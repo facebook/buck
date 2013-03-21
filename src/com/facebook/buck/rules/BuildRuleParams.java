@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSortedSet;
  * Standard set of parameters that is passed to all build rules.
  */
 @Beta
-public final class BuildRuleParams {
+public class BuildRuleParams {
 
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;

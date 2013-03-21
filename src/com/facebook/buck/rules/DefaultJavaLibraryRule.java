@@ -139,14 +139,14 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    */
   protected ImmutableList<AndroidResourceRule> androidResourceDeps;
 
-  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
+  protected DefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
                                    Set<String> srcs,
                                    Set<String> resources,
                                    @Nullable String proguardConfig,
                                    AnnotationProcessingParams annotationProcessingParams,
                                    boolean exportDeps) {
     this(
-        buildRuleParams,
+        cachingBuildRuleParams,
         srcs,
         resources,
         proguardConfig,
@@ -158,7 +158,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
 
-  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
+  protected DefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
                                    Set<String> srcs,
                                    Set<String> resources,
                                    @Nullable String proguardConfig,
@@ -166,7 +166,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
                                    boolean exportDeps,
                                    String sourceLevel,
                                    String targetLevel) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.annotationProcessingParams = Preconditions.checkNotNull(annotationProcessingParams);
@@ -662,8 +662,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder implements SrcsAttributeBuilder,
-      ResourcesAttributeBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder implements
+      SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
     protected Set<String> srcs = Sets.newHashSet();
     protected Set<String> resources = Sets.newHashSet();
@@ -680,12 +680,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
     @Override
     public DefaultJavaLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
 
       return new DefaultJavaLibraryRule(
-          buildRuleParams,
+          cachingBuildRuleParams,
           srcs,
           resources,
           proguardConfig,
@@ -727,6 +727,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

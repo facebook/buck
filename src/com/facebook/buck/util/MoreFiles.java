@@ -99,9 +99,9 @@ public final class MoreFiles {
     }
 
     if (!matching && logger.isLoggable(Level.INFO)) {
-      logger.log(Level.INFO, String.format("DIFF %s", file.getPath()));
+      logger.info(String.format("DIFF %s", file.getPath()));
       for (String diffLine : diffFileContents(lines, file)) {
-        logger.log(Level.INFO, String.format("DIFF %s", diffLine));
+        logger.info(String.format("DIFF %s", diffLine));
       }
     }
 

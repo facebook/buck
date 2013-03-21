@@ -16,16 +16,16 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkFileStep;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
@@ -43,8 +43,9 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
   private final ImmutableSortedSet<String> srcs;
   private final Optional<String> pythonPathDirectory;
 
-  protected PythonLibraryRule(BuildRuleParams buildRuleParams, ImmutableSortedSet<String> srcs) {
-    super(buildRuleParams);
+  protected PythonLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
+      ImmutableSortedSet<String> srcs) {
+    super(cachingBuildRuleParams);
     this.srcs = Preconditions.checkNotNull(srcs);
 
     if (srcs.isEmpty()) {
@@ -116,22 +117,22 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder implements SrcsAttributeBuilder {
-
+  public static class Builder extends AbstractCachingBuildRuleBuilder
+      implements SrcsAttributeBuilder {
     protected ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
 
     private Builder() {}
 
     @Override
-    public AbstractBuildRuleBuilder addSrc(String src) {
+    public AbstractCachingBuildRuleBuilder addSrc(String src) {
       srcs.add(src);
       return this;
     }
 
     @Override
     public PythonLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
-      return new PythonLibraryRule(buildRuleParams, srcs.build());
+      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
+      return new PythonLibraryRule(cachingBuildRuleParams, srcs.build());
     }
   }
 }

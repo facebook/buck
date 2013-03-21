@@ -33,6 +33,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -98,7 +99,7 @@ public class Genrule extends AbstractCachingBuildRule {
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
    */
-  protected final ImmutableList<String> srcs;
+  protected final ImmutableSortedSet<String> srcs;
 
   protected final String cmd;
 
@@ -110,33 +111,33 @@ public class Genrule extends AbstractCachingBuildRule {
   private final String srcDirectory;
   protected final Function<String, String> relativeToAbsolutePathFunction;
 
-  protected Genrule(BuildRuleParams buildRuleParams,
+  protected Genrule(CachingBuildRuleParams cachingBuildRuleParams,
       List<String> srcs,
       String cmd,
       String out,
       Function<String, String> relativeToAbsolutePathFunction) {
-    super(buildRuleParams);
-    this.srcs = ImmutableList.copyOf(srcs);
+    super(cachingBuildRuleParams);
+    this.srcs = ImmutableSortedSet.<String>naturalOrder().addAll(srcs).build();
     this.cmd = Preconditions.checkNotNull(cmd);
     this.srcsToAbsolutePaths = Maps.toMap(srcs, relativeToAbsolutePathFunction);
 
     Preconditions.checkNotNull(out);
     this.outDirectory = String.format("%s/%s",
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePathWithSlash());
+        cachingBuildRuleParams.getBuildTarget().getBasePathWithSlash());
     String outWithGenDirPrefix = String.format("%s%s", outDirectory, out);
     this.outAsAbsolutePath = relativeToAbsolutePathFunction.apply(outWithGenDirPrefix);
 
     String temp = String.format("%s/%s/%s__tmp",
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePath(),
+        cachingBuildRuleParams.getBuildTarget().getBasePath(),
         getBuildTarget().getShortName()
         );
     this.tmpDirectory = relativeToAbsolutePathFunction.apply(temp);
 
     String srcdir = String.format("%s/%s/%s__srcs",
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePath(),
+        cachingBuildRuleParams.getBuildTarget().getBasePath(),
         getBuildTarget().getShortName()
     );
     this.srcDirectory = relativeToAbsolutePathFunction.apply(srcdir);
@@ -155,8 +156,7 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  @VisibleForTesting
-  public ImmutableList<String> getInputsToCompareToOutput(BuildContext context) {
+  protected ImmutableSortedSet<String> getInputsToCompareToOutput(BuildContext context) {
     return srcs;
   }
 
@@ -346,7 +346,7 @@ public class Genrule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder
+  public static class Builder extends AbstractCachingBuildRuleBuilder
       implements SrcsAttributeBuilder {
 
     protected List<String> srcs = Lists.newArrayList();
@@ -360,7 +360,7 @@ public class Genrule extends AbstractCachingBuildRule {
 
     @Override
     public Genrule build(Map<String, BuildRule> buildRuleIndex) {
-      return new Genrule(createBuildRuleParams(buildRuleIndex),
+      return new Genrule(createCachingBuildRuleParams(buildRuleIndex),
           srcs,
           cmd,
           out,
@@ -382,6 +382,12 @@ public class Genrule extends AbstractCachingBuildRule {
     @Override
     public Builder setBuildTarget(BuildTarget buildTarget) {
       this.buildTarget = buildTarget;
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      this.artifactCache = artifactCache;
       return this;
     }
 

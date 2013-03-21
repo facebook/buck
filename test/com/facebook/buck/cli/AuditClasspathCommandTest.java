@@ -25,11 +25,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.android.AndroidBinaryRule;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaLibraryRule;
 import com.facebook.buck.rules.JavaTestRule;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -55,6 +57,7 @@ public class AuditClasspathCommandTest {
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
   private final Ansi ansi = new Ansi(false);
+  private final ArtifactCache artifactCache = new NoopArtifactCache();
   private CapturingPrintStream stdOutStream;
   private CapturingPrintStream stdErrStream;
   private AuditClasspathCommand auditClasspathCommand;
@@ -65,8 +68,12 @@ public class AuditClasspathCommandTest {
     stdErrStream = new CapturingPrintStream();
     Console console = new Console(stdOutStream, stdErrStream, ansi);
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
-    auditClasspathCommand =
-        new AuditClasspathCommand(stdOutStream, stdErrStream, console, projectFilesystem);
+    ArtifactCache artifactCache = new NoopArtifactCache();
+    auditClasspathCommand = new AuditClasspathCommand(stdOutStream,
+        stdErrStream,
+        console,
+        projectFilesystem,
+        artifactCache);
   }
 
   private String getCapturedOutput(CapturingPrintStream stream) {
@@ -108,6 +115,7 @@ public class AuditClasspathCommandTest {
     DefaultJavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
         .addSrc("src/com/facebook/TestJavaLibrary.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
     JavaLibraryRule androidLibraryRule =
@@ -115,6 +123,7 @@ public class AuditClasspathCommandTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
         .addSrc("src/com/facebook/TestAndroidLibrary.java")
         .addDep("//:test-java-library")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(androidLibraryRule.getFullyQualifiedName(), androidLibraryRule);
     AndroidBinaryRule androidBinaryRule = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
@@ -124,6 +133,7 @@ public class AuditClasspathCommandTest {
         .setKeystorePropertiesPath("keystore.properties")
         .addDep("//:test-android-library")
         .addDep("//:test-java-library")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(androidBinaryRule.getFullyQualifiedName(), androidBinaryRule);
     JavaTestRule testRule = JavaTestRule.newJavaTestRuleBuilder()
@@ -131,6 +141,7 @@ public class AuditClasspathCommandTest {
         .addDep("//:test-java-library")
         .setSourceUnderTest(ImmutableSet.of("//:test-java-library"))
         .addSrc("src/com/facebook/test/ProjectTests.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(testRule.getFullyQualifiedName(), testRule);
     PartialGraph partialGraph2 = createGraphFromBuildRules(buildRuleIndex1.values(), targets);

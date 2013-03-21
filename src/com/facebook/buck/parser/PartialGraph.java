@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.json.BuildFileToJsonParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,21 +54,24 @@ public class PartialGraph {
 
   public static PartialGraph createFullGraph(
       File projectDirectoryRoot,
+      ArtifactCache artifactCache,
       Iterable<String> includes) throws NoSuchBuildTargetException, IOException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectDirectoryRoot,
+        artifactCache,
         includes);
   }
 
   public static PartialGraph createPartialGraph(
       RawRulePredicate predicate,
       File projectDirectoryRoot,
+      ArtifactCache artifactCache,
       Iterable<String> includes) throws NoSuchBuildTargetException, IOException {
     List<Map<String, Object>> ruleObjects = BuildFileToJsonParser.getAllRulesInProject(
         projectDirectoryRoot, includes);
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(filesystem);
-    Parser parser = new Parser(filesystem, buildFiles);
+    Parser parser = new Parser(filesystem, artifactCache, buildFiles);
     List<BuildTarget> targets = parser.parseRawRules(ruleObjects, predicate);
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a
@@ -76,5 +80,4 @@ public class PartialGraph {
 
     return new PartialGraph(graph, targets);
   }
-
 }

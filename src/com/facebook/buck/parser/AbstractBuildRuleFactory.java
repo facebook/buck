@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
@@ -68,6 +69,11 @@ public abstract class AbstractBuildRuleFactory implements BuildRuleFactory {
         String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(src);
         ((SrcsAttributeBuilder)builder).addSrc(relativePath);
       }
+    }
+
+    // artifactCache
+    if (builder instanceof AbstractCachingBuildRuleBuilder) {
+      ((AbstractCachingBuildRuleBuilder) builder).setArtifactCache(params.artifactCache);
     }
 
     // resources

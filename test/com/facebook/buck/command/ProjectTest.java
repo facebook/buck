@@ -31,6 +31,7 @@ import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.rules.AndroidResourceRule;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.DependencyGraph;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.JavaLibraryRule;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.JavaTestRule;
 import com.facebook.buck.android.NdkLibraryRule;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PrebuiltJarRule;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -65,6 +67,7 @@ import javax.annotation.Nullable;
 public class ProjectTest {
 
   private static final String PATH_TO_GUAVA_JAR = "third_party/guava/guava-10.0.1.jar";
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
   private PrebuiltJarRule guava;
 
   /**
@@ -85,6 +88,7 @@ public class ProjectTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//buck-android/com/facebook:R"))
         .addSrc("buck-android/com/facebook/R.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(rDotJavaRule.getFullyQualifiedName(), rDotJavaRule);
 
@@ -93,6 +97,7 @@ public class ProjectTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(guava.getFullyQualifiedName(), guava);
 
@@ -102,12 +107,12 @@ public class ProjectTest {
         .setRes("android_res/base/res")
         .setRDotJavaPackage("com.facebook")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidResourceRule.getFullyQualifiedName(), androidResourceRule);
 
     // project_config android_res/base:res
-    ProjectConfigRule projectConfigRuleForResource =
-          ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfigRuleForResource = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:project_config"))
         .setSrcTarget("//android_res/base:res")
         .setSrcRoots(ImmutableList.of("res"))
@@ -123,6 +128,7 @@ public class ProjectTest {
         .addDep("//third_party/guava:guava")
         .addDep("//android_res/base:res")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidLibraryRule.getFullyQualifiedName(), androidLibraryRule);
 
@@ -144,6 +150,7 @@ public class ProjectTest {
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("foo/../keystore.properties")
         .addBuildRuleToExcludeFromDex("//third_party/guava:guava")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinaryRuleUsingNoDx.getFullyQualifiedName(),
         androidBinaryRuleUsingNoDx);
@@ -163,6 +170,7 @@ public class ProjectTest {
         .setManifest("foo/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("bar/../keystore.properties")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinaryRule.getFullyQualifiedName(),
         androidBinaryRule);
@@ -348,12 +356,14 @@ public class ProjectTest {
     PrebuiltJarRule cglib = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:cglib"))
         .setBinaryJar("third_party/java/easymock/cglib.jar")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(cglib.getFullyQualifiedName(), cglib);
 
     PrebuiltJarRule objenesis = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:objenesis"))
         .setBinaryJar("third_party/java/easymock/objenesis.jar")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(objenesis.getFullyQualifiedName(), objenesis);
 
@@ -362,12 +372,14 @@ public class ProjectTest {
         .setBinaryJar("third_party/java/easymock/easymock.jar")
         .addDep("//third_party/java/easymock:cglib")
         .addDep("//third_party/java/easymock:objenesis")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(easymock.getFullyQualifiedName(), easymock);
 
     AndroidLibraryRule androidLibrary = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:example"))
         .addDep("//third_party/java/easymock:easymock")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidLibrary.getFullyQualifiedName(), androidLibrary);
 
@@ -406,18 +418,21 @@ public class ProjectTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/guava:guava"))
         .setBinaryJar("third_party/java/guava.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(guava.getFullyQualifiedName(), guava);
 
     JavaLibraryRule javaLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .addDep("//third_party/java/guava:guava")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaLib.getFullyQualifiedName(), javaLib);
 
     JavaTestRule javaTest = JavaTestRule.newJavaTestRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
         .addDep("//third_party/java/guava:guava")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaTest.getFullyQualifiedName(), javaTest);
 
@@ -463,6 +478,7 @@ public class ProjectTest {
     JavaLibraryRule supportV4 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/android/support/v4:v4"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(supportV4.getFullyQualifiedName(), supportV4);
 
@@ -470,6 +486,7 @@ public class ProjectTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/httpcore:httpcore"))
         .setBinaryJar("httpcore-4.0.1.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(httpCore.getFullyQualifiedName(), httpCore);
 
@@ -480,6 +497,7 @@ public class ProjectTest {
             "//third_party/java/robolectric:robolectric"))
         .addDep("//java/com/android/support/v4:v4")
         .addDep("//third_party/java/httpcore:httpcore")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(robolectric.getFullyQualifiedName(), robolectric);
 
@@ -537,6 +555,7 @@ public class ProjectTest {
     AndroidResourceRule androidResourceRule = AndroidResourceRule
         .newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res"))
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(androidResourceRule.getFullyQualifiedName(),
         androidResourceRule);
@@ -564,6 +583,7 @@ public class ProjectTest {
     AndroidLibraryRule inPackageJavaLibraryRule = AndroidLibraryRule
         .newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex2);
     buildRuleIndex2.put(inPackageJavaLibraryRule.getFullyQualifiedName(),
         inPackageJavaLibraryRule);
@@ -598,6 +618,7 @@ public class ProjectTest {
     AndroidLibraryRule hasSrcFolderAndroidLibraryRule = AndroidLibraryRule
         .newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex3);
     buildRuleIndex3.put(hasSrcFolderAndroidLibraryRule.getFullyQualifiedName(),
         hasSrcFolderAndroidLibraryRule);
@@ -709,6 +730,7 @@ public class ProjectTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni"))
         .addSrc("Android.mk")
         .addVisibilityPattern(new SingletonBuildTargetPattern("//third_party/java/foo:foo"))
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(ndkLibrary.getFullyQualifiedName(), ndkLibrary);
 
@@ -743,6 +765,7 @@ public class ProjectTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//example/parent:ex1"))
         .addSrc("DoesNotExist.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(ex1.getFullyQualifiedName(), ex1);
 
@@ -751,6 +774,7 @@ public class ProjectTest {
         .addSrc("AlsoDoesNotExist.java")
         .addDep(ex1.getFullyQualifiedName())
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(ex2.getFullyQualifiedName(), ex2);
 
@@ -759,6 +783,7 @@ public class ProjectTest {
         .addSrc("SomeTestFile.java")
         .addDep(ex2.getFullyQualifiedName())
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(tests.getFullyQualifiedName(), tests);
 

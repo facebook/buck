@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -127,8 +129,10 @@ public class BuildFileTreeTest {
     Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
     for (String ruleName : ruleNames) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ruleName);
+      ArtifactCache artifactCache = new NoopArtifactCache();
       BuildRule buildRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
           .setBuildTarget(buildTarget)
+          .setArtifactCache(artifactCache)
           .build(buildRuleIndex);
       buildRuleIndex.put(ruleName, buildRule);
       targets.add(buildTarget);

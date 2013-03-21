@@ -49,10 +49,10 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
 
   private final String nativeLibs;
 
-  protected PrebuiltNativeLibraryBuildRule(BuildRuleParams buildRuleParams,
+  protected PrebuiltNativeLibraryBuildRule(CachingBuildRuleParams cachingBuildRuleParams,
       String nativeLibs,
       DirectoryTraverser directoryTraverser) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.nativeLibs = nativeLibs;
   }
@@ -93,7 +93,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     @Nullable
     private String nativeLibs = null;
@@ -102,7 +102,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
 
     @Override
     public PrebuiltNativeLibraryBuildRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(buildRuleIndex),
+      return new PrebuiltNativeLibraryBuildRule(createCachingBuildRuleParams(buildRuleIndex),
           nativeLibs,
           new DefaultDirectoryTraverser());
     }
@@ -122,6 +122,12 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

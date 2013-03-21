@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.TriState;
@@ -51,14 +52,14 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   // Taken from ddms source code.
   final static int INSTALL_TIMEOUT = 2*60*1000; // 2 min
 
-  protected AdbCommandRunner() {
-    super();
+  protected AdbCommandRunner(ArtifactCache artifactCache) {
+    super(artifactCache);
   }
 
   @VisibleForTesting
   protected AdbCommandRunner(PrintStream stdOut, PrintStream stdErr,
-      Console console, ProjectFilesystem projectFilesystem) {
-    super(stdOut, stdErr, console, projectFilesystem);
+      Console console, ProjectFilesystem projectFilesystem, ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
   }
 
   /**

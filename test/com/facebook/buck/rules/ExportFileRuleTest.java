@@ -46,15 +46,18 @@ import java.util.concurrent.Callable;
 
 public class ExportFileRuleTest {
 
-  private BuildRuleParams params;
+  private CachingBuildRuleParams params;
   private BuildContext context;
   private File root;
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Before
   public void createFixtures() {
     BuildTarget target = BuildTargetFactory.newInstance("//:example.html");
-    params = new BuildRuleParams(
-        target, ImmutableSortedSet.<BuildRule>of(), ImmutableSet.<BuildTargetPattern>of());
+    params = new CachingBuildRuleParams(target,
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.<BuildTargetPattern>of(),
+        artifactCache);
     root = new File(".");
     context = getBuildContext(root);
   }

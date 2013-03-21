@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -39,13 +40,16 @@ import java.util.regex.Pattern;
  */
 public class InstallCommand extends UninstallSupportCommandRunner<InstallCommandOptions> {
 
-  protected InstallCommand() {}
+  protected InstallCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
+  }
 
   protected InstallCommand(PrintStream stdOut,
       PrintStream stdErr,
       Console console,
-      ProjectFilesystem projectFilesystem) {
-    super(stdOut, stdErr, console, projectFilesystem);
+      ProjectFilesystem projectFilesystem,
+      ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
   }
 
   @Override
@@ -62,7 +66,11 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     }
 
     // Build the specified target.
-    BuildCommand buildCommand = new BuildCommand(stdOut, stdErr, console, getProjectFilesystem());
+    BuildCommand buildCommand = new BuildCommand(stdOut,
+        stdErr,
+        console,
+        getProjectFilesystem(),
+        getArtifactCache());
     int exitCode = buildCommand.runCommandWithOptions(options);
     if (exitCode != 0) {
       return exitCode;

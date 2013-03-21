@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
@@ -51,6 +50,8 @@ import javax.annotation.Nullable;
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
 
   private final static Logger logger = Logger.getLogger(AbstractCachingBuildRule.class.getName());
+
+  private final ArtifactCache artifactCache;
 
   /**
    * This field will initially be UNSPECIFIED. Once it has been determined whether this rule is
@@ -75,8 +76,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
   private Iterable<InputRule> inputsToCompareToOutputs;
 
-  protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
-    super(buildRuleParams);
+  protected AbstractCachingBuildRule(CachingBuildRuleParams cachingBuildRuleParams) {
+    super(cachingBuildRuleParams);
+    this.artifactCache = cachingBuildRuleParams.getArtifactCache();
     this.isRuleCached = TriState.UNSPECIFIED;
     this.hasUncachedDescendants = TriState.UNSPECIFIED;
     this.ruleInputsAreCached = TriState.UNSPECIFIED;
@@ -285,7 +287,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       return buildRuleResult;
     }
     if (isCached) {
-      logger.log(Level.INFO, String.format("[FROM CACHE %s]", getFullyQualifiedName()));
+      logger.info(String.format("[FROM CACHE %s]", getFullyQualifiedName()));
       buildRuleResult = Futures.immediateFuture(new BuildRuleSuccess(this));
       context.getEventBus().post(
           BuildEvents.finished(this, BuildRuleStatus.SUCCESS, CacheResult.HIT));
@@ -294,7 +296,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // This rule is not cached, so it needs to be built. Ultimately, buildRuleResult will be set
     // with a BuildRuleResult (indicating success) or set with a Throwable (indicating a failure).
-    logger.log(Level.INFO, String.format("[BUILDING %s]", getFullyQualifiedName()));
+    logger.info(String.format("[BUILDING %s]", getFullyQualifiedName()));
     buildRuleResult = SettableFuture.create();
 
     // Create a single future that represents the result of building all of the dependencies.
@@ -319,7 +321,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
             AbstractCachingBuildRule.this, BuildRuleStatus.FAIL, CacheResult.MISS));
       }
     }, context.getExecutor());
-
 
     return buildRuleResult;
   }
@@ -387,18 +388,29 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       @Override
       public BuildRuleSuccess call() throws Exception {
         AbstractCachingBuildRule buildRule = AbstractCachingBuildRule.this;
+        File output = getOutput();
 
-        // Get and run all of the commands.
-        List<Step> steps = buildInternal(context);
-        StepRunner stepRunner = context.getCommandRunner();
-        for (Step command : steps) {
-          stepRunner.runStep(command);
+        // Try to fetch output from cache.
+        boolean fromCache = (output != null && artifactCache.fetch(getRuleKey(), output));
+        if (!fromCache) {
+          // Get and run all of the commands.
+          List<Step> steps = buildInternal(context);
+          StepRunner stepRunner = context.getCommandRunner();
+          for (Step command : steps) {
+            stepRunner.runStep(command);
+          }
         }
+
         // Drop our cached output key, since it probably changed.
         resetOutputKey();
 
         // Write the success file.
         buildRule.writeSuccessFile();
+
+        // Store output to cache.
+        if (output != null && !fromCache) {
+          artifactCache.store(getRuleKey(), output);
+        }
 
         // Return the object to represent the success of the build rule.
         return new BuildRuleSuccess(buildRule);

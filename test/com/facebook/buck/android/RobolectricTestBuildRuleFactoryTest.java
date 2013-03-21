@@ -24,9 +24,11 @@ import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeJavaLibraryRule;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,6 +42,7 @@ import java.io.PrintStream;
 import java.util.Map;
 
 public class RobolectricTestBuildRuleFactoryTest {
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testAmendBuilder() throws NoSuchBuildTargetException {
@@ -60,6 +63,7 @@ public class RobolectricTestBuildRuleFactoryTest {
         instance,
         /* stdErr */ EasyMock.createMock(PrintStream.class),
         projectFilesystem,
+        artifactCache,
         /* buildFiles */ null,
         buildTargetParser,
         buildTarget);
@@ -67,8 +71,9 @@ public class RobolectricTestBuildRuleFactoryTest {
 
     // Create a builder using the factory.
     RobolectricTestBuildRuleFactory factory = new RobolectricTestBuildRuleFactory();
-    RobolectricTestRule.Builder builder = factory.newBuilder();
-    builder.setBuildTarget(buildTarget);
+    RobolectricTestRule.Builder builder = factory.newBuilder()
+        .setBuildTarget(buildTarget)
+        .setArtifactCache(artifactCache);
 
     // Invoke the method under test.
     factory.amendBuilder(builder, params);

@@ -4,6 +4,7 @@
   <property name="aosp.src.dir" value="third-party/java/aosp/src" />
   <property name="test.dir" value="${basedir}/test" />
   <property name="lib.dir" value="${basedir}/lib" />
+  <property name="third-party.dir" value="${basedir}/third-party" />
   <property name="build.dir" value="${basedir}/build" />
   <property name="testrunner.src.dir" value="${src.dir}/com/facebook/buck/junit/" />
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
@@ -27,8 +28,28 @@
     <include name="sdklib.jar" />
   </fileset>
 
+  <fileset dir="${third-party.dir}" id="third-party.jars">
+    <include name="java/astyanax/astyanax-cassandra-1.56.38.jar" />
+    <include name="java/astyanax/astyanax-cassandra-1.56.38-javadoc.jar" />
+    <include name="java/astyanax/astyanax-cassandra-1.56.38-sources.jar" />
+    <include name="java/astyanax/astyanax-core-1.56.38.jar" />
+    <include name="java/astyanax/astyanax-thrift-1.56.38.jar" />
+    <include name="java/astyanax/cassandra-1.2.3.jar" />
+    <include name="java/astyanax/cassandra-thrift-1.2.3.jar" />
+    <include name="java/astyanax/commons-cli-1.1.jar" />
+    <include name="java/astyanax/commons-codec-1.2.jar" />
+    <include name="java/astyanax/commons-lang-2.6.jar" />
+    <include name="java/astyanax/high-scale-lib-1.1.2.jar" />
+    <include name="java/astyanax/joda-time-2.2.jar" />
+    <include name="java/astyanax/libthrift-0.7.0.jar" />
+    <include name="java/astyanax/log4j-1.2.16.jar" />
+    <include name="java/astyanax/slf4j-api-1.7.2.jar" />
+    <include name="java/astyanax/slf4j-log4j12-1.7.2.jar" />
+  </fileset>
+
   <path id="classpath">
     <fileset refid="buck.jars" />
+    <fileset refid="third-party.jars" />
     <pathelement location="${classes.dir}" />
     <pathelement location="${src.dir}" />
   </path>
@@ -82,6 +103,7 @@
           >
     <jar destfile="${build.dir}/buck.jar" update="true">
       <zipfileset refid="buck.jars" />
+      <zipfileset refid="third-party.jars" />
       <fileset dir="${src.dir}"
                excludes="**/*.java, **/BUCK"
                />

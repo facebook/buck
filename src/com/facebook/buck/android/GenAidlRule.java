@@ -16,12 +16,13 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.model.BuildTarget;
@@ -59,10 +60,10 @@ public class GenAidlRule extends AbstractCachingBuildRule {
   private final String aidlFilePath;
   private final String importPath;
 
-  private GenAidlRule(BuildRuleParams buildRuleParams,
+  private GenAidlRule(CachingBuildRuleParams cachingBuildRuleParams,
       String aidlFilePath,
       String importPath) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importPath = Preconditions.checkNotNull(importPath);
   }
@@ -109,7 +110,7 @@ public class GenAidlRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     private String aidl;
 
@@ -119,12 +120,18 @@ public class GenAidlRule extends AbstractCachingBuildRule {
 
     @Override
     public GenAidlRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new GenAidlRule(createBuildRuleParams(buildRuleIndex), aidl, importPath);
+      return new GenAidlRule(createCachingBuildRuleParams(buildRuleIndex), aidl, importPath);
     }
 
     @Override
     public Builder setBuildTarget(BuildTarget buildTarget) {
       super.setBuildTarget(buildTarget);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

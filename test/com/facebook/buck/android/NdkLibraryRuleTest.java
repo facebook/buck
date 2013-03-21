@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -63,6 +64,7 @@ public class NdkLibraryRuleTest {
         .addFlag("flag1")
         .addFlag("flag2")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(new NoopArtifactCache())
         .build(buildRuleIndex);
     buildRuleIndex.put(ndkLibraryRule.getFullyQualifiedName(), ndkLibraryRule);
 

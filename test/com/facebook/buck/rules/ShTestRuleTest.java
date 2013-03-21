@@ -32,6 +32,8 @@ import org.junit.Test;
 
 public class ShTestRuleTest extends EasyMockSupport {
 
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
+
   @After
   public void tearDown() {
     // I don't understand why EasyMockSupport doesn't do this by default.
@@ -90,7 +92,7 @@ public class ShTestRuleTest extends EasyMockSupport {
    */
   private static ShTestRule createShTestRule(final boolean isRuleBuiltFromCache) {
     return new ShTestRule(
-        createBuildRuleParams(),
+        createCachingBuildRuleParams(),
         "run_test.sh",
         /* labels */ ImmutableSet.<String>of()) {
 
@@ -101,10 +103,11 @@ public class ShTestRuleTest extends EasyMockSupport {
     };
   }
 
-  private static BuildRuleParams createBuildRuleParams() {
-    return new BuildRuleParams(
+  private static CachingBuildRuleParams createCachingBuildRuleParams() {
+    return new CachingBuildRuleParams(
         BuildTargetFactory.newInstance("//test/com/example:my_sh_test"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of());
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
+        artifactCache);
   }
 }

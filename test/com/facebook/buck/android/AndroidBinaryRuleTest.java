@@ -26,10 +26,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.AndroidResourceRule;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaLibraryRule;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -60,6 +62,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class AndroidBinaryRuleTest {
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testAndroidBinaryNoDx() {
@@ -91,6 +94,7 @@ public class AndroidBinaryRuleTest {
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
         .setPackageType("debug")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinary.getFullyQualifiedName(), androidBinary);
 
@@ -162,6 +166,7 @@ public class AndroidBinaryRuleTest {
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
         .setPackageType("debug")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinary.getFullyQualifiedName(), androidBinary);
 
@@ -222,6 +227,7 @@ public class AndroidBinaryRuleTest {
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
         .setPackageType("debug")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinary.getFullyQualifiedName(), androidBinary);
 
@@ -293,6 +299,7 @@ public class AndroidBinaryRuleTest {
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
         .setPackageType("debug")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinary.getFullyQualifiedName(), androidBinary);
 
@@ -360,7 +367,8 @@ public class AndroidBinaryRuleTest {
     AndroidLibraryRule.Builder androidLibraryRuleBuilder = AndroidLibraryRule
         .newAndroidLibraryRuleBuilder()
         .addSrc(buildTarget.split(":")[1] + ".java")
-        .setBuildTarget(libraryOnebuildTarget);
+        .setBuildTarget(libraryOnebuildTarget)
+        .setArtifactCache(artifactCache);
 
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
@@ -368,6 +376,7 @@ public class AndroidBinaryRuleTest {
           .setAssetsDirectory(assetDirectory)
           .setRes(resDirectory)
           .setBuildTarget(resourceOnebuildTarget)
+          .setArtifactCache(artifactCache)
           .build(buildRuleIndex);
       buildRuleIndex.put(androidResourceRule.getFullyQualifiedName(), androidResourceRule);
 
@@ -381,6 +390,7 @@ public class AndroidBinaryRuleTest {
           .setAssetsDirectory(assetDirectory)
           .setRes(resDirectory)
           .setBuildTarget(resourceOnebuildTarget)
+          .setArtifactCache(artifactCache)
           .build(buildRuleIndex);
       buildRuleIndex.put(androidResourceRule.getFullyQualifiedName(), androidResourceRule);
 
@@ -392,9 +402,10 @@ public class AndroidBinaryRuleTest {
           BuildTargetFactory.newInstance(buildTarget + "_native_libs");
       PrebuiltNativeLibraryBuildRule nativeLibsRule =
           PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary()
-            .setBuildTarget(nativeLibOnebuildTarget)
-            .setNativeLibsDirectory(nativeLibsDirectory)
-            .build(buildRuleIndex);
+          .setBuildTarget(nativeLibOnebuildTarget)
+          .setNativeLibsDirectory(nativeLibsDirectory)
+          .setArtifactCache(artifactCache)
+          .build(buildRuleIndex);
       buildRuleIndex.put(nativeLibsRule.getFullyQualifiedName(), nativeLibsRule);
 
       androidLibraryRuleBuilder.addDep(nativeLibsRule.getFullyQualifiedName());
@@ -414,6 +425,7 @@ public class AndroidBinaryRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .setManifest("java/src/com/facebook/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
+        .setArtifactCache(artifactCache)
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties");
 
     BuildContext context = createMock(BuildContext.class);
@@ -445,6 +457,7 @@ public class AndroidBinaryRuleTest {
         .setManifest("AndroidManifest.xml")
         .setKeystorePropertiesPath("keystore.properties")
         .setTarget("Google Inc.:Google APIs:16")
+        .setArtifactCache(artifactCache)
         .build(ImmutableMap.<String, BuildRule>of());
     assertEquals(GEN_DIR + "/fb4a.apk", ruleInRootDirectory.getApkPath());
 
@@ -453,6 +466,7 @@ public class AndroidBinaryRuleTest {
         .setManifest("AndroidManifest.xml")
         .setKeystorePropertiesPath("keystore.properties")
         .setTarget("Google Inc.:Google APIs:16")
+        .setArtifactCache(artifactCache)
         .build(ImmutableMap.<String, BuildRule>of());
     assertEquals(GEN_DIR + "/java/com/example/fb4a.apk", ruleInNonRootDirectory.getApkPath());
   }
@@ -464,6 +478,7 @@ public class AndroidBinaryRuleTest {
         .setManifest("AndroidManifest.xml")
         .setKeystorePropertiesPath("keystore.properties")
         .setTarget("Google Inc.:Google APIs:16")
+        .setArtifactCache(artifactCache)
         .build(ImmutableMap.<String, BuildRule>of());
 
     String proguardDir = rule.getProguardOutputFromInputClasspath(
@@ -493,7 +508,9 @@ public class AndroidBinaryRuleTest {
         .setManifest("AndroidManifest.xml")
         .setKeystorePropertiesPath("keystore.properties")
         .setTarget("Google Inc.:Google APIs:16")
-        .setDexSplitMode(new AndroidBinaryRule.DexSplitMode(true, ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE))
+        .setDexSplitMode(new AndroidBinaryRule.DexSplitMode(true,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE))
+        .setArtifactCache(artifactCache)
         .build(ImmutableMap.<String, BuildRule>of());
 
     Set<String> classpath = Sets.newHashSet();

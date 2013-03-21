@@ -32,6 +32,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.JavaLibraryRule;
 import com.facebook.buck.rules.JavaTestRule;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PrebuiltJarRule;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -106,8 +108,9 @@ public class TargetsCommandTest {
     stdErrStream = new CapturingPrintStream();
     Console console = new Console(stdOutStream, stdErrStream, ansi);
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
+    ArtifactCache artifactCache = new NoopArtifactCache();
     targetsCommand =
-        new TargetsCommand(stdOutStream, stdErrStream, console, projectFilesystem);
+        new TargetsCommand(stdOutStream, stdErrStream, console, projectFilesystem, artifactCache);
   }
 
   @Test
@@ -263,10 +266,12 @@ public class TargetsCommandTest {
   @Test
   public void testGetMachingBuildTargets() throws CmdLineException, IOException {
     Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    ArtifactCache artifactCache = new NoopArtifactCache();
     PrebuiltJarRule emptyRule = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//empty:empty"))
         .setBinaryJar("")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(emptyRule.getFullyQualifiedName(), emptyRule);
     JavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
@@ -274,6 +279,7 @@ public class TargetsCommandTest {
         .addSrc("javasrc/JavaLibrary.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addDep("//empty:empty")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
     JavaTestRule javaTestRule =
@@ -281,6 +287,7 @@ public class TargetsCommandTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
             .addSrc("javatest/TestJavaLibrary.java")
             .addDep("//javasrc:java-library")
+            .setArtifactCache(artifactCache)
             .build(buildRuleIndex);
     buildRuleIndex.put(javaTestRule.getFullyQualifiedName(), javaTestRule);
 

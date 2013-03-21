@@ -50,11 +50,11 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   private final Supplier<ImmutableSetMultimap<BuildRule, String>>
       declaredClasspathEntriesSupplier;
 
-  PrebuiltJarRule(BuildRuleParams buildRuleParams,
+  PrebuiltJarRule(CachingBuildRuleParams cachingBuildRuleParams,
       String classesJar,
       String sourceJar,
       String javadocUrl) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.binaryJar = Preconditions.checkNotNull(classesJar);
     this.sourceJar = sourceJar;
     this.javadocUrl = javadocUrl;
@@ -158,7 +158,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     private String binaryJar;
     private String sourceJar;
@@ -168,7 +168,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
 
     @Override
     public PrebuiltJarRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new PrebuiltJarRule(createBuildRuleParams(buildRuleIndex),
+      return new PrebuiltJarRule(createCachingBuildRuleParams(buildRuleIndex),
           binaryJar,
           sourceJar,
           javadocUrl);
@@ -189,6 +189,12 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
@@ -40,14 +41,17 @@ import java.util.SortedSet;
 
 public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
-  public AuditClasspathCommand() {}
+  public AuditClasspathCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
+  }
 
   @VisibleForTesting
   AuditClasspathCommand(PrintStream stdOut,
                         PrintStream stdErr,
                         Console console,
-                        ProjectFilesystem projectFilesystem) {
-    super(stdOut, stdErr, console, projectFilesystem);
+                        ProjectFilesystem projectFilesystem,
+                        ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
   }
 
   @Override
@@ -80,6 +84,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     try {
       partialGraph = PartialGraph.createPartialGraph(predicate,
           getProjectFilesystem().getProjectRoot(),
+          getArtifactCache(),
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);

@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -49,7 +50,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   };
 
 
-  public ProjectCommand() {}
+  public ProjectCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
+  }
 
   @Override
   ProjectCommandOptions createOptions(BuckConfig buckConfig) {
@@ -98,12 +101,15 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       // Build initial targets.
       if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
-        BuildCommand buildCommand = new BuildCommand(stdOut, stdErr, console, getProjectFilesystem());
+        BuildCommand buildCommand = new BuildCommand(stdOut,
+            stdErr,
+            console,
+            getProjectFilesystem(),
+            getArtifactCache());
 
         exitCode = runBuildCommand(
             buildCommand,
             options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets));
-
         if (exitCode != 0) {
           return exitCode;
         }
@@ -149,6 +155,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return PartialGraph.createPartialGraph(
         rulePredicate,
         getProjectFilesystem().getProjectRoot(),
+        getArtifactCache(),
         options.getDefaultIncludes());
   }
 

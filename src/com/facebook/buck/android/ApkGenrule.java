@@ -16,16 +16,19 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Genrule;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.util.List;
@@ -51,15 +54,15 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   private final InstallableBuildRule apk;
 
-  private ApkGenrule(BuildRuleParams buildRuleParams,
+  private ApkGenrule(CachingBuildRuleParams cachingBuildRuleParams,
       List<String> srcs,
       String cmd,
       Function<String, String> relativeToAbsolutePathFunction,
       InstallableBuildRule apk) {
-    super(buildRuleParams,
+    super(cachingBuildRuleParams,
         srcs,
         cmd,
-        /* out */ buildRuleParams.getBuildTarget().getShortName() + ".apk",
+        /* out */ cachingBuildRuleParams.getBuildTarget().getShortName() + ".apk",
         relativeToAbsolutePathFunction);
 
     this.apk = Preconditions.checkNotNull(apk);
@@ -93,6 +96,14 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   @Override
   public String getApkPath() {
     return getOutputFilePath();
+  }
+
+  // Override so that test code and method are in same package; otherwise @VisibleForTesting has
+  // no effect.
+  @VisibleForTesting
+  @Override
+  protected ImmutableSortedSet<String> getInputsToCompareToOutput(BuildContext context) {
+    return super.getInputsToCompareToOutput(context);
   }
 
   @Override
@@ -132,7 +143,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
             apkRule.getFullyQualifiedName());
       }
 
-      return new ApkGenrule(createBuildRuleParams(buildRuleIndex),
+      return new ApkGenrule(createCachingBuildRuleParams(buildRuleIndex),
           srcs,
           cmd,
           relativeToAbsolutePathFunction,

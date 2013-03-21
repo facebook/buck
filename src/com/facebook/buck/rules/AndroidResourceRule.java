@@ -98,13 +98,13 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
   @Nullable
   private final String manifestFile;
 
-  protected AndroidResourceRule(BuildRuleParams buildRuleParams,
+  protected AndroidResourceRule(CachingBuildRuleParams cachingBuildRuleParams,
       @Nullable String res,
       @Nullable String rDotJavaPackage,
       @Nullable String assets,
       @Nullable String manifestFile,
       DirectoryTraverser directoryTraverser) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.res = res;
     this.rDotJavaPackage = rDotJavaPackage;
@@ -115,7 +115,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
       pathToTextSymbolsDir = null;
       pathToTextSymbolsFile = null;
     } else {
-      BuildTarget buildTarget = buildRuleParams.getBuildTarget();
+      BuildTarget buildTarget = cachingBuildRuleParams.getBuildTarget();
       pathToTextSymbolsDir = String.format("%s/%s__%s_text_symbols__",
           BuckConstant.BIN_DIR,
           buildTarget.getBasePathWithSlash(),
@@ -308,8 +308,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
-
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
     @Nullable
     private String res = null;
 
@@ -332,7 +331,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
             getBuildTarget().getFullyQualifiedName());
       }
 
-      return new AndroidResourceRule(createBuildRuleParams(buildRuleIndex),
+      return new AndroidResourceRule(createCachingBuildRuleParams(buildRuleIndex),
           res,
           rDotJavaPackage,
           assetsDirectory,
@@ -355,6 +354,12 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       visibilityPatterns.add(visibilityPattern);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

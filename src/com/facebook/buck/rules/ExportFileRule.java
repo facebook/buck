@@ -77,7 +77,7 @@ public class ExportFileRule extends AbstractCachingBuildRule  {
 
 
   @VisibleForTesting
-  ExportFileRule(BuildRuleParams params, Optional<String> src, Optional<String> out) {
+  ExportFileRule(CachingBuildRuleParams params, Optional<String> src, Optional<String> out) {
     super(params);
 
     String shortName = params.getBuildTarget().getShortName();
@@ -131,7 +131,7 @@ public class ExportFileRule extends AbstractCachingBuildRule  {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
     private Optional<String> src;
     private Optional<String> out;
 
@@ -147,7 +147,7 @@ public class ExportFileRule extends AbstractCachingBuildRule  {
 
     @Override
     public ExportFileRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams params = createBuildRuleParams(buildRuleIndex);
+      CachingBuildRuleParams params = createCachingBuildRuleParams(buildRuleIndex);
 
       return new ExportFileRule(params, src, out);
     }

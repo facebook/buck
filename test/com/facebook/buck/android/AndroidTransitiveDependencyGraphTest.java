@@ -23,11 +23,13 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.rules.AndroidResourceRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PrebuiltJarRule;
 import com.facebook.buck.testutil.RuleMap;
 import com.google.common.base.Optional;
@@ -39,6 +41,7 @@ import org.junit.Test;
 import java.util.Map;
 
 public class AndroidTransitiveDependencyGraphTest {
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   /**
    * This is a regression test to ensure that an additional 1 second startup cost is not
@@ -53,6 +56,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar("third_party/guava/guava-10.0.1.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     guavaRule.setIsCached(false);
     buildRuleIndex.put(guavaRule.getFullyQualifiedName(), guavaRule);
@@ -61,6 +65,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/jsr-305:jsr-305"))
         .setBinaryJar("third_party/jsr-305/jsr305.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     jsr305Rule.setIsCached(false);
     buildRuleIndex.put(jsr305Rule.getFullyQualifiedName(), jsr305Rule);
@@ -69,6 +74,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
         .addDep(guavaRule.getFullyQualifiedName())
         .addDep(jsr305Rule.getFullyQualifiedName())
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     libraryRule.setIsCached(true);
     buildRuleIndex.put(libraryRule.getFullyQualifiedName(), libraryRule);
@@ -77,6 +83,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
         .setManifestFile("java/src/com/facebook/module/AndroidManifest.xml")
         .setAssetsDirectory("assets/")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     manifestRule.setIsCached(false);
     buildRuleIndex.put(manifestRule.getFullyQualifiedName(), manifestRule);
@@ -89,6 +96,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setManifest("java/src/com/facebook/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     binaryRule.setIsCached(false);
     buildRuleIndex.put(binaryRule.getFullyQualifiedName(), binaryRule);

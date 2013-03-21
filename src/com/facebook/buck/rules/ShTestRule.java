@@ -43,10 +43,10 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   private final ImmutableSet<String> labels;
 
   protected ShTestRule(
-      BuildRuleParams buildRuleParams,
+      CachingBuildRuleParams cachingBuildRuleParams,
       String test,
       Set<String> labels) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.test = Preconditions.checkNotNull(test);
     this.labels = ImmutableSet.copyOf(labels);
   }
@@ -135,15 +135,16 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder implements LabelsAttributeBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder implements
+      LabelsAttributeBuilder {
 
     private String test;
     private ImmutableSet<String> labels = ImmutableSet.of();
 
     @Override
     public BuildRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
-      return new ShTestRule(buildRuleParams, test, labels);
+      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
+      return new ShTestRule(cachingBuildRuleParams, test, labels);
     }
 
     public Builder setTest(String test) {

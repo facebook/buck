@@ -16,14 +16,14 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Functions;
@@ -42,8 +42,8 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
 
   private final String main;
 
-  protected PythonBinaryRule(BuildRuleParams buildRuleParams, String main) {
-    super(buildRuleParams);
+  protected PythonBinaryRule(CachingBuildRuleParams cachingBuildRuleParams, String main) {
+    super(cachingBuildRuleParams);
     this.main = Preconditions.checkNotNull(main);
   }
 
@@ -116,7 +116,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     private String main;
 
@@ -124,7 +124,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
 
     @Override
     public PythonBinaryRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new PythonBinaryRule(createBuildRuleParams(buildRuleIndex), main);
+      return new PythonBinaryRule(createCachingBuildRuleParams(buildRuleIndex), main);
     }
 
     public Builder setMain(String main) {

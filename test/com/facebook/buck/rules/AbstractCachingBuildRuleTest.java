@@ -78,6 +78,8 @@ public class AbstractCachingBuildRuleTest {
       BuildTargetFactory.newInstance("//src/com/facebook/orca/Thing2.java", "Thing2.java"),
       BuildTargetFactory.newInstance("//src/com/facebook/orca/Thing3.java", "Thing3.java"));
 
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
+
   @Test
   public void testNotCachedIfDepsNotCached() throws IOException {
     BuildContext context = BuildContext.builder()
@@ -317,9 +319,11 @@ public class AbstractCachingBuildRuleTest {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
-        buildTarget, sortedDeps, visibilityPatterns);
-    return new AbstractCachingBuildRule(buildRuleParams) {
+    CachingBuildRuleParams cachingBuildRuleParams = new CachingBuildRuleParams(buildTarget,
+        sortedDeps,
+        visibilityPatterns,
+        artifactCache);
+    return new AbstractCachingBuildRule(cachingBuildRuleParams) {
       @Override
       public BuildRuleType getType() {
         throw new IllegalStateException("This method should not be called");
@@ -341,7 +345,6 @@ public class AbstractCachingBuildRuleTest {
     };
   }
 
-
   /**
    * Because {@link AbstractCachingBuildRule#build(BuildContext)} returns a
    * {@link ListenableFuture}, any exceptions that are thrown during the invocation of that method
@@ -350,10 +353,11 @@ public class AbstractCachingBuildRuleTest {
    */
   @Test
   public void testExceptionDuringBuildYieldsFailedFuture() throws InterruptedException {
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
+    CachingBuildRuleParams buildRuleParams = new CachingBuildRuleParams(
         BuildTargetFactory.newInstance("//java/src/com/example/base:base"),
         ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSet.<BuildTargetPattern>of(),
+        artifactCache);
     final IOException exceptionThrownDuringBuildInternal = new IOException("some exception");
     AbstractCachingBuildRule buildRule = new AbstractCachingBuildRule(buildRuleParams) {
 
@@ -411,8 +415,10 @@ public class AbstractCachingBuildRuleTest {
   public void whenBuildFinishesThenBuildSuccessEventFired()
       throws ExecutionException, InterruptedException {
     BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
-    BuildRuleParams params = new BuildRuleParams(target, ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        artifactCache);
 
     StepRunner stepRunner = createNiceMock(StepRunner.class);
     expect(stepRunner.getListeningExecutorService()).andStubReturn(
@@ -449,8 +455,10 @@ public class AbstractCachingBuildRuleTest {
   public void whenCacheRaisesExceptionThenBuildFailEventFired()
       throws ExecutionException, InterruptedException {
     BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
-    BuildRuleParams params = new BuildRuleParams(target, ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        artifactCache);
 
     StepRunner stepRunner = createNiceMock(StepRunner.class);
     expect(stepRunner.getListeningExecutorService()).andStubReturn(
@@ -491,8 +499,10 @@ public class AbstractCachingBuildRuleTest {
   public void whenBuildResultCachedThenBuildCachedEventFired()
       throws ExecutionException, InterruptedException {
     BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
-    BuildRuleParams params = new BuildRuleParams(target, ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        artifactCache);
 
     StepRunner stepRunner = createNiceMock(StepRunner.class);
     expect(stepRunner.getListeningExecutorService()).andStubReturn(
@@ -566,8 +576,9 @@ public class AbstractCachingBuildRuleTest {
     private final boolean cached;
     private final boolean cacheDetonates;
 
-    protected DummyRule(BuildRuleParams buildRuleParams, boolean isCached, boolean cacheDetonates) {
-      super(buildRuleParams);
+    protected DummyRule(CachingBuildRuleParams cachingBuildRuleParams, boolean isCached,
+        boolean cacheDetonates) {
+      super(cachingBuildRuleParams);
       cached = isCached;
       this.cacheDetonates = cacheDetonates;
     }

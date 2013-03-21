@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableMap;
 
@@ -23,17 +24,13 @@ import java.io.IOException;
 import java.util.Map;
 
 public class AuditCommandRunner implements CommandRunner {
-
-  static final ImmutableMap<String, ? extends AbstractCommandRunner<?>> AUDIT_COMMANDS =
-      ImmutableMap.of(
-          "input",     new AuditInputCommand(),
-          "classpath", new AuditClasspathCommand(),
-          "owner",     new AuditOwnerCommand());
+  private static ImmutableMap<String, ? extends AbstractCommandRunner<?>> auditCommands;
 
   private final Console console;
 
-  public AuditCommandRunner() {
+  public AuditCommandRunner(ArtifactCache artifactCache) {
     console = new Console(System.out, System.err, new Ansi());
+    setAuditCommands(artifactCache);
   }
 
   @Override
@@ -45,8 +42,8 @@ public class AuditCommandRunner implements CommandRunner {
     }
 
     String auditCmd = args[0];
-    if (AUDIT_COMMANDS.containsKey(auditCmd)) {
-      CommandRunner cmd = AUDIT_COMMANDS.get(auditCmd);
+    if (getAuditCommands().containsKey(auditCmd)) {
+      CommandRunner cmd = getAuditCommands().get(auditCmd);
       String[] newArgs = new String[args.length - 1];
       System.arraycopy(args, 1, newArgs, 0, newArgs.length);
       return cmd.runCommand(buckConfig, newArgs);
@@ -57,10 +54,22 @@ public class AuditCommandRunner implements CommandRunner {
     }
   }
 
+  private ImmutableMap<String, ? extends AbstractCommandRunner<?>> getAuditCommands() {
+    return auditCommands;
+  }
+
+  private void setAuditCommands(ArtifactCache artifactCache) {
+    auditCommands = ImmutableMap.of(
+        "input",     new AuditInputCommand(artifactCache),
+        "classpath", new AuditClasspathCommand(artifactCache),
+        "owner",     new AuditOwnerCommand(artifactCache));
+  }
+
   private void printUsage() {
     // TODO: implement better way of showing help
     console.getStdOut().println("buck audit <cmd>");
-    for (Map.Entry<String, ? extends AbstractCommandRunner<?>> entry : AUDIT_COMMANDS.entrySet()) {
+    for (Map.Entry<String, ? extends AbstractCommandRunner<?>> entry :
+        getAuditCommands().entrySet()) {
       console.getStdOut().println("  " + entry.getKey() + " - " + entry.getValue().getUsageIntro());
     }
   }

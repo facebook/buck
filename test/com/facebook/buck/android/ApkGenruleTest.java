@@ -29,6 +29,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaLibraryRule;
 import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -47,6 +49,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import org.easymock.EasyMock;
@@ -61,7 +64,7 @@ import java.util.Map;
  * Unit test for {@link com.facebook.buck.android.ApkGenrule}.
  */
 public class ApkGenruleTest {
-
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
   private static final Function<String, String> relativeToAbsolutePathFunction =
       new Function<String, String>() {
         @Override
@@ -73,20 +76,21 @@ public class ApkGenruleTest {
   private void createSampleAndroidBinaryRule(Map<String, BuildRule> buildRuleIndex) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    JavaLibraryRule androidLibraryRule =
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    JavaLibraryRule androidLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:lib-android"))
         .addSrc("java/com/facebook/util/Facebook.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidLibraryRule.getFullyQualifiedName(), androidLibraryRule);
 
-    AndroidBinaryRule androidBinaryRule = (AndroidBinaryRule) AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+    AndroidBinaryRule androidBinaryRule = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("keystore.properties")
         .addDep("//:lib-android")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinaryRule.getFullyQualifiedName(), androidBinaryRule);
   }
@@ -137,8 +141,9 @@ public class ApkGenruleTest {
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .build();
-    List<String> inputsToCompareToOutputs = ImmutableList.of(
-        "src/com/facebook/signer.py", "src/com/facebook/key.properties");
+    ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
+        "src/com/facebook/key.properties",
+        "src/com/facebook/signer.py");
     assertEquals(inputsToCompareToOutputs,
         apk_genrule.getInputsToCompareToOutput(buildContext));
 

@@ -18,10 +18,8 @@ package com.facebook.buck.rules;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import javax.annotation.Nullable;
@@ -34,29 +32,33 @@ public class OutputKey implements Comparable<OutputKey> {
   private final boolean idempotent;
 
   /**
-   * OutputKeys associated with actual outputs are non-idempotent if the outputs cannot be read
-   * during key generation.
+   * OutputKeys that have no associated outputs (output == null) are treated as sentinels that are
+   * distinct from other idempotent OutputKeys. OutputKeys associated with actual outputs are
+   * non-idempotent if the outputs cannot be read during key generation.
    */
-  public OutputKey(File outputFile) {
-    HashCode hc;
-    try {
-      byte[] fileBytes = Files.toByteArray(outputFile);
-      hc = Hashing.sha1().hashBytes(fileBytes);
-    } catch (IOException e) {
-      // Generate a non-idempotent key for a missing/unreadable output.
-      hc = null;
+  public OutputKey(@Nullable File output) {
+    if (output == null) {
+      this.hashCode = null;
+      this.idempotent = true;
+    } else {
+      this.hashCode = hashOutput(output);
+      this.idempotent = (hashCode != null);
     }
-    hashCode = hc;
-    idempotent = (hc != null);
   }
 
-  /**
-   * OutputKeys that have no associated outputs are treated as sentinels that are distinct from
-   * other idempotent OutputKeys.
-   */
-  public OutputKey() {
-    hashCode = null;
-    idempotent = true;
+  @Nullable
+  private HashCode hashOutput(File output) {
+    if (output == null) {
+      return null;
+    }
+    // Use RuleKey's Builder to do the hard work of hashing the output file.
+    RuleKey.Builder builder = RuleKey.builder();
+    builder.set(output.getPath(), output);
+    RuleKey ruleKey = builder.build();
+    if (!ruleKey.isIdempotent()) {
+      return null;
+    }
+    return ruleKey.getHashCode();
   }
 
   public boolean isIdempotent() {
@@ -140,5 +142,15 @@ public class OutputKey implements Comparable<OutputKey> {
       return 0;
     }
     return super.hashCode();
+  }
+
+  /**
+   * Helper method used to avoid memoizing non-idempotent OutputKeys.
+   */
+  public static OutputKey filter(OutputKey outputKey) {
+    if (!outputKey.isIdempotent()) {
+      return null;
+    }
+    return outputKey;
   }
 }

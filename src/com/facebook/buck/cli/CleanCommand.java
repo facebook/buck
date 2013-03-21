@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.ProcessExecutor;
@@ -23,6 +24,9 @@ import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
 
 public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
+  public CleanCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
+  }
 
   @Override
   CleanCommandOptions createOptions(BuckConfig buckConfig) {

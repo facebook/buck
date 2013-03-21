@@ -136,14 +136,11 @@ public class InputRule implements BuildRule {
 
   @Override
   public OutputKey getOutputKey() {
-    if (outputKey == null) {
-      File outputFile = getOutput();
-      if (outputFile != null) {
-        outputKey = new OutputKey(outputFile);
-      } else {
-        outputKey = new OutputKey();
-      }
+    if (this.outputKey != null) {
+      return this.outputKey;
     }
+    OutputKey outputKey = new OutputKey(getOutput());
+    this.outputKey = OutputKey.filter(outputKey);
     return outputKey;
   }
 

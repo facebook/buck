@@ -24,9 +24,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -54,11 +56,13 @@ public class GenAidlRuleTest {
 
     String pathToAidl = "java/com/example/base/IWhateverService.aidl";
     String importPath = "java/com/example/base/";
+    ArtifactCache artifactCache = new NoopArtifactCache();
 
     GenAidlRule genAidlRule = GenAidlRule.newGenAidlRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService"))
         .setAidl(pathToAidl)
         .setImportPath(importPath)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
 
     assertEquals(BuildRuleType.GEN_AIDL, genAidlRule.getType());

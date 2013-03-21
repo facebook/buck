@@ -122,18 +122,33 @@ $EXTRA_FLAGS \
 -Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
 -Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
+-Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties \
 -classpath \
 ${BUCK_DIRECTORY}/src:\
 ${BUCK_DIRECTORY}/build/classes:\
 ${BUCK_DIRECTORY}/lib/args4j.jar:\
+${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
 ${BUCK_DIRECTORY}/lib/guava-14.0.1.jar:\
 ${BUCK_DIRECTORY}/lib/ini4j-0.5.2.jar:\
 ${BUCK_DIRECTORY}/lib/jackson-annotations-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jackson-core-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jackson-databind-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jsr305.jar:\
-${BUCK_DIRECTORY}/lib/sdklib.jar:\
-${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
+${BUCK_DIRECTORY}/lib/jyson-1.0.2.jar:\
 ${BUCK_DIRECTORY}/lib/jython-standalone-2.5.3.jar:\
-${BUCK_DIRECTORY}/lib/jyson-1.0.2.jar \
+${BUCK_DIRECTORY}/lib/sdklib.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-cassandra-1.56.38.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-core-1.56.38.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-thrift-1.56.38.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/cassandra-1.2.3.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/cassandra-thrift-1.2.3.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/commons-cli-1.1.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/commons-codec-1.2.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/commons-lang-2.6.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/high-scale-lib-1.1.2.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/joda-time-2.2.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/libthrift-0.7.0.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/log4j-1.2.16.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-api-1.7.2.jar:\
+${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-log4j12-1.7.2.jar \
 com.facebook.buck.cli.Main "$@"

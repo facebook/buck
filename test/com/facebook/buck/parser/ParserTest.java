@@ -24,11 +24,13 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -54,6 +56,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class ParserTest {
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   private File testBuildFile;
   private Parser testParser;
@@ -78,7 +81,7 @@ public class ParserTest {
 
     // Create a Parser.
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
-    testParser = new Parser(filesystem, new BuildFileTree(ImmutableSet.<BuildTarget>of()));
+    testParser = new Parser(filesystem, artifactCache, new BuildFileTree(ImmutableSet.<BuildTarget>of()));
   }
 
   /**
@@ -99,7 +102,7 @@ public class ParserTest {
 
     File projectDirectoryRoot = new File(".");
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
-    Parser parser = new Parser(filesystem, new BuildFileTree(ImmutableSet.<BuildTarget>of()));
+    Parser parser = new Parser(filesystem, artifactCache, new BuildFileTree(ImmutableSet.<BuildTarget>of()));
 
     RawRulePredicate predicate = RawRulePredicates.alwaysTrue();
     List<BuildTarget> targets = parser.parseRawRules(ruleObjects, predicate);
@@ -155,6 +158,7 @@ public class ParserTest {
     Map<String, BuildRuleBuilder> knownBuildTargets = createKnownBuildTargets();
 
     Parser parser = new Parser(projectFilesystem,
+        artifactCache,
         buildFiles,
         buildTargetParser,
         knownBuildTargets);
@@ -175,7 +179,6 @@ public class ParserTest {
   @Test
   public void testParseBuildFilesForTargetsWithOverlappingTargets()
       throws IOException, NoSuchBuildTargetException {
-
     // Execute parseBuildFilesForTargets() with multiple targets that require parsing the same
     // build file.
     BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook",

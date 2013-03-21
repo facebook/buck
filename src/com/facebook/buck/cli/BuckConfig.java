@@ -20,7 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.CassandraArtifactCache;
+import com.facebook.buck.rules.DirArtifactCache;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
@@ -37,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
@@ -58,7 +63,6 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 class BuckConfig {
-
   private static final String ALIAS_SECTION_HEADER = "alias";
 
   /**
@@ -70,12 +74,22 @@ class BuckConfig {
   private static final BuckConfig EMPTY_INSTANCE = new BuckConfig(
       ImmutableMap.<String, Map<String, String>>of(), null /* buildTargetParser */);
 
+  private static final String DEFAULT_CACHE_DIR = "buck-cache";
+  private static final String DEFAULT_CASSANDRA_PORT = "9160";
+
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
 
   @Nullable
   private final BuildTargetParser buildTargetParser;
+
+  private enum ArtifactCacheNames {
+    noop,
+    dir,
+    cassandra
+  }
+  private final ArtifactCache artifactCache;
 
   @VisibleForTesting
   BuckConfig(Map<String, Map<String, String>> sectionsToEntries,
@@ -94,6 +108,7 @@ class BuckConfig {
     this.aliasToBuildTargetMap = createAliasToBuildTargetMap(
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
+    this.artifactCache = initArtifactCache();
   }
 
   public static BuckConfig emptyConfig() {
@@ -117,7 +132,7 @@ class BuckConfig {
    * @return whether {@code aliasName} conforms to the pattern for a valid alias name. This does not
    *     indicate whether it is an alias that maps to a build target in a BuckConfig.
    */
-  private static final boolean isValidAliasName(String aliasName) {
+  private static boolean isValidAliasName(String aliasName) {
     return aliasName != null && ALIAS_PATTERN.matcher(aliasName).matches();
   }
 
@@ -337,6 +352,57 @@ class BuckConfig {
     return initialTargets.isPresent()
         ? Lists.newArrayList(Splitter.on(' ').trimResults().split(initialTargets.get()))
         : ImmutableList.<String>of();
+  }
+
+  private ArtifactCache initNoopArtifactCache() {
+    return new NoopArtifactCache();
+  }
+
+  private ArtifactCache initDirArtifactCache() {
+    String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+    File dir = new File(cacheDir);
+    try {
+      return new DirArtifactCache(dir);
+    } catch (IOException e) {
+      throw new HumanReadableException(String.format(
+          "Failure initializing artifact cache directory: %s",
+          dir));
+    }
+  }
+
+  private ArtifactCache initCassandraArtifactCache() {
+    // cache.hosts
+    String cacheHosts = getValue("cache", "hosts").or("");
+    // cache.port
+    int port = Integer.parseInt(getValue("cache", "port").or(DEFAULT_CASSANDRA_PORT));
+
+    try {
+      return new CassandraArtifactCache(cacheHosts, port);
+    } catch (ConnectionException e) {
+      throw new HumanReadableException("Cassandra cache connection failure");
+    }
+  }
+
+  private ArtifactCache initArtifactCache() {
+    String cacheMode = getValue("cache", "mode").or("noop");
+    try {
+      switch (ArtifactCacheNames.valueOf(cacheMode)) {
+      case noop:
+        return initNoopArtifactCache();
+      case dir:
+        return initDirArtifactCache();
+      case cassandra:
+        return initCassandraArtifactCache();
+      }
+    } catch (IllegalArgumentException e) {
+      throw new HumanReadableException(String.format("Unusable cache.mode: '%s'", cacheMode));
+    }
+
+    throw new HumanReadableException(String.format("Unusable cache.mode: '%s'", cacheMode));
+  }
+
+  public ArtifactCache getArtifactCache() {
+    return artifactCache;
   }
 
   private Optional<String> getValue(String sectionName, String propertyName) {

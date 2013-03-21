@@ -37,6 +37,7 @@ import java.util.Map;
 
 
 public class AndroidResourceRuleTest {
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testGetInputsToCompareToOutput() {
@@ -65,12 +66,13 @@ public class AndroidResourceRuleTest {
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base", "res");
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
+    CachingBuildRuleParams cachingBuildRuleParams = new CachingBuildRuleParams(
         buildTarget,
         ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        new NoopArtifactCache());
     AndroidResourceRule androidResourceRule = new AndroidResourceRule(
-        buildRuleParams,
+        cachingBuildRuleParams,
         "java/src/com/facebook/base/res",
         "com.facebook",
         "java/src/com/facebook/base/assets",
@@ -116,6 +118,7 @@ public class AndroidResourceRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
         .setRes("res_c")
         .setRDotJavaPackage("com.facebook")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(c.getFullyQualifiedName(), c);
 
@@ -124,6 +127,7 @@ public class AndroidResourceRuleTest {
         .setRes("res_b")
         .setRDotJavaPackage("com.facebook")
         .addDep("//:c")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(b.getFullyQualifiedName(), b);
 
@@ -132,6 +136,7 @@ public class AndroidResourceRuleTest {
         .setRes("res_d")
         .setRDotJavaPackage("com.facebook")
         .addDep("//:c")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(d.getFullyQualifiedName(), d);
 
@@ -142,6 +147,7 @@ public class AndroidResourceRuleTest {
         .addDep("//:b")
         .addDep("//:c")
         .addDep("//:d")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(a.getFullyQualifiedName(), a);
 
@@ -168,6 +174,7 @@ public class AndroidResourceRuleTest {
         .setKeystorePropertiesPath("debug.keystore")
         .addDep("//:a")
         .addDep("//:c")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(e.getFullyQualifiedName(), e);
 

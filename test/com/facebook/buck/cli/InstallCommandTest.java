@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
+import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.io.ByteStreams;
@@ -85,7 +87,12 @@ public class InstallCommandTest {
     PrintStream out = new PrintStream(nullOut);
     Console console = new Console(out, out, new Ansi());
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
-    return new InstallCommand(console.getStdOut(), console.getStdErr(), console, filesystem);
+    ArtifactCache artifactCache = new NoopArtifactCache();
+    return new InstallCommand(console.getStdOut(),
+        console.getStdErr(),
+        console,
+        filesystem,
+        artifactCache);
   }
 
   /**

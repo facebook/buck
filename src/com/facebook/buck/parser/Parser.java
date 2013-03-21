@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
 import com.facebook.buck.python.PythonLibraryBuildRuleFactory;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
@@ -69,16 +70,18 @@ public final class Parser {
    */
   private final Map<String, BuildRuleBuilder> knownBuildTargets;
 
-
   private final String absolutePathToProjectRoot;
   private final ProjectFilesystem projectFilesystem;
+  private final ArtifactCache artifactCache;
   private final BuildFileTree buildFiles;
 
   private boolean parserWasPopulatedViaParseRawRules = false;
 
   public Parser(ProjectFilesystem projectFilesystem,
+      ArtifactCache artifactCache,
       BuildFileTree buildFiles) {
     this(projectFilesystem,
+        artifactCache,
         buildFiles,
         new BuildTargetParser(projectFilesystem),
         Maps.<String, BuildRuleBuilder>newHashMap());
@@ -86,10 +89,12 @@ public final class Parser {
 
   @VisibleForTesting
   Parser(ProjectFilesystem projectFilesystem,
+         ArtifactCache artifactCache,
          BuildFileTree buildFiles,
          BuildTargetParser buildTargetParser,
          Map<String, BuildRuleBuilder> knownBuildTargets) {
     this.projectFilesystem = projectFilesystem;
+    this.artifactCache = artifactCache;
     this.buildFiles = Preconditions.checkNotNull(buildFiles);
 
     this.knownBuildTargets = Preconditions.checkNotNull(knownBuildTargets);
@@ -138,7 +143,6 @@ public final class Parser {
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
         new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
-
           @Override
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget) {
             ParseContext parseContext = ParseContext.forBaseName(buildTarget.getBaseName());
@@ -240,7 +244,9 @@ public final class Parser {
 
   private void parseBuildFile(File buildFile, Iterable<String> defaultIncludes)
       throws IOException, NoSuchBuildTargetException {
-    logger.info(String.format("Parsing %s file: %s", BuckConstant.BUILD_RULES_FILE_NAME, buildFile));
+    logger.info(String.format("Parsing %s file: %s",
+        BuckConstant.BUILD_RULES_FILE_NAME,
+        buildFile));
     List<Map<String, Object>> rules = com.facebook.buck.json.BuildFileToJsonParser.getAllRules(
         absolutePathToProjectRoot, Optional.of(buildFile.getPath()), defaultIncludes);
     parseRawRulesInternal(rules, null /* filter */, buildFile);
@@ -303,6 +309,7 @@ public final class Parser {
           map,
           System.err, // TODO(simons): Injecting a Console instance turns out to be a nightmare.
           projectFilesystem,
+          artifactCache,
           buildFiles,
           buildTargetParser,
           target));

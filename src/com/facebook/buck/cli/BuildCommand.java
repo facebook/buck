@@ -21,6 +21,7 @@ import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
@@ -50,11 +51,13 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   private ImmutableList<BuildTarget> buildTargets = ImmutableList.of();
 
-  public BuildCommand() {}
+  public BuildCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
+  }
 
   public BuildCommand(PrintStream stdOut, PrintStream stdErr, Console console,
-      ProjectFilesystem projectFilesystem) {
-    super(stdOut, stdErr, console, projectFilesystem);
+      ProjectFilesystem projectFilesystem, ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
   }
 
   @Override

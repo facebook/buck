@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.AndroidResourceRule;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.Classpaths;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -48,10 +48,10 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
 
   private final AndroidBinaryRule apkUnderTest;
 
-  private AndroidInstrumentationApk(BuildRuleParams buildRuleParams,
+  private AndroidInstrumentationApk(CachingBuildRuleParams cachingBuildRuleParams,
       String manifest,
       AndroidBinaryRule apkUnderTest) {
-    super(buildRuleParams,
+    super(cachingBuildRuleParams,
         manifest,
         apkUnderTest.getTarget(),
         apkUnderTest.getKeystorePropertiesPath(),
@@ -105,7 +105,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     private String manifest = null;
     private String apk = null;
@@ -125,7 +125,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
 
       AndroidBinaryRule underlyingApk = getUnderlyingApk((InstallableBuildRule)apkRule);
 
-      return new AndroidInstrumentationApk(createBuildRuleParams(buildRuleIndex),
+      return new AndroidInstrumentationApk(createCachingBuildRuleParams(buildRuleIndex),
           manifest,
           underlyingApk);
     }

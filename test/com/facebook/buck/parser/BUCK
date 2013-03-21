@@ -52,6 +52,7 @@ java_library(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:core',
     '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:core',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
   ],

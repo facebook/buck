@@ -64,6 +64,7 @@ public class DefaultJavaLibraryRuleTest {
       "//android/java/src/com/facebook:fb";
   private static final String ANNOTATION_SCENARIO_GEN_PATH =
       BuckConstant.ANNOTATION_DIR + "/android/java/src/com/facebook/__fb_gen__";
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
@@ -76,7 +77,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
+        new CachingBuildRuleParams(buildTarget, deps, visibilityPatterns, artifactCache),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
@@ -111,7 +112,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
+        new CachingBuildRuleParams(buildTarget, deps, visibilityPatterns, artifactCache),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
@@ -148,7 +149,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
+        new CachingBuildRuleParams(buildTarget, deps, visibilityPatterns, artifactCache),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
@@ -182,6 +183,7 @@ public class DefaultJavaLibraryRuleTest {
     DefaultJavaLibraryRule javaLibrary = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(buildTarget)
         .addSrc(src)
+        .setArtifactCache(artifactCache)
         .build(Maps.<String, BuildRule>newHashMap());
 
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
@@ -326,6 +328,7 @@ public class DefaultJavaLibraryRuleTest {
     JavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -334,6 +337,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep("//:libone")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
 
@@ -342,6 +346,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
         .addDep("//:libtwo")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -395,6 +400,7 @@ public class DefaultJavaLibraryRuleTest {
     JavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -404,6 +410,7 @@ public class DefaultJavaLibraryRuleTest {
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep("//:libone")
         .setExportDeps(true)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
 
@@ -412,6 +419,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
         .addDep("//:libtwo")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -440,6 +448,7 @@ public class DefaultJavaLibraryRuleTest {
     DefaultJavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/bar.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -468,6 +477,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -476,6 +486,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep("//:libone")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
 
@@ -485,6 +496,7 @@ public class DefaultJavaLibraryRuleTest {
         .addSrc("java/src/com/parent/Meh.java")
         .addDep("//:libtwo")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -493,6 +505,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(grandparentTarget)
         .addSrc("java/src/com/parent/OldManRiver.java")
         .addDep("//:parent")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(grandparent.getFullyQualifiedName(), parent);
 
@@ -537,6 +550,7 @@ public class DefaultJavaLibraryRuleTest {
         .setRuleInputsAreCached(false)
         .setBuildTarget(grandChildTarget)
         .addSrc("java/src/com/grandchild/bar.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(grandChild.getFullyQualifiedName(), grandChild);
 
@@ -548,6 +562,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(childTarget)
         .addSrc("java/src/com/child/foo.java")
         .addDep("//:grandChild")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(child.getFullyQualifiedName(), child);
 
@@ -559,6 +574,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/foo.java")
         .addDep("//:child")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -587,6 +603,7 @@ public class DefaultJavaLibraryRuleTest {
         .setRuleInputsAreCached(false)
         .setBuildTarget(grandChildTarget)
         .addSrc("java/src/com/grandchild/bar.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(grandChild.getFullyQualifiedName(), grandChild);
 
@@ -598,6 +615,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(childTarget)
         .addSrc("java/src/com/child/foo.java")
         .addDep("//:grandChild")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(child.getFullyQualifiedName(), child);
 
@@ -609,6 +627,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/foo.java")
         .addDep("//:child")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -636,6 +655,7 @@ public class DefaultJavaLibraryRuleTest {
         .setRuleInputsAreCached(false)
         .setBuildTarget(grandChildTarget)
         .addSrc("java/src/com/grandchild/bar.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(grandChild.getFullyQualifiedName(), grandChild);
 
@@ -648,6 +668,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(childTarget)
         .addSrc("java/src/com/child/foo.java")
         .addDep("//:grandChild")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(child.getFullyQualifiedName(), child);
 
@@ -659,6 +680,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/foo.java")
         .addDep("//:child")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -758,7 +780,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new Genrule(
-            createBuildRuleParams(target),
+            createCachingBuildRuleParams(target),
             ImmutableList.of("MyInput"),
             "echo hi",
             "MyOutput",
@@ -769,7 +791,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new PrebuiltJarRule(
-            createBuildRuleParams(target),
+            createCachingBuildRuleParams(target),
             "MyJar",
             null,
             null);
@@ -779,7 +801,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new JavaBinaryRule(
-            createBuildRuleParams(target),
+            createCachingBuildRuleParams(target),
             "com.facebook.Main",
             null,
             null,
@@ -790,7 +812,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new DefaultJavaLibraryRule(
-            createBuildRuleParams(target),
+            createCachingBuildRuleParams(target),
             ImmutableSet.<String>of("MyClass.java"),
             ImmutableSet.<String>of(),
             "MyProguardConfig",
@@ -805,11 +827,12 @@ public class DefaultJavaLibraryRuleTest {
       this.targetName = targetName;
     }
 
-    protected BuildRuleParams createBuildRuleParams(BuildTarget target) {
-      return new BuildRuleParams(
+    protected CachingBuildRuleParams createCachingBuildRuleParams(BuildTarget target) {
+      return new CachingBuildRuleParams(
           target,
           ImmutableSortedSet.<BuildRule>of(),
-          ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+          ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+          artifactCache);
     }
 
     public BuildTarget createTarget() {
@@ -868,10 +891,11 @@ public class DefaultJavaLibraryRuleTest {
       String src = "android/java/src/com/facebook/Main.java";
 
       return new AndroidLibraryRule(
-          new BuildRuleParams(
+          new CachingBuildRuleParams(
               buildTarget,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
-              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of()
+              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
+              artifactCache
           ),
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<String>of(),

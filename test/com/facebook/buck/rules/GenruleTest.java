@@ -57,6 +57,8 @@ import java.util.regex.Pattern;
 
 public class GenruleTest {
 
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
+
   private static final Function<String, String> relativeToAbsolutePathFunction =
       new Function<String, String>() {
         @Override
@@ -116,7 +118,7 @@ public class GenruleTest {
     assertEquals("/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml",
         genrule.getOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
-    List<String> inputsToCompareToOutputs = ImmutableList.of(
+    ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
         "src/com/facebook/katana/convert_to_katana.py",
         "src/com/facebook/katana/AndroidManifest.xml");
     assertEquals(inputsToCompareToOutputs,
@@ -297,6 +299,7 @@ public class GenruleTest {
         .addSrc("foo/bar.html")
         .addSrc("other/place.txt")
         .setOut("example-file")
+        .setArtifactCache(artifactCache)
         .build(ImmutableMap.<String, BuildRule>of());
 
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
@@ -323,11 +326,13 @@ public class GenruleTest {
   private JavaBinaryRule createSampleJavaBinaryRule(Map<String, BuildRule> buildRuleIndex) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
+    ArtifactCache artifactCache = new NoopArtifactCache();
     JavaLibraryRule javaLibrary = new DefaultJavaLibraryRule(
-        new BuildRuleParams(
+        new CachingBuildRuleParams(
             BuildTargetFactory.newInstance("//java/com/facebook/util:util"),
             ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSet.of(BuildTargetPattern.MATCH_ALL)),
+            ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+            artifactCache),
         ImmutableSet.<String>of("java/com/facebook/util/ManifestGenerator.java"),
         ImmutableSet.<String>of(),
         /* proguardConfig */ null,
@@ -337,10 +342,11 @@ public class GenruleTest {
     buildRuleIndex.put(javaLibrary.getFullyQualifiedName(), javaLibrary);
 
     JavaBinaryRule javaBinary = new JavaBinaryRule(
-        new BuildRuleParams(
+        new CachingBuildRuleParams(
             BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"),
             ImmutableSortedSet.<BuildRule>of(javaLibrary),
-            ImmutableSet.<BuildTargetPattern>of()),
+            ImmutableSet.<BuildTargetPattern>of(),
+            artifactCache),
         "com.facebook.util.ManifestGenerator",
         /* manifestFile */ null,
         /* metaInfDirectory */ null,
@@ -361,7 +367,8 @@ public class GenruleTest {
         .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
         .setCmd(originalCmd)
-        .setOut("example-file");
+        .setOut("example-file")
+        .setArtifactCache(artifactCache);
 
     for (BuildRule dep : deps) {
       ruleBuilder.addDep(dep.getFullyQualifiedName());

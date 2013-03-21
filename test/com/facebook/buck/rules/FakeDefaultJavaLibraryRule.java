@@ -28,7 +28,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
   private final boolean hasUncachedDescendants;
   private final boolean ruleInputsAreCached;
 
-  protected FakeDefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
+  protected FakeDefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
                                        Set<String> srcs,
                                        Set<String> resources,
                                        @Nullable String proguardConfig,
@@ -37,7 +37,12 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
                                        boolean isCached,
                                        boolean hasUncachedDescendants,
                                        boolean ruleInputsAreCached) {
-    super(buildRuleParams, srcs, resources, proguardConfig, annotationProcessingParams, exportDeps);
+    super(cachingBuildRuleParams,
+        srcs,
+        resources,
+        proguardConfig,
+        annotationProcessingParams,
+        exportDeps);
 
     this.isCached = isCached;
     this.hasUncachedDescendants = hasUncachedDescendants;
@@ -70,12 +75,12 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
 
 
     public FakeDefaultJavaLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
 
       return new FakeDefaultJavaLibraryRule(
-          buildRuleParams,
+          cachingBuildRuleParams,
           srcs,
           resources,
           proguardConfig,

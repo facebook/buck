@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
@@ -55,16 +56,17 @@ import javax.annotation.Nullable;
 
 public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions> {
 
-  public TargetsCommand() {
-    super();
+  public TargetsCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
   }
 
   @VisibleForTesting
   TargetsCommand(PrintStream stdOut,
       PrintStream stdErr,
       Console console,
-      ProjectFilesystem projectFilesystem) {
-    super(stdOut, stdErr, console, projectFilesystem);
+      ProjectFilesystem projectFilesystem,
+      ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
   }
 
   @Override
@@ -106,6 +108,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     PartialGraph graph;
     try {
       graph = PartialGraph.createFullGraph(getProjectFilesystem().getProjectRoot(),
+          getArtifactCache(),
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);

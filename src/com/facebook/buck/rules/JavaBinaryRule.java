@@ -55,12 +55,12 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   private final DirectoryTraverser directoryTraverser;
 
   JavaBinaryRule(
-      BuildRuleParams buildRuleParams,
+      CachingBuildRuleParams cachingBuildRuleParams,
       @Nullable String mainClass,
       @Nullable String manifestFile,
       @Nullable String metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.metaInfDirectory = metaInfDirectory;
@@ -167,7 +167,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
         mainClass);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     private String mainClass;
     private String manifestFile;
@@ -177,7 +177,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
     @Override
     public JavaBinaryRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new JavaBinaryRule(createBuildRuleParams(buildRuleIndex),
+      return new JavaBinaryRule(createCachingBuildRuleParams(buildRuleIndex),
           mainClass,
           manifestFile,
           metaInfDirectory,
@@ -193,6 +193,12 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     @Override
     public Builder addDep(String dep) {
       super.addDep(dep);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

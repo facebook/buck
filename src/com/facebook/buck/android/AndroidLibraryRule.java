@@ -19,9 +19,10 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AnnotationProcessingParams;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -40,7 +41,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   private final String manifestFile;
 
   @VisibleForTesting
-  public AndroidLibraryRule(BuildRuleParams buildRuleParams,
+  public AndroidLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       @Nullable String proguardConfig,
@@ -48,7 +49,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       @Nullable String manifestFile,
       String sourceLevel,
       String targetLevel) {
-    super(buildRuleParams,
+    super(cachingBuildRuleParams,
         srcs,
         resources,
         proguardConfig,
@@ -79,18 +80,20 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
+    private final AnnotationProcessingParams.Builder annotationProcessingBuilder =
+        new AnnotationProcessingParams.Builder();
 
     @Nullable
     private String manifestFile = null;
 
     @Override
     public AndroidLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
 
       return new AndroidLibraryRule(
-          buildRuleParams,
+          cachingBuildRuleParams,
           srcs,
           resources,
           proguardConfig,
@@ -120,6 +123,12 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

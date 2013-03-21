@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.ArtifactCache;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 
 import java.io.IOException;
 
@@ -24,38 +26,38 @@ public enum Command {
 
   AUDIT(
       "lists the inputs for the specified target",
-      new AuditCommandRunner()),
+      AuditCommandRunner.class),
   BUILD(
       "builds the specified target",
-      new BuildCommand()),
+      BuildCommand.class),
   CLEAN(
       "deletes any generated files",
-      new CleanCommand()),
+      CleanCommand.class),
   INSTALL(
       "builds and installs an APK",
-      new InstallCommand()),
+      InstallCommand.class),
   PROJECT(
       "generates project configuration files for an IDE",
-      new ProjectCommand()),
+      ProjectCommand.class),
   TARGETS(
       "prints the list of buildable targets",
-      new TargetsCommand()),
+      TargetsCommand.class),
   TEST(
       "builds and runs the tests for the specified target",
-      new TestCommand()),
+      TestCommand.class),
   UNINSTALL(
       "uninstalls an APK",
-      new UninstallCommand()),
+      UninstallCommand.class),
   ;
 
   private final String shortDescription;
-  private final CommandRunner commandRunner;
+  private final Class<? extends CommandRunner> commandRunnerClass;
 
   private Command(
       String shortDescription,
-      CommandRunner commandRunner) {
+      Class<? extends CommandRunner> commandRunnerClass) {
     this.shortDescription = shortDescription;
-    this.commandRunner = commandRunner;
+    this.commandRunnerClass = commandRunnerClass;
   }
 
   public String getShortDescription() {
@@ -63,7 +65,14 @@ public enum Command {
   }
 
   public int execute(BuckConfig buckConfig, String[] args) throws IOException {
-    return commandRunner.runCommand(buckConfig, args);
+    try {
+      CommandRunner commandRunner =
+          commandRunnerClass.getDeclaredConstructor(ArtifactCache.class)
+          .newInstance(buckConfig.getArtifactCache());
+      return commandRunner.runCommand(buckConfig, args);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   /**

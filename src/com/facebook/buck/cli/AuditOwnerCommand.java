@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
@@ -45,7 +46,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
   private static final String FILE_INDENT = "    ";
 
-  public AuditOwnerCommand() {}
+  public AuditOwnerCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
+  }
 
   @VisibleForTesting
   static final class OwnersReport {
@@ -69,8 +72,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   AuditOwnerCommand(PrintStream stdOut,
                     PrintStream stdErr,
                     Console console,
-                    ProjectFilesystem projectFilesystem) {
-    super(stdOut, stdErr, console, projectFilesystem);
+                    ProjectFilesystem projectFilesystem,
+                    ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
   }
 
   @Override
@@ -86,6 +90,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     try {
       graph = PartialGraph.createFullGraph(
           getProjectFilesystem().getProjectRoot(),
+          getArtifactCache(),
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
@@ -190,7 +195,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   }
 
   /**
-   * Print only targets which were identifies as owners.
+   * Print only targets which were identified as owners.
    */
   private void printOwnersOnlyReport(OwnersReport report) {
     Set<BuildRule> sortedRules = report.owners.keySet();

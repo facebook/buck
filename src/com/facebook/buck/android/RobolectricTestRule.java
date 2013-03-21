@@ -13,15 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AnnotationProcessingParams;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.JavaLibraryRule;
 import com.facebook.buck.rules.JavaTestRule;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -32,7 +36,7 @@ import java.util.Set;
 
 public class RobolectricTestRule extends JavaTestRule {
 
-  protected RobolectricTestRule(BuildRuleParams buildRuleParams,
+  protected RobolectricTestRule(CachingBuildRuleParams cachingBuildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       Set<String> labels,
@@ -42,7 +46,7 @@ public class RobolectricTestRule extends JavaTestRule {
       ImmutableSet<JavaLibraryRule> sourceUnderTest,
       String sourceLevel,
       String targetLevel) {
-    super(buildRuleParams,
+    super(cachingBuildRuleParams,
         srcs,
         resources,
         labels,
@@ -76,7 +80,6 @@ public class RobolectricTestRule extends JavaTestRule {
   public static class Builder extends JavaTestRule.Builder {
 
 
-
     @Override
     public RobolectricTestRule build(Map<String, BuildRule> buildRuleIndex) {
       ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourceUnderTestNames,
@@ -85,7 +88,7 @@ public class RobolectricTestRule extends JavaTestRule {
       ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();
       allVmArgs.addAll(vmArgs);
 
-      return new RobolectricTestRule(createBuildRuleParams(buildRuleIndex),
+      return new RobolectricTestRule(createCachingBuildRuleParams(buildRuleIndex),
           srcs,
           resources,
           labels,
@@ -95,6 +98,18 @@ public class RobolectricTestRule extends JavaTestRule {
           sourceUnderTest,
           sourceLevel,
           targetLevel);
+    }
+
+    @Override
+    public Builder setBuildTarget(BuildTarget buildTarget) {
+      super.setBuildTarget(buildTarget);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
+      return this;
     }
 
   }

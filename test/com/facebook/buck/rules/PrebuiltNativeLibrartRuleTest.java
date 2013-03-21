@@ -54,12 +54,13 @@ public class PrebuiltNativeLibrartRuleTest {
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base", "base");
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
+    CachingBuildRuleParams cachingBuildRuleParams = new CachingBuildRuleParams(
         buildTarget,
         ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        new NoopArtifactCache());
     PrebuiltNativeLibraryBuildRule nativeLibraryRule = new PrebuiltNativeLibraryBuildRule(
-        buildRuleParams,
+        cachingBuildRuleParams,
         "java/src/com/facebook/base/libs",
         traverser);
 

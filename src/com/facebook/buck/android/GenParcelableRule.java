@@ -19,12 +19,12 @@ package com.facebook.buck.android;
 import com.facebook.buck.parcelable.Generator;
 import com.facebook.buck.parcelable.ParcelableClass;
 import com.facebook.buck.parcelable.Parser;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
@@ -47,15 +47,15 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
   private final ImmutableSortedSet<String> srcs;
   private final String outputDirectory;
 
-  private GenParcelableRule(BuildRuleParams buildRuleParams,
+  private GenParcelableRule(CachingBuildRuleParams cachingBuildRuleParams,
       Set<String> srcs) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
 
     this.outputDirectory = String.format("%s/%s/__%s__",
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePath(),
-        buildRuleParams.getBuildTarget().getShortName());
+        cachingBuildRuleParams.getBuildTarget().getBasePath(),
+        cachingBuildRuleParams.getBuildTarget().getShortName());
   }
 
   @Override
@@ -130,7 +130,8 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder implements SrcsAttributeBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder implements
+      SrcsAttributeBuilder {
 
     private ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
 
@@ -142,8 +143,8 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
 
     @Override
     public GenParcelableRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
-      return new GenParcelableRule(buildRuleParams, srcs.build());
+      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
+      return new GenParcelableRule(cachingBuildRuleParams, srcs.build());
     }
   }
 }

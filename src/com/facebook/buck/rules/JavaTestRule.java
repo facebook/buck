@@ -58,7 +58,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   private final ImmutableSet<String> labels;
 
-  protected JavaTestRule(BuildRuleParams buildRuleParams,
+  protected JavaTestRule(CachingBuildRuleParams cachingBuildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       Set<String> labels,
@@ -68,7 +68,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       ImmutableSet<JavaLibraryRule> sourceUnderTest,
       String sourceLevel,
       String targetLevel) {
-    super(buildRuleParams,
+    super(cachingBuildRuleParams,
         srcs,
         resources,
         proguardConfig,
@@ -360,7 +360,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     public JavaTestRule build(Map<String, BuildRule> buildRuleIndex) {
       ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourceUnderTestNames,
           buildRuleIndex);
-      return new JavaTestRule(createBuildRuleParams(buildRuleIndex),
+      return new JavaTestRule(createCachingBuildRuleParams(buildRuleIndex),
           srcs,
           resources,
           labels,
@@ -387,6 +387,12 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     @Override
     public Builder addSrc(String src) {
       super.addSrc(src);
+      return this;
+    }
+
+    @Override
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      super.setArtifactCache(artifactCache);
       return this;
     }
 

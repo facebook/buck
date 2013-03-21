@@ -30,9 +30,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -57,6 +59,7 @@ import java.util.Map;
 public class ProjectCommandTest {
 
   private static final ImmutableMap<String, Object> EMPTY_PARSE_DATA = ImmutableMap.of();
+  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testBasicProjectCommand()
@@ -67,6 +70,7 @@ public class ProjectCommandTest {
     DefaultJavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(javaLibraryTargetName))
         .addSrc("javasrc/JavaLibrary.java")
+        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
 
@@ -155,6 +159,10 @@ public class ProjectCommandTest {
     private List<RawRulePredicate> createPartialGraphCallPredicates = Lists.newArrayList();
     private LinkedList<PartialGraph> createPartialGraphCallReturnValues = Lists.newLinkedList();
     private BuildCommandOptions buildCommandOptions;
+
+    ProjectCommandForTest() {
+      super(artifactCache);
+    }
 
     @Override
     PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)

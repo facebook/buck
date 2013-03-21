@@ -16,13 +16,13 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.AndroidResourceRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -42,11 +42,11 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
   private final ImmutableSet<BuildRule> buildRulesToExcludeFromDex;
 
-  protected AndroidManifestRule(BuildRuleParams buildRuleParams,
+  protected AndroidManifestRule(CachingBuildRuleParams cachingBuildRuleParams,
                                 Optional<String> skeletonFile,
                                 Optional<String> manifestFile,
                                 Set<BuildRule> buildRulesToExcludeFromDex) {
-    super(buildRuleParams);
+    super(cachingBuildRuleParams);
     this.manifestFile = manifestFile;
     this.skeletonFile = skeletonFile;
     this.buildRulesToExcludeFromDex = ImmutableSet.copyOf(buildRulesToExcludeFromDex);
@@ -100,7 +100,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     protected Optional<String> manifestFile;
     protected Optional<String> skeletonFile;
@@ -111,7 +111,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
       boolean allowNonExistentRule =
         false;
 
-      return new AndroidManifestRule(createBuildRuleParams(buildRuleIndex),
+      return new AndroidManifestRule(createCachingBuildRuleParams(buildRuleIndex),
           skeletonFile,
           manifestFile,
           getBuildTargetsAsBuildRules(buildRuleIndex,

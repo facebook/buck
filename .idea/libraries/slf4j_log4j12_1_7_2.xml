@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="slf4j-log4j12-1.7.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/astyanax/slf4j-log4j12-1.7.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

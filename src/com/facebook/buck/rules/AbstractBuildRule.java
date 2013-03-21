@@ -131,15 +131,11 @@ abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public OutputKey getOutputKey() {
-    if (outputKey == null) {
-      File outputFile = getOutput();
-      // Take care to generate OutputKeys only for files!
-      if (outputFile != null && outputFile.isFile()) {
-        outputKey = new OutputKey(outputFile);
-      } else {
-        outputKey = new OutputKey();
-      }
+    if (this.outputKey != null) {
+      return this.outputKey;
     }
+    OutputKey outputKey = new OutputKey(getOutput());
+    this.outputKey = OutputKey.filter(outputKey);
     return outputKey;
   }
 

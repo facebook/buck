@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -38,11 +39,11 @@ import javax.annotation.Nullable;
  * A set of parameters passed to a {@link BuildRuleFactory}.
  */
 public final class BuildRuleFactoryParams {
-
   static final String GENFILE_PREFIX = "BUCKGEN:";
 
   private final Map<String, ?> instance;
   private final ProjectFilesystem filesystem;
+  public final ArtifactCache artifactCache;
   private final BuildFileTree buildFiles;
   public final BuildTargetParser buildTargetParser;
   public final BuildTargetPatternParser buildTargetPatternParser;
@@ -54,12 +55,14 @@ public final class BuildRuleFactoryParams {
       Map<String, ?> instance,
       PrintStream stdErr,
       ProjectFilesystem filesystem,
+      ArtifactCache artifactCache,
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
       BuildTarget target) {
     this(instance,
         stdErr,
         filesystem,
+        artifactCache,
         buildFiles,
         buildTargetParser,
         target,
@@ -71,6 +74,7 @@ public final class BuildRuleFactoryParams {
       Map<String, ?> instance,
       PrintStream stdErr,
       ProjectFilesystem filesystem,
+      ArtifactCache artifactCache,
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
       BuildTarget target,
@@ -78,6 +82,7 @@ public final class BuildRuleFactoryParams {
     this.instance = instance;
     Preconditions.checkNotNull(stdErr);
     this.filesystem = filesystem;
+    this.artifactCache = artifactCache;
     this.buildFiles = buildFiles;
     this.buildTargetParser = buildTargetParser;
     this.buildTargetPatternParser = new BuildTargetPatternParser(filesystem);

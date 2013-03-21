@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -69,7 +70,9 @@ import java.util.concurrent.ExecutionException;
 
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
-  public TestCommand() {}
+  public TestCommand(ArtifactCache artifactCache) {
+    super(artifactCache);
+  }
 
   @Override
   TestCommandOptions createOptions(BuckConfig buckConfig) {
@@ -90,7 +93,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     }
 
-    BuildCommand buildCommand = new BuildCommand(stdOut, stdErr, console, getProjectFilesystem());
+    BuildCommand buildCommand = new BuildCommand(stdOut,
+        stdErr,
+        console,
+        getProjectFilesystem(),
+        getArtifactCache());
 
     int exitCode = buildCommand.runCommandWithOptions(options);
     if (exitCode != 0) {
@@ -245,6 +252,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     };
     PartialGraph partialGraph = PartialGraph.createPartialGraph(predicate,
         getProjectFilesystem().getProjectRoot(),
+        getArtifactCache(),
         options.getDefaultIncludes());
     final DependencyGraph graph = partialGraph.getDependencyGraph();
 

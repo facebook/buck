@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,6 +39,7 @@ public final class NonCheckingBuildRuleFactoryParams {
         instance,
         System.err,
         new ProjectFilesystem(new File(".")),
+        new NoopArtifactCache(),
         new NonCheckingBuildFileTree(),
         buildTargetParser,
         target,

@@ -43,13 +43,13 @@ import javax.annotation.Nullable;
  * relevant to idempotency. The RuleKey.Builder API conceptually implements the construction of an
  * ordered map, and the key/val pairs are digested using an internal serialization that guarantees
  * a 1:1 mapping for each distinct vector of keys
- * <ruleLabel,k1,...,kn> in RuleKey.builder(ruleLabel).set(k1, v1) ... .set(kn, vn).build().
+ * <header,k1,...,kn> in RuleKey.builder(header).set(k1, v1) ... .set(kn, vn).build().
  *
  * Note carefully that in order to reliably avoid accidental collisions, each RuleKey schema, as
- * defined by the key vector, must have a distinct ruleLabel. Otherwise it is possible (if unlikely)
+ * defined by the key vector, must have a distinct header. Otherwise it is possible (if unlikely)
  * for serialized value data to alias serialized key data, with the result being identical RuleKeys
  * for differing input. In practical terms this means that each BuildRule implementer should specify
- * a distinct ruleLabel, and that for all RuleKeys built with a particular ruleLabel, the sequence
+ * a distinct header, and that for all RuleKeys built with a particular header, the sequence
  * of set() calls should be identical, even if values are missing. The set() methods specifically
  * handle null values to accommodate this regime.
  */
@@ -58,6 +58,11 @@ public class RuleKey implements Comparable<RuleKey> {
 
   private RuleKey(HashCode hashCode) {
     this.hashCode = hashCode;
+  }
+
+  @Nullable
+  public HashCode getHashCode() {
+    return hashCode;
   }
 
   public boolean isIdempotent() {
@@ -135,6 +140,10 @@ public class RuleKey implements Comparable<RuleKey> {
     return ruleKey;
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
   public static Builder builder(BuildRule rule) {
     return new Builder(rule.getFullyQualifiedName())
     // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
@@ -165,9 +174,9 @@ public class RuleKey implements Comparable<RuleKey> {
       }
     }
 
-    private Builder(String ruleLabel) {
+    private Builder(String header) {
       this();
-      setHeader(ruleLabel);
+      setHeader(header);
     }
 
     private Builder feed(byte[] bytes) {
@@ -180,11 +189,11 @@ public class RuleKey implements Comparable<RuleKey> {
       return this;
     }
 
-    private void setHeader(String ruleLabel) {
+    private void setHeader(String header) {
       if (logElms != null) {
-        logElms.add(String.format("header(%s):", ruleLabel));
+        logElms.add(String.format("header(%s):", header));
       }
-      feed(ruleLabel.getBytes()).separate();
+      feed(header.getBytes()).separate();
     }
 
     private Builder setKey(String sectionLabel) {
@@ -359,7 +368,7 @@ public class RuleKey implements Comparable<RuleKey> {
     public RuleKey build() {
       RuleKey ruleKey = idempotent ? new RuleKey(hasher.hash()) : new RuleKey(null);
       if (logElms != null) {
-        logger.log(Level.INFO, String.format("%sRuleKey %s=%s",
+        logger.info(String.format("%sRuleKey %s=%s",
             ruleKey.isIdempotent() ? "" : "non-idempotent ", ruleKey.toString(),
             Joiner.on("").join(logElms)));
       }
