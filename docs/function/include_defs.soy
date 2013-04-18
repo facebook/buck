@@ -1,0 +1,73 @@
+{namespace buck.include_defs}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'include_defs()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+The <code>include_defs()</code> function is used to include
+{sp}<a href="{ROOT}extending/macros.html"><code>macros</code></a> and constants
+from another file.
+<p>
+The <code>include_defs()</code> function executes a file of build-file-style
+code in the context of the current build file. Therefore, code in the
+included file may reference Buck functions, such as
+{sp}<code>java_library()</code>, <code>java_test()</code>, etc., as well
+as <code>include_defs()</code> itself!
+<p>
+The motivation behind <code>include_defs()</code> is to avoid
+copy-and-pasting code across multiple build files. Often, included files will
+contain data declarations (as shown in the example below) or definitions of
+macros for creating more complex build rules.
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param desc}
+  The first and only argument is a path, of sorts, to a file containing
+  {sp}<a href="{ROOT}extending/macros.html"><code>macros</code></a> and 
+  constants. It looks similar to a build target because it starts with
+  {sp}<code>//</code> (indicating the root of the project), but is not a
+  proper build target because it identifies a file relative to the root of
+  the project rather than a build rule.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+Suppose the file <code>core/DEFS</code> contains the following:
+{literal}<pre class="prettyprint lang-py">
+JARS_TO_EXCLUDE_FROM_DX = [
+  'third_party/guava/guava-14.0.1.jar',
+  'third_party/jackson/jackson-core-2.0.5.jar',
+  'third_party/jackson/jackson-databind-2.0.5.jar',
+  'third_party/jackson/jackson-datatype-guava-2.0.4.jar',
+]
+</pre>{/literal}
+
+Then another build file could include the array using
+{sp}<code>include_defs()</code>. This eliminates the need to
+copy-and-paste definitions across build files:
+
+{literal}<pre class="prettyprint lang-py">
+include_defs('//core/DEFS')
+
+android_binary(
+  name = 'example',
+  # ...
+  no_dx = JARS_TO_EXCLUDE_FROM_DX,
+)
+</pre>{/literal}
+
+{/param}
+
+{/call} // buck.rule
+    {/param} // content
+  {/call}
+{/template}

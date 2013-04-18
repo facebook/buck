@@ -1,0 +1,91 @@
+{namespace buck.build_file}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Build File' /}
+    {param prettify: true /}
+    {param content}
+
+A <strong>build file</strong> is a file named <code>BUCK</code> that defines
+one or more <a href="build_rule.html">build rules</a>.
+
+<p>
+
+A source file in your project can only be referenced by rules in its "nearest"
+build file, where "nearest" means its closest direct ancestor in your
+project's file tree. (If a source file has a build file as a sibling, then that
+is its nearest ancestor.)
+For example, if your project had the following <code>BUCK</code> files:
+
+{literal}<pre>
+java/com/facebook/base/BUCK
+java/com/facebook/common/BUCK
+java/com/facebook/common/collect/BUCK
+</pre>{/literal}
+
+Then your build rules would have the following constraints:
+
+<ul>
+  <li>Rules in <code>java/com/facebook/base/BUCK</code> can
+      reference any file under <code>java/com/facebook/base/</code>.
+
+  <li>Rules in <code>java/com/facebook/common/</code> can reference any files
+      under that directory, except for those under
+      {sp}<code>java/com/facebook/common/collect/</code>,
+      as those "belong" to the <code>BUCK</code> file in the
+      {sp}<code>collect</code> directory.
+</ul>
+
+The set of source files accessible to a build file is also known as
+its <em>build package</em>.
+
+<p>
+
+The way to refer to code across build packages is to create build rules
+and use <code>deps</code> to refer to that code. Going back to the previous
+example, suppose code in <code>java/com/facebook/common/concurrent/</code> wants
+to depend on code in <code>java/com/facebook/common/collect/</code>. Presumably
+{sp}<code>java/com/facebook/common/collect/BUCK</code> has a build rule like:
+
+{literal}<pre class="prettyprint lang-py">
+java_library(
+  name = 'collect',
+  srcs = glob(['*.java']),
+  deps = [
+    '//java/com/facebook/base:base',
+  ],
+)
+</pre>{/literal}
+
+Then <code>java/com/facebook/common/BUCK</code> could have a rule like:
+
+{literal}<pre class="prettyprint lang-py">
+java_library(
+  name = 'concurrent',
+  srcs = glob(['concurrent&#x2F*.java']),
+  deps = [
+    '//java/com/facebook/base:base',
+    '//java/com/facebook/common/collect:collect',
+  ],
+)
+</pre>{/literal}
+
+whereas the following <strong>would be invalid</strong> because
+{sp}<code>java/com/facebook/common/collect/</code> has its own build file,
+so <code>//java/com/facebook/common/collect:concurrent</code> cannot list
+{sp}<code>java/com/facebook/common/collect&#x2F*.java</code> in its <code>srcs</code>.
+
+{literal}<pre class="prettyprint lang-py">
+java_library(
+  name = 'concurrent',
+  srcs = glob(['collect&#x2F*.java', 'concurrent&#x2F*.java']),
+  deps = [
+    '//java/com/facebook/base:base',
+  ],
+)
+</pre>{/literal}
+
+    {/param}
+  {/call}
+{/template}

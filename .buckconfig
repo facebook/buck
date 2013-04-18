@@ -1,0 +1,6 @@
+[java]
+    # Indicates that any folder named src or test
+    # are folders that contain Java code.
+    src_roots = src, test
+[alias]
+    buck = //src/com/facebook/buck/cli:cli

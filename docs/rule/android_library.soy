@@ -1,0 +1,95 @@
+{namespace buck.android_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'android_library()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+An <code>android_library()</code> rule is used to define a set of Java files
+that can be compiled together against the Android SDK. The main output of an
+{sp}<code>android_library()</code> rule is a single JAR file containing all of the
+compiled class files and resources.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of <code>.java</code> files to compile for this rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Static files to include among the compiled <code>.class</code>
+  {sp}files. These files can be loaded via <a
+  href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)"
+  target="_blank">Class.getResource()</a>.
+  <p>
+  <strong>Note:</strong> Buck uses the <code>src_roots</code> property in
+  {sp}<a href="{ROOT}concept/buckconfig.html"><code>buckconfig.html</code></a>
+  {sp}to help determine where resources should be placed within the generated JAR file.
+  <p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Rules (usually other <code>android_library</code> rules)
+  that are used to generate the classpath required to compile this
+  {sp}<code>android_library</code>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+
+An <code>android_library</code> rule used in concert with an
+{sp}{call buck.android_resource /} rule.
+This would be a common arrangement for a standard Android Library project
+as defined by
+<a href="http://developer.android.com/tools/projects/index.html">
+http://developer.android.com/tools/projects/index.html</a>
+
+{literal}<pre class="prettyprint lang-py">
+android_resource(
+  name = 'res',
+  res = 'res',
+  package = 'com.example',
+)
+
+android_library(
+  name = 'my_library',
+  srcs = glob(['src/**/*.java']),
+  deps = [
+    ':res',
+  ],
+)
+</pre>{/literal}
+
+{/param} // examples
+{/call} // buck.rule
+
+    {/param} // content
+  {/call} // buck.page
+{/template}

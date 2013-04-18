@@ -1,0 +1,67 @@
+{namespace buck.glob}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'glob()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+The <code>glob()</code> function is used to specify a set of files using
+patterns.
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param desc}
+  The first argument is a list of strings, identifying file name patterns used
+  to match against files under the current directory.
+  {/param}
+{/call}
+
+{call buck.functionArg}
+  {param name : 'excludes' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of patterns to identify files that should be removed from the set
+  specified by the first argument.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+
+All of the <code>.java</code> files in this directory:
+<pre class="prettyprint lang-py">glob(['*.java'])</pre>
+
+All of the <code>.java</code> and <code>.aidl</code> files in this directory:
+<pre class="prettyprint lang-py">glob(['*.java', '*.aidl'])</pre>
+
+All of the <code>.java</code> files under this directory:
+<pre class="prettyprint lang-py">glob(['**&#x2F;*.java'])</pre>
+
+All of the files under this directory that end in <code>Test.java</code>:
+<pre class="prettyprint lang-py">glob(['**&#x2F;*Test.java'])</pre>
+
+All of the files under this directory that end in <code>Test.java</code>,
+as well as <code>StringTests.java</code>:
+<pre class="prettyprint lang-py">glob(['**&#x2F;*Test.java', 'StringTests.java'])</pre>
+
+All of the files under this directory that end in <code>Test.java</code>,
+except for <code>HaltingProblemTest.java</code>:
+<pre class="prettyprint lang-py">glob(['**&#x2F;*Test.java'], excludes = ['HaltingProblemTest.java'])</pre>
+
+All of the <code>.java</code> files under this directory, except for those
+that end in <code>Test.java</code>:
+<pre class="prettyprint lang-py">glob(['**&#x2F;*.java'], excludes = ['**&#x2F;*Test.java'])</pre>
+
+{/param}
+
+{/call} // buck.rule
+    {/param} // content
+  {/call}
+{/template}

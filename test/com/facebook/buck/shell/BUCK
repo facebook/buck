@@ -1,0 +1,15 @@
+# These tests fail because JUnitCommand relies on
+# -Dbuck.path_to_emma_jar being passed in.
+java_test(
+  name = 'shell',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/shell:shell',
+  ],
+  deps = [
+    '//lib:easymock',
+    '//lib:junit',
+    '//src/com/facebook/buck/shell:shell',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)

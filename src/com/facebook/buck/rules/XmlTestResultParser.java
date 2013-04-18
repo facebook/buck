@@ -1,0 +1,87 @@
+/*
+ * Copyright 2012-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.rules;
+
+import com.facebook.buck.util.XmlDomParser;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+public class XmlTestResultParser {
+
+  public static TestCaseSummary parse(File xml) throws IOException {
+    Document doc = XmlDomParser.parse(xml);
+    Element root = doc.getDocumentElement();
+    Preconditions.checkState("testcase".equals(root.getTagName()));
+    String testCaseName = root.getAttribute("name");
+
+    NodeList testElements = doc.getElementsByTagName("test");
+    List<TestResultSummary> testResults = Lists.newArrayListWithCapacity(testElements.getLength());
+    for (int i = 0; i < testElements.getLength(); i++) {
+      Element node = (Element)testElements.item(i);
+      String testName = node.getAttribute("name");
+      boolean isSuccess = Boolean.valueOf(node.getAttribute("success"));
+      long time = Long.valueOf(node.getAttribute("time"));
+
+      String message;
+      String stacktrace;
+      if (isSuccess) {
+        message = null;
+        stacktrace = null;
+      } else {
+        message = node.getAttribute("message");
+        stacktrace = node.getAttribute("stacktrace");
+      }
+
+      NodeList stdoutElements = node.getElementsByTagName("stdout");
+      String stdOut;
+      if (stdoutElements.getLength() == 1) {
+        stdOut = stdoutElements.item(0).getTextContent();
+      } else {
+        stdOut = null;
+      }
+
+      NodeList stderrElements = node.getElementsByTagName("stderr");
+      String stdErr;
+      if (stderrElements.getLength() == 1) {
+        stdErr = stderrElements.item(0).getTextContent();
+      } else {
+        stdErr = null;
+      }
+
+      TestResultSummary testResult = new TestResultSummary(
+          testCaseName,
+          testName,
+          isSuccess,
+          time,
+          message,
+          stacktrace,
+          stdOut,
+          stdErr);
+      testResults.add(testResult);
+    }
+
+    return new TestCaseSummary(testCaseName, testResults);
+  }
+}

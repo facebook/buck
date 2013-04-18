@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/third-party/java/aosp/aosp.iml" filepath="$PROJECT_DIR$/third-party/java/aosp/aosp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/buck.iml" filepath="$PROJECT_DIR$/buck.iml" />
+      <module fileurl="file://$PROJECT_DIR$/src/com/facebook/buck/junit/testrunner.iml" filepath="$PROJECT_DIR$/src/com/facebook/buck/junit/testrunner.iml" />
+    </modules>
+  </component>
+</project>
+

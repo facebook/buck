@@ -1,0 +1,11 @@
+java_test(
+  name = 'util',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/util:util',
+  ],
+  deps = [
+    '//lib:junit',
+    '//src/com/facebook/buck/util:util',
+  ],
+)

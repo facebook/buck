@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.sample.home">
+    <application>
+        <activity android:name="com.sample.home.prefs.SampleRendererSettingsActivity"/>
+        <service android:name="com.sample.home.service.SampleHomeService"/>
+    </application>
+</manifest>

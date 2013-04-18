@@ -1,0 +1,88 @@
+{namespace buck.troubleshooting}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Troubleshooting' /}
+    {param content}
+
+If Buck stops working, then there are several things that you can try to do to
+fix it.
+
+
+<h2>Make sure you are using the Oracle JDK</h2>
+
+Buck has only been tested with the Oracle JDK. If you are using an alternative,
+such as OpenJDK, then things are not guaranteed to work.
+
+
+<h2>Rebuild Buck</h2>
+
+In Buck's short history, its autoupdate logic has had several bugs.
+If you think that Buck failed to autoupdate correctly (or failed to rebuild
+correctly after an autoupdate, which is likely if you killed Buck in the
+middle of an autoupdate), then your best bet is to rebuild it yourself:
+
+{literal}<pre>
+cd &lt;directory-where-you-checked-out-Buck>
+git checkout master
+git pull --rebase
+ant clean jar
+</pre>{/literal}
+
+
+<h2>Run `buck clean`</h2>
+
+Ideally, this solution will never work. Seriously.
+If Buck is working correctly, then it should know which files have been
+modified and which files need to be rebuilt.
+<p>
+That said, Buck is not perfect, so it is possible that you have found a defect.
+In this case, give <code>buck clean</code> a shot and file a bug if you have
+found a reproducible bug.
+
+
+<h2>Make sure you do not have a .nobuckcheck file</h2>
+
+If you have been working on Buck itself, you had to create
+a <a href="nobuckcheck.html"><code>.nobuckcheck</code></a> file to disable
+Buck's autoupdating capability
+(assuming you are working on a project that uses
+{sp}<a href="buckversion.html"><code>.buckversion</code></a>).
+Once you are done modifying Buck, you should delete the
+{sp}<code>.nobuckcheck</code> file so that Buck autoupdates again.
+<p>
+If you forget to do this, it is inevitable that someone will update your
+project such that it requires a newer version of Buck, and your local build
+will inexplicably stop working because your are using an outdated version of
+Buck. The alternative is to periodically <code>git pull --rebase</code> to
+update your checkout of Buck manually, but that is error-prone.
+
+
+<h2>Delete all generated files in your project.</h2>
+
+Buck is designed so that all generated files are written to the
+{sp}<code>buck-out</code> directory, which makes <code>buck clean</code> trivial
+to implement. However, you may use additional tools (such as an IDE) that
+generate files in other parts of the tree. Such files may inadvertently get
+included via <a href="{ROOT}function/glob.html"><code>glob()</code></a> rules,
+which would interfere with Buck.
+<p>
+For example, if you are using Git, then you can run:
+
+<pre>git clean -xfdn</pre>
+
+to get a list of files in your project that are
+not under version control. The <code>-n</code> switch is for "dry run,"
+which means that Git will not delete any files when you run
+{sp}<code>git clean</code>. If you want to use Git to remove the generated
+files while preserving some non-versioned files (such
+as <code>local.properties</code>), then use it with the <code>-e</code> switch:
+
+<pre>git clean -xfd -e local.properties</pre>
+
+Note that <code>-e</code> can be specified multiple times.
+
+    {/param}
+  {/call}
+{/template}

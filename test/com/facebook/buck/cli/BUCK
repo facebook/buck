@@ -1,0 +1,36 @@
+STANDARD_TEST_SRCS = [
+  '**/*Test.java',
+]
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['**/*.java'], excludes = STANDARD_TEST_SRCS),
+  deps = [
+    '//lib:guava',
+    '//lib:ddmlib',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_test(
+  name = 'cli',
+  srcs = glob(STANDARD_TEST_SRCS),
+  vm_args = [
+    '-Dbuck.path_to_buck_py=src/com/facebook/buck/parser/buck.py',
+  ],
+  source_under_test = [
+    '//src/com/facebook/buck/cli:cli',
+  ],
+  deps = [
+    ':testutil',
+    '//lib:easymock',
+    '//lib:junit',
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/parser:PartialGraphFactory',
+    '//test/com/facebook/buck/rules:testutil',
+  ],
+)

@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# Exit on error.
+set -e
+
+
+# Record the directory from which this script was run in case
+# we need to re-run it as part of the autoupdate.
+ORIGINAL_WORKING_DIRECTORY="$PWD"
+
+# $BUCK_BIN_DIRECTORY is the directory that hosts this script. Solution taken from:
+# http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
+SOURCE="${BASH_SOURCE[0]}"
+DIR="$( dirname "$SOURCE" )"
+while [ -h "$SOURCE" ]
+do 
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+  DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+BUCK_BIN_DIRECTORY=$DIR
+
+# Keep track of the project root directory.
+PROJECT_ROOT="$PWD"
+
+# Navigate to the root of the Buck project.
+pushd $BUCK_BIN_DIRECTORY > /dev/null
+pushd .. > /dev/null
+BUCK_DIRECTORY="$PWD"
+
+# If there is a .buckversion file in the project root, then make sure that Buck is at that version.
+# The only way to override this is to include a .nobuckcheck file in the project root.
+if [ -e "${PROJECT_ROOT}/.buckversion" ] && [ ! -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
+  BUCK_REQUIRED_VERSION=`cat ${PROJECT_ROOT}/.buckversion`
+
+  # If the hash is in not in the user's repository, do a `git fetch`.
+  if ! git cat-file -e "$BUCK_REQUIRED_VERSION"; then
+    git fetch
+  fi
+
+
+  BUCK_CURRENT_VERSION=`git rev-parse HEAD`
+  
+  # Note that this test succeeds if you have local changes in your Buck repository that have not
+  # been committed.
+  if [ "$BUCK_REQUIRED_VERSION" != "$BUCK_CURRENT_VERSION" ]; then
+    echo "Buck is at ${BUCK_CURRENT_VERSION},"
+    echo "but should be ${BUCK_REQUIRED_VERSION}."
+    echo "Buck is updating itself."
+    echo "To disable this, add a '.nobuckcheck' file to your project root."
+    echo "In general, you should only disable this if you are developing Buck."
+
+    # Now that the version is guaranteed to be in the user's repository,
+    # checkout that hash.
+    git checkout $BUCK_REQUIRED_VERSION
+
+    # Now that we have updated the repository, we should rebuild Buck.
+    ant clean
+  fi
+fi
+
+# Make sure that Buck has been built.
+if [ ! -e "build/buck.jar" ]; then
+  echo "No sign of buck.jar -- building Buck!"
+  # Note the jar file will not be used,
+  # but serves to represent whether everything has been built.
+  ant clean jar
+  cd $ORIGINAL_WORKING_DIRECTORY
+  # Although ${BASH_SOURCE[0]} may be a relative path, it should
+  # be relative to $ORIGINAL_WORKING_DIRECTORY, which is now the
+  # current directory.
+  "${BASH_SOURCE[0]}" "$@"
+  exit $?
+fi
+
+# Make sure buck gets passed the right version.
+BUCK_CURRENT_VERSION=`git rev-parse HEAD`
+
+# if the output of git status -s is non-empty (-n test), it means there are changed files.
+if [ -n "`git status -s`" ]; then
+  BUCK_REPOSITORY_DIRTY=1
+else
+  BUCK_REPOSITORY_DIRTY=0
+fi
+
+# Pop back to the original directory.
+popd > /dev/null
+popd > /dev/null
+
+EXTRA_FLAGS=''
+
+# To debug BUCK, add the following argument to the command below.  This will wait on port 8888 to
+# for Eclipse.
+#
+# EXTRA_FLAGS="${EXTRA_FLAGS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
+
+
+# Note that if $RELATIVE_PATH_TO_BUCK_PY changes, then the default value of
+# com.facebook.buck.json.BuildFileToJsonParser#PATH_TO_BUCK_PY also needs to be updated.
+RELATIVE_PATH_TO_BUCK_PY=src/com/facebook/buck/parser/buck.py
+PATH_TO_BUCK_PY="${BUCK_DIRECTORY}/$RELATIVE_PATH_TO_BUCK_PY"
+
+# Run Buck "unpacked," i.e., from specifying its individual classpath elements rather than from a
+# single monolithic JAR file that includes all of its dependencies. This speeds up Buck development
+# because `ant compile` takes much less time to rebuild Buck than `ant jar` does.
+#
+java \
+-XX:MaxPermSize=256m \
+-Xmx1000m \
+$EXTRA_FLAGS \
+-Dbuck.testrunner_classes=${BUCK_DIRECTORY}/build/testrunner/classes \
+-Dbuck.path_to_emma_jar=${BUCK_DIRECTORY}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar \
+-Dbuck.test_util_no_tests_dir=true \
+-Dbuck.path_to_buck_py=${PATH_TO_BUCK_PY} \
+-Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
+-Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
+-Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
+-classpath \
+${BUCK_DIRECTORY}/src:\
+${BUCK_DIRECTORY}/build/classes:\
+${BUCK_DIRECTORY}/lib/args4j.jar:\
+${BUCK_DIRECTORY}/lib/guava-14.0.1.jar:\
+${BUCK_DIRECTORY}/lib/ini4j-0.5.2.jar:\
+${BUCK_DIRECTORY}/lib/jackson-annotations-2.0.5.jar:\
+${BUCK_DIRECTORY}/lib/jackson-core-2.0.5.jar:\
+${BUCK_DIRECTORY}/lib/jackson-databind-2.0.5.jar:\
+${BUCK_DIRECTORY}/lib/jsr305.jar:\
+${BUCK_DIRECTORY}/lib/sdklib.jar:\
+${BUCK_DIRECTORY}/lib/ddmlib-r21.jar \
+com.facebook.buck.cli.Main "$@"

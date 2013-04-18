@@ -1,0 +1,132 @@
+html {
+  /* Always show scrollbar to prevent the horizontal bouncing when navigating */
+  overflow-y: scroll;
+}
+
+body {
+  font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+  font-size: 12px;
+  background: #eee;
+  line-height: 1.5em;
+  margin: 0;
+  padding; 0;
+}
+
+h1 {
+  color: #FFF;
+  font-size: 18px;
+  background: #4C66A4;
+  border-bottom: 1px solid #133783;
+  margin: 0;
+  padding: 0.6em 10px;
+}
+
+h2 {
+  font-size: 18px;
+  line-height: 27px;
+  margin-top: 1.5em;
+}
+
+.titlebar {
+  display: block;
+  width: 900px;
+  margin: 0 auto;
+}
+
+a {
+  color: #3B5998;
+}
+
+pre, pre.prettyprint {
+  padding: 0.4em;
+  border: 1px solid black;
+  background-color: white;
+  color: black;
+}
+
+code {
+  color: #3B5998;
+}
+
+.success {
+  color: black;
+  background-color: green;
+}
+
+.content_frame {
+  width: 900px; /* sum of .toc#width and .content#width */
+  margin: 10px auto;
+}
+
+.buck_like {
+  float: right;
+  background-color: white;
+}
+
+.toc, .content {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.toc {
+  width: 270px;
+}
+
+.toc a, .toc a:link {
+  text-decoration: none;
+}
+
+.toc a:hover {
+  text-decoration: underline; 
+}
+
+.content {
+  padding-top: 9px;
+  width: 630px;
+}
+
+.toc_root {
+  margin-top: 0;
+  padding-left: 0;
+}
+
+.toc_header {
+  display: inline-block;
+  font-weight: bold;
+  margin: 12px 0 5px;
+}
+
+.toc ul {
+  list-style: none;
+}
+
+.toc ul ul {
+  padding-left: 5px;
+}
+
+.toc ul li {
+  padding-left: 5px;
+}
+
+ul ul {
+  -webkit-padding-start: 20px;
+}
+
+.overview {
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.arglist, .top-level-list {
+  -webkit-padding-start: 20px;
+}
+
+.arg {
+  list-style-type: square;
+  margin-bottom: 0.5em;
+}
+
+.build_target_ex {
+  font-size: 36px;
+  font-family: monospace;
+}

@@ -1,0 +1,86 @@
+{namespace buck.android_resource}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'android_resource()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+An <code>android_resource()</code> rule is used to bundle Android resources
+that are traditionally stored in <code>res</code> and <code>assets</code> directories.
+<p>
+The output of an <code>android_resource()</code> is an <code>R.txt</code> file
+generated via <code>aapt --output-text-symbols</code>.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'res' /}
+  {param default : 'None' /}
+  {param desc}
+  Path to a directory containing Android resources.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'package' /}
+  {param default : 'None' /}
+  {param desc}
+  Java package for the <code>R.java</code> file that will be generated for these
+  resources.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'assets' /}
+  {param default : 'None' /}
+  {param desc}
+  Path to a directory containing Android assets.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : 'None' /}
+  {param desc}
+  Other <code>android_resource</code> rules to include via <code>-S</code> when
+  running <code>aapt</code>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+
+Most of the time, an <code>android_resource</code> rule defines only{sp}
+<code>name</code>, <code>res</code>, and <code>package</code>. By convention,
+such simple rules are often named <code>res</code>:
+
+{literal}<pre class="prettyprint lang-py">
+android_resource(
+  name = 'res',
+  res = 'res',
+  package = 'com.example',
+)
+</pre>{/literal}
+
+{/param} // examples
+{/call} // buck.rule
+
+
+    {/param}
+  {/call}
+{/template}

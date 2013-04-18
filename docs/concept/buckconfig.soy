@@ -1,0 +1,116 @@
+{namespace buck.buckconfig}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: '.buckconfig' /}
+    {param content}
+
+The root of your project may contain a configuration file
+named <code>.buckconfig</code>. If present, Buck will read this file
+before executing its business logic so that any customizations specified
+in <code>.buckconfig</code> will take effect. This file uses the
+{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>.
+
+
+<h2>[alias]</h2>
+
+As demonstrated in the <a href="{ROOT}setup/quickstart.html">Quick Start</a>{sp}
+instructions, aliases for build targets can be defined in
+{sp}<code>.buckconfig</code>:
+
+{literal}<pre>
+[alias]
+  app     = //apps/myapp:app
+  apptest = //apps/myapp:test
+</pre>{/literal}
+
+This facilitates command-line use:
+
+{literal}<pre>
+buck build app
+buck test apptest
+</pre>{/literal}
+
+
+<h2>[buildfile]</h2>
+
+This section may define an <code>includes</code> property that can specify a
+path to a file of macros and constants that will automatically be included in
+every build file. Therefore, defining the following:
+
+{literal}<pre>
+[buildfile]
+  includes = //core/DEFS
+</pre>{/literal}
+
+is the equivalent of manually invoking <code>include_defs('//core/DEFS')</code>
+{sp}at the start of every build file. See
+{sp}<a href="{ROOT}function/include_defs.html"><code>include_defs()</code></a>
+{sp}for more details.
+
+
+<h2>[java]</h2>
+
+This section may define a <code>src_roots</code> property that specifies
+file paths to roots of Java code (where a root contains a tree
+of Java folders where the folder structure mirrors the package structure).
+This list of paths is comma-delimited. Paths that start with a slash are
+relative to the root of the project. All other paths can match a folder
+anywhere in the tree. For example:
+{literal}<pre>
+[java]
+  src_roots = src, /java/, /javatests/
+</pre>{/literal}
+Will match the <code>java</code> and <code>javatests</code> folders in the
+root of the project, as well as any folder named <code>src</code> in the
+project.
+<p>
+<strong>Note:</strong> This is primarily used as a hack to help determine
+where resources from a <code>java_library()</code> should be placed within the
+generated JAR file. Hopefully <code>src_roots</code> will be removed at some
+point.
+
+
+<h2>[project]</h2>
+
+This section may define a <code>default_android_manifest</code> property
+to identify the <code>AndroidManifest.xml</code> that should be used when
+the <code>src_target</code> of a
+{sp}<a href="{ROOT}rule/project_config.html"><code>project_config()</code>
+</a> rule is an Android rule (e.g.,
+{sp}<a href="{ROOT}rule/android_library.html"><code>android_library()</code>
+</a>), but there is no <code>AndroidManifest.xml</code> file in the same
+directory as the build file. Because an IDE configuration for an Android
+project needs an <code>AndroidManifest.xml</code>, this provides a convenient
+fallback, preventing the need to litter your project with boilerplate
+{sp}<code>AndroidManifest.xml</code> files.
+
+{literal}<pre>
+[project]
+  default_android_manifest = //shared/AndroidManifest.xml
+</pre>{/literal}
+
+This section may also define an <code>initial_targets</code> property,
+which is a space-delimited list of build targets to run when
+{sp}<code>buck project</code> is executed. Frequently, this is a list of
+{sp}<code>genrule</code>s whose outputs need to exist in order for an IDE
+to be able to build a project natively (i.e., without the help of Buck).
+<p>
+For example, if you had a <code>genrule()</code> for generating a JAR from
+a <a href="http://thrift.apache.org/">Thrift definition file</a>, and you had
+a <code>java_library()</code> rule that depended on that JAR, then you would
+want to be sure that <code>genrule()</code> was built before importing the
+project into IntelliJ because IntelliJ does not know how to build
+your <code>genrule()</code> as part of its built-in build process:
+
+
+{literal}<pre>
+[project]
+  initial_targets = //java/com/facebook/schema:generate_thrift_jar
+</pre>{/literal}
+
+
+    {/param}
+  {/call}
+{/template}

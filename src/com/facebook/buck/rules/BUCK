@@ -1,0 +1,18 @@
+java_library(
+  name = 'rules',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parcelable:parcelable',
+    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

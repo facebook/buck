@@ -1,0 +1,117 @@
+  <!-- ============================================================== -->
+
+  <patternset id="java.libs" includes="*.jar,*.zip" /> <!-- not recursing by design -->
+
+
+  <!-- ANT 1.4.x dependency: -->
+  <path id="boot.ant.14.classpath" >
+    <pathelement location="${build.target.ant.14.home}/lib/ant.jar" />
+  </path>
+
+  <!-- ANT 1.5.x dependency: -->
+  <path id="boot.ant.15.classpath" >
+    <pathelement location="${build.target.ant.15.home}/lib/ant.jar" />
+  </path>
+
+
+  <!-- J2SE 1.2 boot classpath: -->
+  <path id="boot.j2se.12.classpath" >
+    <fileset dir="${build.target.j2se.12.home}/lib/" >
+      <patternset refid="java.libs" />
+    </fileset>
+  </path>
+
+  <!-- J2SE 1.2 ext classpath: -->
+  <property name="ext.j2se.12.classpath"
+    value="${build.target.j2se.12.home}/lib/ext/"
+  />
+
+
+  <!-- J2SE 1.3 boot classpath: -->
+  <path id="boot.j2se.13.classpath" >
+    <fileset dir="${build.target.j2se.13.home}/lib/" >
+      <patternset refid="java.libs" />
+    </fileset>
+  </path>
+
+  <!-- J2SE 1.3 ext classpath: -->
+  <property name="ext.j2se.13.classpath"
+    value="${build.target.j2se.13.home}/lib/ext/"
+  />
+
+
+  <!-- J2SE 1.4 boot classpath: -->
+  <path id="boot.j2se.14.classpath" >
+    <fileset dir="${build.target.j2se.14.home}/lib/" >
+      <patternset refid="java.libs" />
+    </fileset>
+  </path>
+
+  <!-- J2SE 1.4 ext classpath: -->
+  <property name="ext.j2se.14.classpath"
+    value="${build.target.j2se.14.home}/lib/ext/"
+  />
+
+  <!-- ============================================================== -->
+  <!-- lib module: -->
+
+  <!-- 3rd party dependencies: -->
+  <path id="lib.external.classpath" >
+    <fileset dir="${external.lib.dir}" >
+      <patternset refid="java.libs" />
+    </fileset>
+  </path>
+
+  <!-- internal dependencies: -->
+  <path id="lib.internal.classpath" >
+    <fileset dir="${internal.lib.dir}" >
+      <patternset refid="java.libs" />
+    </fileset>
+  </path>
+
+  <!-- complete dependency classpath: -->
+  <path id="lib.classpath" >
+    <path refid="lib.internal.classpath" />
+    <path refid="lib.external.classpath" />
+  </path>
+
+  <!-- ============================================================== -->
+  <!-- core module: -->
+
+  <!-- compiled module classes + res + lib.classpath: -->
+  <path id="core.classpath" >
+    <pathelement location="${core.classes.out.dir}" />
+    <pathelement location="${core.res.dir}" />
+    <path refid="lib.classpath" />
+  </path>
+
+  <!-- ============================================================== -->
+  <!-- ant module: -->
+
+  <!-- compiled module classes + res + +ant classpath + core.classpath: -->
+  <path id="ant.14.classpath" >
+    <pathelement location="${ant.classes.out.dir}" />
+    <pathelement location="${ant.res.dir}" />
+    <path refid="core.classpath" />
+    <path refid="boot.ant.14.classpath" />
+  </path>
+
+  <!-- compiled module classes + res + +ant classpath + core.classpath: -->
+  <path id="ant.15.classpath" >
+    <pathelement location="${ant.classes.out.dir}" />
+    <pathelement location="${ant.res.dir}" />
+    <path refid="core.classpath" />
+    <path refid="boot.ant.15.classpath" />
+  </path>
+
+  <!-- ============================================================== -->
+  <!-- tools module: -->
+
+  <!-- compiled module classes + res + core.classpath: -->
+  <path id="tools.classpath" >
+    <pathelement location="${tools.classes.out.dir}" />
+    <pathelement location="${tools.res.dir}" />
+    <path refid="core.classpath" />
+  </path>
+
+  <!-- ========== END OF FILE ======================================= -->

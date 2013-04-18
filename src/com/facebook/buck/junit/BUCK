@@ -1,0 +1,10 @@
+java_library(
+  name = 'junit',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:junit',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/junit:junit',
+  ],
+)

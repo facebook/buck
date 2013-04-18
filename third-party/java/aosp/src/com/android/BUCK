@@ -1,0 +1,7 @@
+java_library(
+  name = 'aosp',
+  srcs = glob(['**/*.java']),
+  visibility = [
+    'PUBLIC',
+  ],
+)

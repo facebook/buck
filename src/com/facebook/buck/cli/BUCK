@@ -1,0 +1,16 @@
+java_library(
+  name = 'cli',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:args4j',
+    '//lib:ddmlib',
+    '//lib:guava',
+    '//lib:ini4j',
+    '//lib:jackson-core',
+    '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/cli:cli',
+  ],
+)

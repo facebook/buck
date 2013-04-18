@@ -1,0 +1,84 @@
+{namespace buck.visibility}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Visibility' /}
+    {param prettify: true /}
+    {param content}
+
+Visibility determines whether a build rule can include a build target in its
+list of <code>deps</code>. In a large project, you may want to prevent
+developers from "reaching across" the project and pulling in additional code.
+Reducing the visibility of a build rule can help prevent that type of behavior. 
+<p>
+Build rules are visible to the other targets inside the same build file
+by default.
+<p>
+To make a build rule visible to other targets, add a <code>visibility</code>{sp}
+argument to the build rule and provide a list of
+{sp}<a href="{ROOT}concept/build_target_pattern.html">build target patterns</a>.
+<p>
+There is also a special value, <code>'PUBLIC'</code>, which makes a build rule
+visible to all other rules.
+<h2>Examples</h2>
+
+A common library like Guava should be able to be included by any build rule:
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_jar(
+  name = 'guava',
+  binary_jar = 'guava-14.0.1.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+</pre>{/literal}
+
+It is common to restrict the visibility of Android resources to the Java
+code that uses it:
+
+{literal}<pre class="prettyprint lang-py">
+android_resource(
+  name = 'ui_res',
+  res = 'res',
+  package = 'com.example',
+  visibility = [
+    '//java/com/example/ui:ui',
+  ],
+)
+</pre>{/literal}
+
+Or it may be simpler to make it visible to the entire directory in case
+additional build rules are added to <code>java/com/example/ui/BUCK</code>:
+
+{literal}<pre class="prettyprint lang-py">
+android_resource(
+  name = 'ui_res',
+  res = 'res',
+  package = 'com.example',
+  visibility = [
+    '//java/com/example/ui:',
+  ],
+)
+</pre>{/literal}
+
+Finally, it is common to limit code for testing to be visible only to tests.
+If you define all of your Java unit tests in a folder named
+{sp}<code>javatests/</code> in the root of your project, then you could
+define the following rule to ensure that only allow build rules
+under <code>javatests/</code> can depend on JUnit:
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit-4.11.jar',
+  visibility = [
+    '//javatests/...',
+  ],
+)
+</pre>{/literal}
+
+    {/param}
+  {/call}
+{/template}

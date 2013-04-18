@@ -1,0 +1,11 @@
+java_test(
+  name = 'parcelable',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/parcelable:parcelable',
+  ],
+  deps = [
+    '//lib:junit',
+    '//src/com/facebook/buck/parcelable:parcelable',
+  ],
+)

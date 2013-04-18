@@ -1,0 +1,137 @@
+/*
+ * Copyright 2012-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.shell;
+
+import com.android.sdklib.build.ApkBuilder;
+import com.android.sdklib.build.ApkCreationException;
+import com.android.sdklib.build.DuplicateFileException;
+import com.android.sdklib.build.SealedApkException;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+
+import java.io.File;
+import java.io.PrintStream;
+
+/**
+ * Merges resources into a final APK.  This code is based off of the now depricated apkbuilder tool:
+ * https://android.googlesource.com/platform/sdk/+/fd30096196e3747986bdf8a95cc7713dd6e0b239%5E/sdkmanager/libs/sdklib/src/main/java/com/android/sdklib/build/ApkBuilderMain.java
+ */
+public class ApkBuilderCommand implements Command {
+
+  private final String resourceApk;
+  private final String dexFile;
+  private final String pathToOutputApkFile;
+  private final ImmutableSet<String> assetDirectories;
+  private final ImmutableSet<String> nativeLibraryDirectories;
+  private final ImmutableSet<String> zipFiles;
+  private final boolean debugMode;
+
+  /**
+   *
+   * @param resourceApk Path to the Apk which only contains resources, no dex files.
+   * @param pathToOutputApkFile Path to output our APK to.
+   * @param dexFile Path to the classes.dex file.
+   * @param javaResourcesDirectories List of paths to resources to be included in the apk.
+   * @param nativeLibraryDirectories List of paths to native directories.
+   * @param zipFiles List of paths to zipfiles to be included into the apk.
+   * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
+   */
+  public ApkBuilderCommand(
+      String resourceApk,
+      String pathToOutputApkFile,
+      String dexFile,
+      ImmutableSet<String> javaResourcesDirectories,
+      ImmutableSet<String> nativeLibraryDirectories,
+      ImmutableSet<String> zipFiles,
+      boolean debugMode) {
+    this.resourceApk = Preconditions.checkNotNull(resourceApk);
+    this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
+    this.dexFile = Preconditions.checkNotNull(dexFile);
+    this.assetDirectories = Preconditions.checkNotNull(javaResourcesDirectories);
+    this.nativeLibraryDirectories = Preconditions.checkNotNull(nativeLibraryDirectories);
+    this.zipFiles = Preconditions.checkNotNull(zipFiles);
+    this.debugMode = debugMode;
+  }
+
+  @Override
+  public int execute(ExecutionContext context) {
+    PrintStream output = null;
+    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
+      output = context.getStdOut();
+    }
+    try {
+      ApkBuilder builder = new ApkBuilder(new File(pathToOutputApkFile),
+          new File(resourceApk),
+          new File(dexFile),
+          /* storeOsPath */ null,
+          output);
+      builder.setDebugMode(debugMode);
+      for (String nativeLibraryDirectory : nativeLibraryDirectories) {
+        builder.addNativeLibraries(new File(nativeLibraryDirectory));
+      }
+      for (String assetDirectory : assetDirectories) {
+        builder.addSourceFolder(new File(assetDirectory));
+      }
+      for (String zipFile : zipFiles) {
+        builder.addZipFile(new File(zipFile));
+      }
+
+      // Build the APK
+      builder.sealApk();
+    } catch (ApkCreationException e) {
+      throw new HumanReadableException(e.getMessage());
+    } catch (DuplicateFileException e) {
+      throw new HumanReadableException(
+          String.format("Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
+              e.getArchivePath(), e.getFile1(), e.getFile2()));
+    } catch (SealedApkException e) {
+      throw new HumanReadableException(e.getMessage());
+    }
+    return 0;
+  }
+
+  @Override
+  public String getShortName(ExecutionContext context) {
+    return String.format("apkbuilder %s -v -u %s -z %s %s -f %s",
+        pathToOutputApkFile,
+        Joiner.on(' ').join(Iterables.transform(nativeLibraryDirectories,
+            new Function<String, String>() {
+              @Override
+              public String apply(String s) {
+                return "-nf " + s;
+              }
+            })),
+        resourceApk,
+        Joiner.on(' ').join(Iterables.transform(assetDirectories,
+            new Function<String, String>() {
+              @Override
+              public String apply(String s) {
+                return "-rf " + s;
+              }
+            })),
+        dexFile);
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return getShortName(context);
+  }
+}

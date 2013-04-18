@@ -1,0 +1,111 @@
+{namespace genrule}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'genrule()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+  A <code>genrule()</code> is used to generate a file from a shell
+  command. It must produce a single output file.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the genrule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param desc}
+  A list of files to be used in the shell command.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'cmd' /}
+  {param desc}
+  The shell command to run to generate the output file. It will be
+  subject to the following environment variable substitutions:
+    <dl>
+      <dt><code>SRCS</code><dt>
+      <dd>A space-delimited string expansion of the <code>srcs</code>
+      {sp}argument where each element of <code>srcs</code> will be
+      translated into an absolute path.</dd>
+
+      <dt><code>OUT</code></dt>
+      <dd>The output file for the <code>genrule()</code>. The file
+      specified by this variable must always be written by this
+      command. If not, the execution of this rule will be considered a
+      failure, halting the build process.</dd>
+    </dl>
+
+    Also, references to binary build rules (such as
+    {sp}<code>java_binary()</code> or <code>python_binary()</code>) may be
+    inserted, as well. For example, if
+    {sp}<code>//java/src/com/example:main</code> referred to a
+    {sp}<code>java_binary()</code> rule, then <code>cmd</code> could be
+    {sp}'<code>${lb}//java/src/com/example:main{rb} arg1 arg2
+    arg3</code>', provided that <code>:main</code> were listed in the
+    {sp}<code>deps</code> of the <code>genrule()</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'out' /}
+  {param desc}
+   The name of the output file. Must be unique within the build file
+   in which the <code>genrule()</code> is declared.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param desc}
+  A list of rules that must be built before this rule. These may be
+  accessed within the command by treating the target as a
+  brace-wrapped variable (<code>${lb}//like:this{rb}</code>).
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+
+This genrule() uses a Python script to derive a new
+{sp}<code>AndroidManifest.xml</code> from an
+{sp}<code>AndroidManifest.xml</code> in the source tree.
+
+{literal}<pre class="prettyprint lang-py">
+genrule(
+  name = 'generate_manifest',
+  srcs = [
+    'basic_to_full_manifest.py',
+    'AndroidManifest.xml',
+  ],
+  cmd = 'python $SRC_0 $SRC_1 > $OUT',
+  out = 'AndroidManifest.xml',
+)
+</pre>{/literal}
+
+<h2>See Also</h2>
+
+<a href="{ROOT}function/genfile.html"><code>genfile()</code></a>
+{sp}function.
+
+{/param} // examples
+
+{/call} // buck.rule
+
+ {/param}
+  {/call}
+{/template}

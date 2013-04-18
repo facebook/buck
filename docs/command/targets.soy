@@ -1,0 +1,84 @@
+{namespace buck.targets}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck targets' /}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+Lists the build targets available in the current project.
+
+<p>
+
+The following will print all build targets in the project (sorted
+ alphabetically) to standard out:
+
+<pre>buck targets</pre>
+
+This command can be handy in programmatic tasks, such as building all of the
+ test rules that start with <code>&#x2F;/java/com/myproject</code>:
+
+<pre>
+buck targets --type java_test | \<br>
+grep &#x2F;/java/com/myproject | \<br>
+xargs buck test
+</pre>
+
+{/param}
+
+{param params}
+{call buck.param}
+  {param name: 'type' /}
+  {param desc}
+  The types of target to filter by.  For example:
+  <pre>
+    buck targets --type java_test java_binary
+  </pre>
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'referenced_file' /}
+  {param desc}
+  Filters targets by the list of rules that include <code>referenced_file</code>
+  in their transitive closure.
+
+  <p>
+
+  For example, if a developer wanted to run all tests that could be affected by
+  particular file, they would run:
+  <pre>
+    buck targets --type java_test \<br>
+      --referenced_files java/com/foo/foo.java |
+    xargs buck test
+  </pre>
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'json' /}
+  {param desc}
+  Print JSON representation of each target
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'resolvealias' /}
+  {param desc}
+  Print the fully-qualified build target for the specified alias[es].  This
+  command also accepts build targets.  See  <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> for more
+  information.
+  {/param}
+{/call}
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

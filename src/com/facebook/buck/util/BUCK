@@ -1,0 +1,59 @@
+
+CONSTANT_SRCS = [
+  'BuckConstant.java',
+]
+
+java_library(
+  name = 'constants',
+  srcs = CONSTANT_SRCS,
+  visibility = [ 'PUBLIC' ],
+)
+
+
+EXCEPTION_SRCS = [
+  'ExceptionWithHumanReadableMessage.java',
+  'HumanReadableException.java',
+]
+
+java_library(
+  name = 'exceptions',
+  srcs = EXCEPTION_SRCS,
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+
+IO_SRCS = [
+  'DirectoryTraversal.java',
+  'MoreFiles.java',
+  'ProjectFilesystem.java',
+]
+
+java_library(
+  name = 'io',
+  srcs = IO_SRCS,
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+java_library(
+  name = 'util',
+  srcs = glob(
+    includes = ['*.java'],
+    excludes = EXCEPTION_SRCS + IO_SRCS),
+  deps = [
+    ':constants',
+    ':exceptions',
+    ':io',
+    '//lib:guava',
+    '//lib:jsr305',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

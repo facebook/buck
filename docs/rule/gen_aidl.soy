@@ -1,0 +1,59 @@
+{namespace gen_aidl}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'gen_aidl()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+A <code>gen_aidl()</code> rule is used to generate <code>.java</code> files 
+from <code>.aidl</code> files. It will be deprecated shortly, as its 
+functionality will be absorbed by <code>android_library()</code>.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'aidl' /}
+  {param desc}
+  The path to an <code>.aidl</code> file to convert to a 
+  {sp}<code>.java</code> file.  
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'import_path' /}
+  {param desc}
+  The search path for import statements for the aidl command. 
+  (This is the <code>-I</code> argument when invoking aidl 
+  from the command line.)
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of rules that must be built before this rule.  
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

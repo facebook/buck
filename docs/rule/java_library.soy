@@ -1,0 +1,118 @@
+{namespace java_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'java_library()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+A <code>java_library()</code> rule is used to define a set of Java
+files that can be compiled together. The main output of a
+{sp}<code>java_library()</code> rule is a single JAR file containing all
+of the compiled class files and resources.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of <code>.java</code> files to compile for this rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Static files to include among the compiled <code>.class</code>
+  {sp}files. These files can be loaded via <a
+  href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)"
+  target="_blank">Class.getResource()</a>.
+  <p>
+  <strong>Note:</strong> Buck uses the <code>src_roots</code> property in
+  {sp}<a href="{ROOT}concept/buckconfig.html"><code>buckconfig.html</code></a>
+  {sp}to help determine where resources should be placed within the generated JAR file.
+  <p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Rules (usually other <code>java_library</code> rules) that are used to
+  generate the classpath required to compile this <code>java_library</code>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+# A rule that compiles a single .java file.
+java_library(
+  name = 'JsonUtil',
+  srcs = ['JsonUtil.java'],
+  deps = [
+    '//third_party/guava:guava',
+    '//third_party/jackson:jackson',
+  ],
+)
+
+# A rule that compiles all of the .java files under the directory in
+# which the rule is defined using glob(). It also excludes an
+# individual file that may has additional dependencies, so it is
+# compiled by a separate rule.
+java_library(
+  name = 'messenger',
+  srcs = glob(['**/*.java'], excludes = ['MessengerModule.java']),
+  deps = [
+    '//src/com/facebook/base:base',
+    '//third_party/guava:guava',
+  ],
+)
+
+java_library(
+  name = 'MessengerModule',
+  srcs = ['MessengerModule.java'],
+  deps = [
+    '//src/com/facebook/base:base',
+    '//src/com/google/inject:inject',
+    '//third_party/guava:guava',
+    '//third_party/jsr-330:jsr-330',
+  ],
+)
+
+# A rule that builds a library with both relative and
+# fully-qualified deps.
+java_library(
+  name = 'testutil',
+  srcs = glob(['tests/**/*.java'], excludes = 'tests/**/*Test.java'),
+  deps = [
+    ':lib-fb4a',
+    '//java/com/facebook/base:base',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

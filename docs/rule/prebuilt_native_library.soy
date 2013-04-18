@@ -1,0 +1,65 @@
+{namespace buck.prebuilt_native_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_native_library()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+A <code>prebuilt_native_library()</code> rule is used to bundle native libraries
+(i.e., <code>.so</code> files) for Android.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'native_libs' /}
+  {param default : 'None' /}
+  {param desc}
+  Path to a directory containing native libraries.
+  This directory has subdirectories for different architectures,
+  such as <code>armeabi</code> and <code>armeabi-v7a</code>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+
+Most of the time, a <code>prebuilt_native_library</code> is private to the{sp}
+{call buck.android_library /} that uses it:
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_native_library(
+  name = 'native_libs',
+  native_libs = 'libs',
+)
+
+android_library(
+  name = 'my_lib',
+  srcs = glob(['*.java']),
+  deps = [
+    ':native_libs',
+  ],
+)
+</pre>{/literal}
+
+{/param} // examples
+{/call} // buck.rule
+
+
+    {/param}
+  {/call}
+{/template}

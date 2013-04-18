@@ -1,0 +1,10 @@
+java_library(
+  name = 'debug',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

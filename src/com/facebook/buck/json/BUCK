@@ -1,0 +1,12 @@
+java_library(
+  name = 'json',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+    '//lib:jackson-core',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

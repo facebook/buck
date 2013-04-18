@@ -1,0 +1,115 @@
+{namespace apk_genrule}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'apk_genrule()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+An <code>apk_genrule()</code> rule is used to post-process an APK.  What
+separates an apk_genrule from a genrule is apk_genrules are known by BUCK to
+produce APKs, so commands like <code>buck install</code> or
+<code>buck uninstall</code> still work.  Additionally,
+<code>apk_genrule()</code> rules can be inputs to other
+<code>apk_genrule()</code> rules.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'apk' /}
+  {param desc}
+  The input <code>android_binary()</code> rule.  The path to the APK can be
+  accessed with the <code>$APK</code> shell variable.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param desc}
+  Same as <code>genrule()</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param desc}
+  Same as <code>genrule()</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'cmd' /}
+  {param desc}
+  Same as <code>genrule()</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'out' /}
+  {param desc}
+  Same as <code>genrule()</code>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+Here is an example of a couple <code>apk_genrule()</code> open up an APK, do
+some super signing, and then zipalign that APK again.
+
+{literal}<pre class="prettyprint lang-py">
+
+# Building this rule will produce a file named messenger.apk.
+android_binary(
+  name = 'messenger',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:16',
+  keystore_properties = 'keystore.properties',
+  package_type = 'release',
+  proguard_config = 'proguard.cfg',
+  deps = [
+    ':res',
+    ':src',
+  ],
+)
+
+apk_genrule(
+  name = 'messenger_super_sign_unalign',
+  apk = ':messenger',
+  deps = [
+    '//java/com/facebook/sign:super_sign',
+  ],
+  cmd = '${//java/com/facebook/sign:super_sign} --input $APK'
+      '--output $OUT',
+  out = 'messenger_super_sign_unalign.apk',
+)
+
+apk_genrule(
+  name = 'messenger_super_sign',
+  apk = ':messenger_super_sign_unalign',
+  deps = [],
+  cmd = '$ANDROID_HOME/tools/zipalign --f 4 $APK $OUT',
+  out = 'messenger_super_sign.apk',
+)
+
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

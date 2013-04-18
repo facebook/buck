@@ -1,0 +1,12 @@
+java_library(
+  name = 'test-library',
+  srcs = ['src/foobar.java'],
+  deps = [
+    '//:dependency',
+    '//third-party/guava:guava',
+  ],
+  proguard_config = 'proguard.cfg',
+  visibility = [
+    'PUBLIC',
+  ],
+)

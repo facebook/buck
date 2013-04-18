@@ -1,0 +1,71 @@
+{namespace java_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'java_binary()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+A <code>java_binary()</code> rule is used to create a JAR file of the
+compiled .class files and resources of the <code>java_library()</code>
+{sp}rules on which it depends.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule, as well as the name of the generated JAR file.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Rules (normally of type <code>java_library</code>) that should be
+  compiled and whose <code>.class</code> files and resources should be
+  included in the generated JAR file.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'main_class' /}
+  {param default: 'None' /}
+  {param desc}
+
+  If provided, this will be the value specified as the
+  {sp}<code>Main-Class</code> attribute of the <code>META-INF/MANIFEST.MF</code>
+  {sp}file in the generated JAR file. Also, when this rule is used as
+  an executable in a <a href="genrule.html"><code>genrule()</code></a>,
+  {sp}<code>main_class</code> will indicate the class whose <code>main()</code>
+  method will be invoked to process the command-line arguments. This
+  is consistent with the expected usage of <code>java -jar
+  <em>&lt;name.jar></em> <em>&lt;args></em></code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'manifest_file' /}
+  {param default: 'None' /}
+  {param desc}
+  If provided, this manifest will be used when generating the JAR
+  file. If combined with <code>main_class</code>, the specified manifest
+  file will be used but the <code>main_class</code> will override the main
+  class in the manifest.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

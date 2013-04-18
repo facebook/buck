@@ -1,0 +1,62 @@
+{namespace buck.install}
+
+/***/
+{template .soyweb}
+
+{call buck.header}
+  {param title: 'Downloading and Installing Buck' /}
+{/call}
+
+<div class="{css overview}">
+  {call buck.platformWarning /}
+
+  Buck requires that the following tools are already installed:
+  <ul>
+    <li>Oracle JDK 7
+    <li>Ant
+    <li>Python 2.7
+    <li>Git
+    <li>Android SDK
+  </ul>
+
+  Once you have the above tools installed, you can install Buck as follows:
+  {call buck.installationInstructions /}
+
+  If everything worked correctly, you should see something like:
+
+{literal}<pre>
+buck build tool
+usage:
+  buck [options]
+  buck command --help
+  buck command [command-options]
+available commands:
+  audit      lists the inputs for the specified target
+  build      builds the specified target
+  clean      deletes any generated files
+  install    builds and installs an APK
+  project    generates project configuration files for an IDE
+  targets    prints the list of buildable targets
+  test       builds and runs the tests for the specified target
+  uninstall  uninstalls an APK
+options:
+ --help         : Shows this screen and exits.
+ --version (-V) : Show version number.
+{/literal}</pre>
+
+Because you will likely be running <code>./bin/buck</code> often, you should
+add it to your <code>$PATH</code> so that you can simply
+run <code>buck</code> from the command line. One of the easiest ways to do this
+is to create a symlink to Buck from a directory that is likely already on
+your <code>$PATH</code>, such as <code>/usr/bin/</code>:
+
+<pre>sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck</pre>
+
+To verify that this worked, run <code>which buck</code> to confirm
+that it maps to <code>/usr/bin/buck</code>.
+
+</div>
+
+{call buck.footer /}
+
+{/template}

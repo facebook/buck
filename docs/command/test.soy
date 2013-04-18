@@ -1,0 +1,116 @@
+{namespace buck.command.test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck test' /}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+Builds and runs the tests for one or more specified targets.
+
+{/param}
+
+{param params}
+{call buck.param}
+  {param name: 'all' /}
+  {param desc}
+  If specified, BUCK will run all tests available in the tree.
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'code-coverage' /}
+  {param desc}
+  Collects code coverage information while running tests.  Currently, this only
+  works with Java using <a href="http://emma.sourceforge.net/">emma</a>.  After
+  running:
+
+  <pre>buck test --all --code-coverage</pre>
+
+  <p>
+
+  The code coverage information can be found in:
+
+  <pre>buck-out/gen/emma/coverage/</pre>
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'debug' /}
+  {param desc}
+  If specified, the tests will start suspended with a JDWP debug port of 5005. 
+  This means that they will not run until a debugger is attached.
+ {/param}
+{/call}
+
+
+{call buck.param}
+  {param name: 'include' /}
+  {param alias: 'i'/}
+  {param desc}
+  Test labels to run with this test.  Labels are a way to group together tests
+  of a particular type and run them together.  For example, a developer could
+  mark all tests that run in &lt; 100 ms with the <code>fast</code> label, and
+  then use:
+
+  <pre>buck test --all --include fast</pre>
+
+  to run only fast tests. See <a href="{ROOT}rule/java_test.html"><code>{sp}
+  java_test()</code></a> for more details.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'exclude' /}
+  {param alias: 'e'/}
+  {param desc}
+  The inverse of <code>include</code>.  Labels specified with the exclude option
+  won't be run.  For example, if we wanted to run all tests except slow ones, we
+  would run:
+
+  <pre>buck test --all --exclude slow</pre>
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'num-threads' /}
+  {param desc}
+  The number of threads that buck should use when executing the
+  build. This defaults to 1.25 times the number of processors in the
+  system (on systems with hyperthreading, this means that each core is
+  counted twice).
+
+  The number of active threads may not always be equal to this
+  argument.
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'verbose' /}
+  {param alias: 'v'/}
+  {param desc}
+  How verbose logging to the console should be, with 1 as the minimum
+  and 10 as the most verbose.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'xml' /}
+  {param desc}
+  If specified, Buck will write the test results as XML to the location
+  specified.  For example:
+
+  <pre>buck test --all --xml testOutput.xml</pre>
+ {/param}
+ {/call}
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

@@ -1,0 +1,140 @@
+{namespace buck.macros}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Macros' /}
+    {param prettify: true /}
+    {param content}
+
+Because build files accept valid Python code, it is possible to define
+Python functions that have the side-effect of creating build rules.
+Such functions are called <strong>macros</strong>.
+
+<p>
+
+<strong>Warning:</strong> Although build files are evaluated as Python
+and can therefore do anything (write files, access the network, etc.),
+doing so may cause Buck to fail in peculiar ways and is therefore neither
+supported nor encouraged.
+
+<p>
+
+For example, here is a macro named <code>java_library_using_guava</code> to
+create a build rule that creates a <code>java_library</code> rule that depends
+on Guava:
+
+{literal}<pre class="prettyprint lang-py">
+def java_library_using_guava(
+    name,
+    srcs=[],
+    resources=[],
+    deps=[],
+    visibility=[]):
+  java_library(
+    name = name,
+    srcs = srcs,
+    resources = resources,
+    deps = [
+      # This assumes this is where Guava is in your project.
+      '//third_party/java/guava:guava',
+    ] + deps,
+    visibility = visibility,
+  )
+</pre>{/literal}
+
+Calling this function looks the same as defining a built-in build rule:
+
+{literal}<pre class="prettyprint lang-py">
+# Calling this function has the side-effect of creating
+# a java_library() rule named 'util' that depends on Guava.
+java_library_using_guava(
+  name = 'util',
+  # Source code that depends on Guava.
+  srcs = glob(['*.java']),
+)
+</pre>{/literal}
+
+You can also create more sophisticated macros that create multiple build
+rules. For example, you might want to create a single build rule that
+produces both debug and release versions of an APK:
+
+{literal}<pre class="prettyprint lang-py">
+def create_apks(
+    name,
+    manifest,
+    debug_keystore_properties,
+    release_keystore_properties,
+    proguard_config,
+    deps):
+
+  # This loop will create two android_binary rules.
+  for type in [ 'debug', 'release' ]:
+    # Select the appropriate keystore.
+    if type == 'debug':
+      keystore_properties = debug_keystore_properties
+    else:
+      keystore_properties = release_keystore_properties
+
+    android_binary(
+      # Note how we must parameterize the name of the
+      # build rule so that we avoid creating two build
+      # rules with the same name.
+      name = '%s_%s' % (name, type),
+      manifest = manifest,
+      target = 'Google Inc.:Google APIs:16',
+      keystore_properties = keystore_properties,
+      package_type = type,
+      proguard_config = proguard_config,
+      deps = deps,
+      visibility = [
+        'PUBLIC',
+      ],
+    )
+)
+</pre>{/literal}
+
+Again, using this looks the same as defining a built-in build rule:
+
+{literal}<pre class="prettyprint lang-py">
+create_apks(
+  name = 'messenger',
+  manifest = 'AndroidManifest.xml',
+  debug_keystore_properties = 'debug.keystore.properties',
+  release_keystore_properties = 'release.keystore.properties',
+  proguard_config = 'proguard.cfg',
+  deps = [
+    # ...
+  ],
+)
+{/literal}</pre>
+
+Note that if this were defined in <code>apps/messenger/BUCK</code>,
+then this would create the following build rules:
+
+{literal}<pre>
+//apps/messenger:messenger_debug
+//apps/messenger:messenger_release
+</pre>{/literal}
+
+However, the following build rule would <strong>NOT</strong> exist:
+
+<pre>//apps/messenger:messenger</pre>
+
+This may be confusing to developers who expect the following commands
+to work:
+
+{literal}<pre>
+buck build //apps/messenger:messenger
+buck targets --type create_apks
+</pre>{/literal}
+
+Including your company name as a prefix to the name of your macro
+may help enforce the idea that your macro is not a built-in rule. On the
+other hand, part of the beauty of macros is that they are as familiar
+to use as built-in rules. How you communicate this to your team is up
+to you.
+
+    {/param}
+  {/call}
+{/template}

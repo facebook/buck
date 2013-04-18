@@ -1,0 +1,292 @@
+/*
+ * Copyright 2012-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.shell;
+
+import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.InputStreamConsumer;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.annotation.Nullable;
+
+public abstract class ShellCommand implements Command {
+
+  /** Defined lazily by {@link #getShellCommand(ExecutionContext)}. */
+  private ImmutableList<String> shellCommandArgs;
+
+  /** If specified, the value to return for {@link #getDescription(ExecutionContext)}. */
+  @Nullable
+  private final String description;
+
+  /** If specified, working directory will be different from project root. **/
+  @Nullable
+  protected final File workingDirectory;
+
+  /**
+   * This is set if {@link #shouldRecordStdout()} returns {@code true} when the command is
+   * executed.
+   */
+  @Nullable
+  private String stdOut;
+
+  /**
+   * Creates a new {@link ShellCommand} using the default logic to return a description from
+   * {@link #getDescription(ExecutionContext)}.
+   */
+  protected ShellCommand() {
+    this(null, null);
+  }
+
+  /**
+   * @param description to return as the value of {@link #getDescription(ExecutionContext)}. By
+   *     default, {@link #getDescription(ExecutionContext)} returns a formatted version of the value
+   *     returned by {@link #getShellCommand(ExecutionContext)}; however, if
+   *     {@link #setup(ExecutionContext)} is overridden, then it is likely that
+   *     {@link #getShellCommand(ExecutionContext)} cannot return a value until
+   *     {@link #execute(ExecutionContext)} has been invoked. Because
+   *     {@link #getDescription(ExecutionContext)} may be invoked before
+   *     {@link #execute(ExecutionContext)} (usually for logging purposes), this constructor should
+   *     be used if {@link #getShellCommandInternal(ExecutionContext)} cannot be invoked before
+   *     {@link #setup(ExecutionContext)}.
+   */
+  protected ShellCommand(String description) {
+    this(Preconditions.checkNotNull(description), null);
+  }
+
+  protected ShellCommand(File workingDirectory) {
+    this(null, Preconditions.checkNotNull(workingDirectory));
+  }
+
+  @VisibleForTesting
+  ShellCommand(@Nullable String description, @Nullable File workingDirectory) {
+    this.description = description;
+    this.workingDirectory = workingDirectory;
+  }
+
+  /**
+   * Get the working directory for this command.
+   * @return working directory specified on construction
+   *         ({@code null} if project directory will be used).
+   */
+  protected @Nullable File getWorkingDirectory() {
+    return workingDirectory;
+  }
+
+  /**
+   * @return whether stdout should be recorded when this command is executed. If this returns
+   *     {@code true}, then the stdout will be available via {@link #getStdOut()}.
+   */
+  protected boolean shouldRecordStdout() {
+    return false;
+  }
+
+  @Override
+  public int execute(ExecutionContext context) {
+    try {
+      setup(context);
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+
+    // Kick off a Process in which this ShellCommand will be run.
+    ProcessBuilder processBuilder = new ProcessBuilder(getShellCommand(context));
+
+    // Add environment variables, if appropriate.
+    if (!getEnvironmentVariables().isEmpty()) {
+      Map<String, String> environment = processBuilder.environment();
+      environment.putAll(getEnvironmentVariables());
+    }
+
+    if (workingDirectory != null) {
+      processBuilder.directory(workingDirectory);
+    } else {
+      processBuilder.directory(context.getProjectDirectoryRoot());
+    }
+
+    Process process;
+    try {
+      process = processBuilder.start();
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+
+    return interactWithProcess(context, process);
+  }
+
+  @VisibleForTesting
+  int interactWithProcess(ExecutionContext context, Process process) {
+    // Read stdout/stderr asynchronously while running a Process.
+     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
+    boolean shouldRecordStdOut = shouldRecordStdout();
+    @SuppressWarnings("resource")
+    PrintStream stdOutToWriteTo = shouldRecordStdOut ?
+        new CapturingPrintStream() : context.getStdOut();
+    InputStreamConsumer stdOut = new InputStreamConsumer(
+        process.getInputStream(),
+        stdOutToWriteTo,
+        shouldRecordStdOut,
+        context.getAnsi());
+    boolean shouldPrintStdErr = shouldPrintStdErr(context);
+    @SuppressWarnings("resource")
+    PrintStream stdErrToWriteTo = shouldPrintStdErr ?
+        context.getStdErr() : new CapturingPrintStream();
+    InputStreamConsumer stdErr = new InputStreamConsumer(
+        process.getErrorStream(),
+        stdErrToWriteTo,
+        /* shouldRedirectInputStreamToPrintStream */ true,
+        context.getAnsi());
+    Thread stdOutConsumer = new Thread(stdOut);
+    stdOutConsumer.start();
+    Thread stdErrConsumer = new Thread(stdErr);
+    stdErrConsumer.start();
+
+    // Block until the Process completes.
+    try {
+      process.waitFor();
+      stdOutConsumer.join();
+      stdErrConsumer.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+
+    // If stdout was captured, then wait until its InputStreamConsumer has finished and get the
+    // contents of the stdout PrintStream as a string.
+    if (shouldRecordStdOut) {
+      CapturingPrintStream capturingPrintStream = (CapturingPrintStream)stdOutToWriteTo;
+      this.stdOut = capturingPrintStream.getContentsAsString(Charsets.US_ASCII);
+    }
+
+    // Report the exit code of the Process.
+    int exitCode = process.exitValue();
+
+    // If the command has failed and we're not being explicitly quiet, ensure stderr gets printed.
+    if (exitCode != 0 && !shouldPrintStdErr &&
+      context.getVerbosity().shouldPrintStandardInformation()) {
+      CapturingPrintStream capturingPrintStream = (CapturingPrintStream) stdErrToWriteTo;
+      context.getStdErr().print(capturingPrintStream.getContentsAsString(Charsets.US_ASCII));
+    }
+
+    return exitCode;
+  }
+
+  /**
+   * This method is idempotent.
+   * @return the shell command arguments
+   */
+  public final ImmutableList<String> getShellCommand(ExecutionContext context) {
+    if (shellCommandArgs == null) {
+      shellCommandArgs = getShellCommandInternal(context);
+    }
+    return shellCommandArgs;
+  }
+
+  /**
+   * Implementations of this method should not have any observable side-effects. If any I/O needs to
+   * be done to produce the shell command arguments, then it should be done in
+   * {@link #setup(ExecutionContext)}.
+   */
+  protected abstract ImmutableList<String> getShellCommandInternal(ExecutionContext context);
+
+  @Override
+  public final String getDescription(ExecutionContext context) {
+    if (description == null) {
+
+      // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
+      // quoted as necessary.
+      Iterable<String> env = Iterables.transform(getEnvironmentVariables().entrySet(),
+          new Function<Entry<String, String>, String>() {
+            @Override
+            public String apply(Entry<String, String> e) {
+              return String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue()));
+            }
+      });
+
+      // Quote the arguments to the shell command as needed (this applies to $0 as well
+      // e.g. if we run '/path/a b.sh' quoting is needed).
+      Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.BASH_ESCAPER);
+
+      String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
+      if (getWorkingDirectory() == null) {
+        return shellCommand;
+      } else {
+        // If the ShellCommand has a specific working directory, set through ProcessBuilder, then
+        // this is what the user might type in a shell to get the same behavior. The (...) syntax
+        // introduces a subshell in which the command is only executed if cd was successful.
+        return String.format("(cd %s && %s)",
+            Escaper.escapeAsBashString(workingDirectory.getPath()),
+            shellCommand);
+      }
+    } else {
+      return description;
+    }
+  }
+
+  /**
+   * @return whether the stderr of the shell command, when executed, should be printed to the stderr
+   *     of the specified {@link ExecutionContext}. If {@code false}, stderr will only be printed on
+   *     error and only if verbosity is set to standard information.
+   */
+  protected boolean shouldPrintStdErr(ExecutionContext context) {
+    return context.getVerbosity().shouldPrintOutput();
+  }
+
+  /** By default, this method returns an empty map. */
+  public ImmutableMap<String, String> getEnvironmentVariables() {
+    return ImmutableMap.of();
+  }
+
+  /**
+   * @return the stdout of this ShellCommand or throws an exception if the stdout was not recorded
+   */
+  public final String getStdOut() {
+    Preconditions.checkNotNull(this.stdOut, "stdout was not set: " +
+    		"shouldRecordStdout() must return true and execute() must have been invoked");
+    return this.stdOut;
+  }
+
+  @VisibleForTesting
+  final void setStdOut(String stdOut) {
+    this.stdOut = stdOut;
+  }
+
+  /**
+   * This method will be invoked exactly once at the start of {@link #execute(ExecutionContext)}.
+   * Most shell commands will not need to override this method, as all the information that is
+   * needed to return a value for {@link #getShellCommand(ExecutionContext)} should be passed into
+   * the constructor. In rare cases, some information to produce the shell command arguments will
+   * not be available until runtime. In such rare cases, such logic should be added here.
+   */
+  protected void setup(@SuppressWarnings("unused") ExecutionContext context) throws IOException {
+
+  }
+}

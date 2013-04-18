@@ -1,0 +1,84 @@
+{namespace buck.build_rule}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Build Rule' /}
+    {param content}
+
+A <strong>build rule</strong> is a procedure for producing an output file from
+a set of input files.
+
+<p>
+
+Buck comes with a number of built-in build rules, as there are many common
+procedures when building Android code. For example, compiling Java code against
+the Android SDK is one of the most common operations, so the build rule
+{sp}{call buck.android_library /} exists to
+facilitate that. Similarly, the primary objective of most Android developers
+is to create an APK, so the build rule
+{sp}{call buck.android_binary /} can be used
+to do that.
+
+<p>
+
+Build rules are defined using built-in Python functions in a
+{sp}<a href="build_file.html">build file</a>. (Both the Python function to define
+the rule and the corresponding Java object that is ultimately created to
+carry out the procedure are referred to as "the build rule,"
+even though they are technically different things.) Every build rule takes at
+least the following three arguments:
+
+<ul>
+  <li><code>name</code> The name of the build rule,
+      which must be unique within a build file.
+  <li><code>deps</code> The build rule's dependencies,
+      expressed as a list of build targets.
+  <li><code>visibility</code> The set of build rules that are allowed to
+      claim this rule as a dependency, expressed as a list of
+      {sp}<a href="build_target_pattern.html">build target patterns</a>.
+</ul>
+
+<p>
+
+In Buck, every build rule can produce zero or one output files.
+These output files can be used by other rules that declare the rule
+responsible for the output file as a dependency. For example,
+the output of an {call buck.android_library /}{sp}
+is a JAR file, so an
+{sp}{call buck.android_binary /}{sp}
+that declares the <code>android_library</code> as a dependency can include
+the <code>.class</code> files from the <code>android_library</code>'s JAR
+file in its resulting APK. Or when one <code>android_library</code>{sp}
+depends on another, the JAR of dependent rule will be included on the
+classpath when the rule that depends on it compiles its Java code.
+Check the documentation for each build rule to see how it uses its <code>deps</code>.
+Note that no matter how a rule uses its <code>deps</code>, every rule in a rule's
+{sp}<code>deps</code> is guaranteed to be built before the rule attempts to build itself.
+
+<p>
+
+Build rules and their dependencies define a directed graph. Buck requires that this
+graph be acyclic. This helps Buck build efficiently, as it makes it easier to
+build independent subgraphs in parallel.
+
+<p>
+
+Although Buck tries to provide a rich set of built-in build rules for Android
+developers, it will not be able to address all possible needs. As an "escape hatch," Buck
+also provides a vanilla build rule called a
+{sp}{call buck.genrule /},
+which can be used to build an arbitrary file using a Bash script.
+<p>
+
+Finally, note that build files are evaluated as Python files.
+This means that you can define your own functions within build files that
+generate build rules. This should not be something that you need to do often,
+but taking advantage of this may help you add something to Buck's build process
+without editing its source code.
+For more details on this topic, see the article
+on <a href="{ROOT}extending/macros.html">macros</a>.
+
+    {/param}
+  {/call}
+{/template}

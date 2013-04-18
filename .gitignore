@@ -1,0 +1,23 @@
+# Ant
+build/
+
+# Buck
+/buck-out/
+local.properties
+
+# Compiled Python
+*.pyc
+
+# IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
+.idea/dictionaries
+.idea/inspectionProfiles
+.idea/tasks.xml
+.idea/uiDesigner.xml
+.idea/workspace.xml
+
+# From building Emma with Ant.
+/third-party/java/emma-2.0.5312/out/
+
+# OS X
+.DS_Store
+

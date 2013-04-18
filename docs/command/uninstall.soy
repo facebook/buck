@@ -1,0 +1,36 @@
+{namespace buck.command.uninstall}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck uninstall' /}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+Uninstalls the APK for an <a
+href="{ROOT}rule/android_binary.html"><code>android_binary</code></a> target.
+
+<p>
+
+Takes an <a href="{ROOT}rule/android_binary.html">
+<code>android_binary</code></a> target, determines the id of the application
+that it is meant to build, and uninstalls it by running
+{sp}<code>adb uninstall &lt;application_id&gt;:</code>
+
+<pre>
+buck uninstall &#x2F;/java/com/myawesomeapp
+</pre>
+
+{/param}
+
+{param params}
+None.
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

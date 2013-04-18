@@ -1,0 +1,27 @@
+
+java_test(name = 'model',
+  srcs = glob(includes = ['*.java'], excludes = ['BuildTargetFactory.java']),
+  deps = [
+    ':BuildTargetFactory',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:rules',
+    '//lib:easymock',
+    '//lib:junit',
+  ])
+
+java_library(
+  name = 'BuildTargetFactory',
+  srcs = [
+    'BuildTargetFactory.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:rules',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/command:command',
+    '//test/com/facebook/buck/parser:parser',
+    '//test/com/facebook/buck/rules:rules',
+  ])

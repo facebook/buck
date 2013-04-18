@@ -1,0 +1,89 @@
+{namespace buck.codestyle}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Code Style' /}
+    {param content}
+Writing a detailed Java style guide takes a considerable amount of effort,
+so here are the highlights for what we expect in Buck:
+<ul class="{css top-level-list}">
+  <li>Spacing
+    <ul>
+      <li>Spaces only: no tabs.
+      <li>Standard indent is 2 spaces; continued lines are indented 4 spaces.
+      <li>Lines are a maximum of 100 columns.
+      <li>For a method call/declaration, if all params do not fit on one line,
+          then each param should be on its own line.
+    </ul>
+  <li>Naming
+    <ul>
+      <li>The use of Hungarian notation in any form is prohibited.
+      <li>Prefer descriptive names to single-letter names. The primary
+          exceptions to this rule are (1) the use of <code>e</code> for the
+          name of an exception in a <code>catch</code> block, and (2) the use
+          of <code>i</code> as the name of an index in a <code>for</code> loop.
+    </ul>
+  <li>Null
+    <ul>
+      <li>In the spirit of Guava, references are assumed to be
+          non-null unless otherwise noted.
+      <li>Non-null parameters should be verified using
+          {sp}<a href="{GUAVA_URL}
+          com/google/common/base/Preconditions.html#checkNotNull(T)">
+          <code>Preconditions.checkNotNull()</code></a>.
+      <li>A nullable reference should be annotated with
+          {sp}<code>@javax.annotation.Nullable</code>.
+      <li>A popular alternative to <code>@Nullable</code> is
+          {sp}<a href="{GUAVA_URL}
+          com/google/common/base/Optional.html">
+          <code>com.google.common.base.Optional</code></a>.
+      <li>Annotating an <code>Optional</code> as <code>@Nullable</code> is
+          grounds for dismissal.
+    </ul>
+  <li>APIs
+    <ul>
+      <li>Guava should be used liberally.
+      <li>In particular, favor Guava's immutable collections. In addition to
+          preventing aliasing bugs, they disallow <code>null</code> as an 
+          element, which is in line with the previous bullet point.
+      <li><code>Logger</code>, <code>log4j</code>, etc. should not be used.
+          Log messages should be printed using
+          {sp}<code>com.facebook.buck.cli.Console</code> and should respect
+          the <code>--verbosity</code> flag.
+    </ul>
+  <li>Comments
+    <ul>
+      <li>Comments should be valid US-English sentences: they should start
+          with a capital letter and end with appropriate punctuation.
+      <li>One space after a full stop is preferred. This makes it easier to
+          honor the 100 column rule. This may violate what you learned in
+          high school, but browsers have been condensing your two spaces down
+          to one in HTML for years, so you are likely more accustomed to it than
+          you think.
+      <li>The specification of a field or member should be documented using
+          Javadoc (i.e., <code>&#x2F;** */</code>) rather than
+          implementation comments (i.e., <code>//</code>), even if the field
+          or member is <code>private</code>.
+      <li>A Javadoc comment should be preceded by a blank line.
+    </ul>
+  <li>Imports
+    <ul>
+      <li>No wildcards in imports.
+      <li>Non-<code>java</code> imports are listed before
+          {sp}<code>java</code> imports.
+      <li><code>java</code> imports are listed before
+          {sp}<code>javax</code> imports.
+      <li>Files should not contain unnecessary imports.
+          Use your favorite IDE to help you with this.
+    </ul>
+  <li>Warnings
+    <ul>
+      <li>Code should compile without warnings in Eclipse.
+      <li>Warnings should either be fixed or annotated with
+          {sp}<code>@SuppressWarnings("type-of-warning")</code>, as appropriate.
+    </ul>
+</ul>
+    {/param}
+  {/call}
+{/template}

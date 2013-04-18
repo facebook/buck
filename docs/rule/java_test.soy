@@ -1,0 +1,95 @@
+{namespace java_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'java_test()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+A <code>java_test()</code> rule is used to define a set of
+<code>.java</code> files that contain tests to run via JUnit.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  Like <a href="java_library.html"><code>java_library()</code></a>,
+  all of the <code>.java</code> files specified by the
+  {sp}<code>srcs</code> argument will be compiled when this rule is
+  built. In addition, all of the corresponding <code>.class</code>
+  files that are built by this rule will be passed as arguments to
+  JUnit when this rule is run as a test. <code>.class</code> files
+  that are passed to JUnit that do not have any methods annotated with
+  {sp}<code>@Test</code> are considered failed tests, so make sure that
+  only test case classes are specified as <code>srcs</code>. This is
+  frequently done by specifying <code>srcs</code> as
+  {sp}{literal}<code>glob(['**/*Test.java'])</code>{/literal}.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Same as <a href="java_library.html"><code>java_library()</code></a>. 
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'labels' /}
+  {param default: '[]' /}
+  {param desc}
+  A list of labels to be applied to these tests. These labels are
+  arbitrary text strings and have no meaning within buck itself. They
+  can, however, have meaning for you as a test author
+  (e.g., <code>smoke</code> or <code>fast</code>). A label can be
+  used to filter or include a specific <code>java_test()</code> rule
+  when executing <a href="{ROOT}command/test.html"><code>buck
+  test</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'source_under_test' /}
+  {param default : '[]' /}
+  {param desc}
+  <code>java_library()</code> rules that the <code>java_test()</code>
+  is testing. This must be a subset of the <code>deps</code>
+  argument. The <code>.class</code> files for the rules specified by
+  {sp}</code>source_under_test</code> will be be instrumented by the
+  code coverage tool, EMMA, if <a
+  href="{ROOT}command/test.html"><code>buck test</code></a> is
+  executed with the {sp}<code>--code-coverage</code> option.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Same as <a href="java_library.html"><code>java_library()</code></a>. 
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

@@ -1,0 +1,423 @@
+{namespace buck}
+
+/**
+ * @param title
+ * @param content
+ * @param? prettify true if https://code.google.com/p/google-code-prettify/
+ *     should be used.
+ */
+{template .page}
+  {call .header}
+    {param title: $title /}
+    {param prettify: $prettify /}
+  {/call}
+
+  <div class="{css overview}">
+    {$content|noAutoescape}
+  </div>
+
+  {call .footer}
+    {param prettify: $prettify /}
+  {/call}
+{/template}
+
+/**
+ * @param title
+ * @param? prettify true if https://code.google.com/p/google-code-prettify/
+ *     should be used.
+ */
+{template .header}
+{let $fullTitle}
+  Buck: {$title}
+{/let}
+<!doctype html>
+<html>
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#">
+  <title>{$fullTitle}</title>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  {if $prettify}
+    <link type="text/css"
+          rel="stylesheet"
+          href="{ROOT}google-code-prettify/prettify.css"
+          >
+  {/if}
+  // List buck.css second to override prettify.
+  <link type="text/css" rel="stylesheet" href="{ROOT}buck.css">
+
+// Google Analytics.
+<script>
+(function(i,s,o,g,r,a,m){lb}i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){lb}
+(i[r].q=i[r].q||[]).push(arguments){rb},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+{rb})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-40185670-1', 'github.io');
+ga('send', 'pageview');
+</script>
+
+  // TODO(mbolin): Pass $og_type in as a parameter.
+  {let $og_type}
+    {if $title == 'An Android build tool'}
+      website
+    {else}
+      article
+    {/if}
+  {/let}
+
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="{$title}">
+  <meta property="og:site_name" content="Buck: an Android build tool">
+  <meta property="og:image" content="http://newsroom.fb.com/display-media/265/4">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="690">
+  <meta property="og:image:height" content="690">
+  <meta property="og:type" content="{$og_type}">
+  <meta property="fb:admins" content="{FB_APP_ID}">
+
+</head>
+<body>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {lb}
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId={FB_APP_ID}";
+  fjs.parentNode.insertBefore(js, fjs);
+{rb}(document, 'script', 'facebook-jssdk'));</script>
+
+<h1>
+  <div class="{css titlebar}">
+    <div class="fb-like {css buck_like}"
+         data-send="false"
+         data-layout="standard"
+         data-width="350"
+         data-show-faces="false"
+         data-colorscheme="light"
+         data-action="like">
+    </div>
+
+    <div>{$fullTitle}</div>
+  </div>
+</h1>
+<div class="{css content_frame}">
+
+  {call buck.tableOfContents data="all" /}
+  <div class="{css content}">
+
+{/template}
+
+/**
+ * Consider passing in the path to the URL of the page that the user
+ * is currently on and not hyperlinking that item in the table of contents.
+ */
+{template .tableOfContents}
+<div class="{css toc}">
+<ul class="{css toc_root}">
+  <li><span class="{css toc_header}">Getting Started</span>
+  <ul>
+    <li><a href="{ROOT}">Overview</a>
+    <li><a href="{ROOT}setup/quickstart.html">Quick Start</a>
+    <li><a href="{ROOT}setup/install.html">Downloading and Installing Buck</a>
+  </ul>
+  <li><span class="{css toc_header}">Concepts</span>
+  <ul>
+    <li><a href="{ROOT}concept/build_rule.html">Build Rule</a>
+    <li><a href="{ROOT}concept/build_target.html">Build Target</a>
+    <li><a href="{ROOT}concept/build_file.html">Build File</a>
+    <li><a href="{ROOT}concept/buckversion.html">.buckversion</a>
+    <li><a href="{ROOT}concept/nobuckcheck.html">.nobuckcheck</a>
+    <li><a href="{ROOT}concept/buckconfig.html">.buckconfig</a>
+    <li><a href="{ROOT}concept/build_target_pattern.html">Build Target Pattern</a>
+    <li><a href="{ROOT}concept/visibility.html">Visibility</a>
+    <li><a href="{ROOT}concept/troubleshooting.html">Troubleshooting</a>
+  </ul>
+  <li><span class="{css toc_header}">Build Rules</span>
+  <ul>
+    // TODO(mbolin): document android_instrumentation_apk
+    // TODO(mbolin): document robolectric_test
+    {foreach $rule in [
+        'android_binary',
+        'android_library',
+        'android_resource',
+        'apk_genrule',
+        'gen_aidl',
+        'genrule',
+        'java_binary',
+        'java_library',
+        'java_test',
+        'ndk_library',
+        'prebuilt_jar',
+        'prebuilt_native_library',
+        'project_config',
+        ]}
+      <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
+    {/foreach}
+  </ul>
+  <li><span class="{css toc_header}">Functions</span>
+  <ul>
+    {foreach $function in [
+        'genfile',
+        'glob',
+        'include_defs',
+        ]}
+      <li><a href="{ROOT}function/{$function}.html">{$function}()</a>
+    {/foreach}
+  </ul>
+  <li><span class="{css toc_header}">Commands</span>
+  <ul>
+    {foreach $command in [
+        'audit',
+        'build',
+        'clean',
+        'install',
+        'project',
+        'targets',
+        'test',
+        'uninstall',
+        ]}
+      <li><a href="{ROOT}command/{$command}.html">buck {$command}</a>
+    {/foreach}
+  </ul>
+  <li><span class="{css toc_header}">Extending Buck</span>
+  <ul>
+    <li><a href="{ROOT}extending/macros.html">Custom Macros</a>
+    <li><a href="{ROOT}extending/rules.html">Custom Rules</a>
+  </ul>
+  <li><span class="{css toc_header}">Contributing to Buck</span>
+  <ul>
+    <li><a href="{ROOT}contributing/development.html">Development Workflow</a>
+    <li><a href="{ROOT}contributing/codestyle.html">Code Style</a>
+    <li><a href="{ROOT}javadoc">API</a>
+    <li><a href="https://github.com/facebook/buck">Browse the Source Code</a>
+  </ul>
+</ul>
+</div>
+{/template}
+
+/**
+ * @param? prettify true if https://code.google.com/p/google-code-prettify/
+ *     should be used.
+ */
+{template .footer}
+  </div> // closes .content
+</div>   // closes .contentFrame
+
+
+{if hasData() and $prettify}
+  <script src="{ROOT}google-code-prettify/prettify.js"></script>
+  <script>prettyPrint()</script>
+{/if}
+
+</body>
+</html>
+{/template}
+
+
+/**
+ * Used to format an argument to a build rule.
+ *
+ * @param name Name of the argument.
+ * @param? default What the default value should be. If null, the argument is
+ *     required.
+ * @param desc Prose description of the argument.
+ */
+{template .arg}
+  <li class="{css arg}"><code>{$name}</code>
+
+  {sp}
+  {if isNonnull($default)}
+    (defaults to <code>{$default}</code>)
+  {else}
+    (required)
+  {/if}
+  {sp}
+
+  {$desc|noAutoescape}
+
+{/template}
+
+
+/**
+ * @param overview HTML description of the rule.
+ * @param args HTML documentation for each arg for the rule.
+ *     Should be created using multiple applications of the {buck.arg}
+ *     template.
+ * @param? examples HTML documentation that shows examples of the build
+ *     rule in action.
+ * @param? furtherexp Further explanation; HTML shown after arguments and
+        examples.
+ */
+{template .rule}
+{$overview|noAutoescape}
+
+<h2>Arguments</h2>
+<ul class="{css arglist}">
+  {$args|noAutoescape}
+</ul>
+
+{if $examples}
+  <h2>Examples</h2>
+  {$examples|noAutoescape}
+{/if}
+{if $furtherexp}
+  {$furtherexp|noAutoescape}
+{/if}
+{/template}
+
+
+/**
+ * Used to format an argument to a build rule.
+ *
+ * @param? name Name of the argument.
+ * @param? default What the default value should be. If null, the argument is
+ *     required.
+ * @param desc Prose description of the argument.
+ */
+{template .functionArg}
+  <li class="{css arg}">
+    {if $name}
+      <code>{$name}</code>{sp}
+    {/if}
+
+  {if isNonnull($default)}
+    (defaults to <code>{$default}</code>)
+    {sp}
+  {/if}
+
+  {$desc|noAutoescape}
+{/template}
+
+
+/**
+ * Used to format a parameter of a command.
+ *
+ * @param name Name of the parameter.
+ * @param? alias The alias for this parameter.
+ * @param desc Prose description of the parameter.
+ */
+{template .param}
+  <li class="{css arg}"><code>{$name}</code>
+  {sp}
+  {if $alias}
+    <code>({$alias})</code>
+  {/if}
+
+  {sp}
+  {$desc|noAutoescape}
+
+{/template}
+
+
+/**
+ * @param overview HTML description of the command.
+ * @param params HTML documentation for each param of the command.
+ *     Should be created using multiple applications of the {buck.param}
+ *     template.
+ * @param? examples HTML documentation that shows examples of the build
+ *     rule in action.
+ */
+{template .command}
+{$overview|noAutoescape}
+
+<h2>Parameters</h2>
+<ul class="{css arglist}">
+  {$params|noAutoescape}
+</ul>
+
+{if $examples}
+  <h2>Examples</h2>
+  {$examples|noAutoescape}
+{/if}
+{/template}
+
+
+/**
+ * @param overview HTML description of the function.
+ * @param args HTML documentation for each arg for the function.
+ *     Should be created using multiple applications of the {buck.functionArg}
+ *     template.
+ * @param? examples HTML documentation that shows examples of the function
+ *     in action.
+ */
+{template .function}
+  // For now, functions and build rules should be documented the same way.
+  {call .rule data="all" /}
+{/template}
+
+
+/** @param name */
+{template .ruleLink}
+<a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
+{/template}
+
+
+/***/
+{template .android_binary}
+{call .ruleLink}{param name : 'android_binary' /}{/call}
+{/template}
+
+
+/***/
+{template .android_library}
+{call .ruleLink}{param name : 'android_library' /}{/call}
+{/template}
+
+
+/***/
+{template .android_resource}
+{call .ruleLink}{param name : 'android_resource' /}{/call}
+{/template}
+
+
+/***/
+{template .genrule}
+{call .ruleLink}{param name : 'genrule' /}{/call}
+{/template}
+
+
+/***/
+{template .java_library}
+{call .ruleLink}{param name : 'java_library' /}{/call}
+{/template}
+
+
+/***/
+{template .visibility_arg}
+{call buck.arg}
+  {param name : 'visibility' /}
+  {param default : '[]' /}
+  {param desc}
+  List of <a href="{ROOT}concept/build_target_pattern.html">build
+  target patterns</a> that identify the build rules that can include
+  this rule in its <code>deps</code>. 
+  {/param}
+{/call}
+{/template}
+
+/**
+ *
+ */
+{template .platformWarning}
+<strong>
+Note: Buck works only on Mac OS X and Linux. Windows is not supported.
+</strong>
+<p>
+{/template}
+
+
+/**
+ * @param? withAlias
+ */
+{template .installationInstructions}
+{literal}<pre>
+git checkout git@github.com:facebook/buck.git
+cd buck
+ant{/literal}{\n}
+{if $withAlias}
+sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck
+{else}
+./bin/buck --help
+{/if}
+</pre>
+{/template}

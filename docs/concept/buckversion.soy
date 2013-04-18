@@ -1,0 +1,62 @@
+{namespace buck.buckversion}
+
+/***/
+{template .soyweb}
+
+{call buck.header}
+  {param title: '.buckversion' /}
+{/call}
+
+<div class="{css overview}">
+
+If the root of your project contains a file named <code>.buckversion</code>,
+then Buck will expect that file to contain a Git hash that specifies the
+version of Buck that should be used to build your project.
+
+<p>
+
+If <code>.buckversion</code> is present, then <code>bin/buck</code> will
+compare the value in <code>.buckversion</code> with the value of
+{sp}<code>git rev-parse HEAD</code> in the directory where you checked out
+Buck from Git. If the values differ, then Buck will update itself to the
+revision that you specified (using <code>git fetch</code> and
+{sp}<code>git checkout</code>), and then rebuild itself.
+
+<p>
+
+If <code>.buckversion</code> is not present, then Buck assumes it is at
+the correct revision. In that scenario, <code>bin/buck</code> will only
+rebuild Buck if the compiled <code>.class</code> files for Buck are not present.
+
+<p>
+
+At Facebook, Buck has undergone rapid change, so if a new version of
+a binary version of Buck needed to be checked to the projects that use it
+every time Buck were updated, then those projects' version control histories
+would be littered with Buck binaries. Relying on this
+{sp}<code>.buckversion</code> scheme has made it possible to keep those
+repositories free of Buck binaries while iterating quickly on Buck.
+
+<p>
+
+To disable this behavior, you can either:
+
+<ul>
+  <li>Remove the <code>.buckversion</code> file.
+  <li>Add a <code>.nobuckcheck</code> file.
+      See the article on{sp}
+      <a href="{ROOT}concept/nobuckcheck.html"><code>.nobuckcheck</code></a>{sp}
+      for details
+</ul>
+
+Note that normally, a Git hash in <code>.buckversion</code> will be one
+on the master branch of Buck as hosted by Facebook on GitHub.
+However, if you create your own fork of Buck that developers check out,
+then this scheme should work just as well with the hashes from your forked repo.
+
+
+</div> // close overview
+
+{call buck.footer /}
+
+{/template}

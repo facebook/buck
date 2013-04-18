@@ -1,0 +1,16 @@
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//lib:junit',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:shell',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/command:command',
+    '//test/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/shell:shell',
+  ],
+)

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="**/BUCK" kind="src" path="src"/>
+	<classpathentry excluding="**/BUCK" kind="src" path="third-party/java/aosp/src"/>
+	<classpathentry excluding="**/BUCK" kind="src" path="test"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/guava-14.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/ddmlib-r21.jar"/>
+	<classpathentry kind="lib" path="lib/args4j.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="lib/jsr305.jar"/>
+	<classpathentry kind="lib" path="lib/easymock-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/objenesis-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/cglib-nodep-2.2.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.0.5.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-databind-2.0.5.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.0.5.jar"/>
+	<classpathentry kind="lib" path="lib/ini4j-0.5.2.jar"/>
+	<classpathentry kind="lib" path="lib/hamcrest-core-1.3.jar"/>
+	<classpathentry kind="lib" path="lib/hamcrest-library-1.3.jar"/>
+	<classpathentry kind="lib" path="lib/sdklib.jar"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>

@@ -1,0 +1,118 @@
+/*
+ * Copyright 2012-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.rules;
+
+import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Throwables;
+import com.google.common.eventbus.Subscribe;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
+/**
+ * Logs build events to java.util.logging.
+ */
+public class JavaUtilsLoggingBuildListener {
+
+  private final static Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
+  private final static Level LEVEL = Level.INFO;
+
+  public static void ensureLogFileIsWritten() {
+    try {
+      File dir = new File(BuckConstant.BIN_DIR);
+      if (!dir.exists() && !dir.mkdirs()) {
+        throw new HumanReadableException("Unable to create output directory: " + dir);
+      }
+
+      FileHandler handler = new FileHandler(
+          String.format("%s/build.log", BuckConstant.BIN_DIR), /* append */ false);
+      Formatter formatter = new BuildEventFormatter();
+      handler.setFormatter(formatter);
+
+      LOG.setUseParentHandlers(false);
+      LOG.addHandler(handler);
+
+      LOG.setLevel(LEVEL);
+
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  @Subscribe
+  public void buildStarted(BuildStarted started) {
+    LogRecord record = new LogRecord(LEVEL, "Build started");
+    record.setMillis(started.getTimestamp());
+    LOG.log(record);
+  }
+
+  @Subscribe
+  public void buildFinished(BuildFinished finished) {
+    LogRecord record = new LogRecord(LEVEL, "Build finished");
+    record.setMillis(finished.getTimestamp());
+    LOG.log(record);
+  }
+
+  @Subscribe
+  public void ruleStarted(BuildRuleStarted started) {
+    LogRecord record = new LogRecord(LEVEL, started.toString());
+    record.setMillis(started.getTimestamp());
+    LOG.log(record);
+  }
+
+  @Subscribe
+  public void ruleFinished(BuildRuleFinished finished) {
+    LogRecord record = new LogRecord(LEVEL, finished.toLogMessage());
+    record.setMillis(finished.getTimestamp());
+    LOG.log(record);
+  }
+
+  private static class BuildEventFormatter extends Formatter {
+
+    private final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
+      @Override protected SimpleDateFormat initialValue() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        // Normalize all the times.
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return format;
+      }
+    };
+
+    @Override
+    public String format(LogRecord logRecord) {
+      StringBuilder builder = new StringBuilder();
+
+      SimpleDateFormat format = dateFormat.get();
+      builder.append(format.format(new Date(logRecord.getMillis())));
+
+      builder.append("\t").append(logRecord.getLevel()).append("\t");
+      builder.append(formatMessage(logRecord));
+      builder.append("\n");
+
+      return builder.toString();
+    }
+  }
+}

@@ -1,0 +1,43 @@
+
+REQUIREMENTS
+~~~~~~~~~~~~
+
+- JDK1.4 (the build will not work in JDK1.5)
+- Apache ANT 1.5+ (official build uses v1.6.1)
+
+BUILDING EMMA
+~~~~~~~~~~~~~
+
+- cd into the directory containing build.xml and create a file
+  "build.properties" that tells the build where your JDK and ANT are located:
+
+    - if Java 1.4 is not your currently installed Java version, set the
+      following property to point to the "jre" subdirectory of your JDK 1.4
+      install:
+
+build.target.j2se.14.home = <JDK 1.4 install>/jre
+
+    - if you don't have ANT_HOME environment variable set up to point to ANT
+    1.5 home directory, set the following property:
+
+build.target.ant.15.home = <ANT 1.5 install dir> 
+
+- From the directory containing build.xml, execute:
+
+>ant
+
+- After a successful build, EMMA jars will be located in
+  ${basedir}/${dist.dir}, which defaults to ./dist
+
+
+- To remove all generated build artifacts and reset the build to a clean
+  state, execute:
+
+>ant clean
+
+ __________________________________________________________________________
+       Copyright (C) 2003-2004 Vlad Roubtsov. All rights reserved.
+
+ This program and the accompanying materials are made available under
+ the terms of the Common Public License v1.0 which accompanies this
+ distribution, and is available at http://www.eclipse.org/legal/cpl-v10.html

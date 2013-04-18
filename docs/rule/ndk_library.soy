@@ -1,0 +1,73 @@
+{namespace ndk_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'ndk_library()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview} 
+An <code>ndk_library()</code> is used to define a set of C/C++ files,
+an <code>Android.mk</code> and an <code>Application.mk</code> file that
+are used by the NDK's <code>ndk-build</code> tool to generate one or more shared
+objects.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  List of build targets to build before this rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Array of strings passed verbatim to <code>ndk-build</code>. Normally
+  this is not needed, but in some cases you may want to put something
+  here. For example, this can be used to build the libraries in debug
+  mode (<code>NDK_DEBUG=1</code>) or set the number of jobs spawned by
+  {sp}<code>ndk-build</code> (by default, the same as the number of
+  cores).
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param furtherexp}
+
+An <code>android_binary()</code> that includes this library will
+aggregate all of the native shared objects into a directory in the
+root of the APK named <code>lib/</code>.
+<p>
+Unlike the default invocation of <code>ndk-build</code>,
+{sp}<code>buck</code> will put all intermediate files and build output
+into a subdirectory under <code>buck-out/gen</code>.
+<p>
+Also, because <code>ndk-build</code> and <code>Android.mk</code> do not
+expose the necessary dependency information, <code>buck</code> assumes
+that all files with the following extensions are part of the build:
+{sp}<code>c, cpp, cc, cxx, h, hpp, mk</code>.
+
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

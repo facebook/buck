@@ -1,0 +1,56 @@
+{namespace buck.build_target}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Build Target' /}
+    {param prettify: true /}
+    {param content}
+
+A <strong>build target</strong> is a string that is used to
+identify a build rule in your project.
+
+<p>
+Here is an example of a fully-qualified build target:
+
+<pre>&#x2F/java/com/facebook/share:ui</pre>
+
+A fully-qualified build target has three components:
+
+<ol>
+  <li>The <code>&#x2F/</code> prefix indicates that this path is
+      relative to the root of your project.
+  <li>The <code>java/com/facebook/share</code> component between
+      the <code>&#x2F/</code> prefix and the colon (<code>:</code>) indicates
+      that the build file can be found in the{sp}
+      <code>java/com/facebook/share</code> directory.
+  <li>The <code>ui</code> after the colon (<code>:</code>) indicates the name
+      of the build rule within the build file in which it is defines.
+      Build rule names must be unique within a build file.
+</ol>
+
+A relative build target can be used to reference another build target within
+the same <a href="build_file.html">build file</a>. A relative build target
+starts with a colon (<code>:</code>) and is followed by only the third
+component (or "short name") of the fully-qualified build target. For example,
+within <code>java/com/facebook/share/BUCK</code>, <code>:ui</code> can be
+used to reference <code>&#x2F/java/com/facebook/share:ui</code>:
+
+{literal}<pre class="prettyprint lang-py">
+# This is in java/com/facebook/share/BUCK.
+java_binary(
+  name = 'ui_jar',
+  deps = [
+    # This would be the same as using:
+    # <code>'&#x2F/java/com/facebook/share:ui'</code>
+    ':ui',
+  ],
+)
+</pre>{/literal}
+
+Build targets are frequently used as arguments to build rules and to
+the command-line interface for Buck.
+
+    {/param}
+  {/call}
+{/template}

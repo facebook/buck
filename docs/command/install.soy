@@ -1,0 +1,48 @@
+{namespace buck.command.install}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck install' /}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+Builds and installs the APK for an <code>android_binary</code>
+{sp}target.
+
+<p>
+Takes an <a
+href="{ROOT}rule/android_binary.html"><code>android_binary</code></a>,
+builds it, and install it by running <code>adb install -r
+&lt;path_to_the_APK></code>.
+
+{/param}
+
+{param params}
+{call buck.param}
+  {param name: 'run' /}
+  {param alias: 'r'/}
+  {param desc}
+  Launch the <code>.apk</code> with the default activity after
+  installation.
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'activity <fully qualified class name>' /}
+  {param alias: 'a'/}
+  {param desc}
+  Launch the <code>.apk</code> with the specified activity after
+  installation.
+  {/param}
+{/call}
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

@@ -1,0 +1,171 @@
+<project name="buck" default="jar">
+
+  <property name="src.dir" value="${basedir}/src" />
+  <property name="aosp.src.dir" value="third-party/java/aosp/src" />
+  <property name="test.dir" value="${basedir}/test" />
+  <property name="lib.dir" value="${basedir}/lib" />
+  <property name="build.dir" value="${basedir}/build" />
+  <property name="testrunner.src.dir" value="${src.dir}/com/facebook/buck/junit/" />
+  <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
+  <property name="buck.path_to_buck_py" value="${basedir}/src/com/facebook/buck/parser/buck.py" />
+  <property name="buck.path_to_emma_jar"
+            value="${basedir}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar"
+            />
+  <property name="classes.dir" value="${build.dir}/classes" />
+  <property name="testclasses.dir" value="${build.dir}/testclasses" />
+  <property name="javadoc.dir" value="${build.dir}/javadoc" />
+
+  <fileset dir="${lib.dir}" id="buck.jars">
+    <include name="args4j.jar" />
+   <include name="ddmlib-r21.jar" />
+    <include name="guava-14.0.1.jar" />
+    <include name="ini4j-0.5.2.jar" />
+    <include name="jackson-annotations-2.0.5.jar" />
+    <include name="jackson-core-2.0.5.jar" />
+    <include name="jackson-databind-2.0.5.jar" />
+    <include name="jsr305.jar" />
+    <include name="sdklib.jar" />
+  </fileset>
+
+  <path id="classpath">
+    <fileset refid="buck.jars" />
+    <pathelement location="${classes.dir}" />
+    <pathelement location="${src.dir}" />
+  </path>
+
+  <path id="junit">
+    <pathelement location="${lib.dir}/junit-4.11.jar" />
+    <pathelement location="${lib.dir}/hamcrest-core-1.3.jar" />
+    <pathelement location="${lib.dir}/hamcrest-library-1.3.jar" />
+  </path>
+
+  <target name="clean" description="remove all generated files">
+    <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="clean" />
+    <delete dir="${build.dir}" />
+  </target>
+
+  <target name="compile-testrunner">
+    <mkdir dir="${testrunner.classes.dir}" />
+    <javac srcdir="${testrunner.src.dir}"
+           destdir="${testrunner.classes.dir}"
+           classpathref="junit"
+           debug="on"
+           includeAntRuntime="no"
+           >
+      <compilerarg value="-Werror" />
+    </javac>
+  </target>
+
+  <target name="compile" depends="compile-testrunner" description="compile Java source code">
+    <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="core.package" />
+    <mkdir dir="${classes.dir}" />
+    <javac destdir="${classes.dir}"
+           classpathref="classpath"
+           debug="on"
+           deprecation="on"
+           includeAntRuntime="no"
+           >
+      <src path="${src.dir}" />
+      <src path="${aosp.src.dir}" />
+      <exclude name="com/facebook/buck/junit/**" />
+      <compilerarg value="-Werror" />
+    </javac>
+  </target>
+
+  <target name="jar"
+          depends="compile"
+          description="build buck.jar"
+          >
+    <jar destfile="${build.dir}/buck.jar" update="true">
+      <zipfileset refid="buck.jars" />
+      <fileset dir="${src.dir}"
+               excludes="**/*.java, **/BUCK"
+               />
+      <fileset dir="${classes.dir}" />
+      <manifest>
+        <attribute name="Main-Class" value="com.facebook.buck.cli.Main" />
+      </manifest>
+    </jar>
+  </target>
+
+  <path id="tests.classpath">
+    <path refid="classpath" />
+    <fileset dir="${lib.dir}" >
+      <include name="cglib-nodep-2.2.jar" />
+      <include name="easymock-3.0.jar" />
+      <include name="junit-4.11.jar" />
+      <include name="hamcrest-core-1.3.jar" />
+      <include name="hamcrest-library-1.3.jar" />
+      <include name="objenesis-1.2.jar" />
+    </fileset>
+    <pathelement location="${testclasses.dir}" />
+    <pathelement location="${test.dir}" />
+    <pathelement location="${testrunner.classes.dir}" />
+  </path>
+
+  <target name="compile-tests"
+          depends="compile"
+          >
+    <mkdir dir="${testclasses.dir}" />
+    <javac srcdir="${test.dir}"
+           destdir="${testclasses.dir}"
+           classpathref="tests.classpath"
+           debug="on"
+           deprecation="on"
+           includeAntRuntime="no"
+           >
+      <compilerarg value="-Werror" />
+    </javac>
+  </target>
+
+  <target name="java-test"
+          depends="compile-tests"
+          description="runs the Java tests"
+          >
+    <junit failureproperty="hasFailingTests"
+           showoutput="true">
+      <sysproperty key="buck.path_to_emma_jar" value="${buck.path_to_emma_jar}" />
+      <sysproperty key="buck.path_to_buck_py" value="${buck.path_to_buck_py}" />
+
+      <formatter type="plain" usefile="false" />
+
+      <batchtest fork="yes">
+        <fileset dir="${test.dir}">
+          <!--
+            Do not exclude tests that start with "Abstract", as there are some tests for abstract
+            classes.
+          -->
+          <include name="**/*Test.java" />
+        </fileset>
+      </batchtest>
+      <classpath refid="tests.classpath" />
+    </junit>
+    <fail if="hasFailingTests" />
+  </target>
+
+  <target name="py-test" description="runs the Python tests">
+    <exec executable="python" failonerror="true">
+      <arg value="src/com/facebook/buck/parser/buck_test.py" />
+    </exec>
+  </target>
+
+  <target name="test" depends="java-test, py-test" description="runs the unit tests" />
+
+  <target name="javadoc" description="generates HTML documentation for Java code">
+    <mkdir dir="${javadoc.dir}" />
+    <javadoc destdir="${javadoc.dir}"
+             protected="true"
+             classpathref="tests.classpath"
+             windowtitle="Buck"
+             >
+      <fileset dir="${src.dir}" />
+      <fileset dir="${test.dir}" />
+      <link href="http://docs.oracle.com/javase/7/docs/api/" />
+      <link href="http://docs.guava-libraries.googlecode.com/git-history/v14.0/javadoc/" />
+      <!-- The latest version of the javadocs is only for 4.10 -->
+      <link href="http://kentbeck.github.com/junit/javadoc/4.10/" />
+    </javadoc>
+  </target>
+
+  <target name="all" depends="jar, test, javadoc" />
+</project>

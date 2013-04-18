@@ -1,0 +1,19 @@
+<component name="libraryTable">
+  <library name="buck-lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/jackson-annotations-2.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackson-core-2.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackson-databind-2.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/args4j.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jsr305.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ini4j-0.5.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ddmlib-r21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/sdklib.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/guava-14.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/guava-14.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

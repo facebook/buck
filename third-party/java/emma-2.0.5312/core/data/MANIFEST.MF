@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Created-By: @JDK_ID@
+Specification-Title: @APP_NAME@
+Specification-Vendor: (C) Vladimir Roubtsov
+Implementation-Vendor: @BUILD_USER_NAME@
+Specification-Version: @APP_MAJOR_VERSION@.@APP_MINOR_VERSION@
+Implementation-Version: @APP_MAJOR_VERSION@.@APP_MINOR_VERSION@.@APP_BUILD_ID@@APP_BUILD_RELEASE_TAG@ (@APP_BUILD_DATE@)

@@ -1,0 +1,33 @@
+java_library(
+  name = 'testutil',
+  srcs = [
+    'FakeBuildRule.java',
+    'FakeJavaLibraryRule.java',
+    'FakeTestRule.java',
+    'RetainOrderComparator.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:rules',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/parser:parser',
+    '//test/com/facebook/buck/cli:cli',
+  ],
+)
+
+java_test(
+  name = 'rules',
+  srcs = glob(['*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/rules:rules',
+  ],
+  deps = [
+    ':testutil',
+    '//lib:easymock',
+    '//lib:junit',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/parser:NonCheckingBuildRuleFactoryParams',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)

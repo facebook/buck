@@ -1,0 +1,145 @@
+prebuilt_jar(
+  name = 'args4j',
+  binary_jar = 'args4j.jar',
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+  ],
+)
+
+prebuilt_jar(
+  name = 'cglib',
+  binary_jar = 'cglib-nodep-2.2.jar',
+)
+
+java_library(
+  name = 'easymock',
+  deps = [
+    ':cglib',
+    ':easymock_jar_only',
+    ':objenesis',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/command:command',
+    '//test/com/facebook/buck/model:model',
+    '//test/com/facebook/buck/parser:parser',
+    '//test/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/shell:shell',
+    '//test/com/facebook/buck/debug:debug',
+  ],
+)
+
+prebuilt_jar(
+  name = 'easymock_jar_only',
+  binary_jar = 'easymock-3.0.jar',
+  visibility = [
+    # This build rule should not be public:
+    # Users should depend on the java_library() rule so that
+    # cglib and objenesis are always included with EasyMock.
+  ],
+)
+
+prebuilt_jar(
+  name = 'ddmlib',
+  binary_jar = 'ddmlib-r21.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'guava',
+  binary_jar = 'guava-14.0.1.jar',
+  source_jar = 'guava-14.0.1-sources.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'ini4j',
+  binary_jar = 'ini4j-0.5.2.jar',
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jackson-annotations',
+  binary_jar = 'jackson-annotations-2.0.5.jar',
+  visibility = [
+    '//src/com/facebook/buck/command:command',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jackson-core',
+  binary_jar = 'jackson-core-2.0.5.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jackson-databind',
+  binary_jar = 'jackson-databind-2.0.5.jar',
+  visibility = [
+    '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/rules:rules',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jsr305',
+  binary_jar = 'jsr305.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit-4.11.jar',
+  deps = [
+    ':hamcrest-core',
+    ':hamcrest-library',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/junit:junit',
+    '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/command:command',
+    '//test/com/facebook/buck/debug:debug',
+    '//test/com/facebook/buck/graph:graph',
+    '//test/com/facebook/buck/junit:junit',
+    '//test/com/facebook/buck/model:model',
+    '//test/com/facebook/buck/parcelable:parcelable',
+    '//test/com/facebook/buck/parser:parser',
+    '//test/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/shell:shell',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/util:util',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest-core',
+  binary_jar = 'hamcrest-core-1.3.jar',
+)
+
+prebuilt_jar(
+  name = 'hamcrest-library',
+  binary_jar = 'hamcrest-library-1.3.jar',
+)
+
+prebuilt_jar(
+  name = 'objenesis',
+  binary_jar = 'objenesis-1.2.jar',
+)
+
+prebuilt_jar(
+  name = 'sdklib',
+  binary_jar = 'sdklib.jar',
+  visibility = [
+    '//src/com/facebook/buck/shell:shell',
+  ]
+)

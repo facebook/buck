@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.sample.simple">
+    <application>
+        <activity android:name="com.sample.simple.activity.SimpleActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+                android:name="com.sample.simple.activity.SimpleFragmentActivity"
+                android:windowSoftInputMode="adjustResize"
+                android:launchMode="singleTop"
+                android:configChanges="keyboard|keyboardHidden|screenLayout|orientation"/>
+        <activity android:name="com.sample.simple.activity.AlertActivity"/>
+    </application>
+</manifest>

@@ -1,0 +1,30 @@
+{namespace buck.rules}
+
+/***/
+{template .soyweb}
+
+{call buck.header}
+  {param title: 'Adding Custom Rules to Buck' /}
+{/call}
+
+<div class="{css overview}">
+
+Unfortunately, Buck does not have an official extension point for
+creating custom build rules at this time.
+
+<p>
+
+In practice, the only way to introduce a new build rule is to fork
+Buck and modify its source code directly.
+
+<p>
+
+Official support for custom build rules is something that we hope
+to add in the near future.
+
+
+</div> // close overview
+
+{call buck.footer /}
+
+{/template}

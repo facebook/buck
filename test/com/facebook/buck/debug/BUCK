@@ -1,0 +1,12 @@
+java_test(
+  name = 'debug',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/debug:debug',
+  ],
+  deps = [
+    '//lib:junit',
+    '//lib:easymock',
+    '//src/com/facebook/buck/debug:debug',
+  ],
+)

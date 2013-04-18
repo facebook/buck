@@ -1,0 +1,93 @@
+{namespace prebuilt_jar}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_jar()' /}
+    {param prettify: true /}
+    {param content}
+
+{call buck.rule}
+{param overview}
+A <code>prebuilt_jar()</code> rule is used to identify a JAR file that
+is checked into our repository as a precompiled binary rather than one
+that is built from source by Buck. Frequently, these are used to
+reference third-party JAR files (such as </code>junit.jar</code>) and
+are used as dependencies of <a
+href="java_library.html"><code>java_library()</code></a> rules.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'binary_jar' /}
+  {param desc}
+  Path to the pre-built JAR file.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'source_jar' /}
+  {param default : 'None' /}
+  {param desc}
+  Path to a JAR file that contains the <code>.java</code> files to create
+  the <code>.class</code> in the <code>binary_jar</code>. This is frequently
+  provided for debugging purposes.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'javadoc_url' /}
+  {param default : 'None' /}
+  {param desc}
+  URL to the Javadoc for the <code>.class</code> files in the
+  {sp}<code>binary_jar</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Rules that must be built before this rule. Because the
+  {sp}<code>binary_jar</code> is already built, there should be nothing to
+  build, so this should be empty.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit-4.8.2.jar',
+  source_jar = 'junit-4.8.2-sources.jar',
+  javadoc_url = 'http://kentbeck.github.com/junit/javadoc/4.8/',
+)
+
+java_library(
+  name = 'tests',
+  srcs = glob(['tests/**/*Test.java']),
+  deps = [
+    ':junit',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
