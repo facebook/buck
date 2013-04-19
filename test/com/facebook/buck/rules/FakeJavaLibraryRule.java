@@ -20,6 +20,7 @@ import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRule {
@@ -35,6 +36,11 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
   @Override
   public ImmutableSet<String> getClasspathEntries() {
     return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
+    return ImmutableSetMultimap.of();
   }
 
   @Override

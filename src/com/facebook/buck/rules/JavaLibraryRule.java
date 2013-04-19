@@ -18,13 +18,20 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 public interface JavaLibraryRule extends BuildRule {
 
   /**
+   * @return Map of dependent BuildRules to the classpath entries provided by those rules.
+   */
+  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap();
+
+  /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
-   *     compile the {@code srcs} associated with this rule
+   *     compile the {@code srcs} associated with this rule.  This is equivalent to the set of
+   *     values returned by {@link #getClasspathEntriesMap()}.
    */
   public ImmutableSet<String> getClasspathEntries();
 

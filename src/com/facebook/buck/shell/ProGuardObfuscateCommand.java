@@ -21,6 +21,7 @@ import com.facebook.buck.util.Functions;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -164,4 +165,31 @@ public final class ProGuardObfuscateCommand extends ShellCommand {
     out.close();
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null || !(obj instanceof ProGuardObfuscateCommand)) {
+      return false;
+    }
+    ProGuardObfuscateCommand that = (ProGuardObfuscateCommand) obj;
+
+    return
+        Objects.equal(useAndroidProguardConfigWithOptimizations,
+            that.useAndroidProguardConfigWithOptimizations) &&
+        Objects.equal(additionalLibraryJarsForProguard,
+            that.additionalLibraryJarsForProguard) &&
+        Objects.equal(customProguardConfigs, that.customProguardConfigs) &&
+        Objects.equal(generatedProGuardConfig, that.generatedProGuardConfig) &&
+        Objects.equal(inputAndOutputEntries, that.inputAndOutputEntries) &&
+        Objects.equal(proguardDirectory, that.proguardDirectory);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(useAndroidProguardConfigWithOptimizations,
+        additionalLibraryJarsForProguard,
+        customProguardConfigs,
+        generatedProGuardConfig,
+        inputAndOutputEntries,
+        proguardDirectory);
+  }
 }

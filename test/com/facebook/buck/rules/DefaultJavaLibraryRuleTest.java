@@ -40,6 +40,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -312,6 +313,40 @@ public class DefaultJavaLibraryRuleTest {
     MoreAsserts.assertContainsOne(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+  }
+
+  @Test
+  public void testGetClasspathEntriesMap() {
+    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    JavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(libraryOneTarget)
+        .addSrc("java/src/com/libone/bar.java")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
+
+    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
+    JavaLibraryRule libraryTwo = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(libraryTwoTarget)
+        .addSrc("java/src/com/libtwo/foo.java")
+        .addDep("//:libone")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
+
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
+    JavaLibraryRule parent = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(parentTarget)
+        .addSrc("java/src/com/parent/meh.java")
+        .addDep("//:libtwo")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
+
+    assertEquals(ImmutableSetMultimap.of(
+          libraryOne, "buck-out/gen/lib__libone__output/libone.jar",
+          libraryTwo, "buck-out/gen/lib__libtwo__output/libtwo.jar",
+          parent, "buck-out/gen/lib__parent__output/parent.jar"),
+        parent.getClasspathEntriesMap());
   }
 
   /**

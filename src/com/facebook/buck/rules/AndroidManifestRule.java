@@ -33,18 +33,18 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   private final Optional<String> manifestFile;
   private final Optional<String> skeletonFile;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
-  private final ImmutableSet<String> classpathEntriesToExcludeFromDex;
+  private final ImmutableSet<BuildRule> buildRulesToExcludeFromDex;
 
   protected AndroidManifestRule(BuildRuleParams buildRuleParams,
                                 Optional<String> skeletonFile,
                                 Optional<String> manifestFile,
-                                Set<String> classpathEntriesToExcludeFromDex) {
+                                Set<BuildRule> buildRulesToExcludeFromDex) {
     super(buildRuleParams);
     this.manifestFile = manifestFile;
     this.skeletonFile = skeletonFile;
-    this.classpathEntriesToExcludeFromDex = ImmutableSet.copyOf(classpathEntriesToExcludeFromDex);
+    this.buildRulesToExcludeFromDex = ImmutableSet.copyOf(buildRulesToExcludeFromDex);
     this.transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(this, this.classpathEntriesToExcludeFromDex);
+        new AndroidTransitiveDependencyGraph(this, this.buildRulesToExcludeFromDex);
   }
 
   @Override
@@ -97,14 +97,14 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
 
     protected Optional<String> manifestFile;
     protected Optional<String> skeletonFile;
-    private Set<String> classpathEntriesToExcludeFromDex = Sets.newHashSet();
+    private Set<String> buildRulesToExcludeFromDex = Sets.newHashSet();
 
     @Override
     public AndroidManifestRule build(Map<String, BuildRule> buildRuleIndex) {
       return new AndroidManifestRule(createBuildRuleParams(buildRuleIndex),
           skeletonFile,
           manifestFile,
-          classpathEntriesToExcludeFromDex);
+          getBuildTargetsAsBuildRules(buildRuleIndex, buildRulesToExcludeFromDex));
     }
 
     public Builder setManifestFile(String manifestFile) {
@@ -117,8 +117,8 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
       return this;
     }
 
-    public Builder addClasspathEntryToExcludeFromDex(String entry) {
-      this.classpathEntriesToExcludeFromDex.add(entry);
+    public Builder addBuildRuleToExcludeFromDex(String entry) {
+      this.buildRulesToExcludeFromDex.add(entry);
       return this;
     }
 

@@ -105,6 +105,11 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     }
 
     @Override
+    public AndroidLibraryRule.Builder addSrc(String src) {
+      return (AndroidLibraryRule.Builder)super.addSrc(src);
+    }
+
+    @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
       return this;

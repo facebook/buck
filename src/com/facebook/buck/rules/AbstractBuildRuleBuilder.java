@@ -63,8 +63,12 @@ public abstract class AbstractBuildRuleBuilder implements BuildRuleBuilder {
 
   protected ImmutableSortedSet<BuildRule> getDepsAsBuildRules(
       final Map<String, BuildRule> buildRuleIndex) {
+    return getBuildTargetsAsBuildRules(buildRuleIndex, getDeps());
+  }
+
+  protected ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(final Map<String, BuildRule> buildRuleIndex, Iterable<String> buildTargets) {
     return ImmutableSortedSet.copyOf(Iterables.transform(
-        getDeps(), new Function<String, BuildRule>() {
+        buildTargets, new Function<String, BuildRule>() {
       @Override
       public BuildRule apply(String dep) {
         BuildRule buildRule = buildRuleIndex.get(dep);

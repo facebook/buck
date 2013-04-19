@@ -24,18 +24,19 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 public class AndroidTransitiveDependencyGraph {
 
   private AbstractCachingBuildRule buildRule;
-  private ImmutableSet<String> classpathEntriesToExcludeFromDex;
+  private ImmutableSet<BuildRule> buildRulesToExcludeFromDex;
 
   public AndroidTransitiveDependencyGraph(
       AbstractCachingBuildRule buildRule,
-      ImmutableSet<String> classpathEntriesToExcludeFromDex) {
+      ImmutableSet<BuildRule> buildRulesToExcludeFromDex) {
     this.buildRule = buildRule;
-    this.classpathEntriesToExcludeFromDex = classpathEntriesToExcludeFromDex;
+    this.buildRulesToExcludeFromDex = buildRulesToExcludeFromDex;
   }
 
   public AndroidTransitiveDependencies findDependencies(
@@ -45,6 +46,9 @@ public class AndroidTransitiveDependencyGraph {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
     final ImmutableSet.Builder<String> pathsToDexBuilder = ImmutableSet.builder();
+
+    // Paths to the classfiles to not dex.
+    final ImmutableSet.Builder<String> noDxPathsBuilder = ImmutableSet.builder();
 
     // These are paths to third-party jars that may contain resources that must be included in the
     // final APK.
@@ -68,7 +72,13 @@ public class AndroidTransitiveDependencyGraph {
     final ImmutableSet.Builder<String> proguardConfigs = ImmutableSet.builder();
 
     // Update pathsToDex.
-    pathsToDexBuilder.addAll(buildRule.getClasspathEntriesForDeps());
+    for (Map.Entry<BuildRule, String> entry : buildRule.getClasspathEntriesForDeps().entries()) {
+      if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
+        pathsToDexBuilder.add(entry.getValue());
+      } else {
+        noDxPathsBuilder.add(entry.getValue());
+      }
+    }
 
     // This is not part of the AbstractDependencyVisitor traversal because
     // AndroidResourceRule.getAndroidResourceDeps() does a topological sort whereas
@@ -139,23 +149,18 @@ public class AndroidTransitiveDependencyGraph {
     }
 
     // Filter out the classpath entries to exclude from dex'ing, if appropriate.
-    Set<String> classpathEntries;
-    Set<String> pathsToThirdPartyJars;
-    if (classpathEntriesToExcludeFromDex.isEmpty()) {
-      classpathEntries = pathsToDexBuilder.build();
-      pathsToThirdPartyJars = pathsToThirdPartyJarsBuilder.build();
-    } else {
-      classpathEntries = Sets.newHashSet(pathsToDexBuilder.build());
-      classpathEntries.removeAll(classpathEntriesToExcludeFromDex);
+    Set<String> classpathEntries = pathsToDexBuilder.build();
+    Set<String> pathsToThirdPartyJars = pathsToThirdPartyJarsBuilder.build();
+    ImmutableSet<String> noDxPaths = noDxPathsBuilder.build();
 
+    if (!noDxPaths.isEmpty()) {
       // Classpath entries that should be excluded from dexing should also be excluded from
       // pathsToThirdPartyJars because their resources should not end up in main APK. If they do,
       // the pre-dexed library may try to load a resource from the main APK rather than from within
       // the pre-dexed library (even though the resource is available in both locations). This
       // causes a significant performance regression, as the resource may take more than one second
       // longer to load.
-      pathsToThirdPartyJars = Sets.newHashSet(pathsToThirdPartyJarsBuilder.build());
-      pathsToThirdPartyJars.removeAll(classpathEntriesToExcludeFromDex);
+      pathsToThirdPartyJars = Sets.difference(pathsToThirdPartyJars, noDxPaths);
     }
 
     return new AndroidTransitiveDependencies(classpathEntries,
@@ -166,7 +171,8 @@ public class AndroidTransitiveDependencyGraph {
         details.resDirectories,
         rDotJavaPackages,
         uncachedBuildrules.build(),
-        proguardConfigs.build());
+        proguardConfigs.build(),
+        noDxPaths);
   }
 
   private static boolean ruleIsCachedQuiet(BuildRule rule, Optional<BuildContext> context) {

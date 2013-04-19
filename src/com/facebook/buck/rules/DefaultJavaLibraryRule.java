@@ -33,6 +33,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
@@ -71,11 +72,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final Optional<File> outputJar;
 
-  @Nullable private ImmutableSet<String> cachedClasspathEntries;
-
   private final List<String> inputsToConsiderForCachingPurposes;
 
   private final AnnotationProcessingParams annotationProcessingParams;
+
+  private final Supplier<ImmutableSet<String>> classpathEntriesSupplier;
+
+  private final Supplier<ImmutableSetMultimap<BuildRule, String>> classpathEntriesMapSupplier;
 
   @Nullable
   private final String proguardConfig;
@@ -136,6 +139,30 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         .add(this.sourceLevel)
         .add(this.targetLevel)
         .build();
+
+    classpathEntriesSupplier =
+        Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
+          @Override
+          public ImmutableSet<String> get() {
+            return ImmutableSet.copyOf(getClasspathEntriesMap().values());
+          }
+        });
+
+    classpathEntriesMapSupplier =
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
+          @Override
+          public ImmutableSetMultimap<BuildRule, String> get() {
+            final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+                ImmutableSetMultimap.builder();
+            classpathEntries.putAll(getClasspathEntriesForDeps());
+
+            // Only add ourselves to the classpath if there's a jar to be built.
+            if (outputJar.isPresent()) {
+              classpathEntries.put(DefaultJavaLibraryRule.this, getOutput().getPath());
+            }
+            return classpathEntries.build();
+          }
+        });
   }
 
   /**
@@ -220,22 +247,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
+  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
+    return classpathEntriesMapSupplier.get();
+  }
+
+  @Override
   public ImmutableSet<String> getClasspathEntries() {
-    if (cachedClasspathEntries != null) {
-      return cachedClasspathEntries;
-    }
-
-    final ImmutableSet.Builder<String> classpathEntries = ImmutableSet.builder();
-    classpathEntries.addAll(getClasspathEntriesForDeps());
-
-    // Only add ourselves to the classpath if there's a jar to be built.
-    if (outputJar.isPresent()) {
-      classpathEntries.add(getOutput().getPath());
-    }
-
-    cachedClasspathEntries = classpathEntries.build();
-
-    return cachedClasspathEntries;
+    return classpathEntriesSupplier.get();
   }
 
   @Override
@@ -272,14 +290,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, commands);
     }
 
-    ImmutableSet<String> classpathEntries = getClasspathEntries();
+    Set<String> classpathEntries = getClasspathEntries();
     // If this rule depends on AndroidResourceRules, then we need to include the compiled R.java
     // files on the classpath when compiling this rule.
     if (dependsOnAndroidResourceRules) {
-      ImmutableSet.Builder<String> classpathEntriesWithRDotJava = ImmutableSet.builder();
-      classpathEntriesWithRDotJava.addAll(classpathEntries);
-      classpathEntriesWithRDotJava.add(UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget));
-      classpathEntries = classpathEntriesWithRDotJava.build();
+      classpathEntries = Sets.union(
+          ImmutableSet.of(UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget)),
+          classpathEntries);
     }
 
     // Only override the bootclasspath if this rule is supposed to compile Android code.

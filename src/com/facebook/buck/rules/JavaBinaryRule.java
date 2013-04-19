@@ -27,8 +27,11 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
@@ -49,6 +52,8 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   @Nullable
   private final String metaInfDirectory;
 
+  private final Supplier<ImmutableSet<String>> classpathEntriesSupplier;
+
   JavaBinaryRule(
       BuildRuleParams buildRuleParams,
       @Nullable String mainClass,
@@ -58,6 +63,14 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.metaInfDirectory = metaInfDirectory;
+
+    classpathEntriesSupplier =
+        Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
+          @Override
+          public ImmutableSet<String> get() {
+            return ImmutableSet.copyOf(getClasspathEntriesMap().values());
+          }
+        });
   }
 
   @Override
@@ -126,8 +139,13 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  public ImmutableSet<String> getClasspathEntries() {
+  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
     return getClasspathEntriesForDeps();
+  }
+
+  @Override
+  public ImmutableSet<String> getClasspathEntries() {
+    return classpathEntriesSupplier.get();
   }
 
   private String getOutputDirectory() {

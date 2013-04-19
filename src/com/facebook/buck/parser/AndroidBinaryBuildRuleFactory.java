@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AndroidBinaryRule;
 import com.facebook.buck.util.ZipSplitter;
@@ -33,7 +34,7 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
   protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-      BuildRuleFactoryParams params) {
+      BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     AndroidBinaryRule.Builder builder = ((AndroidBinaryRule.Builder)abstractBuilder);
 
     // manifest
@@ -58,9 +59,10 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
     builder.setPackageType(packageType);
 
     // no_dx
-    List<String> classpathEntriesToExcludeFromDex = params.getOptionalListAttribute("no_dx");
-    for (String entry : classpathEntriesToExcludeFromDex) {
-      builder.addClasspathEntryToExcludeFromDex(entry);
+    ParseContext buildFileParseContext = ParseContext.forBaseName(params.target.getBaseName());
+    for (String noDx : params.getOptionalListAttribute("no_dx")) {
+      BuildTarget buildTarget = params.buildTargetParser.parse(noDx, buildFileParseContext);
+      builder.addBuildRuleToExcludeFromDex(buildTarget.getFullyQualifiedName());
     }
 
     // use_split_dex

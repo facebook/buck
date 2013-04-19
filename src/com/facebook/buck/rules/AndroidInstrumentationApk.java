@@ -48,9 +48,9 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         apkUnderTest.getKeystorePropertiesPath(),
         PackageType.INSTRUMENTED,
         // Do not include the classes that will already be in the classes.dex of the APK under test.
-        ImmutableSet.<String>builder()
-            .addAll(apkUnderTest.getClasspathEntriesToExcludeFromDex())
-            .addAll(apkUnderTest.getClasspathEntriesForDeps())
+        ImmutableSet.<BuildRule>builder()
+            .addAll(apkUnderTest.getBuildRulesToExcludeFromDex())
+            .addAll(apkUnderTest.getClasspathEntriesForDeps().keySet())
             .build(),
         // Do not split the test apk even if the tested apk is split
         new DexSplitMode(false, ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE),

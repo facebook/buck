@@ -17,11 +17,18 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 
 /**
  * Implemented by build rules where the output has a classpath environment.
  */
 public interface HasClasspathEntries {
+
+
+  /**
+   * @return A map of rule names to classpath entries for this rule and its dependencies.
+   */
+  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap();
 
   /**
    * @return the classpath used in building this rule.

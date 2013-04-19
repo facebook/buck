@@ -118,6 +118,7 @@ public class ProjectTest {
     // android_library //java/src/com/facebook/base:base
     AndroidLibraryRule androidLibraryRule = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
+        .addSrc("Base.java")
         .addDep("//buck-android/com/facebook:R")
         .addDep("//third_party/guava:guava")
         .addDep("//android_res/base:res")
@@ -142,7 +143,7 @@ public class ProjectTest {
         .setManifest("foo/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("foo/../keystore.properties")
-        .addClasspathEntryToExcludeFromDex(PATH_TO_GUAVA_JAR)
+        .addBuildRuleToExcludeFromDex("//third_party/guava:guava")
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinaryRuleUsingNoDx.getFullyQualifiedName(),
         androidBinaryRuleUsingNoDx);

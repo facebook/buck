@@ -45,11 +45,15 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -134,7 +138,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   private final String target;
   private final String keystorePropertiesPath;
   private final PackageType packageType;
-  private final ImmutableSet<String> classpathEntriesToExcludeFromDex;
+  private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
   private final boolean useAndroidProguardConfigWithOptimizations;
   @Nullable private final String proguardConfig;
@@ -157,7 +161,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       String target,
       String keystorePropertiesPath,
       PackageType packageType,
-      Set<String> classpathEntriesToExcludeFromDex,
+      Set<BuildRule> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
       boolean useAndroidProguardConfigWithOptimizations,
       @Nullable String proguardConfig,
@@ -169,7 +173,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     this.target = Preconditions.checkNotNull(target);
     this.keystorePropertiesPath = Preconditions.checkNotNull(keystorePropertiesPath);
     this.packageType = Preconditions.checkNotNull(packageType);
-    this.classpathEntriesToExcludeFromDex = ImmutableSet.copyOf(classpathEntriesToExcludeFromDex);
+    this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
     this.proguardConfig = proguardConfig;
@@ -180,7 +184,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         getBuildTarget().getBasePathWithSlash());
     this.resourceFilter = resourceFilter;
     this.transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(this, this.classpathEntriesToExcludeFromDex);
+        new AndroidTransitiveDependencyGraph(this, this.buildRulesToExcludeFromDex);
   }
 
   @Override
@@ -205,7 +209,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         .set("target", target)
         .set("keystorePropertiesPath", keystorePropertiesPath)
         .set("packageType", packageType.toString())
-        .set("classpathEntriesToExcludeFromDex", classpathEntriesToExcludeFromDex)
+        .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
         .set("proguardConfig", proguardConfig)
         .set("compressResources", compressResources)
@@ -214,8 +218,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         .set("resourceFilter", resourceFilter);
    }
 
-  public ImmutableSet<String> getClasspathEntriesToExcludeFromDex() {
-    return classpathEntriesToExcludeFromDex;
+  public ImmutableSortedSet<BuildRule> getBuildRulesToExcludeFromDex() {
+    return buildRulesToExcludeFromDex;
   }
 
   public AndroidTransitiveDependencyGraph getTransitiveDependencyGraph() {
@@ -310,12 +314,10 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Execute proguard if desired (transforms input classpaths).
     if (packageType.isBuildWithObfuscation()) {
-      Set<String> additionalLibraryJarsForProguard = classpathEntriesToExcludeFromDex;
       addProguardCommands(
           transitiveDependencies,
           commands,
-          resDirectories,
-          additionalLibraryJarsForProguard);
+          resDirectories);
     }
 
     // Create the final DEX (or set of DEX files in the case of split dex).
@@ -637,11 +639,19 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return outputJar;
   }
 
-  private void addProguardCommands(
+  @VisibleForTesting
+  void addProguardCommands(
       AndroidTransitiveDependencies deps,
       ImmutableList.Builder<Command> commands,
-      Set<String> resDirectories,
-      Set<String> additionalLibraryJarsForProguard) {
+      Set<String> resDirectories) {
+    final ImmutableSetMultimap<BuildRule, String> classpathEntriesMap =
+        getClasspathEntriesMap();
+    Set<String> additionalLibraryJarsForProguard = Sets.newHashSet();
+
+    for (BuildRule buildRule : buildRulesToExcludeFromDex) {
+      additionalLibraryJarsForProguard.addAll(classpathEntriesMap.get(buildRule));
+    }
+
     Set<String> classpathEntries = deps.classpathEntriesToDex;
 
     // Clean out the directory for generated ProGuard files.
@@ -824,9 +834,14 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  public ImmutableSet<String> getClasspathEntries() {
+  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
     // This is used primarily for buck audit classpath.
     return getClasspathEntriesForDeps();
+  }
+
+  @Override
+  public ImmutableSet<String> getClasspathEntries() {
+    return ImmutableSet.copyOf(getClasspathEntriesMap().values());
   }
 
   public static Builder newAndroidBinaryRuleBuilder() {
@@ -841,7 +856,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     private String target;
     private String keystorePropertiesPath;
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
-    private Set<String> classpathEntriesToExcludeFromDex = Sets.newHashSet();
+    private Set<String> buildRulesToExcludeFromDex = Sets.newHashSet();
     private DexSplitMode dexSplitMode =
         new DexSplitMode(false, ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE);
     private boolean useAndroidProguardConfigWithOptimizations = false;
@@ -860,7 +875,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
           target,
           keystorePropertiesPath,
           packageType,
-          classpathEntriesToExcludeFromDex,
+          getBuildTargetsAsBuildRules(buildRuleIndex, buildRulesToExcludeFromDex),
           dexSplitMode,
           useAndroidProguardConfigWithOptimizations,
           proguardConfig,
@@ -905,8 +920,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       return this;
     }
 
-    public Builder addClasspathEntryToExcludeFromDex(String entry) {
-      this.classpathEntriesToExcludeFromDex.add(entry);
+    public Builder addBuildRuleToExcludeFromDex(String entry) {
+      this.buildRulesToExcludeFromDex.add(entry);
       return this;
     }
 

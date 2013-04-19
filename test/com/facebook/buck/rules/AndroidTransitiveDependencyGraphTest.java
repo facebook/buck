@@ -78,7 +78,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .addDep(libraryRule.getFullyQualifiedName())
         .addDep(manifestRule.getFullyQualifiedName())
-        .addClasspathEntryToExcludeFromDex("third_party/guava/guava-10.0.1.jar")
+        .addBuildRuleToExcludeFromDex("//third_party/guava:guava")
         .setManifest("java/src/com/facebook/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")

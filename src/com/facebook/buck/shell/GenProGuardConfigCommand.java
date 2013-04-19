@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -66,4 +67,20 @@ public class GenProGuardConfigCommand extends ShellCommand {
     return args.build();
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null || !(obj instanceof GenProGuardConfigCommand)) {
+      return false;
+    }
+    GenProGuardConfigCommand that = (GenProGuardConfigCommand) obj;
+
+    return Objects.equal(androidManifestPath, that.androidManifestPath) &&
+        Objects.equal(resDirectories, that.resDirectories) &&
+        Objects.equal(proguardConfigurationPath, that.proguardConfigurationPath);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(androidManifestPath, resDirectories, proguardConfigurationPath);
+  }
 }

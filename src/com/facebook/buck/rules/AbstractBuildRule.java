@@ -22,6 +22,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
@@ -97,12 +98,13 @@ abstract class AbstractBuildRule implements BuildRule {
    * that depend on B. However, if C depended on E as well as F and G, then E would be included in
    * A's classpath.
    */
-  protected final ImmutableSet<String> getClasspathEntriesForDeps() {
-    final ImmutableSet.Builder<String> classpathEntries = ImmutableSet.builder();
+  protected final ImmutableSetMultimap<BuildRule, String> getClasspathEntriesForDeps() {
+    final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+        ImmutableSetMultimap.builder();
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {
-        JavaLibraryRule javaLibraryRule = (JavaLibraryRule)dep;
-        classpathEntries.addAll(javaLibraryRule.getClasspathEntries());
+        JavaLibraryRule libraryRule = (JavaLibraryRule)dep;
+        classpathEntries.putAll(libraryRule.getClasspathEntriesMap());
       }
     }
     return classpathEntries.build();

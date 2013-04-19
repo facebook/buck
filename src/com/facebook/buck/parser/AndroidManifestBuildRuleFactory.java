@@ -44,7 +44,7 @@ public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFact
 
     // no_dx
     for (String entry: params.getOptionalListAttribute("no_dx")) {
-      builder.addClasspathEntryToExcludeFromDex(entry);
+      builder.addBuildRuleToExcludeFromDex(entry);
     }
   }
 }

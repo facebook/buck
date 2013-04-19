@@ -305,7 +305,10 @@ public class Project {
       BuildRule srcRule = projectConfigRule.getSrcRule();
       if (srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinary = (AndroidBinaryRule)srcRule;
-        noDxJarsBuilder.addAll(androidBinary.getClasspathEntriesToExcludeFromDex());
+        AndroidTransitiveDependencies binaryTransitiveDependencies =
+            androidBinary.findTransitiveDependencies(dependencyGraph,
+                                                     Optional.<BuildContext>absent());
+        noDxJarsBuilder.addAll(binaryTransitiveDependencies.noDxClasspathEntries);
       }
 
       Module module = createModuleForProjectConfig(projectConfigRule);

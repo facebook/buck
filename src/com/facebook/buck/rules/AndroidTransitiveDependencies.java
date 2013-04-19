@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 
 import java.util.Set;
@@ -29,6 +30,7 @@ public class AndroidTransitiveDependencies {
   // rule-based design that should be implemented though, so in the absence of that it's probably
   // best to keep this code as narrowly defined as possible.
   public ImmutableSet<String> classpathEntriesToDex;
+  public final ImmutableSet<String> noDxClasspathEntries;
   public final ImmutableSet<String> pathsToThirdPartyJars;
   public final ImmutableSet<String> assetsDirectories;
   public final ImmutableSet<String> nativeLibsDirectories;
@@ -46,7 +48,8 @@ public class AndroidTransitiveDependencies {
                                        ImmutableSet<String> resDirectories,
                                        ImmutableSet<String> rDotJavaPackages,
                                        ImmutableMultimap<BuildRuleType,BuildRule> uncachedBuildRules,
-                                       ImmutableSet<String> proguardConfigs) {
+                                       ImmutableSet<String> proguardConfigs,
+                                       ImmutableSet<String> noDxClasspathEntries) {
     this.classpathEntriesToDex = ImmutableSet.copyOf(pathsToDex);
     this.pathsToThirdPartyJars = ImmutableSet.copyOf(pathsToThirdPartyJars);
     this.assetsDirectories = ImmutableSet.copyOf(assetsDirectories);
@@ -56,6 +59,7 @@ public class AndroidTransitiveDependencies {
     this.rDotJavaPackages = ImmutableSet.copyOf(rDotJavaPackages);
     this.uncachedBuildRules = ImmutableMultimap.copyOf(uncachedBuildRules);
     this.proguardConfigs = ImmutableSet.copyOf(proguardConfigs);
+    this.noDxClasspathEntries = ImmutableSet.copyOf(noDxClasspathEntries);
   }
 
   public void applyClasspathTransformation(InputTransformation transformation) {

@@ -28,11 +28,14 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.shell.Command;
+import com.facebook.buck.shell.GenProGuardConfigCommand;
 import com.facebook.buck.shell.MakeCleanDirectoryCommand;
 import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.shell.ProGuardObfuscateCommand;
 import com.facebook.buck.shell.SmartDexingCommand;
 import com.facebook.buck.shell.SplitZipCommand;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.ZipSplitter;
@@ -55,6 +58,74 @@ import java.util.Map;
 import java.util.Set;
 
 public class AndroidBinaryRuleTest {
+
+  @Test
+  public void testAndroidBinaryNoDx() {
+    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+
+    // Two android_library deps, neither with an assets directory.
+    JavaLibraryRule libraryOne = createAndroidLibraryRule(
+        "//java/src/com/facebook/base:libraryOne",
+        buildRuleIndex,
+        null, /* resDirectory */
+        null, /* assetDirectory */
+        null /* nativeLibsDirectory */);
+    JavaLibraryRule libraryTwo = createAndroidLibraryRule(
+        "//java/src/com/facebook/base:libraryTwo",
+        buildRuleIndex,
+        null, /* resDirectory */
+        null, /* assetDirectory */
+        null /* nativeLibsDirectory */);
+
+    // One android_binary rule that depends on the two android_library rules.
+    BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
+        "//java/src/com/facebook/base:apk");
+    AndroidBinaryRule androidBinary = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+        .setBuildTarget(binaryBuildTarget)
+        .addDep(libraryOne.getFullyQualifiedName())
+        .addDep(libraryTwo.getFullyQualifiedName())
+        .addBuildRuleToExcludeFromDex("//java/src/com/facebook/base:libraryTwo")
+        .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
+        .setTarget("Google Inc.:Google APIs:16")
+        .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
+        .setPackageType("debug")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(androidBinary.getFullyQualifiedName(), androidBinary);
+
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
+    AndroidTransitiveDependencies transitiveDependencies =
+        androidBinary.findTransitiveDependencies(graph, Optional.<BuildContext>absent());
+    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+
+    androidBinary.addProguardCommands(transitiveDependencies,
+        commands,
+        ImmutableSet.<String>of());
+
+    MakeCleanDirectoryCommand expectedClean =
+        new MakeCleanDirectoryCommand("buck-out/gen/java/src/com/facebook/base/.proguard/apk");
+
+    GenProGuardConfigCommand expectedGenProguard =
+        new GenProGuardConfigCommand(
+            "buck-out/bin/java/src/com/facebook/base/__manifest_apk__/AndroidManifest.xml",
+            ImmutableSet.<String>of(),
+            "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt");
+
+    ProGuardObfuscateCommand expectedObfuscation =
+        new ProGuardObfuscateCommand(
+          "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt",
+          ImmutableSet.<String>of(),
+          false,
+          ImmutableMap.of(
+              "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar",
+              "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/java/src/com/" +
+                  "facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar"),
+          ImmutableSet.of("buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
+          "buck-out/gen/java/src/com/facebook/base/.proguard/apk");
+
+    assertEquals(
+        ImmutableList.of(expectedClean, expectedGenProguard, expectedObfuscation),
+        commands.build());
+  }
 
   /**
    * Tests an android_binary with zero dependent android_library rules that contains an assets
@@ -286,6 +357,7 @@ public class AndroidBinaryRuleTest {
     BuildTarget libraryOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
     AndroidLibraryRule.Builder androidLibraryRuleBuilder = AndroidLibraryRule
         .newAndroidLibraryRuleBuilder()
+        .addSrc(buildTarget.split(":")[1] + ".java")
         .setBuildTarget(libraryOnebuildTarget);
 
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
