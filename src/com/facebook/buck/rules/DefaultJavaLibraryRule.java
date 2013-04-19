@@ -136,8 +136,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     inputsToConsiderForCachingPurposes = ImmutableList.<String>builder()
         .addAll(this.srcs)
         .addAll(this.resources)
-        .add(this.sourceLevel)
-        .add(this.targetLevel)
         .build();
 
     classpathEntriesSupplier =
