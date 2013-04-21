@@ -22,11 +22,11 @@ public class BuckConstant {
   /**
    * The directory where Buck will generate its files.
    * <p>
-   * Ultimately, this will be able to be set by {@code -Dbuck.output_dir} and the fields
-   * {@link #ANDROID_GEN_DIR}, {@link #GEN_DIR}, and
-   * {@code BuildRule#BIN_DIRECTORY_NAME} will be hardcoded subdirectories of this directory.
+   * Ultimately, the fields {@link #ANDROID_GEN_DIR}, {@link #GEN_DIR}, {@link #BIN_DIR},
+   * {@link #ANNOTATION_DIR} will be hardcoded subdirectories of this directory.
    */
-  public static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
+  public static final String BUCK_OUTPUT_DIRECTORY =
+      System.getProperty("buck.buck_output_dir", "buck-out");
 
   // TODO(mbolin): The constants ANDROID_GEN_DIR, GEN_DIR, and BIN_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
