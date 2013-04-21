@@ -614,7 +614,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
   /**
    * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
-   * the BIN_DIRECTORY_NAME and the target base path, then formatted with the target short name.
+   * the {@link BuckConstant#BIN_DIR} and the target base path, then formatted with the target
+   * short name.
    * {@code format} should not start with a slash.
    */
   private String getBinPath(String format) {
