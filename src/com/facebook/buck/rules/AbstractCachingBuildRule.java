@@ -340,6 +340,8 @@ abstract class AbstractCachingBuildRule extends AbstractBuildRule implements Bui
         for (Command command : commands) {
           commandRunner.runCommand(command);
         }
+        // Drop our cached output key, since it probably changed.
+        resetOutputKey();
 
         // Write the success file.
         buildRule.writeSuccessFile();

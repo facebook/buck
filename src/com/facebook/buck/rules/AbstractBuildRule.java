@@ -174,6 +174,10 @@ abstract class AbstractBuildRule implements BuildRule {
     return outputKey;
   }
 
+  protected void resetOutputKey() {
+    outputKey = null;
+  }
+
   /**
    * getRuleKey() calls the most derived implementation of this method to lazily construct a
    * RuleKey. Every subclass that extends the rule state in a way that matters to idempotency must
