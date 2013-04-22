@@ -17,6 +17,7 @@ package com.facebook.buck.shell;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -27,6 +28,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -64,11 +66,21 @@ public class ZipDirectoryWithMaxDeflateCommand implements Command {
 
     Closer closer = Closer.create();
     try {
-      ZipOutputStream outputStream = closer.register(
-          new ZipOutputStream(new BufferedOutputStream(
-              new FileOutputStream(outputZipPath))));
+      ImmutableMap.Builder<File, ZipEntry> zipEntriesBuilder = ImmutableMap.builder();
+      addDirectoryToZipEntryList(inputDirectory, "", zipEntriesBuilder);
+      ImmutableMap<File, ZipEntry> zipEntries = zipEntriesBuilder.build();
 
-      addDirectoryToZip(inputDirectory, "", outputStream);
+      if (!zipEntries.isEmpty()) {
+        ZipOutputStream outputStream = closer.register(
+            new ZipOutputStream(new BufferedOutputStream(
+                new FileOutputStream(outputZipPath))));
+
+        for (Map.Entry<File, ZipEntry> zipEntry : zipEntries.entrySet()) {
+          outputStream.putNextEntry(zipEntry.getValue());
+          ByteStreams.copy(Files.newInputStreamSupplier(zipEntry.getKey()), outputStream);
+          outputStream.closeEntry();
+        }
+      }
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return 1;
@@ -82,7 +94,9 @@ public class ZipDirectoryWithMaxDeflateCommand implements Command {
     return 0;
   }
 
-  private void addDirectoryToZip(File directory, String currentPath, ZipOutputStream outputStream)
+  private void addDirectoryToZipEntryList(File directory,
+                                 String currentPath,
+                                 ImmutableMap.Builder<File, ZipEntry> zipEntriesBuilder)
       throws IOException {
     Preconditions.checkNotNull(currentPath);
 
@@ -92,7 +106,7 @@ public class ZipDirectoryWithMaxDeflateCommand implements Command {
           inputFile.getName();
 
       if (inputFile.isDirectory()) {
-        addDirectoryToZip(inputFile, childPath, outputStream);
+        addDirectoryToZipEntryList(inputFile, childPath, zipEntriesBuilder);
       } else {
         ZipEntry nextEntry = new ZipEntry(childPath);
         long fileLength = inputFile.length();
@@ -105,9 +119,7 @@ public class ZipDirectoryWithMaxDeflateCommand implements Command {
           nextEntry.setCrc(crc.padToLong());
         }
 
-        outputStream.putNextEntry(nextEntry);
-        ByteStreams.copy(Files.newInputStreamSupplier(inputFile), outputStream);
-        outputStream.closeEntry();
+        zipEntriesBuilder.put(inputFile, nextEntry);
       }
     }
   }

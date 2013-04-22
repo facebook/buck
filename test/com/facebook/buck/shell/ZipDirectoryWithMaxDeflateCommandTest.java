@@ -16,7 +16,10 @@
 package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -30,16 +33,22 @@ import java.util.zip.ZipFile;
 
 public class ZipDirectoryWithMaxDeflateCommandTest {
   private File outputApk;
+  private File emptyTempDir;
   private final String zipDirectory = "testdata/com/facebook/buck/shell/zipdirectorytest";
+  private File emptyOutputDir;
 
   @Before
   public void setup() throws IOException {
     outputApk = File.createTempFile("ZipDirectoryWithMaxDeflateCommandTest", "zip");
+    emptyTempDir = Files.createTempDir();
+    emptyOutputDir = Files.createTempDir();
   }
 
   @After
   public void teardown() {
     outputApk.delete();
+    emptyTempDir.delete();
+    emptyOutputDir.delete();
   }
 
   @Test
@@ -66,6 +75,24 @@ public class ZipDirectoryWithMaxDeflateCommandTest {
         "DeflatedFile should have been DEFLATED",
         deflatedFile.getMethod(),
         ZipEntry.DEFLATED);
+
+    EasyMock.verify(executionContext);
+  }
+
+  @Test
+  public void testEmptyZipDirectory() throws IOException {
+
+    File emptyOutput = new File(emptyOutputDir.getAbsolutePath() + "/output.zip");
+
+    ZipDirectoryWithMaxDeflateCommand zipCommand = new ZipDirectoryWithMaxDeflateCommand(
+        emptyTempDir.getAbsolutePath(), emptyOutput.getAbsolutePath(), 128);
+
+    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
+    EasyMock.replay(executionContext);
+
+    zipCommand.execute(executionContext);
+
+    assertFalse(emptyOutput.exists());
 
     EasyMock.verify(executionContext);
   }

@@ -91,7 +91,10 @@ public class ApkBuilderCommand implements Command {
         builder.addSourceFolder(new File(assetDirectory));
       }
       for (String zipFile : zipFiles) {
-        builder.addZipFile(new File(zipFile));
+        File zipFileOnDisk = new File(zipFile);
+        if (zipFileOnDisk.exists() && zipFileOnDisk.isFile()) {
+          builder.addZipFile(zipFileOnDisk);
+        }
       }
 
       // Build the APK
