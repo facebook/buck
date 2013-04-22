@@ -113,6 +113,8 @@ public class JavacInMemoryCommand implements Command {
 
     // Build up the compilation task.
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    Preconditions.checkNotNull(compiler,
+        "If using JRE instead of JDK, ToolProvider.getSystemJavaCompiler() may be null.");
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
     List<String> options = getOptions(context);
