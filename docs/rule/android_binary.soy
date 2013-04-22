@@ -98,11 +98,10 @@ key.alias.password=android
   {param name : 'no_dx' /}
   {param default : '[]' /}
   {param desc}
-  List of file paths (relative to the project root) of JAR files that
-  may have been included during compilation of the transitive
-  {sp}<code>android_library()</code> and <code>java_library()</code>{sp}
-  dependencies, but should not be included in the
-  {sp}<code>classes.dex</code> generated for the APK.
+  List of build targets that may have been included during compilation of {sp}
+  the transitive <code>android_library()</code> and{sp}
+  <code>java_library()</code> dependencies, but should not be included{sp}
+  in the <code>classes.dex</code> for generated for the APK.
   <p>
   // t2254090
   <strong>Note:</strong> This argument will be changed to accept a list
