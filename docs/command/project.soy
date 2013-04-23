@@ -18,10 +18,8 @@ Currently, only IntelliJ is supported.
 
 <p>
 
-This command processes all of
-the <a href="{ROOT}rule/project_config.html"><code>project_config()</code></a>
-rules across all of the BUILD files and uses them to generate the configuration
-files for an IDE.
+This command processes all of the {call buck.project_config /} rules across all
+of the BUCK files and uses them to generate the configuration files for an IDE.
 
 <p>
 
@@ -31,15 +29,14 @@ In the case of IntelliJ, the generated files include:
   <li>
     {sp}<code>.idea/libraries&#x2F;*.xml</code>, each of which defines a library
     in IntelliJ. A library always corresponds to
-    a <a href="{ROOT}rule/prebuilt_jar.html"><code>prebuilt_jar()</code></a>.
+    a {call buck.prebuilt_jar /}.
   </li>
   <li>
     {sp}<code>.iml</code> files, each of which defines a module in IntelliJ. An
     {sp}<code>.iml</code> file will be created in each directory with
-    a <a href="{ROOT}concept/build_file.html"><code>BUILD</code></a> file that
-    has
-    a <a href="{ROOT}rule/project_config.html"><code>project_config()</code></a>
-    .  A module can depend on other modules, as well as libraries.
+    a <a href="{ROOT}concept/build_file.html"><code>BUCK</code></a> file that
+    has a {call buck.project_config /}.
+    A module can depend on other modules, as well as libraries.
   </li>
   <li>
     {sp}<code>.idea/modules.xml</code>, which lists all of the IntelliJ modules

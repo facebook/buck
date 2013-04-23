@@ -264,7 +264,21 @@ shorter and easier to remember:
 You likely want to develop your Android app using an IDE.
 Fortunately, Buck can generate an IntelliJ project from the
 {sp}<code><a href="rule/project_config.html">project_config()</code></a>{sp}
-rules you defined in your build files by running the following command:
+rules you defined in your build files.
+
+<p>
+
+In order to ensure that IntelliJ recognizes where your Java folders are,
+you need to specify the following in your <code>.buckconfig</code> file:
+
+{literal}<pre>
+echo "[java]
+    src_roots = /java/" >> .buckconfig
+</pre>{/literal}
+
+<p>
+
+Now you can create the IntelliJ project by running the following command:
 
 <pre>buck project</pre>
 
