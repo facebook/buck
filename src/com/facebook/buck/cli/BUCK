@@ -8,6 +8,7 @@ java_library(
     '//lib:ini4j',
     '//lib:jackson-core',
     '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
   ],
   visibility = [

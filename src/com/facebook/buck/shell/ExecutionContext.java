@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -35,6 +36,7 @@ public class ExecutionContext {
   public final boolean isDebugEnabled;
   private final PrintStream stdout;
   private final PrintStream stderr;
+  private final ProcessExecutor processExecutor;
 
   public ExecutionContext(
       Verbosity verbosity,
@@ -55,6 +57,7 @@ public class ExecutionContext {
     this.isDebugEnabled = isDebugEnabled;
     this.stdout = Preconditions.checkNotNull(stdout);
     this.stderr = Preconditions.checkNotNull(stderr);
+    this.processExecutor = new ProcessExecutor(stdout, stderr, ansi);
   }
 
   public Verbosity getVerbosity() {
@@ -89,4 +92,7 @@ public class ExecutionContext {
     return androidPlatformTarget.get().getAdbExecutable().getAbsolutePath();
   }
 
+  public ProcessExecutor getProcessExecutor() {
+    return processExecutor;
+  }
 }

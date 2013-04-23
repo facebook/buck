@@ -27,8 +27,12 @@ java_library(
 
 
 IO_SRCS = [
+  'Ansi.java',
+  'CapturingPrintStream.java',
   'DirectoryTraversal.java',
+  'InputStreamConsumer.java',
   'MoreFiles.java',
+  'ProcessExecutor.java',
   'ProjectFilesystem.java',
 ]
 
@@ -37,6 +41,7 @@ java_library(
   srcs = IO_SRCS,
   deps = [
     '//lib:guava',
+    '//lib:jsr305',
   ],
   visibility = [ 'PUBLIC' ],
 )

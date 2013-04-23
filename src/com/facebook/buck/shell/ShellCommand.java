@@ -16,11 +16,9 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.InputStreamConsumer;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -30,7 +28,6 @@ import com.google.common.collect.Iterables;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -144,59 +141,17 @@ public abstract class ShellCommand implements Command {
 
   @VisibleForTesting
   int interactWithProcess(ExecutionContext context, Process process) {
-    // Read stdout/stderr asynchronously while running a Process.
-     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     boolean shouldRecordStdOut = shouldRecordStdout();
-    @SuppressWarnings("resource")
-    PrintStream stdOutToWriteTo = shouldRecordStdOut ?
-        new CapturingPrintStream() : context.getStdOut();
-    InputStreamConsumer stdOut = new InputStreamConsumer(
-        process.getInputStream(),
-        stdOutToWriteTo,
-        shouldRecordStdOut,
-        context.getAnsi());
     boolean shouldPrintStdErr = shouldPrintStdErr(context);
-    @SuppressWarnings("resource")
-    PrintStream stdErrToWriteTo = shouldPrintStdErr ?
-        context.getStdErr() : new CapturingPrintStream();
-    InputStreamConsumer stdErr = new InputStreamConsumer(
-        process.getErrorStream(),
-        stdErrToWriteTo,
-        /* shouldRedirectInputStreamToPrintStream */ true,
-        context.getAnsi());
-    Thread stdOutConsumer = new Thread(stdOut);
-    stdOutConsumer.start();
-    Thread stdErrConsumer = new Thread(stdErr);
-    stdErrConsumer.start();
-
-    // Block until the Process completes.
-    try {
-      process.waitFor();
-      stdOutConsumer.join();
-      stdErrConsumer.join();
-    } catch (InterruptedException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    }
-
-    // If stdout was captured, then wait until its InputStreamConsumer has finished and get the
-    // contents of the stdout PrintStream as a string.
+    ProcessExecutor executor = context.getProcessExecutor();
+    ProcessExecutor.Result result = executor.execute(process,
+        shouldRecordStdOut,
+        shouldPrintStdErr,
+        context.getVerbosity() == Verbosity.SILENT);
     if (shouldRecordStdOut) {
-      CapturingPrintStream capturingPrintStream = (CapturingPrintStream)stdOutToWriteTo;
-      this.stdOut = capturingPrintStream.getContentsAsString(Charsets.US_ASCII);
+      this.stdOut = result.getStdOut();
     }
-
-    // Report the exit code of the Process.
-    int exitCode = process.exitValue();
-
-    // If the command has failed and we're not being explicitly quiet, ensure stderr gets printed.
-    if (exitCode != 0 && !shouldPrintStdErr &&
-      context.getVerbosity().shouldPrintStandardInformation()) {
-      CapturingPrintStream capturingPrintStream = (CapturingPrintStream) stdErrToWriteTo;
-      context.getStdErr().print(capturingPrintStream.getContentsAsString(Charsets.US_ASCII));
-    }
-
-    return exitCode;
+    return result.getExitCode();
   }
 
   /**

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +50,8 @@ public class FilterResourcesCommandTest {
 
     // Mock an ExecutionContext.
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
+    ProcessExecutor processExecutor = EasyMock.createMock(ProcessExecutor.class);
+    EasyMock.expect(executionContext.getProcessExecutor()).andReturn(processExecutor).anyTimes();
     EasyMock.replay(executionContext);
 
     // Create a mock DrawableFinder, just creates one drawable/density/resource dir.
@@ -75,7 +78,10 @@ public class FilterResourcesCommandTest {
     // We'll want to see what the filtering command passes to the copier.
     Capture<Map<String, String>> dirMapCapture = new Capture<Map<String, String>>();
     Capture<Predicate<File>> predCapture = new Capture<Predicate<File>>();
-    copier.copyDirs(EasyMock.capture(dirMapCapture), EasyMock.capture(predCapture));
+    Capture<ProcessExecutor> processExecutorCapture = new Capture<ProcessExecutor>();
+    copier.copyDirs(EasyMock.capture(dirMapCapture),
+        EasyMock.capture(predCapture),
+        EasyMock.capture(processExecutorCapture));
     EasyMock.expectLastCall().once();
     EasyMock.replay(copier);
 

@@ -133,7 +133,8 @@ public class SmartDexingCommand implements Command {
       if (inputResolver.hasSecondaryOutput()) {
         removeExtraneousSecondaryArtifacts(
             inputResolver.getSecondaryOutputDir(),
-            outputToInputs.keySet());
+            outputToInputs.keySet(),
+            context);
       }
       return 0;
     } catch (CommandFailedException e) {
@@ -165,10 +166,11 @@ public class SmartDexingCommand implements Command {
    */
   private void removeExtraneousSecondaryArtifacts(
       File secondaryOutputDir,
-      Set<File> producedArtifacts) throws IOException {
+      Set<File> producedArtifacts,
+      ExecutionContext context) throws IOException {
     for (File secondaryOutput : secondaryOutputDir.listFiles()) {
       if (!producedArtifacts.contains(secondaryOutput)) {
-        MoreFiles.rmdir(secondaryOutput.getAbsolutePath());
+        MoreFiles.rmdir(secondaryOutput.getAbsolutePath(), context.getProcessExecutor());
       }
     }
   }

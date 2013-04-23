@@ -95,7 +95,9 @@ public class FilterResourcesCommand implements Command {
     // Create a filter that removes drawables not of desired density.
     Predicate<File> densityFilter = Filters.createImageDensityFilter(drawables, resourceFilter);
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
-    filteredDirectoryCopier.copyDirs(originalToFiltered, densityFilter);
+    filteredDirectoryCopier.copyDirs(originalToFiltered,
+        densityFilter,
+        context.getProcessExecutor());
     return 0;
   }
 

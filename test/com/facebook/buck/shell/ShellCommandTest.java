@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,10 +73,15 @@ public class ShellCommandTest {
 
   private void prepareContextForOutput(Verbosity verbosity) {
     EasyMock.reset(context);
+
+    Ansi ansi = new Ansi(false);
+    ProcessExecutor processExecutor = new ProcessExecutor(stdout, stderr, ansi);
+
     expect(context.getStdErr()).andReturn(stderr).anyTimes();
     expect(context.getStdOut()).andReturn(stdout).anyTimes();
-    expect(context.getAnsi()).andReturn(new Ansi(false)).anyTimes();
+    expect(context.getAnsi()).andReturn(ansi).anyTimes();
     expect(context.getVerbosity()).andReturn(verbosity).anyTimes();
+    expect(context.getProcessExecutor()).andReturn(processExecutor).anyTimes();
     replay(context);
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MoreFiles;
+import com.facebook.buck.util.ProcessExecutor;
 
 import java.io.IOException;
 
@@ -30,7 +31,9 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
 
   @Override
   int runCommandWithOptions(CleanCommandOptions options) throws IOException {
-    MoreFiles.rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY);
+    ProcessExecutor processExecutor = new ProcessExecutor(
+        this.stdOut, this.stdErr, this.ansi);
+    MoreFiles.rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY, processExecutor);
     return 0;
   }
 

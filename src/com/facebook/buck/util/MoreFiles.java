@@ -41,11 +41,12 @@ public final class MoreFiles {
   /** Utility class: do not instantiate. */
   private MoreFiles() {}
 
-  public static void rmdir(String path) throws IOException {
+  public static void rmdir(String path, ProcessExecutor processExecutor) throws IOException {
     // Unfortunately, Guava's Files.deleteRecursively() method is deprecated.
     // This is what the deprecation message suggested to do instead.
     // Unfortunately, it is not cross-platform.
-    Runtime.getRuntime().exec(new String[] {"rm", "-rf", path});
+    Process process = Runtime.getRuntime().exec(new String[] {"rm", "-rf", path});
+    processExecutor.execute(process);
   }
 
   /**
