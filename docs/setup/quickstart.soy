@@ -58,13 +58,13 @@ your <code>~/my-first-buck-project</code> directory.</strong>
 Android applications are typically written in Java, so the first thing
 we will do is configure Buck to compile Java code against the Android API.
 To do so, Buck needs to know where your Android SDK is. Assuming that your
-Android SDK is installed in <code>~/android-macosx-sdk</code>, run the
+Android SDK is installed in <code>~/android-sdk-mac</code>, run the
 following command to create a <code>local.properties</code> file that tells
 Buck where to find your Android SDK:
 
 {literal}<pre>
 echo -n sdk.dir= > local.properties && \
-    echo ~/android-macosx-sdk >> local.properties
+    echo ~/android-sdk-mac >> local.properties
 </pre>{/literal}
 
 Now that Buck can locate your Android SDK, it is time to compile some Java
