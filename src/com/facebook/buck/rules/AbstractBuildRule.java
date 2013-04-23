@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -45,8 +46,7 @@ abstract class AbstractBuildRule implements BuildRule {
 
     for (BuildRule dep : this.deps) {
       if (!dep.isVisibleTo(buildTarget)) {
-        // TODO(mbolin): Figure out how to make this bubble up so it prints nicer.
-        throw new RuntimeException(String.format("%s depends on %s, which is not visible",
+        throw new HumanReadableException(String.format("%s depends on %s, which is not visible",
             buildTarget, dep));
       }
     }
