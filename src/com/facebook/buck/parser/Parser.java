@@ -122,6 +122,11 @@ public final class Parser {
         if (isNewElement) {
           parseBuildFile(buildFile, defaultIncludes);
         }
+        // Verify that after parsing the BUCK file that would contain buildTarget that
+        // buildTarget is in fact now a known build.
+        if (!knownBuildTargets.containsKey(buildTarget.getFullyQualifiedName())) {
+          throw NoSuchBuildTargetException.createForMissingBuildRule(buildTarget);
+        }
       }
     }
 

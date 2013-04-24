@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 
 @SuppressWarnings("serial")
@@ -54,6 +55,17 @@ public class NoSuchBuildTargetException extends Exception
         BUILD_RULES_FILE_NAME,
         buildFilePath,
         makeTargetDescription(buildTargetName, parseContext));
+    return new NoSuchBuildTargetException(message);
+  }
+
+  /**
+   * @param buildTarget the failing {@link BuildTarget}
+   */
+  static NoSuchBuildTargetException createForMissingBuildRule(BuildTarget buildTarget) {
+    String message = String.format("No rule '%s' found in %s%s",
+        buildTarget.getShortName(),
+        buildTarget.getBasePathWithSlash(),
+        BUILD_RULES_FILE_NAME);
     return new NoSuchBuildTargetException(message);
   }
 

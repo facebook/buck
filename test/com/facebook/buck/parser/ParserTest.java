@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildFileTree;
@@ -43,6 +44,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -55,8 +57,33 @@ import java.util.Set;
 
 public class ParserTest {
 
+  private File testBuildFile;
+  private Parser testParser;
+
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
+
+  @Before
+  public void setup() throws IOException {
+    // Create a temp directory with some build files.
+    File projectDirectoryRoot = tempDir.getRoot();
+    tempDir.newFolder("java", "com", "facebook");
+
+    testBuildFile = tempDir.newFile(
+        "java/com/facebook/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'foo')\n" +
+        "java_library(name = 'bar')\n",
+        testBuildFile,
+        Charsets.UTF_8);
+
+    // Create a Parser.
+    Ansi ansi = new Ansi();
+    ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
+    testParser = new Parser(filesystem,
+        new BuildFileTree(ImmutableSet.<BuildTarget>of()),
+        ansi);
+  }
 
   /**
    * If a Parser is populated via {@link Parser#parseRawRules(java.util.List, RawRulePredicate)},
@@ -157,36 +184,41 @@ public class ParserTest {
   @Test
   public void testParseBuildFilesForTargetsWithOverlappingTargets()
       throws IOException, NoSuchBuildTargetException {
-    // Create a temp directory with some build files.
-    File projectDirectoryRoot = tempDir.getRoot();
-    tempDir.newFolder("java", "com", "facebook");
-    File buildFile = tempDir.newFile(
-        "java/com/facebook/" + BuckConstant.BUILD_RULES_FILE_NAME);
-    Files.write(
-        "java_library(name = 'foo')\n" +
-        "java_library(name = 'bar')\n",
-        buildFile,
-        Charsets.UTF_8);
-
-    // Create a Parser.
-    Ansi ansi = new Ansi();
-    ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
-    Parser parser = new Parser(filesystem,
-        new BuildFileTree(ImmutableSet.<BuildTarget>of()),
-        ansi);
 
     // Execute parseBuildFilesForTargets() with multiple targets that require parsing the same
     // build file.
-    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook", "foo", buildFile);
-    BuildTarget barTarget = BuildTargetFactory.newInstance("//java/com/facebook", "bar", buildFile);
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook",
+        "foo", testBuildFile);
+    BuildTarget barTarget = BuildTargetFactory.newInstance("//java/com/facebook",
+        "bar", testBuildFile);
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
-    DependencyGraph graph = parser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
+    DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = graph.findBuildRuleByTarget(barTarget);
     assertNotNull(barRule);
+  }
+
+  @Test
+  public void testMissingBuildRuleInValidFile() throws IOException {
+    // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook",
+        "foo", testBuildFile);
+    BuildTarget razTarget = BuildTargetFactory.newInstance("//java/com/facebook",
+        "raz", testBuildFile);
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
+    Iterable<String> defaultIncludes = ImmutableList.of();
+
+    try {
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
+    } catch (NoSuchBuildTargetException e) {
+      assertEquals("No rule 'raz' found in java/com/facebook/BUCK",
+          e.getHumanReadableErrorMessage());
+      return;
+    }
+    fail("NoSuchBuildTargetException should be thrown");
   }
 
   private static Map<String, BuildRuleBuilder> createKnownBuildTargets() {
