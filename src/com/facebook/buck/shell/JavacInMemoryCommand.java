@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.tools.Diagnostic;
@@ -137,7 +138,25 @@ public class JavacInMemoryCommand implements Command {
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {
         for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-          context.getStdErr().println(diagnostic);
+          if (!System.getProperty("java.version").startsWith("1.6")) {
+            // TODO(simons): When we finally move the world to Java 7, this is all we need.
+            context.getStdErr().println(diagnostic);
+          } else {
+            // TODO(simons): Warn the user that they're using an EOLd JDK.
+            String newLine = System.getProperty("line.separator", "\n");
+            StringBuilder message = new StringBuilder();
+
+            if (diagnostic.getSource() != null) {
+              message.append(diagnostic.getSource().getName())
+                  .append(":")
+                  .append(diagnostic.getLineNumber())
+                  .append(": ").append(diagnostic.getMessage(Locale.getDefault()))
+                  .append(newLine);
+            } else {
+              message.append(diagnostic.getMessage(Locale.getDefault())).append(newLine);
+            }
+            context.getStdErr().println(message.toString());
+          }
         }
       }
       return 1;
