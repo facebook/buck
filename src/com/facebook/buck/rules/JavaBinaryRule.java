@@ -32,8 +32,10 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +79,8 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   protected RuleKey.Builder ruleKeyBuilder() {
     return super.ruleKeyBuilder()
         .set("mainClass", mainClass)
-        .set("manifestFile", manifestFile);
+        .set("manifestFile", manifestFile)
+        .set("metaInfDirectory", metaInfDirectory);
   }
 
   @Override
@@ -85,16 +88,30 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     return BuildRuleType.JAVA_BINARY;
   }
 
+  /**
+   * getInputsToCompareToOutput() helper.
+   */
+  private void metaInfDirectoryRecurse(ImmutableSortedSet.Builder<String> builder, File path) {
+    if (path.isFile()) {
+      builder.add(path.getPath());
+    } else if (path.isDirectory()) {
+      for (String dirEntry : path.list()) {
+        metaInfDirectoryRecurse(builder, new File(path, dirEntry));
+      }
+    }
+  }
+
   @Override
   protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
+    ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
 
     if (manifestFile != null) {
       builder.add(manifestFile);
     }
 
     if (metaInfDirectory != null) {
-      builder.add(metaInfDirectory);
+      metaInfDirectoryRecurse(builder, new File(metaInfDirectory));
     }
 
     return builder.build();
