@@ -298,10 +298,10 @@ ga('send', 'pageview');
  * @param desc Prose description of the parameter.
  */
 {template .param}
-  <li class="{css arg}"><code>{$name}</code>
+  <li class="{css arg}"><code>--{$name}</code>
   {sp}
   {if $alias}
-    <code>({$alias})</code>
+    <code>(-{$alias})</code>
   {/if}
 
   {sp}

@@ -18,14 +18,14 @@ The following will print all build targets in the project (sorted
 
 <pre>buck targets</pre>
 
-This command can be handy in programmatic tasks, such as building all of the
- test rules that start with <code>&#x2F;/java/com/myproject</code>:
+This command can be handy in programmatic tasks, such as running all of the
+Java tests under <code>&#x2F;/java/com/myproject</code>:
 
-<pre>
-buck targets --type java_test | \<br>
-grep &#x2F;/java/com/myproject | \<br>
-xargs buck test
-</pre>
+{literal}<pre>
+buck targets --type java_test | \
+  grep '&#x2F;/java/com/myproject' | \
+  xargs buck test
+</pre>{/literal}
 
 {/param}
 
@@ -43,18 +43,18 @@ xargs buck test
 {call buck.param}
   {param name: 'referenced_file' /}
   {param desc}
-  Filters targets by the list of rules that include <code>referenced_file</code>
-  in their transitive closure.
+  Filters targets by the list of rules that include
+  {sp}<code>referenced_file</code> in their transitive closure.
 
   <p>
 
   For example, if a developer wanted to run all tests that could be affected by
   particular file, they would run:
-  <pre>
-    buck targets --type java_test \<br>
-      --referenced_files java/com/foo/foo.java |
-    xargs buck test
-  </pre>
+{literal}<pre>
+buck targets --type java_test \
+  --referenced_file java/com/example/Foo.java |
+  xargs buck test
+</pre>{/literal}
   {/param}
 {/call}
 
