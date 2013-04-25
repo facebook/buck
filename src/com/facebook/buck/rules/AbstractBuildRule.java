@@ -73,7 +73,6 @@ abstract class AbstractBuildRule implements BuildRule {
   @Override
   public boolean isLibrary() {
     return this instanceof JavaLibraryRule ||
-        this instanceof PythonLibraryRule ||
         this instanceof AndroidResourceRule;
   }
 

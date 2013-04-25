@@ -25,7 +25,7 @@ import com.google.common.collect.Iterables;
 public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory {
 
   @Override
-  JavaTestRule.Builder newBuilder() {
+  public JavaTestRule.Builder newBuilder() {
     return JavaTestRule.newJavaTestRuleBuilder();
   }
 

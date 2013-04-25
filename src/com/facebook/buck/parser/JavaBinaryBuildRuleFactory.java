@@ -24,7 +24,7 @@ import com.google.common.base.Optional;
 public class JavaBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  JavaBinaryRule.Builder newBuilder() {
+  public JavaBinaryRule.Builder newBuilder() {
     return JavaBinaryRule.newJavaBinaryRuleBuilder();
   }
 

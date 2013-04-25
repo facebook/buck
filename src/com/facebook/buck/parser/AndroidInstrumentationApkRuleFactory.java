@@ -23,7 +23,7 @@ import com.facebook.buck.rules.AndroidInstrumentationApk;
 public class AndroidInstrumentationApkRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  AndroidInstrumentationApk.Builder newBuilder() {
+  public AndroidInstrumentationApk.Builder newBuilder() {
     return AndroidInstrumentationApk.newAndroidInstrumentationApkRuleBuilder();
   }
 

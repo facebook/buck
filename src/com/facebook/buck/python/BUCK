@@ -1,0 +1,10 @@
+java_library(
+  name = 'python',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/parser:core',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/parser:parser',
+  ],
+)

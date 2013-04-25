@@ -1,6 +1,24 @@
+PARSER_SRCS = [
+  'Parser.java',
+  'PartialGraph.java',
+]
+
 java_library(
   name = 'parser',
-  srcs = glob(['*.java']),
+  srcs = PARSER_SRCS,
+  deps = [
+    ':core',
+    '//lib:guava',
+    '//src/com/facebook/buck/python:python',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_library(
+  name = 'core',
+  srcs = glob(['*.java'], excludes = PARSER_SRCS),
   deps = [
     '//lib:guava',
     '//lib:jsr305',

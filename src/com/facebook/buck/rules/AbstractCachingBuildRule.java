@@ -24,6 +24,7 @@ import com.facebook.buck.util.DirectoryTraversers;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.TriState;
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +47,8 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
-abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
+@Beta
+public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
 
   private final static Logger logger = Logger.getLogger(AbstractCachingBuildRule.class.getName());
 

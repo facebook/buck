@@ -23,13 +23,15 @@ import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
-abstract class AbstractBuildRuleFactory implements BuildRuleFactory {
+@Beta
+public abstract class AbstractBuildRuleFactory implements BuildRuleFactory {
 
-  abstract AbstractBuildRuleBuilder newBuilder();
+  protected abstract AbstractBuildRuleBuilder newBuilder();
 
   /**
    * Subclasses should override this method to extract any information from the Python object that

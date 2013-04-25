@@ -26,7 +26,7 @@ import java.util.List;
 public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  ProjectConfigRule.Builder newBuilder() {
+  public ProjectConfigRule.Builder newBuilder() {
     return ProjectConfigRule.newProjectConfigRuleBuilder();
   }
 

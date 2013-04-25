@@ -24,7 +24,7 @@ import com.google.common.base.Optional;
 final class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  PrebuiltJarRule.Builder newBuilder() {
+  public PrebuiltJarRule.Builder newBuilder() {
     return PrebuiltJarRule.newPrebuiltJarRuleBuilder();
   }
 

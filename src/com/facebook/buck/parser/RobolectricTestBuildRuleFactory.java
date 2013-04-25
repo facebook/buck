@@ -22,7 +22,7 @@ import com.facebook.buck.rules.RobolectricTestRule;
 public class RobolectricTestBuildRuleFactory extends JavaTestBuildRuleFactory {
 
   @Override
-  RobolectricTestRule.Builder newBuilder() {
+  public RobolectricTestRule.Builder newBuilder() {
     return RobolectricTestRule.newRobolectricTestRuleBuilder();
   }
 

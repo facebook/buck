@@ -28,7 +28,7 @@ import java.util.List;
 public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  AndroidBinaryRule.Builder newBuilder() {
+  public AndroidBinaryRule.Builder newBuilder() {
     return AndroidBinaryRule.newAndroidBinaryRuleBuilder();
   }
 

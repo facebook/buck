@@ -22,7 +22,7 @@ import com.facebook.buck.rules.ShTestRule;
 public class ShTestBuildRuleFactory extends AbstractTestRuleFactory {
 
   @Override
-  ShTestRule.Builder newBuilder() {
+  public ShTestRule.Builder newBuilder() {
     return ShTestRule.newShTestRuleBuilder();
   }
 

@@ -24,7 +24,7 @@ import java.io.File;
 public class GenAidlBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  AbstractBuildRuleBuilder newBuilder() {
+  public AbstractBuildRuleBuilder newBuilder() {
     return GenAidlRule.newGenAidlRuleBuilder();
   }
 

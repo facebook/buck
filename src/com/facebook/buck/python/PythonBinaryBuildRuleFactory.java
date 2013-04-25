@@ -14,21 +14,29 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.python;
 
+import com.facebook.buck.parser.AbstractBuildRuleFactory;
+import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.PythonLibraryRule;
 
-public class PythonLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class PythonBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  PythonLibraryRule.Builder newBuilder() {
-    return PythonLibraryRule.newPythonLibraryBuilder();
+  protected PythonBinaryRule.Builder newBuilder() {
+    return PythonBinaryRule.newPythonBinaryBuilder();
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder builder,
+  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
+    PythonBinaryRule.Builder builder = (PythonBinaryRule.Builder)abstractBuilder;
+
+    // main
+    String main = params.getRequiredStringAttribute("main");
+    String pathToMain = params.resolveFilePathRelativeToBuildFileDirectory(main);
+    builder.setMain(pathToMain);
   }
 
 }

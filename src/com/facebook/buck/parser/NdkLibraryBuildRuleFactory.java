@@ -27,7 +27,7 @@ public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  NdkLibraryRule.Builder newBuilder() {
+  public NdkLibraryRule.Builder newBuilder() {
     return NdkLibraryRule.newNdkLibraryRuleBuilder();
   }
 

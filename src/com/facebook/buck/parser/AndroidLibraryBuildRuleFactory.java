@@ -23,7 +23,7 @@ import com.google.common.base.Optional;
 public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory {
 
   @Override
-  AndroidLibraryRule.Builder newBuilder() {
+  public AndroidLibraryRule.Builder newBuilder() {
     return AndroidLibraryRule.newAndroidLibraryRuleBuilder();
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -29,9 +30,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+@Beta
 public abstract class AbstractBuildRuleBuilder implements BuildRuleBuilder {
 
-  AbstractBuildRuleBuilder() {}
+  protected AbstractBuildRuleBuilder() {}
 
   protected BuildTarget buildTarget;
   protected Set<String> deps = Sets.newHashSet();

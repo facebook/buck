@@ -21,6 +21,8 @@ import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
+import com.facebook.buck.python.PythonLibraryBuildRuleFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;

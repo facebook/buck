@@ -23,7 +23,7 @@ import com.google.common.base.Optional;
 public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  AbstractBuildRuleBuilder newBuilder() {
+  public AbstractBuildRuleBuilder newBuilder() {
     return AndroidResourceRule.newAndroidResourceRuleBuilder();
   }
 

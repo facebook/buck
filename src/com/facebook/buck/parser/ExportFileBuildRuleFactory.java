@@ -22,7 +22,7 @@ import com.google.common.base.Optional;
 
 public class ExportFileBuildRuleFactory extends AbstractBuildRuleFactory {
   @Override
-  ExportFileRule.Builder newBuilder() {
+  public ExportFileRule.Builder newBuilder() {
     return ExportFileRule.newExportFileBuilder();
   }
 

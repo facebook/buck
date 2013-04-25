@@ -14,8 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.python;
 
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.MakeCleanDirectoryCommand;
 import com.facebook.buck.shell.SymlinkFileCommand;
@@ -44,6 +52,11 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
     } else {
       this.pythonPathDirectory = Optional.of(getPathToPythonPathDirectory());
     }
+  }
+
+  @Override
+  public boolean isLibrary() {
+    return true;
   }
 
   @Override

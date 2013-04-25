@@ -22,7 +22,7 @@ import com.facebook.buck.rules.PrebuiltNativeLibraryBuildRule;
 public class PrebuiltNativeLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  AbstractBuildRuleBuilder newBuilder() {
+  protected AbstractBuildRuleBuilder newBuilder() {
     return PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary();
   }
 

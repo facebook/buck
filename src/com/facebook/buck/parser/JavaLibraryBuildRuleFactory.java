@@ -28,7 +28,7 @@ import java.util.List;
 class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
-  DefaultJavaLibraryRule.Builder newBuilder() {
+  public DefaultJavaLibraryRule.Builder newBuilder() {
     return DefaultJavaLibraryRule.newJavaLibraryRuleBuilder();
   }
 
