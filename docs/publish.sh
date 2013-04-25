@@ -37,7 +37,7 @@ git commit -m "Updated HTML documentation."
 
 # Push the new version of the docs to GitHub:
 set +e
-git push origin gh-pages
+git push origin gh-pages --force
 EXIT_CODE=$?
 set -e
 
