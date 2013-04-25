@@ -130,3 +130,10 @@ ul ul {
   font-size: 36px;
   font-family: monospace;
 }
+
+#fork {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+}
