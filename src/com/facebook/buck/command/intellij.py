@@ -147,7 +147,7 @@ def write_modules(modules):
     xml += '\n  <component name="NewModuleRootManager" inherit-compiler-output="true">'
 
     # Empirically, if there are multiple source folders, then the <content> element for the
-    # buck-android/gen folder should be listed before the other source folders.
+    # buck-out/android/gen folder should be listed before the other source folders.
     num_source_folders = len(module['sourceFolders'])
     if num_source_folders > 1:
       xml = add_buck_android_source_folder(xml, module)
@@ -171,7 +171,7 @@ def write_modules(modules):
     xml = add_annotation_generated_source_folder(xml, module)
 
     # Empirically, if there is one source folder, then the <content> element for the
-    # buck-android/gen folder should be listed after the other source folders.
+    # buck-out/android/gen folder should be listed after the other source folders.
     if num_source_folders <= 1:
       xml = add_buck_android_source_folder(xml, module)
 
@@ -274,7 +274,7 @@ def write_modules(modules):
 
 
 def add_buck_android_source_folder(xml, module):
-  # Apparently if we write R.java and friends to a gen/ directory under buck-android/ then
+  # Apparently if we write R.java and friends to a gen/ directory under buck-out/android/ then
   # IntelliJ wants that to be included as a separate source root.
   if 'moduleGenPath' in module:
     xml += '\n    <content url="file://$MODULE_DIR$%s">' % module['moduleGenPath']

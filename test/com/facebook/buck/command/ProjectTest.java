@@ -187,7 +187,7 @@ public class ProjectTest {
   public void testGenerateRelativeGenPath() {
     String basePathOfModuleWithSlash = "android_res/com/facebook/gifts/";
     String expectedRelativePathToGen =
-        "/../../../../buck-android/android_res/com/facebook/gifts/gen";
+        "/../../../../buck-out/android/android_res/com/facebook/gifts/gen";
     assertEquals(
         expectedRelativePathToGen, Project.generateRelativeGenPath(basePathOfModuleWithSlash));
   }

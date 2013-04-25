@@ -486,7 +486,7 @@ public class Project {
    * from the root of the project to base path of current build target.
    *
    * For example, for the build target in $PROJECT_DIR$/android_res/com/facebook/gifts/,
-   * Intellij will generate $PROJECT_DIR$/buck-android/android_res/com/facebook/gifts/gen
+   * Intellij will generate $PROJECT_DIR$/buck-out/android/android_res/com/facebook/gifts/gen
    *
    * @return the relative path of gen from the base path of current module.
    */
@@ -494,7 +494,8 @@ public class Project {
     return
         "/"
         + Paths.computeRelativePath(basePathOfModuleWithSlash, "")
-        + "buck-android/"
+        + BuckConstant.ANDROID_GEN_DIR
+        + "/"
         + Paths.computeRelativePath("", basePathOfModuleWithSlash)
         + "gen";
   }
