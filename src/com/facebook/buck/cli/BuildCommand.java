@@ -18,11 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.debug.Tracer;
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.DependencyGraph;
@@ -36,13 +33,11 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,7 +49,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   private Build build;
 
-  private List<BuildTarget> buildTargets = Lists.newArrayList();
+  private ImmutableList<BuildTarget> buildTargets = ImmutableList.of();
 
   public BuildCommand() {}
 
@@ -87,27 +82,19 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     Verbosity verbosity = options.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);
 
-    // Find all the build files so we know where package boundaries are.
-    BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
 
-    // Create a Parser.
-    Parser parser = new Parser(getProjectFilesystem(), buildFiles, ansi);
+    Parser parser = createParser();
 
-    // Parse all of the build targets specified by the user.
-    BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
-
-    List<String> buildTargetNames =  options.getArgumentsFormattedAsBuildTargets();
-    if (buildTargetNames.isEmpty()) {
-      console.printFailure("Must specify at least one build target.");
+    try {
+      buildTargets = getBuildTargets(parser, options.getArgumentsFormattedAsBuildTargets());
+    } catch (NoSuchBuildTargetException e) {
+      console.printFailureWithoutStacktrace(e);
       return 1;
     }
-    for (String buildTargetName : buildTargetNames) {
-      try {
-        buildTargets.add(buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified()));
-      } catch (NoSuchBuildTargetException e) {
-        console.printFailureWithoutStacktrace(e);
-        return 1;
-      }
+
+    if (buildTargets.isEmpty()) {
+      console.printFailure("Must specify at least one build target.");
+      return 1;
     }
 
     // Parse the build files to create a DependencyGraph.

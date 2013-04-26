@@ -253,6 +253,11 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
+  public File getOutput() {
+    return new File(getApkPath());
+  }
+
+  @Override
   protected List<String> getInputsToCompareToOutput(BuildContext context) {
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     inputs.add(manifest);

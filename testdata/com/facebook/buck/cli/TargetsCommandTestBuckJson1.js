@@ -1,5 +1,6 @@
 [
 {
+  "buck.output_file" : "{$OUTPUT_FILE}",
   "buck_base_path" : "testdata/com/facebook/buck/cli/TargetsCommandTestBuckFile",
   "deps" : [ "//:dependency", "//third-party/guava:guava" ],
   "name" : "test-library",

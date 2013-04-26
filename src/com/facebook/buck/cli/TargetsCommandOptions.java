@@ -32,7 +32,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public class TargetsCommandOptions extends AbstractCommandOptions {
+public class TargetsCommandOptions extends BuildCommandOptions {
 
   @Option(name = "--referenced_file",
       usage = "The referenced file list, --referenced_file file1 file2  ... fileN --other_option",
@@ -51,8 +51,9 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
       usage = "Print the fully-qualified build target for the specified alias[es]")
   private boolean isResolveAlias;
 
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
+  @Option(name = "--show_output",
+      usage = "Print the absolute path to the output for each rule after the rule name.")
+  private boolean isShowOutput;
 
   public TargetsCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
@@ -95,14 +96,14 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
     return json;
   }
 
-  /** @return the arguments passed to this command. */
-  public Iterable<String> getArguments() {
-    return Collections.unmodifiableList(arguments);
-  }
-
   /** @return {@code true} if {@code --resolvealias} was specified. */
   public boolean isResolveAlias() {
     return isResolveAlias;
+  }
+
+  /** @return {@code true} if {@code --show_output} was specified. */
+  public boolean isShowOutput() {
+    return isShowOutput;
   }
 
   /** @return the name of the build target identified by the specified alias or {@code null}. */

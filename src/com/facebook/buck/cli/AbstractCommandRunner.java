@@ -16,9 +16,16 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.model.BuildFileTree;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -26,6 +33,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 
 abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implements CommandRunner {
 
@@ -109,6 +117,39 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
+  }
+
+
+  /**
+   * @return Creates a parser for this command.
+   */
+  protected Parser createParser() {
+    // Find all the build files so we know where package boundaries are.
+    BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
+
+    // Create a Parser.
+    return new Parser(getProjectFilesystem(), buildFiles, ansi);
+  }
+
+  /**
+   * @return A list of {@link BuildTarget}s for the input buildTargetNames.
+   */
+  protected ImmutableList<BuildTarget> getBuildTargets(Parser parser, List<String> buildTargetNames)
+      throws NoSuchBuildTargetException {
+    Preconditions.checkNotNull(parser);
+    Preconditions.checkNotNull(buildTargetNames);
+
+
+    ImmutableList.Builder<BuildTarget> buildTargets = ImmutableList.builder();
+
+    // Parse all of the build targets specified by the user.
+    BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
+
+    for (String buildTargetName : buildTargetNames) {
+      buildTargets.add(buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified()));
+    }
+
+    return buildTargets.build();
   }
 
   private static class ParserAndOptions<T> {

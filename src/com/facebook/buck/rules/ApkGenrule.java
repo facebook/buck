@@ -21,6 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -86,6 +87,11 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   @Override
   public String getApkPath() {
     return getOutputFilePath();
+  }
+
+  @Override
+  public File getOutput() {
+    return new File(getApkPath());
   }
 
   public static Builder newApkGenruleBuilder() {

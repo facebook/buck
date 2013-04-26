@@ -24,9 +24,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.File;
+
+import javax.annotation.Nullable;
+
 public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
 
   private final BuildRuleType type;
+
+  @Nullable
+  private File outputFile;
 
   public FakeBuildRule(BuildRuleType type,
       BuildTarget target,
@@ -58,6 +65,15 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   @Override
   public boolean isCached(BuildContext context) {
     return false;
+  }
+
+  @Override
+  public File getOutput() {
+    return outputFile;
+  }
+
+  public void setOutputFile(File outputFile) {
+    this.outputFile = outputFile;
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.facebook.buck.json.BuildFileToJsonParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -49,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
@@ -95,6 +95,17 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     ImmutableSet<String> referencedFiles = options.getReferencedFiles(
         getProjectFilesystem().getProjectRoot());
 
+    Parser parser = createParser();
+
+    ImmutableSet<BuildTarget> matchingBuildTargets;
+    try {
+      matchingBuildTargets = ImmutableSet.copyOf(
+          getBuildTargets(parser, options.getArgumentsFormattedAsBuildTargets()));
+    } catch (NoSuchBuildTargetException e) {
+      console.printFailureWithoutStacktrace(e);
+      return 1;
+    }
+
     // Parse the entire dependency graph.
     PartialGraph graph;
     try {
@@ -106,42 +117,55 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return 1;
     }
 
-    TreeMap<String, BuildTarget> matchingBuildTargets = getMachingBuildTargets(
+    SortedMap<String, BuildRule> matchingBuildRules = getMatchingBuildRules(
         graph.getDependencyGraph(),
-        new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles));
+        new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, matchingBuildTargets));
 
     // Print out matching targets in alphabetical order.
     if (options.getPrintJson()) {
-      printJsonForTargets(matchingBuildTargets, options.getDefaultIncludes());
+      printJsonForTargets(matchingBuildRules, options.getDefaultIncludes());
     } else {
-      for (String target : matchingBuildTargets.keySet()) {
-        stdOut.println(target);
-      }
+      printTargetsList(matchingBuildRules, options.isShowOutput());
     }
 
     return 0;
   }
 
   @VisibleForTesting
-  TreeMap<String, BuildTarget> getMachingBuildTargets(
+  void printTargetsList(SortedMap<String, BuildRule> matchingBuildRules,
+      boolean showOutput) {
+    for (Map.Entry<String, BuildRule> target : matchingBuildRules.entrySet()) {
+      String output = target.getKey();
+      if (showOutput) {
+        File outputFile = target.getValue().getOutput();
+        if (outputFile != null) {
+          output += " " + outputFile.getPath();
+        }
+      }
+      stdOut.println(output);
+    }
+  }
+
+  @VisibleForTesting
+  SortedMap<String, BuildRule> getMatchingBuildRules(
       final DependencyGraph graph,
       final TargetsCommandPredicate predicate) {
     // Traverse the DependencyGraph and select all of the rules that accepted by Predicate.
-    AbstractBottomUpTraversal<BuildRule, TreeMap<String, BuildTarget>> traversal =
-        new AbstractBottomUpTraversal<BuildRule, TreeMap<String, BuildTarget>>(graph) {
+    AbstractBottomUpTraversal<BuildRule, SortedMap<String, BuildRule>> traversal =
+        new AbstractBottomUpTraversal<BuildRule, SortedMap<String, BuildRule>>(graph) {
 
-      final TreeMap<String, BuildTarget> matchingBuildTargets = Maps.newTreeMap();
+      final SortedMap<String, BuildRule> matchingBuildRules = Maps.newTreeMap();
 
       @Override
       public void visit(BuildRule rule) {
         if (predicate.apply(rule)) {
-          matchingBuildTargets.put(rule.getFullyQualifiedName(), rule.getBuildTarget());
+          matchingBuildRules.put(rule.getFullyQualifiedName(), rule);
         }
       }
 
       @Override
-      public TreeMap<String, BuildTarget> getResult() {
-        return matchingBuildTargets;
+      public SortedMap<String, BuildRule> getResult() {
+        return matchingBuildRules;
       }
     };
 
@@ -155,18 +179,19 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   }
 
   @VisibleForTesting
-  void printJsonForTargets(SortedMap<String, BuildTarget> buildTargets,
+  void printJsonForTargets(SortedMap<String, BuildRule> buildIndex,
       Iterable<String> defaultIncludes) throws IOException {
 
     // Print the JSON representation of the build rule for the specified target(s).
     stdOut.println("[");
 
     ObjectMapper mapper = new ObjectMapper();
-    Iterator<String> keySetIterator = buildTargets.keySet().iterator();
+    Iterator<String> keySetIterator = buildIndex.keySet().iterator();
     while (keySetIterator.hasNext()) {
       String key = keySetIterator.next();
-      BuildTarget target = buildTargets.get(key);
-      File buildFile = target.getBuildFile();
+      BuildRule buildRule = buildIndex.get(key);
+      BuildTarget buildTarget = buildRule.getBuildTarget();
+      File buildFile = buildTarget.getBuildFile();
 
       List<Map<String, Object>> rules = BuildFileToJsonParser.getAllRules(
           getProjectFilesystem().getProjectRoot().getAbsolutePath(),
@@ -174,19 +199,25 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           defaultIncludes,
           console.getAnsi());
 
-      // Find the build rule information that corresponds to this build target.
+      // Find the build rule information that corresponds to this build buildTarget.
       Map<String, Object> targetRule = null;
       for (Map<String, Object> rule : rules) {
         String name = (String)rule.get("name");
-        if (name.equals(target.getShortName())) {
+        if (name.equals(buildTarget.getShortName())) {
           targetRule = rule;
           break;
         }
       }
 
       if (targetRule == null) {
-        console.printFailure("unable to find rule for target " + target.getFullyQualifiedName());
+        console.printFailure(
+            "unable to find rule for target " + buildTarget.getFullyQualifiedName());
         continue;
+      }
+
+      File outputFile = buildRule.getOutput();
+      if (outputFile != null) {
+        targetRule.put("buck.output_file", outputFile.getPath());
       }
 
       // Sort the rule items, both so we have a stable order for unit tests and
@@ -274,13 +305,17 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     private ImmutableSet<InputRule> referencedInputs;
     private Set<String> basePathOfTargets;
     private Set<BuildRule> dependentTargets;
+    private Set<BuildTarget> matchingBuildRules;
 
     public TargetsCommandPredicate(
         PartialGraph partialGraph,
         ImmutableSet<BuildRuleType> buildRuleTypes,
-        ImmutableSet<String> referencedFiles) {
+        ImmutableSet<String> referencedFiles,
+        ImmutableSet<BuildTarget> matchingBuildRules) {
       this.graph = partialGraph.getDependencyGraph();
       this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+      this.matchingBuildRules = Preconditions.checkNotNull(matchingBuildRules);
+
       Preconditions.checkNotNull(referencedFiles);
       if (!referencedFiles.isEmpty()) {
         this.referencedInputs = InputRule.inputPathsAsInputRules(
@@ -321,6 +356,11 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           // and this rule depend on at least one referenced file.
           dependentTargets.add(rule);
         }
+      }
+
+      if (!matchingBuildRules.isEmpty() &&
+          !matchingBuildRules.contains(rule.getBuildTarget())) {
+        return false;
       }
 
       return (isDependent && (buildRuleTypes.isEmpty() || buildRuleTypes.contains(rule.getType())));

@@ -27,6 +27,16 @@ buck targets --type java_test | \
   xargs buck test
 </pre>{/literal}
 
+<p>
+
+A list of rules can also be passed into <code>buck targets</code> and Buck will
+only print out target information for those rules.  For example:
+
+{literal}<pre>
+buck targets --show_output &#x2F;/java/com/myproject:binary
+> &#x2F;/java/com/myproject:binary buck-gen/java/com/myproject/binary.apk
+</pre>{/literal}
+
 {/param}
 
 {param params}
@@ -72,6 +82,13 @@ buck targets --type java_test \
   command also accepts build targets.  See  <a
   href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> for more
   information.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'show_output' /}
+  {param desc}
+  Prints the relative path to the output for each rule after the rule name.
   {/param}
 {/call}
 
