@@ -29,6 +29,7 @@ import static org.easymock.EasyMock.getCurrentArguments;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -39,8 +40,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.CommandRunner;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -518,6 +521,37 @@ public class AbstractCachingBuildRuleTest {
     assertSeenEventsContain(ImmutableList.<BuildEvent>of(
         BuildEvents.started(rule), BuildEvents.finished(rule, SUCCESS, HIT)),
         listener.getSeen());
+  }
+
+  @Test
+  public void canAllowNonExistentBuildRules() {
+    AbstractBuildRuleBuilder builder = JavaBinaryRule.newJavaBinaryRuleBuilder();
+    builder.setBuildTarget(BuildTargetFactory.newInstance("//foo/bar", "raz"));
+
+    ImmutableSortedSet buildRules = builder.getBuildTargetsAsBuildRules(
+        ImmutableMap.<String, BuildRule>of(),
+        ImmutableList.of("//com/fake:javarule"),
+        true /* allowNonExistentRule */);
+
+    assertEquals(ImmutableSortedSet.<BuildRule>of(), buildRules);
+  }
+
+  @Test
+  public void whenAllowNonExistentFalseThenThrow() {
+    AbstractBuildRuleBuilder builder = JavaBinaryRule.newJavaBinaryRuleBuilder();
+    builder.setBuildTarget(BuildTargetFactory.newInstance("//foo/bar", "raz"));
+
+    try {
+      builder.getBuildTargetsAsBuildRules(
+          ImmutableMap.<String, BuildRule>of(),
+          ImmutableList.of("//com/fake:javarule"),
+          false /* allowNonExistentRule */);
+    } catch (HumanReadableException e) {
+      assertEquals("No rule for //com/fake:javarule found when processing //foo/bar:raz",
+          e.getHumanReadableErrorMessage());
+      return;
+    }
+    fail("Should have thrown exception when not allowing non-existent rules in no_dx.");
   }
 
   private void assertSeenEventsContain(List<BuildEvent> expected, List<BuildEvent> seen) {

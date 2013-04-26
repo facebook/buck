@@ -873,13 +873,18 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     @Override
     public AndroidBinaryRule build(Map<String, BuildRule> buildRuleIndex) {
+      boolean allowNonExistentRule =
+        false;
+
       return new AndroidBinaryRule(
           createBuildRuleParams(buildRuleIndex),
           manifest,
           target,
           keystorePropertiesPath,
           packageType,
-          getBuildTargetsAsBuildRules(buildRuleIndex, buildRulesToExcludeFromDex),
+          getBuildTargetsAsBuildRules(buildRuleIndex,
+              buildRulesToExcludeFromDex,
+              allowNonExistentRule),
           dexSplitMode,
           useAndroidProguardConfigWithOptimizations,
           proguardConfig,

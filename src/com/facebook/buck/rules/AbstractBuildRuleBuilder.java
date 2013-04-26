@@ -20,10 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.util.Collections;
@@ -65,19 +66,29 @@ public abstract class AbstractBuildRuleBuilder implements BuildRuleBuilder {
 
   protected ImmutableSortedSet<BuildRule> getDepsAsBuildRules(
       final Map<String, BuildRule> buildRuleIndex) {
-    return getBuildTargetsAsBuildRules(buildRuleIndex, getDeps());
+    return getBuildTargetsAsBuildRules(buildRuleIndex, getDeps(), false /* allowNonExistentRule */);
   }
 
-  protected ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(final Map<String, BuildRule> buildRuleIndex, Iterable<String> buildTargets) {
-    return ImmutableSortedSet.copyOf(Iterables.transform(
-        buildTargets, new Function<String, BuildRule>() {
-      @Override
-      public BuildRule apply(String dep) {
-        BuildRule buildRule = buildRuleIndex.get(dep);
-        Preconditions.checkNotNull(buildRule, "No rule for %s", dep);
-        return buildRule;
+  @VisibleForTesting
+  ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(
+      final Map<String, BuildRule> buildRuleIndex,
+      Iterable<String> buildTargets,
+      boolean allowNonExistentRule) {
+    BuildTarget invokingBuildTarget = Preconditions.checkNotNull(getBuildTarget());
+
+    ImmutableSortedSet.Builder<BuildRule> buildRules = ImmutableSortedSet.naturalOrder();
+
+    for (String target : buildTargets) {
+      BuildRule buildRule = buildRuleIndex.get(target);
+      if (buildRule != null) {
+        buildRules.add(buildRule);
+      } else if (!allowNonExistentRule) {
+        throw new HumanReadableException("No rule for %s found when processing %s",
+            target, invokingBuildTarget.getFullyQualifiedName());
       }
-    }));
+    }
+
+    return buildRules.build();
   }
 
   public AbstractBuildRuleBuilder addVisibilityPattern(BuildTargetPattern visibilityPattern) {

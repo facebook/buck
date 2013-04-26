@@ -101,10 +101,15 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
 
     @Override
     public AndroidManifestRule build(Map<String, BuildRule> buildRuleIndex) {
+      boolean allowNonExistentRule =
+        false;
+
       return new AndroidManifestRule(createBuildRuleParams(buildRuleIndex),
           skeletonFile,
           manifestFile,
-          getBuildTargetsAsBuildRules(buildRuleIndex, buildRulesToExcludeFromDex));
+          getBuildTargetsAsBuildRules(buildRuleIndex,
+              buildRulesToExcludeFromDex,
+              allowNonExistentRule));
     }
 
     public Builder setManifestFile(String manifestFile) {
