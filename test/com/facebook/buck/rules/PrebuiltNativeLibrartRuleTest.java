@@ -65,7 +65,7 @@ public class PrebuiltNativeLibrartRuleTest {
 
     // Test getInputsToCompareToOutput().
     BuildContext context = null;
-    MoreAsserts.assertListEquals(
+    MoreAsserts.assertIterablesEquals(
         "Each subgroup of input files should be sorted alphabetically so that the list order is " +
         "consistent even if the iteration order of the sets passed to the AndroidLibraryRule " +
         "changes.",

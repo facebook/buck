@@ -31,6 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
@@ -124,13 +125,22 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     }
   }
 
+  private void addResContents(ImmutableSortedSet.Builder<String> files) {
+    addInputsToSortedSet(res, files, directoryTraverser);
+  }
+
+  private void addAssetsContents(ImmutableSortedSet.Builder<String> files) {
+    addInputsToSortedSet(assets, files, directoryTraverser);
+  }
+
   @Override
-  protected List<String> getInputsToCompareToOutput(BuildContext context) {
-    ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
+  protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+    ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes = ImmutableSortedSet
+        .naturalOrder();
 
     // This should include the res/ and assets/ folders.
-    addInputsToList(res, inputsToConsiderForCachingPurposes, directoryTraverser);
-    addInputsToList(assets, inputsToConsiderForCachingPurposes, directoryTraverser);
+    addResContents(inputsToConsiderForCachingPurposes);
+    addAssetsContents(inputsToConsiderForCachingPurposes);
 
     // manifest file is optional
     if (manifestFile != null) {
@@ -279,9 +289,15 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
 
   @Override
   protected RuleKey.Builder ruleKeyBuilder() {
+    ImmutableSortedSet.Builder<String> resFiles = ImmutableSortedSet.naturalOrder();
+    addResContents(resFiles);
+
+    ImmutableSortedSet.Builder<String> assetsFiles = ImmutableSortedSet.naturalOrder();
+    addAssetsContents(assetsFiles);
+
     return super.ruleKeyBuilder()
-        .set("res", res)
-        .set("assets", assets);
+        .set("res", resFiles.build())
+        .set("assets", assetsFiles.build());
   }
 
   public static Builder newAndroidResourceRuleBuilder() {

@@ -78,18 +78,17 @@ public class AndroidResourceRuleTest {
 
     // Test getInputsToCompareToOutput().
     BuildContext context = null;
-    MoreAsserts.assertListEquals(
-        "Each subgroup of input files should be sorted alphabetically so that the list order is " +
-        "consistent even if the iteration order of the sets passed to the AndroidResourceRule " +
-        "changes.",
+    MoreAsserts.assertIterablesEquals(
+        "getInputsToCompareToOutput() should return an alphabetically sorted list of all input " +
+        "files that contribute to this android_resource() rule.",
         ImmutableList.of(
-          "java/src/com/facebook/base/res/drawable/A.xml",
-          "java/src/com/facebook/base/res/drawable/C.xml",
-          "java/src/com/facebook/base/res/drawable/E.xml",
-          "java/src/com/facebook/base/assets/drawable/B.xml",
-          "java/src/com/facebook/base/assets/drawable/D.xml",
-          "java/src/com/facebook/base/assets/drawable/F.xml",
-          "java/src/com/facebook/base/AndroidManifest.xml"),
+            "java/src/com/facebook/base/AndroidManifest.xml",
+            "java/src/com/facebook/base/assets/drawable/B.xml",
+            "java/src/com/facebook/base/assets/drawable/D.xml",
+            "java/src/com/facebook/base/assets/drawable/F.xml",
+            "java/src/com/facebook/base/res/drawable/A.xml",
+            "java/src/com/facebook/base/res/drawable/C.xml",
+            "java/src/com/facebook/base/res/drawable/E.xml"),
         androidResourceRule.getInputsToCompareToOutput(context));
   }
 

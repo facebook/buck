@@ -304,9 +304,9 @@ public class RuleKey implements Comparable<RuleKey> {
     public Builder set(String key, @Nullable ImmutableSet<String> val) {
       setKey(key);
       if (val != null) {
-        ImmutableSortedSet<String> sortedVal = ImmutableSortedSet.copyOf(val);
-        for (String s : sortedVal) {
-          setVal(s);
+        ImmutableSortedSet<String> sortedValues = ImmutableSortedSet.copyOf(val);
+        for (String value : sortedValues) {
+          setVal(value);
         }
       }
       return separate();
@@ -316,8 +316,8 @@ public class RuleKey implements Comparable<RuleKey> {
      * The idempotence of the RuleKey to be built is false if this method is ever called with a
      * false argument.
      */
-    public Builder mergeIdempotence(boolean i) {
-      if (!i) {
+    public Builder mergeIdempotence(boolean idempotence) {
+      if (!idempotence) {
         idempotent = false;
       }
       return this;

@@ -228,7 +228,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         .set("srcs", srcs)
         .set("resources", resources)
         .set("classpathEntries", getClasspathEntries())
-        .set("inputsToConsiderForCachingPurposes", inputsToConsiderForCachingPurposes)
         .set("isAndroidLibrary", isAndroidRule())
         .set("sourceLevel", sourceLevel)
         .set("targetLevel", targetLevel);

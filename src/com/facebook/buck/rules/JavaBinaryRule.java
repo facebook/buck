@@ -24,6 +24,8 @@ import com.facebook.buck.shell.MakeCleanDirectoryCommand;
 import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.shell.MkdirCommand;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.DefaultDirectoryTraverser;
+import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -35,7 +37,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -56,49 +57,47 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
   private final Supplier<ImmutableSet<String>> classpathEntriesSupplier;
 
+  private final DirectoryTraverser directoryTraverser;
+
   JavaBinaryRule(
       BuildRuleParams buildRuleParams,
       @Nullable String mainClass,
       @Nullable String manifestFile,
-      @Nullable String metaInfDirectory) {
+      @Nullable String metaInfDirectory,
+      DirectoryTraverser directoryTraverser) {
     super(buildRuleParams);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.metaInfDirectory = metaInfDirectory;
 
-    classpathEntriesSupplier =
+    this.classpathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
           @Override
           public ImmutableSet<String> get() {
             return ImmutableSet.copyOf(getClasspathEntriesMap().values());
           }
         });
+    this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
+  }
+
+  private void addMetaInfContents(ImmutableSortedSet.Builder<String> files) {
+    addInputsToSortedSet(metaInfDirectory, files, directoryTraverser);
   }
 
   @Override
   protected RuleKey.Builder ruleKeyBuilder() {
+    ImmutableSortedSet.Builder<String> metaInfFiles = ImmutableSortedSet.naturalOrder();
+    addMetaInfContents(metaInfFiles);
+
     return super.ruleKeyBuilder()
         .set("mainClass", mainClass)
         .set("manifestFile", manifestFile)
-        .set("metaInfDirectory", metaInfDirectory);
+        .set("metaInfDirectory", metaInfFiles.build());
   }
 
   @Override
   public BuildRuleType getType() {
     return BuildRuleType.JAVA_BINARY;
-  }
-
-  /**
-   * getInputsToCompareToOutput() helper.
-   */
-  private void metaInfDirectoryRecurse(ImmutableSortedSet.Builder<String> builder, File path) {
-    if (path.isFile()) {
-      builder.add(path.getPath());
-    } else if (path.isDirectory()) {
-      for (String dirEntry : path.list()) {
-        metaInfDirectoryRecurse(builder, new File(path, dirEntry));
-      }
-    }
   }
 
   @Override
@@ -110,9 +109,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
       builder.add(manifestFile);
     }
 
-    if (metaInfDirectory != null) {
-      metaInfDirectoryRecurse(builder, new File(metaInfDirectory));
-    }
+    addMetaInfContents(builder);
 
     return builder.build();
   }
@@ -200,8 +197,11 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
     @Override
     public JavaBinaryRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new JavaBinaryRule(
-          createBuildRuleParams(buildRuleIndex), mainClass, manifestFile, metaInfDirectory);
+      return new JavaBinaryRule(createBuildRuleParams(buildRuleIndex),
+          mainClass,
+          manifestFile,
+          metaInfDirectory,
+          new DefaultDirectoryTraverser());
     }
 
     @Override

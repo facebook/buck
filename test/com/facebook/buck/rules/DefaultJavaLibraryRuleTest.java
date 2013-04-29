@@ -34,6 +34,7 @@ import com.facebook.buck.shell.Verbosity;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -443,7 +444,8 @@ public class DefaultJavaLibraryRuleTest {
             createBuildRuleParams(target),
             "com.facebook.Main",
             null,
-            null);
+            null,
+            new DefaultDirectoryTraverser());
       }
     },
     VALID_JAVA_LIBRARY("//tools/java/src/com/facebook/somejava:library") {

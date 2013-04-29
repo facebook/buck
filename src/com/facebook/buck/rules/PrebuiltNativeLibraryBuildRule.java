@@ -23,6 +23,7 @@ import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.util.List;
@@ -63,10 +64,11 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput(BuildContext context) {
-    ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
+  protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+    ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes = ImmutableSortedSet
+        .naturalOrder();
 
-    addInputsToList(nativeLibs, inputsToConsiderForCachingPurposes, directoryTraverser);
+    addInputsToSortedSet(nativeLibs, inputsToConsiderForCachingPurposes, directoryTraverser);
 
     return inputsToConsiderForCachingPurposes.build();
   }

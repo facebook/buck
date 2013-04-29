@@ -37,6 +37,7 @@ import com.facebook.buck.shell.MakeCleanDirectoryCommand;
 import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.shell.MkdirCommand;
 import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -301,7 +302,8 @@ public class GenruleTest {
             ImmutableSet.<BuildTargetPattern>of()),
         "com.facebook.util.ManifestGenerator",
         /* manifestFile */ null,
-        /* metaInfDirectory */ null);
+        /* metaInfDirectory */ null,
+        new DefaultDirectoryTraverser());
     buildRuleIndex.put(javaBinary.getFullyQualifiedName(), javaBinary);
 
     return javaBinary;

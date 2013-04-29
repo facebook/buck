@@ -27,8 +27,8 @@ import com.facebook.buck.util.TriState;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
@@ -275,8 +275,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   /**
    * Helper function for subclasses to create their lists of files for caching.
    */
-  protected static void addInputsToList(@Nullable String pathToDirectory,
-      ImmutableList.Builder<String> inputsToConsiderForCachingPurposes,
+  protected static void addInputsToSortedSet(@Nullable String pathToDirectory,
+      ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes,
       DirectoryTraverser traverser) {
     if (pathToDirectory == null) {
       return;
