@@ -393,7 +393,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
 
     // Print the summary of the test results.
-    if (isAllTestsPassed) {
+    if (completedResults.isEmpty()) {
+      ansi.printlnHighlightedFailureText(stdErr, "NO TESTS RAN");
+    } else if (isAllTestsPassed) {
       ansi.printlnHighlightedSuccessText(stdErr, "TESTS PASSED");
     } else {
       ansi.printlnHighlightedFailureText(stdErr,
