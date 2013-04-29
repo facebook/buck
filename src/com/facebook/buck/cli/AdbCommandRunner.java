@@ -317,7 +317,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    */
   protected static abstract class ErrorParsingReceiver extends MultiLineReceiver {
 
-    private String mErrorMessage = null;
+    private String errorMessage = null;
 
     /**
      * Look for an error message in {@code line}.
@@ -341,11 +341,11 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
         for (String line : lines) {
             if (line.length() > 0) {
                 if (matchForSuccess(line)) {
-                    mErrorMessage = null;
+                    errorMessage = null;
                 } else {
                     String err = matchForError(line);
                     if (err != null) {
-                      mErrorMessage = err;
+                      errorMessage = err;
                     }
                 }
             }
@@ -358,7 +358,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     }
 
     public String getErrorMessage() {
-       return mErrorMessage;
+       return errorMessage;
     }
   }
 
