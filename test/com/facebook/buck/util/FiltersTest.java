@@ -17,7 +17,7 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -92,6 +92,7 @@ public class FiltersTest {
    * Flatten and convert several iterables containing paths into a set of absolute {@code File}
    * instances.
    */
+  @SuppressWarnings({"unchecked", "varargs"})
   private static Set<File> absoluteFileSet(Iterable<String>... iterables) {
     ImmutableSet.Builder<File> builder = ImmutableSet.builder();
     for (String path : Iterables.concat(iterables)) {
@@ -147,7 +148,7 @@ public class FiltersTest {
   public void testImageDensityFilter() {
     Set<File> removals = Filters.onlyOneImage(candidates, "mdpi");
     Predicate<File> predicate = Filters.createImageDensityFilter(candidates, "mdpi");
-    assertTrue(!candidates.isEmpty());
+    assertFalse(candidates.isEmpty());
     for (String candidate : candidates) {
       File file = new File(candidate);
       assertEquals(!removals.contains(file.getAbsoluteFile()), predicate.apply(file));

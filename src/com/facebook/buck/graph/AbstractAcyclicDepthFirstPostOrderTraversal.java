@@ -43,6 +43,7 @@ public abstract class AbstractAcyclicDepthFirstPostOrderTraversal<T> {
    *     {@code null}.
    * @throws CycleException if a cycle is found while performing the traversal.
    */
+  @SuppressWarnings("PMD.PrematureDeclaration")
   public void traverse(Iterable<T> initialNodes) throws CycleException {
     // This corresponds to the current chain of nodes being explored. Enforcing this invariant makes
     // this data structure useful for debugging.

@@ -63,7 +63,7 @@ public class ParserTest {
   public TemporaryFolder tempDir = new TemporaryFolder();
 
   @Before
-  public void setup() throws IOException {
+  public void setUp() throws IOException {
     // Create a temp directory with some build files.
     File projectDirectoryRoot = tempDir.getRoot();
     tempDir.newFolder("java", "com", "facebook");

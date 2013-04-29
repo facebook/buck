@@ -60,7 +60,7 @@ public class AuditClasspathCommandTest {
   private AuditClasspathCommand auditClasspathCommand;
 
   @Before
-  public void setup() {
+  public void setUp() {
     stdOutStream = new CapturingPrintStream();
     stdErrStream = new CapturingPrintStream();
     Console console = new Console(stdOutStream, stdErrStream, ansi);
@@ -163,7 +163,7 @@ public class AuditClasspathCommandTest {
     // - the union of the classpath is output.
     // - all rules have implemented HasClasspathEntries.
     // Note that the output streams are reset.
-    setup();
+    setUp();
     targets.add("//:test-java-library");
     targets.add("//:test-android-library");
     targets.add("//:project-tests");

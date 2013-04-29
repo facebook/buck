@@ -160,7 +160,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       JavaLibraryRule rule,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem projectFilesystem) {
-    Set<String> srcFolders = Sets.newHashSet();
     ImmutableSet<String> javaSrcPaths = rule.getJavaSrcs();
 
     // A Java library rule with just resource files has an empty javaSrcPaths.
@@ -179,6 +178,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Iterate through all source paths to make sure we are generating a complete set of source
     // folders for the source paths.
+    Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
     for (String javaSrcPath : javaSrcPaths) {
       if (!JavaTestRule.isGeneratedFile(javaSrcPath)) {

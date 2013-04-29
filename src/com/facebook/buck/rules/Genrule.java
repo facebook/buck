@@ -175,7 +175,6 @@ public class Genrule extends AbstractCachingBuildRule {
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put("SRCS", Joiner.on(' ').join(srcsToAbsolutePaths.values()));
     environmentVariablesBuilder.put("OUT", getOutputFilePath());
-    int sourceIndex = 0;
 
     final Set<String> depFiles = Sets.newHashSet();
     final Set<BuildRule> processedBuildRules = Sets.newHashSet();

@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
+import java.io.PrintStream;
 import java.util.Map;
 
 public class RobolectricTestBuildRuleFactoryTest {
@@ -54,7 +55,7 @@ public class RobolectricTestBuildRuleFactoryTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//javatests/com/facebook/base:base");
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance,
-        /* stdErr */ null,
+        /* stdErr */ EasyMock.createMock(PrintStream.class),
         projectFilesystem,
         /* buildFiles */ null,
         buildTargetParser,

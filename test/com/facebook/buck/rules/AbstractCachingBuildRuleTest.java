@@ -53,7 +53,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.junit.Test;
 
@@ -83,7 +82,7 @@ public class AbstractCachingBuildRuleTest {
   public void testNotCachedIfDepsNotCached() throws IOException {
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setCommandRunner(createMock(CommandRunner.class))
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
@@ -126,7 +125,7 @@ public class AbstractCachingBuildRuleTest {
         .andReturn(false);
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setCommandRunner(createMock(CommandRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
@@ -167,7 +166,7 @@ public class AbstractCachingBuildRuleTest {
     ProjectFilesystem projectFilesystem = createService(false);
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setCommandRunner(createMock(CommandRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
@@ -208,7 +207,7 @@ public class AbstractCachingBuildRuleTest {
     ProjectFilesystem projectFilesystem = createService(false);
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setCommandRunner(createMock(CommandRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
@@ -250,7 +249,7 @@ public class AbstractCachingBuildRuleTest {
     ProjectFilesystem projectFilesystem = createService(true);
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setCommandRunner(createMock(CommandRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
@@ -300,7 +299,7 @@ public class AbstractCachingBuildRuleTest {
                 .addAll((Iterable<String>) getCurrentArguments()[0])
                 .build();
 
-            assertTrue(inputTargets.size() == arg0.size());
+            assertEquals(inputTargets.size(), arg0.size());
             for (int i = 0; i < inputTargets.size(); i++) {
               // Extract fully qualified name from success file line, which has format:
               //   OutputKey RuleKey FullyQualifiedName
@@ -430,7 +429,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setEventBus(bus)
         .setProjectRoot(root)
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setProjectFilesystem(new ProjectFilesystem(root))
         .setCommandRunner(commandRunner)
         .setJavaPackageFinder(packageFinder)
@@ -446,6 +445,7 @@ public class AbstractCachingBuildRuleTest {
   }
 
   @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public void whenCacheRaisesExceptionThenBuildFailEventFired()
       throws ExecutionException, InterruptedException {
     BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
@@ -467,7 +467,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setEventBus(bus)
         .setProjectRoot(root)
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setProjectFilesystem(new ProjectFilesystem(root))
         .setCommandRunner(commandRunner)
         .setJavaPackageFinder(packageFinder)
@@ -479,6 +479,7 @@ public class AbstractCachingBuildRuleTest {
       build.get();
       fail("Cache should have thrown an IOException");
     } catch (ExecutionException ignored) {
+      // OK
     }
 
     assertSeenEventsContain(ImmutableList.<BuildEvent>of(
@@ -508,7 +509,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setEventBus(bus)
         .setProjectRoot(root)
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setDependencyGraph(createMock(DependencyGraph.class))
         .setProjectFilesystem(new ProjectFilesystem(root))
         .setCommandRunner(commandRunner)
         .setJavaPackageFinder(packageFinder)

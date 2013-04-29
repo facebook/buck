@@ -31,7 +31,5 @@ public class RobolectricTestBuildRuleFactory extends JavaTestBuildRuleFactory {
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     super.amendBuilder(abstractBuilder, params);
 
-    RobolectricTestRule.Builder builder = ((RobolectricTestRule.Builder)abstractBuilder);
-
   }
 }

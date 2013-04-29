@@ -24,11 +24,14 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 public class MoreAssertsTest {
+
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   private void expectFail(Iterable<?> a, Iterable<?> b) {
     try {
       MoreAsserts.assertIterablesEquals(a, b);
       fail("Expected failure from: a=" + a + "; b=" + b);
     } catch (AssertionError e) {
+      // OK
     }
   }
 

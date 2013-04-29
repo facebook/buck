@@ -77,6 +77,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
    * {@link UninstallCommand}.
    */
   @VisibleForTesting
+  @SuppressWarnings("PMD.PrematureDeclaration")
   protected boolean uninstallApkFromDevice(IDevice device, String packageName, boolean keepData) {
     String name;
     if (device.isEmulator()) {

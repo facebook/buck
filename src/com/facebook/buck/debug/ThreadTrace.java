@@ -114,6 +114,7 @@ final class ThreadTrace {
    * @param defaultThreshold The default threshold below which the tracer output will be suppressed.
    *     Can be overridden on a per-Tracer basis.
    */
+  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private void reset(long defaultThreshold) {
     this.defaultThreshold = defaultThreshold;
 
@@ -172,6 +173,7 @@ final class ThreadTrace {
    * @param silenceThresholdParam Threshold below which the tracer is silenced.
    * @return The elapsed time for the tracer or -1 if the tracer identifier was not recognized.
    */
+  @SuppressWarnings("PMD.PrematureDeclaration")
   long stopTracer(long id, Long silenceThresholdParam) {
 
     long now = System.currentTimeMillis();

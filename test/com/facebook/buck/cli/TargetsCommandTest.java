@@ -101,7 +101,7 @@ public class TargetsCommandTest {
   }
 
   @Before
-  public void setup() {
+  public void setUp() {
     stdOutStream = new CapturingPrintStream();
     stdErrStream = new CapturingPrintStream();
     Console console = new Console(stdOutStream, stdErrStream, ansi);

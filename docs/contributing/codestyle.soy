@@ -79,7 +79,10 @@ so here are the highlights for what we expect in Buck:
     </ul>
   <li>Warnings
     <ul>
-      <li>Code should compile without warnings in Eclipse.
+      <li>Code should compile without warnings. To enforce this, we use a
+          combination of <code>-Xlint</code> and <code>-Werror</code> flags
+          to <code>javac</code> in addition to a number of other static checks
+          provided by <a href="http://pmd.sourceforge.net/">PMD</a>.
       <li>Warnings should either be fixed or annotated with
           {sp}<code>@SuppressWarnings("type-of-warning")</code>, as appropriate.
     </ul>

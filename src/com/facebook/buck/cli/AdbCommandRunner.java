@@ -151,6 +151,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    */
   @VisibleForTesting
   @Nullable
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   AndroidDebugBridge createAdb(ExecutionContext context) {
     try {
       AndroidDebugBridge.init(/* clientSupport */ false);

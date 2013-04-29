@@ -633,7 +633,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   @VisibleForTesting
   String getProguardOutputFromInputClasspath(String classpathEntry) {
     // Hehe, this is so ridiculously fragile.
-    Preconditions.checkArgument(!classpathEntry.startsWith("/"),
+    Preconditions.checkArgument(classpathEntry.charAt(0) != '/',
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
     String obfuscatedName = Paths.getBasename(classpathEntry, ".jar") + "-obfuscated.jar";

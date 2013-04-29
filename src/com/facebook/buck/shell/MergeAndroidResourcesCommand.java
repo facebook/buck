@@ -179,10 +179,8 @@ public class MergeAndroidResourcesCommand implements Command {
         // to get fancier than is needed.  That is, just re-enumerate all app-level resource ids
         // and ignore everything else, allowing the styleable references to be messed up.
         String idValueToUse = idValue;
-        if (reenumerate) {
-          if (idValue.startsWith("0x7f")) {
-            idValueToUse = String.format("0x%08x", enumerator.next());
-          }
+        if (reenumerate && idValue.startsWith("0x7f")) {
+          idValueToUse = String.format("0x%08x", enumerator.next());
         }
 
         Resource resource = new Resource(idType, type, name, idValue, idValueToUse);

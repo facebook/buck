@@ -90,13 +90,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         return 1;
       }
     }
-    ImmutableSet<BuildRuleType> buildRuleTypes = buildRuleTypesBuilder.build();
 
-    ImmutableSet<String> referencedFiles = options.getReferencedFiles(
-        getProjectFilesystem().getProjectRoot());
-
+    // Find the build targets that match the specified options.
     Parser parser = createParser();
-
     ImmutableSet<BuildTarget> matchingBuildTargets;
     try {
       matchingBuildTargets = ImmutableSet.copyOf(
@@ -119,7 +115,11 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     SortedMap<String, BuildRule> matchingBuildRules = getMatchingBuildRules(
         graph.getDependencyGraph(),
-        new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, matchingBuildTargets));
+        new TargetsCommandPredicate(
+            graph,
+            buildRuleTypesBuilder.build(),
+            options.getReferencedFiles(getProjectFilesystem().getProjectRoot()),
+            matchingBuildTargets));
 
     // Print out matching targets in alphabetical order.
     if (options.getPrintJson()) {

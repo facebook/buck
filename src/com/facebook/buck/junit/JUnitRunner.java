@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -207,10 +208,7 @@ public final class JUnitRunner {
     }
 
     // Each argument other than the first one should be a class name to run.
-    List<String> testClassNames = new ArrayList<String>(args.length - 1);
-    for (int i = 1; i < args.length; i++) {
-      testClassNames.add(args[i]);
-    }
+    List<String> testClassNames = Arrays.asList(args).subList(1, args.length);
 
     // Run the tests.
     new JUnitRunner(outputDirectory, testClassNames).run();

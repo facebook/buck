@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<ruleset name="buck"
+    xmlns="http://pmd.sf.net/ruleset/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
+    xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
+  <description>Rules for the Buck project.</description>
+
+  <!--
+  Visit https://github.com/pmd/pmd/tree/master/pmd/src/main/resources/rulesets/java
+  for ruleset definitions. Note that Buck is currently built with PMD 5.0.3.
+  -->
+
+  <rule ref="rulesets/java/basic.xml" />
+  <rule ref="rulesets/java/empty.xml" />
+
+  <rule ref="rulesets/java/imports.xml">
+    <!--
+      Excluded because tests that use both JUnit and EasyMock tend to
+      statically import many methods, which we allow.
+    -->
+    <exclude name="TooManyStaticImports" />
+  </rule>
+
+  <rule ref="rulesets/java/junit.xml">
+    <!-- This is not practical. -->
+    <exclude name="JUnitAssertionsShouldIncludeMessage" />
+
+    <!-- Unclear what an appropriate upper bound would be. -->
+    <exclude name="JUnitTestContainsTooManyAsserts" />
+
+    <!--
+      Not practical: pure EasyMock tests or tests that exclusively assert
+      using MoreAsserts.* should not need to be annotated with this.
+    -->
+    <exclude name="JUnitTestsShouldIncludeAssert" />
+  </rule>
+
+  <rule ref="rulesets/java/unusedcode.xml">
+    <!--
+      Including the public keyword in interface methods is acceptable: this
+      makes it easier to copy/paste them.
+    -->
+    <exclude name="UnusedModifier" />
+  </rule>
+
+  <rule ref="rulesets/java/optimizations.xml">
+    <exclude name="AvoidInstantiatingObjectsInLoops" />
+    <exclude name="LocalVariableCouldBeFinal" />
+    <exclude name="MethodArgumentCouldBeFinal" />
+    <exclude name="RedundantFieldInitializer" />
+    <exclude name="UseStringBufferForStringAppends" />
+  </rule>
+
+</ruleset>

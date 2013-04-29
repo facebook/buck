@@ -17,7 +17,9 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -37,15 +39,15 @@ public class TriStateTest {
 
   @Test
   public void testIsSet() {
-    assertEquals(true, TriState.TRUE.isSet());
-    assertEquals(true, TriState.FALSE.isSet());
-    assertEquals(false, TriState.UNSPECIFIED.isSet());
+    assertTrue(TriState.TRUE.isSet());
+    assertTrue(TriState.FALSE.isSet());
+    assertFalse(TriState.UNSPECIFIED.isSet());
   }
 
   @Test
   public void testAsBoolean() {
-    assertEquals(true, TriState.TRUE.asBoolean());
-    assertEquals(false, TriState.FALSE.asBoolean());
+    assertTrue(TriState.TRUE.asBoolean());
+    assertFalse(TriState.FALSE.asBoolean());
   }
 
   @Test(expected = IllegalStateException.class)

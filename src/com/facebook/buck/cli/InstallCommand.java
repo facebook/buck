@@ -219,6 +219,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
    * Installs apk on specific device. Reports success or failure to console.
    */
   @VisibleForTesting
+  @SuppressWarnings("PMD.PrematureDeclaration")
   boolean installApkOnDevice(IDevice device, File apk) {
     String name;
     if (device.isEmulator()) {

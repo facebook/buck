@@ -97,7 +97,7 @@ class DefaultJavaPackageFinder implements JavaPackageFinder {
     ImmutableSortedSet.Builder<String> pathsFromRoot = ImmutableSortedSet.reverseOrder();
     ImmutableSet.Builder<String> pathElements = ImmutableSet.builder();
     for (String pattern : pathPatterns) {
-      if (pattern.startsWith("/")) {
+      if (pattern.charAt(0) == '/') {
         // Strip the leading slash.
         pattern = pattern.substring(1);
 

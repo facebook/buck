@@ -74,7 +74,7 @@ public class StringSetOptionHandler extends OptionHandler<Supplier<ImmutableSet<
 
     while (counter < params.size()) {
       String param = params.getParameter(counter);
-      if (param.startsWith("-")) {
+      if (param.charAt(0) == '-') {
         break;
       }
       Iterator<String> values = Splitter.on(' ')

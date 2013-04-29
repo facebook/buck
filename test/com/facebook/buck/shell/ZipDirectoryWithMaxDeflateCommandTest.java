@@ -38,14 +38,14 @@ public class ZipDirectoryWithMaxDeflateCommandTest {
   private File emptyOutputDir;
 
   @Before
-  public void setup() throws IOException {
+  public void setUp() throws IOException {
     outputApk = File.createTempFile("ZipDirectoryWithMaxDeflateCommandTest", "zip");
     emptyTempDir = Files.createTempDir();
     emptyOutputDir = Files.createTempDir();
   }
 
   @After
-  public void teardown() {
+  public void tearDown() {
     outputApk.delete();
     emptyTempDir.delete();
     emptyOutputDir.delete();

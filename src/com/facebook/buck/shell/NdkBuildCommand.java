@@ -55,9 +55,6 @@ public class NdkBuildCommand extends ShellCommand {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    String rootPath = context.getProjectDirectoryRoot().getAbsolutePath() + "/";
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
     Optional<File> ndkRoot = context.getNdkRoot();
     if (!ndkRoot.isPresent()) {
       throw new HumanReadableException("Must define a local.properties file"
@@ -65,6 +62,7 @@ public class NdkBuildCommand extends ShellCommand {
           + " your Android NDK directory, or set ANDROID_NDK.");
     }
 
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(
         ndkRoot.get().getAbsolutePath() + "/ndk-build",
         "-j",
@@ -73,6 +71,7 @@ public class NdkBuildCommand extends ShellCommand {
         this.makefileDirectory);
 
     builder.addAll(this.flags);
+    String rootPath = context.getProjectDirectoryRoot().getAbsolutePath() + "/";
     builder.add(
         "APP_PROJECT_PATH=" + rootPath + this.buildArtifactsDirectory,
         "APP_BUILD_SCRIPT=" + rootPath + this.makefilePath,

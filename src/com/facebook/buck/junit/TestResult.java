@@ -88,8 +88,6 @@ final class TestResult {
     // Get the stdout/stderr written during the test as strings.
     stdOutStream.flush();
     stdErrStream.flush();
-    String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
-    String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
 
     int numFailures = result.getFailureCount();
     // In practice, I have seen one case of a test having more than one failure:
@@ -105,6 +103,8 @@ final class TestResult {
     }
     Failure failure = numFailures == 0 ? null : result.getFailures().get(0);
 
+    String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
+    String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
     return new TestResult(clazz.getName(),
         methodName,
         result.getRunTime(),

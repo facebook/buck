@@ -85,6 +85,7 @@ public class ApkGenruleTest {
   }
 
   @Test
+  @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
     Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
     createSampleAndroidBinaryRule(buildRuleIndex);

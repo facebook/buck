@@ -27,8 +27,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +42,6 @@ public final class BuildRuleFactoryParams {
   static final String GENFILE_PREFIX = "BUCKGEN:";
 
   private final Map<String, ?> instance;
-  private final PrintStream stdErr;
   private final ProjectFilesystem filesystem;
   private final BuildFileTree buildFiles;
   public final BuildTargetParser buildTargetParser;
@@ -77,7 +76,7 @@ public final class BuildRuleFactoryParams {
       BuildTarget target,
       boolean ignoreFileExistenceChecks) {
     this.instance = instance;
-    this.stdErr = stdErr;
+    Preconditions.checkNotNull(stdErr);
     this.filesystem = filesystem;
     this.buildFiles = buildFiles;
     this.buildTargetParser = buildTargetParser;
