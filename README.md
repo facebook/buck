@@ -1,5 +1,11 @@
+Buck
+====
+
 Buck is an Android build tool. To see what Buck can do for you,
 check out the documentation at <http://facebook.github.io/buck/>.
+
+Installation
+------------
 
 To build Buck, run the following:
 
@@ -7,3 +13,7 @@ To build Buck, run the following:
     cd buck
     ant
     ./bin/buck --help
+
+License
+-------
+Apache License 2.0
