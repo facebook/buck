@@ -58,9 +58,7 @@ import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
@@ -144,7 +142,6 @@ public class TargetsCommandTest {
   @Test
   public void testNormalOutputForBuildTarget() throws IOException {
     final String testBuckFile1 = testDataPath("TargetsCommandTestBuckFile1.txt");
-    final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
     final String outputFile = "buck-out/gen/test/outputFile";
 
     // run `buck targets` on the build file and parse the observed JSON.
@@ -166,7 +163,6 @@ public class TargetsCommandTest {
   @Test
   public void testNormalOutputForBuildTargetWithOutput() throws IOException {
     final String testBuckFile1 = testDataPath("TargetsCommandTestBuckFile1.txt");
-    final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
     final String outputFile = "buck-out/gen/test/outputFile";
 
     // run `buck targets` on the build file and parse the observed JSON.

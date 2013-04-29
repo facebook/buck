@@ -528,7 +528,7 @@ public class AbstractCachingBuildRuleTest {
     AbstractBuildRuleBuilder builder = JavaBinaryRule.newJavaBinaryRuleBuilder();
     builder.setBuildTarget(BuildTargetFactory.newInstance("//foo/bar", "raz"));
 
-    ImmutableSortedSet buildRules = builder.getBuildTargetsAsBuildRules(
+    ImmutableSortedSet<BuildRule> buildRules = builder.getBuildTargetsAsBuildRules(
         ImmutableMap.<String, BuildRule>of(),
         ImmutableList.of("//com/fake:javarule"),
         true /* allowNonExistentRule */);
@@ -546,12 +546,11 @@ public class AbstractCachingBuildRuleTest {
           ImmutableMap.<String, BuildRule>of(),
           ImmutableList.of("//com/fake:javarule"),
           false /* allowNonExistentRule */);
+      fail("Should throw exception when not allowing non-existent rules in no_dx.");
     } catch (HumanReadableException e) {
       assertEquals("No rule for //com/fake:javarule found when processing //foo/bar:raz",
           e.getHumanReadableErrorMessage());
-      return;
     }
-    fail("Should have thrown exception when not allowing non-existent rules in no_dx.");
   }
 
   private void assertSeenEventsContain(List<BuildEvent> expected, List<BuildEvent> seen) {
