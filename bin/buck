@@ -74,15 +74,20 @@ if [ ! -e "build/buck.jar" ]; then
   exit $?
 fi
 
-# Make sure buck gets passed the right version.
-BUCK_CURRENT_VERSION=`git rev-parse HEAD`
 
 # if the output of git status -s is non-empty (-n test), it means there are changed files.
-if [ -n "`git status -s`" ]; then
-  BUCK_REPOSITORY_DIRTY=1
+BUCK_REPOSITORY_DIRTY=0
+if [ -d ".git" ]; then
+  # Make sure buck gets passed the right version.
+  BUCK_CURRENT_VERSION=`git rev-parse HEAD`
+
+  if [ -n "`git status -s`" ]; then
+    BUCK_REPOSITORY_DIRTY=1
+  fi
 else
-  BUCK_REPOSITORY_DIRTY=0
+  BUCK_CURRENT_VERSION="UNKNOWN"
 fi
+
 
 # Pop back to the original directory.
 popd > /dev/null
