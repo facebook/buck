@@ -29,7 +29,8 @@ public class GenerateCodeCoverageReportCommand extends ShellCommand {
   static final String REPORT_OUTPUT_DIR = "report.out.dir";
 
   @VisibleForTesting
-  static final String CODE_COVERAGE_OUTPUT_FORMAT = "html";
+  static final ImmutableSet<String> CODE_COVERAGE_OUTPUT_FORMAT =
+      ImmutableSet.of("html", "xml", "txt");
 
   private final Set<String> srcDirectories;
   private final String outputDirectory;
@@ -56,7 +57,9 @@ public class GenerateCodeCoverageReportCommand extends ShellCommand {
     // Add output directory property so code coverage data lands in the specified output directory.
     args.add(String.format("-D%s=%s", REPORT_OUTPUT_DIR, outputDirectory));
 
-    args.add("-report", CODE_COVERAGE_OUTPUT_FORMAT);
+    for (String reportFormat : CODE_COVERAGE_OUTPUT_FORMAT) {
+      args.add("-report", reportFormat);
+    }
 
     // Specify the paths to the runtime code coverage data and the metadata files.
     // coverage.ec: EMMA runtime code coverage data.

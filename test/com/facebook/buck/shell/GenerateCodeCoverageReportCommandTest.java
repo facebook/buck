@@ -40,16 +40,30 @@ public class GenerateCodeCoverageReportCommandTest {
     ExecutionContext context = createMock(ExecutionContext.class);
     replay(context);
 
-    List<String> expectedShellCommand = ImmutableList.of(
+    ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();
+
+    shellCommandBuilder.add(
         "java",
         "-classpath", JUnitCommand.PATH_TO_EMMA_JAR,
         "emma", "report",
         String.format("-D%s=%s",
-            GenerateCodeCoverageReportCommand.REPORT_OUTPUT_DIR, outputDirectory),
-        "-report", GenerateCodeCoverageReportCommand.CODE_COVERAGE_OUTPUT_FORMAT,
-        "-input", String.format("%s/coverage.ec,%s/coverage.em",
+            GenerateCodeCoverageReportCommand.REPORT_OUTPUT_DIR, outputDirectory));
+
+    for (String reportFormat : GenerateCodeCoverageReportCommand.CODE_COVERAGE_OUTPUT_FORMAT) {
+      shellCommandBuilder.add(
+          "-report", reportFormat
+      );
+    }
+
+    shellCommandBuilder.add(
+        "-input",
+        String.format(
+            "%s/coverage.ec,%s/coverage.em",
             JUnitCommand.EMMA_OUTPUT_DIR, JUnitCommand.EMMA_OUTPUT_DIR),
-        "-sourcepath", "parentDirectory1/src,root/parentDirectory/src");
+        "-sourcepath",
+        "parentDirectory1/src,root/parentDirectory/src");
+
+    List<String> expectedShellCommand = shellCommandBuilder.build();
 
     GenerateCodeCoverageReportCommand command =
         new GenerateCodeCoverageReportCommand(sourceDirectories, outputDirectory);
