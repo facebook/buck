@@ -64,8 +64,6 @@ public class ParserTest {
 
   @Before
   public void setUp() throws IOException {
-    // Create a temp directory with some build files.
-    File projectDirectoryRoot = tempDir.getRoot();
     tempDir.newFolder("java", "com", "facebook");
 
     testBuildFile = tempDir.newFile(
@@ -75,6 +73,9 @@ public class ParserTest {
         "java_library(name = 'bar')\n",
         testBuildFile,
         Charsets.UTF_8);
+
+    // Create a temp directory with some build files.
+    File projectDirectoryRoot = tempDir.getRoot();
 
     // Create a Parser.
     Ansi ansi = new Ansi();
@@ -187,9 +188,11 @@ public class ParserTest {
     // Execute parseBuildFilesForTargets() with multiple targets that require parsing the same
     // build file.
     BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook",
-        "foo", testBuildFile);
+        "foo",
+        testBuildFile);
     BuildTarget barTarget = BuildTargetFactory.newInstance("//java/com/facebook",
-        "bar", testBuildFile);
+        "bar",
+        testBuildFile);
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -201,23 +204,60 @@ public class ParserTest {
   }
 
   @Test
-  public void testMissingBuildRuleInValidFile() throws IOException {
+  public void testMissingBuildRuleInValidFile() throws IOException, NoSuchBuildTargetException {
     // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
     BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook",
-        "foo", testBuildFile);
+        "foo",
+        testBuildFile);
     BuildTarget razTarget = BuildTargetFactory.newInstance("//java/com/facebook",
-        "raz", testBuildFile);
+        "raz",
+        testBuildFile);
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
       testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
-    } catch (NoSuchBuildTargetException e) {
-      assertEquals("No rule 'raz' found in java/com/facebook/BUCK",
+      fail("HumanReadableException should be thrown");
+    } catch (HumanReadableException e) {
+      assertEquals("No rule found when resolving target //java/com/facebook:raz in build file " +
+                   "//java/com/facebook/BUCK",
           e.getHumanReadableErrorMessage());
-      return;
     }
-    fail("NoSuchBuildTargetException should be thrown");
+  }
+
+
+  @Test
+  public void testInvalidDepFromValidFile() throws IOException, NoSuchBuildTargetException {
+    // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
+    tempDir.newFolder("java", "com", "facebook", "invalid");
+
+    File testInvalidBuildFile = tempDir.newFile(
+        "java/com/facebook/invalid/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'foo', deps = ['//java/com/facebook/invalid/lib:missing_rule'])\n" +
+        "java_library(name = 'bar')\n",
+        testInvalidBuildFile,
+        Charsets.UTF_8);
+
+    tempDir.newFolder("java", "com", "facebook", "invalid", "lib");
+    tempDir.newFile(
+        "java/com/facebook/invalid/lib/" + BuckConstant.BUILD_RULES_FILE_NAME);
+
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook/invalid",
+        "foo",
+        testInvalidBuildFile);
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
+    Iterable<String> defaultIncludes = ImmutableList.of();
+
+    try {
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
+      fail("HumanReadableException should be thrown");
+    } catch (HumanReadableException e) {
+      assertEquals("No rule found when resolving target " +
+          "//java/com/facebook/invalid/lib:missing_rule in build file " +
+          "//java/com/facebook/invalid/lib/BUCK",
+          e.getHumanReadableErrorMessage());
+    }
   }
 
   private static Map<String, BuildRuleBuilder> createKnownBuildTargets() {

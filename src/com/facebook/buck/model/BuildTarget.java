@@ -118,7 +118,18 @@ public final class BuildTarget {
    * "//third_party/java/guava/".
    */
   public String getBaseNameWithSlash() {
-    return baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
+    return getBaseNameWithSlash(baseName);
+  }
+
+  /**
+   * Helper function for getting BuildTarget base names with a trailing slash if needed.
+   *
+   * If baseName were //third_party/java/guava, then this would return  "//third_party/java/guava/".
+   * If it were //, it would return //.
+   */
+  @Nullable
+  public static String getBaseNameWithSlash(@Nullable String baseName) {
+    return baseName == null || baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
   }
 
   /**

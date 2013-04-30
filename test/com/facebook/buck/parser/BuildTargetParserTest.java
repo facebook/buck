@@ -200,7 +200,7 @@ public class BuildTargetParserTest {
       fail("parse() should throw an exception");
     } catch (NoSuchBuildTargetException e) {
       assertEquals("No directory facebook/missing when resolving target " +
-          "//facebook/missing:assets in context BUILD_FILE //facebook/orca/" +
+          "//facebook/missing:assets in build file //facebook/orca/" +
           BuckConstant.BUILD_RULES_FILE_NAME, e.getMessage());
     }
 
@@ -223,7 +223,7 @@ public class BuildTargetParserTest {
       assertEquals(
           "No " + BuckConstant.BUILD_RULES_FILE_NAME +
               " file facebook/missing/" + BuckConstant.BUILD_RULES_FILE_NAME + " when resolving target " +
-              "//facebook/missing:assets in context BUILD_FILE //facebook/orca/" +
+              "//facebook/missing:assets in build file //facebook/orca/" +
               BuckConstant.BUILD_RULES_FILE_NAME,
           e.getMessage());
     }

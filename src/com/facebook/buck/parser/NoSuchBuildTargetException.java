@@ -61,11 +61,11 @@ public class NoSuchBuildTargetException extends Exception
   /**
    * @param buildTarget the failing {@link BuildTarget}
    */
-  static NoSuchBuildTargetException createForMissingBuildRule(BuildTarget buildTarget) {
-    String message = String.format("No rule '%s' found in %s%s",
-        buildTarget.getShortName(),
-        buildTarget.getBasePathWithSlash(),
-        BUILD_RULES_FILE_NAME);
+  static NoSuchBuildTargetException createForMissingBuildRule(BuildTarget buildTarget,
+      ParseContext parseContext) {
+    String message = String.format("No rule found when resolving target %s",
+        makeTargetDescription(buildTarget.getFullyQualifiedName(), parseContext));
+
     return new NoSuchBuildTargetException(message);
   }
 
@@ -76,15 +76,18 @@ public class NoSuchBuildTargetException extends Exception
 
   /**
    * @return description of the target name and context being parsed when an error was encountered.
-   *     Examples are ":azzetz in context BUILD_FILE //first-party/orca/orcaapp/BUILD" and
+   *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
    *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
    */
   private static String makeTargetDescription(String buildTargetName, ParseContext parseContext) {
     String location = parseContext.getType().name();
     if (parseContext.getType() == ParseContext.Type.BUILD_FILE) {
-      location += " " + parseContext.getBaseName() + "/" + BUILD_RULES_FILE_NAME;
+      return String.format("%s in build file %s%s",
+          buildTargetName,
+          parseContext.getBaseNameWithSlash(),
+          BUILD_RULES_FILE_NAME);
+    } else {
+      return String.format("%s in context %s", buildTargetName, location);
     }
-
-    return String.format("%s in context %s", buildTargetName, location);
   }
 }

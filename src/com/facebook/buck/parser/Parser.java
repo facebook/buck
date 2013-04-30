@@ -124,11 +124,6 @@ public final class Parser {
         if (isNewElement) {
           parseBuildFile(buildFile, defaultIncludes);
         }
-        // Verify that after parsing the BUCK file that would contain buildTarget that
-        // buildTarget is in fact now a known build.
-        if (!knownBuildTargets.containsKey(buildTarget.getFullyQualifiedName())) {
-          throw NoSuchBuildTargetException.createForMissingBuildRule(buildTarget);
-        }
       }
     }
 
@@ -152,9 +147,18 @@ public final class Parser {
 
           @Override
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget) {
+            ParseContext parseContext = ParseContext.forBaseName(buildTarget.getBaseName());
+
+            // Verify that the BuildTarget actually exists in the map of known BuildTargets
+            // before trying to recurse though its children.
+            if (!knownBuildTargets.containsKey(buildTarget.getFullyQualifiedName())) {
+              throw new HumanReadableException(
+                  NoSuchBuildTargetException.createForMissingBuildRule(buildTarget, parseContext));
+            }
+
             BuildRuleBuilder buildRuleBuilder = knownBuildTargets.get(
                 buildTarget.getFullyQualifiedName());
-            ParseContext parseContext = ParseContext.forBaseName(buildTarget.getBaseName());
+
             Set<BuildTarget> deps = Sets.newHashSet();
             for (String dep : buildRuleBuilder.getDeps()) {
               try {
@@ -181,8 +185,8 @@ public final class Parser {
 
             // Update the graph.
             if (buildRule.getDeps().isEmpty()) {
-              // If a build rule with no deps is specified as the build target to build, then make sure
-              // it is in the graph.
+              // If a build rule with no deps is specified as the build target to build, then make
+              // sure it is in the graph.
               graph.addNode(buildRule);
             } else {
               for (BuildRule dep : buildRule.getDeps()) {
@@ -274,13 +278,9 @@ public final class Parser {
     for (Map<String, Object> map : rules) {
       String type = (String)map.get("type");
       BuildRuleType buildRuleType = BuildRuleType.valueOf(type.toUpperCase());
-      BuildRuleFactory factory = ruleTypeToFactoryMap.get(buildRuleType);
-      if (factory == null) {
-        throw new RuntimeException("Unrecognized rule: " + type);
-      }
 
-      String name = (String)map.get("name");
       String basePath = (String)map.get("buck_base_path");
+
       File sourceOfBuildTarget;
       if (source == null) {
         String relativePathToBuildFile = !basePath.isEmpty()
@@ -290,6 +290,15 @@ public final class Parser {
       } else {
         sourceOfBuildTarget = source;
       }
+
+      BuildRuleFactory factory = ruleTypeToFactoryMap.get(buildRuleType);
+      if (factory == null) {
+        throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
+            type,
+            sourceOfBuildTarget);
+      }
+
+      String name = (String)map.get("name");
       BuildTarget target = new BuildTarget(sourceOfBuildTarget, "//" + basePath, name);
 
       if (filter != null && filter.isMatch(map, buildRuleType, target)) {

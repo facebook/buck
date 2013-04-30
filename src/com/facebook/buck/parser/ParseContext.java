@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -61,6 +62,11 @@ public class ParseContext {
   @Nullable
   public String getBaseName() {
     return baseName;
+  }
+
+  @Nullable
+  public String getBaseNameWithSlash() {
+    return BuildTarget.getBaseNameWithSlash(baseName);
   }
 
   /**
