@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.EchoCommand;
 import com.facebook.buck.shell.JarDirectoryCommand;
 import com.facebook.buck.shell.MakeCleanDirectoryCommand;
 import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
@@ -145,9 +144,6 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     String outputFile = getOutputFile();
     Command jar = new JarDirectoryCommand(outputFile, includePaths, mainClass, manifestFile);
     commands.add(jar);
-
-    Command echo = new EchoCommand(String.format("Created JAR at %s", outputFile));
-    commands.add(echo);
 
     return commands.build();
   }
