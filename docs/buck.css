@@ -137,3 +137,11 @@ ul ul {
   right: 0;
   border: 0;
 }
+
+.faq {
+  margin-bottom: 1em;
+}
+
+.faq_q {
+  font-weight: bold; 
+}

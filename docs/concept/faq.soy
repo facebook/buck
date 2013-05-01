@@ -1,0 +1,86 @@
+{namespace buck.faq}
+
+
+/**
+ * @param id attribute for this blob of HTML so users can link to an individual FAQ. We should make
+ *     an effort to keep these identifiers stable to avoid breaking links. Therefore, when choosing
+ *     an id, try to make it generic enough so that it is forward-compatible.
+ * @param question Question.
+ * @param shortAnswer Try to keep this to a one-liner.
+ * @param? longAnswer This portion of the answer can include more detail.
+ */
+{template .faq}
+<div class="{css faq}" id="{$id|id}">
+  <div class="{css faq_q}">Q: {$question}</div>
+  <div class="{css faq_a}">
+    A: {$shortAnswer|noAutoescape}
+    {if $longAnswer}
+    <p>{$longAnswer|noAutoescape}
+    {/if}
+  <p></div>
+</div>
+{/template}
+
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'FAQ' /}
+    {param content}
+
+{call .faq}
+  {param id: 'windows-support' /}
+  {param question}
+  Why doesn't Buck support Windows?
+  {/param}
+  {param shortAnswer}
+  There are a number of engineering tasks that need to be addressed before Buck will run on Windows.
+  {/param}
+  {param longAnswer}
+  <ul>
+    <li>Buck uses symlinks under the hood in many places. We need to map that concept to the Windows
+        equivalent throughout the codebase.
+    <li>Buck hardcodes the use of OS X/Linux file and path separators all over the place. This may
+        be a poor software design choice, but it makes the code more readable in many circumstances,
+        particularly in unit tests.
+    <li>Documentation becomes more work to maintain. For example, a nifty trick from the OS X/Linux
+        command line, such as:
+        <pre>buck targets --type java_test | xargs buck test</pre>
+        does not work on Windows, so that must be documented separately.
+    <li>The <code>./bin/buck</code> script is written in Bash, so to support Windows, the equivalent
+        would have to be maintained as a Windows Batch Script. Keeping both scripts in sync would be
+        non-trivial. Alternatively, the run script could be written in a platform-independent
+        language, such as Ruby, but that would require users to install an additional tool.
+    <li>It increases the surface area of what needs to be tested.
+  </ul>
+  Despite all of the work it will require, we do hope to support Windows in the future.
+  {/param}
+{/call}
+
+{call .faq}
+  {param id: 'why-is-buck-built-with-ant' /}
+  {param question}
+  Why is Buck built with Ant instead of Buck?
+  {/param}
+  {param shortAnswer}
+  Self-hosting systems can be more difficult to maintain and debug.
+  {/param}
+  {param longAnswer}
+  If Buck built itself using Buck, then every time a change was made to Buck's source,
+  the commit would have to include a new Buck binary that included that change. It would be easy to
+  forget to include the binary, difficult to verify that it was the correct binary, and wasteful to
+  bloat the Git history of the repository with binaries that could be rebuilt from source.
+  Building Buck using Ant ensures we are always building from source, which is simpler to verify.
+  <p>
+  Also, because Ant is a more mature build system than Buck, it has support for features that we
+  have not had time to include in Buck yet, such as generating Javadoc, static analysis
+  via <a href="http://pmd.sourceforge.net/">PMD</a>, Python unit tests, etc. 
+  <p>
+  That said, as a sanity check, Buck is capable of building itself. Once you build Buck using Ant,
+  you can re-build Buck using Buck by running <code>./bin/buck build buck</code>.  
+  {/param}
+{/call}
+
+    {/param}
+  {/call}
+{/template}
