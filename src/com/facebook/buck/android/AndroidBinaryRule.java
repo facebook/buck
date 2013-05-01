@@ -107,28 +107,6 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     }
   }
 
-  /**
-   * Bundles together some information about whether and how we should split up dex files.
-   */
-  public static class DexSplitMode {
-    final boolean shouldSplitDex;
-    final ZipSplitter.DexSplitStrategy dexSplitStrategy;
-
-    public DexSplitMode(boolean shouldSplitDex, ZipSplitter.DexSplitStrategy dexSplitStrategy) {
-      this.shouldSplitDex = shouldSplitDex;
-      this.dexSplitStrategy = dexSplitStrategy;
-    }
-
-    public boolean isShouldSplitDex() {
-      return shouldSplitDex;
-    }
-
-    ZipSplitter.DexSplitStrategy getDexSplitStrategy() {
-      Preconditions.checkState(isShouldSplitDex());
-      return dexSplitStrategy;
-    }
-  }
-
   private final String manifest;
   private final String target;
   private final String keystorePropertiesPath;
@@ -758,7 +736,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
           secondaryZipDir,
           "secondary-%d.jar",
           primaryDexSubstrings,
-          dexSplitMode.getDexSplitStrategy());
+          dexSplitMode.getDexSplitStrategy(),
+          dexSplitMode.getDexStore());
       commands.add(splitZipCommand);
 
       // Add the secondary dex directory that has yet to be created, but will be by the
@@ -802,7 +781,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         secondaryDexDir,
         secondaryInputsDir,
         successDir,
-        Optional.<Integer>absent());
+        Optional.<Integer>absent(),
+        dexSplitMode.getDexStore());
     commands.add(smartDexingCommand);
   }
 
@@ -853,8 +833,10 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     private String keystorePropertiesPath;
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
     private Set<String> buildRulesToExcludeFromDex = Sets.newHashSet();
-    private DexSplitMode dexSplitMode =
-        new DexSplitMode(false, ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE);
+    private DexSplitMode dexSplitMode = new DexSplitMode(
+            /* shouldSplitDex */ false,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+            DexStore.JAR);
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<String> proguardConfig = Optional.absent();
     private boolean compressResources = false;

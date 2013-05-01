@@ -21,6 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitor;
@@ -69,6 +70,15 @@ public class ProjectFilesystem {
 
   public boolean exists(String pathRelativeToProjectRoot) {
     return getFileForRelativePath(pathRelativeToProjectRoot).exists();
+  }
+
+  /**
+   * Deletes a file specified by its path relative to the project root.
+   * @param pathRelativeToProjectRoot path to the file
+   * @return true if the file was successfully deleted, false otherwise
+   */
+  public boolean deleteFileAtPath(String pathRelativeToProjectRoot) {
+    return getFileForRelativePath(pathRelativeToProjectRoot).delete();
   }
 
   public boolean isMatchingFileContents(Iterable<String> lines, String pathRelativeToProjectRoot)

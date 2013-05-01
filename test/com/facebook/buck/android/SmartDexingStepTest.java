@@ -69,7 +69,7 @@ public class SmartDexingStepTest {
         Optional.of(secondaryOutDir.getPath()),
         Optional.of(secondaryInDir.getPath()));
     assertTrue("Expected secondary output", resolver.hasSecondaryOutput());
-    Multimap<File, File> outputToInputs = resolver.createOutputToInputs();
+    Multimap<File, File> outputToInputs = resolver.createOutputToInputs(DexStore.JAR);
     assertEquals("Expected 2 output artifacts", 2, outputToInputs.keySet().size());
 
     MoreAsserts.assertIterablesEquals(
@@ -79,7 +79,7 @@ public class SmartDexingStepTest {
 
     // Make sure that secondary-out/2.dex.jar came from secondary-in/2.jar.
     File secondaryOutFile = new File(secondaryOutDir,
-        SmartDexingStep.transformInputToDexOutput(secondaryInFile.getName()));
+        SmartDexingStep.transformInputToDexOutput(secondaryInFile.getName(), DexStore.JAR));
     MoreAsserts.assertIterablesEquals(
         "Detected inconsistency with secondary output arguments",
         ImmutableSet.of(secondaryInFile),

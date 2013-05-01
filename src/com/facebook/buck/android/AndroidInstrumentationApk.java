@@ -61,7 +61,10 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
             .addAll(Classpaths.getClasspathEntries(apkUnderTest.getDeps()).keySet())
             .build(),
         // Do not split the test apk even if the tested apk is split
-        new DexSplitMode(false, ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE),
+        new DexSplitMode(
+            /* shouldSplitDex */ false,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+            DexStore.JAR),
         apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.isCompressResources(),
