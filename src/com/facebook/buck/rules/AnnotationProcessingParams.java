@@ -43,23 +43,27 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       null,
       ImmutableSet.<String>of(),
       ImmutableSet.<String>of(),
-      ImmutableSet.<String>of());
+      ImmutableSet.<String>of(),
+      false);
 
   @Nullable
   private final BuildTarget ownerTarget;
   private final ImmutableSet<String> searchPathElements;
   private final ImmutableSet<String> names;
   private final ImmutableSet<String> parameters;
+  private final boolean processOnly;
 
   private AnnotationProcessingParams(
       @Nullable BuildTarget ownerTarget,
       Set<String> searchPathElements,
       Set<String> names,
-      Set<String> parameters) {
+      Set<String> parameters,
+      boolean processOnly) {
     this.ownerTarget = ownerTarget;
     this.searchPathElements = ImmutableSet.copyOf(searchPathElements);
     this.names = ImmutableSet.copyOf(names);
     this.parameters = ImmutableSet.copyOf(parameters);
+    this.processOnly = processOnly;
   }
 
   static String getGeneratedSrcFolder(BuildTarget buildTarget) {
@@ -90,6 +94,11 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   }
 
   @Override
+  public boolean getProcessOnly() {
+    return processOnly;
+  }
+
+  @Override
   @Nullable
   public String getGeneratedSourceFolderName() {
     if ((ownerTarget != null) && !isEmpty()) {
@@ -104,6 +113,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
     private Set<BuildTarget> targets = Sets.newHashSet();
     private Set<String> names = Sets.newHashSet();
     private Set<String> parameters = Sets.newHashSet();
+    private boolean processOnly;
 
     public Builder setOwnerTarget(BuildTarget owner) {
       ownerTarget = owner;
@@ -122,6 +132,11 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
     public Builder addParameter(String parameter) {
       parameters.add(parameter);
+      return this;
+    }
+
+    public Builder setProcessOnly(boolean processOnly) {
+      this.processOnly = processOnly;
       return this;
     }
 
@@ -156,7 +171,12 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         }
       }
 
-      return new AnnotationProcessingParams(ownerTarget, searchPathElements, names, parameters);
+      return new AnnotationProcessingParams(
+          ownerTarget,
+          searchPathElements,
+          names,
+          parameters,
+          processOnly);
     }
   }
 }

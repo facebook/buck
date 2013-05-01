@@ -87,6 +87,12 @@ class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
       for (String parameter : params.getOptionalListAttribute("annotation_processor_params")) {
         annotationProcessingBuilder.addParameter(parameter);
       }
+
+      // annotation_processor_only
+      //
+      // If true, we only run annotation processors and do not compile.
+      boolean processOnly = params.getBooleanAttribute("annotation_processor_only");
+      annotationProcessingBuilder.setProcessOnly(processOnly);
     }
   }
 }

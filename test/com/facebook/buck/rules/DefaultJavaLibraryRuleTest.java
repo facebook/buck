@@ -361,6 +361,7 @@ public class DefaultJavaLibraryRuleTest {
     scenario.getAnnotationProcessingParamsBuilder().addAllProcessors(ImmutableList.of("MyProcessor"));
     scenario.getAnnotationProcessingParamsBuilder().addParameter("MyParameter");
     scenario.getAnnotationProcessingParamsBuilder().addParameter("MyKey=MyValue");
+    scenario.getAnnotationProcessingParamsBuilder().setProcessOnly(true);
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
@@ -369,6 +370,7 @@ public class DefaultJavaLibraryRuleTest {
     MoreAsserts.assertContainsOne(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+    MoreAsserts.assertContainsOne(parameters, "-proc:only");
 
     assertEquals(
         "Expected '-processor MyProcessor' parameters",

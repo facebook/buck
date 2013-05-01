@@ -46,6 +46,11 @@ public interface AnnotationProcessingData {
     public String getGeneratedSourceFolderName() {
       return null;
     }
+
+    @Override
+    public boolean getProcessOnly() {
+      return false;
+    }
   };
 
   /**
@@ -67,6 +72,13 @@ public interface AnnotationProcessingData {
    * The set of parameters to pass to annotation processing (via javac -A).
    */
   public ImmutableSet<String> getParameters();
+
+  /**
+   * Controls whether compilation happens along with annotation processing:
+   * false => process annotations (if any) and compile.  This is the default.
+   * true => process annotations (if any) only and do not compile.
+   */
+  public boolean getProcessOnly();
 
   /**
    * The name of the root folder where annotation processing source should be generated.

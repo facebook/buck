@@ -106,6 +106,10 @@ public final class JavacOptionsUtil {
       for (String parameter : annotationProcessingData.getParameters()) {
         optionsBuilder.add("-A" + parameter);
       }
+
+      if (annotationProcessingData.getProcessOnly()) {
+        optionsBuilder.add("-proc:only");
+      }
     }
   }
 }
