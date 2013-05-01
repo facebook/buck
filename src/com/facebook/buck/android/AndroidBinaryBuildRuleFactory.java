@@ -75,8 +75,16 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
             ? ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
             : ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
 
-    builder.setDexSplitMode(new AndroidBinaryRule.DexSplitMode(useSplitDex, dexSplitStrategy));
+    // dex_compression
+    DexStore dexStore =
+        "xz".equals(params.getRequiredStringAttribute("dex_compression")) ?
+            DexStore.XZ :
+            DexStore.JAR;
 
+    builder.setDexSplitMode(new DexSplitMode(
+        useSplitDex,
+        dexSplitStrategy,
+        dexStore));
 
     // use_android_proguard_config_with_optimizations
     boolean useAndroidProguardConfigWithOptimizations =

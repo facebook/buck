@@ -67,6 +67,7 @@ public class SplitZipStep implements Step {
   private final ImmutableSet<String> primaryDexSubstrings;
   private final Predicate<String> requiredInPrimaryZip;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
+  private final DexStore dexStore;
 
   /**
    * @param inputPathsToSplit Input paths that would otherwise have been passed to a single dx --dex
@@ -89,7 +90,8 @@ public class SplitZipStep implements Step {
       String secondaryJarDir,
       String secondaryJarPattern,
       Set<String> primaryDexSubstrings,
-      ZipSplitter.DexSplitStrategy dexSplitStrategy) {
+      ZipSplitter.DexSplitStrategy dexSplitStrategy,
+      DexStore dexStore) {
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
     this.secondaryJarMetaPath = Preconditions.checkNotNull(secondaryJarMetaPath);
     this.primaryJarPath = Preconditions.checkNotNull(primaryJarPath);
@@ -97,6 +99,7 @@ public class SplitZipStep implements Step {
     this.secondaryJarPattern = Preconditions.checkNotNull(secondaryJarPattern);
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
+    this.dexStore = Preconditions.checkNotNull(dexStore);
 
     this.requiredInPrimaryZip = new Predicate<String>() {
       @Override
@@ -135,7 +138,7 @@ public class SplitZipStep implements Step {
       BufferedWriter secondaryMetaInfoWriter = Files.newWriter(new File(secondaryJarMetaPath),
           Charsets.UTF_8);
       try {
-        writeMetaList(secondaryMetaInfoWriter, secondaryZips);
+        writeMetaList(secondaryMetaInfoWriter, secondaryZips, dexStore);
       } finally {
         secondaryMetaInfoWriter.close();
       }
@@ -148,9 +151,13 @@ public class SplitZipStep implements Step {
   }
 
   @VisibleForTesting
-  static void writeMetaList(BufferedWriter writer, Collection<File> jarFiles) throws IOException {
+  static void writeMetaList(
+      BufferedWriter writer,
+      Collection<File> jarFiles,
+      DexStore dexStore) throws IOException {
     for (File secondary : jarFiles) {
-      String filename = SmartDexingStep.transformInputToDexOutput(secondary.getName());
+      String filename = SmartDexingStep.transformInputToDexOutput(
+           secondary.getName(), dexStore);
       String jarHash = hexSha1(secondary);
       String containedClass = findAnyClass(secondary);
       writer.write(String.format("%s %s %s",

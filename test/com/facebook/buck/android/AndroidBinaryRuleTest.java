@@ -496,8 +496,10 @@ public class AndroidBinaryRuleTest {
         .setManifest("AndroidManifest.xml")
         .setKeystorePropertiesPath("keystore.properties")
         .setTarget("Google Inc.:Google APIs:16")
-        .setDexSplitMode(new AndroidBinaryRule.DexSplitMode(true,
-            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE))
+        .setDexSplitMode(new DexSplitMode(
+            /* shouldSplitDex */ true,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+            DexStore.JAR))
         .build(ImmutableMap.<String, BuildRule>of());
 
     Set<String> classpath = Sets.newHashSet();

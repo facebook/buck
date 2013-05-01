@@ -13,15 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.android;
 
-import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.fs.RepackZipEntriesStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.step.fs.ZipStep;
 import com.facebook.buck.util.ClasspathTraversal;
 import com.facebook.buck.util.ClasspathTraverser;
 import com.facebook.buck.util.DefaultClasspathTraverser;
@@ -38,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -66,7 +69,7 @@ public class SmartDexingStep implements Step {
   private final InputResolver inputResolver;
   private final String successDir;
   private final Optional<Integer> numThreads;
-
+  private final DexStore dexStore;
   private ListeningExecutorService dxExecutor;
 
   /** Lazily initialized.  See {@link InputResolver#createOutputToInputs()}. */
@@ -84,6 +87,8 @@ public class SmartDexingStep implements Step {
    * @param successDir Directory where success artifacts are written.
    * @param numThreads Number of threads to use when invoking dx commands.  If absent, a
    *     reasonable default will be selected based on the number of available processors.
+   * @param dexStore Specify the way secondary dexes are to be stored in the APK (e.g.
+   *     within jar files, or as xz-compressed files).
    */
   public SmartDexingStep(
       String primaryOutputPath,
@@ -91,13 +96,15 @@ public class SmartDexingStep implements Step {
       Optional<String> secondaryOutputDir,
       Optional<String> secondaryInputsDir,
       String successDir,
-      Optional<Integer> numThreads) {
+      Optional<Integer> numThreads,
+      DexStore dexStore) {
     this.inputResolver = new InputResolver(primaryOutputPath,
         primaryInputsToDex,
         secondaryOutputDir,
         secondaryInputsDir);
     this.successDir = Preconditions.checkNotNull(successDir);
     this.numThreads = Preconditions.checkNotNull(numThreads);
+    this.dexStore = Preconditions.checkNotNull(dexStore);
   }
 
   @VisibleForTesting
@@ -126,7 +133,7 @@ public class SmartDexingStep implements Step {
 
   private final Multimap<File, File> getOutputToInputsMultimap() {
     if (outputToInputs == null) {
-      outputToInputs = inputResolver.createOutputToInputs();
+      outputToInputs = inputResolver.createOutputToInputs(dexStore);
     }
     return outputToInputs;
   }
@@ -236,8 +243,12 @@ public class SmartDexingStep implements Step {
   // This is a terrible shared kludge between SmartDexingCommand and SplitZipCommand.
   // SplitZipCommand writes the metadata.txt file assuming this will be the final filename
   // in the APK...
-  public static String transformInputToDexOutput(String filename) {
-    return Paths.getBasename(filename, ".jar") + ".dex.jar";
+  public static String transformInputToDexOutput(String filename, DexStore dexStore) {
+    if (DexStore.XZ == dexStore) {
+      return Paths.getBasename(filename, ".jar") + ".dex.jar.xz";
+    } else {
+      return Paths.getBasename(filename, ".jar") + ".dex.jar";
+    }
   }
 
   // Helper class to break down the complex set of paths that this command accepts.
@@ -266,7 +277,7 @@ public class SmartDexingStep implements Step {
      * command.  This defines a set of rules where the keySet of the returned multimap is the
      * set of expected files to exist after smart dexing completes.
      */
-    public Multimap<File, File> createOutputToInputs() {
+    public Multimap<File, File> createOutputToInputs(DexStore dexStore) {
       final ImmutableMultimap.Builder<File, File> map = ImmutableMultimap.builder();
 
       // Add the primary output.
@@ -282,7 +293,7 @@ public class SmartDexingStep implements Step {
         for (File secondaryInputFile : secondaryInputsDirFile.listFiles()) {
           // May be either directories or jar files, doesn't matter.
           File secondaryOutputFile = new File(secondaryOutputDirFile,
-              transformInputToDexOutput(secondaryInputFile.getName()));
+              transformInputToDexOutput(secondaryInputFile.getName(), dexStore));
           map.put(secondaryOutputFile, secondaryInputFile);
         }
       }
@@ -394,18 +405,42 @@ public class SmartDexingStep implements Step {
       return newInputsHash.equals(currentInputsHash);
     }
 
+    /**
+     * Returns true if the output of dexing should be saved as .dex.jar. This is based on the
+     * target file extension, much as {@code dx} itself chooses whether to embed the dex inside
+     * a jar/zip based on the destination file passed to it.
+     */
+    private boolean useXzCompression() {
+      return outputPath.endsWith(".dex.jar.xz");
+    }
+
     public List<Step> buildInternal() {
       Preconditions.checkState(newInputsHash != null, "Must call checkIsCached first!");
 
-      final DxStep dxCommand = new DxStep(outputPath, srcs);
-      final WriteFileStep updateHashCommand = new WriteFileStep(
-          newInputsHash, outputHashPath);
+      List<Step> steps = Lists.newArrayList();
+      if (useXzCompression()) {
+        String tempDexJarOutput = outputPath.replaceAll("\\.jar\\.xz$", ".tmp.jar");
+        steps.add(new DxStep(tempDexJarOutput, srcs));
+        // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
+        // compression won't be effective.
+        String repackedJar = outputPath.replaceAll("\\.xz$", "");
+        steps.add(new RepackZipEntriesStep(
+            tempDexJarOutput,
+            repackedJar,
+            ImmutableSet.of("classes.dex"),
+            ZipStep.MIN_COMPRESSION_LEVEL,
+            /* workingDirectory */ null
+        ));
+        steps.add(new XzStep(repackedJar));
+      } else {
+        steps.add(new DxStep(outputPath, srcs));
+      }
+      steps.add(new WriteFileStep(newInputsHash, outputHashPath));
 
-      // Use a composite command to ensure that runDxCommands can still make use of
-      // runCommandsInParallelAndWait.  This is necessary to keep the DxCommand and
-      // WriteFileCommand dependent in series.
-      return ImmutableList.<Step>of(new CompositeStep(
-          ImmutableList.of(dxCommand, updateHashCommand)));
+      // Use a composite step to ensure that runDxSteps can still make use of
+      // runStepsInParallelAndWait.  This is necessary to keep the DxStep and
+      // WriteFileStep dependent in series.
+      return ImmutableList.<Step>of(new CompositeStep(steps));
     }
   }
 }

@@ -64,7 +64,7 @@ public class SplitZipStepTest {
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
     try {
-      SplitZipStep.writeMetaList(writer, ImmutableList.of(outJar));
+      SplitZipStep.writeMetaList(writer, ImmutableList.of(outJar), DexStore.JAR);
     } finally {
       writer.close();
     }
@@ -77,7 +77,7 @@ public class SplitZipStepTest {
 
     // Note that we cannot test data[1] (the hash) because zip files change their hash each
     // time they are written due to timestamps written into the file.
-    assertEquals(SmartDexingStep.transformInputToDexOutput(outJar.getName()), data[0]);
+    assertEquals(SmartDexingStep.transformInputToDexOutput(outJar.getName(), DexStore.JAR), data[0]);
     assertTrue(String.format("Unexpected class: %s", data[2]),
         fileToClassName.values().contains(data[2]));
   }
