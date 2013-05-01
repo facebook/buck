@@ -42,7 +42,7 @@ java_binary(
   name = 'ui_jar',
   deps = [
     # This would be the same as using:
-    # <code>'&#x2F/java/com/facebook/share:ui'</code>
+    # <code>'&#x2F;/java/com/facebook/share:ui'</code>
     ':ui',
   ],
 )
@@ -50,6 +50,39 @@ java_binary(
 
 Build targets are frequently used as arguments to build rules and to
 the command-line interface for Buck.
+
+<h2>Command-line Protip</h2>
+
+When specifying a build target on the command-line, it can be tedious to type:
+
+<pre>buck build &#x2F;/java/com/facebook/share:share</pre>
+
+Fortunately, Buck is loose with its parsing of build targets on the command-line (but is always
+strict when parsing them in build files). Specifically, the leading <code>//</code> is optional on
+the command line, so the above could be:
+
+<pre>buck build java/com/facebook/share:share</pre>
+
+Also, if there is a forward slash before the colon, it is ignored, so this could also be written as:
+
+<pre>buck build java/com/facebook/share/:share</pre>
+
+This looks odd until you realize that the red text can be produced by tab-completing the path to the
+directory, which dramatically reduces how much you need to type:
+
+<pre>buck build <span class="com">java/com/facebook/share/</span>:share</pre>
+
+Finally, if the final path element matches the value specified after the colon, it can be omitted
+from the command line:
+
+<pre>
+<span class="com"># This is treated as &#x2F;/java/com/facebook/share:share.</span><br>
+buck build java/com/facebook/share/
+</pre>
+
+Note that this is even easier to tab-complete! For this reason, the name of the build rule for the
+primary deliverable in a build file is often named the same thing as the parent directory so it
+can be built from the command-line with less typing.
 
     {/param}
   {/call}
