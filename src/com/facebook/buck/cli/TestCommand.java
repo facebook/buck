@@ -39,7 +39,6 @@ import com.facebook.buck.shell.JUnitCommand;
 import com.facebook.buck.shell.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.NoAndroidSdkException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -254,13 +253,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     testRules = filterTestRules(options, testRules);
 
     // Build all of the test rules.
-    Build build;
-    try {
-      build = options.createBuild(graph, getProjectFilesystem().getProjectRoot(), console);
-    } catch (NoAndroidSdkException e) {
-      console.printFailureWithoutStacktrace(e);
-      return 1;
-    }
+    Build build = options.createBuild(graph, getProjectFilesystem().getProjectRoot(), console);
     int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
     if (exitCode != 0) {
       return exitCode;

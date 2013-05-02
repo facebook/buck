@@ -84,7 +84,7 @@ public final class ProGuardObfuscateCommand extends ShellCommand {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget().get();
+    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     Joiner pathJoiner = Joiner.on(':');
 
     // Run ProGuard as a standalone executable JAR file.

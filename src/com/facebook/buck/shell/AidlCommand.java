@@ -44,7 +44,7 @@ public class AidlCommand extends ShellCommand {
 
     // The arguments passed to aidl are based off of what I observed when running Ant in verbose
     // mode.
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget().get();
+    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     args.add(androidPlatformTarget.getAidlExecutable().getAbsolutePath());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and

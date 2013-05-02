@@ -21,7 +21,6 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.NoAndroidSdkException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -85,14 +84,15 @@ public abstract class AbstractCommandOptions {
   }
 
   /** @return androidSdkDir */
-  protected File findAndroidSdkDir() throws NoAndroidSdkException {
+  protected Optional<File> findAndroidSdkDir() {
     Optional<File> androidSdkDir = findDirectoryByPropertiesThenEnvironmentVariable(
         "sdk.dir", "ANDROID_SDK", "ANDROID_HOME");
-    if (!androidSdkDir.isPresent()) {
-      throw new NoAndroidSdkException();
-    } else {
-      return androidSdkDir.get();
+    if (androidSdkDir.isPresent()) {
+      Preconditions.checkArgument(androidSdkDir.get().isDirectory(),
+          "The location of your Android SDK %s must be a directory",
+          androidSdkDir.get());
     }
+    return androidSdkDir;
   }
 
   /** @return androidNdkDir */
@@ -149,14 +149,11 @@ public abstract class AbstractCommandOptions {
   protected ExecutionContext createExecutionContext(
       AbstractCommandRunner<?> commandRunner,
       File projectDirectoryRoot,
-      DependencyGraph dependencyGraph) throws NoAndroidSdkException {
-    Optional<AndroidPlatformTarget> androidPlatformTarget = Build.findAndroidPlatformTarget(
-        dependencyGraph, findAndroidSdkDir(), commandRunner.stdErr);
-
+      DependencyGraph dependencyGraph) {
     return new ExecutionContext(
         getVerbosity(),
         projectDirectoryRoot,
-        androidPlatformTarget,
+        findAndroidPlatformTarget(dependencyGraph, commandRunner.stdErr),
         findAndroidNdkDir(),
         commandRunner.ansi,
         false /* isCodeCoverageEnabled */,
@@ -166,7 +163,7 @@ public abstract class AbstractCommandOptions {
   }
 
   protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      DependencyGraph dependencyGraph, PrintStream stdErr) throws NoAndroidSdkException {
+      DependencyGraph dependencyGraph, PrintStream stdErr) {
     return Build.findAndroidPlatformTarget(dependencyGraph, findAndroidSdkDir(), stdErr);
   }
 }

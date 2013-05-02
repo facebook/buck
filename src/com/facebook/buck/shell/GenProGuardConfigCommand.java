@@ -47,7 +47,7 @@ public class GenProGuardConfigCommand extends ShellCommand {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget().get();
+    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
     args.add(androidPlatformTarget.getAaptExecutable().getAbsolutePath()).add("package");
 

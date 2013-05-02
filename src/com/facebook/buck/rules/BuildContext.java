@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.shell.CommandRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.NoAndroidSdkException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -174,7 +173,7 @@ public class BuildContext {
       this.androidBootclasspathSupplier = new Supplier<String>() {
         @Override
         public String get() {
-          throw new HumanReadableException(new NoAndroidSdkException());
+          throw new NoAndroidSdkException();
         }
       };
     }

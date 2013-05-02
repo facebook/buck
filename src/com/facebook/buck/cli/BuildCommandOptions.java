@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.NoAndroidSdkException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -96,14 +95,9 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     return listeningExecutorService;
   }
 
-  Build createBuild(DependencyGraph graph,
-      File projectDirectoryRoot,
-      Console console) throws NoAndroidSdkException {
-    // First determine the android SDK dir.
-    File androidSdkDir = findAndroidSdkDir();
-
-    Build build = new Build(graph,
-        androidSdkDir,
+  Build createBuild(DependencyGraph graph, File projectDirectoryRoot, Console console) {
+    return new Build(graph,
+        findAndroidSdkDir(),
         findAndroidNdkDir(),
         projectDirectoryRoot,
         getVerbosity(),
@@ -114,6 +108,5 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         console.getStdErr(),
         isCodeCoverageEnabled(),
         isDebugEnabled());
-    return build;
   }
 }

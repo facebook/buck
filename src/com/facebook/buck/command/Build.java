@@ -67,7 +67,7 @@ public class Build {
    */
   public Build(
       DependencyGraph dependencyGraph,
-      File androidSdkDir,
+      Optional<File> androidSdkDir,
       Optional<File> ndkRoot,
       File projectDirectoryRoot,
       Verbosity verbosity,
@@ -78,9 +78,6 @@ public class Build {
       PrintStream stdErr,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled) {
-    Preconditions.checkNotNull(androidSdkDir);
-    Preconditions.checkArgument(androidSdkDir.exists());
-    Preconditions.checkArgument(androidSdkDir.isDirectory());
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -118,7 +115,18 @@ public class Build {
   }
 
   public static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      DependencyGraph dependencyGraph, final File androidSdkDir, final PrintStream stdErr) {
+      DependencyGraph dependencyGraph, Optional<File> androidSdkDirOption, PrintStream stdErr) {
+    if (androidSdkDirOption.isPresent()) {
+      File androidSdkDir = androidSdkDirOption.get();
+      return findAndroidPlatformTarget(dependencyGraph, androidSdkDir, stdErr);
+    } else {
+      // If the Android SDK has not been specified, then no AndroidPlatformTarget can be found.
+      return Optional.<AndroidPlatformTarget>absent();
+    }
+  }
+
+  private static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
+      final DependencyGraph dependencyGraph, final File androidSdkDir, final PrintStream stdErr) {
     // Traverse the dependency graph to determine androidPlatformTarget.
     AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>> traversal =
         new AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>>(dependencyGraph) {
@@ -195,7 +203,8 @@ public class Build {
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(events)
-        .setAndroidBootclasspathForAndroidPlatformTarget(executionContext.getAndroidPlatformTarget())
+        .setAndroidBootclasspathForAndroidPlatformTarget(
+            executionContext.getAndroidPlatformTargetOptional())
         .build();
 
     return Builder.getInstance().buildRules(rulesToBuild, buildContext);

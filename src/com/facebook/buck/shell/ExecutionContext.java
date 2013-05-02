@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.NoAndroidSdkException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -80,7 +81,30 @@ public class ExecutionContext {
     return ansi;
   }
 
-  public Optional<AndroidPlatformTarget> getAndroidPlatformTarget() {
+  /**
+   * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a
+   * {@link NoAndroidSdkException}. Use this when your logic requires the user to specify the
+   * location of an Android SDK. A user who is building a "pure Java" (i.e., not Android) project
+   * using Buck should never have to exercise this code path.
+   * <p>
+   * If the location of an Android SDK is optional, then use
+   * {@link #getAndroidPlatformTargetOptional()}.
+   * @throws NoAndroidSdkException if no AndroidPlatformTarget is available
+   */
+  public AndroidPlatformTarget getAndroidPlatformTarget() throws NoAndroidSdkException {
+    if (androidPlatformTarget.isPresent()) {
+      return androidPlatformTarget.get();
+    } else {
+      throw new NoAndroidSdkException();
+    }
+  }
+
+  /**
+   * Returns an {@link AndroidPlatformTarget} if the user specified one via {@code local.properties}
+   * or some other mechanism. If the user failed to specify one, {@link Optional#absent()} will be
+   * returned.
+   */
+  public Optional<AndroidPlatformTarget> getAndroidPlatformTargetOptional() {
     return androidPlatformTarget;
   }
 
@@ -88,8 +112,8 @@ public class ExecutionContext {
     return ndkRoot;
   }
 
-  public String getPathToAdbExecutable() {
-    return androidPlatformTarget.get().getAdbExecutable().getAbsolutePath();
+  public String getPathToAdbExecutable() throws NoAndroidSdkException {
+    return getAndroidPlatformTarget().getAdbExecutable().getAbsolutePath();
   }
 
   public ProcessExecutor getProcessExecutor() {

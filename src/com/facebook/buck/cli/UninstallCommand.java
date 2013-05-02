@@ -27,7 +27,6 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.Verbosity;
-import com.facebook.buck.util.NoAndroidSdkException;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -83,13 +82,10 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
     InstallableBuildRule installableBuildRule = (InstallableBuildRule)buildRule;
 
     // We need this in case adb isn't already running.
-    ExecutionContext context;
-    try{
-      context = options.createExecutionContext(this, getProjectFilesystem().getProjectRoot(),
-          dependencyGraph);
-    } catch (NoAndroidSdkException e) {
-      context = null;
-    }
+    ExecutionContext context = options.createExecutionContext(
+        this,
+        getProjectFilesystem().getProjectRoot(),
+        dependencyGraph);
 
     // Find application package name from manifest and uninstall from matching devices.
     String appId = tryToExtractPackageNameFromManifest(installableBuildRule);

@@ -34,7 +34,7 @@ public class ZipalignCommand extends ShellCommand {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget().get();
+    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     args.add(androidPlatformTarget.getZipalignExecutable().getAbsolutePath());
     args.add("-f").add("4");
     args.add(inputFile);

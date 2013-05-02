@@ -98,7 +98,7 @@ public class GenRDotJavaCommand extends ShellCommand {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget().get();
+    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
     builder.add(androidPlatformTarget.getAaptExecutable().getAbsolutePath()).add("package");
 

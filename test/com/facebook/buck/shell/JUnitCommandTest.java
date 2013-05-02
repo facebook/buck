@@ -65,7 +65,7 @@ public class JUnitCommandTest {
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
-    EasyMock.expect(executionContext.getAndroidPlatformTarget()).andReturn(
+    EasyMock.expect(executionContext.getAndroidPlatformTargetOptional()).andReturn(
         Optional.<AndroidPlatformTarget>absent());
     EasyMock.replay(executionContext);
 

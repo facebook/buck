@@ -18,20 +18,16 @@ package com.facebook.buck.util;
 
 
 @SuppressWarnings("serial")
-public class NoAndroidSdkException extends Exception implements ExceptionWithHumanReadableMessage {
+public class NoAndroidSdkException extends HumanReadableException {
 
   public NoAndroidSdkException() {
     this(null);
   }
 
   public NoAndroidSdkException(Throwable cause) {
-    super("Must define a local.properties file with a property named 'sdk.dir' "
+    super(cause,
+        "Must define a local.properties file with a property named 'sdk.dir' "
         + "that points to the absolute path of your Android SDK directory, "
-        + "or set ANDROID_HOME or ANDROID_SDK.", cause);
-  }
-
-  @Override
-  public String getHumanReadableErrorMessage() {
-    return getMessage();
+        + "or set ANDROID_HOME or ANDROID_SDK.");
   }
 }

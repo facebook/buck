@@ -144,8 +144,8 @@ public class JUnitCommand extends ShellCommand {
     }
 
     // Next, add the bootclasspath entries specific to the Android platform being targeted.
-    if (context.getAndroidPlatformTarget().isPresent()) {
-      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget().get();
+    if (context.getAndroidPlatformTargetOptional().isPresent()) {
+      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
       for (File bootclasspathEntry : androidPlatformTarget.getBootclasspathEntries()) {
         classpath.add(bootclasspathEntry.getAbsolutePath());
       }

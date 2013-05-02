@@ -28,7 +28,6 @@ import com.facebook.buck.shell.CommandFailedException;
 import com.facebook.buck.shell.Verbosity;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.NoAndroidSdkException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -108,14 +107,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     // Create and execute the build.
-    try {
-      this.build = options.createBuild(dependencyGraph,
-          getProjectFilesystem().getProjectRoot(),
-          console);
-    } catch (NoAndroidSdkException e) {
-      console.printFailureWithoutStacktrace(e);
-      return 1;
-    }
+    this.build = options.createBuild(dependencyGraph,
+        getProjectFilesystem().getProjectRoot(),
+        console);
     stdErr.printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
 

@@ -23,9 +23,6 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.NoAndroidSdkException;
-import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -68,19 +65,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       return 1;
     }
 
-    Optional<AndroidPlatformTarget> androidPlatformTarget;
-    try {
-      androidPlatformTarget = options.findAndroidPlatformTarget(
-          partialGraph.getDependencyGraph(), stdErr);
-    } catch (NoAndroidSdkException e) {
-      console.printFailureWithoutStacktrace(e);
-      return 1;
-    }
-
     ExecutionContext executionContext = new ExecutionContext(
         options.getVerbosity(),
         getProjectFilesystem().getProjectRoot(),
-        androidPlatformTarget,
+        options.findAndroidPlatformTarget(partialGraph.getDependencyGraph(), stdErr),
         options.findAndroidNdkDir(),
         ansi,
         false /* isCodeCoverageEnabled */,

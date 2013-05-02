@@ -29,7 +29,6 @@ import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
@@ -77,8 +76,7 @@ public class GenAidlRuleTest {
     expect(androidPlatformTarget.getAndroidFrameworkIdlFile()).andReturn(frameworkIdlFile);
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.getAndroidPlatformTarget()).andReturn(
-        Optional.of(androidPlatformTarget));
+    expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
     replay(androidPlatformTarget,
         aidlExecutable,
         frameworkIdlFile,

@@ -54,7 +54,7 @@ public class AaptCommand extends ShellCommand {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget().get();
+    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     builder.add(androidPlatformTarget.getAaptExecutable().getAbsolutePath(), "package");
 
     // verbose flag, if appropriate.
