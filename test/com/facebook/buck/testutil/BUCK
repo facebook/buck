@@ -10,6 +10,7 @@ java_library(
   ],
   visibility = [
     '//test/com/facebook/buck/command:command',
+    '//test/com/facebook/buck/command/io:io',
     '//test/com/facebook/buck/rules:rules',
     '//test/com/facebook/buck/shell:shell',
   ],

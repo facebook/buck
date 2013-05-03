@@ -25,12 +25,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
+import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.GenProGuardConfigCommand;
-import com.facebook.buck.shell.MakeCleanDirectoryCommand;
-import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.shell.ProGuardObfuscateCommand;
 import com.facebook.buck.shell.SmartDexingCommand;
 import com.facebook.buck.shell.SplitZipCommand;

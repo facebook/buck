@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;

@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.JUnitCommand;
-import com.facebook.buck.shell.MakeCleanDirectoryCommand;
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ZipFileTraversal;

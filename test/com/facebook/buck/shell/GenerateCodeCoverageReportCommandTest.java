@@ -68,7 +68,7 @@ public class GenerateCodeCoverageReportCommandTest {
     GenerateCodeCoverageReportCommand command =
         new GenerateCodeCoverageReportCommand(sourceDirectories, outputDirectory);
 
-    MoreAsserts.assertListEquals(expectedShellCommand, command.getShellCommandInternal(context));
+    MoreAsserts.assertListEquals(expectedShellCommand, command.getShellCommand(context));
 
     verify(context);
   }

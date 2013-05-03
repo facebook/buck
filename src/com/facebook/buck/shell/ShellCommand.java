@@ -92,7 +92,9 @@ public abstract class ShellCommand implements Command {
    * @return working directory specified on construction
    *         ({@code null} if project directory will be used).
    */
-  protected @Nullable File getWorkingDirectory() {
+  @Nullable
+  @VisibleForTesting
+  public File getWorkingDirectory() {
     return workingDirectory;
   }
 
@@ -170,6 +172,7 @@ public abstract class ShellCommand implements Command {
    * be done to produce the shell command arguments, then it should be done in
    * {@link #setup(ExecutionContext)}.
    */
+  @VisibleForTesting
   protected abstract ImmutableList<String> getShellCommandInternal(ExecutionContext context);
 
   @Override

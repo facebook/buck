@@ -1,0 +1,10 @@
+java_library(
+  name = 'io',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/shell:core',
+    '//lib:guava',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+

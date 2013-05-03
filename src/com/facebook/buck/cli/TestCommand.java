@@ -36,7 +36,7 @@ import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.GenerateCodeCoverageReportCommand;
 import com.facebook.buck.shell.InstrumentCommand;
 import com.facebook.buck.shell.JUnitCommand;
-import com.facebook.buck.shell.MakeCleanDirectoryCommand;
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;

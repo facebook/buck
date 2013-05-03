@@ -14,8 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.command.io;
 
+import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.shell.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -24,7 +27,7 @@ import java.io.File;
 import java.util.Set;
 
 /**
- * A {@link Command} that creates or updates a ZIP archive using {@code zip}.
+ * A {@link com.facebook.buck.shell.Command} that creates or updates a ZIP archive using {@code zip}.
  *
  * @see <a href="http://www.info-zip.org/mans/zip.html">ZIP</a>
  */

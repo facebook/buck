@@ -1,0 +1,11 @@
+java_test(
+  name = 'io',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:easymock',
+    '//lib:junit',
+    '//src/com/facebook/buck/command/io:io',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)
+

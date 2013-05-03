@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.command.io;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 

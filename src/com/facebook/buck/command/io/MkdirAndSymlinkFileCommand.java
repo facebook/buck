@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.command.io;
 
+import com.facebook.buck.shell.CompositeCommand;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

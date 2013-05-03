@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.command.io.WriteFileCommand;
 import com.facebook.buck.util.ClasspathTraversal;
 import com.facebook.buck.util.ClasspathTraverser;
 import com.facebook.buck.util.DefaultClasspathTraverser;

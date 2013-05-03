@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.GenRDotJavaCommand;
-import com.facebook.buck.shell.MakeCleanDirectoryCommand;
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraverser;

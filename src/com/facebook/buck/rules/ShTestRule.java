@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.MakeCleanDirectoryCommand;
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.BuckConstant;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;

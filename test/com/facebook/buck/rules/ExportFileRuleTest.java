@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.CommandFailedException;
 import com.facebook.buck.shell.CommandRunner;
-import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;

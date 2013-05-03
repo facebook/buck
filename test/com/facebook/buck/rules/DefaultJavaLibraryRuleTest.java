@@ -29,7 +29,7 @@ import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.JavacInMemoryCommand;
 import com.facebook.buck.shell.JavacOptionsUtil;
-import com.facebook.buck.shell.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.shell.Verbosity;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;

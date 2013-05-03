@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.command.io;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
@@ -22,6 +22,9 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.shell.Verbosity;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -81,14 +84,14 @@ public class RepackZipEntriesCommandTest {
         ShellCommand.class);
 
     // First entries are unzipped.
-    MoreAsserts.assertListEquals(unzipExpected, iter.next().getShellCommandInternal(context));
+    MoreAsserts.assertListEquals(unzipExpected, iter.next().getShellCommand(context));
 
     // A copy of the archive would be created.
-    MoreAsserts.assertListEquals(copyExpected, iter.next().getShellCommandInternal(context));
+    MoreAsserts.assertListEquals(copyExpected, iter.next().getShellCommand(context));
 
     // And then the entries would be zipped back in.
     ShellCommand zipCommand = iter.next();
-    MoreAsserts.assertListEquals(zipExpected, zipCommand.getShellCommandInternal(context));
+    MoreAsserts.assertListEquals(zipExpected, zipCommand.getShellCommand(context));
     assertEquals(zipCommand.getWorkingDirectory(), dir);
 
     verify(context);

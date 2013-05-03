@@ -51,7 +51,7 @@ public class InstrumentCommandTest {
     InstrumentCommand command = new InstrumentCommand(mode, instrumentDirectories);
 
     MoreAsserts.assertListEquals(expectedShellCommand,
-        command.getShellCommandInternal(context));
+        command.getShellCommand(context));
 
     verify(context);
   }

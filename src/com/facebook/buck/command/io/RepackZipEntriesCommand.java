@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.command.io;
 
+import com.facebook.buck.shell.CompositeCommand;
+import com.facebook.buck.shell.ShellCommand;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;

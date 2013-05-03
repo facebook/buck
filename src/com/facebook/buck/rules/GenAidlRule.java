@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.AidlCommand;
 import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.MkdirCommand;
+import com.facebook.buck.command.io.MkdirCommand;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

@@ -13,12 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.shell;
+package com.facebook.buck.command.io;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.shell.ExecutionContext;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMock;

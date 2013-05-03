@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.command.io;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
@@ -22,6 +22,8 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.shell.Verbosity;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +63,7 @@ public class ZipCommandTest {
 
     // Assert that the command has been constructed with the right arguments.
     MoreAsserts.assertListEquals(expectedShellCommand,
-        command.getShellCommandInternal(context));
+        command.getShellCommand(context));
 
     // Assert that the desired directory is saved with the ZipCommand as a working directory.
     assertEquals(directory, command.getWorkingDirectory());
@@ -102,7 +104,7 @@ public class ZipCommandTest {
 
     // Assert that the command has been constructed with the right arguments.
     MoreAsserts.assertListEquals(expectedShellCommand,
-        command.getShellCommandInternal(context));
+        command.getShellCommand(context));
 
     // Assert that the desired working directory is saved with the command.
     assertEquals(workingDirectory, command.getWorkingDirectory());
