@@ -132,5 +132,7 @@ ${BUCK_DIRECTORY}/lib/jackson-core-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jackson-databind-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jsr305.jar:\
 ${BUCK_DIRECTORY}/lib/sdklib.jar:\
-${BUCK_DIRECTORY}/lib/ddmlib-r21.jar \
+${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
+${BUCK_DIRECTORY}/lib/jython-standalone-2.5.3.jar:\
+${BUCK_DIRECTORY}/lib/jyson-1.0.2.jar \
 com.facebook.buck.cli.Main "$@"

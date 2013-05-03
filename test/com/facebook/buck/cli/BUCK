@@ -8,6 +8,8 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:ddmlib',
+    '//lib:jyson',
+    '//lib:jython',
   ],
   visibility = [
     'PUBLIC',

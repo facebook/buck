@@ -101,6 +101,8 @@
       <include name="hamcrest-core-1.3.jar" />
       <include name="hamcrest-library-1.3.jar" />
       <include name="objenesis-1.2.jar" />
+      <include name="jython-standalone-2.5.3.jar" />
+      <include name="jyson-1.0.2.jar" />
     </fileset>
     <pathelement location="${testclasses.dir}" />
     <pathelement location="${test.dir}" />

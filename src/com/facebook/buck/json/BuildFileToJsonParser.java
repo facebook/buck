@@ -17,23 +17,33 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.InputStreamConsumer;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Closer;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedReader;
+import java.io.PipedWriter;
 import java.io.Reader;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 /**
  * This is a special JSON parser that is customized to consume the JSON output of buck.py. In
@@ -49,6 +59,16 @@ public class BuildFileToJsonParser {
   /** Path to the buck.py script that is used to evaluate a build file. */
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
+
+  private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+  private static final ScriptEngine engine = new ScriptEngineManager().getEngineByName("python");
+  private static final String python = Joiner.on(System.getProperty("line.separator")).join(
+      "import sys",
+      "import os.path",
+      "sys.path.append(os.path.dirname(\"%s\"))",
+      "import buck",
+      "sys.argv=[\"%s\"]",
+      "buck.main()");
 
   private final JsonParser parser;
 
@@ -143,6 +163,40 @@ public class BuildFileToJsonParser {
     return getAllRules(rootPath.getAbsolutePath(), Optional.<String>absent(), includes, ansi);
   }
 
+  private static class BuildFileRunner implements Runnable {
+
+    private final ImmutableList<String> args;
+    private PipedWriter outputWriter;
+
+    public BuildFileRunner(ImmutableList<String> args, PipedReader outputReader) throws IOException {
+      this.args = args;
+      this.outputWriter = new PipedWriter();
+      outputWriter.connect(outputReader);
+    }
+
+    @Override
+    public void run() {
+      Closer closer = Closer.create();
+      try {
+        closer.register(outputWriter);
+
+        // TODO(user): call buck.py directly rather than emulating the old command line interface?
+        // TODO(user): escape args? (they are currently file names, which shouldn't contain quotes)
+        engine.getContext().setWriter(outputWriter);
+        engine.eval(String.format(python, PATH_TO_BUCK_PY, Joiner.on("\",\"").join(args)));
+
+      } catch (ScriptException e) {
+        throw Throwables.propagate(e);
+      } finally {
+        try {
+          closer.close();
+        } catch (IOException e) {
+          Throwables.propagate(e);
+        }
+      }
+    }
+  }
+
   /**
    * @param rootPath Absolute path to the root of the project. buck.py uses this to determine the
    *     base path of the targets in the build file that it is parsing.
@@ -154,11 +208,27 @@ public class BuildFileToJsonParser {
       Optional<String> buildFile,
       Iterable<String> includes,
       Ansi ansi) throws IOException {
-    // A list of the build rules parsed from the build file.
-    List<Map<String, Object>> rules = Lists.newArrayList();
 
+    // Run the build file in a background thread.
+    final ImmutableList<String> args = buildArgs(rootPath, buildFile, includes);
+    final PipedReader outputReader = new PipedReader();
+    BuildFileRunner runner = new BuildFileRunner(args, outputReader);
+    executor.execute(runner);
+
+    // Stream build rules from python.
+    BuildFileToJsonParser parser = new BuildFileToJsonParser(outputReader);
+    List<Map<String, Object>> rules = Lists.newArrayList();
+    Map<String, Object> value;
+    while ((value = parser.next()) != null) {
+      rules.add(value);
+    }
+
+    return rules;
+  }
+
+  private static ImmutableList<String> buildArgs(String rootPath, Optional<String> buildFile, Iterable<String> includes) {
     // Create a process to run buck.py and read its stdout.
-    List<String> args = Lists.newArrayList("python", PATH_TO_BUCK_PY, "--project_root", rootPath);
+    List<String> args = Lists.newArrayList("buck.py", "--project_root", rootPath);
 
     // Add the --include flags.
     for (String include : includes) {
@@ -170,42 +240,6 @@ public class BuildFileToJsonParser {
     if (buildFile.isPresent()) {
       args.add(buildFile.get());
     }
-
-    ProcessBuilder processBuilder = new ProcessBuilder(args);
-    Process process = processBuilder.start();
-    BuildFileToJsonParser parser = new BuildFileToJsonParser(process.getInputStream());
-
-    // If the build file parses cleanly, then nothing should be written to standard error. We make
-    // sure to consume stderr, just as we do in ShellCommand, to avoid potential deadlock.
-    InputStreamConsumer stdErr = new InputStreamConsumer(
-        process.getErrorStream(),
-        System.err,
-        true /* shouldPrintStdErr */,
-        ansi);
-    Thread stdErrConsumer = new Thread(stdErr);
-    stdErrConsumer.start();
-
-    // Read parsed JSON objects from the stream as they become available.
-    Map<String, Object> value = null;
-    while ((value = parser.next()) != null) {
-      rules.add(value);
-    }
-
-    // Make sure the process exits with zero. If not, throw an exception. The error was likely
-    // printed to stderr by the InputStreamConsumer.
-    try {
-      int exitCode = process.waitFor();
-      if (exitCode != 0) {
-        if (buildFile.isPresent()) {
-          throw new RuntimeException("Parsing " + buildFile.get() + " did not exit cleanly");
-        } else {
-          throw new RuntimeException("Error parsing build files");
-        }
-      }
-    } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
-    }
-
-    return rules;
+    return ImmutableList.copyOf(args);
   }
 }

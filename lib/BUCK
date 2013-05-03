@@ -145,3 +145,21 @@ prebuilt_jar(
     '//src/com/facebook/buck/shell:shell',
   ]
 )
+
+jython_visibility = [
+  '//src/com/facebook/buck/shell:shell',
+  '//test/com/facebook/buck/cli:testutil',
+  '//test/com/facebook/buck/parser:parser',
+]
+
+prebuilt_jar(
+  name = 'jython',
+  binary_jar = 'jython-standalone-2.5.3.jar',
+  visibility = jython_visibility,
+)
+
+prebuilt_jar(
+  name = 'jyson',
+  binary_jar = 'jyson-1.0.2.jar',
+    visibility = jython_visibility,
+)

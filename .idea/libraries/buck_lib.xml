@@ -10,6 +10,8 @@
       <root url="jar://$PROJECT_DIR$/lib/ddmlib-r21.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/sdklib.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/guava-14.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jyson-1.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jython-standalone-2.5.3.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

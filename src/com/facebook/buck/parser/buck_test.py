@@ -1,5 +1,6 @@
 from buck import glob_pattern_to_regex_string
 from buck import parse_git_ignore
+from buck import relpath
 import unittest
 import re
 
@@ -44,6 +45,7 @@ class TestBuck(unittest.TestCase):
     self.assertFalse(all_java_tests_re.match('com/example/Main.java'))
     self.assertTrue(all_java_tests_re.match('com/example/MainTest.java'))
 
+
   def test_git_ignore_parser(self):
     # Test empty file
     self.assertEqual([], parse_git_ignore([]))
@@ -73,6 +75,26 @@ class TestBuck(unittest.TestCase):
           '/a/*\n',
           '/b/',
           ]))
+
+
+    # Test the temporary reimplementation of relpath
+    # TODO(user): upgrade to a jython including os.relpath
+    def test_relpath(self):
+      real_getcwd = os.getcwd
+      try:
+        os.getcwd = lambda: r"/home/user/bar"
+        curdir = os.path.split(os.getcwd())[-1]
+        self.assertRaises(ValueError, relpath, "")
+        self.assertEqual("a", relpath("a"))
+        self.assertEqual("a", relpath(posixpath.abspath("a")))
+        self.assertEqual("a/b", relpath("a/b"))
+        self.assertEqual("../a/b", relpath("../a/b"))
+        self.assertEqual("../" + curdir + "/a", relpath("a", "../b"))
+        self.assertEqual("../" + curdir + "/a/b", relpath("a/b", "../c"))
+        self.assertEqual("../../a", relpath("a", "b/c"))
+      finally:
+        os.getcwd = real_getcwd
+
 
 if __name__ == '__main__':
   unittest.main()

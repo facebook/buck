@@ -8,6 +8,8 @@ java_test(
     ':NonCheckingBuildRuleFactoryParams',
     '//lib:easymock',
     '//lib:junit',
+    '//lib:jyson',
+    '//lib:jython',
     '//src/com/facebook/buck/parser:parser',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
