@@ -118,7 +118,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Add all class directories of java libraries that we are testing to -instrpath.
     for (JavaLibraryRule path : rulesUnderTest) {
-      String classDirectory = path.getOutput().getAbsolutePath();
+      File output = path.getOutput();
+      if (output == null) {
+        continue;
+      }
+      String classDirectory = output.getAbsolutePath();
       pathsToInstrumentedClasses.add(classDirectory);
     }
 
