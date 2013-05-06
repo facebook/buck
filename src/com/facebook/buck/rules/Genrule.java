@@ -289,10 +289,6 @@ public class Genrule extends AbstractCachingBuildRule {
     }
   }
 
-  private String replaceBinaryBuildRuleRefsInCmd() {
-    return replaceBinaryBuildRuleRefsInCmd(cmd, getDeps(), this.getBuildTarget().getBasePath());
-  }
-
   /**
    * Matches either a relative or fully-qualified build target wrapped in <tt>${}</tt>, unless the
    * <code>$</code> is preceded by a backslash.
@@ -302,23 +298,17 @@ public class Genrule extends AbstractCachingBuildRule {
       "([^\\\\]?)(\\$\\{((\\/\\/|:)[^\\}]+)\\})");
 
   /**
-   * @param cmd Command string in which replacement needs to be done.
-   * @param deps of the Genrule that defines {@code cmd}. Any build target interpolated as an
-   *     executable in {@code cmd} must be a dep of the Genrule that defines it.
-   * @param contextBasePath used to resolve a relative build target. Should be the basePath of the
-   *     build file in which the cmd from the genrule is declared.
    * @return the cmd with binary build targets interpolated as executable commands
    */
   @VisibleForTesting
-  static String replaceBinaryBuildRuleRefsInCmd(
-      String cmd, Set<? extends BuildRule> deps, final String contextBasePath) {
+  String replaceBinaryBuildRuleRefsInCmd() {
     Matcher matcher = BUILD_TARGET_PATTERN.matcher(cmd);
     StringBuffer buffer = new StringBuffer();
     Map<String, BuildRule> fullyQualifiedNameToBuildRule = null;
     while (matcher.find()) {
       if (fullyQualifiedNameToBuildRule == null) {
         fullyQualifiedNameToBuildRule = Maps.newHashMap();
-        for (BuildRule dep : deps) {
+        for (BuildRule dep : getDeps()) {
           fullyQualifiedNameToBuildRule.put(dep.getFullyQualifiedName(), dep);
         }
       }
@@ -327,16 +317,17 @@ public class Genrule extends AbstractCachingBuildRule {
       String prefix = matcher.group(4);
       if (":".equals(prefix)) {
         // This is a relative build target, so make it fully qualified.
-        buildTarget = String.format("//%s%s", contextBasePath, buildTarget);
+        buildTarget = String.format("//%s%s", this.getBuildTarget().getBasePath(), buildTarget);
       }
       BuildRule matchingRule = fullyQualifiedNameToBuildRule.get(buildTarget);
       if (matchingRule == null) {
-        throw new RuntimeException(String.format("No dep named %s in %s", buildTarget, cmd));
+        throw new HumanReadableException("No dep named %s for %s %s, cmd was %s",
+            buildTarget, getType().getDisplayName(), getFullyQualifiedName(), cmd);
       }
 
       if (!(matchingRule instanceof BinaryBuildRule)) {
-        throw new RuntimeException(String.format("%s must correspond to a binary rule in %s",
-            buildTarget, cmd));
+        throw new HumanReadableException("%s must correspond to a binary rule in %s for %s %s",
+            buildTarget, cmd, getType().getDisplayName(), getFullyQualifiedName());
       }
       BinaryBuildRule binaryBuildRule = (BinaryBuildRule)matchingRule;
 

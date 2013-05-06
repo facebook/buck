@@ -210,12 +210,14 @@ public class GenruleTest {
     Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
     JavaBinaryRule javaBinary = createSampleJavaBinaryRule(buildRuleIndex);
 
-    // Interpolate the build target in the genrule cmd string.
     String originalCmd = "${//java/com/facebook/util:ManifestGenerator} $OUT";
-    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
     String contextBasePath = "java/com/facebook/util";
-    String transformedString = Genrule.replaceBinaryBuildRuleRefsInCmd(
-        originalCmd, deps, contextBasePath);
+    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
+
+    Genrule rule = createGenrule(buildRuleIndex, originalCmd, contextBasePath, deps);
+
+    // Interpolate the build target in the genrule cmd string.
+    String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
 
     // This creates an absolute path that ends with "/.", so drop the ".".
     String basePathWithTrailingDot = new File(".").getAbsolutePath();
@@ -235,12 +237,14 @@ public class GenruleTest {
     Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
     JavaBinaryRule javaBinary = createSampleJavaBinaryRule(buildRuleIndex);
 
-    // Interpolate the build target in the genrule cmd string.
     String originalCmd = "${:ManifestGenerator} $OUT";
-    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
     String contextBasePath = "java/com/facebook/util";
-    String transformedString = Genrule.replaceBinaryBuildRuleRefsInCmd(
-        originalCmd, deps, contextBasePath);
+    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
+
+    Genrule rule = createGenrule(buildRuleIndex, originalCmd, contextBasePath, deps);
+
+    // Interpolate the build target in the genrule cmd string.
+    String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
 
     // This creates an absolute path that ends with "/.", so drop the ".".
     String basePathWithTrailingDot = new File(".").getAbsolutePath();
@@ -264,8 +268,10 @@ public class GenruleTest {
     String originalCmd = "${:ManifestGenerator} $OUT";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
     String contextBasePath = "java/com/facebook/util";
-    String transformedString = Genrule.replaceBinaryBuildRuleRefsInCmd(
-        originalCmd, deps, contextBasePath);
+
+    Genrule rule = createGenrule(buildRuleIndex, originalCmd, contextBasePath, deps);
+
+    String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
 
     // This creates an absolute path that ends with "/.", so drop the ".".
     String basePathWithTrailingDot = new File(".").getAbsolutePath();
@@ -278,6 +284,40 @@ public class GenruleTest {
         "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
         expectedClasspath);
     assertEquals(expectedCmd, transformedString);
+  }
+
+  @Test
+  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws IOException {
+    BuildTarget target = BuildTargetFactory.newInstance("//:example");
+    Genrule rule = Genrule.newGenruleBuilder()
+        .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
+        .setBuildTarget(target)
+        .setCmd("ignored")
+        .addSrc("in-dir.txt")
+        .addSrc("foo/bar.html")
+        .addSrc("other/place.txt")
+        .setOut("example-file")
+        .build(ImmutableMap.<String, BuildRule>of());
+
+    ImmutableList.Builder<Command> builder = ImmutableList.builder();
+    rule.addSymlinkCommands(builder);
+    ImmutableList<Command> commands = builder.build();
+
+    String baseTmpPath = "/opt/local/fbandroid/" + GEN_DIR + "/example__srcs/";
+    String sourcePath = "/opt/local/fbandroid/";
+
+    assertEquals(3, commands.size());
+    MkdirAndSymlinkFileCommand linkCmd = (MkdirAndSymlinkFileCommand) commands.get(0);
+    assertEquals(sourcePath + "in-dir.txt", linkCmd.getSource().getAbsolutePath());
+    assertEquals(baseTmpPath + "in-dir.txt", linkCmd.getTarget().getAbsolutePath());
+
+    linkCmd = (MkdirAndSymlinkFileCommand) commands.get(1);
+    assertEquals(sourcePath + "foo/bar.html", linkCmd.getSource().getAbsolutePath());
+    assertEquals(baseTmpPath + "foo/bar.html", linkCmd.getTarget().getAbsolutePath());
+
+    linkCmd = (MkdirAndSymlinkFileCommand) commands.get(2);
+    assertEquals(sourcePath + "other/place.txt", linkCmd.getSource().getAbsolutePath());
+    assertEquals(baseTmpPath + "other/place.txt", linkCmd.getTarget().getAbsolutePath());
   }
 
   private JavaBinaryRule createSampleJavaBinaryRule(Map<String, BuildRule> buildRuleIndex) {
@@ -309,37 +349,23 @@ public class GenruleTest {
     return javaBinary;
   }
 
-  @Test
-  public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws IOException {
-    BuildTarget target = BuildTargetFactory.newInstance("//:example");
-    Genrule rule = Genrule.newGenruleBuilder()
+  private Genrule createGenrule(Map<String, BuildRule> buildRuleIndex,
+                                String originalCmd,
+                                String contextBasePath,
+                                Set<? extends BuildRule> deps) {
+    BuildTarget target = BuildTargetFactory.newInstance(
+        String.format("//%s:genrule", contextBasePath));
+
+    Builder ruleBuilder = Genrule.newGenruleBuilder()
         .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
-        .setCmd("ignored")
-        .addSrc("in-dir.txt")
-        .addSrc("foo/bar.html")
-        .addSrc("other/place.txt")
-        .setOut("example-file")
-        .build(Maps.<String, BuildRule>newHashMap());
+        .setCmd(originalCmd)
+        .setOut("example-file");
 
-    ImmutableList.Builder<Command> builder = ImmutableList.builder();
-    rule.addSymlinkCommands(builder);
-    ImmutableList<Command> commands = builder.build();
+    for (BuildRule dep : deps) {
+      ruleBuilder.addDep(dep.getFullyQualifiedName());
+    }
 
-    String baseTmpPath = "/opt/local/fbandroid/" + GEN_DIR + "/example__srcs/";
-    String sourcePath = "/opt/local/fbandroid/";
-
-    assertEquals(3, commands.size());
-    MkdirAndSymlinkFileCommand linkCmd = (MkdirAndSymlinkFileCommand) commands.get(0);
-    assertEquals(sourcePath + "in-dir.txt", linkCmd.getSource().getAbsolutePath());
-    assertEquals(baseTmpPath + "in-dir.txt", linkCmd.getTarget().getAbsolutePath());
-
-    linkCmd = (MkdirAndSymlinkFileCommand) commands.get(1);
-    assertEquals(sourcePath + "foo/bar.html", linkCmd.getSource().getAbsolutePath());
-    assertEquals(baseTmpPath + "foo/bar.html", linkCmd.getTarget().getAbsolutePath());
-
-    linkCmd = (MkdirAndSymlinkFileCommand) commands.get(2);
-    assertEquals(sourcePath + "other/place.txt", linkCmd.getSource().getAbsolutePath());
-    assertEquals(baseTmpPath + "other/place.txt", linkCmd.getTarget().getAbsolutePath());
+    return ruleBuilder.build(buildRuleIndex);
   }
 }
