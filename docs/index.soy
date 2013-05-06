@@ -2,21 +2,11 @@
 
 /***/
 {template .soyweb}
-
-{call buck.header}
-  {param title: 'An Android build tool' /}
-{/call}
-
-// Image copied from https://github.com/blog/273-github-ribbons
-<a href="https://github.com/facebook/buck">
-  <img id="fork" src="fork_me.png" alt="Fork me on GitHub">
-</a>
-
-<div class="{css overview}">
-
+  {call buck.page}
+    {param title: 'An Android build tool' /}
+    {param content}
 Buck is a build system for Android that encourages the creation of
 small, reusable modules consisting of code and resources.
-
 
 <h2>Features</h2>
 
@@ -85,10 +75,6 @@ If you build multiple applications, or if even if you ship one application but
 use several sample applications for development, then Buck is definitely for you.
 Give the <a href="{ROOT}setup/quickstart.html">Quick Start</a> a try and see how
 Buck can help you organize your Android project and build it faster than ever before.
-
-
-</div> // close overview
-
-{call buck.footer /}
-
+    {/param}
+  {/call}
 {/template}
