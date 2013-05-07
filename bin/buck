@@ -114,6 +114,7 @@ java \
 -XX:MaxPermSize=256m \
 -Xmx1000m \
 $EXTRA_FLAGS \
+-Djava.awt.headless=true \
 -Dbuck.testrunner_classes=${BUCK_DIRECTORY}/build/testrunner/classes \
 -Dbuck.path_to_emma_jar=${BUCK_DIRECTORY}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar \
 -Dbuck.test_util_no_tests_dir=true \
