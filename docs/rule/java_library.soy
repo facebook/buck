@@ -57,6 +57,24 @@ of the compiled class files and resources.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'source' /}
+  {param default : '\'6\'' /}
+  {param desc}
+  Java language level for compiling. Corresponds to the
+  {sp}<code>-source</code> argument for <code>javac</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'target' /}
+  {param default : '\'6\'' /}
+  {param desc}
+  Bytecode target level for compiling. Corresponds to the
+  {sp}<code>-target</code> argument for <code>javac</code>.
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // close args
