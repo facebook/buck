@@ -101,7 +101,7 @@ apk_genrule(
   name = 'messenger_super_sign',
   apk = ':messenger_super_sign_unalign',
   deps = [],
-  cmd = '$ANDROID_HOME/tools/zipalign --f 4 $APK $OUT',
+  cmd = '$ANDROID_HOME/tools/zipalign -f 4 $APK $OUT',
   out = 'messenger_super_sign.apk',
 )
 
