@@ -184,8 +184,7 @@ abstract class AbstractBuildRule implements BuildRule {
    * superclass's ruleKeyBuilder() implementation.
    */
   protected RuleKey.Builder ruleKeyBuilder() {
-    return RuleKey.builder(this)
-        .set("fullyQualifiedName", getFullyQualifiedName());
+    return RuleKey.builder(this);
   }
 
   @Override

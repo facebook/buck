@@ -134,8 +134,10 @@ public class RuleKey implements Comparable<RuleKey> {
   }
 
   public static Builder builder(BuildRule rule) {
-    String ruleLabel = rule.getType().getDisplayName();
-    return new Builder(ruleLabel);
+    return new Builder(rule.getFullyQualifiedName())
+    // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
+    .set("buck.type", rule.getType().getDisplayName())
+    .set("deps", rule.getDeps());
   }
 
   public static class Builder {

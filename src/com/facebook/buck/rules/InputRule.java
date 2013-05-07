@@ -144,7 +144,6 @@ public class InputRule implements BuildRule {
 
   private RuleKey.Builder ruleKeyBuilder() {
     return RuleKey.builder(this)
-        .set("fullyQualifiedName", getFullyQualifiedName())
         .set("inputFile", inputFile);
   }
 
