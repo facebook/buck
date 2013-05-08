@@ -160,8 +160,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
-    MakeCleanDirectoryStep mkdirClean = new MakeCleanDirectoryStep(pathToTestOutput);
-    steps.add(mkdirClean);
+    String tmpDirectory = getPathToTmpDirectory();
+    steps.add(new MakeCleanDirectoryStep(pathToTestOutput));
+    steps.add(new MakeCleanDirectoryStep(tmpDirectory));
 
     // If there are android resources, then compile the uber R.java files and add them to the
     // classpath used to run the test runner.
@@ -184,6 +185,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         testClassNames,
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
         pathToTestOutput.toString(),
+        tmpDirectory,
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled());
     steps.add(junit);
@@ -250,6 +252,13 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         getBuildTarget().getBaseNameWithSlash(),
         String.format("__java_test_%s_output__", getBuildTarget().getShortName())
     );
+  }
+
+  private String getPathToTmpDirectory() {
+    return String.format("%s/%s__java_test_%s_tmp__",
+        BuckConstant.GEN_DIR,
+        getBuildTarget().getBasePathWithSlash(),
+        getBuildTarget().getShortName());
   }
 
   @Override
