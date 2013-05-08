@@ -60,6 +60,7 @@ public class JUnitStepTest {
     String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
     String directoryForTestResults = "buck-out/gen/theresults/";
+    String directoryForTemp = "buck-out/gen/thetmp/";
     boolean isCodeCoverageEnabled = false;
     boolean isJacocoEnabled = true;
     boolean isDebugEnabled = false;
@@ -70,6 +71,7 @@ public class JUnitStepTest {
         testClassNames,
         vmArgs,
         directoryForTestResults,
+        directoryForTemp,
         isCodeCoverageEnabled,
         isJacocoEnabled,
         isDebugEnabled,
@@ -86,6 +88,7 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "java",
+            "-Djava.io.tmpdir=" + directoryForTemp,
             buildIdArg,
             vmArg1,
             vmArg2,
@@ -121,6 +124,7 @@ public class JUnitStepTest {
     String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
     String directoryForTestResults = "buck-out/gen/theresults/";
+    String directoryForTemp = "buck-out/gen/thetmp/";
     boolean isCodeCoverageEnabled = false;
     boolean isJacocoEnabled = false;
     boolean isDebugEnabled = true;
@@ -131,6 +135,7 @@ public class JUnitStepTest {
         testClassNames,
         vmArgs,
         directoryForTestResults,
+        directoryForTemp,
         isCodeCoverageEnabled,
         isJacocoEnabled,
         isDebugEnabled,
@@ -153,6 +158,7 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "java",
+            "-Djava.io.tmpdir=" + directoryForTemp,
             buildIdArg,
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
             vmArg1,

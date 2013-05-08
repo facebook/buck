@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
@@ -67,6 +68,8 @@ public class JUnitStep extends ShellStep {
 
   private final boolean isDebugEnabled;
 
+  private final String tmpDirectory;
+
   private final BuildId buildId;
 
   private TestSelectorList testSelectorList;
@@ -81,7 +84,8 @@ public class JUnitStep extends ShellStep {
   public static final String PATH_TO_JACOCO_JARS = System.getProperty("buck.path_to_jacoco_jars",
       "third-party/java/jacoco-0.6.4/out");
 
-  public static final String PATH_TO_JACOCO_AGENT_JAR = String.format("%s/%s",
+  public static final String PATH_TO_JACOCO_AGENT_JAR = String.format(
+      "%s/%s",
       PATH_TO_JACOCO_JARS,
       System.getProperty("buck.jacoco_agent_jar", "jacocoagent.jar"));
 
@@ -96,12 +100,14 @@ public class JUnitStep extends ShellStep {
    *     that will be run, as well as an entry for JUnit.
    * @param testClassNames the fully qualified names of the Java tests to run
    * @param directoryForTestResults directory where test results should be written
+   * @param tmpDirectory directory tests can use for local file scratch space.
    */
   public JUnitStep(
       Set<Path> classpathEntries,
       Set<String> testClassNames,
       List<String> vmArgs,
       String directoryForTestResults,
+      String tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
@@ -111,6 +117,7 @@ public class JUnitStep extends ShellStep {
         testClassNames,
         vmArgs,
         directoryForTestResults,
+        tmpDirectory,
         isCodeCoverageEnabled,
         isJacocoEnabled,
         isDebugEnabled,
@@ -127,6 +134,7 @@ public class JUnitStep extends ShellStep {
       Set<String> testClassNames,
       List<String> vmArgs,
       String directoryForTestResults,
+      String tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
@@ -137,6 +145,7 @@ public class JUnitStep extends ShellStep {
     this.testClassNames = ImmutableSet.copyOf(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.directoryForTestResults = Preconditions.checkNotNull(directoryForTestResults);
+    this.tmpDirectory = Preconditions.checkNotNull(tmpDirectory);
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isJacocoEnabled = isJacocoEnabled;
     this.isDebugEnabled = isDebugEnabled;
@@ -154,6 +163,7 @@ public class JUnitStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java");
+    args.add(String.format("-Djava.io.tmpdir=%s", tmpDirectory));
 
     // Add the output property for EMMA so if the classes are instrumented, coverage.ec will be
     // placed in the EMMA output folder.
@@ -230,6 +240,11 @@ public class JUnitStep extends ShellStep {
     }
 
     return args.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return ImmutableMap.of("TMP", tmpDirectory);
   }
 
   private void warnUser(ExecutionContext context, String message) {
