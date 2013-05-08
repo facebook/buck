@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.java.JavaBinaryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -31,10 +32,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -226,7 +229,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
       // `replacement` may contain Windows style directory separator backslash (\), which will be
       // considered as escape character. Escape them.
-      matcher.appendReplacement(buffer, replacement.replace("\\", "\\\\"));
+      matcher.appendReplacement(buffer, replacement.replace("\\", "\\\\").replace("$", "\\$"));
     }
     matcher.appendTail(buffer);
     return buffer.toString();
@@ -250,7 +253,14 @@ public abstract class AbstractGenruleStep extends ShellStep {
       String cmd,
       Buildable matchingRule) {
     if (matchingRule instanceof BinaryBuildRule) {
-      return ((BinaryBuildRule) matchingRule).getExecutableCommand(filesystem);
+      BinaryBuildRule binaryBuildRule = (BinaryBuildRule) matchingRule;
+      if (binaryBuildRule instanceof JavaBinaryRule) {
+        List<String> jvmArgs = Lists.newArrayListWithCapacity(4);
+        jvmArgs.add("-Djava.io.tmpdir=$TMP");
+        return ((JavaBinaryRule) binaryBuildRule).getExecutableCommand(filesystem, jvmArgs);
+      } else {
+        return binaryBuildRule.getExecutableCommand(filesystem);
+      }
     }
 
     File output = filesystem.getFileForRelativePath(matchingRule.getPathToOutputFile());
