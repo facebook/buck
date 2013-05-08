@@ -159,6 +159,8 @@ public class RuleKey implements Comparable<RuleKey> {
   }
 
   public static class Builder {
+    private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
+    private static final String buckVersionUID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
     private static final byte SEPARATOR = '\0';
     private static final Logger logger = Logger.getLogger(Builder.class.getName());
 
@@ -172,6 +174,7 @@ public class RuleKey implements Comparable<RuleKey> {
       if (logger.isLoggable(Level.INFO)) {
         logElms = Lists.newArrayList();
       }
+      setBuckVersionUID();
     }
 
     private Builder(String header) {
@@ -187,6 +190,13 @@ public class RuleKey implements Comparable<RuleKey> {
     private Builder separate() {
       hasher.putByte(SEPARATOR);
       return this;
+    }
+
+    private void setBuckVersionUID() {
+      if (logElms != null) {
+        logElms.add(String.format("buckVersionUID(%s):", buckVersionUID));
+      }
+      feed(buckVersionUID.getBytes()).separate();
     }
 
     private void setHeader(String header) {

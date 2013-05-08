@@ -4,6 +4,12 @@
 set -e
 
 
+# Set TMPDIR to a reasonable default if it isn't already set, so that mktmp(1) can be
+# succinctly and portably used.
+if [ "x${TMPDIR}" = "x" ] ; then
+  TMPDIR="/tmp"
+fi
+
 # Record the directory from which this script was run in case
 # we need to re-run it as part of the autoupdate.
 ORIGINAL_WORKING_DIRECTORY="$PWD"
@@ -13,7 +19,7 @@ ORIGINAL_WORKING_DIRECTORY="$PWD"
 SOURCE="${BASH_SOURCE[0]}"
 DIR="$( dirname "$SOURCE" )"
 while [ -h "$SOURCE" ]
-do 
+do
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
   DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
@@ -41,7 +47,7 @@ if [ -e "${PROJECT_ROOT}/.buckversion" ] && [ ! -e "${PROJECT_ROOT}/.nobuckcheck
 
 
   BUCK_CURRENT_VERSION=`git rev-parse HEAD`
-  
+
   # Note that this test succeeds if you have local changes in your Buck repository that have not
   # been committed.
   if [ "$BUCK_REQUIRED_VERSION" != "$BUCK_CURRENT_VERSION" ]; then
@@ -74,7 +80,6 @@ if [ ! -e "build/buck.jar" ]; then
   exit $?
 fi
 
-
 # if the output of git status -s is non-empty (-n test), it means there are changed files.
 BUCK_REPOSITORY_DIRTY=0
 if [ -d ".git" ]; then
@@ -85,9 +90,40 @@ if [ -d ".git" ]; then
     BUCK_REPOSITORY_DIRTY=1
   fi
 else
-  BUCK_CURRENT_VERSION="UNKNOWN"
+  BUCK_CURRENT_VERSION="N/A"
 fi
 
+# Compute a version string that uniquely incorporates the current git revision
+# and local modifications (if any) to managed files that are relevant to
+# building/running the buck application.
+if [ "x${BUCK_REPOSITORY_DIRTY}" = "x0" ] ; then
+  BUCK_VERSION_UID="${BUCK_CURRENT_VERSION}"
+else
+  if [ -d ".git" ] ; then
+    # Get git tree for current revision.
+    git_tree_in=`git log -n1 --pretty=format:%T HEAD`
+
+    # Generate git tree as it would exist if current local changes were
+    # committed.
+    git_tree_out=$(
+      git_index_file=`mktemp ${TMPDIR}/buck-git-index.XXXXXX` || exit 1
+      export GIT_INDEX_FILE="${git_index_file}"
+      git read-tree ${git_tree_in} || exit 1
+      git update-index --add --remove `git diff --name-only HEAD` || exit 1
+      git write-tree || exit 1
+      rm -f "${git_index_file}"
+    )
+
+    # Compute UID based on relevant portions of the output git tree.
+    buck_version_uid_input=`mktemp ${TMPDIR}/buck-version-uid-input.XXXXXX` || exit 1
+    git ls-tree --full-tree ${git_tree_out} bin build.xml config lib third-party \
+      > ${buck_version_uid_input} || exit 1
+    BUCK_VERSION_UID=`git hash-object ${buck_version_uid_input}` || exit 1
+    rm -f "${buck_version_uid_input}"
+  else
+    BUCK_VERSION_UID="N/A"
+  fi
+fi
 
 # Pop back to the original directory.
 popd > /dev/null
@@ -122,6 +158,7 @@ $EXTRA_FLAGS \
 -Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
 -Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
+-Dbuck.version_uid=${BUCK_VERSION_UID} \
 -Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties \
 -classpath \
 ${BUCK_DIRECTORY}/src:\
