@@ -26,6 +26,7 @@ import com.facebook.buck.rules.Builder;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.HasAndroidPlatformTarget;
 import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.shell.CommandFailedException;
 import com.facebook.buck.shell.CommandRunner;
 import com.facebook.buck.shell.DefaultCommandRunner;
@@ -58,12 +59,15 @@ public class Build {
 
   private final JavaPackageFinder javaPackageFinder;
 
+  private final BuildDependencies buildDependencies;
+
   /** Not set until {@link #executeBuild(EventBus)} is invoked. */
   @Nullable
   private BuildContext buildContext;
 
   /**
    * @param androidSdkDir where the user's Android SDK is installed.
+   * @param buildDependencies How to include dependencies when building rules.
    */
   public Build(
       DependencyGraph dependencyGraph,
@@ -77,7 +81,8 @@ public class Build {
       PrintStream stdOut,
       PrintStream stdErr,
       boolean isCodeCoverageEnabled,
-      boolean isDebugEnabled) {
+      boolean isDebugEnabled,
+      BuildDependencies buildDependencies) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -94,6 +99,7 @@ public class Build {
         stdErr);
     this.commandRunner = new DefaultCommandRunner(executionContext, listeningExecutorService);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
+    this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
   }
 
   public DependencyGraph getDependencyGraph() {
@@ -205,6 +211,7 @@ public class Build {
         .setEventBus(events)
         .setAndroidBootclasspathForAndroidPlatformTarget(
             executionContext.getAndroidPlatformTargetOptional())
+        .setBuildDependencies(buildDependencies)
         .build();
 
     return Builder.getInstance().buildRules(rulesToBuild, buildContext);

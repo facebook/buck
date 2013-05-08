@@ -43,14 +43,15 @@ public class JavacInMemoryCommand implements Command {
 
   private final Set<String> javaSourceFilePaths;
 
-  private final Set<String> classpathEntries;
-
   private final Supplier<String> bootclasspathSupplier;
 
   private final AnnotationProcessingData annotationProcessingData;
 
   private final String sourceLevel;
+
   private final String targetLevel;
+
+  protected final ImmutableSet<String> classpathEntries;
 
   public JavacInMemoryCommand(
       String outputDirectory,
@@ -64,7 +65,7 @@ public class JavacInMemoryCommand implements Command {
       javaSourceFilePaths,
       classpathEntries,
       bootclasspathSupplier,
-      annotationProcessingData,
+        annotationProcessingData,
       JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
       JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
   }
@@ -96,12 +97,13 @@ public class JavacInMemoryCommand implements Command {
    * @param context the ExecutionContext with in which javac will run
    * @return list of String command-line options.
    */
-  public ImmutableList<String> getOptions(ExecutionContext context) {
+  public ImmutableList<String> getOptions(ExecutionContext context,
+      Set<String> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     JavacOptionsUtil.addOptions(builder,
         context,
         outputDirectory,
-        classpathEntries,
+        buildClasspathEntries,
         bootclasspathSupplier,
         annotationProcessingData,
         sourceLevel,
@@ -110,15 +112,23 @@ public class JavacInMemoryCommand implements Command {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public final int execute(ExecutionContext context) {
 
-    // Build up the compilation task.
+    return executeBuild(context);
+  }
+
+  protected int executeBuild(ExecutionContext context) {
+    return buildWithClasspath(context, ImmutableSet.copyOf(classpathEntries));
+  }
+
+  protected int buildWithClasspath(ExecutionContext context,
+      Set<String> buildClasspathEntries) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     Preconditions.checkNotNull(compiler,
         "If using JRE instead of JDK, ToolProvider.getSystemJavaCompiler() may be null.");
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-    List<String> options = getOptions(context);
+    List<String> options = getOptions(context, buildClasspathEntries);
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Iterable<? extends JavaFileObject> compilationUnits =
         fileManager.getJavaFileObjectsFromStrings(javaSourceFilePaths);
@@ -165,8 +175,10 @@ public class JavacInMemoryCommand implements Command {
 
   @Override
   public String getDescription(ExecutionContext context) {
+    Set<String> buildClassPathEntries = classpathEntries;
+
     StringBuilder builder = new StringBuilder("javac ");
-    Joiner.on(" ").appendTo(builder, getOptions(context));
+    Joiner.on(" ").appendTo(builder, getOptions(context, buildClassPathEntries));
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, javaSourceFilePaths);
 

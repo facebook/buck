@@ -73,6 +73,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         resources,
         proguardConfig,
         annotationProcessors,
+        /* exportDeps */ false,
         sourceLevel,
         targetLevel);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
@@ -171,10 +172,10 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       rDotJavaClasspathEntry = UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget);
       ImmutableSet.Builder<String> classpathEntriesBuilder = ImmutableSet.builder();
       classpathEntriesBuilder.add(rDotJavaClasspathEntry);
-      classpathEntriesBuilder.addAll(getClasspathEntries());
+      classpathEntriesBuilder.addAll(getTransitiveClasspathEntries().values());
       classpathEntries = classpathEntriesBuilder.build();
     } else {
-      classpathEntries = getClasspathEntries();
+      classpathEntries = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
     }
 
     Command junit = new JUnitCommand(

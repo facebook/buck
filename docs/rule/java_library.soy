@@ -75,6 +75,15 @@ of the compiled class files and resources.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'export_deps' /}
+  {param default : 'False' /}
+  {param desc}
+  Whether or not depending on this rule should also transitively pull in all of
+  its dependencies.
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // close args

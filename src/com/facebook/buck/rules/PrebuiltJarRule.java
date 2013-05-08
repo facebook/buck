@@ -44,8 +44,11 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   private final String binaryJar;
   @Nullable private final String sourceJar;
   @Nullable private final String javadocUrl;
-  private final Supplier<ImmutableSet<String>> classpathEntriesSupplier;
-  private final Supplier <ImmutableSetMultimap<BuildRule, String>> classpathMapSupplier;
+  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+      transitiveClasspathEntriesSupplier;
+
+  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+      declaredClasspathEntriesSupplier;
 
   PrebuiltJarRule(BuildRuleParams buildRuleParams,
       String classesJar,
@@ -56,15 +59,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     this.sourceJar = sourceJar;
     this.javadocUrl = javadocUrl;
 
-    classpathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
-          @Override
-          public ImmutableSet<String> get() {
-            return ImmutableSet.copyOf(getClasspathEntriesMap().values());
-          }
-        });
-
-    classpathMapSupplier =
+    transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
           @Override
           public ImmutableSetMultimap<BuildRule, String> get() {
@@ -72,6 +67,17 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
                 ImmutableSetMultimap.builder();
             classpathEntries.put(PrebuiltJarRule.this, getBinaryJar());
             classpathEntries.putAll(getClasspathEntriesForDeps());
+            return classpathEntries.build();
+          }
+        });
+
+    declaredClasspathEntriesSupplier =
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
+          @Override
+          public ImmutableSetMultimap<BuildRule, String> get() {
+            ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+                ImmutableSetMultimap.builder();
+            classpathEntries.put(PrebuiltJarRule.this, getBinaryJar());
             return classpathEntries.build();
           }
         });
@@ -100,13 +106,18 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
-    return classpathMapSupplier.get();
+  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
+    return transitiveClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSet<String> getClasspathEntries() {
-    return classpathEntriesSupplier.get();
+  public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries() {
+    return declaredClasspathEntriesSupplier.get();
+  }
+
+  @Override
+  public ImmutableSet<String> getOutputClasspathEntries() {
+    return ImmutableSet.of(getBinaryJar());
   }
 
   @Override

@@ -6,8 +6,11 @@ java_test(name = 'model',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
     '//lib:easymock',
     '//lib:junit',
+    '//lib:guava',
   ])
 
 java_library(
@@ -16,8 +19,11 @@ java_library(
     'BuildTargetFactory.java',
   ],
   deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:util',
   ],
   visibility = [
     '//test/com/facebook/buck/cli:cli',

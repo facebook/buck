@@ -61,6 +61,22 @@ public class ExecutionContext {
     this.processExecutor = new ProcessExecutor(stdout, stderr, ansi);
   }
 
+  /**
+   * @return A clone of this {@link ExecutionContext} with {@code stdout} and {@code stderr}
+   *    redirected to the provided {@link PrintStream}s.
+   */
+  public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
+    return new ExecutionContext(verbosity,
+        this.projectDirectoryRoot,
+        this.androidPlatformTarget,
+        this.ndkRoot,
+        this.ansi,
+        this.isCodeCoverageEnabled,
+        this.isDebugEnabled,
+        newStdout,
+        newStderr);
+  }
+
   public Verbosity getVerbosity() {
     return verbosity;
   }

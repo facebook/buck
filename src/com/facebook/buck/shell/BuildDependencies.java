@@ -14,18 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.shell;
 
-import com.google.common.collect.ImmutableSetMultimap;
+public enum BuildDependencies {
+  FIRST_ORDER_ONLY,
+  WARN_ON_TRANSITIVE,
+  TRANSITIVE,
+  ;
 
-/**
- * Implemented by build rules where the output has a classpath environment.
- */
-public interface HasClasspathEntries {
-
-
-  /**
-   * @return A map of rule names to classpath entries for this rule and its dependencies.
-   */
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries();
+  public static final BuildDependencies getDefault() {
+    return BuildDependencies.FIRST_ORDER_ONLY;
+  }
 }

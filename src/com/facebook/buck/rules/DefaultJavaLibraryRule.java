@@ -16,29 +16,37 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.shell.Command;
+import com.facebook.buck.shell.DependencyCheckingJavacCommand;
 import com.facebook.buck.shell.JarDirectoryCommand;
-import com.facebook.buck.shell.JavacInMemoryCommand;
 import com.facebook.buck.shell.JavacOptionsUtil;
 import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.ClassPath;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -76,15 +84,55 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final AnnotationProcessingParams annotationProcessingParams;
 
-  private final Supplier<ImmutableSet<String>> classpathEntriesSupplier;
-
-  private final Supplier<ImmutableSetMultimap<BuildRule, String>> classpathEntriesMapSupplier;
-
-  @Nullable
-  private final String proguardConfig;
+  @Nullable private final String proguardConfig;
 
   private final String sourceLevel;
+
   private final String targetLevel;
+
+  private final boolean exportDeps;
+
+  private final Supplier<ImmutableSet<String>> outputClasspathEntriesSupplier;
+
+  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+      transitiveClasspathEntriesSupplier;
+
+  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+      declaredClasspathEntriesSupplier;
+
+  /**
+   * Function for opening a JAR and returning all symbols that can be referenced from inside of that
+   * jar.
+   */
+  @VisibleForTesting
+  static interface JarResolver extends
+      Function<String, ImmutableSet<String>> {}
+
+  private final JarResolver JAR_RESOLVER =
+      new JarResolver() {
+    @Override
+    public ImmutableSet<String> apply(String classPath) {
+      ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
+      try {
+        ClassLoader loader = URLClassLoader.newInstance(
+            new URL[]{new File(classPath).toURI().toURL()},
+          /* parent */ null);
+
+        // For every class contained in that jar, check to see if the package name
+        // (e.g. com.facebook.foo), the simple name (e.g. ImmutableSet) or the name
+        // (e.g com.google.common.collect.ImmutableSet) is one of the missing symbols.
+        for (ClassPath.ClassInfo classInfo : ClassPath.from(loader).getTopLevelClasses()) {
+          topLevelSymbolsBuilder.add(classInfo.getPackageName(),
+              classInfo.getSimpleName(),
+              classInfo.getName());
+        }
+      } catch (IOException e) {
+        // Since this simply is a heuristic, return an empty set if we fail to load a jar.
+        return topLevelSymbolsBuilder.build();
+      }
+      return topLevelSymbolsBuilder.build();
+    }
+  };
 
   /**
    * This is set in {@link #buildInternal(BuildContext)} and is available to subclasses.
@@ -95,13 +143,15 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
                                    Set<String> srcs,
                                    Set<String> resources,
                                    @Nullable String proguardConfig,
-                                   AnnotationProcessingParams annotationProcessingParams) {
+                                   AnnotationProcessingParams annotationProcessingParams,
+                                   boolean exportDeps) {
     this(
         buildRuleParams,
         srcs,
         resources,
         proguardConfig,
         annotationProcessingParams,
+        exportDeps,
         JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
         JavacOptionsUtil.DEFAULT_TARGET_LEVEL
     );
@@ -113,6 +163,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
                                    Set<String> resources,
                                    @Nullable String proguardConfig,
                                    AnnotationProcessingParams annotationProcessingParams,
+                                   boolean exportDeps,
                                    String sourceLevel,
                                    String targetLevel) {
     super(buildRuleParams);
@@ -122,6 +173,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     this.proguardConfig = proguardConfig;
     this.sourceLevel = sourceLevel;
     this.targetLevel = targetLevel;
+    this.exportDeps = exportDeps;
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       File file = new File(getOutputJarPath(getBuildTarget()));
@@ -138,25 +190,66 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         .addAll(this.resources)
         .build();
 
-    classpathEntriesSupplier =
+    outputClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
           @Override
           public ImmutableSet<String> get() {
-            return ImmutableSet.copyOf(getClasspathEntriesMap().values());
+            ImmutableSet<String> outputClasspathEntries;
+
+            // If this java_library exports its dependencies then just return the transitive
+            // dependencies.
+            if (DefaultJavaLibraryRule.this.exportDeps) {
+              outputClasspathEntries = ImmutableSet.copyOf(
+                  getTransitiveClasspathEntries().values());
+            } else if (outputJar.isPresent()) {
+              outputClasspathEntries = ImmutableSet.of(getOutput().getPath());
+            } else {
+              outputClasspathEntries = ImmutableSet.of();
+            }
+
+            return outputClasspathEntries;
           }
         });
 
-    classpathEntriesMapSupplier =
+    transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
           @Override
           public ImmutableSetMultimap<BuildRule, String> get() {
             final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
-            classpathEntries.putAll(getClasspathEntriesForDeps());
+            ImmutableSetMultimap<BuildRule, String> classpathEntriesForDeps =
+                getClasspathEntriesForDeps();
+
+            classpathEntries.putAll(classpathEntriesForDeps);
+
+            if (DefaultJavaLibraryRule.this.exportDeps) {
+              classpathEntries.putAll(DefaultJavaLibraryRule.this,
+                  classpathEntriesForDeps.values());
+            }
 
             // Only add ourselves to the classpath if there's a jar to be built.
             if (outputJar.isPresent()) {
-              classpathEntries.put(DefaultJavaLibraryRule.this, getOutput().getPath());
+              classpathEntries.putAll(DefaultJavaLibraryRule.this,
+                  getOutput().getPath());
+            }
+
+            return classpathEntries.build();
+          }
+        });
+
+    declaredClasspathEntriesSupplier =
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
+          @Override
+          public ImmutableSetMultimap<BuildRule, String> get() {
+            final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+               ImmutableSetMultimap.builder();
+
+            Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(
+                Sets.union(getDeps(), ImmutableSet.of(DefaultJavaLibraryRule.this)),
+                JavaLibraryRule.class);
+
+            for (JavaLibraryRule rule : javaLibraryDeps) {
+              classpathEntries.putAll(rule, rule.getOutputClasspathEntries());
             }
             return classpathEntries.build();
           }
@@ -166,30 +259,42 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   /**
    * @param outputDirectory Directory to write class files to
    * @param javaSourceFilePaths .java files to compile: may be empty
-   * @param classpathEntries to include on the -classpath when compiling with javac
+   * @param transitiveClasspathEntries Classpaths of all transitive dependencies.
+   * @param declaredClasspathEntries Classpaths of all declared dependencies.
    * @param annotationProcessingData to process JSR269 java annotations
+   * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
    * @return commands to compile the specified inputs
    */
   private static ImmutableList<Command> createCommandsForJavac(
       String outputDirectory,
       final SortedSet<String> javaSourceFilePaths,
-      Set<String> classpathEntries,
+      ImmutableSet<String> transitiveClasspathEntries,
+      ImmutableSet<String> declaredClasspathEntries,
       Supplier<String> bootclasspathSupplier,
       AnnotationProcessingData annotationProcessingData,
+      Optional<String> invokingRule,
+      BuildDependencies buildDependencies,
+      Optional<DependencyCheckingJavacCommand.SuggestBuildRules> suggestBuildRules,
       String sourceLevel,
       String targetLevel) {
+
     ImmutableList.Builder<Command> commands = ImmutableList.builder();
 
     // Only run javac if there are .java files to compile.
     if (!javaSourceFilePaths.isEmpty()) {
-      Command javac = new JavacInMemoryCommand(
+      Command javac = new DependencyCheckingJavacCommand(
           outputDirectory,
           javaSourceFilePaths,
-          classpathEntries,
+          transitiveClasspathEntries,
+          declaredClasspathEntries,
           bootclasspathSupplier,
           annotationProcessingData,
+          invokingRule,
+          buildDependencies,
+          suggestBuildRules,
           sourceLevel,
           targetLevel);
+
       commands.add(javac);
     }
 
@@ -227,10 +332,11 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return super.ruleKeyBuilder()
         .set("srcs", srcs)
         .set("resources", resources)
-        .set("classpathEntries", getClasspathEntries())
+        .set("classpathEntries", ImmutableSet.copyOf(getTransitiveClasspathEntries().values()))
         .set("isAndroidLibrary", isAndroidRule())
         .set("sourceLevel", sourceLevel)
-        .set("targetLevel", targetLevel);
+        .set("targetLevel", targetLevel)
+        .set("exportDeps", exportDeps);
   }
 
   @Override
@@ -243,14 +349,17 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return srcs;
   }
 
-  @Override
-  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
-    return classpathEntriesMapSupplier.get();
+  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
+    return transitiveClasspathEntriesSupplier.get();
+  }
+
+  public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries() {
+    return declaredClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSet<String> getClasspathEntries() {
-    return classpathEntriesSupplier.get();
+  public ImmutableSet<String> getOutputClasspathEntries() {
+    return outputClasspathEntriesSupplier.get();
   }
 
   @Override
@@ -287,13 +396,30 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, commands);
     }
 
-    Set<String> classpathEntries = getClasspathEntries();
+    ImmutableSetMultimap<BuildRule, String> transitiveClasspathEntries =
+        getTransitiveClasspathEntries();
+    ImmutableSetMultimap<BuildRule, String> declaredClasspathEntries =
+        getDeclaredClasspathEntries();
+
     // If this rule depends on AndroidResourceRules, then we need to include the compiled R.java
     // files on the classpath when compiling this rule.
     if (dependsOnAndroidResourceRules) {
-      classpathEntries = Sets.union(
-          ImmutableSet.of(UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget)),
-          classpathEntries);
+      ImmutableSetMultimap.Builder<BuildRule, String> transitiveClasspathEntriesWithRDotJava =
+          ImmutableSetMultimap.builder();
+      transitiveClasspathEntriesWithRDotJava.putAll(transitiveClasspathEntries);
+
+      ImmutableSetMultimap.Builder<BuildRule, String> declaredClasspathEntriesWithRDotJava =
+          ImmutableSetMultimap.builder();
+      declaredClasspathEntriesWithRDotJava.putAll(declaredClasspathEntries);
+
+      ImmutableSet<String> rDotJavaClasspath =
+          ImmutableSet.of(UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget));
+
+      transitiveClasspathEntriesWithRDotJava.putAll(this, rDotJavaClasspath);
+      declaredClasspathEntriesWithRDotJava.putAll(this, rDotJavaClasspath);
+
+      declaredClasspathEntries = declaredClasspathEntriesWithRDotJava.build();
+      transitiveClasspathEntries = transitiveClasspathEntriesWithRDotJava.build();
     }
 
     // Only override the bootclasspath if this rule is supposed to compile Android code.
@@ -317,16 +443,25 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     String outputDirectory = getClassesDir(getBuildTarget());
     commands.add(new MakeCleanDirectoryCommand(outputDirectory));
 
+    Optional<DependencyCheckingJavacCommand.SuggestBuildRules> suggestBuildRule =
+        createSuggestBuildFunction(context,
+            transitiveClasspathEntries,
+            declaredClasspathEntries,
+            JAR_RESOLVER);
+
     // This adds the javac command, along with any supporting commands.
     List<Command> javac = createCommandsForJavac(
         outputDirectory,
         srcs,
-        classpathEntries,
+        ImmutableSet.copyOf(transitiveClasspathEntries.values()),
+        ImmutableSet.copyOf(declaredClasspathEntries.values()),
         bootclasspathSupplier,
         annotationProcessingParams,
+        Optional.of(getFullyQualifiedName()),
+        context.getBuildDependencies(),
+        suggestBuildRule,
         sourceLevel,
         targetLevel);
-
     commands.addAll(javac);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
@@ -339,6 +474,93 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     }
 
     return commands.build();
+  }
+
+  /**
+   *  @param transitiveNotDeclaredDep A {@link BuildRule} that is contained in the transitive
+   *      dependency list but is not declared as a dependency.
+   *  @param failedImports A Set of remaining failed imports.  This function will mutate this set
+   *      and remove any imports satisfied by {@code transitiveNotDeclaredDep}.
+   *  @return whether or not adding {@code transitiveNotDeclaredDep} as a dependency to this build
+   *      rule would have satisfied one of the {@code failedImports}.
+   */
+  private boolean isMissingBuildRule(BuildRule transitiveNotDeclaredDep,
+      Set<String> failedImports,
+      JarResolver jarResolver) {
+    ImmutableSet<String> classPaths = getTransitiveClasspathEntries().get(transitiveNotDeclaredDep);
+    boolean containsMissingBuildRule = false;
+    // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
+    // the exception of rules that export their dependencies, this will result in a single
+    // classpath.
+    for (String classPath : classPaths) {
+      ImmutableSet<String> topLevelSymbols;
+      topLevelSymbols = jarResolver.apply(classPath);
+
+      for (String symbolName : topLevelSymbols) {
+        if (failedImports.contains(symbolName)) {
+          failedImports.remove(symbolName);
+          containsMissingBuildRule = true;
+
+          // If we've found all of the missing imports, bail out early.
+          if (failedImports.isEmpty()) {
+            return true;
+          }
+        }
+      }
+    }
+    return containsMissingBuildRule;
+  }
+
+  /**
+   * @return A function that takes a list of failed imports from a javac invocation and returns a
+   *    set of rules to suggest that the developer import to satisfy those imports.
+   */
+  @VisibleForTesting
+  Optional<DependencyCheckingJavacCommand.SuggestBuildRules> createSuggestBuildFunction(
+      BuildContext context,
+      ImmutableSetMultimap<BuildRule, String> transitiveClasspathEntries,
+      ImmutableSetMultimap<BuildRule, String> declaredClasspathEntries,
+      final JarResolver jarResolver) {
+    if (context.getBuildDependencies() != BuildDependencies.WARN_ON_TRANSITIVE) {
+      return Optional.absent();
+    }
+    final Set<BuildRule> transitiveNotDeclaredDeps = Sets.difference(
+        transitiveClasspathEntries.keySet(),
+        declaredClasspathEntries.keySet());
+
+    final ImmutableList<BuildRule> sortedTransitiveNotDeclaredDeps = ImmutableList.copyOf(
+        TopologicalSort.sort(context.getDependencyGraph(),
+            new Predicate<BuildRule>() {
+              @Override
+              public boolean apply(BuildRule input) {
+                return transitiveNotDeclaredDeps.contains(input);
+              }
+            })).reverse();
+
+    DependencyCheckingJavacCommand.SuggestBuildRules suggestBuildRuleFn =
+        new DependencyCheckingJavacCommand.SuggestBuildRules() {
+      @Override
+      public ImmutableSet<String> apply(ImmutableSet<String> failedImports) {
+        ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
+
+        Set<String> remainingImports = Sets.newHashSet(failedImports);
+
+        for (BuildRule transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps) {
+          boolean ruleCanSeeDep = transitiveNotDeclaredDep.isVisibleTo(
+              DefaultJavaLibraryRule.this.getBuildTarget());
+          if (ruleCanSeeDep &&
+              isMissingBuildRule(transitiveNotDeclaredDep, remainingImports, jarResolver)) {
+            suggestedDeps.add(transitiveNotDeclaredDep.getFullyQualifiedName());
+          }
+          // If we've wiped out all remaining imports, break the loop looking for them.
+          if (remainingImports.isEmpty()) {
+            break;
+          }
+        }
+        return suggestedDeps.build();
+      }
+    };
+    return Optional.of(suggestBuildRuleFn);
   }
 
   @VisibleForTesting
@@ -401,6 +623,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         new AnnotationProcessingParams.Builder();
     protected String sourceLevel = JavacOptionsUtil.DEFAULT_SOURCE_LEVEL;
     protected String targetLevel = JavacOptionsUtil.DEFAULT_TARGET_LEVEL;
+    protected boolean exportDeps = false;
 
     @Nullable
     protected String proguardConfig = null;
@@ -419,6 +642,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
           resources,
           proguardConfig,
           processingParams,
+          exportDeps,
           sourceLevel,
           targetLevel);
     }
@@ -470,6 +694,11 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
     public Builder setTargetLevel(String targetLevel) {
       this.targetLevel = targetLevel;
+      return this;
+    }
+
+    public Builder setExportDeps(boolean exportDeps) {
+      this.exportDeps = exportDeps;
       return this;
     }
   }

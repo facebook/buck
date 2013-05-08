@@ -28,8 +28,6 @@ import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -54,8 +52,6 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   @Nullable
   private final String metaInfDirectory;
 
-  private final Supplier<ImmutableSet<String>> classpathEntriesSupplier;
-
   private final DirectoryTraverser directoryTraverser;
 
   JavaBinaryRule(
@@ -69,13 +65,6 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     this.manifestFile = manifestFile;
     this.metaInfDirectory = metaInfDirectory;
 
-    this.classpathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
-          @Override
-          public ImmutableSet<String> get() {
-            return ImmutableSet.copyOf(getClasspathEntriesMap().values());
-          }
-        });
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
   }
 
@@ -135,10 +124,10 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
       includePaths = ImmutableSet.<String>builder()
           .add(stagingRoot)
-          .addAll(getClasspathEntries())
+          .addAll(getTransitiveClasspathEntries().values())
           .build();
     } else {
-      includePaths = getClasspathEntries();
+      includePaths = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
     }
 
     String outputFile = getOutputFile();
@@ -149,13 +138,8 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
+  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
     return getClasspathEntriesForDeps();
-  }
-
-  @Override
-  public ImmutableSet<String> getClasspathEntries() {
-    return classpathEntriesSupplier.get();
   }
 
   private String getOutputDirectory() {
@@ -178,7 +162,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
     return String.format("java -classpath %s %s",
         Joiner.on(':').join(Iterables.transform(
-            getClasspathEntries(),
+            getTransitiveClasspathEntries().values(),
             Functions.RELATIVE_TO_ABSOLUTE_PATH)),
         mainClass);
   }

@@ -17,9 +17,12 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -38,6 +41,11 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   @Option(name = "--num-threads", usage = "Default is 1.25 * num processors")
   private int numThreads = (int)(Runtime.getRuntime().availableProcessors() * 1.25);
 
+  @Option(name = "--build-dependencies",
+      aliases = "-b",
+      usage = "How to handle including dependencies")
+  private BuildDependencies buildDependencies = null;
+
   private ListeningExecutorService listeningExecutorService;
 
   @Argument
@@ -48,6 +56,20 @@ public class BuildCommandOptions extends AbstractCommandOptions {
 
     setNumThreadsFromConfig(buckConfig);
   }
+
+  private Supplier<BuildDependencies> buildDependenciesSupplier =
+      Suppliers.memoize(new Supplier<BuildDependencies>() {
+        @Override
+        public BuildDependencies get() {
+          if (buildDependencies != null) {
+            return buildDependencies;
+          } else if (getBuckConfig().getBuildDependencies().isPresent()) {
+            return getBuckConfig().getBuildDependencies().get();
+          } else {
+            return BuildDependencies.getDefault();
+          }
+        }
+      });
 
   private void setNumThreadsFromConfig(BuckConfig buckConfig) {
     ImmutableMap<String,String> build = buckConfig.getEntriesForSection("build");
@@ -87,6 +109,10 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     return numThreads;
   }
 
+  public BuildDependencies getBuildDependencies() {
+    return buildDependenciesSupplier.get();
+  }
+
   public ListeningExecutorService getListeningExecutorService() {
     if (listeningExecutorService == null) {
       ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
@@ -107,6 +133,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         console.getStdOut(),
         console.getStdErr(),
         isCodeCoverageEnabled(),
-        isDebugEnabled());
+        isDebugEnabled(),
+        getBuildDependencies());
   }
 }

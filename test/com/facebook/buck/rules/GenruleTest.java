@@ -331,7 +331,8 @@ public class GenruleTest {
         ImmutableSet.<String>of("java/com/facebook/util/ManifestGenerator.java"),
         ImmutableSet.<String>of(),
         /* proguardConfig */ null,
-        AnnotationProcessingParams.EMPTY);
+        AnnotationProcessingParams.EMPTY,
+        /* exportDeps */ false);
 
     buildRuleIndex.put(javaLibrary.getFullyQualifiedName(), javaLibrary);
 

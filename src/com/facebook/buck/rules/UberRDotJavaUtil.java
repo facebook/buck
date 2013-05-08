@@ -189,8 +189,8 @@ class UberRDotJavaUtil {
   }
 
   static JavacInMemoryCommand createJavacInMemoryCommandForRDotJavaFiles(
-      Set<String> javaSourceFilePaths, String outputDirectory) {
-    Set<String> classpathEntries = ImmutableSet.of();
+    Set<String> javaSourceFilePaths, String outputDirectory) {
+    ImmutableSet<String> classpathEntries = ImmutableSet.of();
     return new JavacInMemoryCommand(
         outputDirectory,
         javaSourceFilePaths,

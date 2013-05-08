@@ -103,7 +103,7 @@ abstract class AbstractBuildRule implements BuildRule {
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {
         JavaLibraryRule libraryRule = (JavaLibraryRule)dep;
-        classpathEntries.putAll(libraryRule.getClasspathEntriesMap());
+        classpathEntries.putAll(libraryRule.getTransitiveClasspathEntries());
       }
     }
     return classpathEntries.build();

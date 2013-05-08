@@ -46,6 +46,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
         resources,
         proguardConfig,
         annotationProcessingParams,
+        /* exportDeps */ false,
         sourceLevel,
         targetLevel);
     this.manifestFile = manifestFile;

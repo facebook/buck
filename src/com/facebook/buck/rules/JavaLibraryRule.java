@@ -21,19 +21,26 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
-public interface JavaLibraryRule extends BuildRule {
-
+public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
   /**
-   * @return Map of dependent BuildRules to the classpath entries provided by those rules.
+   * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
+   *     build a jar associated with this rule.  Contains the classpath entries for the transitive
+   *     dependencies of these rules.
    */
-  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap();
+  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
-   *     compile the {@code srcs} associated with this rule.  This is equivalent to the set of
-   *     values returned by {@link #getClasspathEntriesMap()}.
+   *     compile the {@code srcs} associated with this rule.  This set only contains the classpath
+   *     entries for those rules that are declared as direct dependencies of this rule.
    */
-  public ImmutableSet<String> getClasspathEntries();
+  public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries();
+
+  /**
+   * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
+   *     compile rules that depend on this rule.
+   */
+  public ImmutableSet<String> getOutputClasspathEntries();
 
   public ImmutableSortedSet<String> getJavaSrcs();
 

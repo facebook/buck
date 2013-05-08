@@ -11,10 +11,23 @@ java_library(
   srcs = CORE_SRCS,
   deps = [
     '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
   ],
   visibility = [
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/command/io:io',
+    '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/python:python',
+    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/command:command',
+    '//test/com/facebook/buck/command/io:io',
+    '//test/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/shell:shell',
   ],
 )
 
@@ -26,10 +39,12 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//lib:sdklib',
-    '//src/com/facebook/buck/debug:debug',
-    # TODO(simons): Check once the java package is set up
     '//src/com/facebook/buck/command/io:io',
+    '//src/com/facebook/buck/debug:debug',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/util:exceptions',
+    # TODO(simons): Check once the java package is set up
+    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//third-party/java/aosp/src/com/android:aosp',
   ],

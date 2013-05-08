@@ -124,7 +124,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
       BuildRule rule = graph.findBuildRuleByTarget(target);
       if (rule instanceof HasClasspathEntries) {
         HasClasspathEntries hasClasspathEntries = (HasClasspathEntries)rule;
-        classpathEntries.addAll(hasClasspathEntries.getClasspathEntries());
+        classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
       } else {
         throw new HumanReadableException(rule.getFullyQualifiedName() + " is not a java-based" +
             " build target");

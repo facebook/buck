@@ -649,7 +649,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       ImmutableList.Builder<Command> commands,
       Set<String> resDirectories) {
     final ImmutableSetMultimap<BuildRule, String> classpathEntriesMap =
-        getClasspathEntriesMap();
+        getTransitiveClasspathEntries();
     Set<String> additionalLibraryJarsForProguard = Sets.newHashSet();
 
     for (BuildRule buildRule : buildRulesToExcludeFromDex) {
@@ -838,14 +838,9 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getClasspathEntriesMap() {
+  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
     return getClasspathEntriesForDeps();
-  }
-
-  @Override
-  public ImmutableSet<String> getClasspathEntries() {
-    return ImmutableSet.copyOf(getClasspathEntriesMap().values());
   }
 
   public static Builder newAndroidBinaryRuleBuilder() {

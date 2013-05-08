@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.shell.CommandRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.NoAndroidSdkException;
@@ -42,6 +43,7 @@ public class BuildContext {
   private final JavaPackageFinder javaPackageFinder;
   private final EventBus events;
   private final Supplier<String> androidBootclasspathSupplier;
+  private final BuildDependencies buildDependencies;
 
   private BuildContext(
       File projectRoot,
@@ -50,7 +52,8 @@ public class BuildContext {
       ProjectFilesystem projectFilesystem,
       JavaPackageFinder javaPackageFinder,
       EventBus events,
-      Supplier<String> androidBootclasspathSupplier) {
+      Supplier<String> androidBootclasspathSupplier,
+      BuildDependencies buildDependencies) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
     this.commandRunner = Preconditions.checkNotNull(commandRunner);
@@ -58,6 +61,7 @@ public class BuildContext {
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.events = Preconditions.checkNotNull(events);
     this.androidBootclasspathSupplier = Preconditions.checkNotNull(androidBootclasspathSupplier);
+    this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
   }
 
   public CommandRunner getCommandRunner() {
@@ -92,6 +96,10 @@ public class BuildContext {
     return androidBootclasspathSupplier;
   }
 
+  public BuildDependencies getBuildDependencies() {
+    return buildDependencies;
+  }
+
   public static class Builder {
 
     private File projectRoot = null;
@@ -101,6 +109,7 @@ public class BuildContext {
     private JavaPackageFinder javaPackgeFinder = null;
     private EventBus events = new EventBus();
     private Supplier<String> androidBootclasspathSupplier = null;
+    private BuildDependencies buildDependencies = BuildDependencies.getDefault();
 
     private Builder() {}
 
@@ -115,7 +124,8 @@ public class BuildContext {
           projectFilesystem,
           javaPackgeFinder,
           events,
-          androidBootclasspathSupplier);
+          androidBootclasspathSupplier,
+          buildDependencies);
     }
 
     public Builder setProjectRoot(File projectRoot) {
@@ -145,6 +155,11 @@ public class BuildContext {
 
     public Builder setEventBus(EventBus events) {
       this.events = events;
+      return this;
+    }
+
+    public Builder setBuildDependencies(BuildDependencies buildDependencies) {
+      this.buildDependencies = buildDependencies;
       return this;
     }
 

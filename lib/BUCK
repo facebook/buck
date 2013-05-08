@@ -3,6 +3,7 @@ prebuilt_jar(
   binary_jar = 'args4j.jar',
   visibility = [
     '//src/com/facebook/buck/cli:cli',
+    '//test/...',
   ],
 )
 
@@ -18,15 +19,9 @@ java_library(
     ':easymock_jar_only',
     ':objenesis',
   ],
+  export_deps = True,
   visibility = [
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/command:command',
-    '//test/com/facebook/buck/command/io:io',
-    '//test/com/facebook/buck/model:model',
-    '//test/com/facebook/buck/parser:parser',
-    '//test/com/facebook/buck/rules:rules',
-    '//test/com/facebook/buck/shell:shell',
-    '//test/com/facebook/buck/debug:debug',
+    '//test/...',
   ],
 )
 
@@ -70,6 +65,7 @@ prebuilt_jar(
   binary_jar = 'jackson-annotations-2.0.5.jar',
   visibility = [
     '//src/com/facebook/buck/command:command',
+    '//test/com/facebook/buck/command:command',
   ],
 )
 
@@ -85,8 +81,10 @@ prebuilt_jar(
   name = 'jackson-databind',
   binary_jar = 'jackson-databind-2.0.5.jar',
   visibility = [
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/rules:rules',
+    '//test/...',
   ],
 )
 
@@ -98,28 +96,22 @@ prebuilt_jar(
   ],
 )
 
-prebuilt_jar(
+java_library(
   name = 'junit',
+  deps = [':junit_jar'],
+  export_deps = True,
+  visibility = [
+    '//src/com/facebook/buck/junit:junit',
+    '//test/...',
+  ]
+)
+
+prebuilt_jar(
+  name = 'junit_jar',
   binary_jar = 'junit-4.11.jar',
   deps = [
     ':hamcrest-core',
     ':hamcrest-library',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/junit:junit',
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/command:command',
-    '//test/com/facebook/buck/command/io:io',
-    '//test/com/facebook/buck/debug:debug',
-    '//test/com/facebook/buck/graph:graph',
-    '//test/com/facebook/buck/junit:junit',
-    '//test/com/facebook/buck/model:model',
-    '//test/com/facebook/buck/parcelable:parcelable',
-    '//test/com/facebook/buck/parser:parser',
-    '//test/com/facebook/buck/rules:rules',
-    '//test/com/facebook/buck/shell:shell',
-    '//test/com/facebook/buck/testutil:testutil',
-    '//test/com/facebook/buck/util:util',
   ],
 )
 

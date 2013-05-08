@@ -148,20 +148,18 @@ public class AndroidTransitiveDependencyGraph {
           buildRule.getBuildTarget()));
     }
 
-    // Filter out the classpath entries to exclude from dex'ing, if appropriate.
-    Set<String> classpathEntries = pathsToDexBuilder.build();
-    Set<String> pathsToThirdPartyJars = pathsToThirdPartyJarsBuilder.build();
     ImmutableSet<String> noDxPaths = noDxPathsBuilder.build();
 
-    if (!noDxPaths.isEmpty()) {
-      // Classpath entries that should be excluded from dexing should also be excluded from
-      // pathsToThirdPartyJars because their resources should not end up in main APK. If they do,
-      // the pre-dexed library may try to load a resource from the main APK rather than from within
-      // the pre-dexed library (even though the resource is available in both locations). This
-      // causes a significant performance regression, as the resource may take more than one second
-      // longer to load.
-      pathsToThirdPartyJars = Sets.difference(pathsToThirdPartyJars, noDxPaths);
-    }
+    // Filter out the classpath entries to exclude from dex'ing, if appropriate
+    Set<String> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
+    // Classpath entries that should be excluded from dexing should also be excluded from
+    // pathsToThirdPartyJars because their resources should not end up in main APK. If they do,
+    // the pre-dexed library may try to load a resource from the main APK rather than from within
+    // the pre-dexed library (even though the resource is available in both locations). This
+    // causes a significant performance regression, as the resource may take more than one second
+    // longer to load.
+    Set<String> pathsToThirdPartyJars =
+        Sets.difference(pathsToThirdPartyJarsBuilder.build(), noDxPaths);
 
     return new AndroidTransitiveDependencies(classpathEntries,
         pathsToThirdPartyJars,

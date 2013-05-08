@@ -5,7 +5,9 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//lib:junit',
+    '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:core',
     '//src/com/facebook/buck/shell:shell',
   ],
   visibility = [

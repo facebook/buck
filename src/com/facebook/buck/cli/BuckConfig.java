@@ -20,10 +20,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -310,6 +313,23 @@ class BuckConfig {
 
   Optional<String> getPathToDefaultAndroidManifest() {
     return getValue("project", "default_android_manifest");
+  }
+
+  @Beta
+  Optional<BuildDependencies> getBuildDependencies() {
+    Optional<String> buildDependenciesOptional = getValue("build", "build_dependencies");
+    if (buildDependenciesOptional.isPresent()) {
+      try {
+        return Optional.of(BuildDependencies.valueOf(buildDependenciesOptional.get()));
+      } catch (IllegalArgumentException e) {
+        throw new HumanReadableException(
+            "%s is not a valid value for build_dependencies.  Must be one of: %s",
+            buildDependenciesOptional.get(),
+            Joiner.on(", ").join(BuildDependencies.values()));
+      }
+    } else {
+      return Optional.absent();
+    }
   }
 
   List<String> getInitialTargets() {

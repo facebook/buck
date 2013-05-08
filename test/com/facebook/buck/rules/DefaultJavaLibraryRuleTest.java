@@ -21,11 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.shell.Command;
+import com.facebook.buck.shell.DependencyCheckingJavacCommand;
 import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.JavacInMemoryCommand;
 import com.facebook.buck.shell.JavacOptionsUtil;
@@ -36,6 +39,7 @@ import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -77,7 +81,8 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
         null,
-        AnnotationProcessingParams.EMPTY);
+        AnnotationProcessingParams.EMPTY,
+        /* exportDeps */ false);
 
     ImmutableList.Builder<Command> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -111,7 +116,8 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
         /* proguargConfig */ null,
-        AnnotationProcessingParams.EMPTY);
+        AnnotationProcessingParams.EMPTY,
+        /* exportDeps */ false);
 
     ImmutableList.Builder<Command> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -147,7 +153,8 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
         /* proguargConfig */ null,
-        AnnotationProcessingParams.EMPTY);
+        AnnotationProcessingParams.EMPTY,
+        /* exportDeps */ false);
 
     ImmutableList.Builder<Command> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -323,14 +330,14 @@ public class DefaultJavaLibraryRuleTest {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     JavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
-        .addSrc("java/src/com/libone/bar.java")
+        .addSrc("java/src/com/libone/Bar.java")
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
     JavaLibraryRule libraryTwo = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryTwoTarget)
-        .addSrc("java/src/com/libtwo/foo.java")
+        .addSrc("java/src/com/libtwo/Foo.java")
         .addDep("//:libone")
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
@@ -338,16 +345,16 @@ public class DefaultJavaLibraryRuleTest {
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     JavaLibraryRule parent = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(parentTarget)
-        .addSrc("java/src/com/parent/meh.java")
+        .addSrc("java/src/com/parent/Meh.java")
         .addDep("//:libtwo")
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
     assertEquals(ImmutableSetMultimap.of(
-          libraryOne, "buck-out/gen/lib__libone__output/libone.jar",
-          libraryTwo, "buck-out/gen/lib__libtwo__output/libtwo.jar",
-          parent, "buck-out/gen/lib__parent__output/parent.jar"),
-        parent.getClasspathEntriesMap());
+        libraryOne, "buck-out/gen/lib__libone__output/libone.jar",
+        libraryTwo, "buck-out/gen/lib__libtwo__output/libtwo.jar",
+        parent, "buck-out/gen/lib__parent__output/parent.jar"),
+        parent.getTransitiveClasspathEntries());
   }
 
   /**
@@ -385,7 +392,167 @@ public class DefaultJavaLibraryRuleTest {
     MoreAsserts.assertContainsOne(parameters, "-AMyKey=MyValue");
   }
 
+  @Test
+  public void testExportDeps() {
+    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    JavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(libraryOneTarget)
+        .addSrc("java/src/com/libone/Bar.java")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
+
+    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
+    JavaLibraryRule libraryTwo = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(libraryTwoTarget)
+        .addSrc("java/src/com/libtwo/Foo.java")
+        .addDep("//:libone")
+        .setExportDeps(true)
+        .build(buildRuleIndex);
+    buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
+
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
+    JavaLibraryRule parent = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(parentTarget)
+        .addSrc("java/src/com/parent/Meh.java")
+        .addDep("//:libtwo")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
+
+    assertEquals(ImmutableSet.of("buck-out/gen/lib__libone__output/libone.jar"),
+        libraryOne.getOutputClasspathEntries());
+
+    assertEquals(
+        ImmutableSet.of("buck-out/gen/lib__libone__output/libone.jar",
+            "buck-out/gen/lib__libtwo__output/libtwo.jar"),
+        libraryTwo.getOutputClasspathEntries());
+
+    ImmutableSetMultimap.Builder<BuildRule, String> expected = ImmutableSetMultimap.builder();
+    expected.put(parent, "buck-out/gen/lib__parent__output/parent.jar");
+    expected.putAll(libraryTwo,
+        "buck-out/gen/lib__libone__output/libone.jar",
+        "buck-out/gen/lib__libtwo__output/libtwo.jar");
+
+    assertEquals(expected.build(), parent.getDeclaredClasspathEntries());
+  }
+
+  @Test
+  public void testEmptySuggestBuildFunction() {
+    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    DefaultJavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(libraryOneTarget)
+        .addSrc("java/src/com/libone/bar.java")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
+
+    BuildContext context = createSuggestContext(buildRuleIndex,
+        BuildDependencies.FIRST_ORDER_ONLY);
+
+    ImmutableSetMultimap<BuildRule, String> classpathEntries =
+        libraryOne.getTransitiveClasspathEntries();
+
+    assertEquals(
+        Optional.<DependencyCheckingJavacCommand.SuggestBuildRules>absent(),
+        libraryOne.createSuggestBuildFunction(context,
+            classpathEntries,
+            classpathEntries,
+            createJarResolver(/* classToSymbols */ImmutableMap.<String, String>of())));
+
+    EasyMock.verify(context);
+  }
+
+  @Test
+  public void testSuggsetDepsReverseTopoSortRespected() {
+    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    DefaultJavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(libraryOneTarget)
+        .addSrc("java/src/com/libone/Bar.java")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .build(buildRuleIndex);
+    buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
+
+    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
+    DefaultJavaLibraryRule libraryTwo = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(libraryTwoTarget)
+        .addSrc("java/src/com/libtwo/Foo.java")
+        .addDep("//:libone")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
+
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
+    DefaultJavaLibraryRule parent = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(parentTarget)
+        .addSrc("java/src/com/parent/Meh.java")
+        .addDep("//:libtwo")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .build(buildRuleIndex);
+    buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
+
+    BuildTarget grandparentTarget = BuildTargetFactory.newInstance("//:grandparent");
+    DefaultJavaLibraryRule grandparent = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(grandparentTarget)
+        .addSrc("java/src/com/parent/OldManRiver.java")
+        .addDep("//:parent")
+        .build(buildRuleIndex);
+    buildRuleIndex.put(grandparent.getFullyQualifiedName(), parent);
+
+    BuildContext context = createSuggestContext(buildRuleIndex,
+        BuildDependencies.WARN_ON_TRANSITIVE);
+
+    ImmutableSetMultimap<BuildRule, String> transitive =
+        parent.getTransitiveClasspathEntries();
+
+    ImmutableMap<String, String> classToSymbols = ImmutableMap.of(
+        Iterables.getFirst(transitive.get(parent), null), "com.facebook.Foo",
+        Iterables.getFirst(transitive.get(libraryOne), null), "com.facebook.Bar",
+        Iterables.getFirst(transitive.get(libraryTwo), null), "com.facebook.Foo");
+
+    Optional<DependencyCheckingJavacCommand.SuggestBuildRules> suggestFn =
+        grandparent.createSuggestBuildFunction(context,
+            transitive,
+            /* declaredClasspathEntries */ ImmutableSetMultimap.<BuildRule, String>of(),
+            createJarResolver(classToSymbols));
+
+    assertTrue(suggestFn.isPresent());
+    assertEquals(ImmutableSet.of("//:parent", "//:libone"),
+        suggestFn.get().apply(ImmutableSet.of("com.facebook.Foo", "com.facebook.Bar")));
+
+    EasyMock.verify(context);
+  }
+
   // Utilities
+
+  private DefaultJavaLibraryRule.JarResolver createJarResolver(
+      final ImmutableMap<String, String> classToSymbols) {
+
+    ImmutableSetMultimap.Builder<String, String> resolveMapBuilder =
+        ImmutableSetMultimap.builder();
+
+    for (Map.Entry<String, String> entry : classToSymbols.entrySet()) {
+      String fullyQualified = entry.getValue();
+      String packageName = fullyQualified.substring(0, fullyQualified.lastIndexOf('.'));
+      String className = fullyQualified.substring(fullyQualified.lastIndexOf('.'));
+      resolveMapBuilder.putAll(entry.getKey(), fullyQualified, packageName, className);
+    }
+
+    final ImmutableSetMultimap<String, String> resolveMap = resolveMapBuilder.build();
+
+    return new DefaultJavaLibraryRule.JarResolver() {
+      @Override
+      public ImmutableSet<String> apply(String input) {
+        if (resolveMap.containsKey(input)) {
+          return resolveMap.get(input);
+        } else {
+          return ImmutableSet.of();
+        }
+      }
+    };
+  }
 
   private JavaPackageFinder createJavaPackageFinder() {
     JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
@@ -400,7 +567,24 @@ public class DefaultJavaLibraryRuleTest {
     return javaPackageFinder;
   }
 
-  private BuildContext createBuildContext(DefaultJavaLibraryRule javaLibrary, String bootclasspath) {
+  private BuildContext createSuggestContext(Map<String, BuildRule> buildRuleIndex,
+                                            BuildDependencies buildDependencies) {
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(
+        ImmutableMap.copyOf(buildRuleIndex));
+
+    BuildContext context = EasyMock.createMock(BuildContext.class);
+    EasyMock.expect(context.getDependencyGraph()).andReturn(graph);
+    EasyMock.expectLastCall().anyTimes();
+
+    EasyMock.expect(context.getBuildDependencies()).andReturn(buildDependencies).anyTimes();
+
+    EasyMock.replay(context);
+
+    return context;
+  }
+
+  private BuildContext createBuildContext(DefaultJavaLibraryRule javaLibrary,
+                                          String bootclasspath) {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(
         ImmutableMap.<String, BuildRule>of(
             javaLibrary.getFullyQualifiedName(),
@@ -408,10 +592,15 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildContext context = EasyMock.createMock(BuildContext.class);
     EasyMock.expect(context.getDependencyGraph()).andReturn(graph);
+    EasyMock.expectLastCall().anyTimes();
+
     EasyMock.expect(context.getAndroidBootclasspathSupplier()).andReturn(Suppliers.ofInstance(
         bootclasspath));
     EasyMock.expect(context.getJavaPackageFinder()).andReturn(
         EasyMock.createMock(JavaPackageFinder.class));
+    EasyMock.expect(context.getBuildDependencies()).andReturn(BuildDependencies.TRANSITIVE);
+    EasyMock.expectLastCall().anyTimes();
+
     EasyMock.replay(context);
 
     return context;
@@ -458,7 +647,8 @@ public class DefaultJavaLibraryRuleTest {
             ImmutableSet.<String>of("MyClass.java"),
             ImmutableSet.<String>of(),
             "MyProguardConfig",
-            AnnotationProcessingParams.EMPTY);
+            AnnotationProcessingParams.EMPTY,
+            /* exportDeps */ false);
       }
     };
 
@@ -516,7 +706,8 @@ public class DefaultJavaLibraryRuleTest {
       EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT);
       EasyMock.replay(executionContext);
 
-      ImmutableList<String> options = javacCommand.getOptions(executionContext);
+      ImmutableList<String> options = javacCommand.getOptions(executionContext,
+          /* buildClasspathEntries */ ImmutableSet.<String>of());
 
       EasyMock.verify(buildContext, executionContext);
       return options;

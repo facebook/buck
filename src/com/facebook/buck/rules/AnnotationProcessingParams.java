@@ -161,7 +161,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
           searchPathElements.add(prebuiltJarRule.getBinaryJar());
         } else if (rule instanceof JavaLibraryRule) {
           JavaLibraryRule javaLibraryRule = (JavaLibraryRule)rule;
-          searchPathElements.addAll(javaLibraryRule.getClasspathEntries());
+          searchPathElements.addAll(javaLibraryRule.getTransitiveClasspathEntries().values());
         } else {
           throw new HumanReadableException(
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +
