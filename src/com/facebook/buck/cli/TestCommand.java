@@ -46,6 +46,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -348,10 +349,16 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // ListenableFuture.
     List<ListenableFuture<TestResults>> results = Lists.newArrayList();
     for (TestRule test : tests) {
-      // See if there is any work to do to run the test. This list will be empty if the java_test()
-      // is simply a rule that depends on other java_test()s.
-      List<com.facebook.buck.shell.Command> commands = test.runTests(buildContext,
-          executionContext);
+      List<com.facebook.buck.shell.Command> commands;
+
+      // See if there is any work to do to run the test.
+      if (test.isTestRunRequired(buildContext, executionContext)) {
+        // This list will be empty if the java_test() is simply a rule that depends on other
+        // java_test()s.
+        commands = test.runTests(buildContext, executionContext);
+      } else {
+        commands = ImmutableList.of();
+      }
 
       // Always run the commands, even if the list of commands as empty. There may be zero commands
       // because the rule is cached, but its results must still be processed.

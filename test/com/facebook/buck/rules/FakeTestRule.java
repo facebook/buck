@@ -70,6 +70,11 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
+  public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
+    return true;
+  }
+
+  @Override
   public List<Command> runTests(BuildContext buildContext, ExecutionContext executionContext) {
     throw new UnsupportedOperationException("runTests() not supported in fake");
   }

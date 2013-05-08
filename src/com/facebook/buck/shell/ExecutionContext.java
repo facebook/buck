@@ -34,7 +34,7 @@ public class ExecutionContext {
   private final Optional<File> ndkRoot;
   private final Ansi ansi;
   public final boolean isCodeCoverageEnabled;
-  public final boolean isDebugEnabled;
+  private final boolean isDebugEnabled;
   private final PrintStream stdout;
   private final PrintStream stderr;
   private final ProcessExecutor processExecutor;
@@ -83,6 +83,10 @@ public class ExecutionContext {
 
   public File getProjectDirectoryRoot() {
     return projectDirectoryRoot;
+  }
+
+  public boolean isDebugEnabled() {
+    return isDebugEnabled;
   }
 
   public PrintStream getStdErr() {

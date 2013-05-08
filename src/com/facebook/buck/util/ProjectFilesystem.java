@@ -63,4 +63,11 @@ public class ProjectFilesystem {
     properties.load(Files.newReader(propertiesFile, Charsets.UTF_8));
     return properties;
   }
+
+  /**
+   * Checks whether there is a normal file at the specified path.
+   */
+  public boolean isFile(String pathRelativeToProjectRoot) {
+    return new File(pathRelativeToProjectRoot).isFile();
+  }
 }

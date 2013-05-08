@@ -29,6 +29,20 @@ import java.util.concurrent.Callable;
 public interface TestRule extends BuildRule {
 
   /**
+   * Returns a boolean indicating whether this test should be run at all. Default implementation:
+   * <pre>
+   * @Override
+   * public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
+   *   // TODO: Also check whether the files that contain the test results are present.
+   *   return executionContext.isDebugEnabled || !isRuleBuiltFromCache();
+   * }
+   * </pre>
+   * If this method returns {@code true}, then {@link #interpretTestResults()} should be able to be
+   * called directly.
+   */
+  public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext context);
+
+  /**
    * Returns the commands required to run the tests.
    * <p>
    * <strong>Note:</strong> This method may be run without {@link #build(BuildContext)} having been

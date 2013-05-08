@@ -16,11 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.JUnitCommand;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ZipFileTraversal;
@@ -135,13 +135,6 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   public List<Command> runTests(BuildContext buildContext, ExecutionContext executionContext) {
     Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
 
-    // If this rule was cached, then no commands are necessary to run the tests. The results will be
-    // read from the XML files in interpretTestResults(); If debug is enabled we should run the
-    // tests as the user is expecting to hook up a debugger.
-    if (!isTestRunRequired(executionContext)) {
-      return ImmutableList.of();
-    }
-
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
     // empty list of commands.
@@ -184,14 +177,18 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         vmArgs,
         pathToTestOutput,
         executionContext.isCodeCoverageEnabled,
-        executionContext.isDebugEnabled);
+        executionContext.isDebugEnabled());
     commands.add(junit);
 
     return commands.build();
   }
 
-  private boolean isTestRunRequired(ExecutionContext context) {
-    if (context.isDebugEnabled || !isRuleBuiltFromCache()) {
+  @Override
+  public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
+    // If this rule was cached, then no commands are necessary to run the tests. The results will be
+    // read from the XML files in interpretTestResults(); If debug is enabled we should run the
+    // tests as the user is expecting to hook up a debugger.
+    if (executionContext.isDebugEnabled() || !isRuleBuiltFromCache()) {
       return true;
     }
 

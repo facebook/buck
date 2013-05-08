@@ -16,11 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.shell.Command;
 import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -77,14 +79,19 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
+  public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
+    if (executionContext.isDebugEnabled() || !isRuleBuiltFromCache()) {
+      return true;
+    }
+
+    // If result.json was not written, then the test needs to be run.
+    ProjectFilesystem filesystem = buildContext.getProjectFilesystem();
+    return !filesystem.isFile(getPathToTestOutputResult());
+  }
+
+  @Override
   public List<Command> runTests(BuildContext buildContext, ExecutionContext executionContext) {
     Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
-
-    // If this rule was cached, then no commands are necessary to run the tests. The results will be
-    // read from the JSON file in interpretTestResults();
-    if (isRuleBuiltFromCache()) {
-      return ImmutableList.of();
-    }
 
     Command mkdirClean = new MakeCleanDirectoryCommand(getPathToTestOutputDirectory());
 
@@ -101,7 +108,8 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
         getBuildTarget().getShortName());
   }
 
-  private String getPathToTestOutputResult() {
+  @VisibleForTesting
+  String getPathToTestOutputResult() {
     return getPathToTestOutputDirectory() + "/result.json";
   }
 
