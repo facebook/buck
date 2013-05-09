@@ -128,7 +128,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
 
     // Create a Parser.
-    return new Parser(getProjectFilesystem(), buildFiles, ansi);
+    return new Parser(getProjectFilesystem(), buildFiles);
   }
 
   /**

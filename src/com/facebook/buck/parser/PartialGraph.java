@@ -20,7 +20,6 @@ import com.facebook.buck.json.BuildFileToJsonParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -54,26 +53,21 @@ public class PartialGraph {
 
   public static PartialGraph createFullGraph(
       File projectDirectoryRoot,
-      Iterable<String> includes,
-      Ansi ansi) throws NoSuchBuildTargetException, IOException {
+      Iterable<String> includes) throws NoSuchBuildTargetException, IOException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectDirectoryRoot,
-        includes,
-        ansi);
+        includes);
   }
 
   public static PartialGraph createPartialGraph(
       RawRulePredicate predicate,
       File projectDirectoryRoot,
-      Iterable<String> includes,
-      Ansi ansi) throws NoSuchBuildTargetException, IOException {
+      Iterable<String> includes) throws NoSuchBuildTargetException, IOException {
     List<Map<String, Object>> ruleObjects = BuildFileToJsonParser.getAllRulesInProject(
-        projectDirectoryRoot, includes, ansi);
+        projectDirectoryRoot, includes);
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(filesystem);
-    Parser parser = new Parser(filesystem,
-        buildFiles,
-        ansi);
+    Parser parser = new Parser(filesystem, buildFiles);
     List<BuildTarget> targets = parser.parseRawRules(ruleObjects, predicate);
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a

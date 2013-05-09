@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -78,11 +77,8 @@ public class ParserTest {
     File projectDirectoryRoot = tempDir.getRoot();
 
     // Create a Parser.
-    Ansi ansi = new Ansi();
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
-    testParser = new Parser(filesystem,
-        new BuildFileTree(ImmutableSet.<BuildTarget>of()),
-        ansi);
+    testParser = new Parser(filesystem, new BuildFileTree(ImmutableSet.<BuildTarget>of()));
   }
 
   /**
@@ -102,11 +98,8 @@ public class ParserTest {
     List<Map<String, Object>> ruleObjects = ImmutableList.of(rawRule);
 
     File projectDirectoryRoot = new File(".");
-    Ansi ansi = new Ansi();
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
-    Parser parser = new Parser(filesystem,
-        new BuildFileTree(ImmutableSet.<BuildTarget>of()),
-        ansi);
+    Parser parser = new Parser(filesystem, new BuildFileTree(ImmutableSet.<BuildTarget>of()));
 
     RawRulePredicate predicate = RawRulePredicates.alwaysTrue();
     List<BuildTarget> targets = parser.parseRawRules(ruleObjects, predicate);
@@ -155,7 +148,6 @@ public class ParserTest {
     };
 
     BuildFileTree buildFiles = EasyMock.createMock(BuildFileTree.class);
-    Ansi ansi = new Ansi();
     EasyMock.replay(projectFilesystem, buildFiles);
 
     // Create the set of known build targets so the Parser does not have to exercise its parsing
@@ -164,7 +156,6 @@ public class ParserTest {
 
     Parser parser = new Parser(projectFilesystem,
         buildFiles,
-        ansi,
         buildTargetParser,
         knownBuildTargets);
 

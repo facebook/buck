@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -36,7 +37,6 @@ import com.facebook.buck.shell.ExecutionContext;
 import com.facebook.buck.shell.GenerateCodeCoverageReportCommand;
 import com.facebook.buck.shell.InstrumentCommand;
 import com.facebook.buck.shell.JUnitCommand;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -243,8 +243,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     };
     PartialGraph partialGraph = PartialGraph.createPartialGraph(predicate,
         getProjectFilesystem().getProjectRoot(),
-        options.getDefaultIncludes(),
-        ansi);
+        options.getDefaultIncludes());
     final DependencyGraph graph = partialGraph.getDependencyGraph();
 
     // Look up all of the test rules in the dependency graph.

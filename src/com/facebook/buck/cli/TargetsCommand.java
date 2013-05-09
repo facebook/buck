@@ -106,8 +106,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     PartialGraph graph;
     try {
       graph = PartialGraph.createFullGraph(getProjectFilesystem().getProjectRoot(),
-          options.getDefaultIncludes(),
-          ansi);
+          options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
       return 1;
@@ -196,8 +195,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       List<Map<String, Object>> rules = BuildFileToJsonParser.getAllRules(
           getProjectFilesystem().getProjectRoot().getAbsolutePath(),
           Optional.of(buildFile.getPath()),
-          defaultIncludes,
-          console.getAnsi());
+          defaultIncludes);
 
       // Find the build rule information that corresponds to this build buildTarget.
       Map<String, Object> targetRule = null;
@@ -286,8 +284,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     List<Map<String, Object>> ruleObjects = BuildFileToJsonParser.getAllRules(
         getProjectFilesystem().getProjectRoot().getAbsolutePath(),
         Optional.of(buildTarget.getBuildFile().toString()),
-        options.getDefaultIncludes(),
-        ansi);
+        options.getDefaultIncludes());
     // Check that the given target is a valid target.
     for (Map<String,Object> rule : ruleObjects) {
       String name = (String)rule.get("name");

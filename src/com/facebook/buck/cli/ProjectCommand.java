@@ -58,8 +58,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     try {
       partialGraph = PartialGraph.createPartialGraph(predicate,
           getProjectFilesystem().getProjectRoot(),
-          options.getDefaultIncludes(),
-          ansi);
+          options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
       return 1;

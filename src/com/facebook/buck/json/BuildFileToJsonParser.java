@@ -16,7 +16,6 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.util.Ansi;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -158,9 +157,9 @@ public class BuildFileToJsonParser {
    *     base path of the targets in the build file that it is parsing.
    */
   public static List<Map<String, Object>> getAllRulesInProject(
-      File rootPath, Iterable<String> includes, Ansi ansi)
+      File rootPath, Iterable<String> includes)
       throws IOException {
-    return getAllRules(rootPath.getAbsolutePath(), Optional.<String>absent(), includes, ansi);
+    return getAllRules(rootPath.getAbsolutePath(), Optional.<String>absent(), includes);
   }
 
   private static class BuildFileRunner implements Runnable {
@@ -206,8 +205,7 @@ public class BuildFileToJsonParser {
   public static List<Map<String, Object>> getAllRules(
       String rootPath,
       Optional<String> buildFile,
-      Iterable<String> includes,
-      Ansi ansi) throws IOException {
+      Iterable<String> includes) throws IOException {
 
     // Run the build file in a background thread.
     final ImmutableList<String> args = buildArgs(rootPath, buildFile, includes);

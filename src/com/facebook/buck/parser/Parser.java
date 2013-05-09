@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -54,8 +53,6 @@ public final class Parser {
 
   private static final Logger logger = Logger.getLogger(Parser.class.getCanonicalName());
 
-  private final Ansi ansi;
-
   private final Map<BuildRuleType, BuildRuleFactory> ruleTypeToFactoryMap;
 
   private final BuildTargetParser buildTargetParser;
@@ -79,11 +76,9 @@ public final class Parser {
   private boolean parserWasPopulatedViaParseRawRules = false;
 
   public Parser(ProjectFilesystem projectFilesystem,
-      BuildFileTree buildFiles,
-      Ansi ansi) {
+      BuildFileTree buildFiles) {
     this(projectFilesystem,
         buildFiles,
-        ansi,
         new BuildTargetParser(projectFilesystem),
         Maps.<String, BuildRuleBuilder>newHashMap());
   }
@@ -91,12 +86,10 @@ public final class Parser {
   @VisibleForTesting
   Parser(ProjectFilesystem projectFilesystem,
          BuildFileTree buildFiles,
-         Ansi ansi,
          BuildTargetParser buildTargetParser,
          Map<String, BuildRuleBuilder> knownBuildTargets) {
     this.projectFilesystem = projectFilesystem;
     this.buildFiles = Preconditions.checkNotNull(buildFiles);
-    this.ansi = Preconditions.checkNotNull(ansi);
 
     this.knownBuildTargets = Preconditions.checkNotNull(knownBuildTargets);
     this.ruleTypeToFactoryMap = getRuleTypeToFactoryMap();
@@ -248,7 +241,7 @@ public final class Parser {
       throws IOException, NoSuchBuildTargetException {
     logger.info(String.format("Parsing %s file: %s", BuckConstant.BUILD_RULES_FILE_NAME, buildFile));
     List<Map<String, Object>> rules = com.facebook.buck.json.BuildFileToJsonParser.getAllRules(
-        absolutePathToProjectRoot, Optional.of(buildFile.getPath()), defaultIncludes, ansi);
+        absolutePathToProjectRoot, Optional.of(buildFile.getPath()), defaultIncludes);
     parseRawRulesInternal(rules, null /* filter */, buildFile);
 
     parsedBuildFiles.add(buildFile);
