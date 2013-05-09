@@ -17,8 +17,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -74,6 +74,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
     return true;
   }
 
+  @Override
   public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext) {
     throw new UnsupportedOperationException("runTests() not supported in fake");
   }

@@ -39,15 +39,14 @@ import java.util.regex.Pattern;
 /**
  * Command used to compile java libraries with a variety of ways to handle dependencies.
  * <p>
- * If {@code buildDependencies} is set to
- * {@link com.facebook.buck.shell.BuildDependencies.FIRST_ORDER_ONLY}, this class will invoke javac
- * using {@code declaredClasspathEntries} for the classpath. If {@code buildDependencies} is set to
- * {@link com.facebook.buck.shell.BuildDependencies.TRANSITIVE}, this class will invoke javac using
- * {@code transitiveClasspathEntries} for the classpath. If {@code buildDependencies} is set to
- * {@link com.facebook.buck.shell.BuildDependencies.WARN_ON_TRANSITIVE}, this class will first
- * compile using {@code declaredClasspathEntries}, and should that fail fall back to
- * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in the
- * transitive classpath but not in the declared classpath.
+ * If {@code buildDependencies} is set to {@link BuildDependencies#FIRST_ORDER_ONLY}, this class
+ * will invoke javac using {@code declaredClasspathEntries} for the classpath.
+ * If {@code buildDependencies} is set to {@link BuildDependencies#TRANSITIVE}, this class will
+ * invoke javac using {@code transitiveClasspathEntries} for the classpath.
+ * If {@code buildDependencies} is set to {@link BuildDependencies#WARN_ON_TRANSITIVE}, this class
+ * will first compile using {@code declaredClasspathEntries}, and should that fail fall back to
+ * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in
+ * the transitive classpath but not in the declared classpath.
  */
 public class DependencyCheckingJavacStep extends JavacInMemoryStep {
 

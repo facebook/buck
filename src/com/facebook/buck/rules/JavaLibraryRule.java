@@ -27,6 +27,7 @@ public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
    *     build a jar associated with this rule.  Contains the classpath entries for the transitive
    *     dependencies of these rules.
    */
+  @Override
   public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries();
 
   /**

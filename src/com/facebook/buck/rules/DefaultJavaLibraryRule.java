@@ -17,13 +17,13 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.java.DependencyCheckingJavacStep;
 import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.java.JavacOptionsUtil;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.shell.BuildDependencies;
-import com.facebook.buck.java.DependencyCheckingJavacStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -348,10 +348,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return srcs;
   }
 
+  @Override
   public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
   }
 
+  @Override
   public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
