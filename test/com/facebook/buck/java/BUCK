@@ -1,0 +1,18 @@
+java_test(
+  name = 'java',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/java:java',
+  ],
+  deps = [
+    '//lib:easymock',
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/java:java',
+    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)

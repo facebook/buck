@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -31,12 +34,9 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.Genrule.Builder;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
-import com.facebook.buck.command.io.MkdirCommand;
-import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -123,12 +123,12 @@ public class GenruleTest {
         genrule.getInputsToCompareToOutput(buildContext));
 
     // Verify that the shell commands that the genrule produces are correct.
-    List<Command> commands = genrule.buildInternal(buildContext);
-    assertEquals(7, commands.size());
+    List<Step> steps = genrule.buildInternal(buildContext);
+    assertEquals(7, steps.size());
 
-    Command firstCommand = commands.get(0);
-    assertTrue(firstCommand instanceof ShellCommand);
-    ShellCommand rmCommand = (ShellCommand)firstCommand;
+    Step firstStep = steps.get(0);
+    assertTrue(firstStep instanceof ShellStep);
+    ShellStep rmCommand = (ShellStep) firstStep;
     ExecutionContext executionContext = null;
     assertEquals(
         "First command should delete the output file to be written by the genrule.",
@@ -138,17 +138,17 @@ public class GenruleTest {
             "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
         rmCommand.getShellCommand(executionContext));
 
-    Command secondCommand = commands.get(1);
-    assertTrue(secondCommand instanceof MkdirCommand);
-    MkdirCommand mkdirCommand = (MkdirCommand)secondCommand;
+    Step secondStep = steps.get(1);
+    assertTrue(secondStep instanceof MkdirStep);
+    MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
         ImmutableList.of("mkdir", "-p", GEN_DIR + "/src/com/facebook/katana/"),
         mkdirCommand.getShellCommand(executionContext));
 
-    Command mkTmpDir = commands.get(2);
-    assertTrue(mkTmpDir instanceof MakeCleanDirectoryCommand);
-    MakeCleanDirectoryCommand secondMkdirCommand = (MakeCleanDirectoryCommand)mkTmpDir;
+    Step mkTmpDir = steps.get(2);
+    assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);
+    MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep)mkTmpDir;
     String tempDirPath =
         "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/katana/katana_manifest__tmp";
     assertEquals(
@@ -156,9 +156,9 @@ public class GenruleTest {
         tempDirPath,
         secondMkdirCommand.getPath());
 
-    Command mkSrcDir = commands.get(3);
-    assertTrue(mkSrcDir instanceof MakeCleanDirectoryCommand);
-    MakeCleanDirectoryCommand thirdMkdirCommand = (MakeCleanDirectoryCommand)mkTmpDir;
+    Step mkSrcDir = steps.get(3);
+    assertTrue(mkSrcDir instanceof MakeCleanDirectoryStep);
+    MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep)mkTmpDir;
     String srcDirPath =
         "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/katana/katana_manifest__srcs";
     assertEquals(
@@ -166,19 +166,19 @@ public class GenruleTest {
         tempDirPath,
         thirdMkdirCommand.getPath());
 
-    MkdirAndSymlinkFileCommand linkSource1 = (MkdirAndSymlinkFileCommand)commands.get(4);
+    MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
     assertEquals("/opt/local/fbandroid/src/com/facebook/katana/convert_to_katana.py",
         linkSource1.getSource().getAbsolutePath());
     assertEquals(srcDirPath + "/convert_to_katana.py", linkSource1.getTarget().getAbsolutePath());
 
-    MkdirAndSymlinkFileCommand linkSource2 = (MkdirAndSymlinkFileCommand)commands.get(5);
+    MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
     assertEquals("/opt/local/fbandroid/src/com/facebook/katana/AndroidManifest.xml",
         linkSource2.getSource().getAbsolutePath());
     assertEquals(srcDirPath + "/AndroidManifest.xml", linkSource2.getTarget().getAbsolutePath());
 
-    Command sixthCommand = commands.get(6);
-    assertTrue(sixthCommand instanceof ShellCommand);
-    ShellCommand genruleCommand = (ShellCommand)sixthCommand;
+    Step sixthStep = steps.get(6);
+    assertTrue(sixthStep instanceof ShellStep);
+    ShellStep genruleCommand = (ShellStep) sixthStep;
     assertEquals("genrule: python convert_to_katana.py AndroidManifest.xml > $OUT",
         genruleCommand.getShortName(executionContext));
     assertEquals(ImmutableMap.<String, String>builder()
@@ -299,23 +299,23 @@ public class GenruleTest {
         .setOut("example-file")
         .build(ImmutableMap.<String, BuildRule>of());
 
-    ImmutableList.Builder<Command> builder = ImmutableList.builder();
+    ImmutableList.Builder<Step> builder = ImmutableList.builder();
     rule.addSymlinkCommands(builder);
-    ImmutableList<Command> commands = builder.build();
+    ImmutableList<Step> commands = builder.build();
 
     String baseTmpPath = "/opt/local/fbandroid/" + GEN_DIR + "/example__srcs/";
     String sourcePath = "/opt/local/fbandroid/";
 
     assertEquals(3, commands.size());
-    MkdirAndSymlinkFileCommand linkCmd = (MkdirAndSymlinkFileCommand) commands.get(0);
+    MkdirAndSymlinkFileStep linkCmd = (MkdirAndSymlinkFileStep) commands.get(0);
     assertEquals(sourcePath + "in-dir.txt", linkCmd.getSource().getAbsolutePath());
     assertEquals(baseTmpPath + "in-dir.txt", linkCmd.getTarget().getAbsolutePath());
 
-    linkCmd = (MkdirAndSymlinkFileCommand) commands.get(1);
+    linkCmd = (MkdirAndSymlinkFileStep) commands.get(1);
     assertEquals(sourcePath + "foo/bar.html", linkCmd.getSource().getAbsolutePath());
     assertEquals(baseTmpPath + "foo/bar.html", linkCmd.getTarget().getAbsolutePath());
 
-    linkCmd = (MkdirAndSymlinkFileCommand) commands.get(2);
+    linkCmd = (MkdirAndSymlinkFileStep) commands.get(2);
     assertEquals(sourcePath + "other/place.txt", linkCmd.getSource().getAbsolutePath());
     assertEquals(baseTmpPath + "other/place.txt", linkCmd.getTarget().getAbsolutePath());
   }

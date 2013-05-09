@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.shell.CommandRunner;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -41,7 +41,7 @@ public class BuildContextTest {
     // Set to non-null values.
     builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setCommandRunner(EasyMock.createMock(CommandRunner.class));
+    builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
 
@@ -80,7 +80,7 @@ public class BuildContextTest {
     // Set to non-null values.
     builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setCommandRunner(EasyMock.createMock(CommandRunner.class));
+    builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
 
@@ -99,7 +99,7 @@ public class BuildContextTest {
     // Set to non-null values.
     builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setCommandRunner(EasyMock.createMock(CommandRunner.class));
+    builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
 

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
@@ -50,10 +50,10 @@ public interface TestRule extends BuildRule {
    * the {@code --debug} flag.
    * @param buildContext Because this method may be run without {@link #build(BuildContext)} having
    *     been run, this is supplied in case any non-cacheable build work needs to be done.
-   * @param executionContext Provides context for creating {@link Command}s.
+   * @param executionContext Provides context for creating {@link com.facebook.buck.step.Step}s.
    * @return the commands required to run the tests
    */
-  public List<Command> runTests(BuildContext buildContext, ExecutionContext executionContext);
+  public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext);
 
   public Callable<TestResults> interpretTestResults();
 

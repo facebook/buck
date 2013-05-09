@@ -17,8 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.java.GenerateCodeCoverageReportStep;
+import com.facebook.buck.java.InstrumentStep;
+import com.facebook.buck.java.JUnitStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
@@ -32,11 +34,11 @@ import com.facebook.buck.rules.JavaTestRule;
 import com.facebook.buck.rules.TestCaseSummary;
 import com.facebook.buck.rules.TestResults;
 import com.facebook.buck.rules.TestRule;
-import com.facebook.buck.shell.CommandFailedException;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.GenerateCodeCoverageReportCommand;
-import com.facebook.buck.shell.InstrumentCommand;
-import com.facebook.buck.shell.JUnitCommand;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -104,8 +106,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     BuildContext buildContext = build.getBuildContext();
     ExecutionContext executionContext = build.getExecutionContext();
-    com.facebook.buck.shell.CommandRunner commandRunner = build.getCommandRunner();
-    return runTests(results, buildContext, executionContext, commandRunner, options);
+    StepRunner stepRunner = build.getCommandRunner();
+    return runTests(results, buildContext, executionContext, stepRunner, options);
   }
 
   /**
@@ -113,7 +115,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    * of tests is supposed to be testing. From TestRule objects, we derive the class file folders
    * and generate a EMMA instr shell command object, which can run in a CommandRunner.
    */
-  private com.facebook.buck.shell.Command getInstrumentCommand(
+  private Step getInstrumentCommand(
       ImmutableSet<JavaLibraryRule> rulesUnderTest) {
     ImmutableSet.Builder<String> pathsToInstrumentedClasses = ImmutableSet.builder();
 
@@ -129,7 +131,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Run EMMA instrumentation. This will instrument the classes we generated in the build command.
     // TODO(user): Output instrumented class files in different folder and change junit classdir.
-    return new InstrumentCommand("overwrite", pathsToInstrumentedClasses.build());
+    return new InstrumentStep("overwrite", pathsToInstrumentedClasses.build());
   }
 
   /**
@@ -137,7 +139,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    * obtained during the test run. This method will also generate a set of source paths to the class
    * files tested during the test run.
    */
-  private com.facebook.buck.shell.Command getReportCommand(
+  private Step getReportCommand(
       ImmutableSet<JavaLibraryRule> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem projectFilesystem) {
@@ -152,8 +154,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     }
 
-    return new GenerateCodeCoverageReportCommand(srcDirectories.build(),
-        JUnitCommand.EMMA_OUTPUT_DIR);
+    return new GenerateCodeCoverageReportStep(srcDirectories.build(),
+        JUnitStep.EMMA_OUTPUT_DIR);
   }
 
   /**
@@ -315,7 +317,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
-      com.facebook.buck.shell.CommandRunner commandRunner,
+      StepRunner stepRunner,
       TestCommandOptions options) throws IOException {
     ImmutableSet<JavaLibraryRule> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.
@@ -323,10 +325,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       rulesUnderTest = getRulesUnderTest(tests);
       if (!rulesUnderTest.isEmpty()) {
         try {
-          commandRunner.runCommand(
-              new MakeCleanDirectoryCommand(JUnitCommand.EMMA_OUTPUT_DIR));
-          commandRunner.runCommand(getInstrumentCommand(rulesUnderTest));
-        } catch (CommandFailedException e) {
+          stepRunner.runStep(
+              new MakeCleanDirectoryStep(JUnitStep.EMMA_OUTPUT_DIR));
+          stepRunner.runStep(getInstrumentCommand(rulesUnderTest));
+        } catch (StepFailedException e) {
           console.printFailureWithoutStacktrace(e);
           return 1;
         }
@@ -348,21 +350,21 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // ListenableFuture.
     List<ListenableFuture<TestResults>> results = Lists.newArrayList();
     for (TestRule test : tests) {
-      List<com.facebook.buck.shell.Command> commands;
+      List<Step> steps;
 
       // See if there is any work to do to run the test.
       if (test.isTestRunRequired(buildContext, executionContext)) {
         // This list will be empty if the java_test() is simply a rule that depends on other
         // java_test()s.
-        commands = test.runTests(buildContext, executionContext);
+        steps = test.runTests(buildContext, executionContext);
       } else {
-        commands = ImmutableList.of();
+        steps = ImmutableList.of();
       }
 
       // Always run the commands, even if the list of commands as empty. There may be zero commands
       // because the rule is cached, but its results must still be processed.
       ListenableFuture<TestResults> testResults =
-          commandRunner.runCommandsAndYieldResult(commands, test.interpretTestResults());
+          stepRunner.runStepsAndYieldResult(steps, test.interpretTestResults());
       results.add(testResults);
     }
 
@@ -410,9 +412,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
             options.getJavaPackageFinder();
-        commandRunner.runCommand(
+        stepRunner.runStep(
             getReportCommand(rulesUnderTest, defaultJavaPackageFinderOptional, getProjectFilesystem()));
-      } catch (CommandFailedException e) {
+      } catch (StepFailedException e) {
         console.printFailureWithoutStacktrace(e);
         return 1;
       }

@@ -19,9 +19,9 @@ package com.facebook.buck.testutil;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Joiner;
 
 import java.util.Iterator;
@@ -130,24 +130,24 @@ public final class MoreAsserts {
   }
 
   /**
-   * Asserts that every {@link Command} in the observed list is a {@link ShellCommand} whose shell
+   * Asserts that every {@link com.facebook.buck.step.Step} in the observed list is a {@link com.facebook.buck.shell.ShellStep} whose shell
    * command arguments match those of the corresponding entry in the expected list.
    */
   public static void assertShellCommands(
       String userMessage,
       List<String> expected,
-      List<Command> observed,
+      List<Step> observed,
       ExecutionContext context) {
     Iterator<String> expectedIter = expected.iterator();
-    Iterator<Command> observedIter = observed.iterator();
+    Iterator<Step> observedIter = observed.iterator();
     Joiner joiner = Joiner.on(" ");
     while (expectedIter.hasNext() && observedIter.hasNext()) {
       String expectedShellCommand = expectedIter.next();
-      Command observedCommand = observedIter.next();
-      if (!(observedCommand instanceof ShellCommand)) {
-        failWith(userMessage, "Observed command must be a shell command: " + observedCommand);
+      Step observedStep = observedIter.next();
+      if (!(observedStep instanceof ShellStep)) {
+        failWith(userMessage, "Observed command must be a shell command: " + observedStep);
       }
-      ShellCommand shellCommand = (ShellCommand)observedCommand;
+      ShellStep shellCommand = (ShellStep) observedStep;
       String observedShellCommand = joiner.join(shellCommand.getShellCommand(context));
       assertEquals(userMessage, expectedShellCommand, observedShellCommand);
     }

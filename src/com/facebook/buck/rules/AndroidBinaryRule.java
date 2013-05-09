@@ -16,26 +16,26 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RepackZipEntriesStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.shell.AaptCommand;
-import com.facebook.buck.shell.ApkBuilderCommand;
-import com.facebook.buck.shell.BashCommand;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.EchoCommand;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.ExtractResourcesCommand;
-import com.facebook.buck.shell.FilterResourcesCommand;
-import com.facebook.buck.shell.GenProGuardConfigCommand;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
-import com.facebook.buck.command.io.MkdirCommand;
-import com.facebook.buck.shell.ProGuardObfuscateCommand;
-import com.facebook.buck.shell.ReadKeystorePropertiesAndSignApkCommand;
-import com.facebook.buck.command.io.RepackZipEntriesCommand;
-import com.facebook.buck.shell.SmartDexingCommand;
-import com.facebook.buck.shell.SplitZipCommand;
-import com.facebook.buck.command.io.ZipDirectoryWithMaxDeflateCommand;
-import com.facebook.buck.shell.ZipalignCommand;
+import com.facebook.buck.android.AaptStep;
+import com.facebook.buck.android.ApkBuilderStep;
+import com.facebook.buck.shell.BashStep;
+import com.facebook.buck.android.GenProGuardConfigStep;
+import com.facebook.buck.android.ProGuardObfuscateStep;
+import com.facebook.buck.android.ReadKeystorePropertiesAndSignApkStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.shell.EchoStep;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.android.ExtractResourcesStep;
+import com.facebook.buck.android.FilterResourcesStep;
+import com.facebook.buck.android.SmartDexingStep;
+import com.facebook.buck.android.SplitZipStep;
+import com.facebook.buck.step.fs.ZipDirectoryWithMaxDeflateStep;
+import com.facebook.buck.android.ZipalignStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
@@ -269,14 +269,14 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context) {
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+  protected List<Step> buildInternal(BuildContext context) {
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     // Map from asset name to pathname for extra files to be added to assets.
     ImmutableMap.Builder<String, File> extraAssetsBuilder = ImmutableMap.builder();
 
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
-    commands.add(new MkdirAndSymlinkFileCommand(getManifest(), getAndroidManifestXml()));
+    commands.add(new MkdirAndSymlinkFileStep(getManifest(), getAndroidManifestXml()));
 
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies(
         context.getDependencyGraph(), Optional.of(context));
@@ -291,12 +291,12 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // If resource filtering was requested (currently only by dpi).
     if (resourceFilter != null) {
-      FilterResourcesCommand filterResourcesCommand = new FilterResourcesCommand(
+      FilterResourcesStep filterResourcesCommand = new FilterResourcesStep(
           resDirectories,
           new File(getBinPath("__filtered__%s__")),
           resourceFilter,
           DefaultFilteredDirectoryCopier.getInstance(),
-          FilterResourcesCommand.DefaultDrawableFinder.getInstance()
+          FilterResourcesStep.DefaultDrawableFinder.getInstance()
       );
       commands.add(filterResourcesCommand);
       resDirectories = filterResourcesCommand.getFilteredResourceDirectories();
@@ -305,8 +305,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // Extract the resources from third-party jars.
     // TODO(mbolin): The results of this should be cached between runs.
     String extractedResourcesDir = getBinPath("__resources__%s__");
-    commands.add(new MakeCleanDirectoryCommand(extractedResourcesDir));
-    commands.add(new ExtractResourcesCommand(transitiveDependencies.pathsToThirdPartyJars,
+    commands.add(new MakeCleanDirectoryStep(extractedResourcesDir));
+    commands.add(new ExtractResourcesStep(transitiveDependencies.pathsToThirdPartyJars,
         extractedResourcesDir));
 
     // Create the R.java files. Their compiled versions must be included in classes.dex.
@@ -327,7 +327,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // The APK building command needs to take a directory of raw files, so we create a directory
     // that can only contain .dex files from this build rule.
     String dexDir = getBinPath(".dex/%s");
-    commands.add(new MkdirCommand(dexDir));
+    commands.add(new MkdirStep(dexDir));
     String dexFile = String.format("%s/classes.dex", dexDir);
 
     final ImmutableSet.Builder<String> secondaryDexDirectories = ImmutableSet.builder();
@@ -341,19 +341,19 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Copy the transitive closure of files in assets to a single directory, if any.
     final ImmutableMap<String, File> extraAssets = extraAssetsBuilder.build();
-    Command collectAssets = new Command() {
+    Step collectAssets = new Step() {
       @Override
       public int execute(ExecutionContext context) {
         // This must be done in a Command because the files and directories that are specified may
         // not exist at the time this Command is created because the previous Commands have not run
         // yet.
-        ImmutableList.Builder<Command> commands = ImmutableList.builder();
+        ImmutableList.Builder<Step> commands = ImmutableList.builder();
         createAllAssetsDirectory(
             transitiveDependencies.assetsDirectories,
             extraAssets,
             commands,
             new DefaultDirectoryTraverser());
-        for (Command command : commands.build()) {
+        for (Step command : commands.build()) {
           int exitCode = command.execute(context);
           if (exitCode != 0) {
             throw new HumanReadableException("Error running " + command.getDescription(context));
@@ -381,12 +381,12 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       String pathForNativeLibs = getPathForNativeLibs();
       String libSubdirectory = pathForNativeLibs + "/lib";
       nativeLibraryDirectories.add(libSubdirectory);
-      commands.add(new MakeCleanDirectoryCommand(libSubdirectory));
+      commands.add(new MakeCleanDirectoryStep(libSubdirectory));
       for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
         if (nativeLibDir.endsWith("/")) {
           nativeLibDir = nativeLibDir.substring(0, nativeLibDir.length() - 1);
         }
-        commands.add(new BashCommand(String.format(
+        commands.add(new BashStep(String.format(
             "cp -r %s/* %s", nativeLibDir, libSubdirectory)));
       }
     }
@@ -402,7 +402,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
     }
 
-    commands.add(new MkdirCommand(outputGenDirectory));
+    commands.add(new MkdirStep(outputGenDirectory));
 
     boolean canSkipAapt = resourcesCached;
     if (canSkipAapt) {
@@ -415,7 +415,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       }
     }
     if (!canSkipAapt) {
-      AaptCommand aaptCommand = new AaptCommand(
+      AaptStep aaptCommand = new AaptStep(
           getAndroidManifestXml(),
           resDirectories,
           assetsDirectory,
@@ -434,12 +434,12 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       String zipFile = secondaryDexDirectory.replaceAll("/$", "") + ".zip";
 
       secondaryDexZips.add(zipFile);
-      commands.add(new ZipDirectoryWithMaxDeflateCommand(secondaryDexDirectory,
+      commands.add(new ZipDirectoryWithMaxDeflateStep(secondaryDexDirectory,
           zipFile,
           FROYO_DEFLATE_LIMIT_BYTES));
     }
 
-    ApkBuilderCommand apkBuilderCommand = new ApkBuilderCommand(
+    ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         resourceApkPath,
         unsignedApkPath,
         dexFile,
@@ -451,7 +451,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Sign the APK.
     String signedApkPath = getSignedApkPath();
-    ReadKeystorePropertiesAndSignApkCommand signApk = new ReadKeystorePropertiesAndSignApkCommand(
+    ReadKeystorePropertiesAndSignApkStep signApk = new ReadKeystorePropertiesAndSignApkStep(
         keystorePropertiesPath, unsignedApkPath, signedApkPath, context.getProjectFilesystem());
     commands.add(signApk);
 
@@ -461,7 +461,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     if (this.isCompressResources()) {
       String compressedApkPath = getCompressedResourcesApkPath();
       apkToAlign = compressedApkPath;
-      RepackZipEntriesCommand arscComp = new RepackZipEntriesCommand(
+      RepackZipEntriesStep arscComp = new RepackZipEntriesStep(
           signedApkPath,
           compressedApkPath,
           ImmutableSet.of("resources.arsc"));
@@ -471,11 +471,11 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     }
 
     String apkPath = getApkPath();
-    ZipalignCommand zipalign = new ZipalignCommand(apkToAlign, apkPath);
+    ZipalignStep zipalign = new ZipalignStep(apkToAlign, apkPath);
     commands.add(zipalign);
 
     // Inform the user where the APK can be found.
-    EchoCommand success = new EchoCommand(
+    EchoStep success = new EchoStep(
         String.format("built APK for %s at %s", getFullyQualifiedName(), apkPath));
     commands.add(success);
 
@@ -495,7 +495,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   Optional<String> createAllAssetsDirectory(
       Set<String> assetsDirectories,
       ImmutableMap<String, File> extraAssets,
-      ImmutableList.Builder<Command> commands,
+      ImmutableList.Builder<Step> commands,
       DirectoryTraverser traverser) {
     if (assetsDirectories.isEmpty() && extraAssets.isEmpty()) {
       return Optional.absent();
@@ -504,7 +504,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // Due to a limitation of aapt, only one assets directory can be specified, so if multiple are
     // specified in Buck, then all of the contents must be symlinked to a single directory.
     String destination = getPathToAllAssetsDirectory();
-    commands.add(new MakeCleanDirectoryCommand(destination));
+    commands.add(new MakeCleanDirectoryStep(destination));
     final ImmutableMap.Builder<String, File> allAssets = ImmutableMap.builder();
 
     File destinationDirectory = new File(destination);
@@ -520,7 +520,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     allAssets.putAll(extraAssets);
 
     for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
-      commands.add(new MkdirAndSymlinkFileCommand(
+      commands.add(new MkdirAndSymlinkFileStep(
           entry.getValue(),
           destinationDirectory + "/" + entry.getKey()));
     }
@@ -646,7 +646,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   @VisibleForTesting
   void addProguardCommands(
       AndroidTransitiveDependencies deps,
-      ImmutableList.Builder<Command> commands,
+      ImmutableList.Builder<Step> commands,
       Set<String> resDirectories) {
     final ImmutableSetMultimap<BuildRule, String> classpathEntriesMap =
         getTransitiveClasspathEntries();
@@ -660,11 +660,11 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Clean out the directory for generated ProGuard files.
     String proguardDirectory = getPathForProGuardDirectory();
-    commands.add(new MakeCleanDirectoryCommand(proguardDirectory));
+    commands.add(new MakeCleanDirectoryStep(proguardDirectory));
 
     // Generate a file of ProGuard config options using aapt.
     String generatedProGuardConfig = proguardDirectory + "/proguard.txt";
-    GenProGuardConfigCommand genProGuardConfig = new GenProGuardConfigCommand(
+    GenProGuardConfigStep genProGuardConfig = new GenProGuardConfigStep(
         getAndroidManifestXml(),
         resDirectories,
         generatedProGuardConfig);
@@ -688,7 +688,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     final Map<String, String> inputOutputEntries = inputOutputEntriesBuilder.build();
 
     // Run ProGuard on the classpath entries.
-    ProGuardObfuscateCommand obfuscateCommand = new ProGuardObfuscateCommand(
+    ProGuardObfuscateStep obfuscateCommand = new ProGuardObfuscateStep(
         generatedProGuardConfig,
         proguardConfigs,
         useAndroidProguardConfigWithOptimizations,
@@ -722,7 +722,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   void addDexingCommands(
       Set<String> classpathEntriesToDex,
       ImmutableSet.Builder<String> secondaryDexDirectories,
-      ImmutableList.Builder<Command> commands,
+      ImmutableList.Builder<Step> commands,
       String primaryDexPath) {
     final Set<String> primaryInputsToDex;
     final Optional<String> secondaryDexDir;
@@ -735,12 +735,12 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
       // Intermediate directory holding the primary split-zip jar.
       String splitZipDir = getBinPath("__split_zip__/%s");
-      commands.add(new MakeCleanDirectoryCommand(splitZipDir));
+      commands.add(new MakeCleanDirectoryStep(splitZipDir));
       String primaryJarPath = splitZipDir + "/primary.jar";
 
       String secondaryJarMetaDirParent = splitZipDir + "/secondary_meta/";
       String secondaryJarMetaDir = secondaryJarMetaDirParent + magicSecondaryDexSubdir;
-      commands.add(new MakeCleanDirectoryCommand(secondaryJarMetaDir));
+      commands.add(new MakeCleanDirectoryStep(secondaryJarMetaDir));
       String secondaryJarMeta = secondaryJarMetaDir + "/metadata.txt";
 
       // Intermediate directory holding _ONLY_ the secondary split-zip jar files.  This is
@@ -748,12 +748,12 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
       String secondaryZipDir = getBinPath("__secondary_zip__/%s");
-      commands.add(new MakeCleanDirectoryCommand(secondaryZipDir));
+      commands.add(new MakeCleanDirectoryStep(secondaryZipDir));
 
       // Run the split-zip command which is responsible for dividing the large set of input
       // classpaths into a more compact set of jar files such that no one jar file when dexed will
       // yield a dex artifact too large for dexopt or the dx method limit to handle.
-      SplitZipCommand splitZipCommand = new SplitZipCommand(
+      SplitZipStep splitZipCommand = new SplitZipStep(
           classpathEntriesToDex,
           secondaryJarMeta,
           primaryJarPath,
@@ -767,7 +767,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       // smart dexing command.  Smart dex will handle "cleaning" this directory properly.
       String secondaryDexParentDir = getBinPath("__secondary_dex__/%s/");
       secondaryDexDir = Optional.of(secondaryDexParentDir + magicSecondaryDexSubdir);
-      commands.add(new MkdirCommand(secondaryDexDir.get()));
+      commands.add(new MkdirStep(secondaryDexDir.get()));
 
       secondaryDexDirectories.add(secondaryJarMetaDirParent);
       secondaryDexDirectories.add(secondaryDexParentDir);
@@ -786,7 +786,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
     String successDir = getBinPath("__smart_dex__/%s/.success");
-    commands.add(new MkdirCommand(successDir));
+    commands.add(new MkdirStep(successDir));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if
     // it can be shown that the inputs have not changed.  It also parallelizes dx invocations
@@ -798,7 +798,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // directly apply to the internal threading/parallelization details of various build commands
     // being executed.  For example, aapt is internally threaded by default when preprocessing
     // images.
-    SmartDexingCommand smartDexingCommand = new SmartDexingCommand(
+    SmartDexingStep smartDexingCommand = new SmartDexingStep(
         primaryDexPath,
         primaryInputsToDex,
         secondaryDexDir,

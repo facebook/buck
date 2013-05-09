@@ -22,7 +22,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.io.Files;
 
 import java.io.File;

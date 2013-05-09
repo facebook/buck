@@ -24,8 +24,8 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
-import com.facebook.buck.shell.CommandFailedException;
-import com.facebook.buck.shell.Verbosity;
+import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -136,7 +136,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     } catch (IOException e) {
       console.printFailureWithoutStacktrace(e);
       exitCode = 1;
-    } catch (CommandFailedException e) {
+    } catch (StepFailedException e) {
       console.printFailureWithoutStacktrace(e);
       exitCode = e.getExitCode();
     } catch (ExecutionException e) {

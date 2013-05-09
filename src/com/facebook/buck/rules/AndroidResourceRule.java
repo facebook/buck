@@ -16,12 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.GenRDotJavaCommand;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
+import com.facebook.buck.android.GenRDotJavaStep;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraverser;
@@ -166,7 +166,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context)
+  protected List<Step> buildInternal(BuildContext context)
       throws IOException {
     // If there is no res directory, then there is no R.java to generate.
     // TODO(mbolin): Change android_resources() so that 'res' is required.
@@ -174,7 +174,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
       return ImmutableList.of();
     }
 
-    MakeCleanDirectoryCommand mkdir = new MakeCleanDirectoryCommand(pathToTextSymbolsDir);
+    MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(pathToTextSymbolsDir);
 
     // Searching through the deps, find any additional res directories to pass to aapt.
     ImmutableList<AndroidResourceRule> androidResourceDeps = getAndroidResourceDeps(
@@ -182,7 +182,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     Set<String> resDirectories = ImmutableSet.copyOf(
         Iterables.transform(androidResourceDeps, GET_RES_FOR_RULE));
 
-    GenRDotJavaCommand genRDotJava = new GenRDotJavaCommand(
+    GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,
         pathToTextSymbolsDir,
         rDotJavaPackage,

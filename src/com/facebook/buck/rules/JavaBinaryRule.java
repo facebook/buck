@@ -16,12 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.JarDirectoryCommand;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
-import com.facebook.buck.command.io.MkdirCommand;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraverser;
@@ -103,11 +103,11 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context) throws IOException {
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+  protected List<Step> buildInternal(BuildContext context) throws IOException {
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     String outputDirectory = getOutputDirectory();
-    Command mkdir = new MkdirCommand(outputDirectory);
+    Step mkdir = new MkdirStep(outputDirectory);
     commands.add(mkdir);
 
     ImmutableSet<String> includePaths;
@@ -115,10 +115,10 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
       String stagingRoot = outputDirectory + "/meta_inf_staging";
       String stagingTarget = stagingRoot + "/META-INF";
 
-      MakeCleanDirectoryCommand createStagingRoot = new MakeCleanDirectoryCommand(stagingRoot);
+      MakeCleanDirectoryStep createStagingRoot = new MakeCleanDirectoryStep(stagingRoot);
       commands.add(createStagingRoot);
 
-      MkdirAndSymlinkFileCommand link = new MkdirAndSymlinkFileCommand(
+      MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
           metaInfDirectory, stagingTarget);
       commands.add(link);
 
@@ -131,7 +131,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     }
 
     String outputFile = getOutputFile();
-    Command jar = new JarDirectoryCommand(outputFile, includePaths, mainClass, manifestFile);
+    Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile);
     commands.add(jar);
 
     return commands.build();

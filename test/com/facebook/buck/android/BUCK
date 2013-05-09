@@ -1,0 +1,16 @@
+java_test(
+  name = 'android',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:easymock',
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/android:android',
+    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)

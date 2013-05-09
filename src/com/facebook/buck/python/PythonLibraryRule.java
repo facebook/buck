@@ -16,6 +16,8 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -24,9 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.SymlinkFileCommand;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -87,20 +87,20 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context) throws IOException {
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+  protected List<Step> buildInternal(BuildContext context) throws IOException {
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Symlink all of the sources to a generated directory so that the generated directory can be
     // included as a $PYTHONPATH element.
     // TODO(mbolin): Do not flatten the directory structure when creating the symlinks, as directory
     // structure is significant in Python when __init__.py is used.
     if (!srcs.isEmpty()) {
-      commands.add(new MakeCleanDirectoryCommand(getPathToPythonPathDirectory()));
+      commands.add(new MakeCleanDirectoryStep(getPathToPythonPathDirectory()));
       File pythonPathDirectory = new File(getPathToPythonPathDirectory());
       for (String src : srcs) {
         File source = new File(src);
         File target = new File(pythonPathDirectory, new File(src).getName());
-        commands.add(new SymlinkFileCommand(source, target));
+        commands.add(new SymlinkFileStep(source, target));
       }
     }
 

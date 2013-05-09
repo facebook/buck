@@ -1,0 +1,15 @@
+java_test(
+  name = 'fs',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:easymock',
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:io',
+    '//test/com/facebook/buck/testutil:testutil',
+  ],
+)
+

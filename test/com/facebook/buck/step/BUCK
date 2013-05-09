@@ -1,0 +1,14 @@
+java_test(
+  name = 'step',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/step:step',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+)

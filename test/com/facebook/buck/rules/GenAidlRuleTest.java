@@ -24,8 +24,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
@@ -63,7 +63,7 @@ public class GenAidlRuleTest {
 
     assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput(context));
 
-    List<Command> commands = genAidlRule.buildInternal(context);
+    List<Step> steps = genAidlRule.buildInternal(context);
 
     final String pathToAidlExecutable = "/usr/local/bin/aidl";
     final String pathToFrameworkAidl = "/home/root/android/platforms/android-16/framework.aidl";
@@ -94,7 +94,7 @@ public class GenAidlRuleTest {
                 outputDirectory,
                 pathToAidl)
         ),
-        commands,
+        steps,
         executionContext);
 
     verify(androidPlatformTarget,

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.CommandRunner;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
@@ -337,10 +337,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         AbstractCachingBuildRule buildRule = AbstractCachingBuildRule.this;
 
         // Get and run all of the commands.
-        List<Command> commands = buildInternal(context);
-        CommandRunner commandRunner = context.getCommandRunner();
-        for (Command command : commands) {
-          commandRunner.runCommand(command);
+        List<Step> steps = buildInternal(context);
+        StepRunner stepRunner = context.getCommandRunner();
+        for (Step command : steps) {
+          stepRunner.runStep(command);
         }
         // Drop our cached output key, since it probably changed.
         resetOutputKey();
@@ -385,5 +385,5 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   /**
    * When this method is run, all of its dependencies will have been built.
    */
-  abstract protected List<Command> buildInternal(BuildContext context) throws IOException;
+  abstract protected List<Step> buildInternal(BuildContext context) throws IOException;
 }

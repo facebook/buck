@@ -1,0 +1,16 @@
+java_library(
+  name = 'java',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = ['PUBLIC'],
+)

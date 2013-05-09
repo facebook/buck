@@ -17,14 +17,14 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.CommandFailedException;
-import com.facebook.buck.shell.CommandRunner;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -64,11 +64,11 @@ public class ExportFileRuleTest {
     ExportFileRule rule = new ExportFileRule(
         params, Optional.<String>absent(), Optional.<String>absent());
 
-    List<Command> commands = rule.buildInternal(context);
+    List<Step> steps = rule.buildInternal(context);
 
-    MkdirAndSymlinkFileCommand expected = new MkdirAndSymlinkFileCommand(
+    MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         new File(root, "example.html"), new File(BuckConstant.GEN_DIR, "example.html"));
-    assertEquals(ImmutableList.of(expected), commands);
+    assertEquals(ImmutableList.of(expected), steps);
   }
 
   @Test
@@ -76,22 +76,22 @@ public class ExportFileRuleTest {
     ExportFileRule rule = new ExportFileRule(
         params, Optional.<String>absent(), Optional.of("fish"));
 
-    List<Command> commands = rule.buildInternal(context);
+    List<Step> steps = rule.buildInternal(context);
 
-    MkdirAndSymlinkFileCommand expected = new MkdirAndSymlinkFileCommand(
+    MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         new File(root, "example.html"), new File(BuckConstant.GEN_DIR, "fish"));
-    assertEquals(ImmutableList.of(expected), commands);
+    assertEquals(ImmutableList.of(expected), steps);
   }
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFileRule rule = new ExportFileRule(params, Optional.of("chips"), Optional.of("fish"));
 
-    List<Command> commands = rule.buildInternal(context);
+    List<Step> steps = rule.buildInternal(context);
 
-    MkdirAndSymlinkFileCommand expected = new MkdirAndSymlinkFileCommand(
+    MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         new File(root, "chips"), new File(BuckConstant.GEN_DIR, "fish"));
-    assertEquals(ImmutableList.of(expected), commands);
+    assertEquals(ImmutableList.of(expected), steps);
   }
 
   private BuildContext getBuildContext(File root) {
@@ -112,14 +112,14 @@ public class ExportFileRuleTest {
           }
         })
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
-        .setCommandRunner(new CommandRunner() {
+        .setCommandRunner(new StepRunner() {
           @Override
-          public void runCommand(Command command) throws CommandFailedException {
+          public void runStep(Step step) throws StepFailedException {
             // Do nothing
           }
 
           @Override
-          public <T> ListenableFuture<T> runCommandsAndYieldResult(List<Command> commands, Callable<T> interpretResults) {
+          public <T> ListenableFuture<T> runStepsAndYieldResult(List<Step> steps, Callable<T> interpretResults) {
             return null;
           }
 

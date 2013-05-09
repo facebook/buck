@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,7 +73,7 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  public List<Command> buildInternal(BuildContext context) {
+  public List<Step> buildInternal(BuildContext context) {
     // Nothing to build: test is run directly.
     return ImmutableList.of();
   }
@@ -90,13 +90,13 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  public List<Command> runTests(BuildContext buildContext, ExecutionContext executionContext) {
+  public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext) {
     Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
 
-    Command mkdirClean = new MakeCleanDirectoryCommand(getPathToTestOutputDirectory());
+    Step mkdirClean = new MakeCleanDirectoryStep(getPathToTestOutputDirectory());
 
     // Return a single command that runs an .sh file with no arguments.
-    Command runTest = new RunShTestAndRecordResultCommand(test, getPathToTestOutputResult());
+    Step runTest = new RunShTestAndRecordResultStep(test, getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);
   }

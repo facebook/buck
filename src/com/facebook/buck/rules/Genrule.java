@@ -16,14 +16,14 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
-import com.facebook.buck.command.io.MkdirCommand;
-import com.facebook.buck.command.io.RmCommand;
-import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Functions;
 import com.facebook.buck.util.HumanReadableException;
@@ -205,21 +205,21 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context) throws IOException {
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+  protected List<Step> buildInternal(BuildContext context) throws IOException {
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Delete the old output for this rule, if it exists.
-    commands.add(new RmCommand(getOutputFilePath(), true /* shouldForceDeletion */));
+    commands.add(new RmStep(getOutputFilePath(), true /* shouldForceDeletion */));
 
     // Make sure that the directory to contain the output file exists. Rules get output to a
     // directory named after the base path, so we don't want to nuke the entire directory.
-    commands.add(new MkdirCommand(outDirectory));
+    commands.add(new MkdirStep(outDirectory));
 
     // Delete the old temp directory
-    commands.add(new MakeCleanDirectoryCommand(tmpDirectory));
+    commands.add(new MakeCleanDirectoryStep(tmpDirectory));
     // Create a directory to hold all the source files.
     // TODO(simons): Actually execute the command from here.
-    commands.add(new MakeCleanDirectoryCommand(srcDirectory));
+    commands.add(new MakeCleanDirectoryStep(srcDirectory));
 
     addSymlinkCommands(commands);
 
@@ -231,7 +231,7 @@ public class Genrule extends AbstractCachingBuildRule {
     addEnvironmentVariables(environmentVariablesBuilder);
 
     final ImmutableMap<String, String> environmentVariables = environmentVariablesBuilder.build();
-    commands.add(new ShellCommand() {
+    commands.add(new ShellStep() {
       @Override
       public String getShortName(ExecutionContext context) {
         return String.format("genrule: %s", cmd);
@@ -257,7 +257,7 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @VisibleForTesting
-  void addSymlinkCommands(ImmutableList.Builder<Command> commands) {
+  void addSymlinkCommands(ImmutableList.Builder<Step> commands) {
     String basePath = getBuildTarget().getBasePathWithSlash();
     int basePathLength = basePath.length();
 
@@ -285,7 +285,7 @@ public class Genrule extends AbstractCachingBuildRule {
       }
 
       File destination = new File(srcDirectory, localPath);
-      commands.add(new MkdirAndSymlinkFileCommand(entry.getValue(), destination.getAbsolutePath()));
+      commands.add(new MkdirAndSymlinkFileStep(entry.getValue(), destination.getAbsolutePath()));
     }
   }
 

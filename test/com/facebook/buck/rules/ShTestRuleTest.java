@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

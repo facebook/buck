@@ -38,8 +38,8 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.CommandRunner;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -83,7 +83,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
         .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(CommandRunner.class))
+        .setCommandRunner(createMock(StepRunner.class))
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .build();
@@ -126,7 +126,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
         .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(CommandRunner.class))
+        .setCommandRunner(createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .build();
@@ -167,7 +167,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
         .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(CommandRunner.class))
+        .setCommandRunner(createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .build();
@@ -208,7 +208,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
         .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(CommandRunner.class))
+        .setCommandRunner(createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .build();
@@ -250,7 +250,7 @@ public class AbstractCachingBuildRuleTest {
     BuildContext context = BuildContext.builder()
         .setProjectRoot(createMock(File.class))
         .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(CommandRunner.class))
+        .setCommandRunner(createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .build();
@@ -335,7 +335,7 @@ public class AbstractCachingBuildRuleTest {
       }
 
       @Override
-      protected List<Command> buildInternal(BuildContext context) throws IOException {
+      protected List<Step> buildInternal(BuildContext context) throws IOException {
         throw new IllegalStateException("This method should not be called");
       }
     };
@@ -363,7 +363,7 @@ public class AbstractCachingBuildRuleTest {
       }
 
       @Override
-      protected List<Command> buildInternal(BuildContext context)
+      protected List<Step> buildInternal(BuildContext context)
           throws IOException {
         throw exceptionThrownDuringBuildInternal;
       }
@@ -384,12 +384,12 @@ public class AbstractCachingBuildRuleTest {
     expect(buildContext.getExecutor()).andReturn(executor).times(3);
     expect(buildContext.getEventBus()).andStubReturn(new EventBus());
 
-    CommandRunner commandRunner = createMock(CommandRunner.class);
+    StepRunner stepRunner = createMock(StepRunner.class);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(executor);
-    expect(commandRunner.getListeningExecutorService()).andReturn(executorService);
+    expect(stepRunner.getListeningExecutorService()).andReturn(executorService);
 
-    expect(buildContext.getCommandRunner()).andReturn(commandRunner);
-    replay(buildContext, commandRunner);
+    expect(buildContext.getCommandRunner()).andReturn(stepRunner);
+    replay(buildContext, stepRunner);
 
     ListenableFuture<BuildRuleSuccess> buildRuleSuccess = buildRule.build(buildContext);
     try {
@@ -404,7 +404,7 @@ public class AbstractCachingBuildRuleTest {
     assertFalse("The rule should not be considered to have built successfully.",
         buildRule.isRuleBuilt());
 
-    verify(buildContext, commandRunner);
+    verify(buildContext, stepRunner);
   }
 
   @Test
@@ -414,12 +414,12 @@ public class AbstractCachingBuildRuleTest {
     BuildRuleParams params = new BuildRuleParams(target, ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
 
-    CommandRunner commandRunner = createNiceMock(CommandRunner.class);
-    expect(commandRunner.getListeningExecutorService()).andStubReturn(
+    StepRunner stepRunner = createNiceMock(StepRunner.class);
+    expect(stepRunner.getListeningExecutorService()).andStubReturn(
         MoreExecutors.sameThreadExecutor());
     JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
 
-    replay(commandRunner, packageFinder);
+    replay(stepRunner, packageFinder);
 
     EventBus bus = new EventBus();
     Listener listener = new Listener();
@@ -431,7 +431,7 @@ public class AbstractCachingBuildRuleTest {
         .setProjectRoot(root)
         .setDependencyGraph(createMock(DependencyGraph.class))
         .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(commandRunner)
+        .setCommandRunner(stepRunner)
         .setJavaPackageFinder(packageFinder)
         .build();
 
@@ -452,12 +452,12 @@ public class AbstractCachingBuildRuleTest {
     BuildRuleParams params = new BuildRuleParams(target, ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
 
-    CommandRunner commandRunner = createNiceMock(CommandRunner.class);
-    expect(commandRunner.getListeningExecutorService()).andStubReturn(
+    StepRunner stepRunner = createNiceMock(StepRunner.class);
+    expect(stepRunner.getListeningExecutorService()).andStubReturn(
         MoreExecutors.sameThreadExecutor());
     JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
 
-    replay(commandRunner, packageFinder);
+    replay(stepRunner, packageFinder);
 
     EventBus bus = new EventBus();
     Listener listener = new Listener();
@@ -469,7 +469,7 @@ public class AbstractCachingBuildRuleTest {
         .setProjectRoot(root)
         .setDependencyGraph(createMock(DependencyGraph.class))
         .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(commandRunner)
+        .setCommandRunner(stepRunner)
         .setJavaPackageFinder(packageFinder)
         .build();
 
@@ -494,12 +494,12 @@ public class AbstractCachingBuildRuleTest {
     BuildRuleParams params = new BuildRuleParams(target, ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
 
-    CommandRunner commandRunner = createNiceMock(CommandRunner.class);
-    expect(commandRunner.getListeningExecutorService()).andStubReturn(
+    StepRunner stepRunner = createNiceMock(StepRunner.class);
+    expect(stepRunner.getListeningExecutorService()).andStubReturn(
         MoreExecutors.sameThreadExecutor());
     JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
 
-    replay(commandRunner, packageFinder);
+    replay(stepRunner, packageFinder);
 
     EventBus bus = new EventBus();
     Listener listener = new Listener();
@@ -511,7 +511,7 @@ public class AbstractCachingBuildRuleTest {
         .setProjectRoot(root)
         .setDependencyGraph(createMock(DependencyGraph.class))
         .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(commandRunner)
+        .setCommandRunner(stepRunner)
         .setJavaPackageFinder(packageFinder)
         .build();
 
@@ -587,7 +587,7 @@ public class AbstractCachingBuildRuleTest {
     }
 
     @Override
-    protected List<Command> buildInternal(BuildContext context) throws IOException {
+    protected List<Step> buildInternal(BuildContext context) throws IOException {
       return ImmutableList.of();
     }
 

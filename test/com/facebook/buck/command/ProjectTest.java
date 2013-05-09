@@ -40,7 +40,7 @@ import com.facebook.buck.rules.JavaTestRule;
 import com.facebook.buck.rules.NdkLibraryRule;
 import com.facebook.buck.rules.PrebuiltJarRule;
 import com.facebook.buck.rules.ProjectConfigRule;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;

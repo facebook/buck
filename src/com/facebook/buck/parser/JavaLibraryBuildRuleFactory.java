@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AnnotationProcessingParams;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
-import com.facebook.buck.shell.JavacOptionsUtil;
+import com.facebook.buck.java.JavacOptionsUtil;
 import com.google.common.base.Optional;
 
 import java.util.List;

@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
@@ -73,7 +73,7 @@ public class NdkLibraryRuleTest {
             basePath + "/main.cpp"),
         ImmutableList.copyOf(ndkLibraryRule.getInputsToCompareToOutput(context)));
 
-    List<Command> commands = ndkLibraryRule.buildInternal(context);
+    List<Step> steps = ndkLibraryRule.buildInternal(context);
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     File projectRoot = createMock(File.class);
@@ -99,7 +99,7 @@ public class NdkLibraryRuleTest {
               BuckConstant.GEN_DIR,
               basePath)
         ),
-        commands,
+        steps,
         executionContext);
     verify(executionContext, projectRoot);
   }

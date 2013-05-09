@@ -16,11 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
+import com.facebook.buck.java.JUnitStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.JUnitCommand;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ZipFileTraversal;
@@ -132,7 +132,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
    * other {@code java_test()} rules, then they will be run separately.
    */
   @Override
-  public List<Command> runTests(BuildContext buildContext, ExecutionContext executionContext) {
+  public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext) {
     Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
 
     // If no classes were generated, then this is probably a java_test() that declares a number of
@@ -149,11 +149,11 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
           buildContext.getDependencyGraph());
     }
 
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     String pathToTestOutput = getPathToTestOutput();
-    MakeCleanDirectoryCommand mkdirClean = new MakeCleanDirectoryCommand(pathToTestOutput);
-    commands.add(mkdirClean);
+    MakeCleanDirectoryStep mkdirClean = new MakeCleanDirectoryStep(pathToTestOutput);
+    steps.add(mkdirClean);
 
     // If there are android resources, then compile the uber R.java files and add them to the
     // classpath used to run the test runner.
@@ -161,7 +161,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     if (isAndroidRule()) {
       BuildTarget buildTarget = getBuildTarget();
       String rDotJavaClasspathEntry;
-      UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, commands);
+      UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, steps);
       rDotJavaClasspathEntry = UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget);
       ImmutableSet.Builder<String> classpathEntriesBuilder = ImmutableSet.builder();
       classpathEntriesBuilder.add(rDotJavaClasspathEntry);
@@ -171,16 +171,16 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       classpathEntries = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
     }
 
-    Command junit = new JUnitCommand(
+    Step junit = new JUnitStep(
         classpathEntries,
         testClassNames,
         vmArgs,
         pathToTestOutput,
         executionContext.isCodeCoverageEnabled,
         executionContext.isDebugEnabled());
-    commands.add(junit);
+    steps.add(junit);
 
-    return commands.build();
+    return steps.build();
   }
 
   @Override

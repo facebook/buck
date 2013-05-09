@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.GenRDotJavaCommand;
-import com.facebook.buck.shell.JavacInMemoryCommand;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.shell.MergeAndroidResourcesCommand;
-import com.facebook.buck.command.io.WriteFileCommand;
+import com.facebook.buck.android.GenRDotJavaStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.java.JavacInMemoryStep;
+import com.facebook.buck.android.MergeAndroidResourcesStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Creates the {@link Command}s needed to generate an uber {@code R.java} file.
+ * Creates the {@link com.facebook.buck.step.Step}s needed to generate an uber {@code R.java} file.
  * <p>
  * Buck builds two types of {@code R.java} files: temporary ones and uber ones. A temporary
  * {@code R.java} file's values are garbage and correspond to a single Android libraries. An uber
@@ -59,16 +59,16 @@ class UberRDotJavaUtil {
       Set<String> resDirectories,
       Set<String> rDotJavaPackages,
       BuildTarget buildTarget,
-      ImmutableList.Builder<Command> commands) {
+      ImmutableList.Builder<Step> commands) {
     // Create the path where the R.java files will be generated.
     String rDotJavaSrc = String.format("%s/%s__%s_uber_rdotjava_src__",
         BuckConstant.BIN_DIR,
         buildTarget.getBasePathWithSlash(),
         buildTarget.getShortName());
-    commands.add(new MakeCleanDirectoryCommand(rDotJavaSrc));
+    commands.add(new MakeCleanDirectoryStep(rDotJavaSrc));
 
     // Generate the R.java files.
-    GenRDotJavaCommand genRDotJava = new GenRDotJavaCommand(
+    GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
         resDirectories,
         rDotJavaSrc,
         rDotJavaPackages.iterator().next(),
@@ -78,7 +78,7 @@ class UberRDotJavaUtil {
 
     // Create the path where the R.java files will be compiled.
     String rDotJavaBin = getPathToCompiledRDotJavaFiles(buildTarget);
-    commands.add(new MakeCleanDirectoryCommand(rDotJavaBin));
+    commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
     // Compile the R.java files.
     Set<String> javaSourceFilePaths = Sets.newHashSet();
@@ -86,7 +86,7 @@ class UberRDotJavaUtil {
       String path = rDotJavaSrc + "/" + rDotJavaPackage.replace('.', '/') + "/R.java";
       javaSourceFilePaths.add(path);
     }
-    JavacInMemoryCommand javac = createJavacInMemoryCommandForRDotJavaFiles(
+    JavacInMemoryStep javac = createJavacInMemoryCommandForRDotJavaFiles(
         javaSourceFilePaths, rDotJavaBin);
     commands.add(javac);
   }
@@ -130,10 +130,10 @@ class UberRDotJavaUtil {
   public static void createDummyRDotJavaFiles(
       ImmutableList<AndroidResourceRule> androidResourceDeps,
       BuildTarget buildTarget,
-      ImmutableList.Builder<Command> commands) {
+      ImmutableList.Builder<Step> commands) {
     // Clear out the folder for the .java files.
     String rDotJavaSrcFolder = getRDotJavaSrcFolder(buildTarget);
-    commands.add(new MakeCleanDirectoryCommand(rDotJavaSrcFolder));
+    commands.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     Set<String> javaSourceFilePaths = Sets.newHashSet();
@@ -145,31 +145,31 @@ class UberRDotJavaUtil {
       // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
       String rDotJavaPackage = "com.facebook";
-      String javaCode = MergeAndroidResourcesCommand.generateJavaCodeForPackageWithoutResources(
+      String javaCode = MergeAndroidResourcesStep.generateJavaCodeForPackageWithoutResources(
           rDotJavaPackage);
-      commands.add(new MakeCleanDirectoryCommand(rDotJavaSrcFolder + "/com/facebook"));
+      commands.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder + "/com/facebook"));
       String rDotJavaFile = rDotJavaSrcFolder + "/com/facebook/R.java";
-      commands.add(new WriteFileCommand(javaCode, rDotJavaFile));
+      commands.add(new WriteFileStep(javaCode, rDotJavaFile));
       javaSourceFilePaths.add(rDotJavaFile);
     } else {
       Map<String, String> symbolsFileToRDotJavaPackage = Maps.newHashMap();
       for (AndroidResourceRule res : androidResourceDeps) {
         String rDotJavaPackage = res.getRDotJavaPackage();
         symbolsFileToRDotJavaPackage.put(res.getPathToTextSymbolsFile(), rDotJavaPackage);
-        String rDotJavaFilePath = MergeAndroidResourcesCommand.getOutputFilePath(
+        String rDotJavaFilePath = MergeAndroidResourcesStep.getOutputFilePath(
             rDotJavaSrcFolder, rDotJavaPackage);
         javaSourceFilePaths.add(rDotJavaFilePath);
       }
-      commands.add(new MergeAndroidResourcesCommand(symbolsFileToRDotJavaPackage,
+      commands.add(new MergeAndroidResourcesStep(symbolsFileToRDotJavaPackage,
           rDotJavaSrcFolder));
     }
 
     // Clear out the directory where the .class files will be generated.
     String rDotJavaClassesDirectory = getRDotJavaBinFolder(buildTarget);
-    commands.add(new MakeCleanDirectoryCommand(rDotJavaClassesDirectory));
+    commands.add(new MakeCleanDirectoryStep(rDotJavaClassesDirectory));
 
     // Compile the .java files.
-    JavacInMemoryCommand javac = createJavacInMemoryCommandForRDotJavaFiles(
+    JavacInMemoryStep javac = createJavacInMemoryCommandForRDotJavaFiles(
         javaSourceFilePaths, rDotJavaClassesDirectory);
     commands.add(javac);
   }
@@ -188,10 +188,10 @@ class UberRDotJavaUtil {
         buildTarget.getShortName());
   }
 
-  static JavacInMemoryCommand createJavacInMemoryCommandForRDotJavaFiles(
+  static JavacInMemoryStep createJavacInMemoryCommandForRDotJavaFiles(
     Set<String> javaSourceFilePaths, String outputDirectory) {
     ImmutableSet<String> classpathEntries = ImmutableSet.of();
-    return new JavacInMemoryCommand(
+    return new JavacInMemoryStep(
         outputDirectory,
         javaSourceFilePaths,
         classpathEntries,

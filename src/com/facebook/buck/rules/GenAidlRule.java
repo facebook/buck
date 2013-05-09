@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.shell.AidlCommand;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.command.io.MkdirCommand;
+import com.facebook.buck.android.AidlStep;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -84,14 +84,14 @@ public class GenAidlRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context)
+  protected List<Step> buildInternal(BuildContext context)
       throws IOException {
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     String destinationDirectory = String.format("%s/%s", BuckConstant.GEN_DIR, importPath);
-    commands.add(new MkdirCommand(destinationDirectory));
+    commands.add(new MkdirStep(destinationDirectory));
 
-    AidlCommand command = new AidlCommand(aidlFilePath,
+    AidlStep command = new AidlStep(aidlFilePath,
         ImmutableSet.of(importPath),
         destinationDirectory);
     commands.add(command);

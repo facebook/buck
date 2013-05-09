@@ -35,8 +35,8 @@ import com.facebook.buck.rules.NdkLibraryRule;
 import com.facebook.buck.rules.PrebuiltJarRule;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.rules.SourceRoot;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
@@ -812,7 +812,7 @@ public class Project {
     final ImmutableList<String> args = ImmutableList.of(
         "python", PATH_TO_INTELLIJ_PY, jsonTempFile.getAbsolutePath());
 
-    ShellCommand command = new ShellCommand() {
+    ShellStep command = new ShellStep() {
 
       @Override
       public String getShortName(ExecutionContext context) {

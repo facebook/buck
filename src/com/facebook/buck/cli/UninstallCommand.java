@@ -25,8 +25,8 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.Verbosity;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Verbosity;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;

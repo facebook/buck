@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.Verbosity;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;

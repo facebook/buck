@@ -25,15 +25,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.GenProGuardConfigCommand;
-import com.facebook.buck.shell.ProGuardObfuscateCommand;
-import com.facebook.buck.shell.SmartDexingCommand;
-import com.facebook.buck.shell.SplitZipCommand;
+import com.facebook.buck.android.GenProGuardConfigStep;
+import com.facebook.buck.android.ProGuardObfuscateStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.android.SmartDexingStep;
+import com.facebook.buck.android.SplitZipStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
@@ -95,23 +95,23 @@ public class AndroidBinaryRuleTest {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
     AndroidTransitiveDependencies transitiveDependencies =
         androidBinary.findTransitiveDependencies(graph, Optional.<BuildContext>absent());
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     androidBinary.addProguardCommands(transitiveDependencies,
         commands,
         ImmutableSet.<String>of());
 
-    MakeCleanDirectoryCommand expectedClean =
-        new MakeCleanDirectoryCommand("buck-out/gen/java/src/com/facebook/base/.proguard/apk");
+    MakeCleanDirectoryStep expectedClean =
+        new MakeCleanDirectoryStep("buck-out/gen/java/src/com/facebook/base/.proguard/apk");
 
-    GenProGuardConfigCommand expectedGenProguard =
-        new GenProGuardConfigCommand(
+    GenProGuardConfigStep expectedGenProguard =
+        new GenProGuardConfigStep(
             "buck-out/bin/java/src/com/facebook/base/__manifest_apk__/AndroidManifest.xml",
             ImmutableSet.<String>of(),
             "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt");
 
-    ProGuardObfuscateCommand expectedObfuscation =
-        new ProGuardObfuscateCommand(
+    ProGuardObfuscateStep expectedObfuscation =
+        new ProGuardObfuscateStep(
           "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt",
           ImmutableSet.<String>of(),
           false,
@@ -165,7 +165,7 @@ public class AndroidBinaryRuleTest {
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<String> assetsDirectories = ImmutableSet.of();
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) {
@@ -225,7 +225,7 @@ public class AndroidBinaryRuleTest {
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<String> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) {
@@ -303,7 +303,7 @@ public class AndroidBinaryRuleTest {
     Set<String> assetsDirectories = ImmutableSet.of(
         resourceOne.getAssets(),
         resourceTwo.getAssets());
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) {
@@ -335,15 +335,15 @@ public class AndroidBinaryRuleTest {
     // Verify that an assets/ directory will be created and passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
     assertEquals(BIN_DIR + "/java/src/com/facebook/base/__assets_apk__", allAssetsDirectory.get());
-    List<? extends Command> expectedCommands = ImmutableList.of(
-        new MakeCleanDirectoryCommand(BIN_DIR + "/java/src/com/facebook/base/__assets_apk__"),
-        new MkdirAndSymlinkFileCommand(
+    List<? extends Step> expectedCommands = ImmutableList.of(
+        new MakeCleanDirectoryStep(BIN_DIR + "/java/src/com/facebook/base/__assets_apk__"),
+        new MkdirAndSymlinkFileStep(
             "java/src/com/facebook/base/assets1/guava-10.0.1-fork.dex.1.jar",
             BIN_DIR + "/java/src/com/facebook/base/__assets_apk__/guava-10.0.1-fork.dex.1.jar"),
-        new MkdirAndSymlinkFileCommand(
+        new MkdirAndSymlinkFileStep(
             "java/src/com/facebook/base/assets2/fonts/Theinhardt-Medium.otf",
             BIN_DIR + "/java/src/com/facebook/base/__assets_apk__/fonts/Theinhardt-Medium.otf"),
-        new MkdirAndSymlinkFileCommand(
+        new MkdirAndSymlinkFileStep(
             "java/src/com/facebook/base/assets2/fonts/Theinhardt-Regular.otf",
             BIN_DIR + "/java/src/com/facebook/base/__assets_apk__/fonts/Theinhardt-Regular.otf"));
     MoreAsserts.assertListEquals(expectedCommands, commands.build());
@@ -471,12 +471,12 @@ public class AndroidBinaryRuleTest {
         proguardDir);
   }
 
-  private void assertCommandsInOrder(List<Command> commands, List<Class<?>> expectedCommands) {
+  private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands) {
     Iterable<Class<?>> filteredObservedCommands = FluentIterable
-        .from(commands)
-        .transform(new Function<Command, Class<?>>() {
+        .from(steps)
+        .transform(new Function<Step, Class<?>>() {
           @Override
-          public Class<?> apply(Command command) {
+          public Class<?> apply(Step command) {
             return command.getClass();
           }
         })
@@ -496,15 +496,15 @@ public class AndroidBinaryRuleTest {
 
     Set<String> classpath = Sets.newHashSet();
     ImmutableSet.Builder<String> secondaryDexDirectories = ImmutableSet.builder();
-    ImmutableList.Builder<Command> commandsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
     String primaryDexPath = BIN_DIR + "/.dex/classes.dex";
     splitDexRule.addDexingCommands(classpath, secondaryDexDirectories, commandsBuilder, primaryDexPath);
 
     assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +
         "secondary zips)", 2, secondaryDexDirectories.build().size());
 
-    List<Command> commands = commandsBuilder.build();
-    assertCommandsInOrder(commands,
-        ImmutableList.<Class<?>>of(SplitZipCommand.class, SmartDexingCommand.class));
+    List<Step> steps = commandsBuilder.build();
+    assertCommandsInOrder(steps,
+        ImmutableList.<Class<?>>of(SplitZipStep.class, SmartDexingStep.class));
   }
 }

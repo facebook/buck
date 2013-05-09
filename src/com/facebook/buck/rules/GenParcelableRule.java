@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.parcelable.Generator;
 import com.facebook.buck.parcelable.ParcelableClass;
 import com.facebook.buck.parcelable.Parser;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -56,9 +56,9 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context)
+  protected List<Step> buildInternal(BuildContext context)
       throws IOException {
-    Command command = new Command() {
+    Step step = new Step() {
 
       @Override
       public int execute(ExecutionContext context) {
@@ -90,7 +90,7 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
         return "gen_parcelable";
       }};
 
-    return ImmutableList.of(command);
+    return ImmutableList.of(step);
   }
 
   @VisibleForTesting

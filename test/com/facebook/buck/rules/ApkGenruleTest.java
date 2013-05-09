@@ -20,6 +20,9 @@ import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -29,13 +32,10 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.CommandRunner;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
-import com.facebook.buck.command.io.MkdirCommand;
-import com.facebook.buck.shell.ShellCommand;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +126,7 @@ public class ApkGenruleTest {
     BuildContext buildContext = BuildContext.builder()
         .setProjectRoot(EasyMock.createNiceMock(File.class))
         .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
-        .setCommandRunner(EasyMock.createNiceMock(CommandRunner.class))
+        .setCommandRunner(EasyMock.createNiceMock(StepRunner.class))
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .build();
@@ -136,12 +136,12 @@ public class ApkGenruleTest {
         apk_genrule.getInputsToCompareToOutput(buildContext));
 
     // Verify that the shell commands that the genrule produces are correct.
-    List<Command> commands = apk_genrule.buildInternal(buildContext);
-    assertEquals(7, commands.size());
+    List<Step> steps = apk_genrule.buildInternal(buildContext);
+    assertEquals(7, steps.size());
 
-    Command firstCommand = commands.get(0);
-    assertTrue(firstCommand instanceof ShellCommand);
-    ShellCommand rmCommand = (ShellCommand)firstCommand;
+    Step firstStep = steps.get(0);
+    assertTrue(firstStep instanceof ShellStep);
+    ShellStep rmCommand = (ShellStep) firstStep;
     ExecutionContext executionContext = null;
     assertEquals(
         "First command should delete the output file to be written by the genrule.",
@@ -151,45 +151,45 @@ public class ApkGenruleTest {
             expectedApkOutput),
         rmCommand.getShellCommand(executionContext));
 
-    Command secondCommand = commands.get(1);
-    assertTrue(secondCommand instanceof MkdirCommand);
-    MkdirCommand mkdirCommand = (MkdirCommand)secondCommand;
+    Step secondStep = steps.get(1);
+    assertTrue(secondStep instanceof MkdirStep);
+    MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
         ImmutableList.of("mkdir", "-p", GEN_DIR + "/src/com/facebook/"),
         mkdirCommand.getShellCommand(executionContext));
 
-    Command thirdCommand = commands.get(2);
-    assertTrue(thirdCommand instanceof MakeCleanDirectoryCommand);
-    MakeCleanDirectoryCommand secondMkdirCommand = (MakeCleanDirectoryCommand)thirdCommand;
+    Step thirdStep = steps.get(2);
+    assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
+    MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) thirdStep;
     String tempDirPath = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a__tmp";
     assertEquals(
         "Third command should make sure the temp directory exists.",
         tempDirPath,
         secondMkdirCommand.getPath());
 
-    Command fourthCommand = commands.get(3);
-    assertTrue(fourthCommand instanceof MakeCleanDirectoryCommand);
-    MakeCleanDirectoryCommand thirdMkdirCommand = (MakeCleanDirectoryCommand)fourthCommand;
+    Step fourthStep = steps.get(3);
+    assertTrue(fourthStep instanceof MakeCleanDirectoryStep);
+    MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) fourthStep;
     String srcDirPath = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a__srcs";
     assertEquals(
         "Fourth command should make sure the temp directory exists.",
         srcDirPath,
         thirdMkdirCommand.getPath());
 
-    MkdirAndSymlinkFileCommand linkSource1 = (MkdirAndSymlinkFileCommand)commands.get(4);
+    MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
     assertEquals("/opt/local/fbandroid/src/com/facebook/signer.py",
         linkSource1.getSource().getAbsolutePath());
     assertEquals(srcDirPath + "/signer.py", linkSource1.getTarget().getAbsolutePath());
 
-    MkdirAndSymlinkFileCommand linkSource2 = (MkdirAndSymlinkFileCommand)commands.get(5);
+    MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
     assertEquals("/opt/local/fbandroid/src/com/facebook/key.properties",
         linkSource2.getSource().getAbsolutePath());
     assertEquals(srcDirPath + "/key.properties", linkSource2.getTarget().getAbsolutePath());
 
-    Command seventhCommand = commands.get(6);
-    assertTrue(seventhCommand instanceof ShellCommand);
-    ShellCommand genruleCommand = (ShellCommand)seventhCommand;
+    Step seventhStep = steps.get(6);
+    assertTrue(seventhStep instanceof ShellStep);
+    ShellStep genruleCommand = (ShellStep) seventhStep;
     assertEquals("genrule: python signer.py $APK key.properties > $OUT",
         genruleCommand.getShortName(executionContext));
     assertEquals(new ImmutableMap.Builder<String, String>()

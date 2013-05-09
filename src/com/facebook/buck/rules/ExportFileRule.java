@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -111,12 +111,12 @@ public class ExportFileRule extends AbstractCachingBuildRule  {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context) throws IOException {
+  protected List<Step> buildInternal(BuildContext context) throws IOException {
     File inputFile = context.getProjectFilesystem().getFileForRelativePath(src);
     File outputFile = out.get();
 
-    ImmutableList.Builder<Command> builder = ImmutableList.<Command>builder()
-        .add(new MkdirAndSymlinkFileCommand(inputFile, outputFile));
+    ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
+        .add(new MkdirAndSymlinkFileStep(inputFile, outputFile));
 
     return builder.build();
   }

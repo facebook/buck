@@ -113,6 +113,25 @@ prebuilt_jar(
     ':hamcrest-core',
     ':hamcrest-library',
   ],
+#  visibility = [
+#    '//src/com/facebook/buck/junit:junit',
+#    '//test/com/facebook/buck/cli:cli',
+#    '//test/com/facebook/buck/android:android',
+#    '//test/com/facebook/buck/command:command',
+#    '//test/com/facebook/buck/debug:debug',
+#    '//test/com/facebook/buck/graph:graph',
+#    '//test/com/facebook/buck/java:java',
+#    '//test/com/facebook/buck/junit:junit',
+#    '//test/com/facebook/buck/model:model',
+#    '//test/com/facebook/buck/parcelable:parcelable',
+#    '//test/com/facebook/buck/parser:parser',
+#    '//test/com/facebook/buck/rules:rules',
+#    '//test/com/facebook/buck/shell:shell',
+#    '//test/com/facebook/buck/step:step',
+#    '//test/com/facebook/buck/step/fs:fs',
+#    '//test/com/facebook/buck/testutil:testutil',
+#    '//test/com/facebook/buck/util:util',
+#  ],
 )
 
 prebuilt_jar(
@@ -134,7 +153,8 @@ prebuilt_jar(
   name = 'sdklib',
   binary_jar = 'sdklib.jar',
   visibility = [
-    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/android:android',
+    '//src/com/facebook/buck/step/fs:fs',
   ]
 )
 

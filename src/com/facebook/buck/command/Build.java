@@ -27,11 +27,11 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.HasAndroidPlatformTarget;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.shell.BuildDependencies;
-import com.facebook.buck.shell.CommandFailedException;
-import com.facebook.buck.shell.CommandRunner;
-import com.facebook.buck.shell.DefaultCommandRunner;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.Verbosity;
+import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -55,7 +55,7 @@ public class Build {
 
   private final ExecutionContext executionContext;
 
-  private final CommandRunner commandRunner;
+  private final StepRunner stepRunner;
 
   private final JavaPackageFinder javaPackageFinder;
 
@@ -97,7 +97,7 @@ public class Build {
         isDebugEnabled,
         stdOut,
         stdErr);
-    this.commandRunner = new DefaultCommandRunner(executionContext, listeningExecutorService);
+    this.stepRunner = new DefaultStepRunner(executionContext, listeningExecutorService);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
   }
@@ -110,8 +110,8 @@ public class Build {
     return executionContext;
   }
 
-  public CommandRunner getCommandRunner() {
-    return commandRunner;
+  public StepRunner getCommandRunner() {
+    return stepRunner;
   }
 
   /** Returns null until {@link #executeBuild(EventBus)} is invoked. */
@@ -195,7 +195,7 @@ public class Build {
   }
 
   public ListenableFuture<List<BuildRuleSuccess>> executeBuild(EventBus events)
-      throws IOException, CommandFailedException {
+      throws IOException, StepFailedException {
     events.post(BuildEvents.started());
     Set<BuildRule> rulesToBuild = dependencyGraph.getNodesWithNoIncomingEdges();
 
@@ -205,7 +205,7 @@ public class Build {
     buildContext = BuildContext.builder()
         .setProjectRoot(executionContext.getProjectDirectoryRoot())
         .setDependencyGraph(dependencyGraph)
-        .setCommandRunner(commandRunner)
+        .setCommandRunner(stepRunner)
         .setProjectFilesystem(projectFilesystem)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(events)

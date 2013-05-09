@@ -25,7 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.shell.Command;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -105,7 +105,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context)
+  protected List<Step> buildInternal(BuildContext context)
       throws IOException {
     // TODO(mbolin): Package Python code, if appropriate. There does not appear to be a standard
     // cross-platform way to do this.

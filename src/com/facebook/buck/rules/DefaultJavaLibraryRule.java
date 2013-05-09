@@ -17,16 +17,16 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.java.JarDirectoryStep;
+import com.facebook.buck.java.JavacOptionsUtil;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.shell.BuildDependencies;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.DependencyCheckingJavacCommand;
-import com.facebook.buck.shell.JarDirectoryCommand;
-import com.facebook.buck.shell.JavacOptionsUtil;
-import com.facebook.buck.command.io.MakeCleanDirectoryCommand;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
+import com.facebook.buck.java.DependencyCheckingJavacStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -265,7 +265,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
    * @return commands to compile the specified inputs
    */
-  private static ImmutableList<Command> createCommandsForJavac(
+  private static ImmutableList<Step> createCommandsForJavac(
       String outputDirectory,
       final SortedSet<String> javaSourceFilePaths,
       ImmutableSet<String> transitiveClasspathEntries,
@@ -274,15 +274,14 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       AnnotationProcessingData annotationProcessingData,
       Optional<String> invokingRule,
       BuildDependencies buildDependencies,
-      Optional<DependencyCheckingJavacCommand.SuggestBuildRules> suggestBuildRules,
+      Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules,
       String sourceLevel,
       String targetLevel) {
-
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Only run javac if there are .java files to compile.
     if (!javaSourceFilePaths.isEmpty()) {
-      Command javac = new DependencyCheckingJavacCommand(
+      Step javac = new DependencyCheckingJavacStep(
           outputDirectory,
           javaSourceFilePaths,
           transitiveClasspathEntries,
@@ -383,8 +382,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * attribute. They are compiled into a directory under {@link BuckConstant#BIN_DIR}.
    */
   @Override
-  protected final List<Command> buildInternal(BuildContext context) throws IOException {
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+  protected final List<Step> buildInternal(BuildContext context) throws IOException {
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     BuildTarget buildTarget = getBuildTarget();
 
     // If this rule depends on AndroidResourceRules, then we need to generate the R.java files that
@@ -433,24 +432,24 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     // Javac requires that the root directory for generated sources already exist.
     String annotationGenFolder = annotationProcessingParams.getGeneratedSourceFolderName();
     if (annotationGenFolder != null) {
-      MakeCleanDirectoryCommand mkdirGeneratedSources =
-          new MakeCleanDirectoryCommand(annotationGenFolder);
+      MakeCleanDirectoryStep mkdirGeneratedSources =
+          new MakeCleanDirectoryStep(annotationGenFolder);
       commands.add(mkdirGeneratedSources);
     }
 
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     String outputDirectory = getClassesDir(getBuildTarget());
-    commands.add(new MakeCleanDirectoryCommand(outputDirectory));
+    commands.add(new MakeCleanDirectoryStep(outputDirectory));
 
-    Optional<DependencyCheckingJavacCommand.SuggestBuildRules> suggestBuildRule =
+    Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRule =
         createSuggestBuildFunction(context,
             transitiveClasspathEntries,
             declaredClasspathEntries,
             JAR_RESOLVER);
 
     // This adds the javac command, along with any supporting commands.
-    List<Command> javac = createCommandsForJavac(
+    List<Step> javac = createCommandsForJavac(
         outputDirectory,
         srcs,
         ImmutableSet.copyOf(transitiveClasspathEntries.values()),
@@ -468,8 +467,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     addResourceCommands(commands, outputDirectory, context.getJavaPackageFinder());
 
     if (outputJar.isPresent()) {
-      commands.add(new MakeCleanDirectoryCommand(outputJar.get().getParent()));
-      commands.add(new JarDirectoryCommand(
+      commands.add(new MakeCleanDirectoryStep(outputJar.get().getParent()));
+      commands.add(new JarDirectoryStep(
           outputJar.get().getPath(), Collections.singleton(outputDirectory), null, null));
     }
 
@@ -516,7 +515,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    *    set of rules to suggest that the developer import to satisfy those imports.
    */
   @VisibleForTesting
-  Optional<DependencyCheckingJavacCommand.SuggestBuildRules> createSuggestBuildFunction(
+  Optional<DependencyCheckingJavacStep.SuggestBuildRules> createSuggestBuildFunction(
       BuildContext context,
       ImmutableSetMultimap<BuildRule, String> transitiveClasspathEntries,
       ImmutableSetMultimap<BuildRule, String> declaredClasspathEntries,
@@ -537,8 +536,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
               }
             })).reverse();
 
-    DependencyCheckingJavacCommand.SuggestBuildRules suggestBuildRuleFn =
-        new DependencyCheckingJavacCommand.SuggestBuildRules() {
+    DependencyCheckingJavacStep.SuggestBuildRules suggestBuildRuleFn =
+        new DependencyCheckingJavacStep.SuggestBuildRules() {
       @Override
       public ImmutableSet<String> apply(ImmutableSet<String> failedImports) {
         ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
@@ -564,7 +563,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @VisibleForTesting
-  void addResourceCommands(ImmutableList.Builder<Command> commands,
+  void addResourceCommands(ImmutableList.Builder<Step> commands,
                            String outputDirectory,
                            JavaPackageFinder javaPackageFinder) {
     if (!resources.isEmpty()) {
@@ -599,7 +598,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         }
         String target = outputDirectory + '/' + relativeSymlinkPath;
 
-        MkdirAndSymlinkFileCommand link = new MkdirAndSymlinkFileCommand(resource, target);
+        MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource, target);
         commands.add(link);
       }
     }

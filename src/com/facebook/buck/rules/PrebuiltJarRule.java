@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.Command;
+import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -131,7 +131,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context)
+  protected List<Step> buildInternal(BuildContext context)
       throws IOException {
     return ImmutableList.of();
   }

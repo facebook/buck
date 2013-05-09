@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.GenerateManifestCommand;
+import com.facebook.buck.android.GenerateManifestStep;
+import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -63,15 +63,15 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context) throws IOException {
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+  protected List<Step> buildInternal(BuildContext context) throws IOException {
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     AndroidTransitiveDependencies transitiveDependencies =
         transitiveDependencyGraph.findDependencies(getAndroidResourceDepsInternal(
             context.getDependencyGraph()),
             Optional.of(context));
 
     if (skeletonFile.isPresent() && manifestFile.isPresent()) {
-      commands.add(new GenerateManifestCommand(
+      commands.add(new GenerateManifestStep(
           skeletonFile.get(),
           manifestFile.get(),
           transitiveDependencies.manifestFiles));

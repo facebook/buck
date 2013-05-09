@@ -18,8 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.NdkBuildCommand;
+import com.facebook.buck.android.NdkBuildStep;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -102,8 +102,8 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Command> buildInternal(BuildContext context) throws IOException {
-    return ImmutableList.of((Command)new NdkBuildCommand(
+  protected List<Step> buildInternal(BuildContext context) throws IOException {
+    return ImmutableList.of((Step)new NdkBuildStep(
         this.makefileDirectory,
         this.buildArtifactsDirectory,
         this.flags));

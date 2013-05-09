@@ -22,7 +22,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.ProjectFilesystem;

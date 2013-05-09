@@ -24,7 +24,7 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.cli.UninstallCommandOptions.UninstallOptions;
 import com.facebook.buck.rules.InstallableBuildRule;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;

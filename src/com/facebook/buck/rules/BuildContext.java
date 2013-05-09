@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.shell.BuildDependencies;
-import com.facebook.buck.shell.CommandRunner;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.NoAndroidSdkException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -38,7 +38,7 @@ public class BuildContext {
 
   public final File projectRoot;
   private final DependencyGraph dependencyGraph;
-  private final CommandRunner commandRunner;
+  private final StepRunner stepRunner;
   private final ProjectFilesystem projectFilesystem;
   private final JavaPackageFinder javaPackageFinder;
   private final EventBus events;
@@ -48,7 +48,7 @@ public class BuildContext {
   private BuildContext(
       File projectRoot,
       DependencyGraph dependencyGraph,
-      CommandRunner commandRunner,
+      StepRunner stepRunner,
       ProjectFilesystem projectFilesystem,
       JavaPackageFinder javaPackageFinder,
       EventBus events,
@@ -56,7 +56,7 @@ public class BuildContext {
       BuildDependencies buildDependencies) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
-    this.commandRunner = Preconditions.checkNotNull(commandRunner);
+    this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.events = Preconditions.checkNotNull(events);
@@ -64,8 +64,8 @@ public class BuildContext {
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
   }
 
-  public CommandRunner getCommandRunner() {
-    return commandRunner;
+  public StepRunner getCommandRunner() {
+    return stepRunner;
   }
 
   public DependencyGraph getDependencyGraph() {
@@ -73,7 +73,7 @@ public class BuildContext {
   }
 
   public Executor getExecutor() {
-    return commandRunner.getListeningExecutorService();
+    return stepRunner.getListeningExecutorService();
   }
 
   public JavaPackageFinder getJavaPackageFinder() {
@@ -104,7 +104,7 @@ public class BuildContext {
 
     private File projectRoot = null;
     private DependencyGraph dependencyGraph = null;
-    private CommandRunner commandRunner = null;
+    private StepRunner stepRunner = null;
     private ProjectFilesystem projectFilesystem = null;
     private JavaPackageFinder javaPackgeFinder = null;
     private EventBus events = new EventBus();
@@ -120,7 +120,7 @@ public class BuildContext {
       return new BuildContext(
           projectRoot,
           dependencyGraph,
-          commandRunner,
+          stepRunner,
           projectFilesystem,
           javaPackgeFinder,
           events,
@@ -138,8 +138,8 @@ public class BuildContext {
       return this;
     }
 
-    public Builder setCommandRunner(CommandRunner commandRunner) {
-      this.commandRunner = commandRunner;
+    public Builder setCommandRunner(StepRunner stepRunner) {
+      this.stepRunner = stepRunner;
       return this;
     }
 

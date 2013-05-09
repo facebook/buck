@@ -23,17 +23,17 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.java.JavacInMemoryStep;
+import com.facebook.buck.java.JavacOptionsUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.shell.BuildDependencies;
-import com.facebook.buck.shell.Command;
-import com.facebook.buck.shell.DependencyCheckingJavacCommand;
-import com.facebook.buck.shell.ExecutionContext;
-import com.facebook.buck.shell.JavacInMemoryCommand;
-import com.facebook.buck.shell.JavacOptionsUtil;
-import com.facebook.buck.command.io.MkdirAndSymlinkFileCommand;
-import com.facebook.buck.shell.Verbosity;
+import com.facebook.buck.java.DependencyCheckingJavacStep;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.Verbosity;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.BuckConstant;
@@ -84,15 +84,15 @@ public class DefaultJavaLibraryRuleTest {
         AnnotationProcessingParams.EMPTY,
         /* exportDeps */ false);
 
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     javaRule.addResourceCommands(
         commands, BIN_DIR + "/android/java/lib__resources__classes", javaPackageFinder);
-    List<? extends Command> expected = ImmutableList.of(
-        new MkdirAndSymlinkFileCommand(
+    List<? extends Step> expected = ImmutableList.of(
+        new MkdirAndSymlinkFileStep(
             "android/java/src/com/facebook/base/data.json",
             BIN_DIR + "/android/java/lib__resources__classes/com/facebook/base/data.json"),
-        new MkdirAndSymlinkFileCommand(
+        new MkdirAndSymlinkFileStep(
             "android/java/src/com/facebook/common/util/data.json",
             BIN_DIR + "/android/java/lib__resources__classes/com/facebook/common/util/data.json"));
     MoreAsserts.assertListEquals(expected, commands.build());
@@ -119,15 +119,15 @@ public class DefaultJavaLibraryRuleTest {
         AnnotationProcessingParams.EMPTY,
         /* exportDeps */ false);
 
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     javaRule.addResourceCommands(
         commands, BIN_DIR + "/android/java/src/lib__resources__classes", javaPackageFinder);
-    List<? extends Command> expected = ImmutableList.of(
-        new MkdirAndSymlinkFileCommand(
+    List<? extends Step> expected = ImmutableList.of(
+        new MkdirAndSymlinkFileStep(
             "android/java/src/com/facebook/base/data.json",
             BIN_DIR + "/android/java/src/lib__resources__classes/com/facebook/base/data.json"),
-        new MkdirAndSymlinkFileCommand(
+        new MkdirAndSymlinkFileStep(
             "android/java/src/com/facebook/common/util/data.json",
             BIN_DIR + "/android/java/src/lib__resources__classes/com/facebook/common/util/data.json"));
     MoreAsserts.assertListEquals(expected, commands.build());
@@ -156,17 +156,17 @@ public class DefaultJavaLibraryRuleTest {
         AnnotationProcessingParams.EMPTY,
         /* exportDeps */ false);
 
-    ImmutableList.Builder<Command> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     javaRule.addResourceCommands(
         commands,
         BIN_DIR + "/android/java/src/com/facebook/lib__resources__classes",
         javaPackageFinder);
-    List<? extends Command> expected = ImmutableList.of(
-        new MkdirAndSymlinkFileCommand(
+    List<? extends Step> expected = ImmutableList.of(
+        new MkdirAndSymlinkFileStep(
             "android/java/src/com/facebook/base/data.json",
             BIN_DIR + "/android/java/src/com/facebook/lib__resources__classes/com/facebook/base/data.json"),
-        new MkdirAndSymlinkFileCommand(
+        new MkdirAndSymlinkFileStep(
             "android/java/src/com/facebook/common/util/data.json",
             BIN_DIR + "/android/java/src/com/facebook/lib__resources__classes/com/facebook/common/util/data.json"));
     MoreAsserts.assertListEquals(expected, commands.build());
@@ -177,7 +177,7 @@ public class DefaultJavaLibraryRuleTest {
   @Test
   public void testBuildInternalWithAndroidBootclasspath() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb");
-    ImmutableSet<String> srcs = ImmutableSet.<String>of("android/java/src/com/facebook/Main.java");
+    ImmutableSet<String> srcs = ImmutableSet.of("android/java/src/com/facebook/Main.java");
     DefaultJavaLibraryRule javaLibrary = new AndroidLibraryRule(
         new BuildRuleParams(
             buildTarget,
@@ -195,16 +195,16 @@ public class DefaultJavaLibraryRuleTest {
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
     BuildContext context = createBuildContext(javaLibrary, bootclasspath);
 
-    List<Command> commands = javaLibrary.buildInternal(context);
+    List<Step> steps = javaLibrary.buildInternal(context);
     // Find the JavacInMemoryCommand and verify its bootclasspath.
-    Command command = Iterables.find(commands, new Predicate<Command>() {
+    Step step = Iterables.find(steps, new Predicate<Step>() {
       @Override
-      public boolean apply(Command command) {
-        return command instanceof JavacInMemoryCommand;
+      public boolean apply(Step command) {
+        return command instanceof JavacInMemoryStep;
       }
     });
-    assertNotNull("Expected a JavacInMemoryCommand in the command list.", command);
-    JavacInMemoryCommand javac = (JavacInMemoryCommand)command;
+    assertNotNull("Expected a JavacInMemoryCommand in the command list.", step);
+    JavacInMemoryStep javac = (JavacInMemoryStep) step;
     assertEquals("Should compile Main.java rather than generated R.java.", srcs, javac.getSrcs());
 
     EasyMock.verify(context);
@@ -455,7 +455,7 @@ public class DefaultJavaLibraryRuleTest {
         libraryOne.getTransitiveClasspathEntries();
 
     assertEquals(
-        Optional.<DependencyCheckingJavacCommand.SuggestBuildRules>absent(),
+        Optional.<DependencyCheckingJavacStep.SuggestBuildRules>absent(),
         libraryOne.createSuggestBuildFunction(context,
             classpathEntries,
             classpathEntries,
@@ -512,7 +512,7 @@ public class DefaultJavaLibraryRuleTest {
         Iterables.getFirst(transitive.get(libraryOne), null), "com.facebook.Bar",
         Iterables.getFirst(transitive.get(libraryTwo), null), "com.facebook.Foo");
 
-    Optional<DependencyCheckingJavacCommand.SuggestBuildRules> suggestFn =
+    Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestFn =
         grandparent.createSuggestBuildFunction(context,
             transitive,
             /* declaredClasspathEntries */ ImmutableSetMultimap.<BuildRule, String>of(),
@@ -699,8 +699,8 @@ public class DefaultJavaLibraryRuleTest {
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
       DefaultJavaLibraryRule javaLibrary = createJavaLibraryRule();
       buildContext = createBuildContext(javaLibrary, "");
-      List<Command> commands = javaLibrary.buildInternal(buildContext);
-      JavacInMemoryCommand javacCommand = lastJavacCommand(commands);
+      List<Step> steps = javaLibrary.buildInternal(buildContext);
+      JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
       executionContext = EasyMock.createMock(ExecutionContext.class);
       EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT);
@@ -733,16 +733,16 @@ public class DefaultJavaLibraryRuleTest {
           JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
     }
 
-    private JavacInMemoryCommand lastJavacCommand(Iterable<Command> commands) {
-      Command javac = null;
-      for (Command command : commands) {
-        if (command instanceof JavacInMemoryCommand) {
-          javac = command;
+    private JavacInMemoryStep lastJavacCommand(Iterable<Step> commands) {
+      Step javac = null;
+      for (Step step : commands) {
+        if (step instanceof JavacInMemoryStep) {
+          javac = step;
           // Intentionally no break here, since we want the last one.
         }
       }
       assertNotNull("Expected a JavacInMemoryCommand in command list", javac);
-      return (JavacInMemoryCommand)javac;
+      return (JavacInMemoryStep)javac;
     }
   }
 }

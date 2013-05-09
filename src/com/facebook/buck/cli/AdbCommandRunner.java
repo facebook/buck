@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
-import com.facebook.buck.shell.ExecutionContext;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.TriState;
 import com.google.common.annotations.VisibleForTesting;

@@ -7,13 +7,15 @@ java_library(
     '//lib:junit',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/shell:core',
     '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/step:step',
   ],
   visibility = [
+    '//test/com/facebook/buck/android:android',
     '//test/com/facebook/buck/command:command',
-    '//test/com/facebook/buck/command/io:io',
+    '//test/com/facebook/buck/java:java',
     '//test/com/facebook/buck/rules:rules',
     '//test/com/facebook/buck/shell:shell',
+    '//test/com/facebook/buck/step/fs:fs',
   ],
 )
