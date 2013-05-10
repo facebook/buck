@@ -14,15 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -32,10 +29,20 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DefaultJavaLibraryRule;
+import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.JavaLibraryRule;
+import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +58,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Unit test for {@link ApkGenrule}.
+ * Unit test for {@link com.facebook.buck.android.ApkGenrule}.
  */
 public class ApkGenruleTest {
 

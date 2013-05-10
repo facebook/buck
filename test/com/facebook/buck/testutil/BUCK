@@ -6,7 +6,7 @@ java_library(
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:core',
     '//src/com/facebook/buck/shell:shell',
     '//src/com/facebook/buck/step:step',
   ],

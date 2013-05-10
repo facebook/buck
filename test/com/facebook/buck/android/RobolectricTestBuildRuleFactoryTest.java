@@ -13,17 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser;
+package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeJavaLibraryRule;
-import com.facebook.buck.rules.RobolectricTestRule;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,8 +62,7 @@ public class RobolectricTestBuildRuleFactoryTest {
         projectFilesystem,
         /* buildFiles */ null,
         buildTargetParser,
-        buildTarget,
-        /* ignoreFileExistenceChecks */ true);
+        buildTarget);
     EasyMock.replay(projectFilesystem);
 
     // Create a builder using the factory.

@@ -14,25 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -41,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Unit test for {@link NdkLibraryRule}.
+ * Unit test for {@link com.facebook.buck.android.NdkLibraryRule}.
  */
 public class NdkLibraryRuleTest {
 
@@ -63,7 +66,7 @@ public class NdkLibraryRuleTest {
         .build(buildRuleIndex);
     buildRuleIndex.put(ndkLibraryRule.getFullyQualifiedName(), ndkLibraryRule);
 
-    assertEquals(BuildRuleType.NDK_LIBRARY, ndkLibraryRule.getType());
+    Assert.assertEquals(BuildRuleType.NDK_LIBRARY, ndkLibraryRule.getType());
     assertTrue(ndkLibraryRule.isAndroidRule());
 
     MoreAsserts.assertListEquals(

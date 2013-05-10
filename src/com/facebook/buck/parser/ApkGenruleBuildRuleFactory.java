@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.ApkGenrule;
+import com.facebook.buck.android.ApkGenrule;
 import com.facebook.buck.util.HumanReadableException;
 
 public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory {

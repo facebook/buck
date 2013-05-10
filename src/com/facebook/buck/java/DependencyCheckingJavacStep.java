@@ -17,7 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.AnnotationProcessingData;
-import com.facebook.buck.shell.BuildDependencies;
+import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.annotations.VisibleForTesting;

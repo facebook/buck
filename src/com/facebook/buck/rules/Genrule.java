@@ -155,7 +155,8 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected ImmutableList<String> getInputsToCompareToOutput(BuildContext context) {
+  @VisibleForTesting
+  public ImmutableList<String> getInputsToCompareToOutput(BuildContext context) {
     return srcs;
   }
 
@@ -205,7 +206,8 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
+  @VisibleForTesting
+  public List<Step> buildInternal(BuildContext context) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Delete the old output for this rule, if it exists.
@@ -394,7 +396,7 @@ public class Genrule extends AbstractCachingBuildRule {
     }
 
     @VisibleForTesting
-    Builder setRelativeToAbsolutePathFunction(
+    public Builder setRelativeToAbsolutePathFunction(
         Function<String, String> relativeToAbsolutePathFunction) {
       this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
       return this;

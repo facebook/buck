@@ -5,7 +5,7 @@ java_library(
     '//lib:guava',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:core',
-    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:core',
     '//src/com/facebook/buck/shell:shell',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',

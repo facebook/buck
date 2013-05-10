@@ -13,10 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser;
+package com.facebook.buck.android;
 
+import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.parser.JavaTestBuildRuleFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.RobolectricTestRule;
 
 
 public class RobolectricTestBuildRuleFactory extends JavaTestBuildRuleFactory {

@@ -23,13 +23,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.java.DependencyCheckingJavacStep;
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.java.JavacOptionsUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.BuildDependencies;
-import com.facebook.buck.java.DependencyCheckingJavacStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.Verbosity;
@@ -177,25 +177,17 @@ public class DefaultJavaLibraryRuleTest {
   @Test
   public void testBuildInternalWithAndroidBootclasspath() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb");
-    ImmutableSet<String> srcs = ImmutableSet.of("android/java/src/com/facebook/Main.java");
-    DefaultJavaLibraryRule javaLibrary = new AndroidLibraryRule(
-        new BuildRuleParams(
-            buildTarget,
-            /* deps */ ImmutableSortedSet.<BuildRule>of(),
-            /* visibilityTargets */ ImmutableSet.<BuildTargetPattern>of()
-        ),
-        srcs,
-        /* resources */ ImmutableSet.<String>of(),
-        /* proguard_config*/ null,
-        /* annotationProcessors */ AnnotationProcessingParams.EMPTY,
-        /* manifestFile */ null,
-        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
+    String src = "android/java/src/com/facebook/Main.java";
+    DefaultJavaLibraryRule javaLibrary = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
+        .setBuildTarget(buildTarget)
+        .addSrc(src)
+        .build(Maps.<String, BuildRule>newHashMap());
 
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
     BuildContext context = createBuildContext(javaLibrary, bootclasspath);
 
     List<Step> steps = javaLibrary.buildInternal(context);
+
     // Find the JavacInMemoryCommand and verify its bootclasspath.
     Step step = Iterables.find(steps, new Predicate<Step>() {
       @Override
@@ -205,7 +197,9 @@ public class DefaultJavaLibraryRuleTest {
     });
     assertNotNull("Expected a JavacInMemoryCommand in the command list.", step);
     JavacInMemoryStep javac = (JavacInMemoryStep) step;
-    assertEquals("Should compile Main.java rather than generated R.java.", srcs, javac.getSrcs());
+    assertEquals("Should compile Main.java rather than generated R.java.",
+        ImmutableSet.of(src),
+        javac.getSrcs());
 
     EasyMock.verify(context);
   }
@@ -713,22 +707,24 @@ public class DefaultJavaLibraryRuleTest {
       return options;
     }
 
+    // TODO(simons): Actually generate a java library rule, rather than an android one.
     private DefaultJavaLibraryRule createJavaLibraryRule() {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
       annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);
 
-      ImmutableSet<String> srcs = ImmutableSet.of("android/java/src/com/facebook/Main.java");
+      String src = "android/java/src/com/facebook/Main.java";
+
       return new AndroidLibraryRule(
           new BuildRuleParams(
               buildTarget,
-            /* deps */ ImmutableSortedSet.<BuildRule>of(),
-            /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of()
+              /* deps */ ImmutableSortedSet.<BuildRule>of(),
+              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of()
           ),
-          srcs,
-        /* resources */ ImmutableSet.<String>of(),
-        /* proguardConfig */ null,
-        /* annotationProcessors */ annotationProcessingParamsBuilder.build(buildRuleIndex),
-        /* manifestFile */ null,
+          ImmutableSet.of(src),
+          /* resources */ ImmutableSet.<String>of(),
+          /* proguardConfig */ null,
+          /* annotationProcessors */ annotationProcessingParamsBuilder.build(buildRuleIndex),
+          /* manifestFile */ null,
           JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
           JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
     }

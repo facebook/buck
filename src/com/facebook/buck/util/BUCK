@@ -29,6 +29,8 @@ java_library(
 IO_SRCS = [
   'Ansi.java',
   'CapturingPrintStream.java',
+  'DefaultDirectoryTraverser.java',
+  'DirectoryTraverser.java',
   'DirectoryTraversal.java',
   'InputStreamConsumer.java',
   'MoreFiles.java',

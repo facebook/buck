@@ -33,7 +33,7 @@ public final class BuildRuleParams {
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
 
-  BuildRuleParams(BuildTarget buildTarget,
+  public BuildRuleParams(BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);

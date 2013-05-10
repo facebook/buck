@@ -13,8 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
+import com.facebook.buck.rules.AnnotationProcessingParams;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.JavaLibraryRule;
+import com.facebook.buck.rules.JavaTestRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 

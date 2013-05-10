@@ -20,7 +20,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.android.GenRDotJavaStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -197,7 +196,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
    * This set will be returned as an {@link ImmutableList} with the rules topologically sorted as
    * determined by {@code graph}. Rules will be ordered from least dependent to most dependent.
    */
-  static ImmutableList<AndroidResourceRule> getAndroidResourceDeps(
+  public static ImmutableList<AndroidResourceRule> getAndroidResourceDeps(
       BuildRule rule,
       DependencyGraph graph) {
     final Set<AndroidResourceRule> allAndroidResourceRules = findAllAndroidResourceDeps(rule);
@@ -284,6 +283,11 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
 
   @Override
   public boolean isAndroidRule() {
+    return true;
+  }
+
+  @Override
+  public boolean isLibrary() {
     return true;
   }
 

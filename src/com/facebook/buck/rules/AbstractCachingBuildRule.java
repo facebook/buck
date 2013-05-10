@@ -121,7 +121,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   @VisibleForTesting
-  void setIsCached(boolean isCached) {
+  public void setIsCached(boolean isCached) {
     isRuleCached = TriState.forBooleanValue(isCached);
   }
 

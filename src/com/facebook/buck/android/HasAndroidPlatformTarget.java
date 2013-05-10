@@ -14,15 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.android;
 
-public enum BuildDependencies {
-  FIRST_ORDER_ONLY,
-  WARN_ON_TRANSITIVE,
-  TRANSITIVE,
-  ;
+import com.facebook.buck.rules.BuildRule;
 
-  public static final BuildDependencies getDefault() {
-    return BuildDependencies.FIRST_ORDER_ONLY;
-  }
+public interface HasAndroidPlatformTarget extends BuildRule {
+
+  /**
+   * Return the version of the Android platform to target when building this rule, such as "16".
+   */
+  public String getAndroidPlatformTarget();
 }

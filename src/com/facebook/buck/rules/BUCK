@@ -1,16 +1,149 @@
+CPP_SRCS = [
+  'PrebuiltNativeLibraryBuildRule.java',
+]
+java_library(
+  name = 'cpp',
+  srcs = CPP_SRCS,
+  deps = [
+    ':core',
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:io',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+# TODO(simons): Things listed as "core" should really be the only things in this package.
+CORE_SRCS = [
+  'AbstractBuildRule.java',
+  'AbstractBuildRuleBuilder.java',
+  'AbstractCachingBuildRule.java',
+  'AbstractDependencyVisitor.java',
+  'BinaryBuildRule.java',
+  'Builder.java',
+  'BuildContext.java',
+  'BuildDependencies.java',
+  'BuildEvent.java',
+  'BuildEvents.java',
+  'BuildFinished.java',
+  'BuildRule.java',
+  'BuildRuleBuilder.java',
+  'BuildRuleFinished.java',
+  'BuildRuleParams.java',
+  'BuildRuleStatus.java',
+  'BuildRuleStarted.java',
+  'BuildRuleSuccess.java',
+  'BuildRuleType.java',
+  'BuildStarted.java',
+  'CacheResult.java',
+  'DependencyGraph.java',
+  'InputRule.java',
+  'InstallableBuildRule.java',
+  'JavaPackageFinder.java',  # TODO(simons): Move to the java package
+  'LabelsAttributeBuilder.java',
+  'OutputKey.java',
+  'RuleKey.java',
+  'SourceRoot.java',
+  'SrcsAttributeBuilder.java',
+  'TestCaseSummary.java',
+  'TestRule.java',          # TODO(simons): Break out a "testing" package?
+  'TestResults.java',
+  'TestResultSummary.java',
+  'XmlTestResultParser.java',
+]
+
+# TODO(simons): Rename to "rules" once all the rules are in their home packages.
+java_library(
+  name = 'core',
+  srcs = CORE_SRCS,
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/android:exceptions',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+JAVA_SRCS = [
+  'AndroidResourceRule.java',         # Belongs in Android
+  'AnnotationProcessingParams.java',
+  'Classpaths.java',
+  'DefaultJavaLibraryRule.java',
+  'GenRDotJavaStep.java',             # Belongs in the Android package.
+  'HasClasspathEntries.java',
+  'HasJavaSrcs.java',
+  'JavaBinaryRule.java',
+  'JavaLibraryRule.java',
+  'JavaTestRule.java',
+  'MergeAndroidResourcesStep.java',   # Belongs in the Android package.
+  'PrebuiltJarRule.java',
+  'ResourcesAttributeBuilder.java',
+  'UberRDotJavaUtil.java',            # Belongs in the Android package.
+]
+java_library(
+  name = 'java',
+  srcs = JAVA_SRCS,
+  deps = [
+    ':core',
+    ':cpp',
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/android:exceptions',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/java:java',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+SHELL_SRCS = [
+  'Genrule.java',
+]
+java_library(
+  name = 'shell',
+  srcs = SHELL_SRCS,
+  deps = [
+    ':core',
+    '//lib:guava',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 java_library(
   name = 'rules',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = CPP_SRCS + CORE_SRCS + JAVA_SRCS + SHELL_SRCS),
   deps = [
+    ':core',
+    ':cpp',
+    ':java',
+    ':shell',
     '//lib:guava',
     '//lib:jackson-core',
     '//lib:jackson-databind',
     '//lib:jsr305',
-    '//src/com/facebook/buck/android:android',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:java',
     '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parcelable:parcelable',
     '//src/com/facebook/buck/shell:shell',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',

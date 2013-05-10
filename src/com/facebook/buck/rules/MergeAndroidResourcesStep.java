@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;

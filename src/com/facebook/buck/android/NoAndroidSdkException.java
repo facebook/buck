@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
 
+
+import com.facebook.buck.util.HumanReadableException;
 
 @SuppressWarnings("serial")
 public class NoAndroidSdkException extends HumanReadableException {

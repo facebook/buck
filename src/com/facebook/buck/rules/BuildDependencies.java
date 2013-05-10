@@ -16,10 +16,13 @@
 
 package com.facebook.buck.rules;
 
-public interface HasAndroidPlatformTarget extends BuildRule {
+public enum BuildDependencies {
+  FIRST_ORDER_ONLY,
+  WARN_ON_TRANSITIVE,
+  TRANSITIVE,
+  ;
 
-  /**
-   * Return the version of the Android platform to target when building this rule, such as "16".
-   */
-  public String getAndroidPlatformTarget();
+  public static final BuildDependencies getDefault() {
+    return BuildDependencies.FIRST_ORDER_ONLY;
+  }
 }

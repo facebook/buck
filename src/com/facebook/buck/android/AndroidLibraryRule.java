@@ -14,10 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AnnotationProcessingParams;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DefaultJavaLibraryRule;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +39,8 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   @Nullable
   private final String manifestFile;
 
-  protected AndroidLibraryRule(BuildRuleParams buildRuleParams,
+  @VisibleForTesting
+  public AndroidLibraryRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       @Nullable String proguardConfig,

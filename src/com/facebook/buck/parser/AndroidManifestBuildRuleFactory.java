@@ -16,7 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AndroidManifestRule;
+import com.facebook.buck.android.AndroidManifestRule;
 
 public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory {
 

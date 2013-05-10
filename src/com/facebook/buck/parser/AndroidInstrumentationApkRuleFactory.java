@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AndroidInstrumentationApk;
+import com.facebook.buck.android.AndroidInstrumentationApk;
 
 public class AndroidInstrumentationApkRuleFactory extends AbstractBuildRuleFactory {
 

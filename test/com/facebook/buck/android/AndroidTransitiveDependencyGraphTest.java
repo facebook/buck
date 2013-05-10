@@ -14,14 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
 import static org.easymock.EasyMock.createNiceMock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.rules.AndroidResourceRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DefaultJavaLibraryRule;
+import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.PrebuiltJarRule;
 import com.facebook.buck.testutil.RuleMap;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;

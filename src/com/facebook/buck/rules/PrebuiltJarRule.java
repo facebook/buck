@@ -66,7 +66,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
             ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
             classpathEntries.put(PrebuiltJarRule.this, getBinaryJar());
-            classpathEntries.putAll(getClasspathEntriesForDeps());
+            classpathEntries.putAll(Classpaths.getClasspathEntries(getDeps()));
             return classpathEntries.build();
           }
         });
@@ -139,6 +139,11 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   @Override
   public File getOutput() {
     return new File(getBinaryJar());
+  }
+
+  @Override
+  public boolean isLibrary() {
+    return true;
   }
 
   @Override

@@ -23,7 +23,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
@@ -72,41 +71,12 @@ abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public boolean isLibrary() {
-    return this instanceof JavaLibraryRule ||
-        this instanceof AndroidResourceRule;
+    return false;
   }
 
   @Override
   public final ImmutableSortedSet<BuildRule> getDeps() {
     return deps;
-  }
-
-  /**
-   * Include the classpath entries from all JavaLibraryRules that have a direct line of lineage
-   * to this rule through other JavaLibraryRules. For example, in the following dependency graph:
-   *
-   *        A
-   *      /   \
-   *     B     C
-   *    / \   / \
-   *    D E   F G
-   *
-   * If all of the nodes correspond to BuildRules that implement JavaLibraryRule except for
-   * B (suppose B is a Genrule), then A's classpath will include C, F, and G, but not D and E.
-   * This is because D and E are used to generate B, but do not contribute .class files to things
-   * that depend on B. However, if C depended on E as well as F and G, then E would be included in
-   * A's classpath.
-   */
-  protected final ImmutableSetMultimap<BuildRule, String> getClasspathEntriesForDeps() {
-    final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
-        ImmutableSetMultimap.builder();
-    for (BuildRule dep : getDeps()) {
-      if (dep instanceof JavaLibraryRule) {
-        JavaLibraryRule libraryRule = (JavaLibraryRule)dep;
-        classpathEntries.putAll(libraryRule.getTransitiveClasspathEntries());
-      }
-    }
-    return classpathEntries.build();
   }
 
   @Override

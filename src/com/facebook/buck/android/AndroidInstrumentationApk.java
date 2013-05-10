@@ -14,8 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AndroidResourceRule;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Classpaths;
+import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.collect.ImmutableList;
@@ -50,7 +59,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         // Do not include the classes that will already be in the classes.dex of the APK under test.
         ImmutableSet.<BuildRule>builder()
             .addAll(apkUnderTest.getBuildRulesToExcludeFromDex())
-            .addAll(apkUnderTest.getClasspathEntriesForDeps().keySet())
+            .addAll(Classpaths.getClasspathEntries(apkUnderTest.getDeps()).keySet())
             .build(),
         // Do not split the test apk even if the tested apk is split
         new DexSplitMode(false, ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE),

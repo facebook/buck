@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.GenParcelableRule;
+import com.facebook.buck.android.GenParcelableRule;
 
 public class GenParcelableBuildRuleFactory extends AbstractBuildRuleFactory {
 

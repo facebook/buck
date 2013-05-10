@@ -18,7 +18,7 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.NoAndroidSdkException;
+import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

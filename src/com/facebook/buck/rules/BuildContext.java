@@ -16,10 +16,9 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.NoAndroidSdkException;
+import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;

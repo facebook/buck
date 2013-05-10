@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AndroidLibraryRule;
+import com.facebook.buck.android.AndroidLibraryRule;
 import com.google.common.base.Optional;
 
 public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory {

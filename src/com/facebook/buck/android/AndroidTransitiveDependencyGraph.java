@@ -14,9 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
-import com.facebook.buck.rules.UberRDotJavaUtil.AndroidResourceDetails;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.AndroidResourceRule;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Classpaths;
+import com.facebook.buck.rules.DefaultJavaLibraryRule;
+import com.facebook.buck.rules.PrebuiltJarRule;
+import com.facebook.buck.rules.PrebuiltNativeLibraryBuildRule;
+import com.facebook.buck.rules.UberRDotJavaUtil;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -72,7 +82,9 @@ public class AndroidTransitiveDependencyGraph {
     final ImmutableSet.Builder<String> proguardConfigs = ImmutableSet.builder();
 
     // Update pathsToDex.
-    for (Map.Entry<BuildRule, String> entry : buildRule.getClasspathEntriesForDeps().entries()) {
+    ImmutableSet<Map.Entry<BuildRule, String>> classpath =
+        Classpaths.getClasspathEntries(buildRule.getDeps()).entries();
+    for (Map.Entry<BuildRule, String> entry : classpath) {
       if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
         pathsToDexBuilder.add(entry.getValue());
       } else {
@@ -83,7 +95,7 @@ public class AndroidTransitiveDependencyGraph {
     // This is not part of the AbstractDependencyVisitor traversal because
     // AndroidResourceRule.getAndroidResourceDeps() does a topological sort whereas
     // AbstractDependencyVisitor does only a breadth-first search.
-    AndroidResourceDetails details =
+    UberRDotJavaUtil.AndroidResourceDetails details =
         new UberRDotJavaUtil.AndroidResourceDetails(androidResourceDeps);
 
     // Visit all of the transitive dependencies to populate the above collections.

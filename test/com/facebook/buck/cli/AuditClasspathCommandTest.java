@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
-import com.facebook.buck.rules.AndroidBinaryRule;
+import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.DependencyGraph;

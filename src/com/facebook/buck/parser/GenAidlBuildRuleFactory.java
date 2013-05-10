@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.GenAidlRule;
+import com.facebook.buck.android.GenAidlRule;
 
 import java.io.File;
 

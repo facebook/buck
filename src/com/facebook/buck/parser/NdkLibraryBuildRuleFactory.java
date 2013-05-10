@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.NdkLibraryRule;
+import com.facebook.buck.android.NdkLibraryRule;
 
 import java.util.List;
 

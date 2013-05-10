@@ -11,12 +11,12 @@ java_library(
     '//lib:jsr305',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
-    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:core',
+    '//src/com/facebook/buck/rules:java',
     '//src/com/facebook/buck/step:step',
   ],
   visibility = [
-    '//test/com/facebook/buck/parser:parser',
-    '//test/com/facebook/buck/cli:cli',
+    '//test/...',
   ],
 )
 
@@ -35,7 +35,11 @@ java_test(
     '//src/com/facebook/buck/java:java',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:core',
+    '//src/com/facebook/buck/rules:core',
+    '//src/com/facebook/buck/rules:cpp',
+    '//src/com/facebook/buck/rules:java',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:shell',
     '//src/com/facebook/buck/shell:shell',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',

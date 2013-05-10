@@ -57,4 +57,9 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
   public AnnotationProcessingData getAnnotationProcessingData() {
     return AnnotationProcessingData.EMPTY;
   }
+
+  @Override
+  public boolean isLibrary() {
+    return true;
+  }
 }

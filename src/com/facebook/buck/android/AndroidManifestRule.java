@@ -14,9 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
-import com.facebook.buck.android.GenerateManifestStep;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AndroidResourceRule;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -84,8 +91,8 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
   /**
-   * @return a list of {@link AndroidResourceRule}s that should be passed, in order, to {@code aapt}
-   *         when generating the {@code R.java} files for this APK.
+   * @return a list of {@link com.facebook.buck.rules.AndroidResourceRule}s that should be passed,
+   * in order, to {@code aapt} when generating the {@code R.java} files for this APK.
    */
   private ImmutableList<AndroidResourceRule> getAndroidResourceDepsInternal(
       DependencyGraph graph) {

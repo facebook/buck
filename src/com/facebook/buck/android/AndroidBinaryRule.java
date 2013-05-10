@@ -14,28 +14,31 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AndroidResourceRule;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Classpaths;
+import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.HasClasspathEntries;
+import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.UberRDotJavaUtil;
+import com.facebook.buck.shell.BashStep;
+import com.facebook.buck.shell.EchoStep;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RepackZipEntriesStep;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.android.AaptStep;
-import com.facebook.buck.android.ApkBuilderStep;
-import com.facebook.buck.shell.BashStep;
-import com.facebook.buck.android.GenProGuardConfigStep;
-import com.facebook.buck.android.ProGuardObfuscateStep;
-import com.facebook.buck.android.ReadKeystorePropertiesAndSignApkStep;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.shell.EchoStep;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.android.ExtractResourcesStep;
-import com.facebook.buck.android.FilterResourcesStep;
-import com.facebook.buck.android.SmartDexingStep;
-import com.facebook.buck.android.SplitZipStep;
 import com.facebook.buck.step.fs.ZipDirectoryWithMaxDeflateStep;
-import com.facebook.buck.android.ZipalignStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
@@ -537,7 +540,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   /**
-   * @return a list of {@link AndroidResourceRule}s that should be passed, in order, to {@code aapt}
+   * @return a list of {@link com.facebook.buck.rules.AndroidResourceRule}s that should be passed, in order, to {@code aapt}
    *     when generating the {@code R.java} files for this APK.
    */
   protected ImmutableList<AndroidResourceRule> getAndroidResourceDepsInternal(
@@ -840,7 +843,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   @Override
   public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
-    return getClasspathEntriesForDeps();
+    return Classpaths.getClasspathEntries(getDeps());
   }
 
   public static Builder newAndroidBinaryRuleBuilder() {

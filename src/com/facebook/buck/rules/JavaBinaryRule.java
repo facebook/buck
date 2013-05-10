@@ -139,7 +139,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
   @Override
   public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
-    return getClasspathEntriesForDeps();
+    return Classpaths.getClasspathEntries(getDeps());
   }
 
   private String getOutputDirectory() {

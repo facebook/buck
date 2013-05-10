@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android;
 
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
@@ -25,15 +25,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.AndroidResourceRule;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.JavaLibraryRule;
+import com.facebook.buck.rules.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.android.GenProGuardConfigStep;
-import com.facebook.buck.android.ProGuardObfuscateStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.android.SmartDexingStep;
-import com.facebook.buck.android.SplitZipStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;

@@ -69,7 +69,7 @@ public abstract class AbstractBuildRuleBuilder implements BuildRuleBuilder {
   }
 
   @VisibleForTesting
-  ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(
+  protected ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(
       final Map<String, BuildRule> buildRuleIndex,
       Iterable<String> buildTargets,
       boolean allowNonExistentRule) {

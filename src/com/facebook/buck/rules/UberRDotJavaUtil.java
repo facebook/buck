@@ -18,12 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.android.GenRDotJavaStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.java.JavacInMemoryStep;
-import com.facebook.buck.android.MergeAndroidResourcesStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +42,7 @@ import java.util.Set;
  * {@code R.java} file represents the transitive closure of Android libraries that are being
  * packaged into an APK and has the real values for that APK.
  */
-class UberRDotJavaUtil {
+public class UberRDotJavaUtil {
 
   private static final Supplier<String> R_DOT_JAVA_BOOTCLASSPATH =
       Suppliers.ofInstance(null);
@@ -101,7 +100,7 @@ class UberRDotJavaUtil {
   /**
    * Aggregate information about a list of {@link AndroidResourceRule}s.
    */
-  static class AndroidResourceDetails {
+  public static class AndroidResourceDetails {
     /**
      * The {@code res} directories associated with the {@link AndroidResourceRule}s.
      * <p>
@@ -112,7 +111,8 @@ class UberRDotJavaUtil {
 
     public final ImmutableSet<String> rDotJavaPackages;
 
-    AndroidResourceDetails(ImmutableList<AndroidResourceRule> androidResourceDeps) {
+    @Beta
+    public AndroidResourceDetails(ImmutableList<AndroidResourceRule> androidResourceDeps) {
       ImmutableSet.Builder<String> resDirectoryBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
       for (AndroidResourceRule androidResource : androidResourceDeps) {
@@ -181,7 +181,7 @@ class UberRDotJavaUtil {
         buildTarget.getShortName());
   }
 
-  static String getRDotJavaBinFolder(BuildTarget buildTarget) {
+  public static String getRDotJavaBinFolder(BuildTarget buildTarget) {
     return String.format("%s/%s__%s_rdotjava_bin__",
         BuckConstant.BIN_DIR,
         buildTarget.getBasePathWithSlash(),

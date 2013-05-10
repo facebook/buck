@@ -23,7 +23,6 @@ import com.facebook.buck.java.JavacOptionsUtil;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.shell.BuildDependencies;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -218,7 +217,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
             final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
             ImmutableSetMultimap<BuildRule, String> classpathEntriesForDeps =
-                getClasspathEntriesForDeps();
+                Classpaths.getClasspathEntries(getDeps());
 
             classpathEntries.putAll(classpathEntriesForDeps);
 
@@ -324,6 +323,11 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   @Override
   public boolean isAndroidRule() {
     return false;
+  }
+
+  @Override
+  public boolean isLibrary() {
+    return true;
   }
 
   @Override

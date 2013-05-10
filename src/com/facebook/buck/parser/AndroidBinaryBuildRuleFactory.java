@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AndroidBinaryRule;
+import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
