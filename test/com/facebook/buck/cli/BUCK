@@ -42,6 +42,7 @@ java_test(
     '//src/com/facebook/buck/rules:core',
     '//src/com/facebook/buck/rules:java',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',

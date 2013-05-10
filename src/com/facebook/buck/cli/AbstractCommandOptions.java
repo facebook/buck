@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Properties;
 
+import javax.annotation.Nullable;
+
 public abstract class AbstractCommandOptions {
 
   @VisibleForTesting static final String HELP_LONG_ARG = "--help";
@@ -50,6 +52,10 @@ public abstract class AbstractCommandOptions {
       aliases = { VERBOSE_SHORT_ARG },
       usage = "Specify a number between 1 and 10.")
   private int verbosityLevel = Verbosity.STANDARD_INFORMATION.ordinal();
+
+  /** Determined by {@link #verbosityLevel}, if not set explicitly. */
+  @Nullable
+  private Verbosity verbosity;
 
   private final BuckConfig buckConfig;
 
@@ -70,17 +76,27 @@ public abstract class AbstractCommandOptions {
   }
 
   public Verbosity getVerbosity() {
-    if (verbosityLevel >= 8) {
-      return Verbosity.ALL;
-    } else if (verbosityLevel >= 5) {
-      return Verbosity.COMMANDS_AND_OUTPUT;
-    } else if (verbosityLevel >= 2) {
-      return Verbosity.COMMANDS;
-    } else if (verbosityLevel >= 1) {
-      return Verbosity.STANDARD_INFORMATION;
-    } else {
-      return Verbosity.SILENT;
+    if (verbosity != null) {
+      return verbosity;
     }
+
+    if (verbosityLevel >= 8) {
+      verbosity = Verbosity.ALL;
+    } else if (verbosityLevel >= 5) {
+      verbosity = Verbosity.COMMANDS_AND_OUTPUT;
+    } else if (verbosityLevel >= 2) {
+      verbosity = Verbosity.COMMANDS;
+    } else if (verbosityLevel >= 1) {
+      verbosity = Verbosity.STANDARD_INFORMATION;
+    } else {
+      verbosity = Verbosity.SILENT;
+    }
+
+    return verbosity;
+  }
+
+  public void setVerbosity(@Nullable Verbosity verbosity) {
+    this.verbosity = verbosity;
   }
 
   /** @return androidSdkDir */

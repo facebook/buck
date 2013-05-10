@@ -59,6 +59,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   public BuildCommandOptions createBuildCommandOptionsWithInitialTargets() {
     BuildCommandOptions buildCommandOptions = new BuildCommandOptions(getBuckConfig());
+    buildCommandOptions.setVerbosity(getVerbosity());
     buildCommandOptions.setArguments(getInitialTargets());
     return buildCommandOptions;
   }
