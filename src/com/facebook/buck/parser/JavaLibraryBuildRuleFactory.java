@@ -25,7 +25,9 @@ import com.google.common.base.Optional;
 
 import java.util.List;
 
-class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
+
+  public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 
   @Override
   public DefaultJavaLibraryRule.Builder newBuilder() {
@@ -67,7 +69,7 @@ class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
     //
     // Names of the classes used for annotation processing.  These must be implemented
     // in a BuildTarget listed in annotation_processor_deps.
-    List<String> annotationProcessors = params.getOptionalListAttribute("annotation_processors");
+    List<String> annotationProcessors = params.getOptionalListAttribute(ANNOTATION_PROCESSORS);
     if (!annotationProcessors.isEmpty()) {
       annotationProcessingBuilder.addAllProcessors(annotationProcessors);
 

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Option;
 
@@ -57,10 +58,20 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     return !getInitialTargets().isEmpty();
   }
 
-  public BuildCommandOptions createBuildCommandOptionsWithInitialTargets() {
+  public BuildCommandOptions createBuildCommandOptionsWithInitialTargets(
+      List<String> additionalInitialTargets) {
+    List<String> initialTargets;
+    if (additionalInitialTargets.isEmpty()) {
+      initialTargets = getInitialTargets();
+    } else {
+      initialTargets = Lists.newArrayList();
+      initialTargets.addAll(getInitialTargets());
+      initialTargets.addAll(additionalInitialTargets);
+    }
+
     BuildCommandOptions buildCommandOptions = new BuildCommandOptions(getBuckConfig());
     buildCommandOptions.setVerbosity(getVerbosity());
-    buildCommandOptions.setArguments(getInitialTargets());
+    buildCommandOptions.setArguments(initialTargets);
     return buildCommandOptions;
   }
 }

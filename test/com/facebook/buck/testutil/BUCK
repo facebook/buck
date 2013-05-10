@@ -12,6 +12,7 @@ java_library(
   ],
   visibility = [
     '//test/com/facebook/buck/android:android',
+    '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/command:command',
     '//test/com/facebook/buck/java:java',
     '//test/com/facebook/buck/rules:rules',

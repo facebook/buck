@@ -23,10 +23,15 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.List;
 import java.util.Map;
 
 public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions> {
@@ -43,6 +48,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
   };
 
+
   public ProjectCommand() {}
 
   @Override
@@ -55,13 +61,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     // Create a PartialGraph that only contains targets that can be represented as IDE
     // configuration files.
     PartialGraph partialGraph;
+
     try {
-      partialGraph = PartialGraph.createPartialGraph(predicate,
-          getProjectFilesystem().getProjectRoot(),
-          options.getDefaultIncludes());
+      partialGraph = createPartialGraph(predicate, options);
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
-      return 1;
+      throw new HumanReadableException(e);
     }
 
     ExecutionContext executionContext = new ExecutionContext(
@@ -85,16 +89,20 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     File tempFile = new File(Files.createTempDir(), "project.json");
     int exitCode;
     try {
-      exitCode = project.createIntellijProject(tempFile, console.getStdOut());
+      exitCode = createIntellijProject(project, tempFile, console.getStdOut());
       if (exitCode != 0) {
         return exitCode;
       }
 
+      List<String> additionalInitialTargets = ImmutableList.of();
+
       // Build initial targets.
-      if (options.hasInitialTargets()) {
+      if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
         BuildCommand buildCommand = new BuildCommand(stdOut, stdErr, console, getProjectFilesystem());
-        exitCode = buildCommand.runCommandWithOptions(
-            options.createBuildCommandOptionsWithInitialTargets());
+
+        exitCode = runBuildCommand(
+            buildCommand,
+            options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets));
 
         if (exitCode != 0) {
           return exitCode;
@@ -110,6 +118,38 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
 
     return 0;
+  }
+
+
+  /**
+   * Calls {@link Project#createIntellijProject}
+   *
+   * This is factored into a separate method for testing purposes.
+   */
+  @VisibleForTesting
+  int createIntellijProject(Project project, File jsonTemplate, PrintStream stdOut)
+      throws IOException {
+    return project.createIntellijProject(jsonTemplate, stdOut);
+  }
+
+  /**
+   * Calls {@link BuildCommand#runCommandWithOptions}
+   *
+   * This is factored into a separate method for testing purposes.
+   */
+  @VisibleForTesting
+  int runBuildCommand(BuildCommand buildCommand, BuildCommandOptions options)
+      throws IOException {
+    return buildCommand.runCommandWithOptions(options);
+  }
+
+  @VisibleForTesting
+  PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)
+      throws IOException, NoSuchBuildTargetException {
+    return PartialGraph.createPartialGraph(
+        rulePredicate,
+        getProjectFilesystem().getProjectRoot(),
+        options.getDefaultIncludes());
   }
 
   @Override
