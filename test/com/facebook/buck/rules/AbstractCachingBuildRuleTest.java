@@ -91,10 +91,10 @@ public class AbstractCachingBuildRuleTest {
     // Create three deps: the second one is not cached.
     BuildRule dep1 = createMock(BuildRule.class);
     expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.isCached(context)).andReturn(true);
+    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep2 = createMock(BuildRule.class);
     expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.isCached(context)).andReturn(false);
+    expect(dep2.hasUncachedDescendants(context)).andReturn(true);
     expect(dep2.getFullyQualifiedName()).andReturn("//src/com/facebook/base:base");
     BuildRule dep3 = createMock(BuildRule.class);
     expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
@@ -102,7 +102,7 @@ public class AbstractCachingBuildRuleTest {
     // Verify the call to the logger so we know the rule was not cached for the right reason.
     Logger logger = createMock(Logger.class);
     logger.info("//src/com/facebook/orca:orca not cached because" +
-        " //src/com/facebook/base:base is not cached");
+        " //src/com/facebook/base:base has an uncached descendant");
 
     // Verify that there are no calls made to the visibility patterns.
     @SuppressWarnings("unchecked")
@@ -134,13 +134,13 @@ public class AbstractCachingBuildRuleTest {
     // Create three deps, all of which are cached.
     BuildRule dep1 = createMock(BuildRule.class);
     expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.isCached(context)).andReturn(true);
+    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep2 = createMock(BuildRule.class);
     expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.isCached(context)).andReturn(true);
+    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep3 = createMock(BuildRule.class);
     expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.isCached(context)).andReturn(true);
+    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
 
     // Verify the call to the logger so we know the rule was not cached for the right reason.
     Logger logger = createMock(Logger.class);
@@ -175,13 +175,13 @@ public class AbstractCachingBuildRuleTest {
     // Create three deps, all of which are cached.
     BuildRule dep1 = createMock(BuildRule.class);
     expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.isCached(context)).andReturn(true);
+    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep2 = createMock(BuildRule.class);
     expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.isCached(context)).andReturn(true);
+    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep3 = createMock(BuildRule.class);
     expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.isCached(context)).andReturn(true);
+    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
 
     // Verify the call to the logger so we know the rule was not cached for the right reason.
     Logger logger = createMock(Logger.class);
@@ -216,13 +216,13 @@ public class AbstractCachingBuildRuleTest {
     // Create three deps, all of which are cached.
     BuildRule dep1 = createMock(BuildRule.class);
     expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.isCached(context)).andReturn(true);
+    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep2 = createMock(BuildRule.class);
     expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.isCached(context)).andReturn(true);
+    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep3 = createMock(BuildRule.class);
     expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.isCached(context)).andReturn(true);
+    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
 
     // Verify the call to the logger so we know the rule was not cached for the right reason.
     Logger logger = createMock(Logger.class);
@@ -258,13 +258,13 @@ public class AbstractCachingBuildRuleTest {
     // Create three deps, all of which are cached.
     BuildRule dep1 = createMock(BuildRule.class);
     expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.isCached(context)).andReturn(true);
+    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep2 = createMock(BuildRule.class);
     expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.isCached(context)).andReturn(true);
+    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
     BuildRule dep3 = createMock(BuildRule.class);
     expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.isCached(context)).andReturn(true);
+    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
 
     // Verify that there are no calls made to the Logger.
     Logger logger = createMock(Logger.class);

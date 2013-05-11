@@ -149,6 +149,11 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
   public static Builder newProjectConfigRuleBuilder() {
     return new Builder();
   }

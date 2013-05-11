@@ -78,6 +78,22 @@ public interface BuildRule extends Comparable<BuildRule> {
   public boolean isCached(BuildContext context) throws IOException;
 
   /**
+   * A rule is considered to have uncached descendants if it satisfies any of the following
+   * criteria:
+   * <ol>
+   *   <li>this rule is uncached as determined by {@link BuildRule#isCached(BuildContext)}
+   *   <li>any of the dependencies for this rule have uncached descendants.
+   * </ol>
+   * Some build rules only need to be rebuilt if some subset of their dependencies are uncached vs.
+   * if any of their descendants are uncached.  Other rules (like packaging rules) need to run if
+   * any of their descendants are uncached.
+   * <p>
+   * Note that it is always safe for this method to return {@code true}; however, that may result
+   * in unnecessary rebuilding.
+   */
+  public boolean hasUncachedDescendants(BuildContext context) throws IOException;
+
+  /**
    * @return whether this rule exists only in an Android project.
    */
   public boolean isAndroidRule();

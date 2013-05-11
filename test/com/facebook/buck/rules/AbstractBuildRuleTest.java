@@ -222,6 +222,11 @@ public class AbstractBuildRuleTest {
       }
 
       @Override
+      public boolean hasUncachedDescendants(BuildContext context) throws IOException {
+        throw new IllegalStateException("This method should not be called");
+      }
+
+      @Override
       public RuleKey.Builder ruleKeyBuilder() {
         throw new IllegalStateException("This method should not be called");
       }

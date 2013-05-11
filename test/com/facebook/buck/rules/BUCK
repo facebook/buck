@@ -2,6 +2,7 @@ java_library(
   name = 'testutil',
   srcs = [
     'FakeBuildRule.java',
+    'FakeDefaultJavaLibraryRule.java',
     'FakeJavaLibraryRule.java',
     'FakeTestRule.java',
     'RetainOrderComparator.java',

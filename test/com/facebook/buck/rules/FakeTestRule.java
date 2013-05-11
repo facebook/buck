@@ -88,4 +88,9 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   public ImmutableSet<String> getLabels() {
     return labels;
   }
+
+  @Override
+  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
+    return true;
+  }
 }

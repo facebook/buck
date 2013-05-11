@@ -119,6 +119,11 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
+    public boolean hasUncachedDescendants(BuildContext context) throws IOException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public boolean isAndroidRule() {
       throw new UnsupportedOperationException();
     }

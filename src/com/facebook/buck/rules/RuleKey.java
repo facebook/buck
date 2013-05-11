@@ -16,11 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -137,7 +139,14 @@ public class RuleKey implements Comparable<RuleKey> {
     return new Builder(rule.getFullyQualifiedName())
     // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
     .set("buck.type", rule.getType().getDisplayName())
-    .set("deps", rule.getDeps());
+    .setStrings("deps", Iterables.transform(rule.getDeps(), new Function<BuildRule, String>() {
+      @Override
+      public String apply(BuildRule input) {
+        return String.format("%s:%s",
+            input.getFullyQualifiedName(),
+            input.getType().getDisplayName());
+      }
+    }));
   }
 
   public static class Builder {
@@ -268,6 +277,16 @@ public class RuleKey implements Comparable<RuleKey> {
       if (val != null) {
         for (SourceRoot root : val) {
           setVal(root.getName());
+        }
+      }
+      return separate();
+    }
+
+    public Builder setStrings(String key, @Nullable Iterable<String> val) {
+      setKey(key);
+      if (val != null) {
+        for (String s : val) {
+          setVal(s);
         }
       }
       return separate();

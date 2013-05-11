@@ -59,6 +59,18 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    */
   private TriState isRuleCached;
 
+  /**
+   * This field behaves similarly to isRuleCached, but instead tracks whether or not any of this
+   * rule's descendants are uncached.
+   */
+  private TriState hasUncachedDescendants;
+
+  /**
+   * This field behaves similarly to isRuleCached, but instead tracks whether or not any of this
+   * rule's inputs were uncached.
+   */
+  private TriState ruleInputsAreCached;
+
   private ListenableFuture<BuildRuleSuccess> buildRuleResult;
 
   private Iterable<InputRule> inputsToCompareToOutputs;
@@ -66,6 +78,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
     super(buildRuleParams);
     this.isRuleCached = TriState.UNSPECIFIED;
+    this.hasUncachedDescendants = TriState.UNSPECIFIED;
+    this.ruleInputsAreCached = TriState.UNSPECIFIED;
   }
 
   /**
@@ -109,6 +123,27 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     return isRuleCached.asBoolean();
   }
 
+  @Override
+  public boolean hasUncachedDescendants(final BuildContext context) throws IOException {
+    if (hasUncachedDescendants.isSet()) {
+      return hasUncachedDescendants.asBoolean();
+    }
+
+    if (!isCached(context)) {
+      hasUncachedDescendants = TriState.TRUE;
+    } else {
+      boolean depHasUncachedDescendant = false;
+      for (BuildRule dep : getDeps()) {
+        if (dep.hasUncachedDescendants(context)) {
+          depHasUncachedDescendant = true;
+          break;
+        }
+      }
+      hasUncachedDescendants = TriState.forBooleanValue(depHasUncachedDescendant);
+    }
+    return hasUncachedDescendants.asBoolean();
+  }
+
   private Iterable<BuildRule> getRulesToConsiderForCaching() {
     List<BuildRule> rules = Lists.newArrayList();
     // Not possible due to generics limitations:
@@ -147,6 +182,15 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   protected boolean ruleInputsCached(BuildContext context, Logger logger) throws IOException {
+    if (ruleInputsAreCached.isSet()) {
+      return ruleInputsAreCached.asBoolean();
+    }
+    ruleInputsAreCached = TriState.forBooleanValue(checkRuleInputsCached(context, logger));
+
+    return ruleInputsAreCached.asBoolean();
+  }
+
+  private boolean checkRuleInputsCached(BuildContext context, Logger logger) throws IOException {
     // If the success file does not exist, then this rule is not cached.
     String pathToSuccessFile = getPathToSuccessFile();
     if (!context.getProjectFilesystem().exists(pathToSuccessFile)) {
@@ -171,17 +215,26 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   boolean checkIsCached(BuildContext context, Logger logger) throws IOException {
     // First, check whether all of the deps are cached.
     // This is checked first since it does not require touching the filesystem.
+    // If all of the deps were cached, check if the inputs to this rule were cached.
+    return depsCached(context, logger) && ruleInputsCached(context, logger);
+  }
+
+  /**
+   * Checks to see if all of the dependencies rules are cached.  By default,
+   * AbstractCachingBuildRule will consider a rule's deps uncached if any of its descendants were
+   * uncached.
+   */
+  @VisibleForTesting
+  boolean depsCached(BuildContext context, Logger logger) throws IOException {
     for (BuildRule dep : getDeps()) {
-      if (!dep.isCached(context)) {
-        logger.info(String.format("%s not cached because %s is not cached",
-            this,
-            dep.getFullyQualifiedName()));
+      if (dep.hasUncachedDescendants(context)) {
+        logger.info(String.format("%s not cached because %s has an uncached descendant",
+                    this,
+                    dep.getFullyQualifiedName()));
         return false;
       }
     }
-
-    // If all of the deps were cached, check if the inputs to this rule were cached.
-    return ruleInputsCached(context, logger);
+    return true;
   }
 
   /**
@@ -197,7 +250,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
   @Override
   public final Iterable<InputRule> getInputs() {
-    // TODO(mbolin): Is context ever used?
     if (inputsToCompareToOutputs == null) {
       List<InputRule> inputs = Lists.newArrayList();
       for (String inputPath : getInputsToCompareToOutput(null /* context */)) {

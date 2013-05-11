@@ -115,6 +115,11 @@ public class InputRule implements BuildRule {
   }
 
   @Override
+  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
+    return false;
+  }
+
+  @Override
   public boolean isAndroidRule() {
     return false;
   }

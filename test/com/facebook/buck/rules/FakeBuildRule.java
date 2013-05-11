@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.annotation.Nullable;
 
@@ -65,6 +66,11 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   @Override
   public boolean isCached(BuildContext context) {
     return false;
+  }
+
+  @Override
+  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
+    return true;
   }
 
   @Override
