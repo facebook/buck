@@ -21,8 +21,6 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
 public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory {
 
-  static final String MANIFEST_FILENAME = "AndroidManifest.xml";
-
   @Override
   public AndroidManifestRule.Builder newBuilder() {
     return AndroidManifestRule.newManifestMergeRuleBuilder();
@@ -34,8 +32,9 @@ public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFact
     AndroidManifestRule.Builder builder = ((AndroidManifestRule.Builder) abstractBuilder);
 
     // manifest file
+    String manifestFile = params.getRequiredStringAttribute("manifest");
     String manifestPath =
-        params.resolveAndCreateFilePathRelativeToBuildFileDirectory(MANIFEST_FILENAME);
+        params.resolveAndCreateFilePathRelativeToBuildFileDirectory(manifestFile);
     builder.setManifestFile(manifestPath);
 
     // skeleton file
