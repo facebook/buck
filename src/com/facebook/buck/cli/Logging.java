@@ -28,7 +28,7 @@ public class Logging {
   public static void setLoggingLevelForVerbosity(Verbosity verbosity) {
     Level loggerLevel = verbosity == Verbosity.ALL
         ? Level.ALL
-        : (verbosity.shouldPrintCommand()) ? Level.INFO : Level.OFF;
+        : (verbosity.shouldPrintOutput()) ? Level.INFO : Level.OFF;
     // TODO(mbolin): Figure out why "com.facebook.buck" cannot be used instead of "".
     Logger.getLogger("").setLevel(loggerLevel);
   }
