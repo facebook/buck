@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.PrintStream;
 
 /**
- * Merges resources into a final APK.  This code is based off of the now depricated apkbuilder tool:
+ * Merges resources into a final APK.  This code is based off of the now deprecated apkbuilder tool:
  * https://android.googlesource.com/platform/sdk/+/fd30096196e3747986bdf8a95cc7713dd6e0b239%5E/sdkmanager/libs/sdklib/src/main/java/com/android/sdklib/build/ApkBuilderMain.java
  */
 public class ApkBuilderStep implements Step {

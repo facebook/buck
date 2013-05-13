@@ -15,11 +15,12 @@
  */
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -31,6 +32,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -42,6 +44,17 @@ import java.util.zip.ZipOutputStream;
  * where we deflate those that we can, and store the ones we can't.
  */
 public class ZipDirectoryWithMaxDeflateStep implements Step {
+
+  /**
+   * Extensions of files we don't want to DEFLATE (e.g. already compressed).
+   */
+  private final Set<String> EXTENSIONS_NOT_TO_DEFLATE = ImmutableSet.of(
+      "gzip",
+      "jar",
+      "jpg",
+      "png",
+      "xz"
+  );
 
   private final String inputDirectoryPath;
   private final String outputZipPath;
@@ -112,8 +125,8 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
       } else {
         ZipEntry nextEntry = new ZipEntry(childPath);
         long fileLength = inputFile.length();
-
-        if (fileLength > maxDeflatedBytes) {
+        if (fileLength > maxDeflatedBytes ||
+            EXTENSIONS_NOT_TO_DEFLATE.contains(Files.getFileExtension(inputFile.getName()))) {
           nextEntry.setMethod(ZipEntry.STORED);
           nextEntry.setCompressedSize(inputFile.length());
           nextEntry.setSize(inputFile.length());

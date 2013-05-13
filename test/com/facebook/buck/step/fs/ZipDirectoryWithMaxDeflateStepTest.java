@@ -77,6 +77,11 @@ public class ZipDirectoryWithMaxDeflateStepTest {
         deflatedFile.getMethod(),
         ZipEntry.DEFLATED);
 
+    ZipEntry compressedFile = resultZip.getEntry("CompressedFile.xz");
+    assertEquals("CompressedFile.xz should have been STORED, it's already compressed",
+        compressedFile.getMethod(),
+        ZipEntry.STORED);
+
     EasyMock.verify(executionContext);
   }
 
