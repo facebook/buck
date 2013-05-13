@@ -30,8 +30,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class GenerateManifestStep implements Step {
@@ -67,6 +69,13 @@ public class GenerateManifestStep implements Step {
       return 1;
     }
 
+    try {
+      Files.createParentDirs(new File(outManifestPath));
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+
     List<File> libraryManifestFiles = Lists.newArrayList();
 
     for (String path : libraryManifestPaths) {
@@ -85,6 +94,7 @@ public class GenerateManifestStep implements Step {
     IMergerLog log = MergerLog.wrapSdkLog(new StdLogger(StdLogger.Level.VERBOSE));
 
     ManifestMerger merger = new ManifestMerger(log, callback);
+
     if (!merger.process(
         new File(outManifestPath),
         skeletonManifestFile,

@@ -434,6 +434,7 @@ def python_binary(
 def android_manifest(
     name,
     skeleton,
+    manifest='AndroidManifest.xml',
     deps=[],
     visibility=[],
     build_env=None):
@@ -441,6 +442,7 @@ def android_manifest(
     'type' : 'android_manifest',
     'name' : name,
     'skeleton' : skeleton,
+    'manifest' : manifest,
     'deps' : deps,
     'visibility' : visibility,
   }, build_env)
