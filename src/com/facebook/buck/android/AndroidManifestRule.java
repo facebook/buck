@@ -91,7 +91,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
   /**
-   * @return a list of {@link com.facebook.buck.rules.AndroidResourceRule}s that should be passed,
+   * @return a list of {@link AndroidResourceRule}s that should be passed,
    * in order, to {@code aapt} when generating the {@code R.java} files for this APK.
    */
   private ImmutableList<AndroidResourceRule> getAndroidResourceDepsInternal(
