@@ -157,8 +157,8 @@ public class DependencyCheckingJavacStep extends JavacInMemoryStep {
       if (transitiveResult == 0) {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
 
-        context.getStdErr().println(String.format("Rule %s builds with it's transitive " +
-            "dependencies but not with it's first order dependencies.", invokingRule.or("")));
+        context.getStdErr().println(String.format("Rule %s builds with its transitive " +
+            "dependencies but not with its first order dependencies.", invokingRule.or("")));
         context.getStdErr().println("The following packages were missing:");
         context.getStdErr().println(Joiner.on(LINE_SEPARATOR).join(failedImports));
         if (suggestBuildRules.isPresent()) {
