@@ -4,10 +4,8 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
-    '//lib:sdklib',
-    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
-    '//third-party/java/aosp/src/com/android:aosp',
   ],
   visibility = [ 'PUBLIC' ],
 )

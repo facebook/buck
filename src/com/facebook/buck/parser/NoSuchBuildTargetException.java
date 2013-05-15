@@ -59,7 +59,7 @@ public class NoSuchBuildTargetException extends Exception
   }
 
   /**
-   * @param buildTarget the failing {@link BuildTarget}
+   * @param buildTarget the failing {@link com.facebook.buck.model.BuildTarget}
    */
   static NoSuchBuildTargetException createForMissingBuildRule(BuildTarget buildTarget,
       ParseContext parseContext) {

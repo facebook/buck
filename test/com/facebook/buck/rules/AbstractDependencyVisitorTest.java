@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.google.common.collect.ImmutableList;

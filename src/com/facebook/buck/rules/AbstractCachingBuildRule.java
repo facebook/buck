@@ -227,7 +227,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * uncached.
    */
   @VisibleForTesting
-  boolean depsCached(BuildContext context, Logger logger) throws IOException {
+  protected boolean depsCached(BuildContext context, Logger logger) throws IOException {
     for (BuildRule dep : getDeps()) {
       if (dep.hasUncachedDescendants(context)) {
         logger.info(String.format("%s not cached because %s has an uncached descendant",
@@ -244,7 +244,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * whether this rule is cached.
    * <p>
    * Note that the collection of inputs is specified as a list, because for some build rules
-   * (such as {@link Genrule}), the order of the inputs is significant. If the order of the inputs
+   * (such as {@link com.facebook.buck.shell.Genrule}), the order of the inputs is significant. If the order of the inputs
    * is not significant for the build rule, then the list should be alphabetized so that lists with
    * the same elements will be {@code .equals()} to one another.
    */

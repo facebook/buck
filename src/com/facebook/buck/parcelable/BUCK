@@ -1,13 +1,33 @@
+RULES_SRCS = [
+  'GenParcelableBuildRuleFactory.java',
+  'GenParcelableRule.java',
+]
+java_library(
+  name = 'rules',
+  srcs = RULES_SRCS,
+  deps = [
+    ':parcelable',
+    '//lib:guava',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:constants',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/parser:parser',
+  ],
+)
+
 java_library(
   name = 'parcelable',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = RULES_SRCS),
   deps = [
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/util:util',
   ],
   visibility = [
-    '//src/com/facebook/buck/android:android',
     '//test/com/facebook/buck/parcelable:parcelable',
   ],
 )

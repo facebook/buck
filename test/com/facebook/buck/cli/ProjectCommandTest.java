@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.command.Project;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -32,7 +33,6 @@ import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;

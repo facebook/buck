@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.Ansi;
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
@@ -36,7 +37,8 @@ public class TestResults {
   private final List<TestCaseSummary> failures;
   private final int failureCount;
 
-  TestResults(List<TestCaseSummary> testCases) {
+  @Beta
+  public TestResults(List<TestCaseSummary> testCases) {
     this.testCases = ImmutableList.copyOf(testCases);
 
     int failureCount = 0;

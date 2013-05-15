@@ -16,16 +16,15 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AnnotationProcessingParams;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
-import com.facebook.buck.rules.JavaLibraryRule;
-import com.facebook.buck.rules.JavaTestRule;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 

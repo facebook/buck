@@ -16,22 +16,22 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.AndroidResourceRule;
+import com.facebook.buck.java.Classpaths;
+import com.facebook.buck.java.HasClasspathEntries;
+import com.facebook.buck.java.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.AndroidResourceRule;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
-import com.facebook.buck.rules.Classpaths;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.HasClasspathEntries;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.UberRDotJavaUtil;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -542,7 +542,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   /**
-   * @return a list of {@link com.facebook.buck.rules.AndroidResourceRule}s that should be passed, in order, to {@code aapt}
+   * @return a list of {@link com.facebook.buck.java.AndroidResourceRule}s that should be passed, in order, to {@code aapt}
    *     when generating the {@code R.java} files for this APK.
    */
   protected ImmutableList<AndroidResourceRule> getAndroidResourceDepsInternal(

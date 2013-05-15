@@ -1,18 +1,48 @@
+FAKES_SRCS = [
+  'FakeDefaultJavaLibraryRule.java',
+  'FakeJavaLibraryRule.java',
+]
+java_library(
+  name = 'fakes',
+  srcs = FAKES_SRCS,
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/rules:testutil',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+
 java_test(
   name = 'java',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = FAKES_SRCS),
   source_under_test = [
-    '//src/com/facebook/buck/java:java',
+    '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:steps',
   ],
   deps = [
+    ':fakes',
     '//lib:easymock',
     '//lib:guava',
     '//lib:junit',
-    '//src/com/facebook/buck/java:java',
-    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:steps',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/testutil:testutil',
   ],
 )

@@ -16,12 +16,26 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.android.AndroidBinaryBuildRuleFactory;
+import com.facebook.buck.android.AndroidInstrumentationApkRuleFactory;
+import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
+import com.facebook.buck.android.AndroidManifestBuildRuleFactory;
+import com.facebook.buck.java.AndroidResourceBuildRuleFactory;
+import com.facebook.buck.android.ApkGenruleBuildRuleFactory;
+import com.facebook.buck.android.GenAidlBuildRuleFactory;
+import com.facebook.buck.android.NdkLibraryBuildRuleFactory;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
+import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
+import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
+import com.facebook.buck.java.JavaTestBuildRuleFactory;
+import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
 import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
 import com.facebook.buck.python.PythonLibraryBuildRuleFactory;
 import com.facebook.buck.rules.ArtifactCache;
@@ -29,6 +43,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.shell.ExportFileBuildRuleFactory;
+import com.facebook.buck.shell.GenruleBuildRuleFactory;
+import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;

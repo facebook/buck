@@ -1,10 +1,44 @@
+RULES_SRCS = [
+  'ExportFileBuildRuleFactory.java',
+  'ExportFileRule.java',
+  'Genrule.java',
+  'GenruleBuildRuleFactory.java',
+  'ShTestBuildRuleFactory.java',
+  'ShTestRule.java',
+]
 java_library(
-  name = 'shell',
-  srcs = glob(['*.java']),
+  name = 'rules',
+  srcs = RULES_SRCS,
   deps = [
+    ':steps',
     '//lib:guava',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
     '//lib:jsr305',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:test',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'steps',
+  srcs = glob(['*.java'], excludes = RULES_SRCS),
+  deps = [
+    '//lib:guava',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:test',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',

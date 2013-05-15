@@ -1,8 +1,6 @@
-
 CONSTANT_SRCS = [
   'BuckConstant.java',
 ]
-
 java_library(
   name = 'constants',
   srcs = CONSTANT_SRCS,
@@ -14,7 +12,6 @@ EXCEPTION_SRCS = [
   'ExceptionWithHumanReadableMessage.java',
   'HumanReadableException.java',
 ]
-
 java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
@@ -37,7 +34,6 @@ IO_SRCS = [
   'ProcessExecutor.java',
   'ProjectFilesystem.java',
 ]
-
 java_library(
   name = 'io',
   srcs = IO_SRCS,
@@ -52,7 +48,7 @@ java_library(
   name = 'util',
   srcs = glob(
     includes = ['*.java'],
-    excludes = EXCEPTION_SRCS + IO_SRCS),
+    excludes = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS),
   deps = [
     ':constants',
     ':exceptions',

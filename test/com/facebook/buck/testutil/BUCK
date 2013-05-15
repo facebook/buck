@@ -1,22 +1,28 @@
 java_library(
   name = 'testutil',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = ['MoreAssertsTest.java']),
   deps = [
     '//lib:guava',
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/rules:core',
-    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
   ],
   visibility = [
-    '//test/com/facebook/buck/android:android',
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/command:command',
-    '//test/com/facebook/buck/java:java',
-    '//test/com/facebook/buck/rules:rules',
-    '//test/com/facebook/buck/shell:shell',
-    '//test/com/facebook/buck/step/fs:fs',
+    '//test/...',
+  ],
+)
+
+java_test(
+  name = 'test',
+  srcs = [
+    'MoreAssertsTest.java',
+  ],
+  deps = [
+    ':testutil',
+    '//lib:guava',
+    '//lib:junit',
   ],
 )

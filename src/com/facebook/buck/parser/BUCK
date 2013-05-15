@@ -1,53 +1,3 @@
-ANDROID_SRCS = [
-  'AndroidBinaryBuildRuleFactory.java',
-  'AndroidInstrumentationApkRuleFactory.java',
-  'AndroidLibraryBuildRuleFactory.java',
-  'AndroidManifestBuildRuleFactory.java',
-  'ApkGenruleBuildRuleFactory.java',
-  'GenAidlBuildRuleFactory.java',
-  'GenParcelableBuildRuleFactory.java',  # Not the right place for this
-  'NdkLibraryBuildRuleFactory.java',
-]
-java_library(
-  name = 'android',
-  srcs = ANDROID_SRCS,
-  deps = [
-    ':core',
-    ':java',
-    '//lib:guava',
-    '//src/com/facebook/buck/android:android',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:core',
-    '//src/com/facebook/buck/rules:java',
-    '//src/com/facebook/buck/rules:shell',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:util',
-  ],
-  visibility = ['PUBLIC'],
-)
-
-JAVA_SRCS = [
-  'AndroidResourceBuildRuleFactory.java',
-  'JavaBinaryBuildRuleFactory.java',
-  'JavaLibraryBuildRuleFactory.java',
-  'JavaTestBuildRuleFactory.java',
-  'PrebuiltJarBuildRuleFactory.java',
-]
-java_library(
-  name = 'java',
-  srcs = JAVA_SRCS,
-  deps = [
-    ':core',
-    '//lib:guava',
-    '//src/com/facebook/buck/java:java',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:core',
-    '//src/com/facebook/buck/rules:java',
-  ],
-  visibility = ['PUBLIC'],
-)
-
 PARSER_SRCS = [
   'Parser.java',
   'PartialGraph.java',
@@ -56,48 +6,60 @@ java_library(
   name = 'parser',
   srcs = PARSER_SRCS,
   deps = [
-    ':android',
-    ':core',
-    ':java',
+    ':project',
+    ':support',
     '//lib:guava',
     '//lib:jsr305',
-    '//src/com/facebook/buck/android:android',
+    '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/cpp:rules',
     '//src/com/facebook/buck/debug:debug',
-    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/json:json',
+    '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/python:python',
-    '//src/com/facebook/buck/rules:core',
+    '//src/com/facebook/buck/parcelable:rules',
+    '//src/com/facebook/buck/python:rules',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:rules',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:util',
   ],
   visibility = [
     'PUBLIC',
   ],
 )
 
+# TODO(simons): Find a proper home for these.
+PROJECT_SRCS = [
+  'ProjectConfigRuleFactory.java',
+  'RawRulePredicate.java',
+  'RawRulePredicates.java',
+]
 java_library(
-  name = 'core',
-  srcs = glob(['*.java'], excludes = ANDROID_SRCS + JAVA_SRCS + PARSER_SRCS),
+  name = 'project',
+  srcs = PROJECT_SRCS,
+  deps = [
+    ':support',
+    '//lib:guava',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:rules',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'support',
+  srcs = glob(['*.java'], excludes = PARSER_SRCS + PROJECT_SRCS),
   deps = [
     '//lib:guava',
     '//lib:jsr305',
-    '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/java:java',
-    '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:core',
-    '//src/com/facebook/buck/rules:cpp',
-    '//src/com/facebook/buck/rules:java',
-    '//src/com/facebook/buck/rules:shell',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
   ],
-  visibility = [
-    'PUBLIC',
-  ],
+  visibility = ['PUBLIC'],
 )

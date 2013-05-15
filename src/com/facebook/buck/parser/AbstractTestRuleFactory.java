@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
-abstract class AbstractTestRuleFactory extends AbstractBuildRuleFactory {
+public abstract class AbstractTestRuleFactory extends AbstractBuildRuleFactory {
 
   @Override
   public BuildRuleBuilder newInstance(BuildRuleFactoryParams params)

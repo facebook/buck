@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.Maps;
 

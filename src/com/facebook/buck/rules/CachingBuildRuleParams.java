@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -25,7 +26,8 @@ import com.google.common.collect.ImmutableSortedSet;
 public class CachingBuildRuleParams extends BuildRuleParams {
   private final ArtifactCache artifactCache;
 
-  CachingBuildRuleParams(BuildTarget buildTarget, ImmutableSortedSet<BuildRule> deps,
+  @Beta
+  public CachingBuildRuleParams(BuildTarget buildTarget, ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns, ArtifactCache artifactCache) {
     super(buildTarget, deps, visibilityPatterns);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);

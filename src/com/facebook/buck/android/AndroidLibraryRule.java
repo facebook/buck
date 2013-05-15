@@ -16,14 +16,14 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.AnnotationProcessingParams;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
-import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Map;

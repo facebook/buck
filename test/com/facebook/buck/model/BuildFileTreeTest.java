@@ -19,10 +19,10 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DefaultJavaLibraryRule;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;

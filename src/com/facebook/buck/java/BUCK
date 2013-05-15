@@ -1,15 +1,60 @@
+RULES_SRCS = [
+  'AndroidResourceRule.java',         # Belongs in Android
+  'AndroidResourceBuildRuleFactory.java',
+  'AnnotationProcessingParams.java',
+  'Classpaths.java',
+  'DefaultJavaLibraryRule.java',
+  'GenRDotJavaStep.java',             # Belongs in the Android package.
+  'HasClasspathEntries.java',
+  'HasJavaSrcs.java',
+  'JavaBinaryRule.java',
+  'JavaBinaryBuildRuleFactory.java',
+  'JavaLibraryRule.java',
+  'JavaLibraryBuildRuleFactory.java',
+  'JavaTestRule.java',
+  'JavaTestBuildRuleFactory.java',
+  'MergeAndroidResourcesStep.java',   # Belongs in the Android package.
+  'PrebuiltJarRule.java',
+  'PrebuiltJarBuildRuleFactory.java',
+  'UberRDotJavaUtil.java',            # Belongs in the Android package.
+]
 java_library(
-  name = 'java',
-  srcs = glob(['*.java']),
+  name = 'rules',
+  srcs = RULES_SRCS,
+  deps = [
+    ':steps',
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/android:exceptions',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:test',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'steps',
+  srcs = glob(['*.java'], excludes = RULES_SRCS),
   deps = [
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:core',
-    '//src/com/facebook/buck/shell:shell',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
