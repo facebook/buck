@@ -10,6 +10,7 @@ local.properties
 *py.class
 
 # IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
+.idea/ant.xml
 .idea/dictionaries
 .idea/inspectionProfiles
 .idea/tasks.xml
