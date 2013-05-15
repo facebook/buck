@@ -67,8 +67,18 @@ public class DependencyCheckingJavacStep extends JavacInMemoryStep {
   private static final Pattern ACCESS_FAILURE =
       Pattern.compile(".*?error: cannot access ([\\w\\.\\*]*)");
 
+  private static final Pattern CLASS_NOT_FOUND =
+      Pattern.compile(".*?class file for ([\\w\\.\\*]*) not found");
+
+  private static final Pattern CLASS_SYMBOL_NOT_FOUND =
+      Pattern.compile(".*?symbol:\\s*class\\s*([\\w\\.\\*]*)");
+
   private static final ImmutableList<Pattern> MISSING_IMPORT_PATTERNS =
-      ImmutableList.of(IMPORT_FAILURE, PACKAGE_FAILURE, ACCESS_FAILURE);
+      ImmutableList.of(IMPORT_FAILURE,
+          PACKAGE_FAILURE,
+          ACCESS_FAILURE,
+          CLASS_NOT_FOUND,
+          CLASS_SYMBOL_NOT_FOUND);
 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 

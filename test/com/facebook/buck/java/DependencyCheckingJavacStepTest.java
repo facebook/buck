@@ -32,11 +32,14 @@ public class DependencyCheckingJavacStepTest {
 
     String stderrOutput = Joiner.on(lineSeperator).join(ImmutableList.of(
         "java/com/foo/bar.java:5: package javax.annotation.concurrent does not exist",
-        "java/com/foo/bar.java:12: cannot find symbol",
-        "symbol: class Immutable"));
+        "java/com/foo/bar.java:99: error: cannot access com.facebook.Raz",
+        "java/com/foo/bar.java:142: cannot find symbol: class ImmutableSet",
+        "java/com/foo/bar.java:999: you are a clown"));
 
     ImmutableSet<String> missingImports =
         DependencyCheckingJavacStep.findFailedImports(stderrOutput);
-    assertEquals(ImmutableSet.of("javax.annotation.concurrent"), missingImports);
+    assertEquals(
+        ImmutableSet.of("javax.annotation.concurrent", "com.facebook.Raz", "ImmutableSet"),
+        missingImports);
   }
 }
