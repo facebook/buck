@@ -76,8 +76,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
   private Iterable<InputRule> inputsToCompareToOutputs;
 
+  @Nullable private ImmutableSet<BuildRule> depsWithUncachedDescendantsCache = null;
+
   protected AbstractCachingBuildRule(CachingBuildRuleParams cachingBuildRuleParams) {
-    super(cachingBuildRuleParams);
+      super(cachingBuildRuleParams);
     this.artifactCache = cachingBuildRuleParams.getArtifactCache();
     this.isRuleCached = TriState.UNSPECIFIED;
     this.hasUncachedDescendants = TriState.UNSPECIFIED;
@@ -125,6 +127,24 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     return isRuleCached.asBoolean();
   }
 
+  private ImmutableSet<BuildRule> getDepsWithUncachedDescendants(final BuildContext context)
+      throws IOException {
+    if (depsWithUncachedDescendantsCache != null) {
+      return depsWithUncachedDescendantsCache;
+    }
+
+    ImmutableSet.Builder<BuildRule> depsWithUncachedDescendantsBuilder = ImmutableSet.builder();
+    for (BuildRule buildRule : getDeps()) {
+      if (buildRule.hasUncachedDescendants(context)) {
+        depsWithUncachedDescendantsBuilder.add(buildRule);
+      }
+    }
+
+    depsWithUncachedDescendantsCache = depsWithUncachedDescendantsBuilder.build();
+
+    return depsWithUncachedDescendantsCache;
+  }
+
   @Override
   public boolean hasUncachedDescendants(final BuildContext context) throws IOException {
     if (hasUncachedDescendants.isSet()) {
@@ -134,14 +154,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     if (!isCached(context)) {
       hasUncachedDescendants = TriState.TRUE;
     } else {
-      boolean depHasUncachedDescendant = false;
-      for (BuildRule dep : getDeps()) {
-        if (dep.hasUncachedDescendants(context)) {
-          depHasUncachedDescendant = true;
-          break;
-        }
-      }
-      hasUncachedDescendants = TriState.forBooleanValue(depHasUncachedDescendant);
+      hasUncachedDescendants =
+          TriState.forBooleanValue(!getDepsWithUncachedDescendants(context).isEmpty());
     }
     return hasUncachedDescendants.asBoolean();
   }
@@ -275,8 +289,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // If this build rule is cached, then a result can be returned immediately.
     boolean isCached;
+    ImmutableSet<BuildRule> depsWithUncachedDescendants;
     try {
       isCached = isCached(context);
+      depsWithUncachedDescendants = getDepsWithUncachedDescendants(context);
     } catch (IOException e) {
       // A failure while determining whether this build rule is cached should be treated as if this
       // rule failed to build.
@@ -286,11 +302,33 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
           BuildEvents.finished(this, BuildRuleStatus.FAIL, CacheResult.MISS));
       return buildRuleResult;
     }
+
+    buildRuleResult = SettableFuture.create();
+
+    // Create a single future to build all of the uncached descendants of this build rule.
+    ListenableFuture<List<BuildRuleSuccess>> builtDeps = Builder.getInstance().buildRules(
+        depsWithUncachedDescendants, context);
+
     if (isCached) {
       logger.info(String.format("[FROM CACHE %s]", getFullyQualifiedName()));
-      buildRuleResult = Futures.immediateFuture(new BuildRuleSuccess(this));
       context.getEventBus().post(
           BuildEvents.finished(this, BuildRuleStatus.SUCCESS, CacheResult.HIT));
+
+      Futures.addCallback(builtDeps, new FutureCallback<List<BuildRuleSuccess>>() {
+        final SettableFuture<BuildRuleSuccess> result =
+            (SettableFuture<BuildRuleSuccess>)buildRuleResult;
+
+        @Override
+        public void onSuccess(List<BuildRuleSuccess> results) {
+          result.set(new BuildRuleSuccess(AbstractCachingBuildRule.this));
+        }
+
+        @Override
+        public void onFailure(Throwable t) {
+          result.setException(t);
+        }
+      }, context.getExecutor());
+
       return buildRuleResult;
     }
 
@@ -298,10 +336,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // with a BuildRuleResult (indicating success) or set with a Throwable (indicating a failure).
     logger.info(String.format("[BUILDING %s]", getFullyQualifiedName()));
     buildRuleResult = SettableFuture.create();
-
-    // Create a single future that represents the result of building all of the dependencies.
-    ListenableFuture<List<BuildRuleSuccess>> builtDeps = Builder.getInstance().buildRules(
-        getDeps(), context);
 
     // Once all of the dependencies have been built, schedule this rule to build itself on the
     // Executor associated with the BuildContext.

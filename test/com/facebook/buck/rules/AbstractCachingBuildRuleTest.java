@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -61,6 +62,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
@@ -431,7 +433,7 @@ public class AbstractCachingBuildRuleTest {
     EventBus bus = new EventBus();
     Listener listener = new Listener();
     bus.register(listener);
-    DummyRule rule = new DummyRule(params, false, false);
+    DummyRule rule = new DummyRule(params, false, false, false);
     File root = new File(".");
     BuildContext context = BuildContext.builder()
         .setEventBus(bus)
@@ -471,7 +473,10 @@ public class AbstractCachingBuildRuleTest {
     EventBus bus = new EventBus();
     Listener listener = new Listener();
     bus.register(listener);
-    DummyRule rule = new DummyRule(params, false, /* cache detonates */ true);
+    DummyRule rule = new DummyRule(params,
+        /* cached */ false,
+        /* cacheDetonates */ true,
+        /* hasUncachedDescendants */ false);
     File root = new File(".");
     BuildContext context = BuildContext.builder()
         .setEventBus(bus)
@@ -515,7 +520,10 @@ public class AbstractCachingBuildRuleTest {
     EventBus bus = new EventBus();
     Listener listener = new Listener();
     bus.register(listener);
-    DummyRule rule = new DummyRule(params, /* cached */ true, /* cache detonates */ false);
+    DummyRule rule = new DummyRule(params,
+        /* cached */ true,
+        /* cacheDetonates */ false,
+        /* hasUncachedDescendants */ false);
     File root = new File(".");
     BuildContext context = BuildContext.builder()
         .setEventBus(bus)
@@ -565,6 +573,62 @@ public class AbstractCachingBuildRuleTest {
     }
   }
 
+  @Test
+  public void whenCachedRuleHasUncachedDescendantsThenRebuildThem()
+      throws ExecutionException, InterruptedException {
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//com/example:dep");
+    CachingBuildRuleParams depParams = new CachingBuildRuleParams(depTarget,
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        artifactCache);
+    DummyRule depRule = new DummyRule(depParams,
+        /* cached */ false,
+        /* cacheDetonates */ false,
+        /* hasUncachedDescendants */ true);
+
+
+    BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
+    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
+        ImmutableSortedSet.<BuildRule>of(depRule),
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        artifactCache);
+
+    StepRunner stepRunner = createNiceMock(StepRunner.class);
+    expect(stepRunner.getListeningExecutorService()).andStubReturn(
+        MoreExecutors.sameThreadExecutor());
+    JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
+
+    replay(stepRunner, packageFinder);
+
+    EventBus bus = new EventBus();
+    Listener listener = new Listener();
+    bus.register(listener);
+    DummyRule rule = new DummyRule(params,
+        /* cached */ true,
+        /* cacheDetonates */ false,
+        /* hasUncachedDescendants */ true);
+
+    File root = new File(".");
+    BuildContext context = BuildContext.builder()
+        .setEventBus(bus)
+        .setProjectRoot(root)
+        .setDependencyGraph(createMock(DependencyGraph.class))
+        .setProjectFilesystem(new ProjectFilesystem(root))
+        .setCommandRunner(stepRunner)
+        .setJavaPackageFinder(packageFinder)
+        .build();
+
+
+    ListenableFuture<BuildRuleSuccess> build = rule.build(context);
+    build.get();
+
+    assertSeenEventsContain(ImmutableList.<BuildEvent>of(
+        BuildEvents.started(rule),
+        BuildEvents.finished(rule, SUCCESS, HIT),
+        BuildEvents.finished(depRule, SUCCESS, MISS)),
+        listener.getSeen());
+  }
+
   private void assertSeenEventsContain(List<BuildEvent> expected, List<BuildEvent> seen) {
     for (BuildEvent buildEvent : expected) {
       assertTrue(String.format("Did not see %s in %s", buildEvent, seen),
@@ -576,12 +640,27 @@ public class AbstractCachingBuildRuleTest {
 
     private final boolean cached;
     private final boolean cacheDetonates;
+    private final boolean hasUncachedDescendants;
+    private Set<BuildRule> deps;
 
-    protected DummyRule(CachingBuildRuleParams cachingBuildRuleParams, boolean isCached,
-        boolean cacheDetonates) {
+    protected DummyRule(CachingBuildRuleParams cachingBuildRuleParams,
+                        boolean isCached,
+                        boolean cacheDetonates,
+                        boolean hasUncachedDescendants) {
       super(cachingBuildRuleParams);
       cached = isCached;
       this.cacheDetonates = cacheDetonates;
+      this.hasUncachedDescendants = hasUncachedDescendants;
+      deps = Sets.newHashSet();
+    }
+
+    public void addDep(BuildRule dep) {
+      deps.add(dep);
+    }
+
+    @Override
+    public boolean hasUncachedDescendants(BuildContext context) {
+      return hasUncachedDescendants;
     }
 
     @Override
