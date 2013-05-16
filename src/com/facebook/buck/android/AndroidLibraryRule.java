@@ -80,9 +80,6 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
-    private final AnnotationProcessingParams.Builder annotationProcessingBuilder =
-        new AnnotationProcessingParams.Builder();
-
     @Nullable
     private String manifestFile = null;
 

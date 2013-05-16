@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -322,6 +323,31 @@ public class DefaultJavaLibraryRuleTest {
     MoreAsserts.assertContainsOne(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
+  }
+
+  @Test
+  public void testAndroidAnnotation() throws IOException {
+    Map<String,BuildRule> buildRuleIndex = Maps.newHashMap();
+
+    BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
+    JavaLibraryRule processorRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(processorTarget)
+        .addSrc("java/processor/processor.java")
+        .setArtifactCache(artifactCache)
+        .build(buildRuleIndex);
+    buildRuleIndex.put(processorRule.getFullyQualifiedName(), processorRule);
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
+    AndroidLibraryRule.Builder builder = new AndroidLibraryRule.Builder()
+      .setBuildTarget(libTarget)
+      .setArtifactCache(artifactCache);
+    builder.getAnnotationProcessingBuilder()
+        .addAllProcessors(ImmutableList.of("MyProcessor"))
+        .addProcessorBuildTarget(processorTarget);
+    AndroidLibraryRule rule = builder.build(buildRuleIndex);
+
+    AnnotationProcessingData processingData = rule.getAnnotationProcessingData();
+    assertNotNull(processingData.getGeneratedSourceFolderName());
   }
 
   @Test
