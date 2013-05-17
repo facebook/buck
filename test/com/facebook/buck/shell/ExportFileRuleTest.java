@@ -129,6 +129,12 @@ public class ExportFileRuleTest {
           }
 
           @Override
+          public void runStepForBuildTarget(Step step, BuildTarget buildTarget)
+              throws StepFailedException {
+            // Do nothing
+          }
+
+          @Override
           public <T> ListenableFuture<T> runStepsAndYieldResult(List<Step> steps, Callable<T> interpretResults) {
             return null;
           }

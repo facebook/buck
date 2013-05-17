@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 import java.io.PrintStream;
 
@@ -62,7 +63,7 @@ class Console {
   }
 
   void printFailureWithoutStacktrace(Throwable t) {
-    printFailure(t.getMessage());
+    printFailure(Throwables.getRootCause(t).getMessage());
   }
 
   void printFailure(String failureMessage) {

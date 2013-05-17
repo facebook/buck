@@ -17,8 +17,10 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.debug.Tracer;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.MoreFutures;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -57,7 +59,17 @@ public final class DefaultStepRunner implements StepRunner {
   }
 
   @Override
-  public void runStep(final Step step) throws StepFailedException {
+  public void runStep(Step step) throws StepFailedException {
+    runStepInternal(step, Optional.<BuildTarget>absent());
+  }
+
+  @Override
+  public void runStepForBuildTarget(Step step, BuildTarget buildTarget) throws StepFailedException {
+    runStepInternal(step, Optional.of(buildTarget));
+  }
+
+  protected void runStepInternal(final Step step, final Optional<BuildTarget> buildTarget)
+      throws StepFailedException {
     Preconditions.checkNotNull(step);
 
     if (context.getVerbosity().shouldPrintCommand()) {
@@ -66,7 +78,7 @@ public final class DefaultStepRunner implements StepRunner {
 
     int exitCode = step.execute(context);
     if (exitCode != 0) {
-      throw new StepFailedException(step, context, exitCode);
+      throw StepFailedException.createForFailingStep(step, context, exitCode, buildTarget);
     }
 
     Tracer.addComment(step.getShortName(context), TRACER_COMMENT_TYPE);

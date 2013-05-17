@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -28,6 +29,13 @@ public interface StepRunner {
    * Note that this method blocks until the specified command terminates.
    */
   public void runStep(Step step) throws StepFailedException;
+
+  /**
+   * Runs a BuildStep for a given BuildRule.
+   *
+   * Note that this method blocks until the specified command terminates.
+   */
+  public void runStepForBuildTarget(Step step, BuildTarget buildTarget) throws StepFailedException;
 
   /**
    * In a new thread, executes of the list of commands and then invokes {@code interpretResults} to

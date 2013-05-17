@@ -16,16 +16,37 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.model.BuildTarget;
+import com.google.common.base.Optional;
+
 @SuppressWarnings("serial")
 public class StepFailedException extends Exception {
 
   private final Step step;
   private final int exitCode;
 
-  StepFailedException(Step step, ExecutionContext context, int exitCode) {
-    super("Failed with " + exitCode + ": " + step.getDescription(context));
+  private StepFailedException(String message, Step step, int exitCode) {
+    super(message);
     this.step = step;
     this.exitCode = exitCode;
+  }
+
+  static StepFailedException createForFailingStep(Step step,
+      ExecutionContext context,
+      int exitCode,
+      Optional<BuildTarget> buildTarget) {
+    String message;
+    if (buildTarget.isPresent()) {
+      message = String.format("%s failed on step \"%s\" with exit code %d",
+          buildTarget.get().getFullyQualifiedName(),
+          step.getShortName(context),
+          exitCode);
+    } else {
+      message = String.format("Failed with %d: %s",
+          exitCode,
+          step.getDescription(context));
+    }
+    return new StepFailedException(message, step, exitCode);
   }
 
   public Step getStep() {
