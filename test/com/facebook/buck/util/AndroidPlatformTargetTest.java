@@ -21,12 +21,16 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
 public class AndroidPlatformTargetTest {
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
   @Test
   public void testCreateFromDefaultDirectoryStructure() {
@@ -50,5 +54,36 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getProguardConfig());
     assertEquals(new File("/home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
+    assertEquals(new File(androidSdkDir, "platform-tools/aapt"),
+        androidPlatformTarget.getAaptExecutable());
+    assertEquals(new File(androidSdkDir, "platform-tools/aidl"),
+        androidPlatformTarget.getAidlExecutable());
+    assertEquals(new File(androidSdkDir, "platform-tools/dx"),
+        androidPlatformTarget.getDxExecutable());
+  }
+
+  @Test
+  public void testInstalledNewerBuildTools() throws IOException {
+    String name = "Example Inc.:Google APIs:16";
+    File androidSdkDir = tempDir.newFolder();
+    File buildToolsDir = new File(androidSdkDir, "build-tools");
+    buildToolsDir.mkdir();
+
+    String platformDirectoryPath = "platforms/android-16";
+    Set<String> additionalJarPaths = ImmutableSet.of();
+    AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
+        .createFromDefaultDirectoryStructure(
+            name, androidSdkDir, platformDirectoryPath, additionalJarPaths);
+    assertEquals(name, androidPlatformTarget.getName());
+    assertEquals(ImmutableList.of(new File(androidSdkDir, "platforms/android-16/android.jar")),
+        androidPlatformTarget.getBootclasspathEntries());
+    assertEquals(new File(androidSdkDir, "platforms/android-16/android.jar"),
+        androidPlatformTarget.getAndroidJar());
+    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/aapt"),
+        androidPlatformTarget.getAaptExecutable());
+    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/aidl"),
+        androidPlatformTarget.getAidlExecutable());
+    assertEquals(new File(androidSdkDir, "build-tools/17.0.0/dx"),
+        androidPlatformTarget.getDxExecutable());
   }
 }

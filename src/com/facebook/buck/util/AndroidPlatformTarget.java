@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 public class AndroidPlatformTarget {
 
   static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:16";
+  static final int FIRST_API_WITH_BUILDTOOLS = 17;
 
   private final String name;
   private final File androidJar;
@@ -206,15 +207,24 @@ public class AndroidPlatformTarget {
     // Make sure android.jar is at the front of the bootclasspath.
     bootclasspathEntries.addFirst(androidJar);
 
+    // TODO(royw): I don't know what the long term plan is for this directory layout.  Improve these
+    // heuristics when we do.
+    String buildToolsDir = "platform-tools";
+    if (new File(androidSdkDir, "build-tools").exists()) {
+      // If the user has installed an SDK that has a build-tools directory, use the first version
+      // found.
+      buildToolsDir = String.format("build-tools/%d.0.0", FIRST_API_WITH_BUILDTOOLS);
+    }
+
     return new AndroidPlatformTarget(
         name,
         androidJar,
         bootclasspathEntries,
-        new File(androidSdkDir, "platform-tools/aapt"),
+        new File(androidSdkDir, buildToolsDir + "/aapt"),
         new File(androidSdkDir, "platform-tools/adb"),
-        new File(androidSdkDir, "platform-tools/aidl"),
+        new File(androidSdkDir, buildToolsDir + "/aidl"),
         new File(androidSdkDir, "tools/zipalign"),
-        new File(androidSdkDir, "platform-tools/dx"),
+        new File(androidSdkDir, buildToolsDir + "/dx"),
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
