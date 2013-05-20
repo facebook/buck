@@ -21,5 +21,11 @@
 	<classpathentry kind="lib" path="lib/sdklib.jar"/>
 	<classpathentry kind="lib" path="lib/jyson-1.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/jython-standalone-2.5.3.jar"/>
+	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-cassandra-1.56.38.jar"/>
+	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-core-1.56.38.jar"/>
+	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-thrift-1.56.38.jar"/>
+	<classpathentry kind="lib" path="third-party/java/astyanax/libthrift-0.7.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/astyanax/cassandra-1.2.3.jar"/>
+	<classpathentry kind="lib" path="third-party/java/astyanax/cassandra-thrift-1.2.3.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
