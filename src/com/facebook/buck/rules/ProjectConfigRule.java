@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 
 
 public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
@@ -48,6 +50,10 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   private final ImmutableList<SourceRoot> testsSourceRoots;
 
   private final boolean isIntelliJPlugin;
+
+  @Nullable
+  @GuardedBy("this")
+  private ListenableFuture<BuildRuleSuccess> buildOutput;
 
   public ProjectConfigRule(BuildRuleParams buildRuleParams,
       @Nullable BuildRule srcRule,
@@ -135,8 +141,11 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-    throw new UnsupportedOperationException();
+  public synchronized ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
+    if (buildOutput == null) {
+      buildOutput = Futures.immediateFuture(new BuildRuleSuccess(this));
+    }
+    return buildOutput;
   }
 
   @Override
@@ -146,12 +155,12 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
   @Override
   public boolean isCached(BuildContext context) throws IOException {
-    throw new UnsupportedOperationException();
+    return true;
   }
 
   @Override
   public boolean hasUncachedDescendants(BuildContext context) throws IOException {
-    throw new UnsupportedOperationException();
+    return false;
   }
 
   public static Builder newProjectConfigRuleBuilder() {
