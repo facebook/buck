@@ -110,6 +110,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     }
   }
 
+  @Override
   public boolean fetch(RuleKey ruleKey, File output) {
     if (!ruleKey.isIdempotent()) {
       return false;
@@ -145,6 +146,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     return success;
   }
 
+  @Override
   public void store(RuleKey ruleKey, File output) {
     if (!ruleKey.isIdempotent()) {
       return;

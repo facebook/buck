@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -62,7 +61,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
@@ -641,7 +639,6 @@ public class AbstractCachingBuildRuleTest {
     private final boolean cached;
     private final boolean cacheDetonates;
     private final boolean hasUncachedDescendants;
-    private Set<BuildRule> deps;
 
     protected DummyRule(CachingBuildRuleParams cachingBuildRuleParams,
                         boolean isCached,
@@ -651,11 +648,6 @@ public class AbstractCachingBuildRuleTest {
       cached = isCached;
       this.cacheDetonates = cacheDetonates;
       this.hasUncachedDescendants = hasUncachedDescendants;
-      deps = Sets.newHashSet();
-    }
-
-    public void addDep(BuildRule dep) {
-      deps.add(dep);
     }
 
     @Override

@@ -19,11 +19,14 @@ package com.facebook.buck.rules;
 import java.io.File;
 
 public class NoopArtifactCache implements ArtifactCache {
+
+  @Override
   public boolean fetch(RuleKey ruleKey, File output) {
     // Do nothing.
     return false;
   }
 
+  @Override
   public void store(RuleKey ruleKey, File output) {
     // Do nothing.
   }

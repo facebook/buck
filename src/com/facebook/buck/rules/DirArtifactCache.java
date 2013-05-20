@@ -37,6 +37,7 @@ public class DirArtifactCache implements ArtifactCache {
     }
   }
 
+  @Override
   public boolean fetch(RuleKey ruleKey, File output) {
     if (!ruleKey.isIdempotent()) {
       return false;
@@ -62,6 +63,7 @@ public class DirArtifactCache implements ArtifactCache {
     return success;
   }
 
+  @Override
   public void store(RuleKey ruleKey, File output) {
     if (!ruleKey.isIdempotent()) {
       return;

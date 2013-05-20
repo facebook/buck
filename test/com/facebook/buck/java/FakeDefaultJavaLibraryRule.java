@@ -68,6 +68,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
     private boolean hasUncachedDescendants;
     private boolean ruleInputsAreCached;
 
+    @Override
     public FakeDefaultJavaLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
       CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
