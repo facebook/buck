@@ -101,6 +101,18 @@ public interface BuildRule extends Comparable<BuildRule> {
   public boolean isLibrary();
 
   /**
+   * @return whether or not this rule is considered a packaging rule.  Packaging rules
+   *   (like java_binary) are rules that package up all of their transitive dependencies in their
+   *   final output.
+   */
+  public boolean isPackagingRule();
+
+  /**
+   * @return whether or not this rule exports its dependencies to all rules depending on it.
+   */
+  public boolean getExportDeps();
+
+  /**
    * Return the primary output of the build rule. This must be a single file, or null if there is
    * no output.
    *

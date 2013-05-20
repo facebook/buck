@@ -112,6 +112,11 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
     return ImmutableList.of();
   }
 
+  @Override
+  public boolean isPackagingRule() {
+    return true;
+  }
+
   public static Builder newPythonBinaryBuilder() {
     return new Builder();
   }

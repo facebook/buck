@@ -28,6 +28,7 @@ import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.java.UberRDotJavaUtil;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -45,8 +46,8 @@ public class AndroidTransitiveDependencyGraph {
   public AndroidTransitiveDependencyGraph(
       AbstractCachingBuildRule buildRule,
       ImmutableSet<BuildRule> buildRulesToExcludeFromDex) {
-    this.buildRule = buildRule;
-    this.buildRulesToExcludeFromDex = buildRulesToExcludeFromDex;
+    this.buildRule = Preconditions.checkNotNull(buildRule);
+    this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
   }
 
   public AndroidTransitiveDependencies findDependencies(

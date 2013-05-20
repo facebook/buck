@@ -668,7 +668,8 @@ public class Project {
 
       @Override
       public boolean visit(BuildRule dep) {
-        boolean shouldVisitDeps = dep.isLibrary()
+        boolean depShouldExportDeps = dep.getExportDeps() || rule.isPackagingRule();
+        boolean shouldVisitDeps = (dep.isLibrary() && (depShouldExportDeps))
             || (dep instanceof AndroidResourceRule)
             || dep == rule;
 

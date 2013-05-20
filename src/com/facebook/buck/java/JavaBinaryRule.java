@@ -163,6 +163,11 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
+  public boolean isPackagingRule() {
+    return true;
+  }
+
+  @Override
   public String getExecutableCommand() {
     Preconditions.checkState(mainClass != null,
         "Must specify a main class for %s in order to to run it.",

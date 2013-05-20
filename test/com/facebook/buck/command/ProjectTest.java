@@ -120,12 +120,46 @@ public class ProjectTest {
     buildRuleIndex.put(projectConfigRuleForResource.getFullyQualifiedName(),
         projectConfigRuleForResource);
 
+    // java_library //java/src/com/facebook/grandchild:grandchild
+    JavaLibraryRule grandchildLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance(
+            "//java/src/com/facebook/grandchild:grandchild"))
+        .addSrc("Grandchild.java")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
+        .build(buildRuleIndex);
+    buildRuleIndex.put(grandchildLib.getFullyQualifiedName(), grandchildLib);
+
+    // java_library //java/src/com/facebook/child:child
+    JavaLibraryRule childLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance(
+            "//java/src/com/facebook/child:child"))
+        .addSrc("Child.java")
+        .addDep("//java/src/com/facebook/grandchild:grandchild")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
+        .build(buildRuleIndex);
+    buildRuleIndex.put(childLib.getFullyQualifiedName(), childLib);
+
+    // java_library //java/src/com/facebook/exportlib:exportlib
+    JavaLibraryRule exportingLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance(
+            "//java/src/com/facebook/exportlib:exportlib"))
+        .addSrc("ExportLib.java")
+        .addDep("//third_party/guava:guava")
+        .setExportDeps(true)
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
+        .setArtifactCache(artifactCache)
+        .build(buildRuleIndex);
+    buildRuleIndex.put(exportingLib.getFullyQualifiedName(), exportingLib);
+
     // android_library //java/src/com/facebook/base:base
     AndroidLibraryRule androidLibraryRule = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
         .addSrc("Base.java")
         .addDep("//buck-android/com/facebook:R")
-        .addDep("//third_party/guava:guava")
+        .addDep("//java/src/com/facebook/exportlib:exportlib")
+        .addDep("//java/src/com/facebook/child:child")
         .addDep("//android_res/base:res")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .setArtifactCache(artifactCache)
@@ -141,6 +175,17 @@ public class ProjectTest {
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfigRuleForLibrary.getFullyQualifiedName(),
         projectConfigRuleForLibrary);
+
+    ProjectConfigRule projectConfigRuleForExportLibrary =
+          ProjectConfigRule.newProjectConfigRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance(
+            "//java/src/com/facebook/exportlib:project_config"))
+        .setSrcTarget("//java/src/com/facebook/exportlib:exportlib")
+        .setSrcRoots(ImmutableList.of("src"))
+        .build(buildRuleIndex);
+    buildRuleIndex.put(projectConfigRuleForExportLibrary.getFullyQualifiedName(),
+        projectConfigRuleForExportLibrary);
+
 
     // android_binary //foo:app
     AndroidBinaryRule androidBinaryRuleUsingNoDx = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
@@ -184,10 +229,11 @@ public class ProjectTest {
 
     return getModulesForPartialGraph(buildRuleIndex,
         ImmutableList.of(
+            projectConfigRuleForExportLibrary,
             projectConfigRuleForLibrary,
+            projectConfigRuleForResource,
             projectConfigRuleUsingNoDx,
-            projectConfigRule,
-            projectConfigRuleForResource),
+            projectConfigRule),
         javaPackageFinder);
   }
 
@@ -216,13 +262,37 @@ public class ProjectTest {
     PartialGraph partialGraph = project.getPartialGraph();
     List<Module> modules = projectWithModules.modules;
 
-    assertEquals("Should be one module for the android_library, one for the android_resource, " +
-                 "and one for each android_binary",
-        4,
+    assertEquals("Should be one module for the java_library, one for the android_library, " +
+                 "one module for the android_resource, and one for each android_binary",
+        5,
         modules.size());
 
     // Check the values of the module that corresponds to the android_library.
-    Module androidLibraryModule = modules.get(0);
+    Module javaLibraryModule = modules.get(0);
+    assertSame(getRuleById("//java/src/com/facebook/exportlib:exportlib", partialGraph),
+        javaLibraryModule.srcRule);
+    assertEquals("module_java_src_com_facebook_exportlib", javaLibraryModule.name);
+    assertEquals("java/src/com/facebook/exportlib/module_java_src_com_facebook_exportlib.iml",
+        javaLibraryModule.pathToImlFile);
+    assertListEquals(
+        ImmutableList.of(SourceFolder.SRC),
+        javaLibraryModule.sourceFolders);
+
+    // Check the dependencies.
+    DependentModule inheritedJdk = DependentModule.newInheritedJdk();
+    DependentModule guavaAsProvidedDep = DependentModule.newLibrary(
+        guava.getBuildTarget(), "guava_10_0_1");
+    guavaAsProvidedDep.scope = "PROVIDED";
+
+    assertListEquals(
+        ImmutableList.of(
+            DependentModule.newSourceFolder(),
+            guavaAsProvidedDep,
+            DependentModule.newStandardJdk()),
+        javaLibraryModule.dependencies);
+
+    // Check the values of the module that corresponds to the android_library.
+    Module androidLibraryModule = modules.get(1);
     assertSame(getRuleById("//java/src/com/facebook/base:base", partialGraph),
         androidLibraryModule.srcRule);
     assertEquals("module_java_src_com_facebook_base", androidLibraryModule.name);
@@ -240,30 +310,36 @@ public class ProjectTest {
     assertEquals(null, androidLibraryModule.resFolder);
 
     // Check the dependencies.
-    DependentModule inheritedJdk = DependentModule.newInheritedJdk();
-    DependentModule guavaAsProvidedDep = DependentModule.newLibrary(
-        guava.getBuildTarget(), "guava_10_0_1");
-    guavaAsProvidedDep.scope = "PROVIDED";
     DependentModule androidResourceAsProvidedDep = DependentModule.newModule(
         BuildTargetFactory.newInstance("//android_res/base:res"),
         "module_android_res_base");
+
+    DependentModule childAsProvidedDep = DependentModule.newModule(
+        BuildTargetFactory.newInstance("//java/src/com/facebook/child:child"),
+        "module_java_src_com_facebook_child");
+
+    DependentModule exportDepsAsProvidedDep = DependentModule.newModule(
+        BuildTargetFactory.newInstance("//java/src/com/facebook/exportlib:exportlib"),
+        "module_java_src_com_facebook_exportlib");
 
     assertListEquals(
         ImmutableList.of(
             DependentModule.newSourceFolder(),
             guavaAsProvidedDep,
             androidResourceAsProvidedDep,
+            childAsProvidedDep,
+            exportDepsAsProvidedDep,
             inheritedJdk),
         androidLibraryModule.dependencies);
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
-    Module androidResourceModule = modules.get(3);
+    Module androidResourceModule = modules.get(2);
     assertSame(getRuleById("//android_res/base:res", partialGraph), androidResourceModule.srcRule);
 
     assertEquals("/res", androidResourceModule.resFolder);
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
-    Module androidBinaryModuleNoDx = modules.get(1);
+    Module androidBinaryModuleNoDx = modules.get(3);
     assertSame(getRuleById("//foo:app", partialGraph), androidBinaryModuleNoDx.srcRule);
     assertEquals("module_foo", androidBinaryModuleNoDx.name);
     assertEquals("foo/module_foo.iml", androidBinaryModuleNoDx.pathToImlFile);
@@ -276,6 +352,11 @@ public class ProjectTest {
     assertEquals("../debug.keystore", androidBinaryModuleNoDx.keystorePath);
 
     // Check the dependencies.
+    DependentModule grandchildAsProvidedDep = DependentModule.newModule(
+        BuildTargetFactory.newInstance("//java/src/com/facebook/grandchild:grandchild"),
+        "module_java_src_com_facebook_grandchild"
+    );
+
     DependentModule androidLibraryDep = DependentModule.newModule(
         androidLibraryModule.srcRule.getBuildTarget(), "module_java_src_com_facebook_base");
     assertEquals(
@@ -284,11 +365,14 @@ public class ProjectTest {
             guavaAsProvidedDep,
             androidLibraryDep,
             androidResourceAsProvidedDep,
+            childAsProvidedDep,
+            exportDepsAsProvidedDep,
+            grandchildAsProvidedDep,
             inheritedJdk),
         androidBinaryModuleNoDx.dependencies);
 
     // Check the values of the module that corresponds to the android_binary with an empty no_dx.
-    Module androidBinaryModuleEmptyNoDx = modules.get(2);
+    Module androidBinaryModuleEmptyNoDx = modules.get(4);
     assertSame(getRuleById("//bar:app", partialGraph), androidBinaryModuleEmptyNoDx.srcRule);
     assertEquals("module_bar", androidBinaryModuleEmptyNoDx.name);
     assertEquals("bar/module_bar.iml", androidBinaryModuleEmptyNoDx.pathToImlFile);
@@ -310,6 +394,9 @@ public class ProjectTest {
             guavaAsCompiledDep,
             androidLibraryDep,
             androidResourceAsProvidedDep,
+            childAsProvidedDep,
+            exportDepsAsProvidedDep,
+            grandchildAsProvidedDep,
             inheritedJdk),
         androidBinaryModuleEmptyNoDx.dependencies);
 

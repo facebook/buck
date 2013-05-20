@@ -393,6 +393,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return inputsToConsiderForCachingPurposes;
   }
 
+  @Override
   public boolean getExportDeps() {
     return exportDeps;
   }

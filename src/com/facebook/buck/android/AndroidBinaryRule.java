@@ -201,6 +201,11 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
+  public boolean isPackagingRule() {
+    return true;
+  }
+
+  @Override
   public String getAndroidPlatformTarget() {
     return target;
   }

@@ -130,6 +130,16 @@ public class InputRule implements BuildRule {
   }
 
   @Override
+  public boolean getExportDeps() {
+    return false;
+  }
+
+  @Override
+  public boolean isPackagingRule() {
+    return false;
+  }
+
+  @Override
   public File getOutput() {
     return inputFile;
   }
