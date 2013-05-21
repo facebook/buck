@@ -131,21 +131,21 @@ public class MergeAndroidResourcesStepTest {
         "public class R {\n" +
         "\n" +
         "  public static class id {\n" +
-        "    public static int placeholder=0x7f020000;\n" +
+        "    public static final int placeholder=0x7f020000;\n" +
         "  }\n" +
         "\n" +
         "  public static class string {\n" +
-        "    public static int debug_http_proxy_dialog_title=0x7f030004;\n" +
-        "    public static int debug_http_proxy_hint=0x7f030005;\n" +
-        "    public static int debug_http_proxy_summary=0x7f030003;\n" +
-        "    public static int debug_http_proxy_title=0x7f030002;\n" +
-        "    public static int debug_ssl_cert_check_summary=0x7f030001;\n" +
-        "    public static int debug_ssl_cert_check_title=0x7f030000;\n" +
+        "    public static final int debug_http_proxy_dialog_title=0x7f030004;\n" +
+        "    public static final int debug_http_proxy_hint=0x7f030005;\n" +
+        "    public static final int debug_http_proxy_summary=0x7f030003;\n" +
+        "    public static final int debug_http_proxy_title=0x7f030002;\n" +
+        "    public static final int debug_ssl_cert_check_summary=0x7f030001;\n" +
+        "    public static final int debug_ssl_cert_check_title=0x7f030000;\n" +
         "  }\n" +
         "\n" +
         "  public static class styleable {\n" +
-        "    public static int SherlockMenuItem_android_visible=4;\n" +
-        "    public static int[] SherlockMenuView={ 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d };\n" +
+        "    public static final int SherlockMenuItem_android_visible=4;\n" +
+        "    public static final int[] SherlockMenuView={ 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d };\n" +
         "  }\n" +
         "\n" +
         "}\n",
