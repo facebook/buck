@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.io.PrintStream;
 public final class Main {
 
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
+  private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
@@ -78,19 +80,12 @@ public final class Main {
    */
   @VisibleForTesting
   int runMainWithExitCode(String[] args) throws IOException {
-    // Read .buckconfig if it is available.
-    BuckConfig buckConfig;
-    File file = new File(DEFAULT_BUCK_CONFIG_FILE_NAME);
-    if (file.isFile()) {
-      buckConfig = BuckConfig.createFromFile(file);
-    } else {
-      buckConfig = BuckConfig.emptyConfig();
-    }
-
     if (args.length == 0) {
       return usage();
     }
 
+    File projectRoot = new File(".");
+    BuckConfig buckConfig = createBuckConfig(projectRoot);
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
       String[] remainingArgs = new String[args.length - 1];
@@ -104,6 +99,24 @@ public final class Main {
         return exitCode;
       }
     }
+  }
+
+  /**
+   * @param projectRoot The directory that is the root of the project being built.
+   */
+  private static BuckConfig createBuckConfig(File projectRoot) throws IOException {
+    ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
+    File configFile = new File(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    if (configFile.isFile()) {
+      configFileBuilder.add(configFile);
+    }
+    File overrideConfigFile = new File(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
+    if (overrideConfigFile.isFile()) {
+      configFileBuilder.add(overrideConfigFile);
+    }
+
+    ImmutableList<File> configFiles = configFileBuilder.build();
+    return BuckConfig.createFromFiles(projectRoot, configFiles);
   }
 
   private int tryRunMainWithExitCode(String[] args) throws IOException {

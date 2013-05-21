@@ -12,6 +12,15 @@ before executing its business logic so that any customizations specified
 in <code>.buckconfig</code> will take effect. This file uses the
 {sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>.
 
+<p>
+
+The root of your project may also contain a second configuration file
+named <code>.buckconfig.local</code>. Its format is exactly the same as
+that of <code>.buckconfig</code>, but any definition in <code>.buckconfig.local</code>{sp}
+will override that of <code>.buckconfig</code>. In practice, <code>.buckconfig</code> will be a
+version-controlled file that contains settings that are applicable to all team members (such as
+standard includes for build files), whereas <code>.buckconfig.local</code> will be excluded from
+version control because it contains user-specific overrides (such as personal aliases).
 
 <h2>[alias]</h2>
 

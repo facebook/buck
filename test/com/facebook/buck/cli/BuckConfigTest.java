@@ -28,6 +28,7 @@ import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -50,7 +51,8 @@ public class BuckConfigTest {
         "two =   //foo:two",
         "three = //foo:three",
         "four  = //foo:four"));
-    Map<String, Map<String, String>> sectionsToEntries = BuckConfig.createFromReader(reader);
+    Map<String, Map<String, String>> sectionsToEntries = BuckConfig.createFromReaders(
+        ImmutableList.of(reader));
     Map<String, String> aliases = sectionsToEntries.get("alias");
 
     // Verify that entries are sorted in the order that they appear in the file, rather than in

@@ -30,6 +30,7 @@ java_test(
     '//lib:ddmlib',
     '//lib:easymock',
     '//lib:guava',
+    '//lib:ini4j',
     '//lib:jackson-core',
     '//lib:jackson-databind',
     '//lib:junit',

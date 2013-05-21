@@ -38,6 +38,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
@@ -46,7 +47,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -115,17 +115,32 @@ class BuckConfig {
     return EMPTY_INSTANCE;
   }
 
-  public static BuckConfig createFromFile(File file) throws IOException {
-    Preconditions.checkNotNull(file);
+  /**
+   * Takes a sequence of {@code .buckconfig} files and loads them, in order, to create a
+   * {@code BuckConfig} object. Each successive file that is loaded has the ability to override
+   * definitions from a previous file.
+   * @param projectRoot The directory that is the root of the project being built.
+   * @param files The sequence of {@code .buckconfig} files to load.
+   */
+  public static BuckConfig createFromFiles(File projectRoot, Iterable<File> files)
+      throws IOException {
+    Preconditions.checkNotNull(projectRoot);
+    Preconditions.checkArgument(projectRoot.isDirectory());
+    Preconditions.checkNotNull(files);
 
-    // It is necessary to get the absolute file before getting the parent file because the file
-    // is most likely `new File(".buckproject")`, whose parent file is null, according to Java.
-    File projectRoot = file.getAbsoluteFile().getParentFile();
+    if (Iterables.isEmpty(files)) {
+      return BuckConfig.emptyConfig();
+    }
+
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem);
 
-    BufferedReader reader = Files.newReader(file, Charsets.UTF_8);
-    return createFromReader(reader, buildTargetParser);
+    // Convert the Files to Readers.
+    ImmutableList.Builder<Reader> readers = ImmutableList.builder();
+    for (File file : files) {
+      readers.add(Files.newReader(file, Charsets.UTF_8));
+    }
+    return createFromReaders(readers.build(), buildTargetParser);
   }
 
   /**
@@ -161,11 +176,20 @@ class BuckConfig {
   }
 
   @VisibleForTesting
-  static Map<String, Map<String, String>> createFromReader(Reader reader) throws IOException {
-    Preconditions.checkNotNull(reader);
+  static BuckConfig createFromReader(Reader reader, BuildTargetParser buildTargetParser)
+      throws IOException {
+    return createFromReaders(ImmutableList.of(reader), buildTargetParser);
+  }
+
+  @VisibleForTesting
+  static Map<String, Map<String, String>> createFromReaders(Iterable<Reader> readers)
+      throws IOException {
+    Preconditions.checkNotNull(readers);
 
     Ini ini = new Ini();
-    ini.load(reader);
+    for (Reader reader : readers) {
+      ini.load(reader);
+    }
 
     Map<String, Map<String, String>> sectionsToEntries = Maps.newHashMap();
     for (String sectionName : ini.keySet()) {
@@ -191,9 +215,9 @@ class BuckConfig {
   }
 
   @VisibleForTesting
-  static BuckConfig createFromReader(Reader reader, BuildTargetParser buildTargetParser)
+  static BuckConfig createFromReaders(Iterable<Reader> readers, BuildTargetParser buildTargetParser)
       throws IOException {
-    Map<String, Map<String, String>> sectionsToEntries = createFromReader(reader);
+    Map<String, Map<String, String>> sectionsToEntries = createFromReaders(readers);
     return new BuckConfig(sectionsToEntries, buildTargetParser);
   }
 
