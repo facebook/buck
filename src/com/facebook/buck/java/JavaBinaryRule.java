@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -152,6 +153,11 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
   private String getOutputDirectory() {
     return String.format("%s/%s", BuckConstant.GEN_DIR, getBuildTarget().getBasePath());
+  }
+
+  @Override
+  public File getOutput() {
+    return new File(getOutputFile());
   }
 
   String getOutputFile() {

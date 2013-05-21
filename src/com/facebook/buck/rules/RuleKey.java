@@ -16,13 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -144,18 +142,32 @@ public class RuleKey implements Comparable<RuleKey> {
     return new Builder();
   }
 
-  public static Builder builder(BuildRule rule) {
-    return new Builder(rule.getFullyQualifiedName())
-    // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
-    .set("buck.type", rule.getType().getDisplayName())
-    .setStrings("deps", Iterables.transform(rule.getDeps(), new Function<BuildRule, String>() {
-      @Override
-      public String apply(BuildRule input) {
-        return String.format("%s:%s",
-            input.getFullyQualifiedName(),
-            input.getType().getDisplayName());
-      }
-    }));
+  // TODO(royw):  This is a hack to stop us from regressing build times.  We ned to create the
+  // abstraction of an "interfaceKey" that we use for local caching decisions.
+  public static Builder builder(final BuildRule rule) {
+    Builder result = new Builder(rule.getFullyQualifiedName())
+        // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
+        .set("buck.type", rule.getType().getDisplayName());
+    if (rule.isPackagingRule()) {
+      // If the rule is a packaging rule, use the contents of all of the files in the transitive
+      // deps.
+      final ImmutableSortedSet.Builder<BuildRule> transitiveDeps =
+          ImmutableSortedSet.naturalOrder();
+      (new AbstractDependencyVisitor(rule, /* excludeRoot */ true) {
+        @Override
+        public boolean visit(BuildRule dep) {
+          transitiveDeps.add(dep);
+          return true;
+        }
+      }).start();
+
+      result.set("deps", transitiveDeps.build());
+    } else {
+      // Otherwise, add the names and the contents of their inputs, but explicitly excluding deps
+      // of deps.
+      result.setOnInputs("deps", rule.getDeps());
+    }
+    return  result;
   }
 
   public static class Builder {
@@ -301,11 +313,15 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
-    public Builder setStrings(String key, @Nullable Iterable<String> val) {
+    public Builder setOnInputs(String key, @Nullable Iterable<BuildRule> val) {
       setKey(key);
       if (val != null) {
-        for (String s : val) {
-          setVal(s);
+        for (BuildRule buildRule : val) {
+          setVal(buildRule.getFullyQualifiedName());
+          setVal(buildRule.getType().toString());
+          for (InputRule inputRule : buildRule.getInputs()) {
+            setVal(inputRule.getRuleKey());
+          }
         }
       }
       return separate();
