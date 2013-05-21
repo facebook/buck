@@ -254,7 +254,7 @@ public class MergeAndroidResourcesStep implements Step {
 
       // Write out the resource.
       // Write as an int.
-      writer.println(String.format("    public static %s %s=%s;",
+      writer.println(String.format("    public static final %s %s=%s;",
           res.idType,
           res.name,
           res.idValueToWrite));
