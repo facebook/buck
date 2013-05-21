@@ -16,6 +16,7 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -185,7 +186,16 @@ public class BuildFileToJsonParser {
         engine.eval(String.format(python, PATH_TO_BUCK_PY, Joiner.on("\",\"").join(args)));
 
       } catch (ScriptException e) {
-        throw Throwables.propagate(e);
+        // Print human readable python trace if available, default to normal exception if not.
+        // Path to build file is included in python stack trace.
+        final Throwable cause = e.getCause();
+        if (cause != null) {
+          throw new HumanReadableException("Unable to parse build file: %s%s,",
+              System.getProperty("line.separator"),
+              cause);
+        } else {
+          throw Throwables.propagate(e);
+        }
       } finally {
         try {
           closer.close();
