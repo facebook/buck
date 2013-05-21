@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -152,16 +153,17 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
       for (BuildTarget target : targets) {
         BuildRule rule = buildRuleIndex.get(target.getFullyQualifiedName());
+        String type = rule.getType().getDisplayName();
 
-        // TODO simons: can we just use BuildRule.getOutput() here without special-cases?
-        if (rule instanceof JavaBinaryRule) {
-          JavaBinaryRule javaBinaryRule = (JavaBinaryRule)rule;
-          searchPathElements.add(javaBinaryRule.getOutputFile());
-        } else if (rule instanceof PrebuiltJarRule) {
-          PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule)rule;
-          searchPathElements.add(prebuiltJarRule.getBinaryJar());
-        } else if (rule instanceof JavaLibraryRule) {
-          JavaLibraryRule javaLibraryRule = (JavaLibraryRule)rule;
+        // We're using raw strings here to avoid circular dependencies.
+        // TODO(simons): don't use raw strings.
+        if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
+          File output = rule.getOutput();
+          if (output != null) {
+            searchPathElements.add(output.getAbsolutePath());
+          }
+        } else if (rule instanceof HasClasspathEntries) {
+          HasClasspathEntries javaLibraryRule = (HasClasspathEntries)rule;
           searchPathElements.addAll(javaLibraryRule.getTransitiveClasspathEntries().values());
         } else {
           throw new HumanReadableException(

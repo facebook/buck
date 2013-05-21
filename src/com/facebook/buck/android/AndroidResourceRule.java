@@ -14,20 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.android;
 
-import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -37,7 +34,6 @@ import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -66,27 +62,17 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AndroidResourceRule extends AbstractCachingBuildRule {
+public class AndroidResourceRule extends AbstractCachingBuildRule implements HasAndroidResourceDeps {
 
   /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResourceRule}. */
-  private static final Function<AndroidResourceRule, String> GET_RES_FOR_RULE =
-      new Function<AndroidResourceRule, String>() {
+  private static final Function<HasAndroidResourceDeps, String> GET_RES_FOR_RULE =
+      new Function<HasAndroidResourceDeps, String>() {
     @Override
     @Nullable
-    public String apply(AndroidResourceRule rule) {
+    public String apply(HasAndroidResourceDeps rule) {
       return rule.getRes();
     }
   };
-
-  private static final ImmutableSet<BuildRuleType> TRAVERSABLE_TYPES = ImmutableSet.of(
-      BuildRuleType.ANDROID_BINARY,
-      BuildRuleType.ANDROID_INSTRUMENTATION_APK,
-      BuildRuleType.ANDROID_LIBRARY,
-      BuildRuleType.ANDROID_RESOURCE,
-      BuildRuleType.APK_GENRULE,
-      BuildRuleType.JAVA_LIBRARY,
-      BuildRuleType.JAVA_TEST,
-      BuildRuleType.ROBOLECTRIC_TEST);
 
   private final DirectoryTraverser directoryTraverser;
 
@@ -159,6 +145,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     return inputsToConsiderForCachingPurposes.build();
   }
 
+  @Override
   @Nullable
   public String getRes() {
     return res;
@@ -186,7 +173,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(pathToTextSymbolsDir);
 
     // Searching through the deps, find any additional res directories to pass to aapt.
-    ImmutableList<AndroidResourceRule> androidResourceDeps = getAndroidResourceDeps(
+    ImmutableList<HasAndroidResourceDeps> androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(
         this, context.getDependencyGraph());
     Set<String> resDirectories = ImmutableSet.copyOf(
         Iterables.transform(androidResourceDeps, GET_RES_FOR_RULE));
@@ -200,70 +187,6 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     return ImmutableList.of(mkdir, genRDotJava);
   }
 
-  /**
-   * Finds the transitive set of {@code rule}'s {@link AndroidResourceRule} dependencies with
-   * non-null {@code res} directories, which can also include {@code rule} itself.
-   * This set will be returned as an {@link ImmutableList} with the rules topologically sorted as
-   * determined by {@code graph}. Rules will be ordered from least dependent to most dependent.
-   */
-  public static ImmutableList<AndroidResourceRule> getAndroidResourceDeps(
-      BuildRule rule,
-      DependencyGraph graph) {
-    final Set<AndroidResourceRule> allAndroidResourceRules = findAllAndroidResourceDeps(rule);
-
-    // Now that we have the transitive set of AndroidResourceRules, we need to return them in
-    // topologically sorted order. This is critical because the order in which -S flags are passed
-    // to aapt is significant and must be consistent.
-    Predicate<BuildRule> inclusionPredicate = new Predicate<BuildRule>() {
-      @Override
-      public boolean apply(BuildRule rule) {
-        return allAndroidResourceRules.contains(rule);
-      }
-    };
-    ImmutableList<BuildRule> sortedAndroidResourceRules = TopologicalSort.sort(graph,
-        inclusionPredicate);
-
-    // TopologicalSort.sort() returns rules in leaves-first order, which is the opposite of what we
-    // want, so we must reverse the list and cast BuildRules to AndroidResourceRules.
-    return ImmutableList.copyOf(
-        Iterables.transform(
-            sortedAndroidResourceRules.reverse(),
-            CAST_TO_ANDROID_RESOURCE_RULE)
-        );
-  }
-
-  private static Function<BuildRule, AndroidResourceRule> CAST_TO_ANDROID_RESOURCE_RULE =
-      new Function<BuildRule, AndroidResourceRule>() {
-        @Override
-        public AndroidResourceRule apply(BuildRule rule) {
-          return (AndroidResourceRule)rule;
-        }
-  };
-
-  private static ImmutableSet<AndroidResourceRule> findAllAndroidResourceDeps(BuildRule buildRule) {
-    final ImmutableSet.Builder<AndroidResourceRule> androidResources = ImmutableSet.builder();
-    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(buildRule) {
-
-      @Override
-      public boolean visit(BuildRule rule) {
-        if (rule instanceof AndroidResourceRule) {
-          AndroidResourceRule androidResourceRule = (AndroidResourceRule)rule;
-          if (androidResourceRule.getRes() != null) {
-            androidResources.add(androidResourceRule);
-          }
-        }
-
-        // Only certain types of rules should be considered as part of this traversal.
-        BuildRuleType type = rule.getType();
-        return TRAVERSABLE_TYPES.contains(type);
-      }
-
-    };
-    visitor.start();
-
-    return androidResources.build();
-  }
-
   @Override
   @Nullable
   public File getOutput() {
@@ -274,11 +197,13 @@ public class AndroidResourceRule extends AbstractCachingBuildRule {
     }
   }
 
+  @Override
   @Nullable
   public String getPathToTextSymbolsFile() {
     return pathToTextSymbolsFile;
   }
 
+  @Override
   public String getRDotJavaPackage() {
     if (rDotJavaPackage == null) {
       throw new RuntimeException("No package for " + getFullyQualifiedName());

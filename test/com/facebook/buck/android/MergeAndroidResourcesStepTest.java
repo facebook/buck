@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.java.MergeAndroidResourcesStep.Resource;
+import com.facebook.buck.android.MergeAndroidResourcesStep.Resource;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;

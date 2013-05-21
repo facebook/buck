@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.android;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;

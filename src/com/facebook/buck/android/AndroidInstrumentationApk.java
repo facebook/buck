@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.AndroidResourceRule;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.BuildRule;
@@ -83,17 +82,17 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   }
 
   @Override
-  protected ImmutableList<AndroidResourceRule> getAndroidResourceDepsInternal(
+  protected ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal(
       DependencyGraph graph) {
     // Filter out the AndroidResourceRules that are needed by this APK but not the APK under test.
-    ImmutableSet<AndroidResourceRule> originalResources = ImmutableSet.copyOf(
-        AndroidResourceRule.getAndroidResourceDeps(apkUnderTest, graph));
-    ImmutableList<AndroidResourceRule> instrumentationResources =
-        AndroidResourceRule.getAndroidResourceDeps(this, graph);
+    ImmutableSet<HasAndroidResourceDeps> originalResources = ImmutableSet.copyOf(
+        UberRDotJavaUtil.getAndroidResourceDeps(apkUnderTest, graph));
+    ImmutableList<HasAndroidResourceDeps> instrumentationResources =
+        UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
 
     // Include all of the instrumentation resources first, in their original order.
-    ImmutableList.Builder<AndroidResourceRule> allResources = ImmutableList.builder();
-    for (AndroidResourceRule resource : instrumentationResources) {
+    ImmutableList.Builder<HasAndroidResourceDeps> allResources = ImmutableList.builder();
+    for (HasAndroidResourceDeps resource : instrumentationResources) {
       if (!originalResources.contains(resource)) {
         allResources.add(resource);
       }

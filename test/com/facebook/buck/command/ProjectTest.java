@@ -25,7 +25,7 @@ import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.NdkLibraryRule;
 import com.facebook.buck.command.Project.SourceFolder;
-import com.facebook.buck.java.AndroidResourceRule;
+import com.facebook.buck.android.AndroidResourceRule;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.android.HasAndroidResourceDeps;
+import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
@@ -146,7 +148,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   /**
    * This is set in {@link #buildInternal(com.facebook.buck.rules.BuildContext)} and is available to subclasses.
    */
-  protected ImmutableList<AndroidResourceRule> androidResourceDeps;
+  protected ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
 
   protected DefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
                                    Set<String> srcs,
@@ -447,7 +449,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
     // If this rule depends on AndroidResourceRules, then we need to generate the R.java files that
     // this rule needs in order to be able to compile itself.
-    androidResourceDeps = AndroidResourceRule.getAndroidResourceDeps(this,
+    androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this,
         context.getDependencyGraph());
     boolean dependsOnAndroidResourceRules = !androidResourceDeps.isEmpty();
     if (dependsOnAndroidResourceRules) {

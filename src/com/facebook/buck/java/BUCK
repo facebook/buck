@@ -1,11 +1,24 @@
-RULES_SRCS = [
-  'AndroidResourceRule.java',         # Belongs in Android
-  'AndroidResourceBuildRuleFactory.java',
+SUPPORT_SRCS = [
   'AnnotationProcessingParams.java',
+  'HasClasspathEntries.java',
+]
+java_library(
+  name = 'support',
+  srcs = SUPPORT_SRCS,
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:exceptions',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+RULES_SRCS = [
   'Classpaths.java',
   'DefaultJavaLibraryRule.java',
-  'GenRDotJavaStep.java',             # Belongs in the Android package.
-  'HasClasspathEntries.java',
   'HasJavaSrcs.java',
   'JavaBinaryRule.java',
   'JavaBinaryBuildRuleFactory.java',
@@ -13,19 +26,19 @@ RULES_SRCS = [
   'JavaLibraryBuildRuleFactory.java',
   'JavaTestRule.java',
   'JavaTestBuildRuleFactory.java',
-  'MergeAndroidResourcesStep.java',   # Belongs in the Android package.
   'PrebuiltJarRule.java',
   'PrebuiltJarBuildRuleFactory.java',
-  'UberRDotJavaUtil.java',            # Belongs in the Android package.
 ]
 java_library(
   name = 'rules',
   srcs = RULES_SRCS,
   deps = [
     ':steps',
+    ':support',
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/android:exceptions',
+    '//src/com/facebook/buck/android:r',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:support',

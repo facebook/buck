@@ -38,6 +38,7 @@ java_test(
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/parser:project',

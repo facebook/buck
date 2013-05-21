@@ -23,14 +23,14 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.java.JavaLibraryRule;
-import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;

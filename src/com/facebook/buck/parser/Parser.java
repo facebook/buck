@@ -20,7 +20,7 @@ import com.facebook.buck.android.AndroidBinaryBuildRuleFactory;
 import com.facebook.buck.android.AndroidInstrumentationApkRuleFactory;
 import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
 import com.facebook.buck.android.AndroidManifestBuildRuleFactory;
-import com.facebook.buck.java.AndroidResourceBuildRuleFactory;
+import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
 import com.facebook.buck.android.ApkGenruleBuildRuleFactory;
 import com.facebook.buck.android.GenAidlBuildRuleFactory;
 import com.facebook.buck.android.NdkLibraryBuildRuleFactory;

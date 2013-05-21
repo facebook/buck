@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.AndroidResourceRule;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
 import com.facebook.buck.rules.BuildContext;
@@ -91,12 +90,12 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
   /**
-   * @return a list of {@link com.facebook.buck.java.AndroidResourceRule}s that should be passed,
+   * @return a list of {@link AndroidResourceRule}s that should be passed,
    * in order, to {@code aapt} when generating the {@code R.java} files for this APK.
    */
-  private ImmutableList<AndroidResourceRule> getAndroidResourceDepsInternal(
+  private ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal(
       DependencyGraph graph) {
-    return AndroidResourceRule.getAndroidResourceDeps(this, graph);
+    return UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
   }
 
 

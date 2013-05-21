@@ -1,3 +1,30 @@
+R_DOT_JAVA_SRCS = [
+  'GenRDotJavaStep.java',
+  'HasAndroidResourceDeps.java',
+  'MergeAndroidResourcesStep.java',
+  'UberRDotJavaUtil.java',
+]
+java_library(
+  name = 'r',
+  srcs = R_DOT_JAVA_SRCS,
+  deps = [
+    ':exceptions',
+    '//lib:guava',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/java:steps',
+    '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 EXCEPTION_SRCS = [
   'NoAndroidSdkException.java',
 ]
@@ -19,6 +46,8 @@ RULES_SRCS = [
   'AndroidLibraryRule.java',
   'AndroidManifestBuildRuleFactory.java',
   'AndroidManifestRule.java',
+  'AndroidResourceBuildRuleFactory.java',
+  'AndroidResourceRule.java',
   'AndroidTransitiveDependencies.java',
   'AndroidTransitiveDependencyGraph.java',
   'ApkGenrule.java',
@@ -35,11 +64,13 @@ java_library(
   name = 'rules',
   srcs = RULES_SRCS,
   deps = [
+    ':r',
     ':steps',
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/cpp:rules',
     '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:support',
     '//src/com/facebook/buck/rules:rules',
@@ -57,7 +88,7 @@ java_library(
 
 java_library(
   name = 'steps',
-  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + RULES_SRCS),
+  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + R_DOT_JAVA_SRCS + RULES_SRCS),
   deps = [
     ':exceptions',
     '//lib:guava',

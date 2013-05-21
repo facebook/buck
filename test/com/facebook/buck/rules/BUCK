@@ -34,6 +34,7 @@ java_test(
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:test',
+    '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',

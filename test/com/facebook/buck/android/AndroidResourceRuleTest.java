@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -158,7 +157,7 @@ public class AndroidResourceRuleTest {
     buildRuleIndex.put(a.getFullyQualifiedName(), a);
 
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
-    ImmutableList<AndroidResourceRule> deps = AndroidResourceRule.getAndroidResourceDeps(a, graph);
+    ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a, graph);
 
     // Note that a topological sort for a DAG is not guaranteed to be unique. In this particular
     // case, there are two possible valid outcomes.
@@ -185,7 +184,7 @@ public class AndroidResourceRuleTest {
     buildRuleIndex.put(e.getFullyQualifiedName(), e);
 
     DependencyGraph graph2 = RuleMap.createGraphFromBuildRules(buildRuleIndex);
-    ImmutableList<AndroidResourceRule> deps2 = AndroidResourceRule.getAndroidResourceDeps(e, graph2);
+    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e, graph2);
     assertTrue(
         String.format(
             "Topological sort %s should be either %s or %s", deps, validResult1, validResult2),

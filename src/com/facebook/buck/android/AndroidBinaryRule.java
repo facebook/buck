@@ -16,10 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.AndroidResourceRule;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
-import com.facebook.buck.java.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
@@ -83,12 +81,12 @@ import javax.annotation.Nullable;
 public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule {
 
+  private final static Logger logger = Logger.getLogger(AndroidBinaryRule.class.getName());
+
   /**
    * The largest file size Froyo will deflate.
    */
   private final long FROYO_DEFLATE_LIMIT_BYTES = 1 << 20;
-
-  private final static Logger logger = Logger.getLogger(AndroidBinaryRule.class.getName());
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -547,12 +545,12 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   /**
-   * @return a list of {@link com.facebook.buck.java.AndroidResourceRule}s that should be passed, in order, to {@code aapt}
+   * @return a list of {@link HasAndroidResourceDeps}s that should be passed, in order, to {@code aapt}
    *     when generating the {@code R.java} files for this APK.
    */
-  protected ImmutableList<AndroidResourceRule> getAndroidResourceDepsInternal(
+  protected ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal(
       DependencyGraph graph) {
-    return AndroidResourceRule.getAndroidResourceDeps(this, graph);
+    return UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
   }
 
   /**

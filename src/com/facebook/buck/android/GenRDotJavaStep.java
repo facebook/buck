@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.android;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;

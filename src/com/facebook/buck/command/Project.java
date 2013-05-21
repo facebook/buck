@@ -23,7 +23,7 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibraryRule;
-import com.facebook.buck.java.AndroidResourceRule;
+import com.facebook.buck.android.AndroidResourceRule;
 import com.facebook.buck.android.AndroidTransitiveDependencies;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;

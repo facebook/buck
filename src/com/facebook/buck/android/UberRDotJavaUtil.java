@@ -14,18 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.android;
 
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -34,7 +44,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Creates the {@link com.facebook.buck.step.Step}s needed to generate an uber {@code R.java} file.
+ * Creates the {@link Step}s needed to generate an uber {@code R.java} file.
  * <p>
  * Buck builds two types of {@code R.java} files: temporary ones and uber ones. A temporary
  * {@code R.java} file's values are garbage and correspond to a single Android libraries. An uber
@@ -45,6 +55,18 @@ public class UberRDotJavaUtil {
 
   private static final Supplier<String> R_DOT_JAVA_BOOTCLASSPATH =
       Suppliers.ofInstance(null);
+
+  private static final ImmutableSet<BuildRuleType> TRAVERSABLE_TYPES = ImmutableSet.of(
+      BuildRuleType.ANDROID_BINARY,
+      BuildRuleType.ANDROID_INSTRUMENTATION_APK,
+      BuildRuleType.ANDROID_LIBRARY,
+      BuildRuleType.ANDROID_RESOURCE,
+      BuildRuleType.APK_GENRULE,
+      BuildRuleType.JAVA_LIBRARY,
+      BuildRuleType.JAVA_TEST,
+      BuildRuleType.ROBOLECTRIC_TEST
+  );
+
 
   /** Utility class: do not instantiate. */
   private UberRDotJavaUtil() {}
@@ -97,6 +119,71 @@ public class UberRDotJavaUtil {
   }
 
   /**
+   * Finds the transitive set of {@code rule}'s {@link AndroidResourceRule} dependencies with
+   * non-null {@code res} directories, which can also include {@code rule} itself.
+   * This set will be returned as an {@link ImmutableList} with the rules topologically sorted as
+   * determined by {@code graph}. Rules will be ordered from least dependent to most dependent.
+   */
+  public static ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(
+      BuildRule rule,
+      DependencyGraph graph) {
+    final Set<HasAndroidResourceDeps> allAndroidResourceRules = findAllAndroidResourceDeps(rule);
+
+    // Now that we have the transitive set of AndroidResourceRules, we need to return them in
+    // topologically sorted order. This is critical because the order in which -S flags are passed
+    // to aapt is significant and must be consistent.
+    Predicate<BuildRule> inclusionPredicate = new Predicate<BuildRule>() {
+      @Override
+      public boolean apply(BuildRule rule) {
+        return allAndroidResourceRules.contains(rule);
+      }
+    };
+    ImmutableList<BuildRule> sortedAndroidResourceRules = TopologicalSort.sort(graph,
+        inclusionPredicate);
+
+    // TopologicalSort.sort() returns rules in leaves-first order, which is the opposite of what we
+    // want, so we must reverse the list and cast BuildRules to AndroidResourceRules.
+    return ImmutableList.copyOf(
+        Iterables.transform(
+            sortedAndroidResourceRules.reverse(),
+            CAST_TO_ANDROID_RESOURCE_RULE)
+        );
+  }
+
+
+  private static Function<BuildRule, HasAndroidResourceDeps> CAST_TO_ANDROID_RESOURCE_RULE =
+      new Function<BuildRule, HasAndroidResourceDeps>() {
+        @Override
+        public HasAndroidResourceDeps apply(BuildRule rule) {
+          return (HasAndroidResourceDeps)rule;
+        }
+      };
+
+  private static ImmutableSet<HasAndroidResourceDeps> findAllAndroidResourceDeps(BuildRule buildRule) {
+    final ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
+    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(buildRule) {
+
+      @Override
+      public boolean visit(BuildRule rule) {
+        if (rule instanceof HasAndroidResourceDeps) {
+          HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
+          if (androidResourceRule.getRes() != null) {
+            androidResources.add(androidResourceRule);
+          }
+        }
+
+        // Only certain types of rules should be considered as part of this traversal.
+        BuildRuleType type = rule.getType();
+        return TRAVERSABLE_TYPES.contains(type);
+      }
+
+    };
+    visitor.start();
+
+    return androidResources.build();
+  }
+
+  /**
    * Aggregate information about a list of {@link AndroidResourceRule}s.
    */
   public static class AndroidResourceDetails {
@@ -111,10 +198,10 @@ public class UberRDotJavaUtil {
     public final ImmutableSet<String> rDotJavaPackages;
 
     @Beta
-    public AndroidResourceDetails(ImmutableList<AndroidResourceRule> androidResourceDeps) {
+    public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
       ImmutableSet.Builder<String> resDirectoryBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
-      for (AndroidResourceRule androidResource : androidResourceDeps) {
+      for (HasAndroidResourceDeps androidResource : androidResourceDeps) {
         String resDirectory = androidResource.getRes();
         if (resDirectory != null) {
           resDirectoryBuilder.add(resDirectory);
@@ -127,7 +214,7 @@ public class UberRDotJavaUtil {
   }
 
   public static void createDummyRDotJavaFiles(
-      ImmutableList<AndroidResourceRule> androidResourceDeps,
+      ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
       BuildTarget buildTarget,
       ImmutableList.Builder<Step> commands) {
     // Clear out the folder for the .java files.
@@ -152,7 +239,7 @@ public class UberRDotJavaUtil {
       javaSourceFilePaths.add(rDotJavaFile);
     } else {
       Map<String, String> symbolsFileToRDotJavaPackage = Maps.newHashMap();
-      for (AndroidResourceRule res : androidResourceDeps) {
+      for (HasAndroidResourceDeps res : androidResourceDeps) {
         String rDotJavaPackage = res.getRDotJavaPackage();
         symbolsFileToRDotJavaPackage.put(res.getPathToTextSymbolsFile(), rDotJavaPackage);
         String rDotJavaFilePath = MergeAndroidResourcesStep.getOutputFilePath(

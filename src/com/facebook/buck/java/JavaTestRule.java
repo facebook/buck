@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -155,7 +156,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     // androidResourceDeps will be null if this test is re-run without being rebuilt.
     if (androidResourceDeps == null) {
-      androidResourceDeps = AndroidResourceRule.getAndroidResourceDeps(this,
+      androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this,
           buildContext.getDependencyGraph());
     }
 
