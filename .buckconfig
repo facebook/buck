@@ -4,3 +4,5 @@
     src_roots = src, test
 [alias]
     buck = //src/com/facebook/buck/cli:cli
+[buckd]
+    ignore = .git, .idea, .buckd, buck-out, buck-bin, buck-gen, build

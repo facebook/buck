@@ -1,4 +1,4 @@
-<project name="buck" default="jar">
+<project name="buck" default="default">
 
   <property name="src.dir" value="${basedir}/src" />
   <property name="aosp.src.dir" value="third-party/java/aosp/src" />
@@ -15,6 +15,7 @@
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testclasses.dir" value="${build.dir}/testclasses" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
+  <property name="client.dir" value="third-party/nailgun" />
 
   <fileset dir="${lib.dir}" id="buck.jars">
     <include name="args4j.jar" />
@@ -64,6 +65,10 @@
     <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="clean" />
     <delete dir="${build.dir}" />
   </target>
+
+  <!-- Default target so that a command line build can 
+       do more than one thing. -->
+  <target name="default" depends="jar, client" />
 
   <target name="compile-testrunner">
     <mkdir dir="${testrunner.classes.dir}" />
@@ -217,5 +222,12 @@
     </javadoc>
   </target>
 
-  <target name="all" depends="jar, test, javadoc" />
+  <target name="client" description="install nailgun buckd c client">
+    <mkdir dir="${build.dir}" />
+    <exec dir="${basedir}" executable="gcc">
+      <arg line="-Wall -pedantic -O3 -o ${build.dir}/ng ${client.dir}/nailgun-client/ng.c" />
+    </exec> 
+  </target>
+
+  <target name="all" depends="jar, test, javadoc, client" />
 </project>

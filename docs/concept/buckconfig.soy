@@ -41,6 +41,19 @@ buck build app
 buck test apptest
 </pre>{/literal}
 
+<h2>[buckd]</h2>
+
+This section may define an <code>ignore</code> property that can specify a comma separated list
+of subtrees within the project root which should be ignored by Buck when it is running in daemon
+mode and monitoring the filesystem for changes that may affect build files. Typically source
+control, IDE and output directories along with the <code>.buckd</code> directory should be added to
+this list to avoid the build file cache being invalidated on every build and source control
+operation.
+
+{literal}<pre>
+[buckd]
+  ignore = .git, .buckd, .idea, buck-out
+</pre>{/literal}
 
 <h2>[buildfile]</h2>
 

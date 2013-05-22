@@ -22,6 +22,9 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitor;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.Properties;
 
 /**
@@ -69,5 +72,19 @@ public class ProjectFilesystem {
    */
   public boolean isFile(String pathRelativeToProjectRoot) {
     return new File(pathRelativeToProjectRoot).isFile();
+  }
+
+  /**
+   * Allows {@link java.nio.file.Files#walkFileTree} to be faked in tests.
+   */
+  public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
+    java.nio.file.Files.walkFileTree(root, fileVisitor);
+  }
+
+  /**
+   * Allows {@link java.nio.file.Files#isDirectory} to be faked in tests.
+   */
+  public boolean isDirectory(Path child, LinkOption linkOption) {
+    return java.nio.file.Files.isDirectory(child, linkOption);
   }
 }

@@ -31,6 +31,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -199,6 +200,8 @@ public class BuckConfigTest {
     assertEquals(ImmutableMap.of(), emptyConfig.getEntriesForSection("alias"));
     assertNull(emptyConfig.getBuildTargetForAlias("fb4a"));
     assertEquals(ImmutableMap.of(), emptyConfig.getBasePathToAliasMap());
+    assertEquals(0, Iterables.size(emptyConfig.getDefaultIncludes()));
+    assertEquals(ImmutableSet.of(), emptyConfig.getIgnoredDirectories());
   }
 
   @Test
@@ -313,5 +316,15 @@ public class BuckConfigTest {
     BuckConfig config = BuckConfig.createFromReader(reader, null);
 
     assertEquals(ImmutableSet.of("windows", "linux"), config.getDefaultExcludedLabels());
+  }
+
+  @Test
+  public void testExcludedDirectories() throws IOException {
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[buckd]",
+        "ignore = .git, .idea"));
+    BuckConfig config = BuckConfig.createFromReader(reader, null);
+
+    assertEquals(ImmutableSet.of(".git", ".idea"), config.getIgnoredDirectories());
   }
 }

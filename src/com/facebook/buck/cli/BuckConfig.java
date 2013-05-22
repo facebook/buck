@@ -232,13 +232,33 @@ class BuckConfig {
   }
 
   /**
-   * A [possibly empty] sequence of paths to files that should be included by default when
+   * A (possibly empty) sequence of paths to files that should be included by default when
    * evaluating a build file.
    */
   public Iterable<String> getDefaultIncludes() {
     ImmutableMap<String, String> entries = getEntriesForSection("buildfile");
     String includes = Strings.nullToEmpty(entries.get("includes"));
     return Splitter.on(' ').trimResults().omitEmptyStrings().split(includes);
+  }
+
+  /**
+   * A (possibly empty) set of paths to sub-trees that do not contain source files,
+   * build files or files that could affect either (typically .git, .idea, .buckd, buck-out, etc.)
+   */
+  public ImmutableSet<String> getIgnoredDirectories() {
+    final ImmutableMap<String, String> directoriesConfig = getEntriesForSection("buckd");
+    final String EXCLUDED_KEY = "ignore";
+
+    if (!directoriesConfig.containsKey(EXCLUDED_KEY)) {
+      return ImmutableSet.of();
+    }
+
+    final String excludedString = directoriesConfig.get(EXCLUDED_KEY);
+    return ImmutableSet.copyOf(
+        Splitter.on(',')
+        .omitEmptyStrings()
+        .trimResults()
+        .split(excludedString));
   }
 
   @Nullable

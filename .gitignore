@@ -16,6 +16,7 @@ local.properties
 .idea/tasks.xml
 .idea/uiDesigner.xml
 .idea/workspace.xml
+.idea/misc.xml
 
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
@@ -23,3 +24,6 @@ local.properties
 # OS X
 .DS_Store
 
+
+# Buck daemon.
+.buckd

@@ -184,7 +184,6 @@ public class BuildFileToJsonParser {
         // TODO(user): escape args? (they are currently file names, which shouldn't contain quotes)
         engine.getContext().setWriter(outputWriter);
         engine.eval(String.format(python, PATH_TO_BUCK_PY, Joiner.on("\",\"").join(args)));
-
       } catch (ScriptException e) {
         // Print human readable python trace if available, default to normal exception if not.
         // Path to build file is included in python stack trace.
@@ -200,7 +199,7 @@ public class BuildFileToJsonParser {
         try {
           closer.close();
         } catch (IOException e) {
-          Throwables.propagate(e);
+          throw Throwables.propagate(e);
         }
       }
     }

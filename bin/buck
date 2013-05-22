@@ -3,17 +3,6 @@
 # Exit on error.
 set -e
 
-
-# Set TMPDIR to a reasonable default if it isn't already set, so that mktmp(1) can be
-# succinctly and portably used.
-if [ "x${TMPDIR}" = "x" ] ; then
-  TMPDIR="/tmp"
-fi
-
-# Record the directory from which this script was run in case
-# we need to re-run it as part of the autoupdate.
-ORIGINAL_WORKING_DIRECTORY="$PWD"
-
 # $BUCK_BIN_DIRECTORY is the directory that hosts this script. Solution taken from:
 # http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
 SOURCE="${BASH_SOURCE[0]}"
@@ -27,165 +16,23 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 BUCK_BIN_DIRECTORY=$DIR
 
-# Keep track of the project root directory.
-PROJECT_ROOT="$PWD"
+# Set environment and update buck if required.
+# TODO(user): refactor buck_common in to functions rather than sourcing
+source "${BUCK_BIN_DIRECTORY}/buck_common"
 
-# Navigate to the root of the Buck project.
-pushd $BUCK_BIN_DIRECTORY > /dev/null
-pushd .. > /dev/null
-BUCK_DIRECTORY="$PWD"
-
-# If there is a .buckversion file in the project root, then make sure that Buck is at that version.
-# The only way to override this is to include a .nobuckcheck file in the project root.
-if [ -e "${PROJECT_ROOT}/.buckversion" ] && [ ! -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
-  BUCK_REQUIRED_VERSION=`cat ${PROJECT_ROOT}/.buckversion`
-
-  # If the hash is in not in the user's repository, do a `git fetch`.
-  if ! git cat-file -e "$BUCK_REQUIRED_VERSION"; then
-    git fetch
-  fi
-
-
-  BUCK_CURRENT_VERSION=`git rev-parse HEAD`
-
-  # Note that this test succeeds if you have local changes in your Buck repository that have not
-  # been committed.
-  if [ "$BUCK_REQUIRED_VERSION" != "$BUCK_CURRENT_VERSION" ]; then
-    echo "Buck is at ${BUCK_CURRENT_VERSION},"
-    echo "but should be ${BUCK_REQUIRED_VERSION}."
-    echo "Buck is updating itself."
-    echo "To disable this, add a '.nobuckcheck' file to your project root."
-    echo "In general, you should only disable this if you are developing Buck."
-
-    # Now that the version is guaranteed to be in the user's repository,
-    # checkout that hash.
-    git checkout $BUCK_REQUIRED_VERSION
-
-    # Now that we have updated the repository, we should rebuild Buck.
-    ant clean
-  fi
-fi
-
-# Make sure that Buck has been built.
-if [ ! -e "build/buck.jar" ]; then
-  echo "No sign of buck.jar -- building Buck!"
-  # Note the jar file will not be used,
-  # but serves to represent whether everything has been built.
-  ant clean jar
-  cd $ORIGINAL_WORKING_DIRECTORY
-  # Although ${BASH_SOURCE[0]} may be a relative path, it should
-  # be relative to $ORIGINAL_WORKING_DIRECTORY, which is now the
-  # current directory.
-  "${BASH_SOURCE[0]}" "$@"
+# If a buck daemon is running, use it.
+BUCK_CLIENT="${BUCK_DIRECTORY}/build/ng"
+if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
+  BUCKD_PORT=`cat ${BUCKD_DIR}/buckd.port`
+   $BUCK_CLIENT --nailgun-port $BUCKD_PORT \
+      com.facebook.buck.cli.Main "$@"
   exit $?
 fi
 
-# if the output of git status -s is non-empty (-n test), it means there are changed files.
-BUCK_REPOSITORY_DIRTY=0
-if [ -d ".git" ]; then
-  # Make sure buck gets passed the right version.
-  BUCK_CURRENT_VERSION=`git rev-parse HEAD`
-
-  if [ -n "`git status -s`" ]; then
-    BUCK_REPOSITORY_DIRTY=1
-  fi
-else
-  BUCK_CURRENT_VERSION="N/A"
-fi
-
-# Compute a version string that uniquely incorporates the current git revision
-# and local modifications (if any) to managed files that are relevant to
-# building/running the buck application.
-if [ "x${BUCK_REPOSITORY_DIRTY}" = "x0" ] ; then
-  BUCK_VERSION_UID="${BUCK_CURRENT_VERSION}"
-else
-  if [ -d ".git" ] ; then
-    # Get git tree for current revision.
-    git_tree_in=`git log -n1 --pretty=format:%T HEAD`
-
-    # Generate git tree as it would exist if current local changes were
-    # committed.
-    git_tree_out=$(
-      git_index_file=`mktemp ${TMPDIR}/buck-git-index.XXXXXX` || exit 1
-      export GIT_INDEX_FILE="${git_index_file}"
-      git read-tree ${git_tree_in} || exit 1
-      git update-index --add --remove `git diff --name-only HEAD` || exit 1
-      git write-tree || exit 1
-      rm -f "${git_index_file}"
-    )
-
-    # Compute UID based on relevant portions of the output git tree.
-    buck_version_uid_input=`mktemp ${TMPDIR}/buck-version-uid-input.XXXXXX` || exit 1
-    git ls-tree --full-tree ${git_tree_out} bin build.xml config lib third-party \
-      > ${buck_version_uid_input} || exit 1
-    BUCK_VERSION_UID=`git hash-object ${buck_version_uid_input}` || exit 1
-    rm -f "${buck_version_uid_input}"
-  else
-    BUCK_VERSION_UID="N/A"
-  fi
-fi
-
-# Pop back to the original directory.
-popd > /dev/null
-popd > /dev/null
-
-EXTRA_FLAGS=''
-
-# To debug BUCK, add the following argument to the command below.  This will wait on port 8888 to
-# for Eclipse.
-#
-# EXTRA_FLAGS="${EXTRA_FLAGS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
-
-
-# Note that if $RELATIVE_PATH_TO_BUCK_PY changes, then the default value of
-# com.facebook.buck.json.BuildFileToJsonParser#PATH_TO_BUCK_PY also needs to be updated.
-RELATIVE_PATH_TO_BUCK_PY=src/com/facebook/buck/parser/buck.py
-PATH_TO_BUCK_PY="${BUCK_DIRECTORY}/$RELATIVE_PATH_TO_BUCK_PY"
-
-# Run Buck "unpacked," i.e., from specifying its individual classpath elements rather than from a
-# single monolithic JAR file that includes all of its dependencies. This speeds up Buck development
-# because `ant compile` takes much less time to rebuild Buck than `ant jar` does.
-#
+# Run buck.
 java \
--XX:MaxPermSize=256m \
--Xmx1000m \
-$EXTRA_FLAGS \
--Djava.awt.headless=true \
--Dbuck.testrunner_classes=${BUCK_DIRECTORY}/build/testrunner/classes \
--Dbuck.path_to_emma_jar=${BUCK_DIRECTORY}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar \
--Dbuck.test_util_no_tests_dir=true \
--Dbuck.path_to_buck_py=${PATH_TO_BUCK_PY} \
--Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
--Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
--Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
--Dbuck.version_uid=${BUCK_VERSION_UID} \
--Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties \
+$BUCK_JAVA_ARGS \
+-Dbuck.daemon=false \
 -classpath \
-${BUCK_DIRECTORY}/src:\
-${BUCK_DIRECTORY}/build/classes:\
-${BUCK_DIRECTORY}/lib/args4j.jar:\
-${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
-${BUCK_DIRECTORY}/lib/guava-14.0.1.jar:\
-${BUCK_DIRECTORY}/lib/ini4j-0.5.2.jar:\
-${BUCK_DIRECTORY}/lib/jackson-annotations-2.0.5.jar:\
-${BUCK_DIRECTORY}/lib/jackson-core-2.0.5.jar:\
-${BUCK_DIRECTORY}/lib/jackson-databind-2.0.5.jar:\
-${BUCK_DIRECTORY}/lib/jsr305.jar:\
-${BUCK_DIRECTORY}/lib/jyson-1.0.2.jar:\
-${BUCK_DIRECTORY}/lib/jython-standalone-2.5.3.jar:\
-${BUCK_DIRECTORY}/lib/sdklib.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-cassandra-1.56.38.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-core-1.56.38.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-thrift-1.56.38.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/cassandra-1.2.3.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/cassandra-thrift-1.2.3.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/commons-cli-1.1.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/commons-codec-1.2.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/commons-lang-2.6.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/high-scale-lib-1.1.2.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/joda-time-2.2.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/libthrift-0.7.0.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/log4j-1.2.16.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-api-1.7.2.jar:\
-${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-log4j12-1.7.2.jar \
+$BUCK_JAVA_CLASSPATH \
 com.facebook.buck.cli.Main "$@"

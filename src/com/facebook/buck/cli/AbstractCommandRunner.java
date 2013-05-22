@@ -133,7 +133,6 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
     // Create a Parser.
     return new Parser(getProjectFilesystem(), getArtifactCache(), buildFiles);
-
   }
 
   /**

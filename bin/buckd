@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Exit on error.
+set -e
+
+# $BUCK_BIN_DIRECTORY is the directory that hosts this script. Solution taken from:
+# http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
+SOURCE="${BASH_SOURCE[0]}"
+DIR="$( dirname "$SOURCE" )"
+while [ -h "$SOURCE" ]
+do 
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+  DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+BUCK_BIN_DIRECTORY=$DIR
+
+# Set environment and update buck if required.
+# TODO(jimp): refactor buck_common in to functions that can be called
+source "${BUCK_BIN_DIRECTORY}/buck_common"
+
+# Kill any existing buckd process.
+if [ $BUCKD_RUNNING -eq 0 ]; then
+  echo "Killing existing buckd process"
+  kill `cat $BUCKD_PID_FILE 2> /dev/null` &> /dev/null || true
+fi
+
+# Find an unused port.
+for BUCKD_PORT in $(seq 2000 65000); do
+  nc -z localhost $BUCKD_PORT &> /dev/null || break
+done
+
+# Persist port.
+mkdir -p "$BUCKD_DIR" &> /dev/null || true
+echo $BUCKD_PORT > "$BUCKD_PORT_FILE"
+
+# Run buckd.
+java \
+$BUCK_JAVA_ARGS \
+-Dbuck.daemon=true \
+-classpath \
+${BUCK_JAVA_CLASSPATH}:\
+${BUCK_DIRECTORY}/lib/nailgun-server-0.9.2-SNAPSHOT.jar \
+com.martiansoftware.nailgun.NGServer localhost:${BUCKD_PORT} \
+&> $BUCKD_LOG_FILE &
+echo $! > "$BUCKD_PID_FILE"

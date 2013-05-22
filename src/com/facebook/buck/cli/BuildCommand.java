@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.debug.Tracer;
+import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
@@ -30,21 +31,30 @@ import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.io.PrintStream;
+
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.annotation.Nullable;
+
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
-  /** The minimum length of time for a Tracer event to take to be printed to the console. */
+  // The minimum length of time for a Tracer event to take to be printed to the console.
   private static final long TRACER_THRESHOLD = 50L;
 
   private Build build;
@@ -54,6 +64,22 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   public BuildCommand(ArtifactCache artifactCache) {
     super(artifactCache);
   }
+
+  // Static fields persist between builds when running as a daemon.
+  private static final boolean isDaemon = Boolean.getBoolean("buck.daemon");
+
+  @Nullable
+  private static Parser parser;
+
+  @Nullable
+  private static BuildFileTree buildFiles;
+
+  @Nullable
+  private static EventBus fileChangeEventBus;
+
+  @Nullable
+  private static ProjectFilesystemWatcher filesystemWatcher;
+
 
   public BuildCommand(PrintStream stdOut, PrintStream stdErr, Console console,
       ProjectFilesystem projectFilesystem, ArtifactCache artifactCache) {
@@ -78,14 +104,32 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
   }
 
-  private int runCommandWithOptionsWithTracerRunning(BuildCommandOptions options)
+  private synchronized int runCommandWithOptionsWithTracerRunning(BuildCommandOptions options)
       throws IOException {
     // Set the logger level based on the verbosity option.
     Verbosity verbosity = options.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);
 
+    // Watch filesystem to invalidate parsed build files on changes if daemon.
+    if (isDaemon) {
+      if (filesystemWatcher == null) {
+        fileChangeEventBus = new EventBus("file-change-events");
+        filesystemWatcher = new ProjectFilesystemWatcher(
+            getProjectFilesystem(),
+            fileChangeEventBus,
+            options.getBuckConfig().getIgnoredDirectories(),
+            FileSystems.getDefault().newWatchService());
+        fileChangeEventBus.register(this);
+      } else {
+        filesystemWatcher.postEvents();
+      }
+    }
 
-    Parser parser = createParser();
+    // Create static members on first run, cache parsed build files between runs if daemon.
+    if (buildFiles == null) {
+      buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
+      parser = new Parser(getProjectFilesystem(), getArtifactCache(), buildFiles);
+    }
 
     try {
       buildTargets = getBuildTargets(parser, options.getArgumentsFormattedAsBuildTargets());
@@ -186,5 +230,20 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   @Override
   String getUsageIntro() {
     return "Specify one build rule to build.";
+  }
+
+  @Subscribe
+  public void onFileSystemChange(WatchEvent<?> event) {
+    if (filesystemWatcher.isPathChangeEvent(event)) {
+      // TODO(user): Track the files imported by build files, rather than just assuming source files can't affect them.
+      final String SRC_EXTENSION = ".java";
+      Path path = (Path) event.context();
+      if (path.toString().endsWith(SRC_EXTENSION)) {
+        return;
+      }
+    }
+    // TODO(user): invalidate affected build files, rather than nuking buildFiles and parser completely.
+    buildFiles = null;
+    parser = null;
   }
 }

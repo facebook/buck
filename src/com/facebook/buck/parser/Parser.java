@@ -261,6 +261,9 @@ public final class Parser {
 
   private void parseBuildFile(File buildFile, Iterable<String> defaultIncludes)
       throws IOException, NoSuchBuildTargetException {
+    if (parsedBuildFiles.contains(buildFile)) {
+      return; // Use cached build file.
+    }
     logger.info(String.format("Parsing %s file: %s",
         BuckConstant.BUILD_RULES_FILE_NAME,
         buildFile));
