@@ -95,7 +95,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final AnnotationProcessingParams annotationProcessingParams;
 
-  @Nullable private final String proguardConfig;
+  private final Optional<String> proguardConfig;
 
   private final String sourceLevel;
 
@@ -153,26 +153,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   protected DefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
                                    Set<String> srcs,
                                    Set<String> resources,
-                                   @Nullable String proguardConfig,
-                                   AnnotationProcessingParams annotationProcessingParams,
-                                   boolean exportDeps) {
-    this(
-        cachingBuildRuleParams,
-        srcs,
-        resources,
-        proguardConfig,
-        annotationProcessingParams,
-        exportDeps,
-        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-        JavacOptionsUtil.DEFAULT_TARGET_LEVEL
-    );
-  }
-
-
-  protected DefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
-                                   Set<String> srcs,
-                                   Set<String> resources,
-                                   @Nullable String proguardConfig,
+                                   Optional<String> proguardConfig,
                                    AnnotationProcessingParams annotationProcessingParams,
                                    boolean exportDeps,
                                    String sourceLevel,
@@ -181,7 +162,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.annotationProcessingParams = Preconditions.checkNotNull(annotationProcessingParams);
-    this.proguardConfig = proguardConfig;
+    this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.sourceLevel = sourceLevel;
     this.targetLevel = targetLevel;
     this.exportDeps = exportDeps;
@@ -384,8 +365,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return annotationProcessingParams;
   }
 
-  @Nullable
-  public String getProguardConfig() {
+  public Optional<String> getProguardConfig() {
     return proguardConfig;
   }
 
@@ -685,8 +665,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     protected String targetLevel = JavacOptionsUtil.DEFAULT_TARGET_LEVEL;
     protected boolean exportDeps = false;
 
-    @Nullable
-    protected String proguardConfig = null;
+    protected Optional<String> proguardConfig = Optional.absent();
 
     protected Builder() {}
 
@@ -748,8 +727,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       return this;
     }
 
-    public Builder setProguardConfig(String proguardConfig) {
-      this.proguardConfig = proguardConfig;
+    public Builder setProguardConfig(Optional<String> proguardConfig) {
+      this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
       return this;
     }
 

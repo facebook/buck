@@ -85,11 +85,8 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
 
     // proguard_config
     Optional<String> proguardConfig = params.getOptionalStringAttribute("proguard_config");
-    if (proguardConfig.isPresent()) {
-      String proguardConfigPath = params.resolveFilePathRelativeToBuildFileDirectory(
-          proguardConfig.get());
-      builder.setProguardConfig(proguardConfigPath);
-    }
+    builder.setProguardConfig(
+        proguardConfig.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 
     // compress_resources
     boolean compressResources = params.getBooleanAttribute("compress_resources");
@@ -102,7 +99,11 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
     // resource_filter
     Optional<String> resourceFilter = params.getOptionalStringAttribute("resource_filter");
     if (resourceFilter.isPresent()) {
-      builder.setResourceFilter(Strings.emptyToNull(resourceFilter.get().trim()));
+      String trimmedResourceFilter = resourceFilter.get().trim();
+      builder.setResourceFilter(Optional.fromNullable(
+          Strings.emptyToNull(trimmedResourceFilter)));
+    } else {
+      builder.setProguardConfig(resourceFilter);
     }
   }
 

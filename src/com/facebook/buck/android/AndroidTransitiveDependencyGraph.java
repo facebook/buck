@@ -25,6 +25,7 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -126,21 +127,13 @@ public class AndroidTransitiveDependencyGraph {
           if (nativeLibsDirectory != null) {
             nativeLibsDirectories.add(nativeLibsDirectory);
           }
-        } else if (rule instanceof AndroidLibraryRule) {
-          AndroidLibraryRule androidLibraryRule = (AndroidLibraryRule)rule;
-          String proguardConfig = androidLibraryRule.getProguardConfig();
-          if (proguardConfig != null) {
-            proguardConfigs.add(proguardConfig);
-          }
-          String manifestFile = androidLibraryRule.getManifestFile();
-          if (manifestFile != null) {
-            manifestFiles.add(manifestFile);
-          }
         } else if (rule instanceof DefaultJavaLibraryRule) {
-          DefaultJavaLibraryRule androidRule = (DefaultJavaLibraryRule)rule;
-          String proguardConfig = androidRule.getProguardConfig();
-          if (proguardConfig != null) {
-            proguardConfigs.add(proguardConfig);
+          DefaultJavaLibraryRule defaultJavaLibraryRule = (DefaultJavaLibraryRule)rule;
+          Optionals.addIfPresent(defaultJavaLibraryRule.getProguardConfig(), proguardConfigs);
+
+          if (rule instanceof AndroidLibraryRule) {
+            AndroidLibraryRule androidLibraryRule = (AndroidLibraryRule)rule;
+            Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
           }
         }
         if (!ruleIsCachedQuiet(rule, context)) {

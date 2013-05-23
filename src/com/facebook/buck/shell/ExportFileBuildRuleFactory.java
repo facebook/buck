@@ -34,13 +34,7 @@ public class ExportFileBuildRuleFactory extends AbstractBuildRuleFactory {
     ExportFileRule.Builder builder = (ExportFileRule.Builder) abstractBuilder;
 
     Optional<String> src = params.getOptionalStringAttribute("src");
-
-    if (src.isPresent()) {
-      String srcPath = params.resolveFilePathRelativeToBuildFileDirectory(src.get());
-      builder.setSrc(Optional.of(srcPath));
-    } else {
-      builder.setSrc(src);
-    }
+    builder.setSrc(src.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 
     Optional<String> out = params.getOptionalStringAttribute("out");
     builder.setOut(out);

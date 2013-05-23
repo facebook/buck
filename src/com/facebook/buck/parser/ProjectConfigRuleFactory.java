@@ -39,9 +39,7 @@ public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory {
 
     // src_target
     Optional<String> srcTargetId = params.getOptionalStringAttribute("src_target");
-    if (srcTargetId.isPresent()) {
-      builder.setSrcTarget(contextualBuildParser.apply(srcTargetId.get()));
-    }
+    builder.setSrcTarget(srcTargetId.transform(contextualBuildParser));
 
     // src_roots
     // Note that the values in this array are passed as-is, rather than resolved to local project
@@ -51,9 +49,7 @@ public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory {
 
     // test_target
     Optional<String> testTargetId = params.getOptionalStringAttribute("test_target");
-    if (testTargetId.isPresent()) {
-      builder.setTestTarget(contextualBuildParser.apply(testTargetId.get()));
-    }
+    builder.setTestTarget(testTargetId.transform(contextualBuildParser));
 
     // test_roots
     // Note that this value is passed as-is, rather than resolved to a project local path.

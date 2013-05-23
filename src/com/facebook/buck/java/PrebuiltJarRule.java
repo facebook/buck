@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -41,8 +42,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 /**
  * A rule that establishes a pre-compiled JAR file as a dependency.
  */
@@ -50,8 +49,8 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     implements JavaLibraryRule, HasClasspathEntries {
 
   private final String binaryJar;
-  @Nullable private final String sourceJar;
-  @Nullable private final String javadocUrl;
+  private final Optional<String> sourceJar;
+  private final Optional<String> javadocUrl;
   private final Supplier<ImmutableSetMultimap<BuildRule, String>>
       transitiveClasspathEntriesSupplier;
 
@@ -60,12 +59,12 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
 
   PrebuiltJarRule(CachingBuildRuleParams cachingBuildRuleParams,
       String classesJar,
-      String sourceJar,
-      String javadocUrl) {
+      Optional<String> sourceJar,
+      Optional<String> javadocUrl) {
     super(cachingBuildRuleParams);
     this.binaryJar = Preconditions.checkNotNull(classesJar);
-    this.sourceJar = sourceJar;
-    this.javadocUrl = javadocUrl;
+    this.sourceJar = Preconditions.checkNotNull(sourceJar);
+    this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
 
     transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
@@ -100,11 +99,11 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     return binaryJar;
   }
 
-  public String getSourceJar() {
+  public Optional<String> getSourceJar() {
     return sourceJar;
   }
 
-  public String getJavadocUrl() {
+  public Optional<String> getJavadocUrl() {
     return javadocUrl;
   }
 
@@ -169,8 +168,8 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   public static class Builder extends AbstractCachingBuildRuleBuilder {
 
     private String binaryJar;
-    private String sourceJar;
-    private String javadocUrl;
+    private Optional<String> sourceJar = Optional.absent();
+    private Optional<String> javadocUrl = Optional.absent();
 
     private Builder() {}
 
@@ -211,13 +210,13 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
       return this;
     }
 
-    public Builder setSourceJar(String sourceJar) {
-      this.sourceJar = sourceJar;
+    public Builder setSourceJar(Optional<String> sourceJar) {
+      this.sourceJar = Preconditions.checkNotNull(sourceJar);
       return this;
     }
 
-    public Builder setJavadocUrl(String javadocUrl) {
-      this.javadocUrl = javadocUrl;
+    public Builder setJavadocUrl(Optional<String> javadocUrl) {
+      this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
       return this;
     }
 

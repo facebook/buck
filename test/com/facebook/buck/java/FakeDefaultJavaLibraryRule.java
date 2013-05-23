@@ -19,13 +19,12 @@ package com.facebook.buck.java;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import javax.annotation.Nullable;
 
 public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
   private final boolean hasUncachedDescendants;
@@ -34,7 +33,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
   protected FakeDefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
                                        Set<String> srcs,
                                        Set<String> resources,
-                                       @Nullable String proguardConfig,
+                                       Optional<String> proguardConfig,
                                        AnnotationProcessingParams annotationProcessingParams,
                                        boolean exportDeps,
                                        boolean hasUncachedDescendants,
@@ -44,7 +43,9 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
         resources,
         proguardConfig,
         annotationProcessingParams,
-        exportDeps);
+        exportDeps,
+        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
+        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
 
     this.hasUncachedDescendants = hasUncachedDescendants;
     this.ruleInputsAreCached = ruleInputsAreCached;

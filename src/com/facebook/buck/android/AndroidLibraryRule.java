@@ -25,11 +25,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 public class AndroidLibraryRule extends DefaultJavaLibraryRule {
 
@@ -37,16 +37,15 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
    * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
    * generation logic.
    */
-  @Nullable
-  private final String manifestFile;
+  private final Optional<String> manifestFile;
 
   @VisibleForTesting
   public AndroidLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
       Set<String> srcs,
       Set<String> resources,
-      @Nullable String proguardConfig,
+      Optional<String> proguardConfig,
       AnnotationProcessingParams annotationProcessingParams,
-      @Nullable String manifestFile,
+      Optional<String> manifestFile,
       String sourceLevel,
       String targetLevel) {
     super(cachingBuildRuleParams,
@@ -57,7 +56,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
         /* exportDeps */ false,
         sourceLevel,
         targetLevel);
-    this.manifestFile = manifestFile;
+    this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }
 
   @Override
@@ -65,8 +64,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     return BuildRuleType.ANDROID_LIBRARY;
   }
 
-  @Nullable
-  public String getManifestFile() {
+  public Optional<String> getManifestFile() {
     return manifestFile;
   }
 
@@ -80,8 +78,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
-    @Nullable
-    private String manifestFile = null;
+    private Optional<String> manifestFile = Optional.absent();
 
     @Override
     public AndroidLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
@@ -134,8 +131,8 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       return annotationProcessingBuilder;
     }
 
-    public Builder setManifestFile(String manifestFile) {
-      this.manifestFile = manifestFile;
+    public Builder setManifestFile(Optional<String> manifestFile) {
+      this.manifestFile = Preconditions.checkNotNull(manifestFile);
       return this;
     }
 

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -32,14 +33,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 public class RobolectricTestRule extends JavaTestRule {
 
   protected RobolectricTestRule(CachingBuildRuleParams cachingBuildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       Set<String> labels,
-      String proguardConfig,
+      Optional<String> proguardConfig,
       AnnotationProcessingParams annotationProcessors,
       List<String> vmArgs,
       ImmutableSet<JavaLibraryRule> sourceUnderTest,

@@ -437,7 +437,7 @@ public class AndroidBinaryRuleTest {
             "java/src/com/facebook/base/keystore.properties"),
             androidBinaryRuleBuilder.build(buildRuleIndex).getInputsToCompareToOutput(context));
 
-    androidBinaryRuleBuilder.setProguardConfig("java/src/com/facebook/proguard.cfg");
+    androidBinaryRuleBuilder.setProguardConfig(Optional.of("java/src/com/facebook/proguard.cfg"));
     MoreAsserts.assertListEquals(
         "getInputsToCompareToOutput() should include Proguard config, if present.",
         ImmutableList.of(

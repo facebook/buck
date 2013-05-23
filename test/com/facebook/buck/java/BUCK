@@ -10,6 +10,7 @@ java_library(
     '//lib:jsr305',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:rules',
     '//test/com/facebook/buck/rules:testutil',

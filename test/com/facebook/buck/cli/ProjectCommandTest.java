@@ -40,6 +40,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -77,7 +78,7 @@ public class ProjectCommandTest {
     String projectConfigTargetName = "//javasrc:project-config";
     ProjectConfigRule ruleConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(projectConfigTargetName))
-        .setSrcTarget(javaLibraryTargetName)
+        .setSrcTarget(Optional.of(javaLibraryTargetName))
         .build(buildRuleIndex);
     buildRuleIndex.put(ruleConfig.getFullyQualifiedName(), ruleConfig);
 

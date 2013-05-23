@@ -41,15 +41,11 @@ public class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory {
 
     // source_jar
     Optional<String> sourceJar = params.getOptionalStringAttribute("source_jar");
-    if (sourceJar.isPresent()) {
-      String sourceJarFile = params.resolveFilePathRelativeToBuildFileDirectory(sourceJar.get());
-      builder.setSourceJar(sourceJarFile);
-    }
+    builder.setSourceJar(
+        sourceJar.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 
     // javadoc_url
     Optional<String> javadocUrl = params.getOptionalStringAttribute("javadoc_url");
-    if (javadocUrl.isPresent()) {
-      builder.setJavadocUrl(javadocUrl.get());
-    }
+    builder.setJavadocUrl(javadocUrl);
   }
 }

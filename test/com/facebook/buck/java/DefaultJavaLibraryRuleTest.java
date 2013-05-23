@@ -87,9 +87,11 @@ public class DefaultJavaLibraryRuleTest {
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
-        null,
+        /* proguardConfig */ Optional.<String>absent(),
         AnnotationProcessingParams.EMPTY,
-        /* exportDeps */ false);
+        /* exportDeps */ false,
+        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
+        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -122,9 +124,11 @@ public class DefaultJavaLibraryRuleTest {
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
-        /* proguargConfig */ null,
+        /* proguargConfig */ Optional.<String>absent(),
         AnnotationProcessingParams.EMPTY,
-        /* exportDeps */ false);
+        /* exportDeps */ false,
+        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
+        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -159,9 +163,11 @@ public class DefaultJavaLibraryRuleTest {
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
-        /* proguargConfig */ null,
+        /* proguargConfig */ Optional.<String>absent(),
         AnnotationProcessingParams.EMPTY,
-        /* exportDeps */ false);
+        /* exportDeps */ false,
+        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
+        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -797,8 +803,8 @@ public class DefaultJavaLibraryRuleTest {
         return new PrebuiltJarRule(
             createCachingBuildRuleParams(target),
             "MyJar",
-            null,
-            null);
+            Optional.<String>absent(),
+            Optional.<String>absent());
       }
     },
     VALID_JAVA_BINARY("//tools/java/src/com/facebook/annotations:custom-processors") {
@@ -819,9 +825,11 @@ public class DefaultJavaLibraryRuleTest {
             createCachingBuildRuleParams(target),
             ImmutableSet.<String>of("MyClass.java"),
             ImmutableSet.<String>of(),
-            "MyProguardConfig",
+            Optional.of("MyProguardConfig"),
             AnnotationProcessingParams.EMPTY,
-            /* exportDeps */ false);
+            /* exportDeps */ false,
+            JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
+            JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
       }
     };
 
@@ -903,9 +911,9 @@ public class DefaultJavaLibraryRuleTest {
           ),
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<String>of(),
-          /* proguardConfig */ null,
+          /* proguardConfig */ Optional.<String>absent(),
           /* annotationProcessors */ annotationProcessingParamsBuilder.build(buildRuleIndex),
-          /* manifestFile */ null,
+          /* manifestFile */ Optional.<String>absent(),
           JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
           JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
     }

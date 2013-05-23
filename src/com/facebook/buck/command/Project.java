@@ -913,8 +913,8 @@ public class Project {
     private SerializablePrebuiltJarRule(PrebuiltJarRule rule) {
       this.name = getIntellijNameForRule(rule, null /* basePathToAliasMap */);
       this.binaryJar = rule.getBinaryJar();
-      this.sourceJar = rule.getSourceJar();
-      this.javadocUrl = rule.getJavadocUrl();
+      this.sourceJar = rule.getSourceJar().orNull();
+      this.javadocUrl = rule.getJavadocUrl().orNull();
     }
 
     @Override

@@ -114,7 +114,7 @@ public class ProjectTest {
     // project_config android_res/base:res
     ProjectConfigRule projectConfigRuleForResource = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:project_config"))
-        .setSrcTarget("//android_res/base:res")
+        .setSrcTarget(Optional.of("//android_res/base:res"))
         .setSrcRoots(ImmutableList.of("res"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfigRuleForResource.getFullyQualifiedName(),
@@ -170,7 +170,7 @@ public class ProjectTest {
     ProjectConfigRule projectConfigRuleForLibrary = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/base:project_config"))
-        .setSrcTarget("//java/src/com/facebook/base:base")
+        .setSrcTarget(Optional.of("//java/src/com/facebook/base:base"))
         .setSrcRoots(ImmutableList.of("src", "src-gen"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfigRuleForLibrary.getFullyQualifiedName(),
@@ -180,7 +180,7 @@ public class ProjectTest {
           ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/exportlib:project_config"))
-        .setSrcTarget("//java/src/com/facebook/exportlib:exportlib")
+        .setSrcTarget(Optional.of("//java/src/com/facebook/exportlib:exportlib"))
         .setSrcRoots(ImmutableList.of("src"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfigRuleForExportLibrary.getFullyQualifiedName(),
@@ -203,7 +203,7 @@ public class ProjectTest {
     // project_config //foo:project_config
     ProjectConfigRule projectConfigRuleUsingNoDx = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:project_config"))
-        .setSrcTarget("//foo:app")
+        .setSrcTarget(Optional.of("//foo:app"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfigRuleUsingNoDx.getFullyQualifiedName(),
         projectConfigRuleUsingNoDx);
@@ -223,7 +223,7 @@ public class ProjectTest {
     // project_config //bar:project_config
     ProjectConfigRule projectConfigRule = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//bar:project_config"))
-        .setSrcTarget("//bar:app")
+        .setSrcTarget(Optional.of("//bar:app"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfigRule.getFullyQualifiedName(), projectConfigRule);
 
@@ -473,7 +473,7 @@ public class ProjectTest {
     ProjectConfigRule projectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(
             BuildTargetFactory.newInstance("//third_party/java/easymock:project_config"))
-        .setSrcTarget("//third_party/java/easymock:example")
+        .setSrcTarget(Optional.of("//third_party/java/easymock:example"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfig.getFullyQualifiedName(), projectConfig);
 
@@ -525,8 +525,8 @@ public class ProjectTest {
 
     ProjectConfigRule projectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
-        .setSrcTarget("//java/com/example/base:base")
-        .setTestTarget("//java/com/example/base:tests")
+        .setSrcTarget(Optional.of("//java/com/example/base:base"))
+        .setTestTarget(Optional.of("//java/com/example/base:tests"))
         .setTestRoots(ImmutableList.of("tests"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfig.getFullyQualifiedName(), projectConfig);
@@ -591,7 +591,7 @@ public class ProjectTest {
     ProjectConfigRule projectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//third_party/java/robolectric:project_config"))
-        .setSrcTarget("//third_party/java/robolectric:robolectric")
+        .setSrcTarget(Optional.of("//third_party/java/robolectric:robolectric"))
         .setSrcRoots(ImmutableList.of("src/main/java"))
         .build(buildRuleIndex);
     buildRuleIndex.put(projectConfig.getFullyQualifiedName(), projectConfig);
@@ -648,7 +648,7 @@ public class ProjectTest {
         androidResourceRule);
     ProjectConfigRule projectConfigNullSrcRoots = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:project_config"))
-        .setSrcTarget("//resources/com/example:res")
+        .setSrcTarget(Optional.of("//resources/com/example:res"))
         .setSrcRoots(null)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(projectConfigNullSrcRoots.getFullyQualifiedName(),
@@ -676,7 +676,7 @@ public class ProjectTest {
         inPackageJavaLibraryRule);
     ProjectConfigRule inPackageProjectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
-        .setSrcTarget("//java/com/example/base:base")
+        .setSrcTarget(Optional.of("//java/com/example/base:base"))
         .setSrcRoots(ImmutableList.<String>of())
         .build(buildRuleIndex2);
     buildRuleIndex2.put(inPackageProjectConfig.getFullyQualifiedName(), inPackageProjectConfig);
@@ -711,7 +711,7 @@ public class ProjectTest {
         hasSrcFolderAndroidLibraryRule);
     ProjectConfigRule hasSrcFolderProjectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
-        .setSrcTarget("//java/com/example/base:base")
+        .setSrcTarget(Optional.of("//java/com/example/base:base"))
         .setSrcRoots(ImmutableList.of("src"))
         .build(buildRuleIndex3);
     buildRuleIndex3.put(hasSrcFolderProjectConfig.getFullyQualifiedName(),
@@ -823,7 +823,7 @@ public class ProjectTest {
 
     ProjectConfigRule ndkProjectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/foo/jni:project_config"))
-        .setSrcTarget("//third_party/java/foo/jni:foo-jni")
+        .setSrcTarget(Optional.of("//third_party/java/foo/jni:foo-jni"))
         .build(buildRuleIndex);
     buildRuleIndex.put(ndkProjectConfig.getFullyQualifiedName(), ndkProjectConfig);
 
@@ -876,8 +876,8 @@ public class ProjectTest {
 
     ProjectConfigRule config = ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//example/child:config"))
-        .setSrcTarget(ex2.getFullyQualifiedName())
-        .setTestTarget(tests.getFullyQualifiedName())
+        .setSrcTarget(Optional.of(ex2.getFullyQualifiedName()))
+        .setTestTarget(Optional.of(tests.getFullyQualifiedName()))
         .build(buildRuleIndex);
     buildRuleIndex.put(config.getFullyQualifiedName(), config);
 

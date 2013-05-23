@@ -37,10 +37,7 @@ public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory 
 
     // manifest
     Optional<String> manifestFile = params.getOptionalStringAttribute("manifest");
-    if (manifestFile.isPresent()) {
-      String manifestFilePath = params.resolveFilePathRelativeToBuildFileDirectory(
-          manifestFile.get());
-      builder.setManifestFile(manifestFilePath);
-    }
+    builder.setManifestFile(
+        manifestFile.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
   }
 }

@@ -36,6 +36,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -73,7 +74,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       Set<String> srcs,
       Set<String> resources,
       Set<String> labels,
-      @Nullable String proguardConfig,
+      Optional<String> proguardConfig,
       AnnotationProcessingParams annotationProcessors,
       List<String> vmArgs,
       ImmutableSet<JavaLibraryRule> sourceUnderTest,

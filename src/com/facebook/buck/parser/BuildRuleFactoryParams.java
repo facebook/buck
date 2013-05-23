@@ -23,6 +23,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +51,8 @@ public final class BuildRuleFactoryParams {
   public final BuildTarget target;
   private final ParseContext visibilityParseContext;
   private final boolean ignoreFileExistenceChecks;
+
+  private final Function<String, String> resolveFilePathRelativeToBuildFileDirectoryTransform;
 
   public BuildRuleFactoryParams(
       Map<String, ?> instance,
@@ -89,6 +92,13 @@ public final class BuildRuleFactoryParams {
     this.target = target;
     this.visibilityParseContext = ParseContext.forVisibilityArgument();
     this.ignoreFileExistenceChecks = ignoreFileExistenceChecks;
+
+    this.resolveFilePathRelativeToBuildFileDirectoryTransform = new Function<String, String>() {
+      @Override
+      public String apply(String input) {
+        return resolveFilePathRelativeToBuildFileDirectory(input);
+      }
+    };
   }
 
   public BuildTarget parseVisibilityTarget(String visibilityTarget)
@@ -224,6 +234,10 @@ public final class BuildRuleFactoryParams {
 
   public boolean hasAttribute(String attributeName) {
     return instance.containsKey(attributeName);
+  }
+
+  public Function<String, String> getResolveFilePathRelativeToBuildFileDirectoryTransform() {
+    return resolveFilePathRelativeToBuildFileDirectoryTransform;
   }
 
   /** If a boolean attribute has not been specified, then it always defaults to false. */

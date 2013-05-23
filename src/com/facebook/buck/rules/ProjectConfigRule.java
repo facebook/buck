@@ -17,7 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.Optionals;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -169,9 +171,9 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
   public static class Builder extends AbstractBuildRuleBuilder {
 
-    @Nullable private String srcTargetId;
+    private Optional<String> srcTargetId = Optional.absent();
     @Nullable private List<String> srcRoots = null;
-    @Nullable private String testTargetId = null;
+    private Optional<String> testTargetId = Optional.absent();
     @Nullable private List<String> testRoots = null;
     private boolean isIntelliJPlugin = false;
 
@@ -179,8 +181,8 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
     @Override
     public ProjectConfigRule build(final Map<String, BuildRule> buildRuleIndex) {
-      BuildRule srcRule = buildRuleIndex.get(srcTargetId);
-      BuildRule testRule = buildRuleIndex.get(testTargetId);
+      BuildRule srcRule = buildRuleIndex.get(srcTargetId.orNull());
+      BuildRule testRule = buildRuleIndex.get(testTargetId.orNull());
 
       return new ProjectConfigRule(createBuildRuleParams(buildRuleIndex),
           srcRule,
@@ -196,8 +198,8 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
       return this;
     }
 
-    public Builder setSrcTarget(String srcTargetId) {
-      this.srcTargetId = srcTargetId;
+    public Builder setSrcTarget(Optional<String> srcTargetId) {
+      this.srcTargetId = Preconditions.checkNotNull(srcTargetId);
       return this;
     }
 
@@ -206,8 +208,8 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
       return this;
     }
 
-    public Builder setTestTarget(@Nullable String testTargetId) {
-      this.testTargetId = testTargetId;
+    public Builder setTestTarget(Optional<String> testTargetId) {
+      this.testTargetId = Preconditions.checkNotNull(testTargetId);
       return this;
     }
 
@@ -224,12 +226,10 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     @Override
     public Set<String> getDeps() {
       ImmutableSet.Builder<String> depsBuilder = ImmutableSet.builder();
-      if (srcTargetId != null) {
-        depsBuilder.add(srcTargetId);
-      }
-      if (testTargetId != null) {
-        depsBuilder.add(testTargetId);
-      }
+
+      Optionals.addIfPresent(srcTargetId, depsBuilder);
+      Optionals.addIfPresent(testTargetId, depsBuilder);
+
       return depsBuilder.build();
     }
   }
