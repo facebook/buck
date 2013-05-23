@@ -19,7 +19,6 @@ package com.facebook.buck.command;
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
-import com.facebook.buck.android.AndroidTransitiveDependencies;
 import com.facebook.buck.android.GenAidlRule;
 import com.facebook.buck.android.NdkLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -29,6 +28,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -320,9 +320,9 @@ public class Project {
       BuildRule srcRule = projectConfigRule.getSrcRule();
       if (srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinary = (AndroidBinaryRule)srcRule;
-        AndroidTransitiveDependencies binaryTransitiveDependencies =
-            androidBinary.findTransitiveDependencies(dependencyGraph);
-        noDxJarsBuilder.addAll(binaryTransitiveDependencies.noDxClasspathEntries);
+        AndroidDexTransitiveDependencies binaryDexTransitiveDependencies =
+            androidBinary.findDexTransitiveDependencies(dependencyGraph);
+        noDxJarsBuilder.addAll(binaryDexTransitiveDependencies.noDxClasspathEntries);
       }
 
       Module module = createModuleForProjectConfig(projectConfigRule);
@@ -639,8 +639,8 @@ public class Project {
   static void markNoDxJarsAsProvided(
       List<Module> modules,
       Set<String> noDxJars,
-      DependencyGraph dependencyGraph) {
-    Map<String, String> intelliJLibraryNameToJarPath = Maps.newHashMap();
+        DependencyGraph dependencyGraph) {
+  Map<String, String> intelliJLibraryNameToJarPath = Maps.newHashMap();
     for (String jarPath : noDxJars) {
       String libraryName = getIntellijNameForBinaryJar(jarPath);
       intelliJLibraryNameToJarPath.put(libraryName, jarPath);
@@ -654,10 +654,10 @@ public class Project {
       Set<String> classpathEntriesToDex;
       if (module.srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinaryRule = (AndroidBinaryRule)module.srcRule;
-        AndroidTransitiveDependencies transitiveDependencies = androidBinaryRule
-            .findTransitiveDependencies(dependencyGraph);
+        AndroidDexTransitiveDependencies dexTransitiveDependencies =
+            androidBinaryRule.findDexTransitiveDependencies(dependencyGraph);
         classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
-            transitiveDependencies.classpathEntriesToDex));
+            dexTransitiveDependencies.classpathEntriesToDex));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
       }

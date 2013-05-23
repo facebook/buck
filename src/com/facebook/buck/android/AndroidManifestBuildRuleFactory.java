@@ -42,10 +42,5 @@ public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFact
     String skeletonFile = params.getRequiredStringAttribute("skeleton");
     String skeletonPath = params.resolveFilePathRelativeToBuildFileDirectory(skeletonFile);
     builder.setSkeletonFile(skeletonPath);
-
-    // no_dx
-    for (String entry: params.getOptionalListAttribute("no_dx")) {
-      builder.addBuildRuleToExcludeFromDex(entry);
-    }
   }
 }

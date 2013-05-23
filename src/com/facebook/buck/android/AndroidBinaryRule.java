@@ -180,7 +180,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         getBuildTarget().getBasePathWithSlash());
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
     this.transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(this, this.buildRulesToExcludeFromDex);
+        new AndroidTransitiveDependencyGraph(this);
   }
 
   @Override
@@ -281,6 +281,9 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies(
         context.getDependencyGraph());
 
+    final AndroidDexTransitiveDependencies dexTransitiveDependencies =
+        findDexTransitiveDependencies(context.getDependencyGraph());
+
     Set<String> resDirectories = transitiveDependencies.resDirectories;
     Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
 
@@ -303,7 +306,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // TODO(mbolin): The results of this should be cached between runs.
     String extractedResourcesDir = getBinPath("__resources__%s__");
     commands.add(new MakeCleanDirectoryStep(extractedResourcesDir));
-    commands.add(new ExtractResourcesStep(transitiveDependencies.pathsToThirdPartyJars,
+    commands.add(new ExtractResourcesStep(dexTransitiveDependencies.pathsToThirdPartyJars,
         extractedResourcesDir));
 
     // Create the R.java files. Their compiled versions must be included in classes.dex.
@@ -315,7 +318,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // Execute proguard if desired (transforms input classpaths).
     if (packageType.isBuildWithObfuscation()) {
       addProguardCommands(
-          transitiveDependencies,
+          dexTransitiveDependencies,
+          transitiveDependencies.proguardConfigs,
           commands,
           resDirectories);
     }
@@ -331,7 +335,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Create dex artifacts.  This may modify assetsDirectories.
     addDexingCommands(
-        transitiveDependencies.classpathEntriesToDex,
+        dexTransitiveDependencies.classpathEntriesToDex,
         secondaryDexDirectories,
         commands,
         dexFile);
@@ -519,6 +523,12 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return getTransitiveDependencyGraph().findDependencies(getAndroidResourceDepsInternal(graph));
   }
 
+  public AndroidDexTransitiveDependencies findDexTransitiveDependencies(DependencyGraph graph) {
+    return getTransitiveDependencyGraph().findDexDependencies(
+        getAndroidResourceDepsInternal(graph),
+        buildRulesToExcludeFromDex);
+  }
+
   /**
    * @return a list of {@link HasAndroidResourceDeps}s that should be passed, in order, to {@code aapt}
    *     when generating the {@code R.java} files for this APK.
@@ -635,7 +645,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
   @VisibleForTesting
   void addProguardCommands(
-      AndroidTransitiveDependencies deps,
+      AndroidDexTransitiveDependencies dexDeps,
+      Set<String> depsProguardConfigs,
       ImmutableList.Builder<Step> commands,
       Set<String> resDirectories) {
     final ImmutableSetMultimap<BuildRule, String> classpathEntriesMap =
@@ -646,7 +657,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       additionalLibraryJarsForProguardBuilder.addAll(classpathEntriesMap.get(buildRule));
     }
 
-    Set<String> classpathEntries = deps.classpathEntriesToDex;
+    Set<String> classpathEntries = dexDeps.classpathEntriesToDex;
 
     // Clean out the directory for generated ProGuard files.
     String proguardDirectory = getPathForProGuardDirectory();
@@ -662,7 +673,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Create list of proguard Configs for the app project and its dependencies
     ImmutableSet.Builder<String> proguardConfigsBuilder = ImmutableSet.builder();
-    proguardConfigsBuilder.addAll(deps.proguardConfigs);
+    proguardConfigsBuilder.addAll(depsProguardConfigs);
     Optionals.addIfPresent(proguardConfig, proguardConfigsBuilder);
 
     // Transform our input classpath to a set of output locations for each input classpath.
@@ -687,7 +698,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
     // so that we're now dexing the proguarded artifacts).
-    deps.applyClasspathTransformation(new AndroidTransitiveDependencies.InputTransformation() {
+    dexDeps.applyClasspathTransformation(new AndroidDexTransitiveDependencies.InputTransformation() {
       @Override
       public String apply(String originalClasspath) {
         return inputOutputEntries.get(originalClasspath);

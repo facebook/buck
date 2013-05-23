@@ -434,14 +434,12 @@ def python_binary(
 def android_manifest(
     name,
     skeleton,
-    no_dx=[],
     deps=[],
     visibility=[],
     build_env=None):
   add_rule({
     'type' : 'android_manifest',
     'name' : name,
-    'no_dx' : no_dx,
     'skeleton' : skeleton,
     'deps' : deps,
     'visibility' : visibility,

@@ -20,7 +20,6 @@ import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.Optionals;
@@ -34,19 +33,15 @@ import java.util.Set;
 
 public class AndroidTransitiveDependencyGraph {
 
-  private AbstractCachingBuildRule buildRule;
-  private ImmutableSet<BuildRule> buildRulesToExcludeFromDex;
+  private BuildRule buildRule;
 
-  public AndroidTransitiveDependencyGraph(
-      AbstractCachingBuildRule buildRule,
-      ImmutableSet<BuildRule> buildRulesToExcludeFromDex) {
+  public AndroidTransitiveDependencyGraph(BuildRule buildRule) {
     this.buildRule = Preconditions.checkNotNull(buildRule);
-    this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
   }
 
-  public AndroidTransitiveDependencies findDependencies(
-      ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
-
+  public AndroidDexTransitiveDependencies findDexDependencies(
+      ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
+      ImmutableSet<BuildRule> buildRulesToExcludeFromDex) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
     final ImmutableSet.Builder<String> pathsToDexBuilder = ImmutableSet.builder();
@@ -57,6 +52,65 @@ public class AndroidTransitiveDependencyGraph {
     // These are paths to third-party jars that may contain resources that must be included in the
     // final APK.
     final ImmutableSet.Builder<String> pathsToThirdPartyJarsBuilder = ImmutableSet.builder();
+
+    UberRDotJavaUtil.AndroidResourceDetails details =
+        createAndroidResourceDetails(androidResourceDeps);
+
+    // Update pathsToDex.
+    ImmutableSet<Map.Entry<BuildRule, String>> classpath =
+        Classpaths.getClasspathEntries(buildRule.getDeps()).entries();
+    for (Map.Entry<BuildRule, String> entry : classpath) {
+      if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
+        pathsToDexBuilder.add(entry.getValue());
+      } else {
+        noDxPathsBuilder.add(entry.getValue());
+      }
+    }
+
+    // Visit all of the transitive dependencies to populate the above collections.
+    new AbstractDependencyVisitor(buildRule) {
+      @Override
+      public boolean visit(BuildRule rule) {
+        // We need to include the transitive closure of the compiled .class files when dex'ing, as
+        // well as the third-party jars that they depend on.
+        // Update pathsToThirdPartyJars.
+        if (rule instanceof PrebuiltJarRule) {
+          PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule) rule;
+          pathsToThirdPartyJarsBuilder.add(prebuiltJarRule.getBinaryJar());
+        }
+        // AbstractDependencyVisitor will start from this (AndroidBinaryRule) so make sure it
+        // descends to its dependencies even though it is not a library rule.
+        return rule.isLibrary() || rule == buildRule;
+      }
+    }.start();
+
+    // Include the directory of compiled R.java files on the classpath.
+    ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
+    if (!rDotJavaPackages.isEmpty()) {
+      pathsToDexBuilder.add(UberRDotJavaUtil.getPathToCompiledRDotJavaFiles(
+          buildRule.getBuildTarget()));
+    }
+
+    ImmutableSet<String> noDxPaths = noDxPathsBuilder.build();
+
+    // Filter out the classpath entries to exclude from dex'ing, if appropriate
+    Set<String> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
+    // Classpath entries that should be excluded from dexing should also be excluded from
+    // pathsToThirdPartyJars because their resources should not end up in main APK. If they do,
+    // the pre-dexed library may try to load a resource from the main APK rather than from within
+    // the pre-dexed library (even though the resource is available in both locations). This
+    // causes a significant performance regression, as the resource may take more than one second
+    // longer to load.
+    Set<String> pathsToThirdPartyJars =
+        Sets.difference(pathsToThirdPartyJarsBuilder.build(), noDxPaths);
+
+    return new AndroidDexTransitiveDependencies(classpathEntries,
+        pathsToThirdPartyJars,
+        noDxPaths);
+  }
+
+  public AndroidTransitiveDependencies findDependencies(
+      ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
 
     // Paths to assets/ directories that should be included in the final APK.
     final ImmutableSet.Builder<String> assetsDirectories = ImmutableSet.builder();
@@ -71,22 +125,8 @@ public class AndroidTransitiveDependencyGraph {
     // Path to the module's proguard_config
     final ImmutableSet.Builder<String> proguardConfigs = ImmutableSet.builder();
 
-    // Update pathsToDex.
-    ImmutableSet<Map.Entry<BuildRule, String>> classpath =
-        Classpaths.getClasspathEntries(buildRule.getDeps()).entries();
-    for (Map.Entry<BuildRule, String> entry : classpath) {
-      if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
-        pathsToDexBuilder.add(entry.getValue());
-      } else {
-        noDxPathsBuilder.add(entry.getValue());
-      }
-    }
-
-    // This is not part of the AbstractDependencyVisitor traversal because
-    // AndroidResourceRule.getAndroidResourceDeps() does a topological sort whereas
-    // AbstractDependencyVisitor does only a breadth-first search.
     UberRDotJavaUtil.AndroidResourceDetails details =
-        new UberRDotJavaUtil.AndroidResourceDetails(androidResourceDeps);
+        createAndroidResourceDetails(androidResourceDeps);
 
     // Visit all of the transitive dependencies to populate the above collections.
     new AbstractDependencyVisitor(buildRule) {
@@ -95,10 +135,7 @@ public class AndroidTransitiveDependencyGraph {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
-        if (rule instanceof PrebuiltJarRule) {
-          PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule) rule;
-          pathsToThirdPartyJarsBuilder.add(prebuiltJarRule.getBinaryJar());
-        } else if (rule instanceof NdkLibraryRule) {
+        if (rule instanceof NdkLibraryRule) {
           NdkLibraryRule ndkRule = (NdkLibraryRule) rule;
           nativeLibsDirectories.add(ndkRule.getLibraryPath());
         } else if (rule instanceof AndroidResourceRule) {
@@ -132,34 +169,19 @@ public class AndroidTransitiveDependencyGraph {
       }
     }.start();
 
-    // Include the directory of compiled R.java files on the classpath.
-    ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
-    if (!rDotJavaPackages.isEmpty()) {
-      pathsToDexBuilder.add(UberRDotJavaUtil.getPathToCompiledRDotJavaFiles(
-          buildRule.getBuildTarget()));
-    }
-
-    ImmutableSet<String> noDxPaths = noDxPathsBuilder.build();
-
-    // Filter out the classpath entries to exclude from dex'ing, if appropriate
-    Set<String> classpathEntries = Sets.difference(pathsToDexBuilder.build(), noDxPaths);
-    // Classpath entries that should be excluded from dexing should also be excluded from
-    // pathsToThirdPartyJars because their resources should not end up in main APK. If they do,
-    // the pre-dexed library may try to load a resource from the main APK rather than from within
-    // the pre-dexed library (even though the resource is available in both locations). This
-    // causes a significant performance regression, as the resource may take more than one second
-    // longer to load.
-    Set<String> pathsToThirdPartyJars =
-        Sets.difference(pathsToThirdPartyJarsBuilder.build(), noDxPaths);
-
-    return new AndroidTransitiveDependencies(classpathEntries,
-        pathsToThirdPartyJars,
-        assetsDirectories.build(),
+    return new AndroidTransitiveDependencies(assetsDirectories.build(),
         nativeLibsDirectories.build(),
         manifestFiles.build(),
         details.resDirectories,
-        rDotJavaPackages,
-        proguardConfigs.build(),
-        noDxPaths);
+        details.rDotJavaPackages,
+        proguardConfigs.build());
+  }
+
+  private UberRDotJavaUtil.AndroidResourceDetails createAndroidResourceDetails(
+      ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
+    // This is not part of the AbstractDependencyVisitor traversal because
+    // AndroidResourceRule.getAndroidResourceDeps() does a topological sort whereas
+    // AbstractDependencyVisitor does only a breadth-first search.
+    return new UberRDotJavaUtil.AndroidResourceDetails(androidResourceDeps);
   }
 }
