@@ -408,9 +408,7 @@ class BuckConfig {
     try {
       return new DirArtifactCache(dir);
     } catch (IOException e) {
-      throw new HumanReadableException(String.format(
-          "Failure initializing artifact cache directory: %s",
-          dir));
+      throw new HumanReadableException("Failure initializing artifact cache directory: %s", dir);
     }
   }
 
@@ -423,7 +421,7 @@ class BuckConfig {
     try {
       return new CassandraArtifactCache(cacheHosts, port);
     } catch (ConnectionException e) {
-      throw new HumanReadableException("Cassandra cache connection failure");
+      throw new HumanReadableException("Cassandra cache connection failure: %s", e.getMessage());
     }
   }
 
@@ -439,10 +437,10 @@ class BuckConfig {
         return initCassandraArtifactCache();
       }
     } catch (IllegalArgumentException e) {
-      throw new HumanReadableException(String.format("Unusable cache.mode: '%s'", cacheMode));
+      throw new HumanReadableException("Unusable cache.mode: '%s'", cacheMode);
     }
 
-    throw new HumanReadableException(String.format("Unusable cache.mode: '%s'", cacheMode));
+    throw new HumanReadableException("Unusable cache.mode: '%s'", cacheMode);
   }
 
   public ArtifactCache getArtifactCache() {

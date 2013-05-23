@@ -45,12 +45,9 @@ public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory {
       BuildTarget buildTarget = params.buildTargetParser.parse(apk, buildFileParseContext);
       builder.setApk(buildTarget.getFullyQualifiedName());
     } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(String.format(
-            "Couldn't resolve APK dependency %s for rule %s",
-            apk,
-            params.target.getFullyQualifiedName()
-          )
-      );
+      throw new HumanReadableException("Couldn't resolve APK dependency %s for rule %s",
+          apk,
+          params.target.getFullyQualifiedName());
     }
   }
 }

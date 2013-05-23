@@ -45,8 +45,9 @@ abstract class AbstractBuildRule implements BuildRule {
 
     for (BuildRule dep : this.deps) {
       if (!dep.isVisibleTo(buildTarget)) {
-        throw new HumanReadableException(String.format("%s depends on %s, which is not visible",
-            buildTarget, dep));
+        throw new HumanReadableException("%s depends on %s, which is not visible",
+            buildTarget,
+            dep);
       }
     }
   }

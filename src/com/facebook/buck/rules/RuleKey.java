@@ -350,7 +350,7 @@ public class RuleKey implements Comparable<RuleKey> {
     public Builder set(String key, @Nullable ImmutableSortedSet<BuildRule> val) {
       setKey(key);
       if (val != null) {
-        for (BuildRule buildRule :val) {
+        for (BuildRule buildRule : val) {
           setVal(buildRule.getRuleKey());
         }
       }
