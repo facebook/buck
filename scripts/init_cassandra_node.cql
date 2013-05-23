@@ -2,8 +2,13 @@
 -- script as:
 --
 --   cassandra-cli -h <node_hostname> -f init_cassandra_node.cql
+--
+-- Depending on cluster configuration, this script should be modified prior to
+-- invocation to increase replication_factor.
 
-CREATE KEYSPACE Buck;
+CREATE KEYSPACE Buck
+  WITH placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
+  AND strategy_options = {replication_factor:2};
 USE Buck;
 
 CREATE COLUMN FAMILY Configuration

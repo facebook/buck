@@ -23,6 +23,7 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
 import com.netflix.astyanax.connectionpool.OperationResult;
+import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor;
@@ -39,7 +40,7 @@ import java.util.logging.Logger;
 public class CassandraArtifactCache implements ArtifactCache {
   private static final Logger logger = Logger.getLogger(CassandraArtifactCache.class.getName());
   private static final String poolName = "ArtifactCachePool";
-  private static final String clusterName = "ArtifactCacheCluster";
+  private static final String clusterName = "BuckCacheCluster";
   private static final String keyspaceName = "Buck";
 
   private static final String configurationColumnFamilyName = "Configuration";
@@ -85,9 +86,15 @@ public class CassandraArtifactCache implements ArtifactCache {
   }
 
   private void verifyMagic() throws ConnectionException {
-    OperationResult<ColumnList<String>> result = keyspace.prepareQuery(CF_CONFIG)
-        .getKey(configurationMagicKey)
-        .execute();
+    OperationResult<ColumnList<String>> result;
+    try {
+      result = keyspace.prepareQuery(CF_CONFIG)
+          .getKey(configurationMagicKey)
+          .execute();
+    } catch (BadRequestException e) {
+      throw new HumanReadableException("Artifact cache error during schema verification: %s",
+          e.getMessage());
+    }
     Column<String> column = result.getResult().getColumnByName(configurationColumnName);
     if (column == null || !column.getStringValue().equals(configurationMagicValue)) {
       throw new HumanReadableException("Artifact cache schema mismatch");
@@ -105,8 +112,8 @@ public class CassandraArtifactCache implements ArtifactCache {
     try {
       return Integer.parseInt(column.getStringValue());
     } catch (NumberFormatException e) {
-      throw new HumanReadableException(String.format("Artifact cache ttl malformation: \"%s\"",
-          column.getStringValue()));
+      throw new HumanReadableException("Artifact cache ttl malformation: \"%s\"",
+          column.getStringValue());
     }
   }
 
