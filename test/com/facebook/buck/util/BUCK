@@ -8,6 +8,7 @@ java_test(
     '//lib:easymock',
     '//lib:guava',
     '//lib:junit',
+    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util:io',
   ],

@@ -26,7 +26,11 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -40,7 +44,6 @@ import java.util.regex.Pattern;
 public class AndroidPlatformTarget {
 
   static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:16";
-  static final int FIRST_API_WITH_BUILDTOOLS = 17;
 
   private final String name;
   private final File androidJar;
@@ -198,37 +201,103 @@ public class AndroidPlatformTarget {
     File platformDirectory = new File(androidSdkDir, platformDirectoryPath);
     File androidJar = new File(platformDirectory, "android.jar");
     LinkedList<File> bootclasspathEntries = resolvePaths(androidSdkDir, additionalJarPaths);
+
+    // Make sure android.jar is at the front of the bootclasspath.
+    bootclasspathEntries.addFirst(androidJar);
+
+    File buildToolsDir = new File(androidSdkDir, "build-tools");
+
+    // This is the relative path under the Android SDK directory to the directory that contains the
+    // aapt, aidl, and dx executables.
+    String buildToolsPath;
+
+    if (buildToolsDir.isDirectory()) {
+      // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
+      // directory appears to contain subfolders of the form "17.0.0". However, newer versions of
+      // the ADT that are downloaded directly from http://developer.android.com/ appear to have
+      // subfolders of the form android-4.2.2. We need to support both of these scenarios.
+      File[] directories = buildToolsDir.listFiles(new FileFilter() {
+        @Override
+        public boolean accept(File pathname) {
+          return pathname.isDirectory();
+        }
+      });
+
+      if (directories.length == 0) {
+        throw new HumanReadableException(
+            "%s was empty, but should have contained a subdirectory with build tools",
+            buildToolsDir.getAbsolutePath());
+      } else {
+        File newestBuildToolsDir = pickNewestBuildToolsDir(ImmutableSet.copyOf(directories));
+        buildToolsPath = "build-tools/" + newestBuildToolsDir.getName();
+      }
+    } else {
+      buildToolsPath = "platform-tools";
+    }
+
     File androidFrameworkIdlFile = new File(platformDirectory, "framework.aidl");
     File proguardJar = new File(androidSdkDir, "tools/proguard/lib/proguard.jar");
     File proguardConfig = new File(androidSdkDir, "tools/proguard/proguard-android.txt");
     File optimizedProguardConfig =
         new File(androidSdkDir, "tools/proguard/proguard-android-optimize.txt");
 
-    // Make sure android.jar is at the front of the bootclasspath.
-    bootclasspathEntries.addFirst(androidJar);
-
-    // TODO(royw): I don't know what the long term plan is for this directory layout.  Improve these
-    // heuristics when we do.
-    String buildToolsDir = "platform-tools";
-    if (new File(androidSdkDir, "build-tools").exists()) {
-      // If the user has installed an SDK that has a build-tools directory, use the first version
-      // found.
-      buildToolsDir = String.format("build-tools/%d.0.0", FIRST_API_WITH_BUILDTOOLS);
-    }
-
     return new AndroidPlatformTarget(
         name,
         androidJar,
         bootclasspathEntries,
-        new File(androidSdkDir, buildToolsDir + "/aapt"),
+        new File(androidSdkDir, buildToolsPath + "/aapt"),
         new File(androidSdkDir, "platform-tools/adb"),
-        new File(androidSdkDir, buildToolsDir + "/aidl"),
+        new File(androidSdkDir, buildToolsPath + "/aidl"),
         new File(androidSdkDir, "tools/zipalign"),
-        new File(androidSdkDir, buildToolsDir + "/dx"),
+        new File(androidSdkDir, buildToolsPath + "/dx"),
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
         optimizedProguardConfig);
+  }
+
+  private static File pickNewestBuildToolsDir(Set<File> directories) {
+    if (directories.size() == 1) {
+      return Iterables.getOnlyElement(directories);
+    }
+
+    List<File> androidVersionDirectories = Lists.newArrayList();
+    List<File> apiVersionDirectories = Lists.newArrayList();
+    for (File dir : directories) {
+      if (dir.getName().startsWith("android-")) {
+        androidVersionDirectories.add(dir);
+      } else {
+        apiVersionDirectories.add(dir);
+      }
+    }
+
+    final VersionStringComparator comparator = new VersionStringComparator();
+
+    // This is the directory from newer downloads from http://developer.android.com/, so prefer
+    // these.
+    if (!androidVersionDirectories.isEmpty()) {
+      Collections.sort(androidVersionDirectories, new Comparator<File>() {
+        @Override
+        public int compare(File a, File b) {
+          String versionA = a.getName().substring("android-".length());
+          String versionB = b.getName().substring("android-".length());
+          return comparator.compare(versionA, versionB);
+        }
+      });
+      // Return the last element in the list.
+      return androidVersionDirectories.get(androidVersionDirectories.size() - 1);
+    } else {
+      Collections.sort(apiVersionDirectories, new Comparator<File>() {
+        @Override
+        public int compare(File a, File b) {
+          String versionA = a.getName();
+          String versionB = b.getName();
+          return comparator.compare(versionA, versionB);
+        }
+      });
+      // Return the last element in the list.
+      return apiVersionDirectories.get(apiVersionDirectories.size() - 1);
+    }
   }
 
   /**
@@ -240,29 +309,33 @@ public class AndroidPlatformTarget {
     public AndroidPlatformTarget newInstance(File androidSdkDir, int apiLevel) {
       String addonPath = String.format("/add-ons/addon-google_apis-google-%d/libs/", apiLevel);
       File addonDirectory = new File(androidSdkDir.getPath() + addonPath);
-      String[] addonFiles = addonDirectory.list(new AddonFilter());
+      String[] addonFiles;
 
-      if (addonFiles == null || addonFiles.length == 0) {
+      if (!addonDirectory.isDirectory() ||
+          (addonFiles = addonDirectory.list(new AddonFilter())) == null ||
+          addonFiles.length == 0) {
         throw new HumanReadableException(
             "Google APIs not found in %s.\n" +
-            "Please run '$ANDROID_SDK/tools/android sdk' and select both 'SDK Platform' and " +
+            "Please run '%s/tools/android sdk' and select both 'SDK Platform' and " +
             "'Google APIs' under Android (API %d)",
             addonDirectory.getAbsolutePath(),
+            androidSdkDir.getPath(),
             apiLevel);
       }
 
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
-      for (String filename: addonFiles) {
+      Arrays.sort(addonFiles);
+      for (String filename : addonFiles) {
         builder.add(addonPath + filename);
       }
-      Set<String> ADDITIONAL_JAR_PATHS = builder.build();
+      Set<String> additionalJarPaths = builder.build();
 
       return createFromDefaultDirectoryStructure(
           String.format("Google Inc.:Google APIs:%d", apiLevel),
           androidSdkDir,
           String.format("platforms/android-%d", apiLevel),
-          ADDITIONAL_JAR_PATHS);
+          additionalJarPaths);
     }
   }
 
