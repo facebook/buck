@@ -100,9 +100,13 @@ public class AndroidBinaryRuleTest {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
     AndroidTransitiveDependencies transitiveDependencies =
         androidBinary.findTransitiveDependencies(graph);
+    AndroidDexTransitiveDependencies dexTransitiveDependencies =
+        androidBinary.findDexTransitiveDependencies(graph);
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    androidBinary.addProguardCommands(transitiveDependencies,
+    androidBinary.addProguardCommands(
+        dexTransitiveDependencies,
+        transitiveDependencies.proguardConfigs,
         commands,
         ImmutableSet.<String>of());
 

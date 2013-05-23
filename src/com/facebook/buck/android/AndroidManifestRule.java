@@ -24,33 +24,41 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+/**
+ * The build rule generates the application's manifest file from the skeleton manifest and
+ * the library manifests from its dependencies.
+ * <pre>
+ * android_manifest(
+ *   name = 'sample_app',
+ *   skeleton = 'AndroidManifestSkeleton.xml',
+ *   manifest = genfile('MergedAndroidManifest.xml')
+ *   deps = [
+ *     ':sample_manifest',
+ *     # Additional dependent android_library rules would be listed here, as well.
+ *   ],
+ * )
+ * </pre>
+ */
 public class AndroidManifestRule extends AbstractCachingBuildRule {
 
-  private final Optional<String> manifestFile;
-  private final Optional<String> skeletonFile;
+  private final String manifestFile;
+  private final String skeletonFile;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
-  private final ImmutableSet<BuildRule> buildRulesToExcludeFromDex;
 
   protected AndroidManifestRule(CachingBuildRuleParams cachingBuildRuleParams,
-                                Optional<String> skeletonFile,
-                                Optional<String> manifestFile,
-                                Set<BuildRule> buildRulesToExcludeFromDex) {
+                                String skeletonFile,
+                                String manifestFile) {
     super(cachingBuildRuleParams);
-    this.manifestFile = manifestFile;
-    this.skeletonFile = skeletonFile;
-    this.buildRulesToExcludeFromDex = ImmutableSet.copyOf(buildRulesToExcludeFromDex);
-    this.transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(this, this.buildRulesToExcludeFromDex);
+    this.manifestFile = Preconditions.checkNotNull(manifestFile);
+    this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
+    this.transitiveDependencyGraph = new AndroidTransitiveDependencyGraph(this);
   }
 
   @Override
@@ -61,10 +69,8 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   @Override
   protected List<String> getInputsToCompareToOutput(BuildContext context) {
     ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
-    if (skeletonFile.isPresent() && manifestFile.isPresent()) {
-      inputsToConsiderForCachingPurposes.add(skeletonFile.get());
-      inputsToConsiderForCachingPurposes.add(manifestFile.get());
-    }
+    inputsToConsiderForCachingPurposes.add(skeletonFile);
+    inputsToConsiderForCachingPurposes.add(manifestFile);
     return inputsToConsiderForCachingPurposes.build();
   }
 
@@ -75,12 +81,11 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
         transitiveDependencyGraph.findDependencies(getAndroidResourceDepsInternal(
             context.getDependencyGraph()));
 
-    if (skeletonFile.isPresent() && manifestFile.isPresent()) {
-      commands.add(new GenerateManifestStep(
-          skeletonFile.get(),
-          manifestFile.get(),
-          transitiveDependencies.manifestFiles));
-    }
+    commands.add(new GenerateManifestStep(
+        skeletonFile,
+        manifestFile,
+        transitiveDependencies.manifestFiles));
+
     return commands.build();
   }
 
@@ -100,35 +105,24 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
 
   public static class Builder extends AbstractCachingBuildRuleBuilder {
 
-    protected Optional<String> manifestFile;
-    protected Optional<String> skeletonFile;
-    private Set<String> buildRulesToExcludeFromDex = Sets.newHashSet();
+    protected String manifestFile;
+    protected String skeletonFile;
 
     @Override
     public AndroidManifestRule build(Map<String, BuildRule> buildRuleIndex) {
-      boolean allowNonExistentRule =
-        false;
-
-      return new AndroidManifestRule(createCachingBuildRuleParams(buildRuleIndex),
+      return new AndroidManifestRule(
+          createCachingBuildRuleParams(buildRuleIndex),
           skeletonFile,
-          manifestFile,
-          getBuildTargetsAsBuildRules(buildRuleIndex,
-              buildRulesToExcludeFromDex,
-              allowNonExistentRule));
+          manifestFile);
     }
 
     public Builder setManifestFile(String manifestFile) {
-      this.manifestFile = Optional.of(manifestFile);
+      this.manifestFile = manifestFile;
       return this;
     }
 
     public Builder setSkeletonFile(String skeletonFile) {
-      this.skeletonFile = Optional.of(skeletonFile);
-      return this;
-    }
-
-    public Builder addBuildRuleToExcludeFromDex(String entry) {
-      this.buildRulesToExcludeFromDex.add(entry);
+      this.skeletonFile = skeletonFile;
       return this;
     }
 

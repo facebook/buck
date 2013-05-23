@@ -93,10 +93,12 @@ public class AndroidTransitiveDependencyGraphTest {
     // Verify that the correct transitive dependencies are found.
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
     AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies(graph);
+    AndroidDexTransitiveDependencies dexTransitiveDeps =
+    		binaryRule.findDexTransitiveDependencies(graph);
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
         ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
-        transitiveDeps.classpathEntriesToDex);
+        dexTransitiveDeps.classpathEntriesToDex);
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
             "resources need to be extracted and repacked in the APK. If this is done, then code in " +
@@ -107,7 +109,7 @@ public class AndroidTransitiveDependencyGraphTest {
             "resource was loaded on startup, this introduced a substantial regression in the startup " +
             "time for the fb4a app.",
         ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
-        transitiveDeps.pathsToThirdPartyJars);
+        dexTransitiveDeps.pathsToThirdPartyJars);
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",

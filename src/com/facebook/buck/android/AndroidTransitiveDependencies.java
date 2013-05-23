@@ -15,21 +15,9 @@
  */
 package com.facebook.buck.android;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-
-import java.util.Set;
 
 public class AndroidTransitiveDependencies {
-  // TODO(devjasta): these fields should not be immutable; we should expect that these values
-  // will all be transformed by various commands (and we shouldn't need to keep checking back to
-  // get the latest values of them to observe those transformations).  There's a much richer
-  // rule-based design that should be implemented though, so in the absence of that it's probably
-  // best to keep this code as narrowly defined as possible.
-  public ImmutableSet<String> classpathEntriesToDex;
-  public final ImmutableSet<String> noDxClasspathEntries;
-  public final ImmutableSet<String> pathsToThirdPartyJars;
   public final ImmutableSet<String> assetsDirectories;
   public final ImmutableSet<String> nativeLibsDirectories;
   public final ImmutableSet<String> manifestFiles;
@@ -37,31 +25,17 @@ public class AndroidTransitiveDependencies {
   public final ImmutableSet<String> rDotJavaPackages;
   public final ImmutableSet<String> proguardConfigs;
 
-  public AndroidTransitiveDependencies(Set<String> pathsToDex,
-                                       Set<String> pathsToThirdPartyJars,
-                                       ImmutableSet<String> assetsDirectories,
+  public AndroidTransitiveDependencies(ImmutableSet<String> assetsDirectories,
                                        ImmutableSet<String> nativeLibsDirectories,
                                        ImmutableSet<String> manifestFiles,
                                        ImmutableSet<String> resDirectories,
                                        ImmutableSet<String> rDotJavaPackages,
-                                       ImmutableSet<String> proguardConfigs,
-                                       ImmutableSet<String> noDxClasspathEntries) {
-    this.classpathEntriesToDex = ImmutableSet.copyOf(pathsToDex);
-    this.pathsToThirdPartyJars = ImmutableSet.copyOf(pathsToThirdPartyJars);
+                                       ImmutableSet<String> proguardConfigs) {
     this.assetsDirectories = ImmutableSet.copyOf(assetsDirectories);
     this.nativeLibsDirectories = ImmutableSet.copyOf(nativeLibsDirectories);
     this.manifestFiles = ImmutableSet.copyOf(manifestFiles);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
     this.rDotJavaPackages = ImmutableSet.copyOf(rDotJavaPackages);
     this.proguardConfigs = ImmutableSet.copyOf(proguardConfigs);
-    this.noDxClasspathEntries = ImmutableSet.copyOf(noDxClasspathEntries);
-  }
-
-  public void applyClasspathTransformation(InputTransformation transformation) {
-    classpathEntriesToDex = ImmutableSet.copyOf(
-        Iterables.transform(classpathEntriesToDex, transformation));
-  }
-
-  public interface InputTransformation extends Function<String, String> {
   }
 }
