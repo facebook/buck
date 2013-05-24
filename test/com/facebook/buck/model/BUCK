@@ -13,7 +13,11 @@ java_test(name = 'model',
     '//lib:easymock',
     '//lib:junit',
     '//lib:guava',
-  ])
+  ],
+  source_under_test = [
+    '//src/com/facebook/buck/model:model',
+  ],
+)
 
 java_library(
   name = 'BuildTargetFactory',

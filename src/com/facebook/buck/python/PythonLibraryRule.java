@@ -24,12 +24,11 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -46,7 +45,7 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
   protected PythonLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
       ImmutableSortedSet<String> srcs) {
     super(cachingBuildRuleParams);
-    this.srcs = Preconditions.checkNotNull(srcs);
+    this.srcs = ImmutableSortedSet.copyOf(srcs);
 
     if (srcs.isEmpty()) {
       this.pythonPathDirectory = Optional.absent();

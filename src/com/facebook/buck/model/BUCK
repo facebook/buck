@@ -1,4 +1,3 @@
-
 java_library(name = 'model',
   srcs = glob(['*.java']),
   deps = [
@@ -8,5 +7,5 @@ java_library(name = 'model',
     '//lib:guava',
     '//lib:jsr305',
   ],
-  visibility = ['PUBLIC'])
-
+  visibility = ['PUBLIC'],
+)

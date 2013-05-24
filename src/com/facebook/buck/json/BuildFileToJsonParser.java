@@ -54,8 +54,6 @@ import javax.script.ScriptException;
  */
 public class BuildFileToJsonParser {
 
-  // TODO(mbolin): This class should have a unit test.
-
   /** Path to the buck.py script that is used to evaluate a build file. */
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");

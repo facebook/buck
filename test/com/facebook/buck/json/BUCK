@@ -1,0 +1,13 @@
+java_test(
+  name = 'json',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/json:json',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:jackson-core',
+    '//lib:junit',
+    '//src/com/facebook/buck/json:json',
+  ],
+)
