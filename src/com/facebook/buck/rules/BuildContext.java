@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -26,10 +26,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
@@ -71,7 +71,7 @@ public class BuildContext {
     return dependencyGraph;
   }
 
-  public Executor getExecutor() {
+  public ListeningExecutorService getExecutor() {
     return stepRunner.getListeningExecutorService();
   }
 

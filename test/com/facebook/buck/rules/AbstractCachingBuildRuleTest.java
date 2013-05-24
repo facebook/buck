@@ -62,7 +62,6 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
 /**
@@ -385,7 +384,7 @@ public class AbstractCachingBuildRuleTest {
     };
 
     BuildContext buildContext = createMock(BuildContext.class);
-    ExecutorService executor = MoreExecutors.sameThreadExecutor();
+    ListeningExecutorService executor = MoreExecutors.sameThreadExecutor();
     expect(buildContext.getExecutor()).andReturn(executor).times(3);
     expect(buildContext.getEventBus()).andStubReturn(new EventBus());
 
