@@ -283,10 +283,11 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     commands.add(new MkdirAndSymlinkFileStep(getManifest(), getAndroidManifestXml()));
 
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies(
-        context.getDependencyGraph(), Optional.of(context));
+        context.getDependencyGraph());
 
-    boolean resourcesCached =
-        !transitiveDependencies.uncachedBuildRules.containsKey(BuildRuleType.ANDROID_RESOURCE);
+    // TODO(mbolin): Introduce new logic to determine whether all of the resources are cached.
+    // For now, we assume that they are not cached and forego a potential optimization.
+    boolean resourcesCached = false;
 
     Set<String> resDirectories = transitiveDependencies.resDirectories;
     Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
@@ -532,12 +533,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return Optional.of(destination);
   }
 
-  public AndroidTransitiveDependencies findTransitiveDependencies(
-      DependencyGraph graph,
-      final Optional<BuildContext> context) {
-    return getTransitiveDependencyGraph().findDependencies(
-        getAndroidResourceDepsInternal(graph),
-        context);
+  public AndroidTransitiveDependencies findTransitiveDependencies(DependencyGraph graph) {
+    return getTransitiveDependencyGraph().findDependencies(getAndroidResourceDepsInternal(graph));
   }
 
   /**

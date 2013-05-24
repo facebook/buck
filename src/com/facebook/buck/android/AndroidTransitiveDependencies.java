@@ -15,10 +15,7 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -38,7 +35,6 @@ public class AndroidTransitiveDependencies {
   public final ImmutableSet<String> manifestFiles;
   public final ImmutableSet<String> resDirectories;
   public final ImmutableSet<String> rDotJavaPackages;
-  public final ImmutableMultimap<BuildRuleType,BuildRule> uncachedBuildRules;
   public final ImmutableSet<String> proguardConfigs;
 
   public AndroidTransitiveDependencies(Set<String> pathsToDex,
@@ -48,7 +44,6 @@ public class AndroidTransitiveDependencies {
                                        ImmutableSet<String> manifestFiles,
                                        ImmutableSet<String> resDirectories,
                                        ImmutableSet<String> rDotJavaPackages,
-                                       ImmutableMultimap<BuildRuleType,BuildRule> uncachedBuildRules,
                                        ImmutableSet<String> proguardConfigs,
                                        ImmutableSet<String> noDxClasspathEntries) {
     this.classpathEntriesToDex = ImmutableSet.copyOf(pathsToDex);
@@ -58,7 +53,6 @@ public class AndroidTransitiveDependencies {
     this.manifestFiles = ImmutableSet.copyOf(manifestFiles);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
     this.rDotJavaPackages = ImmutableSet.copyOf(rDotJavaPackages);
-    this.uncachedBuildRules = ImmutableMultimap.copyOf(uncachedBuildRules);
     this.proguardConfigs = ImmutableSet.copyOf(proguardConfigs);
     this.noDxClasspathEntries = ImmutableSet.copyOf(noDxClasspathEntries);
   }

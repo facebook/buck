@@ -22,18 +22,13 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,8 +45,7 @@ public class AndroidTransitiveDependencyGraph {
   }
 
   public AndroidTransitiveDependencies findDependencies(
-      ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
-      final Optional<BuildContext> context) {
+      ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
 
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
@@ -70,10 +64,6 @@ public class AndroidTransitiveDependencyGraph {
     // Paths to native libs directories (often named libs/) that should be included as raw files
     // directories in the final APK.
     final ImmutableSet.Builder<String> nativeLibsDirectories = ImmutableSet.builder();
-
-    // Map of BuildRuleType to a list of BuildRules that were not built from cache.
-    final ImmutableMultimap.Builder<BuildRuleType, BuildRule> uncachedBuildrules =
-        ImmutableMultimap.builder();
 
     // Path to the module's manifest file
     final ImmutableSet.Builder<String> manifestFiles = ImmutableSet.builder();
@@ -136,9 +126,6 @@ public class AndroidTransitiveDependencyGraph {
             Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
           }
         }
-        if (!ruleIsCachedQuiet(rule, context)) {
-          uncachedBuildrules.put(rule.getType(), rule);
-        }
         // AbstractDependencyVisitor will start from this (AndroidBinaryRule) so make sure it
         // descends to its dependencies even though it is not a library rule.
         return rule.isLibrary() || rule == buildRule;
@@ -172,22 +159,7 @@ public class AndroidTransitiveDependencyGraph {
         manifestFiles.build(),
         details.resDirectories,
         rDotJavaPackages,
-        uncachedBuildrules.build(),
         proguardConfigs.build(),
         noDxPaths);
-  }
-
-  private static boolean ruleIsCachedQuiet(BuildRule rule, Optional<BuildContext> context) {
-    boolean ruleIsCached = false;
-    try {
-      if (context.isPresent() && rule.isCached(context.get())) {
-        ruleIsCached = true;
-      }
-    } catch (IOException e) {
-      throw new RuntimeException("Invalid State:  By the time we're checking if rules were " +
-          "cached in the android_binary rule we should have already successfully checked " +
-          "cache for all it's depenencies.");
-    }
-    return ruleIsCached;
   }
 }

@@ -16,27 +16,26 @@
 
 package com.facebook.buck.command;
 
+import com.facebook.buck.android.AndroidBinaryRule;
+import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.android.AndroidResourceRule;
+import com.facebook.buck.android.AndroidTransitiveDependencies;
+import com.facebook.buck.android.GenAidlRule;
+import com.facebook.buck.android.NdkLibraryRule;
+import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
-import com.facebook.buck.android.AndroidBinaryRule;
-import com.facebook.buck.android.AndroidLibraryRule;
-import com.facebook.buck.android.AndroidResourceRule;
-import com.facebook.buck.android.AndroidTransitiveDependencies;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.android.GenAidlRule;
-import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.rules.JavaPackageFinder;
-import com.facebook.buck.android.NdkLibraryRule;
-import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.rules.SourceRoot;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
@@ -306,8 +305,7 @@ public class Project {
       if (srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinary = (AndroidBinaryRule)srcRule;
         AndroidTransitiveDependencies binaryTransitiveDependencies =
-            androidBinary.findTransitiveDependencies(dependencyGraph,
-                                                     Optional.<BuildContext>absent());
+            androidBinary.findTransitiveDependencies(dependencyGraph);
         noDxJarsBuilder.addAll(binaryTransitiveDependencies.noDxClasspathEntries);
       }
 
@@ -611,8 +609,7 @@ public class Project {
       if (module.srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinaryRule = (AndroidBinaryRule)module.srcRule;
         AndroidTransitiveDependencies transitiveDependencies = androidBinaryRule
-            .findTransitiveDependencies(dependencyGraph,
-                /* context */ Optional.<BuildContext>absent());
+            .findTransitiveDependencies(dependencyGraph);
         classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
             transitiveDependencies.classpathEntriesToDex));
       } else {

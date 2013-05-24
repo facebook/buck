@@ -73,8 +73,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     AndroidTransitiveDependencies transitiveDependencies =
         transitiveDependencyGraph.findDependencies(getAndroidResourceDepsInternal(
-            context.getDependencyGraph()),
-            Optional.of(context));
+            context.getDependencyGraph()));
 
     if (skeletonFile.isPresent() && manifestFile.isPresent()) {
       commands.add(new GenerateManifestStep(

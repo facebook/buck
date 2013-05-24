@@ -99,7 +99,7 @@ public class AndroidBinaryRuleTest {
 
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
     AndroidTransitiveDependencies transitiveDependencies =
-        androidBinary.findTransitiveDependencies(graph, Optional.<BuildContext>absent());
+        androidBinary.findTransitiveDependencies(graph);
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     androidBinary.addProguardCommands(transitiveDependencies,

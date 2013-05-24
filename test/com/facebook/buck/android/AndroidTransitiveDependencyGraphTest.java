@@ -16,22 +16,17 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.createNiceMock;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
@@ -102,8 +97,7 @@ public class AndroidTransitiveDependencyGraphTest {
 
     // Verify that the correct transitive dependencies are found.
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
-    AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies(graph,
-        Optional.of(createNiceMock(BuildContext.class)));
+    AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies(graph);
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
         ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
@@ -130,9 +124,5 @@ public class AndroidTransitiveDependencyGraphTest {
         ImmutableSet.of("java/src/com/facebook/module/AndroidManifest.xml"),
         transitiveDeps.manifestFiles);
     assertEquals(ImmutableSet.of(), transitiveDeps.nativeLibsDirectories);
-    assertEquals(1, transitiveDeps.uncachedBuildRules.get(BuildRuleType.ANDROID_BINARY).size());
-    assertEquals(1, transitiveDeps.uncachedBuildRules.get(BuildRuleType.ANDROID_RESOURCE).size());
-    assertEquals(2, transitiveDeps.uncachedBuildRules.get(BuildRuleType.PREBUILT_JAR).size());
-    assertFalse(transitiveDeps.uncachedBuildRules.containsKey(BuildRuleType.JAVA_LIBRARY));
   }
 }
