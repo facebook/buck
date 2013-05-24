@@ -99,11 +99,8 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
     // resource_filter
     Optional<String> resourceFilter = params.getOptionalStringAttribute("resource_filter");
     if (resourceFilter.isPresent()) {
-      String trimmedResourceFilter = resourceFilter.get().trim();
-      builder.setResourceFilter(Optional.fromNullable(
-          Strings.emptyToNull(trimmedResourceFilter)));
-    } else {
-      builder.setProguardConfig(resourceFilter);
+      String trimmedResourceFilter = Strings.emptyToNull(resourceFilter.get().trim());
+      builder.setResourceFilter(Optional.fromNullable(trimmedResourceFilter));
     }
   }
 

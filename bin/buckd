@@ -17,7 +17,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 BUCK_BIN_DIRECTORY=$DIR
 
 # Set environment and update buck if required.
-# TODO(jimp): refactor buck_common in to functions that can be called
+# TODO(user): refactor buck_common in to functions that can be called
 source "${BUCK_BIN_DIRECTORY}/buck_common"
 
 # Kill any existing buckd process.

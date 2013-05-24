@@ -1,9 +1,4 @@
-# MOE:begin_strip
-# Temporary debugging code for Buildbot.
-if [ "$USER" = "jenkins" ]; then
-  set -x
-fi
-# MOE:end_strip
+
 
 # Set TMPDIR to a reasonable default if it isn't already set, so that mktmp(1) can be
 # succinctly and portably used.
@@ -41,47 +36,17 @@ if [ -e "${PROJECT_ROOT}/.buckversion" ] && [ ! -e "${PROJECT_ROOT}/.nobuckcheck
     git fetch
   fi
 
-  # MOE:begin_strip
-  # This check was originally introduced in https://phabricator.fb.com/D571496 to fix a situation
-  # where, on Buildbot smoke builds, we were updating to very old versions of Buck (specifically,
-  # versions of Buck that predated an important autoupdate fix). If this happened, the build slave
-  # would be wedged: it would not be able to update its version of Buck when processing the next
-  # diff.
-  #
-  # This check should be removed once we are confident that no one is submitting diffs whose parent
-  # commit is older than Sept 3, 2012. 
-  BUCK_REQUIRED_VERSION_TIME=`git show --abbrev-commit --format="format:%ct" $BUCK_REQUIRED_VERSION | head -1`
-  if [ $BUCK_REQUIRED_VERSION_TIME -lt 1346740500 ]; then
-    echo "Your target version of Buck is too old -- you must rebase and submit again!"
-    exit 42
-  fi
-  # MOE:end_strip
 
   BUCK_CURRENT_VERSION=`git rev-parse HEAD`
   
   # Note that this test succeeds if you have local changes in your Buck repository that have not
   # been committed.
   if [ "$BUCK_REQUIRED_VERSION" != "$BUCK_CURRENT_VERSION" ]; then
-    # MOE:begin_strip
-    # Display warning in yellow so user sees that this is happening, though check to make sure
-    # stdout isatty before using color.
-    # TODO(mbolin): Restore color when we know what is going on with Buildbot.
-    if false; then
-      ANSI_WARNING_COLOR=$(tput setaf 3)
-      echo $ANSI_WARNING_COLOR
-    fi
-    # MOE:end_strip
     echo "Buck is at ${BUCK_CURRENT_VERSION},"
     echo "but should be ${BUCK_REQUIRED_VERSION}."
     echo "Buck is updating itself."
     echo "To disable this, add a '.nobuckcheck' file to your project root."
     echo "In general, you should only disable this if you are developing Buck."
-    # MOE:begin_strip
-    if false; then
-      ANSI_RESET=$(tput sgr0)
-      echo $ANSI_RESET
-    fi
-    # MOE:end_strip
 
     # Now that the version is guaranteed to be in the user's repository,
     # checkout that hash.
@@ -220,14 +185,3 @@ BUCK_JAVA_ARGS="-XX:MaxPermSize=256m \
 # To debug BUCK, uncomment the following line to wait on port 8888 for Eclipse.
 # BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
 
-# MOE:begin_strip
-if [ -z "$BUCK_OUT_DIR" ] ; then
-  BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS \
-      -Dbuck.buck_android_dir=buck-android \
-      -Dbuck.buck_bin_dir=buck-bin \
-      -Dbuck.buck_gen_dir=buck-gen"
-else
-  BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS \
-    -Dbuck.buck_output_dir=$BUCK_OUT_DIR"
-fi
-# MOE:end_strip
