@@ -21,6 +21,7 @@ import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -38,6 +39,14 @@ public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory {
 
     JavaLibraryBuildRuleFactory.extractAnnotationProcessorParameters(
         builder.getAnnotationProcessingBuilder(), builder, params);
+
+    // source
+    Optional<String> sourceLevel = params.getOptionalStringAttribute("source");
+    builder.setSourceLevel(sourceLevel.or(JavacOptionsUtil.DEFAULT_SOURCE_LEVEL));
+
+    // target
+    Optional<String> targetLevel = params.getOptionalStringAttribute("target");
+    builder.setTargetLevel(targetLevel.or(JavacOptionsUtil.DEFAULT_TARGET_LEVEL));
 
     // vm_args
     builder.setVmArgs(params.getOptionalListAttribute("vm_args"));

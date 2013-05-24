@@ -409,7 +409,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
 
     public Builder setVmArgs(List<String> vmArgs) {
-      this.vmArgs = vmArgs == null ? ImmutableList.<String>of() : ImmutableList.copyOf(vmArgs);
+      this.vmArgs = ImmutableList.copyOf(vmArgs);
       return this;
     }
 
