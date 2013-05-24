@@ -195,7 +195,13 @@ abstract class AbstractReportGenerator extends AbstractItemVisitor
                 }
             }
             
-            m_typeSortComparators [t] = ItemComparator.Factory.create (orderedAttrIDsWithDir.values (), m_settings.getUnitsType ());
+            // Original:
+            // int [] attributeIDsWithDir = orderedAttrIDsWithDir.values ();
+            
+            // Modified by Buck so that the leftmost column is alphabetized in an HTML report:
+            int [] attributeIDsWithDir = new int[] { IItemAttribute.ATTRIBUTE_NAME_ID, 0 };
+
+            m_typeSortComparators [t] = ItemComparator.Factory.create (attributeIDsWithDir, m_settings.getUnitsType ());
         }
         
         m_metrics = new int [allTypes.length];
