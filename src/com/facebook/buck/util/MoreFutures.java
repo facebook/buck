@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 public class MoreFutures {
@@ -51,5 +52,32 @@ public class MoreFutures {
     // Wait for completion.
     ListenableFuture<List<V>> allAsOne = Futures.allAsList(futures.build());
     return Uninterruptibles.getUninterruptibly(allAsOne);
+  }
+
+  /**
+   * Create a convenience method for checking whether a future completed successfully because this
+   * does not appear to be possible to do in a more direct way:
+   * https://groups.google.com/forum/?fromgroups=#!topic/guava-discuss/rofEhagKnOc.
+   *
+   * @return true if the specified future has been resolved without throwing an exception or being
+   *     cancelled.
+   */
+  public static <T> boolean isSuccess(ListenableFuture<T> future) {
+    if (future.isDone()) {
+      try {
+        future.get();
+        return true;
+      } catch (ExecutionException e) {
+        // The computation threw an exception, so it did not complete successfully.
+        return false;
+      } catch (CancellationException e) {
+        // The computation was cancelled, so it did not complete successfully.
+        return false;
+      } catch (InterruptedException e) {
+        throw new RuntimeException("Should not be possible to interrupt a resolved future.", e);
+      }
+    } else {
+      return false;
+    }
   }
 }
