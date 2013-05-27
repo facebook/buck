@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.DirArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
@@ -91,6 +92,8 @@ class BuckConfig {
   }
   private final ArtifactCache artifactCache;
 
+  private final Ansi ansi;
+
   @VisibleForTesting
   BuckConfig(Map<String, Map<String, String>> sectionsToEntries,
       BuildTargetParser buildTargetParser) {
@@ -109,6 +112,7 @@ class BuckConfig {
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
     this.artifactCache = initArtifactCache();
+    this.ansi = initAnsi();
   }
 
   public static BuckConfig emptyConfig() {
@@ -445,6 +449,25 @@ class BuckConfig {
 
   public ArtifactCache getArtifactCache() {
     return artifactCache;
+  }
+
+  private Ansi initAnsi() {
+    String color = getValue("color", "ui").or("auto");
+    switch (color) {
+    case "false":
+      return Ansi.withoutTty();
+      // Git also supports "always" and "never" for color.ui:
+      // https://www.kernel.org/pub/software/scm/git/docs/git-config.html
+      // It would be nice to be able to mirror those nuances.
+    case "auto":
+    default:
+      return new Ansi();
+    }
+  }
+
+  /** This method always returns the same exact object. */
+  public Ansi getAnsi() {
+    return ansi;
   }
 
   private Optional<String> getValue(String sectionName, String propertyName) {

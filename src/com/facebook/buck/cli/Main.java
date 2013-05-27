@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -89,7 +90,14 @@ public final class Main {
     if (command.isPresent()) {
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
-      return command.get().execute(remainingArgs, buckConfig, projectFilesystem);
+      CommandRunnerParams params = new CommandRunnerParams(
+          buckConfig.getAnsi(),
+          this.stdOut,
+          this.stdErr,
+          buckConfig.getArtifactCache(),
+          projectFilesystem,
+          new KnownBuildRuleTypes());
+      return command.get().execute(remainingArgs, buckConfig, params);
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {

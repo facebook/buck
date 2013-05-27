@@ -77,7 +77,7 @@ public class TargetsCommandTest {
 
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
-  private final Ansi ansi = new Ansi(false);
+  private final Ansi ansi = Ansi.withoutTty();
   private CapturingPrintStream stdOutStream;
   private CapturingPrintStream stdErrStream;
   private TargetsCommand targetsCommand;

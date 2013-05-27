@@ -76,7 +76,7 @@ public class ShellStepTest {
   private void prepareContextForOutput(Verbosity verbosity) {
     EasyMock.reset(context);
 
-    Ansi ansi = new Ansi(false);
+    Ansi ansi = Ansi.withoutTty();
     ProcessExecutor processExecutor = new ProcessExecutor(stdout, stderr, ansi);
 
     expect(context.getStdErr()).andReturn(stderr).anyTimes();

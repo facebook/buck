@@ -47,9 +47,12 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final ArtifactCache artifactCache;
 
   protected AbstractCommandRunner(CommandRunnerParams commandRunnerParams) {
-    this(System.out,
-        System.err,
-        new Console(System.out, System.err, new Ansi()),
+    this(commandRunnerParams.getStdout(),
+        commandRunnerParams.getStderr(),
+        new Console(
+            commandRunnerParams.getStdout(),
+            commandRunnerParams.getStderr(),
+            commandRunnerParams.getAnsi()),
         commandRunnerParams.getProjectFilesystem(),
         commandRunnerParams.getBuildRuleTypes(),
         commandRunnerParams.getArtifactCache());

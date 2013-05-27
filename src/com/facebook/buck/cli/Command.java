@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
@@ -68,9 +66,7 @@ public enum Command {
 
   public int execute(String[] args,
       BuckConfig buckConfig,
-      ProjectFilesystem projectFilesystem) throws IOException {
-      CommandRunnerParams params = new CommandRunnerParams(
-          buckConfig.getArtifactCache(), projectFilesystem, new KnownBuildRuleTypes());
+      CommandRunnerParams params) throws IOException {
       CommandRunner commandRunner;
       try {
         commandRunner = commandRunnerClass
