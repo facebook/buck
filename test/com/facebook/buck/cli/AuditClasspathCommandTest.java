@@ -57,7 +57,7 @@ public class AuditClasspathCommandTest {
 
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
-  private final Ansi ansi = new Ansi(false);
+  private final Ansi ansi = Ansi.withoutTty();
   private final ArtifactCache artifactCache = new NoopArtifactCache();
   private CapturingPrintStream stdOutStream;
   private CapturingPrintStream stdErrStream;

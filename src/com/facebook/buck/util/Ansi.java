@@ -58,7 +58,7 @@ public final class Ansi {
     this(Strings.nullToEmpty(System.getenv("TERM")).startsWith("xterm"));
   }
 
-  public Ansi(boolean isTerminalThatSupportsColor) {
+  private Ansi(boolean isTerminalThatSupportsColor) {
     this.isTerminalThatSupportsColor = isTerminalThatSupportsColor;
   }
 

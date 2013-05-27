@@ -19,8 +19,8 @@ package com.facebook.buck.java;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
@@ -123,7 +123,7 @@ public class JUnitStepTest {
         new File("."),
         Optional.<AndroidPlatformTarget>absent(),
         Optional.<File>absent(),
-        new Ansi(false),
+        Ansi.withoutTty(),
         /* coverageEnabled */ false,
         /* debugEnabled */ true,
         stdout,
