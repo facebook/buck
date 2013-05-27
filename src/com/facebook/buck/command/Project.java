@@ -355,7 +355,7 @@ public class Project {
     // test dependencies
     BuildRule testRule = projectConfig.getTestRule();
     if (testRule != null) {
-      walkRuleAndAdd(testRule, true /* isForTests */, dependencies);
+      walkRuleAndAdd(testRule, true /* isForTests */, dependencies, projectConfig.getSrcRule());
     }
 
     // src folder
@@ -382,7 +382,7 @@ public class Project {
     }
 
     // src dependencies
-    walkRuleAndAdd(projectRule, false /* isForTests */, dependencies);
+    walkRuleAndAdd(projectRule, false /* isForTests */, dependencies, projectConfig.getSrcRule());
 
     String basePathWithSlash = projectConfig.getBuildTarget().getBasePathWithSlash();
 
@@ -656,8 +656,10 @@ public class Project {
   private void walkRuleAndAdd(
       final BuildRule rule,
       final boolean isForTests,
-      final LinkedHashSet<DependentModule> dependencies) {
+      final LinkedHashSet<DependentModule> dependencies,
+      @Nullable final BuildRule srcTarget) {
 
+    final String basePathForRule = rule.getBuildTarget().getBasePath();
     new AbstractDependencyVisitor(rule, true /* excludeRoot */) {
 
       private final LinkedHashSet<DependentModule> librariesToAdd = Sets.newLinkedHashSet();
@@ -669,6 +671,41 @@ public class Project {
         boolean shouldVisitDeps = (dep.isLibrary() && (depShouldExportDeps))
             || (dep instanceof AndroidResourceRule)
             || dep == rule;
+
+        // Special Case: If we are traversing the test_target and we encounter a library rule in the
+        // same package that is not the src_target, then we should traverse the deps. Consider the
+        // following build file:
+        //
+        // android_library(
+        //   name = 'lib',
+        //   srcs = glob(['*.java'], excludes = ['*Test.java']),
+        //   deps = [
+        //     # LOTS OF DEPS
+        //   ],
+        // )
+        //
+        // java_test(
+        //   name = 'test',
+        //   srcs = glob(['*Test.java']),
+        //   deps = [
+        //     ':lib',
+        //     # MOAR DEPS
+        //   ],
+        // )
+        //
+        // project_config(
+        //   test_target = ':test',
+        // )
+        //
+        // Note that the only source folder for this IntelliJ module is the current directory. Thus,
+        // the current directory should be treated as a source folder with test sources, but it
+        // should contain the union of :lib and :test's deps as dependent modules.
+        if (isForTests
+            && !shouldVisitDeps
+            && dep.getBuildTarget().getBasePath().equals(basePathForRule)
+            && !dep.equals(srcTarget)) {
+          shouldVisitDeps = true;
+        }
 
         DependentModule dependentModule;
         if (dep instanceof PrebuiltJarRule) {
