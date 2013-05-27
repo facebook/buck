@@ -19,9 +19,6 @@ java_library(
 java_test(
   name = 'cli',
   srcs = glob(STANDARD_TEST_SRCS),
-  vm_args = [
-    '-Dbuck.path_to_buck_py=src/com/facebook/buck/parser/buck.py',
-  ],
   source_under_test = [
     '//src/com/facebook/buck/cli:cli',
   ],

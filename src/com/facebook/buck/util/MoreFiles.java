@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
@@ -29,6 +30,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -37,6 +43,13 @@ import java.util.logging.Logger;
 public final class MoreFiles {
 
   private final static Logger logger = Logger.getLogger(MoreFiles.class.getName());
+
+  private static final Function<Path, Path> IDENTITY_TRANSFORM = new Function<Path, Path>() {
+    @Override
+    public Path apply(Path path) {
+      return path;
+    }
+  };
 
   /** Utility class: do not instantiate. */
   private MoreFiles() {}
@@ -47,6 +60,77 @@ public final class MoreFiles {
     // Unfortunately, it is not cross-platform.
     Process process = Runtime.getRuntime().exec(new String[] {"rm", "-rf", path});
     processExecutor.execute(process);
+  }
+
+  /**
+   * Recursively copies all files under {@code fromPath} to {@code toPath}.
+   */
+  public static void copyRecursively(
+      final Path fromPath,
+      final Path toPath) throws IOException {
+    copyRecursively(fromPath, toPath, IDENTITY_TRANSFORM);
+  }
+
+  /**
+   * Recursively copies all files under {@code fromPath} to {@code toPath}.
+   * The {@code transform} will be applied after the destination path for a file has been
+   * relativized.
+   * @param fromPath item to copy
+   * @param toPath destination of copy
+   * @param transform renaming function to apply when copying. If this function returns null, then
+   *     the file is not copied.
+   */
+  public static void copyRecursively(
+      final Path fromPath,
+      final Path toPath,
+      final Function<Path, Path> transform) throws IOException {
+    // Adapted from http://codingjunkie.net/java-7-copy-move/.
+    SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
+
+      @Override
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+          throws IOException {
+        Path targetPath = toPath.resolve(fromPath.relativize(dir));
+        if (!java.nio.file.Files.exists(targetPath)) {
+          java.nio.file.Files.createDirectory(targetPath);
+        }
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        Path destPath = toPath.resolve(fromPath.relativize(file));
+        Path transformedDestPath = transform.apply(destPath);
+        if (transformedDestPath != null) {
+          java.nio.file.Files.copy(file, transformedDestPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return FileVisitResult.CONTINUE;
+      }
+    };
+    java.nio.file.Files.walkFileTree(fromPath, copyDirVisitor);
+  }
+
+  public static void deleteRecursively(final Path path) throws IOException {
+    // Adapted from http://codingjunkie.net/java-7-copy-move/.
+    SimpleFileVisitor<Path> deleteDirVisitor = new SimpleFileVisitor<Path>() {
+
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        java.nio.file.Files.delete(file);
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+        if (e == null) {
+          java.nio.file.Files.delete(dir);
+          return FileVisitResult.CONTINUE;
+        } else {
+          throw e;
+        }
+      }
+    };
+    java.nio.file.Files.walkFileTree(path, deleteDirVisitor);
   }
 
   /**

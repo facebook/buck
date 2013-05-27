@@ -286,9 +286,9 @@ public final class Parser {
       File sourceOfBuildTarget;
       if (source == null) {
         String relativePathToBuildFile = !basePath.isEmpty()
-            ? "./" + basePath + "/" + BuckConstant.BUILD_RULES_FILE_NAME
-            : "./" + BuckConstant.BUILD_RULES_FILE_NAME;
-        sourceOfBuildTarget = new File(relativePathToBuildFile);
+            ? basePath + "/" + BuckConstant.BUILD_RULES_FILE_NAME
+            : BuckConstant.BUILD_RULES_FILE_NAME;
+        sourceOfBuildTarget = new File(projectFilesystem.getProjectRoot(), relativePathToBuildFile);
       } else {
         sourceOfBuildTarget = source;
       }
