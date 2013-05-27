@@ -41,8 +41,8 @@ import java.util.SortedSet;
 
 public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
-  public AuditClasspathCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public AuditClasspathCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @VisibleForTesting

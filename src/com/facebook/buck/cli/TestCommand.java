@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -70,8 +69,8 @@ import java.util.concurrent.ExecutionException;
 
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
-  public TestCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public TestCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @Override

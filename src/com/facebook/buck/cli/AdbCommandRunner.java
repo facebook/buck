@@ -52,8 +52,8 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   // Taken from ddms source code.
   final static int INSTALL_TIMEOUT = 2*60*1000; // 2 min
 
-  protected AdbCommandRunner(ArtifactCache artifactCache) {
-    super(artifactCache);
+  protected AdbCommandRunner(CommandRunnerParams params) {
+    super(params);
   }
 
   @VisibleForTesting

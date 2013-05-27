@@ -56,8 +56,8 @@ import javax.annotation.Nullable;
 
 public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions> {
 
-  public TargetsCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public TargetsCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @VisibleForTesting

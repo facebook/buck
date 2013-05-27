@@ -27,6 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -61,7 +62,7 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new String[] {});
+    int exitCode = main.runMainWithExitCode(new String[] {}, new File("."));
     assertEquals(1, exitCode);
     assertEquals(
         "When the user does not specify any arguments, the usage information should be displayed",
@@ -74,7 +75,7 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new String[] {"--help"});
+    int exitCode = main.runMainWithExitCode(new String[] {"--help"}, new File("."));
     assertEquals(1, exitCode);
     assertEquals("Users instinctively try running `buck --help`, so it should print usage info.",
         getUsageString(),

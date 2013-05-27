@@ -22,7 +22,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -33,8 +32,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 
 public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCommandOptions> {
-  public UninstallCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public UninstallCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @Override

@@ -61,6 +61,7 @@ public class ProjectCommandTest {
 
   private static final ImmutableMap<String, Object> EMPTY_PARSE_DATA = ImmutableMap.of();
   private static final ArtifactCache artifactCache = new NoopArtifactCache();
+  private static final ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
 
   @Test
   public void testBasicProjectCommand()
@@ -85,7 +86,7 @@ public class ProjectCommandTest {
     BuckConfig buckConfig = createBuckConfig(
         Joiner.on("\n").join(
             "[project]",
-            "initial_targets = "+javaLibraryTargetName));
+            "initial_targets = " + javaLibraryTargetName));
 
     ProjectCommandForTest command = new ProjectCommandForTest();
     command.createPartialGraphCallReturnValues.push(
@@ -108,12 +109,11 @@ public class ProjectCommandTest {
 
   BuckConfig createBuckConfig(String contents)
       throws IOException, NoSuchBuildTargetException {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.replay(projectFilesystem);
-
+    ProjectFilesystem dummyProjectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.replay(dummyProjectFilesystem);
     return BuckConfig.createFromReader(
         new StringReader(contents),
-        new BuildTargetParser(projectFilesystem));
+        new BuildTargetParser(dummyProjectFilesystem));
   }
 
   private static void checkPredicate(
@@ -162,7 +162,7 @@ public class ProjectCommandTest {
     private BuildCommandOptions buildCommandOptions;
 
     ProjectCommandForTest() {
-      super(artifactCache);
+      super(new CommandRunnerParams(artifactCache, projectFilesystem));
     }
 
     @Override

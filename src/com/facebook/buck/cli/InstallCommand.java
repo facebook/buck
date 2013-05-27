@@ -40,8 +40,8 @@ import java.util.regex.Pattern;
  */
 public class InstallCommand extends UninstallSupportCommandRunner<InstallCommandOptions> {
 
-  protected InstallCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  protected InstallCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   protected InstallCommand(PrintStream stdOut,

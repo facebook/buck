@@ -16,11 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 public enum Command {
 
@@ -64,15 +65,25 @@ public enum Command {
     return shortDescription;
   }
 
-  public int execute(BuckConfig buckConfig, String[] args) throws IOException {
-    try {
-      CommandRunner commandRunner =
-          commandRunnerClass.getDeclaredConstructor(ArtifactCache.class)
-          .newInstance(buckConfig.getArtifactCache());
+  public int execute(String[] args,
+      BuckConfig buckConfig,
+      ProjectFilesystem projectFilesystem) throws IOException {
+      CommandRunnerParams params = new CommandRunnerParams(
+          buckConfig.getArtifactCache(), projectFilesystem);
+      CommandRunner commandRunner;
+      try {
+        commandRunner = commandRunnerClass
+            .getDeclaredConstructor(CommandRunnerParams.class)
+            .newInstance(params);
+      } catch (InstantiationException
+          | IllegalAccessException
+          | IllegalArgumentException
+          | InvocationTargetException
+          | NoSuchMethodException
+          | SecurityException e) {
+        throw Throwables.propagate(e);
+      }
       return commandRunner.runCommand(buckConfig, args);
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
-    }
   }
 
   /**

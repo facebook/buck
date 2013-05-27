@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableMap;
 
@@ -28,9 +27,9 @@ public class AuditCommandRunner implements CommandRunner {
 
   private final Console console;
 
-  public AuditCommandRunner(ArtifactCache artifactCache) {
+  public AuditCommandRunner(CommandRunnerParams params) {
     console = new Console(System.out, System.err, new Ansi());
-    setAuditCommands(artifactCache);
+    setAuditCommands(params);
   }
 
   @Override
@@ -58,11 +57,11 @@ public class AuditCommandRunner implements CommandRunner {
     return auditCommands;
   }
 
-  private void setAuditCommands(ArtifactCache artifactCache) {
+  private void setAuditCommands(CommandRunnerParams params) {
     auditCommands = ImmutableMap.of(
-        "input",     new AuditInputCommand(artifactCache),
-        "classpath", new AuditClasspathCommand(artifactCache),
-        "owner",     new AuditOwnerCommand(artifactCache));
+        "input",     new AuditInputCommand(params),
+        "classpath", new AuditClasspathCommand(params),
+        "owner",     new AuditOwnerCommand(params));
   }
 
   private void printUsage() {

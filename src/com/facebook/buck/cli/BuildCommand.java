@@ -41,11 +41,9 @@ import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.io.PrintStream;
-
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -61,8 +59,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   private ImmutableList<BuildTarget> buildTargets = ImmutableList.of();
 
-  public BuildCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public BuildCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   // Static fields persist between builds when running as a daemon.

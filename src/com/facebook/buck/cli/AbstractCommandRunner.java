@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
@@ -45,12 +44,12 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final ProjectFilesystem projectFilesystem;
   private final ArtifactCache artifactCache;
 
-  protected AbstractCommandRunner(ArtifactCache artifactCache) {
+  protected AbstractCommandRunner(CommandRunnerParams commandRunnerParams) {
     this(System.out,
         System.err,
         new Console(System.out, System.err, new Ansi()),
-        new ProjectFilesystem(new File(".")),
-        artifactCache);
+        commandRunnerParams.getProjectFilesystem(),
+        commandRunnerParams.getArtifactCache());
   }
 
   protected AbstractCommandRunner(PrintStream stdOut,

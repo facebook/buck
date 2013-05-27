@@ -37,8 +37,8 @@ import java.util.Set;
 
 public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
-  public AuditInputCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public AuditInputCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @VisibleForTesting

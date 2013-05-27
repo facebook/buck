@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -79,18 +80,18 @@ public final class Main {
    * @return an exit code or {@code null} if this is a process that should not exit
    */
   @VisibleForTesting
-  int runMainWithExitCode(String[] args) throws IOException {
+  int runMainWithExitCode(String[] args, File projectRoot) throws IOException {
     if (args.length == 0) {
       return usage();
     }
 
-    File projectRoot = new File(".");
     BuckConfig buckConfig = createBuckConfig(projectRoot);
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
-      return command.get().execute(buckConfig, remainingArgs);
+      return command.get().execute(remainingArgs, buckConfig, projectFilesystem);
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
@@ -119,9 +120,9 @@ public final class Main {
     return BuckConfig.createFromFiles(projectRoot, configFiles);
   }
 
-  private int tryRunMainWithExitCode(String[] args) throws IOException {
+  private int tryRunMainWithExitCode(String[] args, File projectRoot) throws IOException {
     try {
-      return runMainWithExitCode(args);
+      return runMainWithExitCode(args, projectRoot);
     } catch (HumanReadableException e) {
       Console console = new Console(stdOut, stdErr, new Ansi());
       console.printFailure(e.getHumanReadableErrorMessage());
@@ -131,7 +132,8 @@ public final class Main {
 
   public static void main(String[] args) throws IOException {
     Main main = new Main(System.out, System.err);
-    int exitCode = main.tryRunMainWithExitCode(args);
+    File projectRoot = new File(".");
+    int exitCode = main.tryRunMainWithExitCode(args, projectRoot);
     System.exit(exitCode);
   }
 }

@@ -46,8 +46,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
   private static final String FILE_INDENT = "    ";
 
-  public AuditOwnerCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public AuditOwnerCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @VisibleForTesting

@@ -42,8 +42,8 @@ import java.io.PrintStream;
 public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOptions>
     extends AdbCommandRunner<T> {
 
-  protected UninstallSupportCommandRunner(ArtifactCache artifactCache) {
-    super(artifactCache);
+  protected UninstallSupportCommandRunner(CommandRunnerParams params) {
+    super(params);
   }
 
   @VisibleForTesting

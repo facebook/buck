@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -50,8 +49,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   };
 
 
-  public ProjectCommand(ArtifactCache artifactCache) {
-    super(artifactCache);
+  public ProjectCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @Override
