@@ -37,8 +37,7 @@ public final class Main {
   private final PrintStream stdOut;
   private final PrintStream stdErr;
 
-  @VisibleForTesting
-  Main(PrintStream stdOut, PrintStream stdErr) {
+  public Main(PrintStream stdOut, PrintStream stdErr) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
   }
@@ -79,8 +78,7 @@ public final class Main {
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
-  @VisibleForTesting
-  int runMainWithExitCode(String[] args, File projectRoot) throws IOException {
+  public int runMainWithExitCode(File projectRoot, String... args) throws IOException {
     if (args.length == 0) {
       return usage();
     }
@@ -107,11 +105,11 @@ public final class Main {
    */
   private static BuckConfig createBuckConfig(File projectRoot) throws IOException {
     ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
-    File configFile = new File(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    File configFile = new File(projectRoot, DEFAULT_BUCK_CONFIG_FILE_NAME);
     if (configFile.isFile()) {
       configFileBuilder.add(configFile);
     }
-    File overrideConfigFile = new File(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
+    File overrideConfigFile = new File(projectRoot, DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
     if (overrideConfigFile.isFile()) {
       configFileBuilder.add(overrideConfigFile);
     }
@@ -120,9 +118,9 @@ public final class Main {
     return BuckConfig.createFromFiles(projectRoot, configFiles);
   }
 
-  private int tryRunMainWithExitCode(String[] args, File projectRoot) throws IOException {
+  private int tryRunMainWithExitCode(File projectRoot, String... args) throws IOException {
     try {
-      return runMainWithExitCode(args, projectRoot);
+      return runMainWithExitCode(projectRoot, args);
     } catch (HumanReadableException e) {
       Console console = new Console(stdOut, stdErr, new Ansi());
       console.printFailure(e.getHumanReadableErrorMessage());
@@ -133,7 +131,7 @@ public final class Main {
   public static void main(String[] args) throws IOException {
     Main main = new Main(System.out, System.err);
     File projectRoot = new File(".");
-    int exitCode = main.tryRunMainWithExitCode(args, projectRoot);
+    int exitCode = main.tryRunMainWithExitCode(projectRoot, args);
     System.exit(exitCode);
   }
 }

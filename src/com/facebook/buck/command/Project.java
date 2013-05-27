@@ -88,7 +88,10 @@ public class Project {
   /**
    * Path to the intellij.py script that is used to transform the JSON written by this file.
    */
-  private static final String PATH_TO_INTELLIJ_PY = System.getProperty("buck.path_to_intellij_py");
+  private static final String PATH_TO_INTELLIJ_PY = System.getProperty(
+      "buck.path_to_intellij_py",
+      // Fall back on this value when running Buck from an IDE.
+      new File("src/com/facebook/buck/command/intellij.py").getAbsolutePath());
 
   /**
    * For now, do not write any project.properties files. We have failed to provide them in the

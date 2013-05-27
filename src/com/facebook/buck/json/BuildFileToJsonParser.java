@@ -55,8 +55,10 @@ import javax.script.ScriptException;
 public class BuildFileToJsonParser {
 
   /** Path to the buck.py script that is used to evaluate a build file. */
-  private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
-      "src/com/facebook/buck/parser/buck.py");
+  private static final String PATH_TO_BUCK_PY = System.getProperty(
+      "buck.path_to_buck_py",
+      // Fall back on this value when running Buck from an IDE.
+      new File("src/com/facebook/buck/parser/buck.py").getAbsolutePath());
 
   private static final ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final ScriptEngine engine = new ScriptEngineManager().getEngineByName("python");
