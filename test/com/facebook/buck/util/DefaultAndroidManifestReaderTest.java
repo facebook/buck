@@ -31,17 +31,23 @@ public class DefaultAndroidManifestReaderTest {
   public void testReadPackage() throws IOException {
     AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(String.format(
         "<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='%s' />",
-        "com.facebook.orca"));
+        "com.example.package"));
     String packageName = manifestReader.getPackage();
-    assertEquals("com.facebook.orca", packageName);
+    assertEquals("com.example.package", packageName);
   }
 
   @Test
   public void testReadLauncherActivitiesNoneFound() throws IOException {
     AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(
         "<manifest xmlns:android='http://schemas.android.com/apk/res/android'>" +
-        "<application>" +
-        "</application>" +
+        "  <application>" +
+        "    <not-an-activity android:name='com.example.Activity6'>" +
+        "      <intent-filter>" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "      </intent-filter>" +
+        "    </not-an-activity>" +
+        "  </application>" +
         "</manifest>");
     List<String> found = manifestReader.getLauncherActivities();
     List<String> expected = ImmutableList.of();
@@ -81,6 +87,26 @@ public class DefaultAndroidManifestReaderTest {
         "</manifest>");
     List<String> found = manifestReader.getLauncherActivities();
     List<String> expected = ImmutableList.of("com.example.Activity1", ".Activity2");
+    assertEquals(expected, found);
+  }
+
+  @Test
+  public void testReadLauncherActivityAliases() throws IOException {
+    AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(
+        "<manifest xmlns:android='http://schemas.android.com/apk/res/android'" +
+        "          package='com.example'>" +
+        "  <application>" +
+        "    <activity-alias android:name='.ActivityAlias1' " +
+        "        android:targetActivity='com.example.RealActivity1'>" +
+        "      <intent-filter>" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "      </intent-filter>" +
+        "    </activity-alias>" +
+        "  </application>" +
+        "</manifest>");
+    List<String> found = manifestReader.getLauncherActivities();
+    List<String> expected = ImmutableList.of(".ActivityAlias1");
     assertEquals(expected, found);
   }
 }
