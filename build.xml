@@ -70,7 +70,13 @@
        do more than one thing. -->
   <target name="default" depends="jar, client" />
 
-  <target name="compile-testrunner">
+  <target name="checkversion">
+    <!-- The nio Files class was only introduced in Java 7. -->
+    <available property="jdk7" classname="java.nio.file.Files"/> 
+    <fail message="Require JDK 7 or higher" unless="jdk7"/> 
+  </target>
+
+  <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${testrunner.src.dir}"
            destdir="${testrunner.classes.dir}"
