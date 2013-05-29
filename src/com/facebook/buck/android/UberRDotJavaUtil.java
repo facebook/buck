@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavacInMemoryStep;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
@@ -31,8 +31,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -52,9 +50,6 @@ import java.util.Set;
  * packaged into an APK and has the real values for that APK.
  */
 public class UberRDotJavaUtil {
-
-  private static final Supplier<String> R_DOT_JAVA_BOOTCLASSPATH =
-      Suppliers.ofInstance(null);
 
   private static final ImmutableSet<BuildRuleType> TRAVERSABLE_TYPES = ImmutableSet.of(
       BuildRuleType.ANDROID_BINARY,
@@ -276,12 +271,12 @@ public class UberRDotJavaUtil {
 
   static JavacInMemoryStep createJavacInMemoryCommandForRDotJavaFiles(
     Set<String> javaSourceFilePaths, String outputDirectory) {
+
     ImmutableSet<String> classpathEntries = ImmutableSet.of();
     return new JavacInMemoryStep(
         outputDirectory,
         javaSourceFilePaths,
         classpathEntries,
-        R_DOT_JAVA_BOOTCLASSPATH,
-        AnnotationProcessingParams.EMPTY);
+        JavacOptions.DEFAULTS);
   }
 }

@@ -1,6 +1,7 @@
 SUPPORT_SRCS = [
   'AnnotationProcessingParams.java',
   'HasClasspathEntries.java',
+  'JavacOptions.java',
 ]
 java_library(
   name = 'support',

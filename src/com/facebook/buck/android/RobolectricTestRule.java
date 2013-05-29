@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -40,21 +41,17 @@ public class RobolectricTestRule extends JavaTestRule {
       Set<String> resources,
       Set<String> labels,
       Optional<String> proguardConfig,
-      AnnotationProcessingParams annotationProcessors,
+      JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<JavaLibraryRule> sourceUnderTest,
-      String sourceLevel,
-      String targetLevel) {
+      ImmutableSet<JavaLibraryRule> sourceUnderTest) {
     super(cachingBuildRuleParams,
         srcs,
         resources,
         labels,
         proguardConfig,
-        annotationProcessors,
+        javacOptions,
         vmArgs,
-        sourceUnderTest,
-        sourceLevel,
-        targetLevel);
+        sourceUnderTest);
   }
 
   @Override
@@ -87,16 +84,17 @@ public class RobolectricTestRule extends JavaTestRule {
       ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();
       allVmArgs.addAll(vmArgs);
 
+      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleIndex);
+      javacOptions.setAnnotationProcessingData(processingParams);
+
       return new RobolectricTestRule(createCachingBuildRuleParams(buildRuleIndex),
           srcs,
           resources,
           labels,
           proguardConfig,
-          getAnnotationProcessingBuilder().build(buildRuleIndex),
+          javacOptions.build(),
           allVmArgs.build(),
-          sourceUnderTest,
-          sourceLevel,
-          targetLevel);
+          sourceUnderTest);
     }
 
     @Override

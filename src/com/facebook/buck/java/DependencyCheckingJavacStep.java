@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -27,7 +26,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -90,45 +88,11 @@ public class DependencyCheckingJavacStep extends JavacInMemoryStep {
       Set<String> javaSourceFilePaths,
       Set<String> transitiveClasspathEntries,
       Set<String> declaredClasspathEntries,
-      Supplier<String> bootclasspathSupplier,
-      AnnotationProcessingData annotationProcessingData,
+      JavacOptions javacOptions,
       Optional<String> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules) {
-
-    this(outputDirectory,
-        javaSourceFilePaths,
-        transitiveClasspathEntries,
-        declaredClasspathEntries,
-        bootclasspathSupplier,
-        annotationProcessingData,
-        invokingRule,
-        buildDependencies,
-        suggestBuildRules,
-        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
-  }
-
-  public DependencyCheckingJavacStep(
-      String outputDirectory,
-      Set<String> javaSourceFilePaths,
-      Set<String> transitiveClasspathEntries,
-      Set<String> declaredClasspathEntries,
-      Supplier<String> bootclasspathSupplier,
-      AnnotationProcessingData annotationProcessingData,
-      Optional<String> invokingRule,
-      BuildDependencies buildDependencies,
-      Optional<SuggestBuildRules> suggestBuildRules,
-      String sourceLevel,
-      String targetLevel) {
-
-    super(outputDirectory,
-          javaSourceFilePaths,
-          transitiveClasspathEntries,
-          bootclasspathSupplier,
-          annotationProcessingData,
-          sourceLevel,
-          targetLevel);
+    super(outputDirectory, javaSourceFilePaths, transitiveClasspathEntries, javacOptions);
 
     this.declaredClasspathEntries = ImmutableSet.copyOf(declaredClasspathEntries);
     this.invokingRule = Preconditions.checkNotNull(invokingRule);

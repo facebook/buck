@@ -93,13 +93,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final List<String> inputsToConsiderForCachingPurposes;
 
-  private final AnnotationProcessingParams annotationProcessingParams;
-
   private final Optional<String> proguardConfig;
-
-  private final String sourceLevel;
-
-  private final String targetLevel;
 
   private final boolean exportDeps;
 
@@ -110,6 +104,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final Supplier<ImmutableSetMultimap<BuildRule, String>>
       declaredClasspathEntriesSupplier;
+
+  protected final JavacOptions javacOptions;
 
   /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
@@ -154,18 +150,14 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
                                    Set<String> srcs,
                                    Set<String> resources,
                                    Optional<String> proguardConfig,
-                                   AnnotationProcessingParams annotationProcessingParams,
                                    boolean exportDeps,
-                                   String sourceLevel,
-                                   String targetLevel) {
+                                   JavacOptions javacOptions) {
     super(cachingBuildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
-    this.annotationProcessingParams = Preconditions.checkNotNull(annotationProcessingParams);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-    this.sourceLevel = sourceLevel;
-    this.targetLevel = targetLevel;
     this.exportDeps = exportDeps;
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       File file = new File(getOutputJarPath(getBuildTarget()));
@@ -253,7 +245,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * @param javaSourceFilePaths .java files to compile: may be empty
    * @param transitiveClasspathEntries Classpaths of all transitive dependencies.
    * @param declaredClasspathEntries Classpaths of all declared dependencies.
-   * @param annotationProcessingData to process JSR269 java annotations
+   * @param javacOptions options to use when compiling code.
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
    * @return commands to compile the specified inputs
    */
@@ -262,13 +254,10 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       final SortedSet<String> javaSourceFilePaths,
       ImmutableSet<String> transitiveClasspathEntries,
       ImmutableSet<String> declaredClasspathEntries,
-      Supplier<String> bootclasspathSupplier,
-      AnnotationProcessingData annotationProcessingData,
+      JavacOptions javacOptions,
       Optional<String> invokingRule,
       BuildDependencies buildDependencies,
-      Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules,
-      String sourceLevel,
-      String targetLevel) {
+      Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Only run javac if there are .java files to compile.
@@ -278,13 +267,10 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
           javaSourceFilePaths,
           transitiveClasspathEntries,
           declaredClasspathEntries,
-          bootclasspathSupplier,
-          annotationProcessingData,
+          javacOptions,
           invokingRule,
           buildDependencies,
-          suggestBuildRules,
-          sourceLevel,
-          targetLevel);
+          suggestBuildRules);
 
       commands.add(javac);
     }
@@ -325,14 +311,16 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   @Override
   protected RuleKey.Builder ruleKeyBuilder() {
-    return super.ruleKeyBuilder()
+    RuleKey.Builder builder = super.ruleKeyBuilder()
         .set("srcs", srcs)
         .set("resources", resources)
         .set("classpathEntries", ImmutableSortedSet.copyOf(getDeclaredClasspathEntries().values()))
         .set("isAndroidLibrary", isAndroidRule())
-        .set("sourceLevel", sourceLevel)
-        .set("targetLevel", targetLevel)
         .set("exportDeps", exportDeps);
+
+    javacOptions.appendToRuleKey(builder);
+
+    return builder;
   }
 
   @Override
@@ -362,7 +350,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   @Override
   public AnnotationProcessingData getAnnotationProcessingData() {
-    return annotationProcessingParams;
+    return javacOptions.getAnnotationProcessingData();
   }
 
   public Optional<String> getProguardConfig() {
@@ -427,6 +415,14 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     BuildTarget buildTarget = getBuildTarget();
 
+    JavacOptions javacOptions = this.javacOptions;
+    // Only override the bootclasspath if this rule is supposed to compile Android code.
+    if (isAndroidRule()) {
+      javacOptions = JavacOptions.builder(this.javacOptions)
+          .setBootclasspath(context.getAndroidBootclasspathSupplier().get())
+          .build();
+    }
+
     // If this rule depends on AndroidResourceRules, then we need to generate the R.java files that
     // this rule needs in order to be able to compile itself.
     androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this,
@@ -462,16 +458,9 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       transitiveClasspathEntries = transitiveClasspathEntriesWithRDotJava.build();
     }
 
-    // Only override the bootclasspath if this rule is supposed to compile Android code.
-    Supplier<String> bootclasspathSupplier;
-    if (isAndroidRule()) {
-      bootclasspathSupplier = context.getAndroidBootclasspathSupplier();
-    } else {
-      bootclasspathSupplier = Suppliers.ofInstance(null);
-    }
-
     // Javac requires that the root directory for generated sources already exist.
-    String annotationGenFolder = annotationProcessingParams.getGeneratedSourceFolderName();
+    String annotationGenFolder =
+        javacOptions.getAnnotationProcessingData().getGeneratedSourceFolderName();
     if (annotationGenFolder != null) {
       MakeCleanDirectoryStep mkdirGeneratedSources =
           new MakeCleanDirectoryStep(annotationGenFolder);
@@ -495,13 +484,10 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         srcs,
         ImmutableSet.copyOf(transitiveClasspathEntries.values()),
         ImmutableSet.copyOf(declaredClasspathEntries.values()),
-        bootclasspathSupplier,
-        annotationProcessingParams,
+        javacOptions,
         Optional.of(getFullyQualifiedName()),
         context.getBuildDependencies(),
-        suggestBuildRule,
-        sourceLevel,
-        targetLevel);
+        suggestBuildRule);
     commands.addAll(javac);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
@@ -661,9 +647,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     protected Set<String> resources = Sets.newHashSet();
     protected final AnnotationProcessingParams.Builder annotationProcessingBuilder =
         new AnnotationProcessingParams.Builder();
-    protected String sourceLevel = JavacOptionsUtil.DEFAULT_SOURCE_LEVEL;
-    protected String targetLevel = JavacOptionsUtil.DEFAULT_TARGET_LEVEL;
     protected boolean exportDeps = false;
+    protected JavacOptions.Builder javacOptions = JavacOptions.builder();
 
     protected Optional<String> proguardConfig = Optional.absent();
 
@@ -674,16 +659,15 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
+      javacOptions.setAnnotationProcessingData(processingParams);
 
       return new DefaultJavaLibraryRule(
           cachingBuildRuleParams,
           srcs,
           resources,
           proguardConfig,
-          processingParams,
           exportDeps,
-          sourceLevel,
-          targetLevel);
+          javacOptions.build());
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingBuilder() {
@@ -733,12 +717,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     }
 
     public Builder setSourceLevel(String sourceLevel) {
-      this.sourceLevel = sourceLevel;
+      javacOptions.setSourceLevel(sourceLevel);
       return this;
     }
 
     public Builder setTargetLevel(String targetLevel) {
-      this.targetLevel = targetLevel;
+      javacOptions.setTargetLevel(targetLevel);
       return this;
     }
 

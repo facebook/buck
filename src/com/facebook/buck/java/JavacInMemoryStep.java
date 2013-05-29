@@ -18,10 +18,9 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.model.AnnotationProcessingData;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -45,77 +44,54 @@ public class JavacInMemoryStep implements Step {
 
   private final Set<String> javaSourceFilePaths;
 
-  private final Supplier<String> bootclasspathSupplier;
-
-  private final AnnotationProcessingData annotationProcessingData;
-
-  private final String sourceLevel;
-
-  private final String targetLevel;
-
   protected final ImmutableSet<String> classpathEntries;
+  private final JavacOptions javacOptions;
 
   public JavacInMemoryStep(
-      String outputDirectory,
-      Set<String> javaSourceFilePaths,
-      Set<String> classpathEntries,
-      Supplier<String> bootclasspathSupplier,
-      AnnotationProcessingData annotationProcessingData) {
-
-    this(
-      outputDirectory,
-      javaSourceFilePaths,
-      classpathEntries,
-      bootclasspathSupplier,
-        annotationProcessingData,
-      JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-      JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
-  }
-
-    public JavacInMemoryStep(
         String outputDirectory,
         Set<String> javaSourceFilePaths,
         Set<String> classpathEntries,
-        Supplier<String> bootclasspathSupplier,
-        AnnotationProcessingData annotationProcessingData,
-        String sourceLevel,
-        String targetLevel) {
+        JavacOptions javacOptions) {
     Preconditions.checkNotNull(outputDirectory);
     this.outputDirectory = new File(outputDirectory);
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
-    this.bootclasspathSupplier = Preconditions.checkNotNull(bootclasspathSupplier);
-    this.annotationProcessingData = Preconditions.checkNotNull(annotationProcessingData);
-    this.sourceLevel = Preconditions.checkNotNull(sourceLevel);
-    this.targetLevel = Preconditions.checkNotNull(targetLevel);
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
   }
 
   /**
-   * This is public for testing purposes and is not intended for use outside this class.
-   *
    * Returns a list of command-line options to pass to javac.  These options reflect
    * the configuration of this javac command.
    *
    * @param context the ExecutionContext with in which javac will run
    * @return list of String command-line options.
    */
-  public ImmutableList<String> getOptions(ExecutionContext context,
+  @VisibleForTesting
+  protected ImmutableList<String> getOptions(ExecutionContext context,
       Set<String> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    JavacOptionsUtil.addOptions(builder,
-        context,
-        outputDirectory,
-        buildClasspathEntries,
-        bootclasspathSupplier,
-        annotationProcessingData,
-        sourceLevel,
-        targetLevel);
+
+    javacOptions.appendOptionsToList(builder);
+
+    // verbose flag, if appropriate.
+    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
+      builder.add("-verbose");
+    }
+
+    // Specify the output directory.
+    builder.add("-d").add(outputDirectory.getAbsolutePath());
+
+    // Build up and set the classpath.
+    if (!buildClasspathEntries.isEmpty()) {
+      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
+      builder.add("-classpath", classpath);
+    }
+
     return builder.build();
   }
 
   @Override
   public final int execute(ExecutionContext context) {
-
     return executeBuild(context);
   }
 
@@ -195,5 +171,4 @@ public class JavacInMemoryStep implements Step {
   public Set<String> getSrcs() {
     return javaSourceFilePaths;
   }
-
 }

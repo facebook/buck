@@ -42,11 +42,15 @@ public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory {
 
     // source
     Optional<String> sourceLevel = params.getOptionalStringAttribute("source");
-    builder.setSourceLevel(sourceLevel.or(JavacOptionsUtil.DEFAULT_SOURCE_LEVEL));
+    if (sourceLevel.isPresent()) {
+      builder.setSourceLevel(sourceLevel.get());
+    }
 
     // target
     Optional<String> targetLevel = params.getOptionalStringAttribute("target");
-    builder.setTargetLevel(targetLevel.or(JavacOptionsUtil.DEFAULT_TARGET_LEVEL));
+    if (targetLevel.isPresent()) {
+      builder.setTargetLevel(targetLevel.get());
+    }
 
     // vm_args
     builder.setVmArgs(params.getOptionalListAttribute("vm_args"));
@@ -57,5 +61,4 @@ public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory {
         params.getOptionalListAttribute("source_under_test"), contextualBuildParser));
     builder.setSourceUnderTest(sourceUnderTest);
   }
-
 }
