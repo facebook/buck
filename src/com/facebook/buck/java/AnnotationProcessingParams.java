@@ -153,7 +153,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
       for (BuildTarget target : targets) {
         BuildRule rule = buildRuleIndex.get(target.getFullyQualifiedName());
-        String type = rule.getType().getDisplayName();
+        String type = rule.getType().getName();
 
         // We're using raw strings here to avoid circular dependencies.
         // TODO(simons): don't use raw strings.

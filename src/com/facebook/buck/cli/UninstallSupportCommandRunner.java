@@ -25,6 +25,7 @@ import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.cli.UninstallCommandOptions.UninstallOptions;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
@@ -47,14 +48,18 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
   }
 
   @VisibleForTesting
-  protected UninstallSupportCommandRunner(PrintStream stdOut, PrintStream stdErr,
-      Console console, ProjectFilesystem projectFilesystem, ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
+  protected UninstallSupportCommandRunner(PrintStream stdOut,
+      PrintStream stdErr,
+      Console console,
+      ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
+      ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   /**
    * Uninstall apk from all matching devices.
-   * @see InstallCommand#installApk(File, InstallCommandOptions)
+   * @see InstallCommand#installApk(java.io.File, InstallCommandOptions, ExecutionContext)
    */
   @VisibleForTesting
   protected boolean uninstallApk(final String packageName, final AdbOptions adbOptions,

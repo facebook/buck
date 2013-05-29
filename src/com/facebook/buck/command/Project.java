@@ -328,7 +328,7 @@ public class Project {
         || projectRule instanceof AndroidBinaryRule
         || projectRule instanceof NdkLibraryRule,
         "project_config() does not know how to process a src_target of type %s.",
-        projectRule.getType().getDisplayName());
+        projectRule.getType().getName());
 
     LinkedHashSet<DependentModule> dependencies = Sets.newLinkedHashSet();
     final BuildTarget target = projectConfig.getBuildTarget();

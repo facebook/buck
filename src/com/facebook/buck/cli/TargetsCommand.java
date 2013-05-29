@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,8 +66,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       PrintStream stdErr,
       Console console,
       ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
+    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -86,7 +88,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
     for (String name : types) {
       try {
-        buildRuleTypesBuilder.add(BuildRuleType.valueOf(name.toUpperCase()));
+        buildRuleTypesBuilder.add(getBuildRuleTypes().getBuildRuleType(name));
       } catch (IllegalArgumentException e) {
         console.printFailure("Invalid build rule type: " + name);
         return 1;

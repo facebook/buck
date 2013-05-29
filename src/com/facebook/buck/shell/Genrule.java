@@ -333,12 +333,12 @@ public class Genrule extends AbstractCachingBuildRule {
       BuildRule matchingRule = fullyQualifiedNameToBuildRule.get(buildTarget);
       if (matchingRule == null) {
         throw new HumanReadableException("No dep named %s for %s %s, cmd was %s",
-            buildTarget, getType().getDisplayName(), getFullyQualifiedName(), cmd);
+            buildTarget, getType().getName(), getFullyQualifiedName(), cmd);
       }
 
       if (!(matchingRule instanceof BinaryBuildRule)) {
         throw new HumanReadableException("%s must correspond to a binary rule in %s for %s %s",
-            buildTarget, cmd, getType().getDisplayName(), getFullyQualifiedName());
+            buildTarget, cmd, getType().getName(), getFullyQualifiedName());
       }
       BinaryBuildRule binaryBuildRule = (BinaryBuildRule)matchingRule;
 

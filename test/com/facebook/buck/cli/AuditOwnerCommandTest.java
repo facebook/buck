@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.OutputKey;
 import com.facebook.buck.rules.RuleKey;
@@ -245,11 +246,13 @@ public class AuditOwnerCommandTest {
     OutputStream nullOut = ByteStreams.nullOutputStream();
     PrintStream out = new PrintStream(nullOut);
     Console console = new Console(out, out, new Ansi());
+    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
     return new AuditOwnerCommand(console.getStdOut(),
         console.getStdErr(),
         console,
         filesystem,
+        buildRuleTypes,
         artifactCache);
   }
 

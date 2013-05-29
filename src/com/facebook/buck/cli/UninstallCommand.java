@@ -55,7 +55,10 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
 
     // Create a parser.
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
-    Parser parser = new Parser(getProjectFilesystem(), getArtifactCache(), buildFiles);
+    Parser parser = new Parser(getProjectFilesystem(),
+        getBuildRuleTypes(),
+        getArtifactCache(),
+        buildFiles);
 
     // Parse all of the build targets specified by the user.
     BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
@@ -77,7 +80,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
       console.printFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
-          buildRule.getType().getDisplayName()));
+          buildRule.getType().getName()));
       return 1;
     }
     InstallableBuildRule installableBuildRule = (InstallableBuildRule)buildRule;

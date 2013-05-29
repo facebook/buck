@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -73,8 +74,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
                     PrintStream stdErr,
                     Console console,
                     ProjectFilesystem projectFilesystem,
+                    KnownBuildRuleTypes buildRuleTypes,
                     ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
+    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override

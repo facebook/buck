@@ -20,6 +20,7 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.TriState;
@@ -57,9 +58,13 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   }
 
   @VisibleForTesting
-  protected AdbCommandRunner(PrintStream stdOut, PrintStream stdErr,
-      Console console, ProjectFilesystem projectFilesystem, ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
+  protected AdbCommandRunner(PrintStream stdOut,
+      PrintStream stdErr,
+      Console console,
+      ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
+      ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   /**

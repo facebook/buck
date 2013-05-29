@@ -23,6 +23,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -42,6 +43,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   protected final Ansi ansi;
   protected final Console console;
   private final ProjectFilesystem projectFilesystem;
+  private final KnownBuildRuleTypes buildRuleTypes;
   private final ArtifactCache artifactCache;
 
   protected AbstractCommandRunner(CommandRunnerParams commandRunnerParams) {
@@ -49,6 +51,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
         System.err,
         new Console(System.out, System.err, new Ansi()),
         commandRunnerParams.getProjectFilesystem(),
+        commandRunnerParams.getBuildRuleTypes(),
         commandRunnerParams.getArtifactCache());
   }
 
@@ -56,12 +59,14 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
       PrintStream stdErr,
       Console console,
       ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
     this.console = Preconditions.checkNotNull(console);
     this.ansi = Preconditions.checkNotNull(console.getAnsi());
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
   }
 
@@ -69,7 +74,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   private ParserAndOptions<T> createParser(BuckConfig buckConfig) {
     T options = createOptions(buckConfig);
-    return new ParserAndOptions<T>(options);
+    return new ParserAndOptions<>(options);
   }
 
   @Override
@@ -123,6 +128,10 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return projectFilesystem;
   }
 
+  public KnownBuildRuleTypes getBuildRuleTypes() {
+    return buildRuleTypes;
+  }
+
   /**
    * @return Creates a parser for this command.
    */
@@ -131,7 +140,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
 
     // Create a Parser.
-    return new Parser(getProjectFilesystem(), getArtifactCache(), buildFiles);
+    return new Parser(getProjectFilesystem(), getBuildRuleTypes(), getArtifactCache(), buildFiles);
   }
 
   /**

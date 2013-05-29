@@ -104,6 +104,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             stdErr,
             console,
             getProjectFilesystem(),
+            getBuildRuleTypes(),
             getArtifactCache());
 
         exitCode = runBuildCommand(

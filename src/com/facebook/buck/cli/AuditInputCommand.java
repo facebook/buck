@@ -25,6 +25,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.InputRule;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -46,8 +47,9 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
                     PrintStream stdErr,
                     Console console,
                     ProjectFilesystem projectFilesystem,
+                    KnownBuildRuleTypes buildRuleTypes,
                     ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
+    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override

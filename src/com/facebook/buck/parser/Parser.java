@@ -16,36 +16,17 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.android.AndroidBinaryBuildRuleFactory;
-import com.facebook.buck.android.AndroidInstrumentationApkRuleFactory;
-import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
-import com.facebook.buck.android.AndroidManifestBuildRuleFactory;
-import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
-import com.facebook.buck.android.ApkGenruleBuildRuleFactory;
-import com.facebook.buck.android.GenAidlBuildRuleFactory;
-import com.facebook.buck.android.NdkLibraryBuildRuleFactory;
-import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
-import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
-import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
-import com.facebook.buck.java.JavaTestBuildRuleFactory;
-import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
-import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
-import com.facebook.buck.python.PythonLibraryBuildRuleFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.shell.ExportFileBuildRuleFactory;
-import com.facebook.buck.shell.GenruleBuildRuleFactory;
-import com.facebook.buck.shell.ShTestBuildRuleFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -53,7 +34,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -72,8 +52,6 @@ public final class Parser {
 
   private static final Logger logger = Logger.getLogger(Parser.class.getCanonicalName());
 
-  private final Map<BuildRuleType, BuildRuleFactory> ruleTypeToFactoryMap;
-
   private final BuildTargetParser buildTargetParser;
 
   /**
@@ -89,15 +67,18 @@ public final class Parser {
 
   private final String absolutePathToProjectRoot;
   private final ProjectFilesystem projectFilesystem;
+  private final KnownBuildRuleTypes buildRuleTypes;
   private final ArtifactCache artifactCache;
   private final BuildFileTree buildFiles;
 
   private boolean parserWasPopulatedViaParseRawRules = false;
 
   public Parser(ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache,
       BuildFileTree buildFiles) {
     this(projectFilesystem,
+        buildRuleTypes,
         artifactCache,
         buildFiles,
         new BuildTargetParser(projectFilesystem),
@@ -106,16 +87,17 @@ public final class Parser {
 
   @VisibleForTesting
   Parser(ProjectFilesystem projectFilesystem,
+         KnownBuildRuleTypes buildRuleTypes,
          ArtifactCache artifactCache,
          BuildFileTree buildFiles,
          BuildTargetParser buildTargetParser,
          Map<String, BuildRuleBuilder> knownBuildTargets) {
     this.projectFilesystem = projectFilesystem;
+    this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.artifactCache = artifactCache;
     this.buildFiles = Preconditions.checkNotNull(buildFiles);
 
     this.knownBuildTargets = Preconditions.checkNotNull(knownBuildTargets);
-    this.ruleTypeToFactoryMap = getRuleTypeToFactoryMap();
 
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.parsedBuildFiles = Sets.newHashSet();
@@ -297,7 +279,7 @@ public final class Parser {
 
     for (Map<String, Object> map : rules) {
       String type = (String)map.get("type");
-      BuildRuleType buildRuleType = BuildRuleType.valueOf(type.toUpperCase());
+      BuildRuleType buildRuleType = buildRuleTypes.getBuildRuleType(type);
 
       String basePath = (String)map.get("buck_base_path");
 
@@ -311,7 +293,7 @@ public final class Parser {
         sourceOfBuildTarget = source;
       }
 
-      BuildRuleFactory factory = ruleTypeToFactoryMap.get(buildRuleType);
+      BuildRuleFactory factory = buildRuleTypes.getFactory(buildRuleType);
       if (factory == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
             type,
@@ -340,38 +322,5 @@ public final class Parser {
     }
 
     return matchingTargets;
-  }
-
-  // TODO(mbolin): This will ultimately have to support a plug-in model so users can define their
-  // own build rules.
-  private Map<BuildRuleType, BuildRuleFactory> getRuleTypeToFactoryMap() {
-    return ImmutableMap.<BuildRuleType, BuildRuleFactory>builder()
-        .put(BuildRuleType.PREBUILT_JAR,
-            new PrebuiltJarBuildRuleFactory())
-        .put(BuildRuleType.JAVA_LIBRARY,
-            new JavaLibraryBuildRuleFactory())
-        .put(BuildRuleType.JAVA_TEST,
-            new JavaTestBuildRuleFactory())
-        .put(BuildRuleType.JAVA_BINARY,
-            new JavaBinaryBuildRuleFactory())
-        .put(BuildRuleType.NDK_LIBRARY,
-            new NdkLibraryBuildRuleFactory())
-        .put(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory())
-        .put(BuildRuleType.ANDROID_INSTRUMENTATION_APK, new AndroidInstrumentationApkRuleFactory())
-        .put(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory())
-        .put(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory())
-        .put(BuildRuleType.EXPORT_FILE, new ExportFileBuildRuleFactory())
-        .put(BuildRuleType.PREBUILT_NATIVE_LIBRARY, new PrebuiltNativeLibraryBuildRuleFactory())
-        .put(BuildRuleType.PROJECT_CONFIG, new ProjectConfigRuleFactory())
-        .put(BuildRuleType.GEN_AIDL, new GenAidlBuildRuleFactory())
-        .put(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory())
-        .put(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory())
-        .put(BuildRuleType.ANDROID_MANIFEST, new AndroidManifestBuildRuleFactory())
-        .put(BuildRuleType.GENRULE, new GenruleBuildRuleFactory())
-        .put(BuildRuleType.PYTHON_LIBRARY, new PythonLibraryBuildRuleFactory())
-        .put(BuildRuleType.PYTHON_BINARY, new PythonBinaryBuildRuleFactory())
-        .put(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory())
-        .put(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory())
-        .build();
   }
 }

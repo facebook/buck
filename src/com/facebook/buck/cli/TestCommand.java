@@ -96,6 +96,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         stdErr,
         console,
         getProjectFilesystem(),
+        getBuildRuleTypes(),
         getArtifactCache());
 
     int exitCode = buildCommand.runCommandWithOptions(options);

@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
@@ -28,12 +29,15 @@ class CommandRunnerParams {
 
   private final ArtifactCache artifactCache;
   private final ProjectFilesystem projectFilesystem;
+  private final KnownBuildRuleTypes buildRuleTypes;
 
   public CommandRunnerParams(
       ArtifactCache artifactCache,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes) {
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
   }
 
   public ArtifactCache getArtifactCache() {
@@ -42,5 +46,9 @@ class CommandRunnerParams {
 
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
+  }
+
+  public KnownBuildRuleTypes getBuildRuleTypes() {
+    return buildRuleTypes;
   }
 }

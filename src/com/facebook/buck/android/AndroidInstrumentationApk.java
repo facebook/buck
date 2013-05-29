@@ -119,7 +119,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
             "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
             getBuildTarget(),
             apkRule.getFullyQualifiedName(),
-            apkRule.getType().getDisplayName());
+            apkRule.getType().getName());
       }
 
       AndroidBinaryRule underlyingApk = getUnderlyingApk((InstallableBuildRule)apkRule);
