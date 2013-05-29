@@ -42,10 +42,9 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
         srcs,
         resources,
         proguardConfig,
-        annotationProcessingParams,
         exportDeps,
-        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
+        JavacOptions.builder().setAnnotationProcessingData(annotationProcessingParams).build()
+    );
 
     this.hasUncachedDescendants = hasUncachedDescendants;
     this.ruleInputsAreCached = ruleInputsAreCached;

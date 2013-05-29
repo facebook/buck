@@ -75,19 +75,15 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       Set<String> resources,
       Set<String> labels,
       Optional<String> proguardConfig,
-      AnnotationProcessingParams annotationProcessors,
+      JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<JavaLibraryRule> sourceUnderTest,
-      String sourceLevel,
-      String targetLevel) {
+      ImmutableSet<JavaLibraryRule> sourceUnderTest) {
     super(cachingBuildRuleParams,
         srcs,
         resources,
         proguardConfig,
-        annotationProcessors,
         /* exportDeps */ false,
-        sourceLevel,
-        targetLevel);
+        javacOptions);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
     this.labels = ImmutableSet.copyOf(labels);
@@ -372,16 +368,17 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     public JavaTestRule build(Map<String, BuildRule> buildRuleIndex) {
       ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourceUnderTestNames,
           buildRuleIndex);
+      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleIndex);
+      javacOptions.setAnnotationProcessingData(processingParams);
+
       return new JavaTestRule(createCachingBuildRuleParams(buildRuleIndex),
           srcs,
           resources,
           labels,
           proguardConfig,
-          getAnnotationProcessingBuilder().build(buildRuleIndex),
+          javacOptions.build(),
           vmArgs,
-          sourceUnderTest,
-          sourceLevel,
-          targetLevel);
+          sourceUnderTest);
     }
 
     @Override

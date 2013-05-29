@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.ArtifactCache;
@@ -44,18 +45,14 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       Set<String> srcs,
       Set<String> resources,
       Optional<String> proguardConfig,
-      AnnotationProcessingParams annotationProcessingParams,
-      Optional<String> manifestFile,
-      String sourceLevel,
-      String targetLevel) {
+      JavacOptions javacOptions,
+      Optional<String> manifestFile) {
     super(cachingBuildRuleParams,
         srcs,
         resources,
         proguardConfig,
-        annotationProcessingParams,
         /* exportDeps */ false,
-        sourceLevel,
-        targetLevel);
+        javacOptions);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }
 
@@ -85,16 +82,15 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
+      javacOptions.setAnnotationProcessingData(processingParams);
 
       return new AndroidLibraryRule(
           cachingBuildRuleParams,
           srcs,
           resources,
           proguardConfig,
-          processingParams,
-          manifestFile,
-          sourceLevel,
-          targetLevel);
+          javacOptions.build(),
+          manifestFile);
     }
 
     @Override

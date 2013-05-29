@@ -51,10 +51,14 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
         builder.getAnnotationProcessingBuilder(), builder, params);
 
     Optional<String> sourceLevel = params.getOptionalStringAttribute("source");
-    builder.setSourceLevel(sourceLevel.or(JavacOptionsUtil.DEFAULT_SOURCE_LEVEL));
+    if (sourceLevel.isPresent()) {
+      builder.setSourceLevel(sourceLevel.get());
+    }
 
     Optional<String> targetLevel = params.getOptionalStringAttribute("target");
-    builder.setTargetLevel(targetLevel.or(JavacOptionsUtil.DEFAULT_TARGET_LEVEL));
+    if (targetLevel.isPresent()) {
+      builder.setTargetLevel(targetLevel.get());
+    }
   }
 
   static void extractAnnotationProcessorParameters(

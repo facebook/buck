@@ -42,6 +42,8 @@ import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.google.common.base.Optional;
@@ -88,10 +90,9 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
         /* proguardConfig */ Optional.<String>absent(),
-        AnnotationProcessingParams.EMPTY,
         /* exportDeps */ false,
-        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
+        JavacOptions.DEFAULTS
+        );
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -125,10 +126,9 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
         /* proguargConfig */ Optional.<String>absent(),
-        AnnotationProcessingParams.EMPTY,
         /* exportDeps */ false,
-        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
+        JavacOptions.DEFAULTS
+        );
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -164,10 +164,8 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/base/data.json",
             "android/java/src/com/facebook/common/util/data.json"),
         /* proguargConfig */ Optional.<String>absent(),
-        AnnotationProcessingParams.EMPTY,
         /* exportDeps */ false,
-        JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-        JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
+        JavacOptions.DEFAULTS);
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -826,10 +824,8 @@ public class DefaultJavaLibraryRuleTest {
             ImmutableSet.<String>of("MyClass.java"),
             ImmutableSet.<String>of(),
             Optional.of("MyProguardConfig"),
-            AnnotationProcessingParams.EMPTY,
             /* exportDeps */ false,
-            JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-            JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
+            JavacOptions.DEFAULTS);
       }
     };
 
@@ -884,14 +880,20 @@ public class DefaultJavaLibraryRuleTest {
       List<Step> steps = javaLibrary.buildInternal(buildContext);
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
-      executionContext = EasyMock.createMock(ExecutionContext.class);
-      EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT);
-      EasyMock.replay(executionContext);
+      executionContext = new ExecutionContext(
+          Verbosity.SILENT,
+          new File("."),
+          Optional.<AndroidPlatformTarget>absent(),
+          Optional.<File>absent(),
+          new Ansi(),
+          /* code coverage enabled */ false,
+          /* debug enabled */ true,
+          System.out,
+          System.err);
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,
           /* buildClasspathEntries */ ImmutableSet.<String>of());
 
-      EasyMock.verify(buildContext, executionContext);
       return options;
     }
 
@@ -901,6 +903,9 @@ public class DefaultJavaLibraryRuleTest {
       annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);
 
       String src = "android/java/src/com/facebook/Main.java";
+
+      AnnotationProcessingParams params = annotationProcessingParamsBuilder.build(buildRuleIndex);
+      JavacOptions.Builder options = JavacOptions.builder().setAnnotationProcessingData(params);
 
       return new AndroidLibraryRule(
           new CachingBuildRuleParams(
@@ -912,10 +917,8 @@ public class DefaultJavaLibraryRuleTest {
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<String>of(),
           /* proguardConfig */ Optional.<String>absent(),
-          /* annotationProcessors */ annotationProcessingParamsBuilder.build(buildRuleIndex),
-          /* manifestFile */ Optional.<String>absent(),
-          JavacOptionsUtil.DEFAULT_SOURCE_LEVEL,
-          JavacOptionsUtil.DEFAULT_TARGET_LEVEL);
+          options.build(),
+          /* manifestFile */ Optional.<String>absent());
     }
 
     private JavacInMemoryStep lastJavacCommand(Iterable<Step> commands) {
