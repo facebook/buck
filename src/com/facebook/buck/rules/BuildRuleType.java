@@ -16,45 +16,70 @@
 
 package com.facebook.buck.rules;
 
-public enum BuildRuleType {
-  ANDROID_BINARY,
-  ANDROID_INSTRUMENTATION_APK,
-  ANDROID_LIBRARY,
-  ANDROID_MANIFEST,
-  ANDROID_RESOURCE,
-  APK_GENRULE,
-  EXPORT_FILE,
-  GEN_AIDL,
-  GEN_PARCELABLE,
-  GENRULE,
-  INPUT,
-  JAVA_BINARY,
-  JAVA_LIBRARY,
-  JAVA_TEST,
-  NDK_LIBRARY,
-  PREBUILT_JAR,
-  PREBUILT_NATIVE_LIBRARY,
-  PROJECT_CONFIG,
-  PYTHON_BINARY,
-  PYTHON_LIBRARY,
-  ROBOLECTRIC_TEST,
-  SH_TEST,
-  ;
+import com.google.common.base.Preconditions;
 
+public final class BuildRuleType {
+  // TODO(simons): Move each of these closer to the BuildRules they represent.
+  public static BuildRuleType ANDROID_BINARY = new BuildRuleType("android_binary");
+  public static BuildRuleType ANDROID_INSTRUMENTATION_APK = new BuildRuleType("android_instrumentation_apk");
+  public static BuildRuleType ANDROID_LIBRARY = new BuildRuleType("android_library");
+  public static BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
+  public static BuildRuleType ANDROID_RESOURCE = new BuildRuleType("android_resource");
+  public static BuildRuleType APK_GENRULE = new BuildRuleType("apk_genrule");
+  public static BuildRuleType EXPORT_FILE = new BuildRuleType("export_file");
+  public static BuildRuleType GEN_AIDL = new BuildRuleType("gen_aidl");
+  public static BuildRuleType GEN_PARCELABLE = new BuildRuleType("gen_parcelable");
+  public static BuildRuleType GENRULE = new BuildRuleType("genrule");
+  public static BuildRuleType INPUT = new BuildRuleType("input");
+  public static BuildRuleType JAVA_BINARY = new BuildRuleType("java_binary");
+  public static BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
+  public static BuildRuleType JAVA_TEST = new BuildRuleType("java_test");
+  public static BuildRuleType NDK_LIBRARY = new BuildRuleType("ndk_library");
+  public static BuildRuleType PREBUILT_JAR = new BuildRuleType("prebuilt_jar");
+  public static BuildRuleType PREBUILT_NATIVE_LIBRARY = new BuildRuleType("prebuilt_native_library");
+  public static BuildRuleType PROJECT_CONFIG = new BuildRuleType("project_config");
+  public static BuildRuleType PYTHON_BINARY = new BuildRuleType("python_binary");
+  public static BuildRuleType PYTHON_LIBRARY = new BuildRuleType("python_library");
+  public static BuildRuleType ROBOLECTRIC_TEST = new BuildRuleType("robolectric_test");
+  public static BuildRuleType SH_TEST = new BuildRuleType("sh_test");
+
+  private final String name;
   private final boolean isTestRule;
 
-  private BuildRuleType() {
-    isTestRule = name().endsWith("_TEST");
+  /**
+   * @param name must match the name of a type of build rule used in a build file (eg. "genrule").
+   */
+  public BuildRuleType(String name)  {
+    this.name = Preconditions.checkNotNull(name).toLowerCase();
+    this.isTestRule = name.endsWith("_test");
   }
 
   /**
    * @return the name as displayed in a build file, such as "java_library"
    */
-  public String getDisplayName() {
-    return name().toLowerCase();
+  public String getName() {
+    return name;
   }
 
   public boolean isTestRule() {
     return isTestRule;
+  }
+
+  @Override
+  public int hashCode() {
+    return name.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object that) {
+    if (that == null || !(that instanceof BuildRuleType)) {
+      return false;
+    }
+    return getName().equals(((BuildRuleType) that).getName());
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

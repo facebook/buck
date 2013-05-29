@@ -147,7 +147,7 @@ public class RuleKey implements Comparable<RuleKey> {
   public static Builder builder(final BuildRule rule) {
     Builder result = new Builder(rule.getFullyQualifiedName())
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
-        .set("buck.type", rule.getType().getDisplayName());
+        .set("buck.type", rule.getType().getName());
     if (rule.isPackagingRule()) {
       // If the rule is a packaging rule, use the contents of all of the files in the transitive
       // deps.

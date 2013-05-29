@@ -15,7 +15,7 @@ java_library(
     '//src/com/facebook/buck/util:constants',
   ],
   visibility = [
-    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:types',
   ],
 )
 

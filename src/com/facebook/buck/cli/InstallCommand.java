@@ -23,6 +23,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
@@ -48,8 +49,9 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       PrintStream stdErr,
       Console console,
       ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
+    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -70,6 +72,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
         stdErr,
         console,
         getProjectFilesystem(),
+        getBuildRuleTypes(),
         getArtifactCache());
     int exitCode = buildCommand.runCommandWithOptions(options);
     if (exitCode != 0) {
@@ -84,7 +87,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       console.printFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
-          buildRule.getType().getDisplayName()));
+          buildRule.getType().getName()));
       return 1;
     }
     InstallableBuildRule installableBuildRule = (InstallableBuildRule)buildRule;

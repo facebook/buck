@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -70,8 +71,9 @@ public class PartialGraph {
     List<Map<String, Object>> ruleObjects = BuildFileToJsonParser.getAllRulesInProject(
         projectDirectoryRoot, includes);
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
+    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(filesystem);
-    Parser parser = new Parser(filesystem, artifactCache, buildFiles);
+    Parser parser = new Parser(filesystem, buildRuleTypes, artifactCache, buildFiles);
     List<BuildTarget> targets = parser.parseRawRules(ruleObjects, predicate);
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a

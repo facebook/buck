@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
@@ -79,9 +80,13 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   private static ProjectFilesystemWatcher filesystemWatcher;
 
 
-  public BuildCommand(PrintStream stdOut, PrintStream stdErr, Console console,
-      ProjectFilesystem projectFilesystem, ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, artifactCache);
+  public BuildCommand(PrintStream stdOut,
+      PrintStream stdErr,
+      Console console,
+      ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
+      ArtifactCache artifactCache) {
+    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -126,7 +131,10 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // Create static members on first run, cache parsed build files between runs if daemon.
     if (buildFiles == null) {
       buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
-      parser = new Parser(getProjectFilesystem(), getArtifactCache(), buildFiles);
+      parser = new Parser(getProjectFilesystem(),
+          getBuildRuleTypes(),
+          getArtifactCache(),
+          buildFiles);
     }
 
     try {

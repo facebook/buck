@@ -34,6 +34,7 @@ import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -162,7 +163,7 @@ public class ProjectCommandTest {
     private BuildCommandOptions buildCommandOptions;
 
     ProjectCommandForTest() {
-      super(new CommandRunnerParams(artifactCache, projectFilesystem));
+      super(new CommandRunnerParams(artifactCache, projectFilesystem, new KnownBuildRuleTypes()));
     }
 
     @Override

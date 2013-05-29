@@ -17,9 +17,11 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.rules.BuildRuleBuilder;
+import com.google.common.annotations.Beta;
 
 /** Implementations should be stateless. */
-interface BuildRuleFactory {
+@Beta
+public interface BuildRuleFactory {
 
   public BuildRuleBuilder newInstance(BuildRuleFactoryParams params) throws NoSuchBuildTargetException;
 

@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -108,9 +109,15 @@ public class TargetsCommandTest {
     stdErrStream = new CapturingPrintStream();
     Console console = new Console(stdOutStream, stdErrStream, ansi);
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
+    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
     targetsCommand =
-        new TargetsCommand(stdOutStream, stdErrStream, console, projectFilesystem, artifactCache);
+        new TargetsCommand(stdOutStream,
+            stdErrStream,
+            console,
+            projectFilesystem,
+            buildRuleTypes,
+            artifactCache);
   }
 
   @Test

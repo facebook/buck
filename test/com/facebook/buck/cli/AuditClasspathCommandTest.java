@@ -31,6 +31,7 @@ import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -68,11 +69,13 @@ public class AuditClasspathCommandTest {
     stdErrStream = new CapturingPrintStream();
     Console console = new Console(stdOutStream, stdErrStream, ansi);
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
+    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
     auditClasspathCommand = new AuditClasspathCommand(stdOutStream,
         stdErrStream,
         console,
         projectFilesystem,
+        buildRuleTypes,
         artifactCache);
   }
 
