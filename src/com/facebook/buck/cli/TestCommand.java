@@ -372,7 +372,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // Always run the commands, even if the list of commands as empty. There may be zero commands
       // because the rule is cached, but its results must still be processed.
       ListenableFuture<TestResults> testResults =
-          stepRunner.runStepsAndYieldResult(steps, test.interpretTestResults());
+          stepRunner.runStepsAndYieldResult(steps,
+              test.interpretTestResults(),
+              test.getBuildTarget());
       results.add(testResults);
     }
 

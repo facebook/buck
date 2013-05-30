@@ -135,7 +135,8 @@ public class ExportFileRuleTest {
           }
 
           @Override
-          public <T> ListenableFuture<T> runStepsAndYieldResult(List<Step> steps, Callable<T> interpretResults) {
+          public <T> ListenableFuture<T> runStepsAndYieldResult(
+              List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget) {
             return null;
           }
 

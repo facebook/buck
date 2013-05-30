@@ -86,13 +86,14 @@ public final class DefaultStepRunner implements StepRunner {
 
   @Override
   public <T> ListenableFuture<T> runStepsAndYieldResult(final List<Step> steps,
-                                                        final Callable<T> interpretResults) {
+                                                        final Callable<T> interpretResults,
+                                                        final BuildTarget buildTarget) {
     Callable<T> callable = new Callable<T>() {
 
       @Override
       public T call() throws Exception {
         for (Step command : steps) {
-          runStep(command);
+          runStepForBuildTarget(command, buildTarget);
         }
 
         return interpretResults.call();

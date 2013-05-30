@@ -42,7 +42,7 @@ public interface StepRunner {
    * return a value that represents the output of the commands.
    */
   public <T> ListenableFuture<T> runStepsAndYieldResult(
-      List<Step> steps, Callable<T> interpretResults);
+      List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget);
 
   public ListeningExecutorService getListeningExecutorService();
 }
