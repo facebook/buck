@@ -207,7 +207,7 @@ def robolectric_test(
     srcs=[],
     labels=[],
     resources=[],
-    vm_args=None,
+    vm_args=[],
     source_under_test=[],
     deps=[],
     visibility=[],
