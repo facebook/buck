@@ -59,7 +59,7 @@ public final class JUnitRunner {
   private final File outputDirectory;
   private final List<String> testClassNames;
   private final boolean shouldPrintOutWhenTestsStartAndStop;
-  
+
   public JUnitRunner(
       File outputDirectory,
       List<String> testClassNames,
@@ -98,7 +98,7 @@ public final class JUnitRunner {
               stderr.flush();
             }
 
-            TestResult result = TestResult.runTestMethod(testClass, method.getName(), testRunner); 
+            TestResult result = TestResult.runTestMethod(testClass, method.getName(), testRunner);
             results.add(result);
 
             if (shouldPrintOutWhenTestsStartAndStop) {

@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -225,8 +226,12 @@ public class AndroidPlatformTarget {
 
       if (directories.length == 0) {
         throw new HumanReadableException(
-            "%s was empty, but should have contained a subdirectory with build tools",
-            buildToolsDir.getAbsolutePath());
+          Joiner.on(System.getProperty("line.separator")).join(
+            "%s was empty, but should have contained a subdirectory with build tools.",
+            "Install them using the Android SDK Manager (%s)."),
+          buildToolsDir.getAbsolutePath(),
+          new File(androidSdkDir, Joiner.on(File.separator).join("tools", "android"))
+        );
       } else {
         File newestBuildToolsDir = pickNewestBuildToolsDir(ImmutableSet.copyOf(directories));
         buildToolsPath = "build-tools/" + newestBuildToolsDir.getName();
