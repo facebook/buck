@@ -151,14 +151,16 @@ public class Project {
 
     // Write out the .idea/compiler.xml file (the .idea/ directory is guaranteed to exist).
     CompilerXml compilerXml = new CompilerXml(modules);
-    File compilerXmlFile = new File(".idea/compiler.xml");
+    final String pathToCompilerXml = ".idea/compiler.xml";
+    File compilerXmlFile = projectFilesystem.getFileForRelativePath(pathToCompilerXml);
     if (compilerXml.write(compilerXmlFile)) {
-      modifiedFiles.add(compilerXmlFile.getPath());
+      modifiedFiles.add(pathToCompilerXml);
     }
 
     // If any files have been modified by `buck project`, then list them for the user.
     if (!modifiedFiles.isEmpty()) {
-      stdOut.printf("MODIFIED FILES:\n%s\n", Joiner.on('\n').join(modifiedFiles));
+      SortedSet<String> modifiedFilesInSortedForder = Sets.newTreeSet(modifiedFiles);
+      stdOut.printf("MODIFIED FILES:\n%s\n", Joiner.on('\n').join(modifiedFilesInSortedForder));
     }
 
     return 0;
