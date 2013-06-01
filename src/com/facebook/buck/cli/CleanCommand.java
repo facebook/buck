@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.Project;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Joiner;
 
 import java.io.IOException;
 
@@ -34,8 +36,26 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
 
   @Override
   int runCommandWithOptions(CleanCommandOptions options) throws IOException {
+    if (!options.getArguments().isEmpty()) {
+      getStdErr().printf("Unrecognized argument%s to buck clean: %s\n",
+          options.getArguments().size() == 1 ? "" : "s",
+          Joiner.on(' ').join(options.getArguments()));
+      return 1;
+    }
+
     ProcessExecutor processExecutor = new ProcessExecutor(console);
-    MoreFiles.rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY, processExecutor);
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+
+    if (options.isCleanBuckProjectFiles()) {
+      // Delete directories that were created for the purpose of `buck project`.
+      // TODO(mbolin): Unify these two directories under a single buck-ide directory,
+      // which is distinct from the buck-out directory.
+      projectFilesystem.rmdir(Project.ANDROID_GEN_DIR, processExecutor);
+      projectFilesystem.rmdir(BuckConstant.ANNOTATION_DIR, processExecutor);
+    } else {
+      projectFilesystem.rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY, processExecutor);
+    }
+
     return 0;
   }
 

@@ -22,24 +22,16 @@ public class BuckConstant {
   /**
    * The directory where Buck will generate its files.
    * <p>
-   * Ultimately, the fields {@link #ANDROID_GEN_DIR}, {@link #GEN_DIR}, {@link #BIN_DIR},
+   * Ultimately, the fields {@link #GEN_DIR}, {@link #BIN_DIR},
    * {@link #ANNOTATION_DIR} will be hardcoded subdirectories of this directory.
    */
   public static final String BUCK_OUTPUT_DIRECTORY =
       System.getProperty("buck.buck_output_dir", "buck-out");
 
-  // TODO(mbolin): The constants ANDROID_GEN_DIR, GEN_DIR, and BIN_DIR should be
+  // TODO(mbolin): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
   // com.facebook.buck.shell package, but these values should be injected into shell commands rather
   // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
-
-  /**
-   * This directory is analogous to the gen/ directory Ant would produce when building an Android
-   * application. It contains files such as R.java, BuildConfig.java, and Manifest.java. It is
-   * distinct from the "gen/" directory so that Buck can be used alongside Ant, if desired.
-   */
-  public static final String ANDROID_GEN_DIR =
-      System.getProperty("buck.buck_android_dir", BUCK_OUTPUT_DIRECTORY + "/android");
 
   public static final String GEN_DIR =
       System.getProperty("buck.buck_gen_dir", BUCK_OUTPUT_DIRECTORY + "/gen");

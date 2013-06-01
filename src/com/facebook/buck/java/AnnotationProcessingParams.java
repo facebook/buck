@@ -68,11 +68,11 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
     this.processOnly = processOnly;
   }
 
-  static String getGeneratedSrcFolder(BuildTarget buildTarget) {
+  private String getGeneratedSrcFolder() {
     return String.format("%s/%s__%s_gen__",
         BuckConstant.ANNOTATION_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        ownerTarget.getBasePathWithSlash(),
+        ownerTarget.getShortName());
   }
 
   @Override
@@ -104,7 +104,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   @Nullable
   public String getGeneratedSourceFolderName() {
     if ((ownerTarget != null) && !isEmpty()) {
-      return getGeneratedSrcFolder(ownerTarget);
+      return getGeneratedSrcFolder();
     } else {
       return null;
     }
