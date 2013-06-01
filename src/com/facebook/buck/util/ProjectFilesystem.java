@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
@@ -95,5 +96,23 @@ public class ProjectFilesystem {
     // TODO(mbolin): Reimplement this so it no longer requires a processExecutor using the
     // SimpleFileVisitor introduced in Java 7.
     MoreFiles.rmdir(path, processExecutor);
+  }
+
+  public void createParentDirs(File file) throws IOException {
+    Files.createParentDirs(file);
+  }
+
+  public void writeLinesToPath(Iterable<String> lines, String pathToFile)
+      throws IOException {
+    MoreFiles.writeLinesToFile(lines, pathToFile);
+  }
+
+  public Optional<File> getFileIfExists(String path) {
+    File file = new File(path);
+    if (file.exists()) {
+      return Optional.of(file);
+    } else {
+      return Optional.absent();
+    }
   }
 }
