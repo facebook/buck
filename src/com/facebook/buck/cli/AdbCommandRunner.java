@@ -22,6 +22,7 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.TriState;
 import com.google.common.annotations.VisibleForTesting;
@@ -31,7 +32,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -58,13 +58,11 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   }
 
   @VisibleForTesting
-  protected AdbCommandRunner(PrintStream stdOut,
-      PrintStream stdErr,
-      Console console,
+  protected AdbCommandRunner(Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   /**

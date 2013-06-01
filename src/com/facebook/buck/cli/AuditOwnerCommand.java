@@ -24,7 +24,9 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
@@ -70,13 +72,11 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   }
 
   @VisibleForTesting
-  AuditOwnerCommand(PrintStream stdOut,
-                    PrintStream stdErr,
-                    Console console,
+  AuditOwnerCommand(Console console,
                     ProjectFilesystem projectFilesystem,
                     KnownBuildRuleTypes buildRuleTypes,
                     ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -211,6 +211,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
    */
   private void printFullReport(OwnersReport report) {
     PrintStream out = console.getStdOut();
+    Ansi ansi = console.getAnsi();
     if (report.owners.isEmpty()) {
       out.println(ansi.asErrorText("No owners found"));
     } else {

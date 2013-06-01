@@ -16,9 +16,10 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.android.NoAndroidSdkException;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -30,35 +31,29 @@ public class ExecutionContext {
 
   private final Verbosity verbosity;
   private final File projectDirectoryRoot;
+  private final Console console;
   private final Optional<AndroidPlatformTarget> androidPlatformTarget;
   private final Optional<File> ndkRoot;
-  private final Ansi ansi;
   public final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
-  private final PrintStream stdout;
-  private final PrintStream stderr;
   private final ProcessExecutor processExecutor;
 
   public ExecutionContext(
       Verbosity verbosity,
       File directory,
+      Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<File> ndkRoot,
-      Ansi ansi,
       boolean isCodeCoverageEnabled,
-      boolean isDebugEnabled,
-      PrintStream stdout,
-      PrintStream stderr) {
+      boolean isDebugEnabled) {
     this.verbosity = Preconditions.checkNotNull(verbosity);
     this.projectDirectoryRoot = Preconditions.checkNotNull(directory);
+    this.console = Preconditions.checkNotNull(console);
     this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
     this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
-    this.ansi = Preconditions.checkNotNull(ansi);
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
-    this.stdout = Preconditions.checkNotNull(stdout);
-    this.stderr = Preconditions.checkNotNull(stderr);
-    this.processExecutor = new ProcessExecutor(stdout, stderr, ansi);
+    this.processExecutor = new ProcessExecutor(console);
   }
 
   /**
@@ -68,13 +63,11 @@ public class ExecutionContext {
   public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
     return new ExecutionContext(verbosity,
         this.projectDirectoryRoot,
+        new Console(newStdout, newStderr, console.getAnsi()),
         this.androidPlatformTarget,
         this.ndkRoot,
-        this.ansi,
         this.isCodeCoverageEnabled,
-        this.isDebugEnabled,
-        newStdout,
-        newStderr);
+        this.isDebugEnabled);
   }
 
   public Verbosity getVerbosity() {
@@ -90,15 +83,15 @@ public class ExecutionContext {
   }
 
   public PrintStream getStdErr() {
-    return stderr;
+    return console.getStdErr();
   }
 
   public PrintStream getStdOut() {
-    return stdout;
+    return console.getStdOut();
   }
 
   public Ansi getAnsi() {
-    return ansi;
+    return console.getAnsi();
   }
 
   /**

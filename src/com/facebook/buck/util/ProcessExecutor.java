@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 
 import java.io.PrintStream;
 
@@ -35,10 +36,11 @@ public class ProcessExecutor {
    * Creates a new {@link ProcessExecutor} with the specified parameters used for writing the output
    * of the process.
    */
-  public ProcessExecutor(PrintStream stdOutStream, PrintStream stdErrStream, Ansi ansi) {
-    this.stdOutStream = stdOutStream;
-    this.stdErrStream = stdErrStream;
-    this.ansi = ansi;
+  public ProcessExecutor(Console console) {
+    Preconditions.checkNotNull(console);
+    this.stdOutStream = console.getStdOut();
+    this.stdErrStream = console.getStdErr();
+    this.ansi = console.getAnsi();
   }
 
   /**

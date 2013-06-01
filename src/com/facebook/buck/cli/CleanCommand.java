@@ -34,8 +34,7 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
 
   @Override
   int runCommandWithOptions(CleanCommandOptions options) throws IOException {
-    ProcessExecutor processExecutor = new ProcessExecutor(
-        this.stdOut, this.stdErr, this.ansi);
+    ProcessExecutor processExecutor = new ProcessExecutor(console);
     MoreFiles.rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY, processExecutor);
     return 0;
   }

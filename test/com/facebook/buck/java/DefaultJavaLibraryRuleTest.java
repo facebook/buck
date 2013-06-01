@@ -45,6 +45,7 @@ import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -883,13 +884,11 @@ public class DefaultJavaLibraryRuleTest {
       executionContext = new ExecutionContext(
           Verbosity.SILENT,
           new File("."),
+          new Console(System.out, System.err, Ansi.withoutTty()),
           Optional.<AndroidPlatformTarget>absent(),
           Optional.<File>absent(),
-          new Ansi(),
           /* code coverage enabled */ false,
-          /* debug enabled */ true,
-          System.out,
-          System.err);
+          /* debug enabled */ true);
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,
           /* buildClasspathEntries */ ImmutableSet.<String>of());

@@ -18,6 +18,7 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -46,13 +47,11 @@ public class DefaultStepRunnerTest {
     ExecutionContext context = new ExecutionContext(
         Verbosity.SILENT,
         new File("."),
+        new Console(System.out, System.err, Ansi.withoutTty()),
         Optional.<AndroidPlatformTarget>absent(),
         Optional.<File>absent(),
-        Ansi.withoutTty(),
         false,
-        false,
-        System.out,
-        System.err);
+        false);
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
         .setDaemon(true)
         .setNameFormat(getClass().getSimpleName() + "-%d")

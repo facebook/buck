@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -48,13 +49,11 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
   }
 
   @VisibleForTesting
-  protected UninstallSupportCommandRunner(PrintStream stdOut,
-      PrintStream stdErr,
-      Console console,
+  protected UninstallSupportCommandRunner(Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   /**

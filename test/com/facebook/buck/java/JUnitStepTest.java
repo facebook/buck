@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -121,13 +122,11 @@ public class JUnitStepTest {
     ExecutionContext executionContext = new ExecutionContext(
         Verbosity.ALL,
         new File("."),
+        new Console(stdout, stderr, Ansi.withoutTty()),
         Optional.<AndroidPlatformTarget>absent(),
         Optional.<File>absent(),
-        Ansi.withoutTty(),
         /* coverageEnabled */ false,
-        /* debugEnabled */ true,
-        stdout,
-        stderr);
+        /* debugEnabled */ true);
 
     EasyMock.replay(stdout);
 

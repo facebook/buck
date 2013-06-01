@@ -16,24 +16,24 @@
 
 package com.facebook.buck.command;
 
+import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.Builder;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.rules.JavaPackageFinder;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -77,26 +77,22 @@ public class Build {
       Verbosity verbosity,
       ListeningExecutorService listeningExecutorService,
       JavaPackageFinder javaPackageFinder,
-      Ansi ansi,
-      PrintStream stdOut,
-      PrintStream stdErr,
+      Console console,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
       BuildDependencies buildDependencies) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
-        dependencyGraph, androidSdkDir, stdErr);
+        dependencyGraph, androidSdkDir, console.getStdErr());
     this.executionContext = new ExecutionContext(
         verbosity,
         projectDirectoryRoot,
+        console,
         androidPlatformTarget,
         ndkRoot,
-        ansi,
         isCodeCoverageEnabled,
-        isDebugEnabled,
-        stdOut,
-        stdErr);
+        isDebugEnabled);
     this.stepRunner = new DefaultStepRunner(executionContext, listeningExecutorService);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);

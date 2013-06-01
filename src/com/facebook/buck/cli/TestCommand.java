@@ -39,6 +39,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -92,9 +93,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     }
 
-    BuildCommand buildCommand = new BuildCommand(stdOut,
-        stdErr,
-        console,
+    BuildCommand buildCommand = new BuildCommand(console,
         getProjectFilesystem(),
         getBuildRuleTypes(),
         getArtifactCache());
@@ -352,7 +351,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     } else {
       targetsBeingTested = Joiner.on(' ').join(options.getArgumentsFormattedAsBuildTargets());
     }
-    stdErr.printf("TESTING %s\n", targetsBeingTested);
+    getStdErr().printf("TESTING %s\n", targetsBeingTested);
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
@@ -384,10 +383,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     try {
       completedResults = uberFuture.get();
     } catch (InterruptedException e) {
-      e.printStackTrace(stdErr);
+      e.printStackTrace(getStdErr());
       return 1;
     } catch (ExecutionException e) {
-      e.printStackTrace(stdErr);
+      e.printStackTrace(getStdErr());
       return 1;
     }
 
@@ -399,21 +398,22 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Print whether each test succeeded or failed.
     boolean isAllTestsPassed = true;
     int numFailures = 0;
+    Ansi ansi = console.getAnsi();
     for (TestResults summary : completedResults) {
       if (!summary.isSuccess()) {
         isAllTestsPassed = false;
         numFailures += summary.getFailureCount();
       }
-      stdErr.print(summary.getSummaryWithFailureDetails(ansi));
+      getStdErr().print(summary.getSummaryWithFailureDetails(ansi));
     }
 
     // Print the summary of the test results.
     if (completedResults.isEmpty()) {
-      ansi.printlnHighlightedFailureText(stdErr, "NO TESTS RAN");
+      ansi.printlnHighlightedFailureText(getStdErr(), "NO TESTS RAN");
     } else if (isAllTestsPassed) {
-      ansi.printlnHighlightedSuccessText(stdErr, "TESTS PASSED");
+      ansi.printlnHighlightedSuccessText(getStdErr(), "TESTS PASSED");
     } else {
-      ansi.printlnHighlightedFailureText(stdErr,
+      ansi.printlnHighlightedFailureText(getStdErr(),
           String.format("TESTS FAILED: %d Failures", numFailures));
     }
 

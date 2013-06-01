@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -90,10 +91,9 @@ public final class Main {
     if (command.isPresent()) {
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
+      Console console = new Console(stdOut, stdErr, buckConfig.getAnsi());
       CommandRunnerParams params = new CommandRunnerParams(
-          buckConfig.getAnsi(),
-          this.stdOut,
-          this.stdErr,
+          console,
           buckConfig.getArtifactCache(),
           projectFilesystem,
           new KnownBuildRuleTypes());

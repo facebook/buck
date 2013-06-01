@@ -29,6 +29,7 @@ import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.Verbosity;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -41,7 +42,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
@@ -80,13 +80,12 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   private static ProjectFilesystemWatcher filesystemWatcher;
 
 
-  public BuildCommand(PrintStream stdOut,
-      PrintStream stdErr,
+  public BuildCommand(
       Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -102,7 +101,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     } finally {
       tracer.stop(TRACER_THRESHOLD);
       if (options.getVerbosity().shouldPrintCommand()) {
-        Tracer.clearAndPrintCurrentTrace(stdErr);
+        Tracer.clearAndPrintCurrentTrace(getStdErr());
       }
     }
   }
@@ -163,7 +162,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     this.build = options.createBuild(dependencyGraph,
         getProjectFilesystem().getProjectRoot(),
         console);
-    stdErr.printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
+    getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
 
     if (exitCode != 0) {
@@ -171,7 +170,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     Tracer.addComment("Build targets built");
-    ansi.printlnHighlightedSuccessText(stdErr, "BUILD SUCCESSFUL");
+    console.getAnsi().printlnHighlightedSuccessText(getStdErr(), "BUILD SUCCESSFUL");
     return 0;
   }
 

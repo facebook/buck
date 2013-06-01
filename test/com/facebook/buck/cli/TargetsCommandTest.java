@@ -45,6 +45,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -112,9 +113,7 @@ public class TargetsCommandTest {
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
     targetsCommand =
-        new TargetsCommand(stdOutStream,
-            stdErrStream,
-            console,
+        new TargetsCommand(console,
             projectFilesystem,
             buildRuleTypes,
             artifactCache);

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
@@ -30,38 +31,36 @@ import java.io.PrintStream;
  */
 class CommandRunnerParams {
 
-  private final Ansi ansi;
-  private final PrintStream stdout;
-  private final PrintStream stderr;
+  private final Console console;
   private final ArtifactCache artifactCache;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
 
   public CommandRunnerParams(
-      Ansi ansi,
-      PrintStream stdout,
-      PrintStream stderr,
+      Console console,
       ArtifactCache artifactCache,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes) {
-    this.ansi = Preconditions.checkNotNull(ansi);
-    this.stdout = Preconditions.checkNotNull(stdout);
-    this.stderr = Preconditions.checkNotNull(stderr);
+    this.console = Preconditions.checkNotNull(console);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
   }
 
+  public Console getConsole() {
+    return console;
+  }
+
   public Ansi getAnsi() {
-    return ansi;
+    return console.getAnsi();
   }
 
   public PrintStream getStdout() {
-    return stdout;
+    return console.getStdOut();
   }
 
   public PrintStream getStderr() {
-    return stderr;
+    return console.getStdErr();
   }
 
   public ArtifactCache getArtifactCache() {
