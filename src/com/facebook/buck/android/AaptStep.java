@@ -16,8 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.step.ExecutionContext;
+import com.android.sdklib.build.ApkBuilder;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -26,6 +27,11 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 
+/**
+ * Runs the Android Asset Packaging Tool ({@code aapt}), which creates an {@code .apk} file.
+ * Frequently, the {@code pathsToRawFilesDirs} excludes {@code classes.dex}, as {@code classes.dex}
+ * will be added separately to the final APK via {@link ApkBuilder}.
+ */
 public class AaptStep extends ShellStep {
 
   private final String androidManifest;
