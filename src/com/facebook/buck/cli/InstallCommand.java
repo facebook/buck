@@ -26,6 +26,7 @@ import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,13 +46,12 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     super(params);
   }
 
-  protected InstallCommand(PrintStream stdOut,
-      PrintStream stdErr,
+  protected InstallCommand(
       Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -63,14 +63,12 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
   int runCommandWithOptions(InstallCommandOptions options) throws IOException {
     // Make sure that only one build target is specified.
     if (options.getArguments().size() != 1) {
-      stdErr.println("Must specify exactly one android_binary() or apk_genrule() rule.");
+      getStdErr().println("Must specify exactly one android_binary() or apk_genrule() rule.");
       return 1;
     }
 
     // Build the specified target.
-    BuildCommand buildCommand = new BuildCommand(stdOut,
-        stdErr,
-        console,
+    BuildCommand buildCommand = new BuildCommand(console,
         getProjectFilesystem(),
         getBuildRuleTypes(),
         getArtifactCache());

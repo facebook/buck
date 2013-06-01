@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.io.ByteStreams;
 
@@ -86,13 +87,11 @@ public class InstallCommandTest {
   private InstallCommand createInstallCommand() {
     OutputStream nullOut = ByteStreams.nullOutputStream();
     PrintStream out = new PrintStream(nullOut);
-    Console console = new Console(out, out, new Ansi());
+    Console console = new Console(out, out, Ansi.withoutTty());
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    return new InstallCommand(console.getStdOut(),
-        console.getStdErr(),
-        console,
+    return new InstallCommand(console,
         filesystem,
         buildRuleTypes,
         artifactCache);

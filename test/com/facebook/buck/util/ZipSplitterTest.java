@@ -108,7 +108,8 @@ public class ZipSplitterTest {
   @After
   public void tearDown() throws IOException {
     if (privateDir != null) {
-      ProcessExecutor processExecutor = new ProcessExecutor(System.out, System.err, new Ansi());
+      ProcessExecutor processExecutor = new ProcessExecutor(
+          new Console(System.out, System.err, Ansi.withoutTty()));
       MoreFiles.rmdir(privateDir.getAbsolutePath(), processExecutor);
     }
   }

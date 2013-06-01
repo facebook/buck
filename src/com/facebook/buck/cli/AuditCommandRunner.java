@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class AuditCommandRunner implements CommandRunner {
   private final Console console;
 
   public AuditCommandRunner(CommandRunnerParams params) {
-    console = new Console(params.getStdout(), params.getStderr(), params.getAnsi());
+    console = params.getConsole();
     setAuditCommands(params);
   }
 

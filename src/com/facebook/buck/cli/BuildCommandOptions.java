@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
@@ -129,9 +130,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         getVerbosity(),
         getListeningExecutorService(),
         getBuckConfig().createDefaultJavaPackageFinder(),
-        console.getAnsi(),
-        console.getStdOut(),
-        console.getStdErr(),
+        console,
         isCodeCoverageEnabled(),
         isDebugEnabled(),
         getBuildDependencies());

@@ -49,7 +49,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
 
     // Make sure that only one build target is specified.
     if (options.getArguments().size() != 1) {
-      stdErr.println("Must specify exactly one android_binary() rule.");
+      getStdErr().println("Must specify exactly one android_binary() rule.");
       return 1;
     }
 
@@ -89,6 +89,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
     ExecutionContext context = options.createExecutionContext(
         this,
         getProjectFilesystem().getProjectRoot(),
+        console,
         dependencyGraph);
 
     // Find application package name from manifest and uninstall from matching devices.

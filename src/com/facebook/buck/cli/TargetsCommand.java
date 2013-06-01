@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,7 +45,6 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Iterator;
@@ -62,13 +62,11 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   }
 
   @VisibleForTesting
-  TargetsCommand(PrintStream stdOut,
-      PrintStream stdErr,
-      Console console,
+  TargetsCommand(Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -146,7 +144,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           output += " " + outputFile.getPath();
         }
       }
-      stdOut.println(output);
+      getStdOut().println(output);
     }
   }
 
@@ -187,7 +185,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       Iterable<String> defaultIncludes) throws IOException {
 
     // Print the JSON representation of the build rule for the specified target(s).
-    stdOut.println("[");
+    getStdOut().println("[");
 
     ObjectMapper mapper = new ObjectMapper();
     Iterator<String> keySetIterator = buildIndex.keySet().iterator();
@@ -235,10 +233,10 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       if (keySetIterator.hasNext()) {
         output += ",";
       }
-      stdOut.println(output);
+      getStdOut().println(output);
     }
 
-    stdOut.println("]");
+    getStdOut().println("]");
   }
 
   /**
@@ -265,7 +263,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     for (String resolvedAlias : resolvedAliases) {
-      stdOut.println(resolvedAlias);
+      getStdOut().println(resolvedAlias);
     }
 
     return 0;

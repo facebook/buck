@@ -35,6 +35,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -71,9 +72,7 @@ public class AuditClasspathCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    auditClasspathCommand = new AuditClasspathCommand(stdOutStream,
-        stdErrStream,
-        console,
+    auditClasspathCommand = new AuditClasspathCommand(console,
         projectFilesystem,
         buildRuleTypes,
         artifactCache);

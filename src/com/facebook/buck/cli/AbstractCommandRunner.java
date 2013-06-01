@@ -24,7 +24,7 @@ import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -38,36 +38,23 @@ import java.util.List;
 
 abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implements CommandRunner {
 
-  protected final PrintStream stdOut;
-  protected final PrintStream stdErr;
-  protected final Ansi ansi;
   protected final Console console;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ArtifactCache artifactCache;
 
   protected AbstractCommandRunner(CommandRunnerParams commandRunnerParams) {
-    this(commandRunnerParams.getStdout(),
-        commandRunnerParams.getStderr(),
-        new Console(
-            commandRunnerParams.getStdout(),
-            commandRunnerParams.getStderr(),
-            commandRunnerParams.getAnsi()),
+    this(commandRunnerParams.getConsole(),
         commandRunnerParams.getProjectFilesystem(),
         commandRunnerParams.getBuildRuleTypes(),
         commandRunnerParams.getArtifactCache());
   }
 
-  protected AbstractCommandRunner(PrintStream stdOut,
-      PrintStream stdErr,
-      Console console,
+  protected AbstractCommandRunner(Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
-    this.stdOut = Preconditions.checkNotNull(stdOut);
-    this.stdErr = Preconditions.checkNotNull(stdErr);
     this.console = Preconditions.checkNotNull(console);
-    this.ansi = Preconditions.checkNotNull(console.getAnsi());
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
@@ -111,9 +98,9 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   public final void printUsage(CmdLineParser parser) {
     String intro = getUsageIntro();
     if (intro != null) {
-      System.err.println(intro);
+      getStdErr().println(intro);
     }
-    parser.printUsage(System.err);
+    parser.printUsage(getStdErr());
   }
 
   /**
@@ -169,6 +156,14 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   public ArtifactCache getArtifactCache() {
     return artifactCache;
+  }
+
+  protected PrintStream getStdOut() {
+    return console.getStdOut();
+  }
+
+  protected PrintStream getStdErr() {
+    return console.getStdErr();
   }
 
   private static class ParserAndOptions<T> {

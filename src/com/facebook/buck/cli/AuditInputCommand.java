@@ -26,13 +26,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,13 +43,11 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   }
 
   @VisibleForTesting
-  AuditInputCommand(PrintStream stdOut,
-                    PrintStream stdErr,
-                    Console console,
+  AuditInputCommand(Console console,
                     ProjectFilesystem projectFilesystem,
                     KnownBuildRuleTypes buildRuleTypes,
                     ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -105,7 +103,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
         for (InputRule input : rule.getInputs()) {
           boolean isNewInput = inputs.add(input);
           if (isNewInput) {
-            stdOut.println(input.getFullyQualifiedName());
+            getStdOut().println(input.getFullyQualifiedName());
           }
         }
       }

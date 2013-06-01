@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -35,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -47,13 +47,11 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   }
 
   @VisibleForTesting
-  AuditClasspathCommand(PrintStream stdOut,
-                        PrintStream stdErr,
-                        Console console,
+  AuditClasspathCommand(Console console,
                         ProjectFilesystem projectFilesystem,
                         KnownBuildRuleTypes buildRuleTypes,
                         ArtifactCache artifactCache) {
-    super(stdOut, stdErr, console, projectFilesystem, buildRuleTypes, artifactCache);
+    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override
@@ -111,7 +109,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
             return "\"" + buildRule.getFullyQualifiedName() + "\"";
           }
         },
-        stdOut);
+        getStdOut());
     try {
       dot.writeOutput();
     } catch (IOException e) {
@@ -138,7 +136,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     }
 
     for (String path : classpathEntries) {
-      stdOut.println(path);
+      getStdOut().println(path);
     }
 
     return 0;

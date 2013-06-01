@@ -26,6 +26,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -77,7 +78,7 @@ public class ShellStepTest {
     EasyMock.reset(context);
 
     Ansi ansi = Ansi.withoutTty();
-    ProcessExecutor processExecutor = new ProcessExecutor(stdout, stderr, ansi);
+    ProcessExecutor processExecutor = new ProcessExecutor(new Console(stdout, stderr, ansi));
 
     expect(context.getStdErr()).andReturn(stderr).anyTimes();
     expect(context.getStdOut()).andReturn(stdout).anyTimes();

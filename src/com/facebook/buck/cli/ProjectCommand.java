@@ -73,13 +73,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ExecutionContext executionContext = new ExecutionContext(
         options.getVerbosity(),
         getProjectFilesystem().getProjectRoot(),
-        options.findAndroidPlatformTarget(partialGraph.getDependencyGraph(), stdErr),
+        console,
+        options.findAndroidPlatformTarget(partialGraph.getDependencyGraph(), getStdErr()),
         options.findAndroidNdkDir(),
-        ansi,
-        false /* isCodeCoverageEnabled */,
-        false /* isDebugEnabled */,
-        stdOut,
-        stdErr);
+        /* isCodeCoverageEnabled */ false,
+        /* isDebugEnabled */ false);
 
     Project project = new Project(partialGraph,
         options.getBasePathToAliasMap(),
@@ -100,8 +98,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       // Build initial targets.
       if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
-        BuildCommand buildCommand = new BuildCommand(stdOut,
-            stdErr,
+        BuildCommand buildCommand = new BuildCommand(
             console,
             getProjectFilesystem(),
             getBuildRuleTypes(),
@@ -117,7 +114,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     } finally {
       // Either leave project.json around for debugging or delete it on exit.
       if (options.getVerbosity().shouldPrintOutput()) {
-        stdErr.printf("project.json was written to %s", tempFile.getAbsolutePath());
+        getStdErr().printf("project.json was written to %s", tempFile.getAbsolutePath());
       } else {
         tempFile.deleteOnExit();
       }

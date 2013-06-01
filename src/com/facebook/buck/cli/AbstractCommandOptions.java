@@ -21,6 +21,7 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Console;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -165,17 +166,16 @@ public abstract class AbstractCommandOptions {
   protected ExecutionContext createExecutionContext(
       AbstractCommandRunner<?> commandRunner,
       File projectDirectoryRoot,
+      Console console,
       DependencyGraph dependencyGraph) {
     return new ExecutionContext(
         getVerbosity(),
         projectDirectoryRoot,
-        findAndroidPlatformTarget(dependencyGraph, commandRunner.stdErr),
+        console,
+        findAndroidPlatformTarget(dependencyGraph, commandRunner.getStdErr()),
         findAndroidNdkDir(),
-        commandRunner.ansi,
-        false /* isCodeCoverageEnabled */,
-        false /* isDebugEnabled */,
-        commandRunner.stdOut,
-        commandRunner.stdErr);
+        /* isCodeCoverageEnabled */ false,
+        /* isDebugEnabled */ false);
   }
 
   protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(

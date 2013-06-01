@@ -14,35 +14,34 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.util;
 
-import com.facebook.buck.util.Ansi;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import java.io.PrintStream;
 
-class Console {
+public class Console {
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
   private final Ansi ansi;
 
-  Console(PrintStream stdOut, PrintStream stdErr, Ansi ansi) {
+  public Console(PrintStream stdOut, PrintStream stdErr, Ansi ansi) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
     this.ansi = Preconditions.checkNotNull(ansi);
   }
 
-  Ansi getAnsi() {
+  public Ansi getAnsi() {
     return ansi;
   }
 
-  PrintStream getStdOut() {
+  public PrintStream getStdOut() {
     return stdOut;
   }
 
-  PrintStream getStdErr() {
+  public PrintStream getStdErr() {
     return stdErr;
   }
 
@@ -50,23 +49,23 @@ class Console {
    * @param successMessage single line of text without a trailing newline. If stdErr is attached to
    *     a terminal, then this will append an ANSI reset escape sequence followed by a newline.
    */
-  void printSuccess(String successMessage) {
+  public void printSuccess(String successMessage) {
     Preconditions.checkArgument(!successMessage.endsWith("\n"),
         "Trailing newline will be added by this method");
     ansi.printHighlightedSuccessText(stdErr, successMessage);
     stdErr.print('\n');
   }
 
-  void printFailureWithStacktrace(Throwable t) {
+  public void printFailureWithStacktrace(Throwable t) {
     t.printStackTrace(stdErr);
     printFailure("Unexpected internal error (this is probably a buck bug).");
   }
 
-  void printFailureWithoutStacktrace(Throwable t) {
+  public void printFailureWithoutStacktrace(Throwable t) {
     printFailure(Throwables.getRootCause(t).getMessage());
   }
 
-  void printFailure(String failureMessage) {
+  public void printFailure(String failureMessage) {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
 }
