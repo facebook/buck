@@ -87,4 +87,13 @@ public class ProjectFilesystem {
   public boolean isDirectory(Path child, LinkOption linkOption) {
     return java.nio.file.Files.isDirectory(child, linkOption);
   }
+
+  /**
+   * Recursively delete everything under the specified path.
+   */
+  public void rmdir(String path, ProcessExecutor processExecutor) throws IOException {
+    // TODO(mbolin): Reimplement this so it no longer requires a processExecutor using the
+    // SimpleFileVisitor introduced in Java 7.
+    MoreFiles.rmdir(path, processExecutor);
+  }
 }

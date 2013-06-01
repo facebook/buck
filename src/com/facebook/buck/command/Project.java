@@ -86,6 +86,17 @@ import javax.annotation.Nullable;
 public class Project {
 
   /**
+   * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
+   * Android module. It contains files such as R.java, BuildConfig.java, and Manifest.java.
+   * <p>
+   * By default, IntelliJ generates its gen/ directories in our source tree, which would likely
+   * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
+   * users to target
+   */
+  public static final String ANDROID_GEN_DIR =
+      System.getProperty("buck.buck_android_dir", BuckConstant.BUCK_OUTPUT_DIRECTORY + "/android");
+
+  /**
    * Path to the intellij.py script that is used to transform the JSON written by this file.
    */
   private static final String PATH_TO_INTELLIJ_PY = System.getProperty(
@@ -497,7 +508,7 @@ public class Project {
     return
         "/"
         + Paths.computeRelativePath(basePathOfModuleWithSlash, "")
-        + BuckConstant.ANDROID_GEN_DIR
+        + ANDROID_GEN_DIR
         + "/"
         + Paths.computeRelativePath("", basePathOfModuleWithSlash)
         + "gen";
