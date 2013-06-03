@@ -59,11 +59,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /**
  * <pre>
@@ -79,8 +77,6 @@ import java.util.logging.Logger;
  */
 public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule {
-
-  private final static Logger logger = Logger.getLogger(AndroidBinaryRule.class.getName());
 
   /**
    * The largest file size Froyo will deflate.
@@ -285,10 +281,6 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies(
         context.getDependencyGraph());
 
-    // TODO(mbolin): Introduce new logic to determine whether all of the resources are cached.
-    // For now, we assume that they are not cached and forego a potential optimization.
-    boolean resourcesCached = false;
-
     Set<String> resDirectories = transitiveDependencies.resDirectories;
     Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
 
@@ -409,17 +401,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     commands.add(new MkdirStep(outputGenDirectory));
 
-    boolean canSkipAapt = resourcesCached;
-    if (canSkipAapt) {
-      try {
-        canSkipAapt = ruleInputsCached(context, logger);
-      } catch (IOException e) {
-        // If we hit an IO exception while checking if the inputs to this rule were cached eat it
-        // and treat it as a cache miss.
-        canSkipAapt = false;
-      }
-    }
-    if (!canSkipAapt) {
+    if (!canSkipAaptResourcePackaging()) {
       AaptStep aaptCommand = new AaptStep(
           getAndroidManifestXml(),
           resDirectories,
@@ -544,6 +526,13 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   protected ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal(
       DependencyGraph graph) {
     return UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
+  }
+
+  private boolean canSkipAaptResourcePackaging() {
+    // TODO(mbolin): Create a RuleKey for resources only and use it to determine the value of this
+    // boolean. Whether the resources have not changed since the last build run is irrelevant
+    // because this AndroidBinary may not have been written as part of the last build run.
+    return false;
   }
 
   /**
