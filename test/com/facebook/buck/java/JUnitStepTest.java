@@ -67,7 +67,7 @@ public class JUnitStepTest {
         testRunnerClassesDirectory);
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
+    EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL).times(2);
     EasyMock.expect(executionContext.getAndroidPlatformTargetOptional()).andReturn(
         Optional.<AndroidPlatformTarget>absent());
     EasyMock.replay(executionContext);
@@ -83,6 +83,7 @@ public class JUnitStepTest {
             "foo:bar/baz:build/classes/junit",
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
+            "true",
             testClass1,
             testClass2),
         observedArgs);
@@ -142,6 +143,7 @@ public class JUnitStepTest {
             "foo:bar/baz:build/classes/junit",
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
+            "true",
             testClass1,
             testClass2),
         observedArgs);
