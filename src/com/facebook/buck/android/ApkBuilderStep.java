@@ -80,7 +80,8 @@ public class ApkBuilderStep implements Step {
       output = context.getStdOut();
     }
     try {
-      ApkBuilder builder = new ApkBuilder(new File(pathToOutputApkFile),
+      ApkBuilder builder = new ApkBuilder(
+          new File(pathToOutputApkFile),
           new File(resourceApk),
           new File(dexFile),
           /* storeOsPath */ null,
@@ -115,7 +116,11 @@ public class ApkBuilderStep implements Step {
 
   @Override
   public String getShortName(ExecutionContext context) {
-    return String.format("apkbuilder %s -v -u %s -z %s %s -f %s",
+    return String.format(
+        // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
+        // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
+        "java -classpath $ANDROID_HOME/tools/lib/sdklib.jar %s %s -v -u %s -z %s %s -f %s",
+        "com.android.sdklib.build.ApkBuilderMain",
         pathToOutputApkFile,
         Joiner.on(' ').join(Iterables.transform(nativeLibraryDirectories,
             new Function<String, String>() {
