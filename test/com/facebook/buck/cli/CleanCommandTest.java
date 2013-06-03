@@ -100,9 +100,9 @@ public class CleanCommandTest extends EasyMockSupport {
             /* stdout */ createMock(PrintStream.class),
             /* stderr */ createMock(PrintStream.class),
             Ansi.withoutTty()),
-        createMock(ArtifactCache.class),
         createMock(ProjectFilesystem.class),
-        createMock(KnownBuildRuleTypes.class));
+        createMock(KnownBuildRuleTypes.class),
+        createMock(ArtifactCache.class));
     return new CleanCommand(params);
   }
 

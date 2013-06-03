@@ -23,44 +23,44 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
-import java.io.PrintStream;
-
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to create a
  * {@link CommandRunner}.
  */
 class CommandRunnerParams {
 
-  private final Console console;
   private final ArtifactCache artifactCache;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
+  private final Console console;
+
+  public CommandRunnerParams(
+      ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
+      ArtifactCache artifactCache) {
+    this(new Console(System.out, System.err, new Ansi()),
+        projectFilesystem,
+        buildRuleTypes,
+        artifactCache);
+  }
 
   public CommandRunnerParams(
       Console console,
-      ArtifactCache artifactCache,
       ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes) {
+      KnownBuildRuleTypes buildRuleTypes,
+      ArtifactCache artifactCache) {
     this.console = Preconditions.checkNotNull(console);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
   }
 
-  public Console getConsole() {
-    return console;
-  }
-
   public Ansi getAnsi() {
     return console.getAnsi();
   }
 
-  public PrintStream getStdout() {
-    return console.getStdOut();
-  }
-
-  public PrintStream getStderr() {
-    return console.getStdErr();
+  public Console getConsole() {
+    return console;
   }
 
   public ArtifactCache getArtifactCache() {

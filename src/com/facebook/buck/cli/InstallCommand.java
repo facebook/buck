@@ -19,16 +19,12 @@ package com.facebook.buck.cli;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.io.File;
@@ -46,14 +42,6 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     super(params);
   }
 
-  protected InstallCommand(
-      Console console,
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache) {
-    super(console, projectFilesystem, buildRuleTypes, artifactCache);
-  }
-
   @Override
   InstallCommandOptions createOptions(BuckConfig buckConfig) {
     return new InstallCommandOptions(buckConfig);
@@ -68,10 +56,11 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     }
 
     // Build the specified target.
-    BuildCommand buildCommand = new BuildCommand(console,
+    BuildCommand buildCommand = new BuildCommand(new CommandRunnerParams(
+        console,
         getProjectFilesystem(),
         getBuildRuleTypes(),
-        getArtifactCache());
+        getArtifactCache()));
     int exitCode = buildCommand.runCommandWithOptions(options);
     if (exitCode != 0) {
       return exitCode;

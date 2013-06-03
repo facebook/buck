@@ -23,15 +23,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -59,14 +55,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   public TargetsCommand(CommandRunnerParams params) {
     super(params);
-  }
-
-  @VisibleForTesting
-  TargetsCommand(Console console,
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache) {
-    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override

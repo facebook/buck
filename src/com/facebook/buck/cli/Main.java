@@ -94,9 +94,9 @@ public final class Main {
       Console console = new Console(stdOut, stdErr, buckConfig.getAnsi());
       CommandRunnerParams params = new CommandRunnerParams(
           console,
-          buckConfig.getArtifactCache(),
           projectFilesystem,
-          new KnownBuildRuleTypes());
+          new KnownBuildRuleTypes(),
+          buckConfig.getArtifactCache());
       return command.get().execute(remainingArgs, buckConfig, params);
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);

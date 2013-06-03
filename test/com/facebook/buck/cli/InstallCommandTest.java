@@ -91,10 +91,11 @@ public class InstallCommandTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    return new InstallCommand(console,
+    return new InstallCommand(new CommandRunnerParams(
+        console,
         filesystem,
         buildRuleTypes,
-        artifactCache);
+        artifactCache));
   }
 
   /**

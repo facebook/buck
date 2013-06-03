@@ -249,10 +249,11 @@ public class AuditOwnerCommandTest {
     Console console = new Console(out, out, Ansi.withoutTty());
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    return new AuditOwnerCommand(console,
+    return new AuditOwnerCommand(new CommandRunnerParams(
+        console,
         filesystem,
         buildRuleTypes,
-        artifactCache);
+        artifactCache));
   }
 
   @Test

@@ -23,14 +23,10 @@ import com.android.ddmlib.InstallException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.cli.UninstallCommandOptions.UninstallOptions;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.InstallableBuildRule;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.io.File;
@@ -46,14 +42,6 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
 
   protected UninstallSupportCommandRunner(CommandRunnerParams params) {
     super(params);
-  }
-
-  @VisibleForTesting
-  protected UninstallSupportCommandRunner(Console console,
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache) {
-    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   /**

@@ -113,10 +113,11 @@ public class TargetsCommandTest {
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
     targetsCommand =
-        new TargetsCommand(console,
+        new TargetsCommand(new CommandRunnerParams(
+            console,
             projectFilesystem,
             buildRuleTypes,
-            artifactCache);
+            artifactCache));
   }
 
   @Test
