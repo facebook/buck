@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
@@ -33,6 +34,12 @@ import java.util.Map;
  */
 public class RuleKeyTest {
   private static final ArtifactCache artifactCache = new NoopArtifactCache();
+
+  @Test
+  public void testRuleKeyFromHashString() {
+    RuleKey ruleKey = new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208");
+    assertEquals("19d2558a6bd3a34fb3f95412de9da27ed32fe208", ruleKey.toString());
+  }
 
   /**
    * Ensure that build rules with the same inputs but different deps have unique RuleKeys.

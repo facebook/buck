@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -23,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.HashCodes;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -52,7 +54,29 @@ import javax.annotation.Nullable;
  * handle null values to accommodate this regime.
  */
 public class RuleKey implements Comparable<RuleKey> {
+
+  // TODO(mbolin): Do not let this be @Nullable anymore.
   @Nullable private final HashCode hashCode;
+
+  /**
+   * @param hashString string that conforms to the contract of the return value of
+   *     {@link com.google.common.hash.HashCode#toString()}.
+   */
+  public RuleKey(String hashString) {
+    this(HashCodes.fromBytes(hashStringToBytes(hashString)));
+  }
+
+  private static byte[] hashStringToBytes(String hashString) {
+    byte[] bytes = new byte[hashString.length() / 2];
+    for (int i = 0; i < hashString.length(); i += 2) {
+      char highOrderBits = hashString.charAt(i);
+      char lowOrderBits = hashString.charAt(i + 1);
+      bytes[i / 2] = (byte)
+          ((Byte.parseByte(String.valueOf(highOrderBits), 16) << 4) +
+          Byte.parseByte(String.valueOf(lowOrderBits), 16));
+    }
+    return bytes;
+  }
 
   private RuleKey(HashCode hashCode) {
     this.hashCode = hashCode;
@@ -142,38 +166,32 @@ public class RuleKey implements Comparable<RuleKey> {
     return new Builder();
   }
 
-  // TODO(royw):  This is a hack to stop us from regressing build times.  We ned to create the
-  // abstraction of an "interfaceKey" that we use for local caching decisions.
   public static Builder builder(final BuildRule rule) {
-    Builder result = new Builder(rule.getFullyQualifiedName())
+    Builder builder = new Builder()
+        .set("name", rule.getFullyQualifiedName())
+
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .set("buck.type", rule.getType().getName());
-    if (rule.isPackagingRule()) {
-      // If the rule is a packaging rule, use the contents of all of the files in the transitive
-      // deps.
-      final ImmutableSortedSet.Builder<BuildRule> transitiveDeps =
-          ImmutableSortedSet.naturalOrder();
-      (new AbstractDependencyVisitor(rule, /* excludeRoot */ true) {
-        @Override
-        public boolean visit(BuildRule dep) {
-          transitiveDeps.add(dep);
-          return true;
-        }
-      }).start();
 
-      result.set("deps", transitiveDeps.build());
-    } else {
-      // Otherwise, add the names and the contents of their inputs, but explicitly excluding deps
-      // of deps.
-      result.setOnInputs("deps", rule.getDeps());
+    builder.setKey("deps");
+    // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
+    for (BuildRule buildRule : rule.getDeps()) {
+      builder.setVal(buildRule.getRuleKey());
     }
-    return  result;
+    builder.separate();
+
+    return builder;
   }
 
   public static class Builder {
     private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
-    private static final String buckVersionUID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
-    private static final byte SEPARATOR = '\0';
+
+    @VisibleForTesting
+    static final String buckVersionUID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
+
+    @VisibleForTesting
+    static final byte SEPARATOR = '\0';
+
     private static final Logger logger = Logger.getLogger(Builder.class.getName());
 
     private final Hasher hasher;
@@ -313,20 +331,6 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
-    public Builder setOnInputs(String key, @Nullable Iterable<BuildRule> val) {
-      setKey(key);
-      if (val != null) {
-        for (BuildRule buildRule : val) {
-          setVal(buildRule.getFullyQualifiedName());
-          setVal(buildRule.getType().toString());
-          for (InputRule inputRule : buildRule.getInputs()) {
-            setVal(inputRule.getRuleKey());
-          }
-        }
-      }
-      return separate();
-    }
-
     public Builder set(String key, @Nullable List<String> val) {
       setKey(key);
       if (val != null) {
@@ -392,7 +396,7 @@ public class RuleKey implements Comparable<RuleKey> {
     }
 
     public RuleKey build() {
-      RuleKey ruleKey = idempotent ? new RuleKey(hasher.hash()) : new RuleKey(null);
+      RuleKey ruleKey = idempotent ? new RuleKey(hasher.hash()) : new RuleKey((HashCode)null);
       if (logElms != null) {
         logger.info(String.format("%sRuleKey %s=%s",
             ruleKey.isIdempotent() ? "" : "non-idempotent ", ruleKey.toString(),
