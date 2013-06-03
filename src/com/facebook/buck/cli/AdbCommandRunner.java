@@ -19,11 +19,7 @@ package com.facebook.buck.cli;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
-import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.TriState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -55,14 +51,6 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
 
   protected AdbCommandRunner(CommandRunnerParams params) {
     super(params);
-  }
-
-  @VisibleForTesting
-  protected AdbCommandRunner(Console console,
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache) {
-    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   /**

@@ -22,17 +22,14 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -60,10 +57,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   private ImmutableList<BuildTarget> buildTargets = ImmutableList.of();
 
-  public BuildCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   // Static fields persist between builds when running as a daemon.
   private static final boolean isDaemon = Boolean.getBoolean("buck.daemon");
 
@@ -79,13 +72,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   @Nullable
   private static ProjectFilesystemWatcher filesystemWatcher;
 
-
-  public BuildCommand(
-      Console console,
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache) {
-    super(console, projectFilesystem, buildRuleTypes, artifactCache);
+  public BuildCommand(CommandRunnerParams params) {
+    super(params);
   }
 
   @Override

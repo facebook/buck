@@ -72,10 +72,12 @@ public class AuditClasspathCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    auditClasspathCommand = new AuditClasspathCommand(console,
+
+    auditClasspathCommand = new AuditClasspathCommand(new CommandRunnerParams(
+        console,
         projectFilesystem,
         buildRuleTypes,
-        artifactCache);
+        artifactCache));
   }
 
   private String getCapturedOutput(CapturingPrintStream stream) {

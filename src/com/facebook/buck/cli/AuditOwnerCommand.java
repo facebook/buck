@@ -18,16 +18,12 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
@@ -69,14 +65,6 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       this.nonExistentInputs = ImmutableSet.copyOf(nonExistentInputs);
       this.nonFileInputs = ImmutableSet.copyOf(nonFileInputs);
     }
-  }
-
-  @VisibleForTesting
-  AuditOwnerCommand(Console console,
-                    ProjectFilesystem projectFilesystem,
-                    KnownBuildRuleTypes buildRuleTypes,
-                    ArtifactCache artifactCache) {
-    super(console, projectFilesystem, buildRuleTypes, artifactCache);
   }
 
   @Override

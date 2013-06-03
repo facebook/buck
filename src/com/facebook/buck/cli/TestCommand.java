@@ -93,10 +93,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     }
 
-    BuildCommand buildCommand = new BuildCommand(console,
+    BuildCommand buildCommand = new BuildCommand(new CommandRunnerParams(
+        console,
         getProjectFilesystem(),
         getBuildRuleTypes(),
-        getArtifactCache());
+        getArtifactCache()));
 
     int exitCode = buildCommand.runCommandWithOptions(options);
     if (exitCode != 0) {

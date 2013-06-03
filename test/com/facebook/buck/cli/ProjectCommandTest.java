@@ -38,8 +38,6 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -166,13 +164,9 @@ public class ProjectCommandTest {
 
     ProjectCommandForTest() {
       super(new CommandRunnerParams(
-          new Console(
-              System.out,
-              System.err,
-              Ansi.withoutTty()),
-          artifactCache,
           projectFilesystem,
-          new KnownBuildRuleTypes()));
+          new KnownBuildRuleTypes(),
+          artifactCache));
     }
 
     @Override
