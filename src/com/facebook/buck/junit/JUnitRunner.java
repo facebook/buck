@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +58,15 @@ public final class JUnitRunner {
 
   private final File outputDirectory;
   private final List<String> testClassNames;
-
-  public JUnitRunner(File outputDirectory, List<String> testClassNames) {
+  private final boolean shouldPrintOutWhenTestsStartAndStop;
+  
+  public JUnitRunner(
+      File outputDirectory,
+      List<String> testClassNames,
+      boolean shouldPrintOutWhenTestsStartAndStop) {
     this.outputDirectory = outputDirectory;
     this.testClassNames = testClassNames;
+    this.shouldPrintOutWhenTestsStartAndStop = shouldPrintOutWhenTestsStartAndStop;
   }
 
   public void run() throws
@@ -85,7 +91,20 @@ public final class JUnitRunner {
         Method[] publicInstanceMethods = testClass.getMethods();
         for (Method method : publicInstanceMethods) {
           if (isTestMethod(method)) {
-            results.add(TestResult.runTestMethod(testClass, method.getName(), testRunner));
+            PrintStream stderr = System.err;
+
+            if (shouldPrintOutWhenTestsStartAndStop) {
+              stderr.printf("START TEST %s#%s\n", testClass.getName(), method.getName());
+              stderr.flush();
+            }
+
+            TestResult result = TestResult.runTestMethod(testClass, method.getName(), testRunner); 
+            results.add(result);
+
+            if (shouldPrintOutWhenTestsStartAndStop) {
+              stderr.printf("STOP TEST %s#%s\n", testClass.getName(), method.getName());
+              stderr.flush();
+            }
           }
         }
       }
@@ -195,7 +214,7 @@ public final class JUnitRunner {
       System.err.println("Must specify an output directory.");
       System.exit(1);
     }
-    if (args.length == 1) {
+    if (args.length < 2) {
       System.err.println("Must specify at least one test.");
       System.exit(1);
     }
@@ -207,11 +226,13 @@ public final class JUnitRunner {
       System.exit(1);
     }
 
+    boolean shouldPrintOutWhenTestsStartAndStop = Boolean.parseBoolean(args[1]);
+
     // Each argument other than the first one should be a class name to run.
-    List<String> testClassNames = Arrays.asList(args).subList(1, args.length);
+    List<String> testClassNames = Arrays.asList(args).subList(2, args.length);
 
     // Run the tests.
-    new JUnitRunner(outputDirectory, testClassNames).run();
+    new JUnitRunner(outputDirectory, testClassNames, shouldPrintOutWhenTestsStartAndStop).run();
 
     // Explicitly exit to force the test runner to complete even if tests have sloppily left behind
     // non-daemon threads that would have otherwise forced the process to wait and eventually

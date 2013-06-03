@@ -16,8 +16,8 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
@@ -168,12 +168,20 @@ public class JUnitStep extends ShellStep {
     // tests written to those file descriptors, as well.
     args.add(directoryForTestResults);
 
+    boolean shouldPrintOutWhenTestsStartAndStop = context.getVerbosity().shouldPrintCommand();
+    args.add(String.valueOf(shouldPrintOutWhenTestsStartAndStop));
+
     // List all of the tests to be run.
     for (String testClassName : testClassNames) {
       args.add(testClassName);
     }
 
     return args.build();
+  }
+
+  @Override
+  protected boolean shouldPrintStdErr(ExecutionContext context) {
+    return true;
   }
 
   private void warnUser(ExecutionContext context, String message) {
