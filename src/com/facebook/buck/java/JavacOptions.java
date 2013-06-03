@@ -107,10 +107,17 @@ public class JavacOptions {
   }
 
   public void appendToRuleKey(RuleKey.Builder builder) {
-    // TODO(simons): Include annotation processing and bootclasspath params
+    // TODO(simons): Include bootclasspath params.
     builder.set("sourceLevel", sourceLevel)
         .set("targetLevel", targetLevel)
-        .set("debug", debug);
+        .set("debug", debug)
+
+        // Annotation processing data.
+        .set("searchPathElements", annotationProcessingData.getSearchPathElements())
+        .set("names", annotationProcessingData.getNames())
+        .set("parameters", annotationProcessingData.getParameters())
+        .set("generatedSource", annotationProcessingData.getGeneratedSourceFolderName())
+        .set("processOnly", annotationProcessingData.getProcessOnly());
   }
 
   public AnnotationProcessingData getAnnotationProcessingData() {

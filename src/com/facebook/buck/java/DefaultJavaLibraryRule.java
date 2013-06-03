@@ -314,12 +314,9 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     RuleKey.Builder builder = super.ruleKeyBuilder()
         .set("srcs", srcs)
         .set("resources", resources)
-        .set("classpathEntries", ImmutableSortedSet.copyOf(getDeclaredClasspathEntries().values()))
-        .set("isAndroidLibrary", isAndroidRule())
+        .set("proguard", proguardConfig)
         .set("exportDeps", exportDeps);
-
     javacOptions.appendToRuleKey(builder);
-
     return builder;
   }
 
