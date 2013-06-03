@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
 
 
 public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
@@ -53,9 +52,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
   private final boolean isIntelliJPlugin;
 
-  @Nullable
-  @GuardedBy("this")
-  private ListenableFuture<BuildRuleSuccess> buildOutput;
+  private final ListenableFuture<BuildRuleSuccess> buildOutput;
 
   public ProjectConfigRule(BuildRuleParams buildRuleParams,
       @Nullable BuildRule srcRule,
@@ -99,6 +96,9 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     }
 
     this.isIntelliJPlugin = isIntelliJPlugin;
+
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this);
+    this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
   }
 
   @Override
@@ -143,10 +143,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public synchronized ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-    if (buildOutput == null) {
-      buildOutput = Futures.immediateFuture(new BuildRuleSuccess(this));
-    }
+  public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
     return buildOutput;
   }
 
