@@ -40,6 +40,7 @@ public class InputRule implements BuildRule {
   private final BuildTarget buildTarget;
   @Nullable private OutputKey outputKey;
   @Nullable private RuleKey ruleKey;
+  private final ListenableFuture<BuildRuleSuccess> buildOutput;
 
   /**
    * Convert a set of input file paths to InputRules.
@@ -63,6 +64,9 @@ public class InputRule implements BuildRule {
   public InputRule(File input) {
     inputFile = Preconditions.checkNotNull(input);
     buildTarget = new BuildTarget(input);
+
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this);
+    this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
   }
 
   public InputRule(String input) {
@@ -106,7 +110,7 @@ public class InputRule implements BuildRule {
 
   @Override
   public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-    return Futures.immediateFuture(new BuildRuleSuccess(this));
+    return buildOutput;
   }
 
   @Override
@@ -154,22 +158,12 @@ public class InputRule implements BuildRule {
     return outputKey;
   }
 
-  private RuleKey.Builder ruleKeyBuilder() {
-    return RuleKey.builder(this)
-        .set("inputFile", inputFile);
-  }
-
   @Override
-  public final RuleKey getRuleKey() {
-    if (this.ruleKey != null) {
-      return this.ruleKey;
-    } else {
-      RuleKey ruleKey = ruleKeyBuilder().build();
-      // Although this.ruleKey could be null, the RuleKey returned by this method is guaranteed to
-      // be non-null.
-      this.ruleKey = RuleKey.filter(ruleKey);
-      return ruleKey;
+  public RuleKey getRuleKey() {
+    if (this.ruleKey == null) {
+      ruleKey = RuleKey.builder(this).set("inputFile", inputFile).build();
     }
+    return ruleKey;
   }
 
   @Override
