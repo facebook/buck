@@ -22,6 +22,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -50,9 +51,9 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
   @Nullable
   private final BuildTarget ownerTarget;
-  private final ImmutableSet<String> searchPathElements;
-  private final ImmutableSet<String> names;
-  private final ImmutableSet<String> parameters;
+  private final ImmutableSortedSet<String> searchPathElements;
+  private final ImmutableSortedSet<String> names;
+  private final ImmutableSortedSet<String> parameters;
   private final boolean processOnly;
 
   private AnnotationProcessingParams(
@@ -62,9 +63,9 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       Set<String> parameters,
       boolean processOnly) {
     this.ownerTarget = ownerTarget;
-    this.searchPathElements = ImmutableSet.copyOf(searchPathElements);
-    this.names = ImmutableSet.copyOf(names);
-    this.parameters = ImmutableSet.copyOf(parameters);
+    this.searchPathElements = ImmutableSortedSet.copyOf(searchPathElements);
+    this.names = ImmutableSortedSet.copyOf(names);
+    this.parameters = ImmutableSortedSet.copyOf(parameters);
     this.processOnly = processOnly;
   }
 
@@ -81,17 +82,17 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   }
 
   @Override
-  public ImmutableSet<String> getSearchPathElements() {
+  public ImmutableSortedSet<String> getSearchPathElements() {
     return searchPathElements;
   }
 
   @Override
-  public ImmutableSet<String> getNames() {
+  public ImmutableSortedSet<String> getNames() {
     return names;
   }
 
   @Override
-  public ImmutableSet<String> getParameters() {
+  public ImmutableSortedSet<String> getParameters() {
     return parameters;
   }
 

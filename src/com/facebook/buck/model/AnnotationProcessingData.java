@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.model;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import javax.annotation.Nullable;
 
@@ -27,18 +27,18 @@ public interface AnnotationProcessingData {
     }
 
     @Override
-    public ImmutableSet<String> getSearchPathElements() {
-      return ImmutableSet.of();
+    public ImmutableSortedSet<String> getSearchPathElements() {
+      return ImmutableSortedSet.of();
     }
 
     @Override
-    public ImmutableSet<String> getNames() {
-      return ImmutableSet.of();
+    public ImmutableSortedSet<String> getNames() {
+      return ImmutableSortedSet.of();
     }
 
     @Override
-    public ImmutableSet<String> getParameters() {
-      return ImmutableSet.of();
+    public ImmutableSortedSet<String> getParameters() {
+      return ImmutableSortedSet.of();
     }
 
     @Override
@@ -61,17 +61,17 @@ public interface AnnotationProcessingData {
   /**
    * Path to search for annotation processors.
    */
-  public ImmutableSet<String> getSearchPathElements();
+  public ImmutableSortedSet<String> getSearchPathElements();
 
   /**
    * The set of fully-qualified names of annotation processor classes.
    */
-  public ImmutableSet<String> getNames();
+  public ImmutableSortedSet<String> getNames();
 
   /**
    * The set of parameters to pass to annotation processing (via javac -A).
    */
-  public ImmutableSet<String> getParameters();
+  public ImmutableSortedSet<String> getParameters();
 
   /**
    * Controls whether compilation happens along with annotation processing:
