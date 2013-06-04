@@ -188,6 +188,11 @@ public final class JUnitRunner {
 
   /* @VisibleForTesting */
   static boolean isTestMethod(Method method) {
+    // Always ignore a method if it has an @Ignore annotation.
+    if (method.getAnnotation(Ignore.class) != null) {
+      return false;
+    }
+
     // JUnit 4: Methods annotated with @Test are considered tests. Also must be no-arg methods, but
     // JUnit will complain about that when it tries to run the method.
     if (method.getAnnotation(Test.class) != null) {

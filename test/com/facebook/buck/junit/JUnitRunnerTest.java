@@ -19,6 +19,7 @@ package com.facebook.buck.junit;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -36,6 +37,10 @@ public class JUnitRunnerTest {
     Method testSetterMethod = FakeJUnit4Test.class.getMethod("testSetter");
     assertFalse("Does not have @Test annotation, so should not be considered a test method.",
         JUnitRunner.isTestMethod(testSetterMethod));
+
+    Method ignoreableTestGetterMethod = FakeJUnit4Test.class.getMethod("testBehavior");
+    assertFalse("Has @Ignore annotation, so should not be considered a test method.",
+        JUnitRunner.isTestMethod(ignoreableTestGetterMethod));
   }
 
   @Test
@@ -59,6 +64,10 @@ public class JUnitRunnerTest {
     Method getMethod = FakeJUnit3Test.class.getMethod("get");
     assertFalse("Does not start with 'test', so should not be considered a test method.",
         JUnitRunner.isTestMethod(getMethod));
+
+    Method ignoreableTestGetterMethod = FakeJUnit3Test.class.getMethod("testBehavior");
+    assertFalse("Has @Ignore annotation, so should not be considered a test method.",
+        JUnitRunner.isTestMethod(ignoreableTestGetterMethod));
   }
 
   public static class FakeJUnit4Test {
@@ -67,6 +76,10 @@ public class JUnitRunnerTest {
     public void testGetter() {}
 
     public void testSetter() {}
+
+    @Ignore
+    @Test
+    public void testBehavior() {}
   }
 
   public static class FakeJUnit3Test extends TestCase {
@@ -81,6 +94,10 @@ public class JUnitRunnerTest {
     public String testStringGetter() { return null; }
 
     public void get() {}
+
+    @Ignore
+    @Test
+    public void testBehavior() {}
   }
 
 }
