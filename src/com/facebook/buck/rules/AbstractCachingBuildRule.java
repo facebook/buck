@@ -457,7 +457,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   @Override
   protected RuleKey.Builder ruleKeyBuilder() {
     return super.ruleKeyBuilder()
-        .set("inputs", getInputs());
+        .setInputs("inputs", getInputs());
   }
 
   private String getPathToSuccessFile() {

@@ -47,7 +47,6 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,27 +100,12 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   @Override
   protected RuleKey.Builder ruleKeyBuilder() {
-    // Convert sourceUnderTest to a form that RuleKey can handle.  Ideally RuleKey would directly
-    // handle sourceUnderTest, but type erasure would cause method overload ambiguity.  The other
-    // alternative would be to add a converter method to JavaLibraryRule, but that will not work
-    // because JavaLibraryRule is an interface.
-    Comparator<BuildRule> comparator = new Comparator<BuildRule>() {
-      @Override
-      public int compare(BuildRule o1, BuildRule o2) {
-        return o1.compareTo(o2);
-      }
-    };
-    ImmutableSortedSet.Builder<BuildRule> builder
-        = new ImmutableSortedSet.Builder<BuildRule>(comparator);
-    for (JavaLibraryRule rule : sourceUnderTest) {
-      builder.add(rule);
-    }
-    ImmutableSortedSet<BuildRule> srcUnderTest = builder.build();
-
-    return super.ruleKeyBuilder()
+    ImmutableSortedSet<? extends BuildRule> srcUnderTest = ImmutableSortedSet.copyOf(sourceUnderTest);
+    RuleKey.Builder builder = super.ruleKeyBuilder()
         .set("vmArgs", vmArgs)
-        .set("sourceUnderTest", srcUnderTest)
-        ;
+        .set("sourceUnderTest", srcUnderTest);
+    javacOptions.appendToRuleKey(builder);
+    return builder;
   }
 
   /**
