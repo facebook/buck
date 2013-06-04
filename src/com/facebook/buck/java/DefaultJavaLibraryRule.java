@@ -493,7 +493,10 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     if (outputJar.isPresent()) {
       commands.add(new MakeCleanDirectoryStep(outputJar.get().getParent()));
       commands.add(new JarDirectoryStep(
-          outputJar.get().getPath(), Collections.singleton(outputDirectory), null, null));
+          outputJar.get().getPath(),
+          Collections.singleton(outputDirectory),
+          /* mainClass */ null,
+          /* manifestFile */ null));
     }
 
     return commands.build();
