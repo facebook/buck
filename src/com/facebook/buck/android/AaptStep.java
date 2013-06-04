@@ -99,6 +99,10 @@ public class AaptStep extends ShellStep {
     builder.add("-I", androidPlatformTarget.getAndroidJar().getAbsolutePath());
     builder.add("-F", pathToOutputApkFile);
 
+    // Ignore BUCK files in addition to the other files that are ignored by default.
+    // Otherwise, having a BUCK file in a res/ directory will cause a build failure.
+    builder.add("--ignore-assets", "BUCK:!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~");
+
     builder.addAll(pathsToRawFilesDirs);
 
     return builder.build();
