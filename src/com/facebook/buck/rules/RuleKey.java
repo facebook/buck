@@ -341,7 +341,7 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
-    public Builder set(String key, @Nullable Iterable<InputRule> val) {
+    public Builder setInputs(String key, @Nullable Iterable<InputRule> val) {
       setKey(key);
       if (val != null) {
         for (InputRule inputRule : val) {
@@ -351,7 +351,7 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
-    public Builder set(String key, @Nullable ImmutableSortedSet<BuildRule> val) {
+    public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val) {
       setKey(key);
       if (val != null) {
         for (BuildRule buildRule : val) {
