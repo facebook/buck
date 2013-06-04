@@ -2,6 +2,7 @@ java_library(
   name = 'integration',
   srcs = glob(['*.java']),
   deps = [
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//lib:guava',

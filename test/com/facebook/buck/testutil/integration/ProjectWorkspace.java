@@ -17,14 +17,19 @@
 package com.facebook.buck.testutil.integration;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.Main;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,9 +56,6 @@ import javax.annotation.Nullable;
  * For each file in the testdata directory with the {@code .expected} extension, {@link #verify()}
  * will check that a file with the same relative path (but without the {@code .expected} extension)
  * exists in the tmp directory. If not, {@link org.junit.Assert#fail()} will be invoked.
- * <p>
- * Finally, {@link #tearDown()} should be invoked in the JUnit test's {@link org.junit.After}
- * method.
  */
 public class ProjectWorkspace {
 
@@ -77,14 +79,22 @@ public class ProjectWorkspace {
     }
   };
 
+  private boolean isSetUp = false;
   private final Path templatePath;
+  private final File destDir;
   private final Path destPath;
 
-  public ProjectWorkspace(File templateDir, File destDir) {
+  /**
+   * @param templateDir The directory that contains the template version of the project.
+   * @param temporaryFolder The directory where the clone of the template directory should be
+   *     written. By requiring a {@link TemporaryFolder} rather than a {@link File}, we can ensure
+   *     that JUnit will clean up the test correctly.
+   */
+  public ProjectWorkspace(File templateDir, TemporaryFolder temporaryFolder) {
     Preconditions.checkNotNull(templateDir);
-    Preconditions.checkArgument(templateDir.isDirectory());
-    Preconditions.checkNotNull(destDir);
+    Preconditions.checkNotNull(temporaryFolder);
     this.templatePath = templateDir.toPath();
+    this.destDir = temporaryFolder.getRoot();
     this.destPath = destDir.toPath();
   }
 
@@ -94,6 +104,51 @@ public class ProjectWorkspace {
    */
   public void setUp() throws IOException {
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
+    isSetUp = true;
+  }
+
+  /**
+   * Runs Buck with the specified list of command-line arguments.
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *   {@code ["project"]}, etc.
+   * @return the result of running Buck, which includes the exit code, stdout, and stderr.
+   */
+  public ProcessResult runBuckCommand(String... args) throws IOException {
+    assertTrue("setUp() must be run before this method is invoked", isSetUp);
+    CapturingPrintStream stdout = new CapturingPrintStream();
+    CapturingPrintStream stderr = new CapturingPrintStream();
+
+    Main main = new Main(stdout, stderr);
+    int exitCode = main.runMainWithExitCode(destDir, args);
+
+    return new ProcessResult(exitCode,
+        stdout.getContentsAsString(Charsets.UTF_8),
+        stderr.getContentsAsString(Charsets.UTF_8));
+  }
+
+  /** The result of running {@code buck} from the command line. */
+  public static class ProcessResult {
+    private final int exitCode;
+    private final String stdout;
+    private final String stderr;
+
+    private ProcessResult(int exitCode, String stdout, String stderr) {
+      this.exitCode = exitCode;
+      this.stdout = Preconditions.checkNotNull(stdout);
+      this.stderr = Preconditions.checkNotNull(stderr);
+    }
+
+    public int getExitCode() {
+      return exitCode;
+    }
+
+    public String getStdout() {
+      return stdout;
+    }
+
+    public String getStderr() {
+      return stderr;
+    }
   }
 
   /**
@@ -128,10 +183,5 @@ public class ProjectWorkspace {
       }
     };
     java.nio.file.Files.walkFileTree(templatePath, copyDirVisitor);
-  }
-
-  /** Deletes the destination directory created by {@link #setUp()}. */
-  public void tearDown() throws IOException {
-    MoreFiles.deleteRecursively(destPath);
   }
 }

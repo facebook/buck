@@ -20,16 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.google.common.base.Charsets;
+import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -40,28 +38,21 @@ public class ProjectIntegrationTest {
   @Rule
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-  private ProjectWorkspace workspace;
-
   @Test
   public void testBuckProject() throws IOException {
-    File templateDir = new File("test/com/facebook/buck/cli/testdata/project1/");
-    File destDir = temporaryFolder.getRoot();
-    workspace = new ProjectWorkspace(templateDir, destDir);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project1", temporaryFolder);
     workspace.setUp();
 
-    CapturingPrintStream stdout = new CapturingPrintStream();
-    CapturingPrintStream stderr = new CapturingPrintStream();
-
-    Main main = new Main(stdout, stderr);
-    int exitCode = main.runMainWithExitCode(destDir, "project");
-    assertEquals("buck project should exit cleanly", 0, exitCode);
+    ProcessResult result = workspace.runBuckCommand("project");
+    assertEquals("buck project should exit cleanly", 0, result.getExitCode());
 
     workspace.verify();
 
-    String stdErrOutput = stderr.getContentsAsString(Charsets.UTF_8);
+    String stderr = result.getStderr();
     assertTrue(
         "Nothing should be written to stderr except possibly an Android platform warning.",
-        stdErrOutput.isEmpty() || stdErrOutput.startsWith("No Android platform target specified."));
+        stderr.isEmpty() || stderr.startsWith("No Android platform target specified."));
     assertEquals(
         "`buck project` should report the files it modified.",
         Joiner.on('\n').join(
@@ -75,13 +66,6 @@ public class ProjectIntegrationTest {
           "modules/dep1/module_modules_dep1.iml",
           "modules/tip/module_modules_tip.iml"
         ) + '\n',
-        stdout.getContentsAsString(Charsets.UTF_8));
-  }
-
-  @After
-  public void tearDown() throws IOException {
-    if (workspace != null) {
-      workspace.tearDown();
-    }
+        result.getStdout());
   }
 }
