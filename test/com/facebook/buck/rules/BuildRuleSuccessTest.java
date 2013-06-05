@@ -35,7 +35,7 @@ public class BuildRuleSuccessTest {
     expect(rule.getFullyQualifiedName()).andReturn("//java/com/example/base:base");
     replay(rule);
 
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule);
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, /* isFromBuildCache */ false);
     assertEquals("//java/com/example/base:base", buildRuleSuccess.toString());
 
     verify(rule);
@@ -43,6 +43,6 @@ public class BuildRuleSuccessTest {
 
   @Test(expected = NullPointerException.class)
   public void testConstructor() {
-    new BuildRuleSuccess(null);
+    new BuildRuleSuccess(null, /* isFromBuildCache */ false);
   }
 }

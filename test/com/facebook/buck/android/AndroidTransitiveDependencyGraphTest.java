@@ -52,7 +52,6 @@ public class AndroidTransitiveDependencyGraphTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
-    guavaRule.setIsCached(false);
     buildRuleIndex.put(guavaRule.getFullyQualifiedName(), guavaRule);
 
     PrebuiltJarRule jsr305Rule = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
@@ -61,7 +60,6 @@ public class AndroidTransitiveDependencyGraphTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
-    jsr305Rule.setIsCached(false);
     buildRuleIndex.put(jsr305Rule.getFullyQualifiedName(), jsr305Rule);
 
     DefaultJavaLibraryRule libraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
@@ -70,7 +68,6 @@ public class AndroidTransitiveDependencyGraphTest {
         .addDep(jsr305Rule.getFullyQualifiedName())
         .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
-    libraryRule.setIsCached(true);
     buildRuleIndex.put(libraryRule.getFullyQualifiedName(), libraryRule);
 
     AndroidResourceRule manifestRule = AndroidResourceRule.newAndroidResourceRuleBuilder()
@@ -79,7 +76,6 @@ public class AndroidTransitiveDependencyGraphTest {
         .setAssetsDirectory("assets/")
         .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
-    manifestRule.setIsCached(false);
     buildRuleIndex.put(manifestRule.getFullyQualifiedName(), manifestRule);
 
     AndroidBinaryRule binaryRule = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
@@ -92,7 +88,6 @@ public class AndroidTransitiveDependencyGraphTest {
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
         .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
-    binaryRule.setIsCached(false);
     buildRuleIndex.put(binaryRule.getFullyQualifiedName(), binaryRule);
 
     // Verify that the correct transitive dependencies are found.

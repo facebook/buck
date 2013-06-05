@@ -164,8 +164,11 @@ abstract class AbstractBuildRule implements BuildRule {
     return RuleKey.builder(this);
   }
 
+  /**
+   * This method should be overridden only for unit testing.
+   */
   @Override
-  public final RuleKey getRuleKey() {
+  public RuleKey getRuleKey() {
     if (this.ruleKey != null) {
       return this.ruleKey;
     } else {

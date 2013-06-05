@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
-import java.io.IOException;
 
 import javax.annotation.Nullable;
 
@@ -61,37 +60,6 @@ public interface BuildRule extends Comparable<BuildRule> {
    * This method must be idempotent.
    */
   public ListenableFuture<BuildRuleSuccess> build(BuildContext context);
-
-  /**
-   * A rule is considered "cached" if it satisfies all of the following criteria:
-   * <ol>
-   *   <li>the output file for this rule exists
-   *   <li>all of the dependencies for this rule are cached
-   *   <li>the output file was created using precisely the same dependencies, which in turn have
-   *       precisely the same state as when the output file was created
-   * </ol>
-   * A rule that is cached should not be rebuilt.
-   * <p>
-   * Note that it is always safe for this method to return {@code false}; however, that may result
-   * in unnecessary rebuilding.
-   */
-  public boolean isCached(BuildContext context) throws IOException;
-
-  /**
-   * A rule is considered to have uncached descendants if it satisfies any of the following
-   * criteria:
-   * <ol>
-   *   <li>this rule is uncached as determined by {@link BuildRule#isCached(BuildContext)}
-   *   <li>any of the dependencies for this rule have uncached descendants.
-   * </ol>
-   * Some build rules only need to be rebuilt if some subset of their dependencies are uncached vs.
-   * if any of their descendants are uncached.  Other rules (like packaging rules) need to run if
-   * any of their descendants are uncached.
-   * <p>
-   * Note that it is always safe for this method to return {@code true}; however, that may result
-   * in unnecessary rebuilding.
-   */
-  public boolean hasUncachedDescendants(BuildContext context) throws IOException;
 
   /**
    * @return whether this rule exists only in an Android project.
