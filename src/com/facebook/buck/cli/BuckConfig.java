@@ -123,20 +123,19 @@ class BuckConfig {
    * Takes a sequence of {@code .buckconfig} files and loads them, in order, to create a
    * {@code BuckConfig} object. Each successive file that is loaded has the ability to override
    * definitions from a previous file.
-   * @param projectRoot The directory that is the root of the project being built.
+   * @param projectFilesystem project for which the {@link BuckConfig} is being created.
    * @param files The sequence of {@code .buckconfig} files to load.
    */
-  public static BuckConfig createFromFiles(File projectRoot, Iterable<File> files)
+  public static BuckConfig createFromFiles(ProjectFilesystem projectFilesystem,
+      Iterable<File> files)
       throws IOException {
-    Preconditions.checkNotNull(projectRoot);
-    Preconditions.checkArgument(projectRoot.isDirectory());
+    Preconditions.checkNotNull(projectFilesystem);
     Preconditions.checkNotNull(files);
 
     if (Iterables.isEmpty(files)) {
       return BuckConfig.emptyConfig();
     }
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem);
 
     // Convert the Files to Readers.

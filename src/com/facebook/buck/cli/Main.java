@@ -85,8 +85,8 @@ public final class Main {
       return usage();
     }
 
-    BuckConfig buckConfig = createBuckConfig(projectRoot);
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
+    BuckConfig buckConfig = createBuckConfig(projectFilesystem);
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
       String[] remainingArgs = new String[args.length - 1];
@@ -111,19 +111,21 @@ public final class Main {
   /**
    * @param projectRoot The directory that is the root of the project being built.
    */
-  private static BuckConfig createBuckConfig(File projectRoot) throws IOException {
+  private static BuckConfig createBuckConfig(ProjectFilesystem projectFilesystem)
+      throws IOException {
     ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
-    File configFile = new File(projectRoot, DEFAULT_BUCK_CONFIG_FILE_NAME);
+    File configFile = projectFilesystem.getFileForRelativePath(DEFAULT_BUCK_CONFIG_FILE_NAME);
     if (configFile.isFile()) {
       configFileBuilder.add(configFile);
     }
-    File overrideConfigFile = new File(projectRoot, DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
+    File overrideConfigFile = projectFilesystem.getFileForRelativePath(
+        DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
     if (overrideConfigFile.isFile()) {
       configFileBuilder.add(overrideConfigFile);
     }
 
     ImmutableList<File> configFiles = configFileBuilder.build();
-    return BuckConfig.createFromFiles(projectRoot, configFiles);
+    return BuckConfig.createFromFiles(projectFilesystem, configFiles);
   }
 
   private int tryRunMainWithExitCode(File projectRoot, String... args) throws IOException {

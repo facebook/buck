@@ -62,7 +62,6 @@ public class ProjectCommandTest {
 
   private static final ImmutableMap<String, Object> EMPTY_PARSE_DATA = ImmutableMap.of();
   private static final ArtifactCache artifactCache = new NoopArtifactCache();
-  private static final ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
 
   @Test
   public void testBasicProjectCommand()
@@ -164,7 +163,7 @@ public class ProjectCommandTest {
 
     ProjectCommandForTest() {
       super(new CommandRunnerParams(
-          projectFilesystem,
+          EasyMock.createMock(ProjectFilesystem.class),
           new KnownBuildRuleTypes(),
           artifactCache));
     }

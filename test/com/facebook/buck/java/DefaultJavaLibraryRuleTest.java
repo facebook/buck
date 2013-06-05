@@ -47,6 +47,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -736,7 +737,7 @@ public class DefaultJavaLibraryRuleTest {
 
       executionContext = new ExecutionContext(
           Verbosity.SILENT,
-          new File("."),
+          EasyMock.createMock(ProjectFilesystem.class),
           new Console(System.out, System.err, Ansi.withoutTty()),
           Optional.<AndroidPlatformTarget>absent(),
           Optional.<File>absent(),

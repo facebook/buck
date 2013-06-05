@@ -61,3 +61,8 @@ java_library(
     'PUBLIC',
   ],
 )
+
+sh_test(
+  name = 'one_project_filesystem_test',
+  test = 'one_project_filesystem_test.sh',
+)

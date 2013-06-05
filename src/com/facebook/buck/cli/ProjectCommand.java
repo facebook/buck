@@ -72,7 +72,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ExecutionContext executionContext = new ExecutionContext(
         options.getVerbosity(),
-        getProjectFilesystem().getProjectRoot(),
+        getProjectFilesystem(),
         console,
         options.findAndroidPlatformTarget(partialGraph.getDependencyGraph(), getStdErr()),
         options.findAndroidNdkDir(),
@@ -151,7 +151,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throws IOException, NoSuchBuildTargetException {
     return PartialGraph.createPartialGraph(
         rulePredicate,
-        getProjectFilesystem().getProjectRoot(),
+        getProjectFilesystem(),
         getArtifactCache(),
         options.getDefaultIncludes());
   }

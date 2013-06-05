@@ -66,7 +66,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     PartialGraph partialGraph;
     try {
       partialGraph = PartialGraph.createPartialGraph(predicate,
-          getProjectFilesystem().getProjectRoot(),
+          getProjectFilesystem(),
           getArtifactCache(),
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {

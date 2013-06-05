@@ -79,7 +79,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     PartialGraph graph;
     try {
       graph = PartialGraph.createFullGraph(
-          getProjectFilesystem().getProjectRoot(),
+          getProjectFilesystem(),
           getArtifactCache(),
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {

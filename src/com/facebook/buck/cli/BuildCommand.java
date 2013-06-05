@@ -148,7 +148,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
     // Create and execute the build.
     this.build = options.createBuild(dependencyGraph,
-        getProjectFilesystem().getProjectRoot(),
+        getProjectFilesystem(),
         console);
     getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);

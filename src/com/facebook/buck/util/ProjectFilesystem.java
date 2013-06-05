@@ -35,6 +35,14 @@ public class ProjectFilesystem {
 
   private final File projectRoot;
 
+  /**
+   * There should only be one {@link ProjectFilesystem} created per process.
+   * <p>
+   * When creating a {@code ProjectFilesystem} for a test, rather than create a filesystem with an
+   * arbitrary argument for the project root, such as {@code new File(".")}, prefer the creation of
+   * a mock filesystem via EasyMock instead. Note that there are cases (such as integration tests)
+   * where specifying {@code new File(".")} as the project root might be the appropriate thing.
+   */
   public ProjectFilesystem(File projectRoot) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     Preconditions.checkArgument(projectRoot.isDirectory());

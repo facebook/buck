@@ -21,6 +21,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -30,7 +31,7 @@ import java.io.PrintStream;
 public class ExecutionContext {
 
   private final Verbosity verbosity;
-  private final File projectDirectoryRoot;
+  private final ProjectFilesystem projectFilesystem;
   private final Console console;
   private final Optional<AndroidPlatformTarget> androidPlatformTarget;
   private final Optional<File> ndkRoot;
@@ -40,14 +41,14 @@ public class ExecutionContext {
 
   public ExecutionContext(
       Verbosity verbosity,
-      File directory,
+      ProjectFilesystem projectFilesystem,
       Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<File> ndkRoot,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled) {
     this.verbosity = Preconditions.checkNotNull(verbosity);
-    this.projectDirectoryRoot = Preconditions.checkNotNull(directory);
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
     this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
     this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
@@ -62,7 +63,7 @@ public class ExecutionContext {
    */
   public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
     return new ExecutionContext(verbosity,
-        this.projectDirectoryRoot,
+        this.projectFilesystem,
         new Console(newStdout, newStderr, console.getAnsi()),
         this.androidPlatformTarget,
         this.ndkRoot,
@@ -74,8 +75,12 @@ public class ExecutionContext {
     return verbosity;
   }
 
+  public ProjectFilesystem getProjectFilesystem() {
+    return projectFilesystem;
+  }
+
   public File getProjectDirectoryRoot() {
-    return projectDirectoryRoot;
+    return projectFilesystem.getProjectRoot();
   }
 
   public boolean isDebugEnabled() {

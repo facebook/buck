@@ -95,7 +95,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // Parse the entire dependency graph.
     PartialGraph graph;
     try {
-      graph = PartialGraph.createFullGraph(getProjectFilesystem().getProjectRoot(),
+      graph = PartialGraph.createFullGraph(getProjectFilesystem(),
           getArtifactCache(),
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {

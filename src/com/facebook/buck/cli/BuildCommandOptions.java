@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -32,7 +33,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -122,11 +122,11 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     return listeningExecutorService;
   }
 
-  Build createBuild(DependencyGraph graph, File projectDirectoryRoot, Console console) {
+  Build createBuild(DependencyGraph graph, ProjectFilesystem projectFilesystem, Console console) {
     return new Build(graph,
         findAndroidSdkDir(),
         findAndroidNdkDir(),
-        projectDirectoryRoot,
+        projectFilesystem,
         getVerbosity(),
         getListeningExecutorService(),
         getBuckConfig().createDefaultJavaPackageFinder(),
