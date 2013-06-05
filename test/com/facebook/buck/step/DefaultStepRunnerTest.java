@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -26,6 +27,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 
+import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.File;
@@ -34,6 +36,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class DefaultStepRunnerTest {
+
   @Test(expected=StepFailedException.class, timeout=1000)
   public void testParallelCommandFailure() throws Exception {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -46,7 +49,7 @@ public class DefaultStepRunnerTest {
 
     ExecutionContext context = new ExecutionContext(
         Verbosity.SILENT,
-        new File("."),
+        EasyMock.createMock(ProjectFilesystem.class),
         new Console(System.out, System.err, Ansi.withoutTty()),
         Optional.<AndroidPlatformTarget>absent(),
         Optional.<File>absent(),

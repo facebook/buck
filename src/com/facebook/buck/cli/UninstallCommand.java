@@ -88,7 +88,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
     // We need this in case adb isn't already running.
     ExecutionContext context = options.createExecutionContext(
         this,
-        getProjectFilesystem().getProjectRoot(),
+        getProjectFilesystem(),
         console,
         dependencyGraph);
 

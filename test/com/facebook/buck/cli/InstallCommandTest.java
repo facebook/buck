@@ -34,6 +34,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.io.ByteStreams;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
@@ -88,7 +89,7 @@ public class InstallCommandTest {
     OutputStream nullOut = ByteStreams.nullOutputStream();
     PrintStream out = new PrintStream(nullOut);
     Console console = new Console(out, out, Ansi.withoutTty());
-    ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
     return new InstallCommand(new CommandRunnerParams(

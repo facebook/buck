@@ -73,7 +73,7 @@ public class Build {
       DependencyGraph dependencyGraph,
       Optional<File> androidSdkDir,
       Optional<File> ndkRoot,
-      File projectDirectoryRoot,
+      ProjectFilesystem projectFilesystem,
       Verbosity verbosity,
       ListeningExecutorService listeningExecutorService,
       JavaPackageFinder javaPackageFinder,
@@ -87,7 +87,7 @@ public class Build {
         dependencyGraph, androidSdkDir, console.getStdErr());
     this.executionContext = new ExecutionContext(
         verbosity,
-        projectDirectoryRoot,
+        projectFilesystem,
         console,
         androidPlatformTarget,
         ndkRoot,
@@ -195,14 +195,11 @@ public class Build {
     events.post(BuildEvents.started());
     Set<BuildRule> rulesToBuild = dependencyGraph.getNodesWithNoIncomingEdges();
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(
-        executionContext.getProjectDirectoryRoot());
-
     buildContext = BuildContext.builder()
         .setProjectRoot(executionContext.getProjectDirectoryRoot())
         .setDependencyGraph(dependencyGraph)
         .setCommandRunner(stepRunner)
-        .setProjectFilesystem(projectFilesystem)
+        .setProjectFilesystem(executionContext.getProjectFilesystem())
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(events)
         .setAndroidBootclasspathForAndroidPlatformTarget(

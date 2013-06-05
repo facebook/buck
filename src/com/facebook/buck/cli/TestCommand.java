@@ -251,7 +251,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     };
     PartialGraph partialGraph = PartialGraph.createPartialGraph(predicate,
-        getProjectFilesystem().getProjectRoot(),
+        getProjectFilesystem(),
         getArtifactCache(),
         options.getDefaultIncludes());
     final DependencyGraph graph = partialGraph.getDependencyGraph();
@@ -267,7 +267,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     testRules = filterTestRules(options, testRules);
 
     // Build all of the test rules.
-    Build build = options.createBuild(graph, getProjectFilesystem().getProjectRoot(), console);
+    Build build = options.createBuild(graph, getProjectFilesystem(), console);
     int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
     if (exitCode != 0) {
       return exitCode;

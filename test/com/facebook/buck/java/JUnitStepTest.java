@@ -26,6 +26,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -122,7 +123,7 @@ public class JUnitStepTest {
     PrintStream stdout = EasyMock.createNiceMock(PrintStream.class);
     ExecutionContext executionContext = new ExecutionContext(
         Verbosity.ALL,
-        new File("."),
+        EasyMock.createMock(ProjectFilesystem.class),
         new Console(stdout, stderr, Ansi.withoutTty()),
         Optional.<AndroidPlatformTarget>absent(),
         Optional.<File>absent(),
