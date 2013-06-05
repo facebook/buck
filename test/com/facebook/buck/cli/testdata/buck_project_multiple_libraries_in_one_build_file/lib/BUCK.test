@@ -1,0 +1,7 @@
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit-4.11.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)

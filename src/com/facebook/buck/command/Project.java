@@ -356,8 +356,7 @@ public class Project {
     module.pathToImlFile = String.format("%s%s.iml", relativePath, module.name);
 
     // List the module source as the first dependency.
-    DependentModule sourceFolderModule = DependentModule.newSourceFolder();
-    dependencies.add(sourceFolderModule);
+    boolean includeSourceFolder = true;
 
     // Do the tests before the sources so they appear earlier in the classpath. When tests are run,
     // their classpath entries may be deliberately shadowing production classpath entries.
@@ -383,7 +382,7 @@ public class Project {
     // At least one of src or tests should contribute a source folder unless this is an
     // non-library Android project with no source roots specified.
     if (!hasSourceFoldersForTestRule && !hasSourceFoldersForSrcRule) {
-      dependencies.remove(sourceFolderModule);
+      includeSourceFolder = false;
     }
 
     // IntelliJ expects all Android projects to have a gen/ folder, even if there is no src/
@@ -393,11 +392,12 @@ public class Project {
       boolean hasSourceFolders = !module.sourceFolders.isEmpty();
       module.sourceFolders.add(SourceFolder.GEN);
       if (!hasSourceFolders) {
-        dependencies.add(DependentModule.newSourceFolder());
+        includeSourceFolder = true;
       }
     }
 
     // src dependencies
+    // Note that isForTests is false even if projectRule is the project_config's test_target.
     walkRuleAndAdd(projectRule, false /* isForTests */, dependencies, projectConfig.getSrcRule());
 
     String basePathWithSlash = projectConfig.getBuildTarget().getBasePathWithSlash();
@@ -408,8 +408,9 @@ public class Project {
     // the base path of current build target.
     module.moduleGenPath = generateRelativeGenPath(basePathWithSlash);
 
-    // android details
+    DependentModule jdkDependency;
     if (isAndroidRule) {
+      // android details
       if (projectRule instanceof NdkLibraryRule) {
         NdkLibraryRule ndkLibraryRule = (NdkLibraryRule)projectRule;
         module.isAndroidLibraryProject = true;
@@ -462,18 +463,20 @@ public class Project {
       }
 
       // List this last so that classes from modules can shadow classes in the JDK.
-      dependencies.add(DependentModule.newInheritedJdk());
+      jdkDependency = DependentModule.newInheritedJdk();
     } else {
       module.hasAndroidFacet = false;
 
       if (module.isIntelliJPlugin()) {
-        dependencies.add(DependentModule.newIntelliJPluginJdk());
+        jdkDependency = DependentModule.newIntelliJPluginJdk();
       } else {
-        dependencies.add(DependentModule.newStandardJdk());
+        jdkDependency = DependentModule.newStandardJdk();
       }
     }
 
-    module.dependencies = Lists.newArrayList(dependencies);
+    // Assign the dependencies.
+    module.dependencies = createDependenciesInOrder(
+        includeSourceFolder, dependencies, jdkDependency);
 
     // Annotation processing generates sources for IntelliJ to consume, but does so outside
     // the module directory to avoid messing up globbing.
@@ -490,6 +493,33 @@ public class Project {
     }
 
     return module;
+  }
+
+  private List<DependentModule> createDependenciesInOrder(
+      boolean includeSourceFolder,
+      LinkedHashSet<DependentModule> dependencies,
+      DependentModule jdkDependency) {
+    List<DependentModule> dependenciesInOrder = Lists.newArrayList();
+
+    // If the source folder module is present, add it to the front of the list.
+    if (includeSourceFolder) {
+      dependenciesInOrder.add(DependentModule.newSourceFolder());
+    }
+
+    // List the libraries before the non-libraries.
+    List<DependentModule> nonLibraries = Lists.newArrayList();
+    for (DependentModule dep : dependencies) {
+      if (dep.isLibrary()) {
+        dependenciesInOrder.add(dep);
+      } else {
+        nonLibraries.add(dep);
+      }
+    }
+    dependenciesInOrder.addAll(nonLibraries);
+
+    // Add the JDK last.
+    dependenciesInOrder.add(jdkDependency);
+    return dependenciesInOrder;
   }
 
   /**

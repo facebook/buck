@@ -68,4 +68,27 @@ public class ProjectIntegrationTest {
         ) + '\n',
         result.getStdout());
   }
+
+  /**
+   * Tests the case where a build file has a test rule that depends on a library rule in the same
+   * build file, and the test rule is specified as the {@code test_target} in its
+   * {@code project_config()}. When this happens, all libraries in the generated {@code .iml} file
+   * should be listed before any of the modules.
+   * <p>
+   * This prevents a regression where JUnit was not being loaded early enough in the classpath,
+   * which led to a "JUnit version 3.8 or later expected" error when running tests in IntelliJ.
+   * (Presumably, IntelliJ ended up loading JUnit 3 from android.jar instead of loading JUnit 4
+   * from the version of JUnit checked into version control.)
+   */
+  @Test
+  public void testBuckProjectWithMultipleLibrariesInOneBuildFile() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "buck_project_multiple_libraries_in_one_build_file", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project");
+    assertEquals("buck project should exit cleanly", 0, result.getExitCode());
+
+    workspace.verify();
+  }
 }
