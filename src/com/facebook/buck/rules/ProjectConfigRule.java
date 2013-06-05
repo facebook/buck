@@ -27,7 +27,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -97,7 +96,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
     this.isIntelliJPlugin = isIntelliJPlugin;
 
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this);
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, /* isFromBuildCache */ false);
     this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
   }
 
@@ -150,16 +149,6 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   @Override
   public final Iterable<InputRule> getInputs() {
     return ImmutableList.of();
-  }
-
-  @Override
-  public boolean isCached(BuildContext context) throws IOException {
-    return true;
-  }
-
-  @Override
-  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
-    return false;
   }
 
   public static Builder newProjectConfigRuleBuilder() {

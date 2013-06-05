@@ -33,7 +33,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.Comparator;
 
 public class AbstractBuildRuleTest {
@@ -214,16 +213,6 @@ public class AbstractBuildRuleTest {
       @Override
       public final Iterable<InputRule> getInputs() {
         return ImmutableList.of();
-      }
-
-      @Override
-      public boolean isCached(BuildContext context) throws IOException {
-        throw new IllegalStateException("This method should not be called");
-      }
-
-      @Override
-      public boolean hasUncachedDescendants(BuildContext context) throws IOException {
-        throw new IllegalStateException("This method should not be called");
       }
 
       @Override

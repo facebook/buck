@@ -16,18 +16,17 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.google.common.base.Optional;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
-  private final boolean hasUncachedDescendants;
+
+  // TODO(mbolin): Find a way to make use of this field or delete it.
+  @SuppressWarnings("unused")
   private final boolean ruleInputsAreCached;
 
   protected FakeDefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
@@ -36,7 +35,6 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
                                        Optional<String> proguardConfig,
                                        AnnotationProcessingParams annotationProcessingParams,
                                        boolean exportDeps,
-                                       boolean hasUncachedDescendants,
                                        boolean ruleInputsAreCached) {
     super(cachingBuildRuleParams,
         srcs,
@@ -46,18 +44,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
         JavacOptions.builder().setAnnotationProcessingData(annotationProcessingParams).build()
     );
 
-    this.hasUncachedDescendants = hasUncachedDescendants;
     this.ruleInputsAreCached = ruleInputsAreCached;
-  }
-
-  @Override
-  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
-    return hasUncachedDescendants;
-  }
-
-  @Override
-  protected boolean ruleInputsCached(BuildContext context, Logger logger) throws IOException {
-    return ruleInputsAreCached;
   }
 
   public static FakeDefaultJavaLibraryRule.Builder newFakeJavaLibraryRuleBuilder() {
@@ -65,7 +52,6 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
-    private boolean hasUncachedDescendants;
     private boolean ruleInputsAreCached;
 
     @Override
@@ -81,13 +67,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
           proguardConfig,
           processingParams,
           exportDeps,
-          hasUncachedDescendants,
           ruleInputsAreCached);
-    }
-
-    public Builder setHasUncachedDescendants(boolean hasUncachedDescendants) {
-      this.hasUncachedDescendants = hasUncachedDescendants;
-      return this;
     }
 
     public Builder setRuleInputsAreCached(boolean ruleInputsAreCached) {

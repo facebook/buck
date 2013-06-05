@@ -26,7 +26,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Comparator;
 
 import javax.annotation.Nullable;
@@ -65,7 +64,7 @@ public class InputRule implements BuildRule {
     inputFile = Preconditions.checkNotNull(input);
     buildTarget = new BuildTarget(input);
 
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this);
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, /* isFromBuildCache */ false);
     this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
   }
 
@@ -111,16 +110,6 @@ public class InputRule implements BuildRule {
   @Override
   public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
     return buildOutput;
-  }
-
-  @Override
-  public boolean isCached(BuildContext context) throws IOException {
-    return true;
-  }
-
-  @Override
-  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
-    return false;
   }
 
   @Override

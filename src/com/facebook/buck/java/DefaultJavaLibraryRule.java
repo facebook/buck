@@ -62,7 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
@@ -363,44 +362,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   @Override
   public boolean getExportDeps() {
     return exportDeps;
-  }
-
-  /**
-   * Checks to see if all of the dependant rules are cached.  By default, AbstractCachingBuildRule
-   * will consider a rule's deps uncached if any of its descendants were uncached.
-   */
-  @VisibleForTesting
-  @Override
-  protected boolean depsCached(final BuildContext context, Logger logger) throws IOException {
-    if (context.getBuildDependencies() != BuildDependencies.FIRST_ORDER_ONLY) {
-      return super.depsCached(context, logger);
-    }
-
-    for (BuildRule dep : getDeps()) {
-      if (dep instanceof DefaultJavaLibraryRule) {
-        DefaultJavaLibraryRule javaDep = (DefaultJavaLibraryRule)dep;
-        if (javaDep.getExportDeps()) {
-          if (javaDep.hasUncachedDescendants(context)) {
-            logger.info(String.format("%s not cached because java library %s exports its deps " +
-                                      "and has uncached descendants",
-                this,
-                dep.getFullyQualifiedName()));
-            return false;
-          }
-        } else if (!javaDep.ruleInputsCached(context, logger)) {
-          logger.info(String.format("%s not cached because java library %s's inputs changed",
-              this,
-              dep.getFullyQualifiedName()));
-          return false;
-        }
-      } else if (!dep.isCached(context)) {
-        logger.info(String.format("%s not cached because %s is not cached",
-            this,
-            dep.getFullyQualifiedName()));
-        return false;
-      }
-    }
-    return true;
   }
 
   /**

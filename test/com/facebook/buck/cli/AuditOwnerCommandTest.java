@@ -48,7 +48,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
@@ -114,16 +113,6 @@ public class AuditOwnerCommandTest {
 
     @Override
     public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isCached(BuildContext context) throws IOException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasUncachedDescendants(BuildContext context) throws IOException {
       throw new UnsupportedOperationException();
     }
 

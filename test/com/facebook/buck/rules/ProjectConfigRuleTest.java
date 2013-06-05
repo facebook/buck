@@ -16,10 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -33,8 +31,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * Unit test for {@link ProjectConfigRule}.
@@ -57,16 +53,6 @@ public class ProjectConfigRuleTest extends EasyMockSupport {
 
     assertNotNull("build() should return a non-null result", result1);
     assertSame("build() must be idempotent", result1, result2);
-  }
-
-  @Test
-  public void testCacheMethods() throws IOException {
-    BuildContext context = createMock(BuildContext.class);
-    replayAll();
-
-    ProjectConfigRule projectConfig = createProjectConfig();
-    assertTrue(projectConfig.isCached(context));
-    assertFalse(projectConfig.hasUncachedDescendants(context));
   }
 
   private ProjectConfigRule createProjectConfig() {

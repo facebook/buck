@@ -16,45 +16,32 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.BuildRuleStatus.FAIL;
-import static com.facebook.buck.rules.BuildRuleStatus.SUCCESS;
-import static com.facebook.buck.rules.CacheResult.HIT;
-import static com.facebook.buck.rules.CacheResult.MISS;
-import static com.facebook.buck.util.BuckConstant.BIN_DIR;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.getCurrentArguments;
-import static org.easymock.EasyMock.isA;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.java.JavaBinaryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.easymock.IAnswer;
+import org.easymock.Capture;
+import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.File;
@@ -62,260 +49,167 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
+
+import javax.annotation.Nullable;
 
 /**
  * Ensuring that build rule caching works correctly in Buck is imperative for both its performance
  * and correctness.
  */
-public class AbstractCachingBuildRuleTest {
+public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
   private static final BuildTarget buildTarget = BuildTargetFactory.newInstance(
       "//src/com/facebook/orca", "orca");
 
-  private static final ImmutableList<BuildTarget> inputTargets = ImmutableList.of(
-      BuildTargetFactory.newInstance("//src/com/facebook/orca/Thing1.java", "Thing1.java"),
-      BuildTargetFactory.newInstance("//src/com/facebook/orca/Thing2.java", "Thing2.java"),
-      BuildTargetFactory.newInstance("//src/com/facebook/orca/Thing3.java", "Thing3.java"));
-
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
-
+  /**
+   * Tests what should happen when a rule is built for the first time: it should have no cached
+   * RuleKey, nor should it have any artifact in the ArtifactCache. The sequence of events should be
+   * as follows:
+   * <ol>
+   *   <li>The rule invokes the {@link BuildRule#build(BuildContext)} method of each of its deps.
+   *   <li>The rule computes its own {@link RuleKey}.
+   *   <li>It compares its {@link RuleKey} to the one on disk, if present.
+   *   <li>Because the rule has no {@link RuleKey} on disk, the rule tries to build itself.
+   *   <li>First, it checks the artifact cache, but there is a cache miss.
+   *   <li>The rule generates its build steps and executes them.
+   *   <li>Upon executing its steps successfully, it should write its {@RuleKey} to disk.
+   *   <li>It should persist its output to the ArtifactCache.
+   * </ol>
+   */
   @Test
-  public void testNotCachedIfDepsNotCached() throws IOException {
-    BuildContext context = BuildContext.builder()
-        .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(StepRunner.class))
-        .setProjectFilesystem(createMock(ProjectFilesystem.class))
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .build();
-
-    // Create three deps: the second one is not cached.
-    BuildRule dep1 = createMock(BuildRule.class);
-    expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep2 = createMock(BuildRule.class);
-    expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.hasUncachedDescendants(context)).andReturn(true);
-    expect(dep2.getFullyQualifiedName()).andReturn("//src/com/facebook/base:base");
-    BuildRule dep3 = createMock(BuildRule.class);
-    expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-
-    // Verify the call to the logger so we know the rule was not cached for the right reason.
-    Logger logger = createMock(Logger.class);
-    logger.info("//src/com/facebook/orca:orca not cached because" +
-        " //src/com/facebook/base:base has an uncached descendant");
+  public void testBuildRuleWithoutSuccessFileOrCachedArtifact()
+      throws IOException, InterruptedException, ExecutionException, StepFailedException {
+    // Create a dep for the build rule.
+    BuildRule dep = createMock(BuildRule.class);
+    expect(dep.isVisibleTo(buildTarget)).andReturn(true);
 
     // Verify that there are no calls made to the visibility patterns.
     @SuppressWarnings("unchecked")
     ImmutableSet<BuildTargetPattern> visibilityPatterns = createMock(ImmutableSet.class);
 
-    // Replay the mocks so checkIsCached() can be run and verify they are used as expected.
-    replay(dep1, dep2, dep3, logger, visibilityPatterns);
-    AbstractCachingBuildRule cachingRule = createRule(ImmutableSet.of(dep1, dep2, dep3),
-        visibilityPatterns);
-    boolean isCached = cachingRule.checkIsCached(context, logger);
-    assertFalse("The rule should not be cached", isCached);
-    verify(dep1, dep2, dep3, logger, visibilityPatterns);
-  }
+    // Create an ArtifactCache whose expectations will be set later.
+    ArtifactCache artifactCache = createMock(ArtifactCache.class);
 
-  @Test
-  public void testNotCachedIfSuccessFileDoesNotExist() throws IOException {
-    // Create a LastModifiedService that checks for the existence of a file.
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.exists(BIN_DIR + "/src/com/facebook/orca/.success/orca"))
-        .andReturn(false);
-    BuildContext context = BuildContext.builder()
-        .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(StepRunner.class))
-        .setProjectFilesystem(projectFilesystem)
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .build();
-
-    // Create three deps, all of which are cached.
-    BuildRule dep1 = createMock(BuildRule.class);
-    expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep2 = createMock(BuildRule.class);
-    expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep3 = createMock(BuildRule.class);
-    expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
-
-    // Verify the call to the logger so we know the rule was not cached for the right reason.
-    Logger logger = createMock(Logger.class);
-    logger.info("//src/com/facebook/orca:orca not cached because the output file " +
-        BIN_DIR + "/src/com/facebook/orca/.success/orca is not built");
-
-    // Verify that there are no calls made to the visibility patterns.
-    @SuppressWarnings("unchecked")
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = createMock(ImmutableSet.class);
-
-    // Replay the mocks so checkIsCached() can be run and verify they are used as expected.
-    replay(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-    AbstractCachingBuildRule cachingRule = createRule(ImmutableSet.of(dep1, dep2, dep3),
-        visibilityPatterns);
-    boolean isCached = cachingRule.checkIsCached(context, logger);
-    assertFalse("The rule should not be cached", isCached);
-    verify(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-  }
-
-  @Test
-  public void testNotCachedIfInputsHaveChanged() throws IOException {
-    // Create a LastModifiedService that checks for the existence of a file and then its contents.
-    ProjectFilesystem projectFilesystem = createService(false);
-    BuildContext context = BuildContext.builder()
-        .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(StepRunner.class))
-        .setProjectFilesystem(projectFilesystem)
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .build();
-
-    // Create three deps, all of which are cached.
-    BuildRule dep1 = createMock(BuildRule.class);
-    expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep2 = createMock(BuildRule.class);
-    expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep3 = createMock(BuildRule.class);
-    expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
-
-    // Verify the call to the logger so we know the rule was not cached for the right reason.
-    Logger logger = createMock(Logger.class);
-    logger.info(String.format(
-        "%s not cached because the inputs and/or their contents have changed", buildTarget));
-
-    // Verify that there are no calls made to the visibility patterns.
-    @SuppressWarnings("unchecked")
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = createMock(ImmutableSet.class);
-
-    // Replay the mocks so checkIsCached() can be run and verify they are used as expected.
-    replay(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-    AbstractCachingBuildRule cachingRule = createRule(ImmutableSet.of(dep1, dep2, dep3),
-        visibilityPatterns);
-    boolean isCached = cachingRule.checkIsCached(context, logger);
-    assertFalse("The rule should not be cached", isCached);
-    verify(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-  }
-
-  @Test
-  public void testNotCachedIfInputFilesHaveBeenModifiedSinceTheLastBuild() throws IOException {
-    // If the build file is modified after the success file, then the rule should not be cached.
-    ProjectFilesystem projectFilesystem = createService(false);
-    BuildContext context = BuildContext.builder()
-        .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(StepRunner.class))
-        .setProjectFilesystem(projectFilesystem)
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .build();
-
-    // Create three deps, all of which are cached.
-    BuildRule dep1 = createMock(BuildRule.class);
-    expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep2 = createMock(BuildRule.class);
-    expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep3 = createMock(BuildRule.class);
-    expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
-
-    // Verify the call to the logger so we know the rule was not cached for the right reason.
-    Logger logger = createMock(Logger.class);
-    logger.info(String.format(
-        "%s not cached because the inputs and/or their contents have changed", buildTarget));
-
-    // Verify that there are no calls made to the visibility patterns.
-    @SuppressWarnings("unchecked")
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = createMock(ImmutableSet.class);
-
-    // Replay the mocks so checkIsCached() can be run and verify they are used as expected.
-    replay(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-    AbstractCachingBuildRule cachingRule = createRule(ImmutableSet.of(dep1, dep2, dep3),
-        visibilityPatterns);
-    boolean isCached = cachingRule.checkIsCached(context, logger);
-    assertFalse("The rule should not be cached", isCached);
-    verify(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-  }
-
-  @Test
-  public void testCachedIfAllCachingCriteriaAreSatisfied() throws IOException {
-    // If the build file is modified at the same time as the success file, then it can still be
-    // cached.
-    ProjectFilesystem projectFilesystem = createService(true);
-    BuildContext context = BuildContext.builder()
-        .setProjectRoot(createMock(File.class))
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setCommandRunner(createMock(StepRunner.class))
-        .setProjectFilesystem(projectFilesystem)
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .build();
-
-    // Create three deps, all of which are cached.
-    BuildRule dep1 = createMock(BuildRule.class);
-    expect(dep1.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep1.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep2 = createMock(BuildRule.class);
-    expect(dep2.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep2.hasUncachedDescendants(context)).andReturn(false);
-    BuildRule dep3 = createMock(BuildRule.class);
-    expect(dep3.isVisibleTo(buildTarget)).andReturn(true);
-    expect(dep3.hasUncachedDescendants(context)).andReturn(false);
-
-    // Verify that there are no calls made to the Logger.
-    Logger logger = createMock(Logger.class);
-
-    // Verify that there are no calls made to the visibility patterns.
-    @SuppressWarnings("unchecked")
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = createMock(ImmutableSet.class);
-
-    // Replay the mocks so checkIsCached() can be run and verify they are used as expected.
-    replay(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-    AbstractCachingBuildRule cachingRule = createRule(ImmutableSet.of(dep1, dep2, dep3),
-        visibilityPatterns);
-    boolean isCached = cachingRule.checkIsCached(context, logger);
-    assertTrue("The rule should be cached", isCached);
-    verify(projectFilesystem, dep1, dep2, dep3, logger, visibilityPatterns);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static ProjectFilesystem createService(final boolean isCached) throws IOException {
-    // Create a LastModifiedService that:
-    // (1) checks for the existence of the success file,
-    // (2) verifies that its contents match the list of inputs and input contents
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.exists(BIN_DIR + "/src/com/facebook/orca/.success/orca"))
-        .andReturn(true);
-    expect(projectFilesystem.isMatchingFileContents(isA(Iterable.class),
-        eq(BIN_DIR + "/src/com/facebook/orca/.success/orca")))
-        .andAnswer(new IAnswer<Boolean>() {
+    // Replay the mocks to instantiate the AbstractCachingBuildRule.
+    replayAll();
+    File output = new File("some_file");
+    List<Step> buildSteps = Lists.newArrayList();
+    AbstractCachingBuildRule cachingRule = createRule(
+        ImmutableSet.of(dep),
+        visibilityPatterns,
+        ImmutableList.<InputRule>of(new InputRule("/dev/null") {
           @Override
-          public Boolean answer() throws Throwable {
-            ImmutableList<String> arg0 = ImmutableList.<String>builder()
-                .addAll((Iterable<String>) getCurrentArguments()[0])
-                .build();
-
-            assertEquals(inputTargets.size(), arg0.size());
-            for (int i = 0; i < inputTargets.size(); i++) {
-              // Extract fully qualified name from success file line, which has format:
-              //   OutputKey RuleKey FullyQualifiedName
-              String[] tuple = arg0.get(i).split(" ", 3);
-              assertTrue(tuple[2].equals(inputTargets.get(i).getFullyQualifiedName()));
-            }
-            return isCached;
+          public RuleKey getRuleKey() {
+            return new RuleKey("ae8c0f860a0ecad94ecede79b69460434eddbfbc");
           }
-        });
-    return projectFilesystem;
+        }),
+        buildSteps,
+        /* ruleKeyOnDisk */ Optional.<RuleKey>absent(),
+        output,
+        artifactCache);
+    verifyAll();
+    resetAll();
+
+    String expectedRuleKeyHash = Hashing.sha1().newHasher()
+        .putBytes(RuleKey.Builder.buckVersionUID.getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("name".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes(cachingRule.getFullyQualifiedName().getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("buck.type".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("java_library".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("deps".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("19d2558a6bd3a34fb3f95412de9da27ed32fe208".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putByte(RuleKey.Builder.SEPARATOR)
+
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("buck.inputs".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("ae8c0f860a0ecad94ecede79b69460434eddbfbc".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putByte(RuleKey.Builder.SEPARATOR)
+
+        .hash()
+        .toString();
+
+    // The EventBus should be updated with events indicating how the rule was built.
+    EventBus eventBus = createMock(EventBus.class);
+    eventBus.post(BuildEvents.started(cachingRule));
+    eventBus.post(BuildEvents.finished(cachingRule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
+
+    // The BuildContext that will be used by the rule's build() method.
+    BuildContext context = createMock(BuildContext.class);
+    expect(context.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
+    expect(context.getEventBus()).andReturn(eventBus).times(2);
+    StepRunner stepRunner = createMock(StepRunner.class);
+    expect(context.getCommandRunner()).andReturn(stepRunner);
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(context.getProjectFilesystem()).andReturn(projectFilesystem).times(2);
+    String pathToSuccessFile = cachingRule.getPathToSuccessFile();
+    projectFilesystem.createParentDirs(new File(pathToSuccessFile));
+    Capture<Iterable<String>> linesCapture = new Capture<Iterable<String>>();
+    projectFilesystem.writeLinesToPath(capture(linesCapture), eq(pathToSuccessFile));
+
+    // There will initially be a cache miss, later followed by a cache store.
+    RuleKey expectedRuleKey = new RuleKey(expectedRuleKeyHash);
+    expect(artifactCache.fetch(expectedRuleKey, output)).andReturn(false);
+    artifactCache.store(expectedRuleKey, output);
+
+    // The dependent rule will be built immediately with a distinct rule key.
+    expect(dep.build(context)).andReturn(
+        Futures.immediateFuture(new BuildRuleSuccess(dep, /* isFromBuildCache */ false)));
+    expect(dep.getRuleKey()).andReturn(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208"));
+
+    // Add a build step so we can verify that the steps are executed.
+    Step buildStep = createMock(Step.class);
+    buildSteps.add(buildStep);
+    stepRunner.runStepForBuildTarget(buildStep, buildTarget);
+
+    // Attempting to build the rule should force a rebuild due to a cache miss.
+    replayAll();
+    BuildRuleSuccess result = cachingRule.build(context).get();
+    assertFalse(result.isFromBuildCache());
+    verifyAll();
+
+    // Verify that the correct value was written to the .success file.
+    String firstLineInSuccessFile = Iterables.getFirst(linesCapture.getValue(),
+        /* defaultValue */ null);
+    assertEquals(expectedRuleKeyHash, firstLineInSuccessFile);
   }
 
-  private static AbstractCachingBuildRule createRule(ImmutableSet<BuildRule> deps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
+
+  // TODO(mbolin): Test that when the success files match, nothing is built and nothing is written
+  // back to the cache.
+
+  // TODO(mbolin): Test that when the value in the success file does not agree with the current
+  // value, the rule is rebuilt and the result is written back to the cache.
+
+  // TODO(mbolin): Test that if there is a cache hit, nothing is built and nothing is written back
+  // to the cache.
+
+  // TODO(mbolin): Test that a failure when executing the build steps is propagated appropriately.
+
+  // TODO(mbolin): Test what happens when the cache's methods throw an exception.
+
+  private static AbstractCachingBuildRule createRule(
+      ImmutableSet<BuildRule> deps,
+      ImmutableSet<BuildTargetPattern> visibilityPatterns,
+      final Iterable<InputRule> inputRules,
+      final List<Step> buildSteps,
+      final Optional<RuleKey> ruleKeyOnDisk,
+      @Nullable final File output,
+      final ArtifactCache artifactCache) {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
@@ -324,53 +218,8 @@ public class AbstractCachingBuildRuleTest {
         visibilityPatterns,
         artifactCache);
     return new AbstractCachingBuildRule(cachingBuildRuleParams) {
-      @Override
-      public BuildRuleType getType() {
-        throw new IllegalStateException("This method should not be called");
-      }
 
-      @Override
-      protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
-        List<String> inputs = Lists.newArrayList();
-        for (BuildTarget inputTarget : inputTargets) {
-          inputs.add(inputTarget.getBasePath());
-        }
-        return inputs;
-      }
-
-      @Override
-      protected List<Step> buildInternal(BuildContext context) throws IOException {
-        throw new IllegalStateException("This method should not be called");
-      }
-    };
-  }
-
-  /**
-   * Because {@link AbstractCachingBuildRule#build(BuildContext)} returns a
-   * {@link ListenableFuture}, any exceptions that are thrown during the invocation of that method
-   * should ideally be reflected as a failed future rather than being thrown and bubbling up to the
-   * top-level.
-   */
-  @Test
-  public void testExceptionDuringBuildYieldsFailedFuture() throws InterruptedException {
-    CachingBuildRuleParams buildRuleParams = new CachingBuildRuleParams(
-        BuildTargetFactory.newInstance("//java/src/com/example/base:base"),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of(),
-        artifactCache);
-    final IOException exceptionThrownDuringBuildInternal = new IOException("some exception");
-    AbstractCachingBuildRule buildRule = new AbstractCachingBuildRule(buildRuleParams) {
-
-      @Override
-      protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
-        return ImmutableList.of();
-      }
-
-      @Override
-      protected List<Step> buildInternal(BuildContext context)
-          throws IOException {
-        throw exceptionThrownDuringBuildInternal;
-      }
+      private Iterable<InputRule> inputs = inputRules;
 
       @Override
       public BuildRuleType getType() {
@@ -378,318 +227,29 @@ public class AbstractCachingBuildRuleTest {
       }
 
       @Override
-      boolean checkIsCached(BuildContext context, Logger logger) throws IOException {
-        return false;
+      public Iterable<InputRule> getInputs() {
+        return inputs;
+      }
+
+      @Override
+      public File getOutput() {
+        return output;
+      }
+
+      @Override
+      Optional<RuleKey> getRuleKeyOnDisk(ProjectFilesystem projectFilesystem) {
+        return ruleKeyOnDisk;
+      }
+
+      @Override
+      protected List<Step> buildInternal(BuildContext context) throws IOException {
+        return buildSteps;
+      }
+
+      @Override
+      protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+        throw new UnsupportedOperationException();
       }
     };
-
-    BuildContext buildContext = createMock(BuildContext.class);
-    ListeningExecutorService executor = MoreExecutors.sameThreadExecutor();
-    expect(buildContext.getExecutor()).andReturn(executor).times(3);
-    expect(buildContext.getEventBus()).andStubReturn(new EventBus());
-
-    StepRunner stepRunner = createMock(StepRunner.class);
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(executor);
-    expect(stepRunner.getListeningExecutorService()).andReturn(executorService);
-
-    expect(buildContext.getCommandRunner()).andReturn(stepRunner);
-    replay(buildContext, stepRunner);
-
-    ListenableFuture<BuildRuleSuccess> buildRuleSuccess = buildRule.build(buildContext);
-    try {
-      buildRuleSuccess.get();
-      fail("Should have thrown ExecutionException");
-    } catch (ExecutionException e) {
-      assertSame("The build rule should have the IOException packaged in an ExecutionException.",
-          exceptionThrownDuringBuildInternal,
-          e.getCause());
-    }
-
-    assertFalse("The rule should not be considered to have built successfully.",
-        buildRule.isRuleBuilt());
-
-    verify(buildContext, stepRunner);
-  }
-
-  @Test
-  public void whenBuildFinishesThenBuildSuccessEventFired()
-      throws ExecutionException, InterruptedException {
-    BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
-    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        artifactCache);
-
-    StepRunner stepRunner = createNiceMock(StepRunner.class);
-    expect(stepRunner.getListeningExecutorService()).andStubReturn(
-        MoreExecutors.sameThreadExecutor());
-    JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
-
-    replay(stepRunner, packageFinder);
-
-    EventBus bus = new EventBus();
-    Listener listener = new Listener();
-    bus.register(listener);
-    DummyRule rule = new DummyRule(params, false, false, false);
-    File root = new File(".");
-    BuildContext context = BuildContext.builder()
-        .setEventBus(bus)
-        .setProjectRoot(root)
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(stepRunner)
-        .setJavaPackageFinder(packageFinder)
-        .build();
-
-
-    ListenableFuture<BuildRuleSuccess> build = rule.build(context);
-    build.get();
-
-    assertSeenEventsContain(ImmutableList.<BuildEvent>of(
-        BuildEvents.started(rule), BuildEvents.finished(rule, SUCCESS, MISS)),
-        listener.getSeen());
-  }
-
-  @Test
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  public void whenCacheRaisesExceptionThenBuildFailEventFired()
-      throws ExecutionException, InterruptedException {
-    BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
-    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        artifactCache);
-
-    StepRunner stepRunner = createNiceMock(StepRunner.class);
-    expect(stepRunner.getListeningExecutorService()).andStubReturn(
-        MoreExecutors.sameThreadExecutor());
-    JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
-
-    replay(stepRunner, packageFinder);
-
-    EventBus bus = new EventBus();
-    Listener listener = new Listener();
-    bus.register(listener);
-    DummyRule rule = new DummyRule(params,
-        /* cached */ false,
-        /* cacheDetonates */ true,
-        /* hasUncachedDescendants */ false);
-    File root = new File(".");
-    BuildContext context = BuildContext.builder()
-        .setEventBus(bus)
-        .setProjectRoot(root)
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(stepRunner)
-        .setJavaPackageFinder(packageFinder)
-        .build();
-
-
-    ListenableFuture<BuildRuleSuccess> build = rule.build(context);
-    try {
-      build.get();
-      fail("Cache should have thrown an IOException");
-    } catch (ExecutionException ignored) {
-      // OK
-    }
-
-    assertSeenEventsContain(ImmutableList.<BuildEvent>of(
-        BuildEvents.started(rule), BuildEvents.finished(rule, FAIL, MISS)),
-        listener.getSeen());
-  }
-
-  @Test
-  public void whenBuildResultCachedThenBuildCachedEventFired()
-      throws ExecutionException, InterruptedException {
-    BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
-    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        artifactCache);
-
-    StepRunner stepRunner = createNiceMock(StepRunner.class);
-    expect(stepRunner.getListeningExecutorService()).andStubReturn(
-        MoreExecutors.sameThreadExecutor());
-    JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
-
-    replay(stepRunner, packageFinder);
-
-    EventBus bus = new EventBus();
-    Listener listener = new Listener();
-    bus.register(listener);
-    DummyRule rule = new DummyRule(params,
-        /* cached */ true,
-        /* cacheDetonates */ false,
-        /* hasUncachedDescendants */ false);
-    File root = new File(".");
-    BuildContext context = BuildContext.builder()
-        .setEventBus(bus)
-        .setProjectRoot(root)
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(stepRunner)
-        .setJavaPackageFinder(packageFinder)
-        .build();
-
-
-    ListenableFuture<BuildRuleSuccess> build = rule.build(context);
-    build.get();
-
-    assertSeenEventsContain(ImmutableList.<BuildEvent>of(
-        BuildEvents.started(rule), BuildEvents.finished(rule, SUCCESS, HIT)),
-        listener.getSeen());
-  }
-
-  @Test
-  public void canAllowNonExistentBuildRules() {
-    AbstractBuildRuleBuilder builder = JavaBinaryRule.newJavaBinaryRuleBuilder();
-    builder.setBuildTarget(BuildTargetFactory.newInstance("//foo/bar", "raz"));
-
-    ImmutableSortedSet<BuildRule> buildRules = builder.getBuildTargetsAsBuildRules(
-        ImmutableMap.<String, BuildRule>of(),
-        ImmutableList.of("//com/fake:javarule"),
-        true /* allowNonExistentRule */);
-
-    assertEquals(ImmutableSortedSet.<BuildRule>of(), buildRules);
-  }
-
-  @Test
-  public void whenAllowNonExistentFalseThenThrow() {
-    AbstractBuildRuleBuilder builder = JavaBinaryRule.newJavaBinaryRuleBuilder();
-    builder.setBuildTarget(BuildTargetFactory.newInstance("//foo/bar", "raz"));
-
-    try {
-      builder.getBuildTargetsAsBuildRules(
-          ImmutableMap.<String, BuildRule>of(),
-          ImmutableList.of("//com/fake:javarule"),
-          false /* allowNonExistentRule */);
-      fail("Should throw exception when not allowing non-existent rules in no_dx.");
-    } catch (HumanReadableException e) {
-      assertEquals("No rule for //com/fake:javarule found when processing //foo/bar:raz",
-          e.getHumanReadableErrorMessage());
-    }
-  }
-
-  @Test
-  public void whenCachedRuleHasUncachedDescendantsThenRebuildThem()
-      throws ExecutionException, InterruptedException {
-    BuildTarget depTarget = BuildTargetFactory.newInstance("//com/example:dep");
-    CachingBuildRuleParams depParams = new CachingBuildRuleParams(depTarget,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        artifactCache);
-    DummyRule depRule = new DummyRule(depParams,
-        /* cached */ false,
-        /* cacheDetonates */ false,
-        /* hasUncachedDescendants */ true);
-
-
-    BuildTarget target = BuildTargetFactory.newInstance("//com/example:rule");
-    CachingBuildRuleParams params = new CachingBuildRuleParams(target,
-        ImmutableSortedSet.<BuildRule>of(depRule),
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        artifactCache);
-
-    StepRunner stepRunner = createNiceMock(StepRunner.class);
-    expect(stepRunner.getListeningExecutorService()).andStubReturn(
-        MoreExecutors.sameThreadExecutor());
-    JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
-
-    replay(stepRunner, packageFinder);
-
-    EventBus bus = new EventBus();
-    Listener listener = new Listener();
-    bus.register(listener);
-    DummyRule rule = new DummyRule(params,
-        /* cached */ true,
-        /* cacheDetonates */ false,
-        /* hasUncachedDescendants */ true);
-
-    File root = new File(".");
-    BuildContext context = BuildContext.builder()
-        .setEventBus(bus)
-        .setProjectRoot(root)
-        .setDependencyGraph(createMock(DependencyGraph.class))
-        .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(stepRunner)
-        .setJavaPackageFinder(packageFinder)
-        .build();
-
-
-    ListenableFuture<BuildRuleSuccess> build = rule.build(context);
-    build.get();
-
-    assertSeenEventsContain(ImmutableList.<BuildEvent>of(
-        BuildEvents.started(rule),
-        BuildEvents.finished(rule, SUCCESS, HIT),
-        BuildEvents.finished(depRule, SUCCESS, MISS)),
-        listener.getSeen());
-  }
-
-  private void assertSeenEventsContain(List<BuildEvent> expected, List<BuildEvent> seen) {
-    for (BuildEvent buildEvent : expected) {
-      assertTrue(String.format("Did not see %s in %s", buildEvent, seen),
-          seen.contains(buildEvent));
-    }
-  }
-
-  private static class DummyRule extends AbstractCachingBuildRule {
-
-    private final boolean cached;
-    private final boolean cacheDetonates;
-    private final boolean hasUncachedDescendants;
-
-    protected DummyRule(CachingBuildRuleParams cachingBuildRuleParams,
-                        boolean isCached,
-                        boolean cacheDetonates,
-                        boolean hasUncachedDescendants) {
-      super(cachingBuildRuleParams);
-      cached = isCached;
-      this.cacheDetonates = cacheDetonates;
-      this.hasUncachedDescendants = hasUncachedDescendants;
-    }
-
-    @Override
-    public boolean hasUncachedDescendants(BuildContext context) {
-      return hasUncachedDescendants;
-    }
-
-    @Override
-    boolean checkIsCached(BuildContext context, Logger logger) throws IOException {
-      if (cacheDetonates) {
-        throw new IOException("Cache is somehow b0rked");
-      }
-
-      return cached;
-    }
-
-    @Override
-    protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
-      return ImmutableSet.of();
-    }
-
-    @Override
-    protected List<Step> buildInternal(BuildContext context) throws IOException {
-      return ImmutableList.of();
-    }
-
-    @Override
-    public BuildRuleType getType() {
-      return BuildRuleType.GENRULE;
-    }
-  }
-
-  private static class Listener {
-    private List<BuildEvent> seen = Lists.newArrayList();
-
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void eventFired(BuildEvent event) {
-      seen.add(event);
-    }
-
-    public List<BuildEvent> getSeen() {
-      return seen;
-    }
   }
 }

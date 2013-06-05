@@ -17,15 +17,17 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
-import com.facebook.buck.util.MoreFiles;
+import com.facebook.buck.util.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.TriState;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,217 +42,82 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
+/**
+ * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
+ * matches the one on disk, then it has no work to do. It should also try to fetch its output from
+ * an {@link ArtifactCache} to avoid doing any computation.
+ * <p>
+ * TODO(mbolin, simons): This should be converted from an abstract class that relies on inheritance
+ * to a final class that takes an object that implements the following methods:
+ * <ul>
+ *   <li>getInputsToCompareToOutput()
+ *   <li>buildInternal()
+ *   <li>appendToRuleKey()
+ *   <li>canSkipRebuildIfInterfacesOfDepsAreUnchanged()
+ * </ul>
+ * Ultimately, we plan to define a BuildRuleDescriptor, from which we will at least be able to
+ * provide the implementation of getInputsToCompareToOutput() and appendToRuleKey() automatically.
+ * How we plan to generify the ABI logic is up in the air.
+ */
 @Beta
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
 
+  // TODO(mbolin): Make Console and Verbosity accessible through BuildContext and remove this.
   private final static Logger logger = Logger.getLogger(AbstractCachingBuildRule.class.getName());
 
+  // TODO(mbolin): This should be a property of the BuildContext.
   private final ArtifactCache artifactCache;
 
   /**
-   * This field will initially be UNSPECIFIED. Once it has been determined whether this rule is
-   * cached, this field will be set accordingly. Thus, the result of {@link #isCached(BuildContext)}
-   * itself is cached.
+   * Lock used to ensure that the logic to kick off a build is performed at most once.
    */
-  private TriState isRuleCached;
+  private final AtomicBoolean hasBuildStarted;
 
   /**
-   * This field behaves similarly to isRuleCached, but instead tracks whether or not any of this
-   * rule's descendants are uncached.
+   * This is the value returned by {@link #build(BuildContext)}.
+   * This is initialized by the constructor and marked as final because {@link #build(BuildContext)}
+   * must always return the same value.
    */
-  private TriState hasUncachedDescendants;
+  private final SettableFuture<BuildRuleSuccess> buildRuleResult;
 
-  /**
-   * This field behaves similarly to isRuleCached, but instead tracks whether or not any of this
-   * rule's inputs were uncached.
-   */
-  private TriState ruleInputsAreCached;
-
-  private ListenableFuture<BuildRuleSuccess> buildRuleResult;
-
+  /** @see #getInputsToCompareToOutput(BuildContext) */
   private Iterable<InputRule> inputsToCompareToOutputs;
-
-  @Nullable private ImmutableSet<BuildRule> depsWithUncachedDescendantsCache = null;
 
   protected AbstractCachingBuildRule(CachingBuildRuleParams cachingBuildRuleParams) {
       super(cachingBuildRuleParams);
     this.artifactCache = cachingBuildRuleParams.getArtifactCache();
-    this.isRuleCached = TriState.UNSPECIFIED;
-    this.hasUncachedDescendants = TriState.UNSPECIFIED;
-    this.ruleInputsAreCached = TriState.UNSPECIFIED;
+    this.hasBuildStarted = new AtomicBoolean(false);
+    this.buildRuleResult = SettableFuture.create();
   }
 
   /**
-   * This rule is designed to be used for precondition checks in subclasses. For examples, before
+   * This rule is designed to be used for precondition checks in subclasses. For example, before
    * running the tests associated with a build rule, it is reasonable to do a sanity check to
    * ensure that the rule has been built.
    */
   protected final synchronized boolean isRuleBuilt() {
-    if (buildRuleResult == null) {
-      return false;
-    } else if (buildRuleResult.isDone()) {
-      // If the ListenableFuture<BuildRuleSuccess> is complete, the only way to verify that it
-      // completed successfully is to try invoking its get() method.
-      try {
-        buildRuleResult.get();
-        return true;
-      } catch (ExecutionException e) {
-        return false;
-      } catch (InterruptedException e) {
-        return false;
-      }
-    } else {
-      return false;
-    }
+    return MoreFutures.isSuccess(buildRuleResult);
   }
 
+  // TODO(mbolin): This method should probably be removed since its meaning is unclear.
   protected boolean isRuleBuiltFromCache() {
-    Preconditions.checkArgument(isRuleCached.isSet(),
+    Preconditions.checkArgument(buildRuleResult.isDone(),
         "rule must be built before this method is invoked");
-    return isRuleCached.asBoolean();
-  }
-
-  @Override
-  public final boolean isCached(BuildContext context) throws IOException {
-    if (isRuleCached.isSet()) {
-      return isRuleCached.asBoolean();
-    }
-
-    boolean isCached = checkIsCached(context, logger);
-    isRuleCached = TriState.forBooleanValue(isCached);
-    return isRuleCached.asBoolean();
-  }
-
-  private ImmutableSet<BuildRule> getDepsWithUncachedDescendants(final BuildContext context)
-      throws IOException {
-    if (depsWithUncachedDescendantsCache != null) {
-      return depsWithUncachedDescendantsCache;
-    }
-
-    ImmutableSet.Builder<BuildRule> depsWithUncachedDescendantsBuilder = ImmutableSet.builder();
-    for (BuildRule buildRule : getDeps()) {
-      if (buildRule.hasUncachedDescendants(context)) {
-        depsWithUncachedDescendantsBuilder.add(buildRule);
-      }
-    }
-
-    depsWithUncachedDescendantsCache = depsWithUncachedDescendantsBuilder.build();
-
-    return depsWithUncachedDescendantsCache;
-  }
-
-  @Override
-  public boolean hasUncachedDescendants(final BuildContext context) throws IOException {
-    if (hasUncachedDescendants.isSet()) {
-      return hasUncachedDescendants.asBoolean();
-    }
-
-    if (!isCached(context)) {
-      hasUncachedDescendants = TriState.TRUE;
-    } else {
-      hasUncachedDescendants =
-          TriState.forBooleanValue(!getDepsWithUncachedDescendants(context).isEmpty());
-    }
-    return hasUncachedDescendants.asBoolean();
-  }
-
-  private Iterable<BuildRule> getRulesToConsiderForCaching() {
-    List<BuildRule> rules = Lists.newArrayList();
-    // Not possible due to generics limitations:
-    //   rules.addAll(getInputs());
-    for (InputRule input : getInputs()) {
-      rules.add(input);
-    }
-    rules.add(this);
-    return rules;
-  }
-
-  @VisibleForTesting
-  public void setIsCached(boolean isCached) {
-    isRuleCached = TriState.forBooleanValue(isCached);
-  }
-
-  private Iterable<String> getSuccessFileStringsForBuildRules(Iterable<BuildRule> buildRules,
-      boolean mangleNonIdempotent) {
-    List<String> lines = Lists.newArrayList();
-    for (BuildRule buildRule : buildRules) {
-      if (buildRule.getOutput() != null) {
-        lines.add(String.format("%s %s %s",
-            buildRule.getOutputKey().toString(mangleNonIdempotent),
-            buildRule.getRuleKey().toString(mangleNonIdempotent),
-            buildRule.getFullyQualifiedName()));
-      }
-    }
-    return lines;
-  }
-
-  private  boolean isMatchingSuccessState(BuildContext context, Iterable<BuildRule> buildRules,
-      String pathRelativeToProjectRoot) throws IOException {
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    return projectFilesystem.isMatchingFileContents(
-        getSuccessFileStringsForBuildRules(buildRules, true), pathRelativeToProjectRoot);
-  }
-
-  protected boolean ruleInputsCached(BuildContext context, Logger logger) throws IOException {
-    if (ruleInputsAreCached.isSet()) {
-      return ruleInputsAreCached.asBoolean();
-    }
-    ruleInputsAreCached = TriState.forBooleanValue(checkRuleInputsCached(context, logger));
-
-    return ruleInputsAreCached.asBoolean();
-  }
-
-  private boolean checkRuleInputsCached(BuildContext context, Logger logger) throws IOException {
-    // If the success file does not exist, then this rule is not cached.
-    String pathToSuccessFile = getPathToSuccessFile();
-    if (!context.getProjectFilesystem().exists(pathToSuccessFile)) {
-      logger.info(String.format("%s not cached because the output file %s is not built",
-              this,
-              pathToSuccessFile));
-      return false;
-    }
-
-    // If any of the input files, output files, or the build rule have been modified since the last
-    // build, then this rule should not be cached.
-    Iterable<BuildRule> rulesToConsiderForCaching = getRulesToConsiderForCaching();
-    if (!isMatchingSuccessState(context, rulesToConsiderForCaching, pathToSuccessFile)) {
-      logger.info(String.format(
-          "%s not cached because the inputs and/or their contents have changed", this));
-      return false;
-    }
-    return true;
-  }
-
-  @VisibleForTesting
-  boolean checkIsCached(BuildContext context, Logger logger) throws IOException {
-    // First, check whether all of the deps are cached.
-    // This is checked first since it does not require touching the filesystem.
-    // If all of the deps were cached, check if the inputs to this rule were cached.
-    return depsCached(context, logger) && ruleInputsCached(context, logger);
-  }
-
-  /**
-   * Checks to see if all of the dependencies rules are cached.  By default,
-   * AbstractCachingBuildRule will consider a rule's deps uncached if any of its descendants were
-   * uncached.
-   */
-  @VisibleForTesting
-  protected boolean depsCached(BuildContext context, Logger logger) throws IOException {
-    for (BuildRule dep : getDeps()) {
-      if (dep.hasUncachedDescendants(context)) {
-        logger.info(String.format("%s not cached because %s has an uncached descendant",
-                    this,
-                    dep.getFullyQualifiedName()));
+    if (isRuleBuilt()) {
+      try {
+        return buildRuleResult.get().isFromBuildCache();
+      } catch (InterruptedException | ExecutionException ignored) {
         return false;
       }
+    } else {
+      return false;
     }
-    return true;
   }
 
   /**
@@ -258,14 +125,14 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * whether this rule is cached.
    * <p>
    * Note that the collection of inputs is specified as a list, because for some build rules
-   * (such as {@link com.facebook.buck.shell.Genrule}), the order of the inputs is significant. If the order of the inputs
-   * is not significant for the build rule, then the list should be alphabetized so that lists with
-   * the same elements will be {@code .equals()} to one another.
+   * (such as {@link com.facebook.buck.shell.Genrule}), the order of the inputs is significant. If
+   * the order of the inputs is not significant for the build rule, then the list should be
+   * alphabetized so that lists with the same elements will be {@code .equals()} to one another.
    */
   abstract protected Iterable<String> getInputsToCompareToOutput(BuildContext context);
 
   @Override
-  public final Iterable<InputRule> getInputs() {
+  public Iterable<InputRule> getInputs() {
     if (inputsToCompareToOutputs == null) {
       List<InputRule> inputs = Lists.newArrayList();
       for (String inputPath : getInputsToCompareToOutput(null /* context */)) {
@@ -277,86 +144,267 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   @Override
-  public final synchronized ListenableFuture<BuildRuleSuccess> build(final BuildContext context) {
-    // If buildRuleResult is non-null, then this method has already been invoked. Because this
-    // method must be idempotent, return the existing future.
-    if (buildRuleResult != null) {
-      // Not posting an event because the start has already been fired.
-      return buildRuleResult;
+  protected RuleKey.Builder ruleKeyBuilder() {
+    // For a rule that lists its inputs via a "srcs" argument, this may seem redundant, but it is
+    // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
+    // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
+    // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
+    return super.ruleKeyBuilder()
+        .setInputs("buck.inputs", getInputs());
+  }
+
+  @Override
+  public final ListenableFuture<BuildRuleSuccess> build(final BuildContext context) {
+    // We use hasBuildStarted as a lock so that we can minimize how much we need to synchronize.
+    synchronized(hasBuildStarted) {
+      if (hasBuildStarted.get()) {
+        return buildRuleResult;
+      } else {
+        hasBuildStarted.set(true);
+      }
     }
 
-    context.getEventBus().post(BuildEvents.started(this));
-
-    // If this build rule is cached, then a result can be returned immediately.
-    boolean isCached;
-    ImmutableSet<BuildRule> depsWithUncachedDescendants;
+    // Build all of the deps first and then schedule a callback for this rule to build itself once
+    // all of those rules are done building.
     try {
-      isCached = isCached(context);
-      depsWithUncachedDescendants = getDepsWithUncachedDescendants(context);
-    } catch (IOException e) {
-      // A failure while determining whether this build rule is cached should be treated as if this
-      // rule failed to build.
-      buildRuleResult = Futures.immediateFailedFuture(e);
-      // Assume a cache result is a miss: "Here's your cached result" should not be exceptional.
-      context.getEventBus().post(
-          BuildEvents.finished(this, BuildRuleStatus.FAIL, CacheResult.MISS));
-      return buildRuleResult;
-    }
-
-    buildRuleResult = SettableFuture.create();
-
-    // Create a single future to build all of the uncached descendants of this build rule.
-    ListenableFuture<List<BuildRuleSuccess>> builtDeps = Builder.getInstance().buildRules(
-        depsWithUncachedDescendants, context);
-
-    if (isCached) {
-      logger.info(String.format("[FROM CACHE %s]", getFullyQualifiedName()));
-      context.getEventBus().post(
-          BuildEvents.finished(this, BuildRuleStatus.SUCCESS, CacheResult.HIT));
-
-      Futures.addCallback(builtDeps, new FutureCallback<List<BuildRuleSuccess>>() {
-        final SettableFuture<BuildRuleSuccess> result =
-            (SettableFuture<BuildRuleSuccess>)buildRuleResult;
-
-        @Override
-        public void onSuccess(List<BuildRuleSuccess> results) {
-          result.set(new BuildRuleSuccess(AbstractCachingBuildRule.this));
-        }
-
-        @Override
-        public void onFailure(Throwable t) {
-          result.setException(t);
-        }
-      }, context.getExecutor());
-
-      return buildRuleResult;
-    }
-
-    // This rule is not cached, so it needs to be built. Ultimately, buildRuleResult will be set
-    // with a BuildRuleResult (indicating success) or set with a Throwable (indicating a failure).
-    logger.info(String.format("[BUILDING %s]", getFullyQualifiedName()));
-    buildRuleResult = SettableFuture.create();
-
-    // Once all of the dependencies have been built, schedule this rule to build itself on the
-    // Executor associated with the BuildContext.
-    OnDepsBuiltCallback onDepsBuiltCallback = new OnDepsBuiltCallback(context);
-    Futures.addCallback(builtDeps, onDepsBuiltCallback, context.getExecutor());
-
-    Futures.addCallback(buildRuleResult, new FutureCallback<BuildRuleSuccess>() {
-      @Override
-      public void onSuccess(BuildRuleSuccess buildRuleSuccess) {
-        context.getEventBus().post(BuildEvents.finished(
-            AbstractCachingBuildRule.this, BuildRuleStatus.SUCCESS, CacheResult.MISS));
+      // Invoke every dep's build() method and create an uber-ListenableFuture that represents the
+      // successful completion of all deps.
+      List<ListenableFuture<BuildRuleSuccess>> builtDeps =
+          Lists.newArrayListWithCapacity(getDeps().size());
+      for (BuildRule dep : getDeps()) {
+        builtDeps.add(dep.build(context));
       }
+      ListenableFuture<List<BuildRuleSuccess>> allBuiltDeps = Futures.allAsList(builtDeps);
 
-      @Override
-      public void onFailure(Throwable throwable) {
-        context.getEventBus().post(BuildEvents.finished(
-            AbstractCachingBuildRule.this, BuildRuleStatus.FAIL, CacheResult.MISS));
-      }
-    }, context.getExecutor());
+      // Schedule this rule to build itself once all of the deps are built.
+      Futures.addCallback(allBuiltDeps,
+          new FutureCallback<List<BuildRuleSuccess>>() {
+
+            @Override
+            public void onSuccess(List<BuildRuleSuccess> deps) {
+              buildOnceDepsAreBuilt(context);
+            }
+
+            @Override
+            public void onFailure(Throwable failure) {
+              buildRuleResult.setException(failure);
+            }
+          },
+          context.getExecutor());
+    } catch (Throwable throwable) {
+      // This is a defensive catch block: if buildRuleResult is never satisfied, then Buck will
+      // hang because a callback that is waiting for this rule's future to complete will never be
+      // executed.
+      buildRuleResult.setException(throwable);
+    }
 
     return buildRuleResult;
+  }
+
+  /**
+   * This method is invoked once all of this rule's dependencies are built.
+   * <p>
+   * This method should be executed on a fresh Runnable in BuildContext's ListeningExecutorService,
+   * so there is no reason to schedule new work in a new Runnable.
+   * <p>
+   * All exit paths through this method should resolve {@link #buildRuleResult} before exiting. To
+   * that end, this method should never throw an exception, or else Buck will hang waiting for
+   * {@link #buildRuleResult} to be resolved.
+   */
+  private void buildOnceDepsAreBuilt(final BuildContext context) {
+    // Deciding whether we need to rebuild is tricky business. We want to rebuild as little as
+    // possible while always being sound.
+    //
+    // For java_library rules that depend only on their first-order deps,
+    // they only need to rebuild themselves if any of the following conditions hold:
+    // (1) The definition of the build rule has changed.
+    // (2) Any of the input files (which includes resources as well as .java files) have changed.
+    // (3) The ABI of any of its dependent java_library rules has changed.
+    //
+    // For other types of build rules, we have to be more conservative when rebuilding. In those
+    // cases, we rebuild if any of the following conditions hold:
+    // (1) The definition of the build rule has changed.
+    // (2) Any of the input files have changed.
+    // (3) Any of the RuleKeys of this rule's deps have changed.
+    //
+    // Because a RuleKey for a rule will change if any of its transitive deps have changed, that
+    // means a change in one of the leaves can result in almost all rules being rebuilt, which is
+    // slow. Fortunately, we limit the effects of this when building Java code when checking the ABI
+    // of deps instead of the RuleKey for deps.
+    //
+    // TODO(mbolin): It appears that we need to be able to compute a RuleKey with and without its
+    // deps. Right now, it looks like a RuleKey includes its deps via
+    // RuleKey.Builder.builder() when it creates the Builder. We almost always want to do it with
+    // deps, with the exception of java_library() when we want to test (1) and (2) but not (3).
+    RuleKey ruleKey;
+    if (canSkipRebuildIfInterfacesOfDepsAreUnchanged()) {
+      // TODO(mbolin): Implement this case.
+
+      // Compute the current ruleKey only if necessary.
+      ruleKey = null;
+    } else {
+      // Compute the current RuleKey and compare it to the one stored on disk.
+      ruleKey = getRuleKey();
+      Optional<RuleKey> cachedRuleKey = getRuleKeyOnDisk(context.getProjectFilesystem());
+
+      // If the RuleKeys match, then there is nothing to build.
+      if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
+        logger.info(String.format("[UNCHANGED %s]", getFullyQualifiedName()));
+        buildRuleResult.set(new BuildRuleSuccess(this, /* isFromBuildCache */ false));
+        return;
+      }
+    }
+
+    Preconditions.checkNotNull(ruleKey, "ruleKey must be set by the preceding codepath.");
+
+    // Record the start of the build.
+    context.getEventBus().post(BuildEvents.started(this));
+
+    // Before deciding to build, check the ArtifactCache.
+    File output = getOutput();
+    boolean fromCache = (output != null && artifactCache.fetch(getRuleKey(), output));
+    CacheResult cacheResult = fromCache ? CacheResult.HIT : CacheResult.MISS;
+
+    // Run the steps to build this rule since it was not found in the cache.
+    if (!fromCache) {
+      try {
+        executeCommandsNowThatDepsAreBuilt(context);
+      } catch (IOException|StepFailedException e) {
+        buildRuleResult.setException(e);
+        BuildEvents.finished(this, BuildRuleStatus.FAIL, cacheResult);
+        return;
+      }
+    }
+
+    // Record that the build rule has built successfully.
+    try {
+      recordBuildRuleCompleted(context.getProjectFilesystem(), fromCache);
+    } catch (IOException e) {
+      // If we failed to record the success, then we are in a potentially bad state where we have a
+      // new output but an old RuleKey record.
+      // TODO(mbolin): Make a final attempt to clear the invalid RuleKey record.
+      buildRuleResult.setException(e);
+      BuildEvents.finished(this, BuildRuleStatus.FAIL, cacheResult);
+      return;
+    }
+
+    // We made it to the end of the method! Record our success.
+    buildRuleResult.set(new BuildRuleSuccess(this, /* isFromBuildCache */ fromCache));
+    context.getEventBus().post(
+        BuildEvents.finished(this, BuildRuleStatus.SUCCESS, cacheResult));
+    return;
+  }
+
+  protected boolean canSkipRebuildIfInterfacesOfDepsAreUnchanged() {
+    // TODO(mbolin): Override this to return true for java_library() and friends.
+    return false;
+  }
+
+  /**
+   * Return this rule's RuleKey from the previous run if it is available on disk.
+   * <p>
+   * Any sort of internal IOException will be masked via {@link Optional#absent()}.
+   */
+  @VisibleForTesting
+  Optional<RuleKey> getRuleKeyOnDisk(ProjectFilesystem projectFilesystem) {
+    Optional<File> successFile = projectFilesystem.getFileIfExists(getPathToSuccessFile());
+    if (successFile.isPresent()) {
+      try {
+        String ruleKeyHash = Files.readFirstLine(successFile.get(), Charsets.US_ASCII);
+        return Optional.of(new RuleKey(ruleKeyHash));
+      } catch (IOException|NumberFormatException|NullPointerException e) {
+        // As we transition into a new format for a .success file, old versions of .success files
+        // may be lying around, which could throw any of these exceptions. When this happens, we
+        // treat the .success file the same as if it were missing.
+        return Optional.absent();
+      }
+    } else {
+      return Optional.absent();
+    }
+  }
+
+  /**
+   * Execute the commands for this build rule. Requires all dependent rules are already built
+   * successfully.
+   */
+  private void executeCommandsNowThatDepsAreBuilt(BuildContext context)
+      throws IOException, StepFailedException {
+    logger.info(String.format("[BUILDING %s]", getFullyQualifiedName()));
+
+    // Get and run all of the commands.
+    List<Step> steps = buildInternal(context);
+    StepRunner stepRunner = context.getCommandRunner();
+    for (Step step : steps) {
+      stepRunner.runStepForBuildTarget(step, getBuildTarget());
+    }
+  }
+
+  /**
+   * When this method is invoked, all of its dependencies will have been built.
+   */
+  abstract protected List<Step> buildInternal(BuildContext context) throws IOException;
+
+  /**
+   * Record that the outputs for the build rule have been written. They may have been written by
+   * either:
+   * <ol>
+   *   <li>The build rule executing all of its steps successfully.
+   *   <li>The build rule pulling down the output artifacts via the ArtifactCache.
+   * </ol>
+   */
+  private void recordBuildRuleCompleted(ProjectFilesystem projectFilesystem, boolean fromCache)
+      throws IOException {
+    // Drop our cached output key, since it probably changed.
+    resetOutputKey();
+
+    // Write the success file.
+    writeSuccessFile(projectFilesystem);
+
+    // Store output to cache.
+    File output = getOutput();
+    if (output != null && !fromCache) {
+      artifactCache.store(getRuleKey(), output);
+    }
+  }
+
+  /**
+   * Write out a file that represents that this build rule succeeded, as well as the inputs that
+   * were used. The last-modified time of this file, and its contents, will be used to determine
+   * whether this rule should be cached.
+   * @throws IOException
+   */
+  private void writeSuccessFile(ProjectFilesystem projectFilesystem) throws IOException {
+    String path = getPathToSuccessFile();
+    projectFilesystem.createParentDirs(new File(path));
+    Iterable<String> lines = getSuccessFileStringsForBuildRules(/* mangleNonIdempotent */ false);
+    projectFilesystem.writeLinesToPath(lines, path);
+  }
+
+  private Iterable<String> getSuccessFileStringsForBuildRules(
+      boolean mangleNonIdempotent) {
+    List<String> lines = Lists.newArrayList();
+
+    // The first line should always be the RuleKey.
+    lines.add(getRuleKey().toString());
+
+    // These lines are still written for now for debugging purposes, but may ultimately be removed.
+    for (BuildRule buildRule : getInputs()) {
+      if (buildRule.getOutput() != null) {
+        lines.add(String.format("%s %s %s",
+            buildRule.getOutputKey().toString(mangleNonIdempotent),
+            buildRule.getRuleKey().toString(mangleNonIdempotent),
+            buildRule.getFullyQualifiedName()));
+      }
+    }
+    return lines;
+  }
+
+  @VisibleForTesting
+  String getPathToSuccessFile() {
+    return String.format("%s/%s/.success/%s",
+        BuckConstant.BIN_DIR,
+        getBuildTarget().getBasePath(),
+        getBuildTarget().getShortName());
   }
 
   /**
@@ -372,116 +420,4 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         ImmutableSet.of(pathToDirectory), traverser);
     inputsToConsiderForCachingPurposes.addAll(files);
   }
-
-  private class OnDepsBuiltCallback implements FutureCallback<List<BuildRuleSuccess>> {
-
-    private final BuildContext context;
-
-    private OnDepsBuiltCallback(BuildContext context) {
-      this.context = context;
-    }
-
-    @Override
-    public void onSuccess(List<BuildRuleSuccess> results) {
-      final SettableFuture<BuildRuleSuccess> result =
-          (SettableFuture<BuildRuleSuccess>)buildRuleResult;
-
-      ListenableFuture<BuildRuleSuccess> future = executeCommandsNowThatDepsAreBuilt(context);
-      Futures.addCallback(
-          future,
-          new FutureCallback<BuildRuleSuccess>() {
-            @Override
-            public void onSuccess(BuildRuleSuccess buildRuleSuccess) {
-              result.set(buildRuleSuccess);
-            }
-
-            @Override
-            public void onFailure(Throwable throwable) {
-              result.setException(throwable);
-            }
-          },
-          context.getExecutor()
-      );
-    }
-
-    @Override
-    public void onFailure(Throwable throwable) {
-      ((SettableFuture<BuildRuleSuccess>)buildRuleResult).setException(throwable);
-    }
-  }
-
-  /**
-   * Execute the commands for this build rule. Requires all dependent rules are already built
-   * successfully.
-   */
-  private ListenableFuture<BuildRuleSuccess> executeCommandsNowThatDepsAreBuilt(
-      final BuildContext context) {
-
-    // Do the work to build this rule in a Callable so it can be scheduled on an Executor.
-    Callable<BuildRuleSuccess> callable = new Callable<BuildRuleSuccess>() {
-      @Override
-      public BuildRuleSuccess call() throws Exception {
-        AbstractCachingBuildRule buildRule = AbstractCachingBuildRule.this;
-        File output = getOutput();
-
-        // Try to fetch output from cache.
-        boolean fromCache = (output != null && artifactCache.fetch(getRuleKey(), output));
-        if (!fromCache) {
-          // Get and run all of the commands.
-          List<Step> steps = buildInternal(context);
-          StepRunner stepRunner = context.getCommandRunner();
-          for (Step step : steps) {
-            stepRunner.runStepForBuildTarget(step, getBuildTarget());
-          }
-        }
-
-        // Drop our cached output key, since it probably changed.
-        resetOutputKey();
-
-        // Write the success file.
-        buildRule.writeSuccessFile();
-
-        // Store output to cache.
-        if (output != null && !fromCache) {
-          artifactCache.store(getRuleKey(), output);
-        }
-
-        // Return the object to represent the success of the build rule.
-        return new BuildRuleSuccess(buildRule);
-      }
-    };
-
-    return context.getCommandRunner().getListeningExecutorService().submit(callable);
-  }
-
-  @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
-    return super.ruleKeyBuilder()
-        .setInputs("inputs", getInputs());
-  }
-
-  private String getPathToSuccessFile() {
-    return String.format("%s/%s/.success/%s",
-        BuckConstant.BIN_DIR,
-        getBuildTarget().getBasePath(),
-        getBuildTarget().getShortName());
-  }
-
-  /**
-   * Write out a file that represents that this build rule succeeded, as well as the inputs that
-   * were used. The last-modified time of this file, and its contents, will be used to determine
-   * whether this rule should be cached.
-   * @throws IOException
-   */
-  private void writeSuccessFile() throws IOException {
-    String path = getPathToSuccessFile();
-    Files.createParentDirs(new File(path));
-    MoreFiles.writeLinesToFile(getSuccessFileStringsForBuildRules(
-        getRulesToConsiderForCaching(), false), path);
-  }
-
-  /**
-   * When this method is run, all of its dependencies will have been built.
-   */
-  abstract protected List<Step> buildInternal(BuildContext context) throws IOException;
 }

@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -65,11 +64,6 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public boolean isCached(BuildContext context) throws IOException {
-    return false;
-  }
-
-  @Override
   public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
     return true;
   }
@@ -87,10 +81,5 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   @Override
   public ImmutableSet<String> getLabels() {
     return labels;
-  }
-
-  @Override
-  public boolean hasUncachedDescendants(BuildContext context) throws IOException {
-    return true;
   }
 }

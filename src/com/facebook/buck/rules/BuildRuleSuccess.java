@@ -25,9 +25,15 @@ import com.google.common.base.Preconditions;
 public class BuildRuleSuccess {
 
   private final BuildRule rule;
+  private final boolean isFromBuildCache;
 
-  public BuildRuleSuccess(BuildRule rule) {
+  public BuildRuleSuccess(BuildRule rule, boolean isFromBuildCache) {
     this.rule = Preconditions.checkNotNull(rule);
+    this.isFromBuildCache = isFromBuildCache;
+  }
+
+  public boolean isFromBuildCache() {
+    return isFromBuildCache;
   }
 
   @Override
