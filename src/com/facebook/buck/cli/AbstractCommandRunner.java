@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -43,6 +42,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ArtifactCache artifactCache;
+  private final Parser parser;
 
   protected AbstractCommandRunner(CommandRunnerParams params) {
     this.commandRunnerParams = Preconditions.checkNotNull(params);
@@ -50,6 +50,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.projectFilesystem = Preconditions.checkNotNull(params.getProjectFilesystem());
     this.buildRuleTypes = Preconditions.checkNotNull(params.getBuildRuleTypes());
     this.artifactCache = Preconditions.checkNotNull(params.getArtifactCache());
+    this.parser = Preconditions.checkNotNull(params.getParser());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -123,29 +124,15 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   /**
-   * @return Creates a parser for this command.
-   */
-  protected Parser createParser() {
-    // Find all the build files so we know where package boundaries are.
-    BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
-
-    // Create a Parser.
-    return new Parser(getProjectFilesystem(), getBuildRuleTypes(), buildFiles);
-  }
-
-  /**
    * @return A list of {@link BuildTarget}s for the input buildTargetNames.
    */
-  protected ImmutableList<BuildTarget> getBuildTargets(Parser parser, List<String> buildTargetNames)
-      throws NoSuchBuildTargetException {
-    Preconditions.checkNotNull(parser);
+  protected ImmutableList<BuildTarget> getBuildTargets(List<String> buildTargetNames)
+      throws NoSuchBuildTargetException, IOException {
     Preconditions.checkNotNull(buildTargetNames);
-
-
     ImmutableList.Builder<BuildTarget> buildTargets = ImmutableList.builder();
 
     // Parse all of the build targets specified by the user.
-    BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
+    BuildTargetParser buildTargetParser = getParser().getBuildTargetParser();
 
     for (String buildTargetName : buildTargetNames) {
       buildTargets.add(buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified()));
@@ -166,6 +153,13 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return console.getStdErr();
   }
 
+  /**
+   * @return Returns a potentially cached Parser for this command.
+   */
+  public Parser getParser() {
+    return parser;
+  }
+
   private static class ParserAndOptions<T> {
     private final T options;
     private final CmdLineParser parser;
@@ -175,5 +169,4 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
       this.parser = new CmdLineParserAdditionalOptions(options);
     }
   }
-
 }

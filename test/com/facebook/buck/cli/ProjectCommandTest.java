@@ -38,6 +38,8 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -46,10 +48,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import org.easymock.EasyMock;
 import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -162,7 +162,8 @@ public class ProjectCommandTest {
 
     ProjectCommandForTest() {
       super(new CommandRunnerParams(
-          EasyMock.createMock(ProjectFilesystem.class),
+          new Console(System.out, System.err, new Ansi()),
+          new ProjectFilesystem(new File(".")),
           new KnownBuildRuleTypes(),
           artifactCache));
     }

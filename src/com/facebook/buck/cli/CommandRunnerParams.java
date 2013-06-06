@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
@@ -33,26 +34,31 @@ class CommandRunnerParams {
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final Console console;
-
-  public CommandRunnerParams(
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache) {
-    this(new Console(System.out, System.err, new Ansi()),
-        projectFilesystem,
-        buildRuleTypes,
-        artifactCache);
-  }
+  private final Parser parser;
 
   public CommandRunnerParams(
       Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache) {
+    this(console,
+        projectFilesystem,
+        buildRuleTypes,
+        artifactCache,
+        new Parser(projectFilesystem, buildRuleTypes));
+  }
+
+  public CommandRunnerParams(
+      Console console,
+      ProjectFilesystem projectFilesystem,
+      KnownBuildRuleTypes buildRuleTypes,
+      ArtifactCache artifactCache,
+      Parser parser) {
     this.console = Preconditions.checkNotNull(console);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+    this.parser = Preconditions.checkNotNull(parser);
   }
 
   public Ansi getAnsi() {
@@ -73,5 +79,9 @@ class CommandRunnerParams {
 
   public KnownBuildRuleTypes getBuildRuleTypes() {
     return buildRuleTypes;
+  }
+
+  public Parser getParser() {
+    return parser;
   }
 }

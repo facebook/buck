@@ -67,7 +67,8 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     try {
       partialGraph = PartialGraph.createPartialGraph(predicate,
           getProjectFilesystem(),
-          options.getDefaultIncludes());
+          options.getDefaultIncludes(),
+          getParser());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
       return 1;

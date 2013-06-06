@@ -32,6 +32,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -477,5 +478,21 @@ class BuckConfig {
     } else {
       return Optional.absent();
     }
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    } else if (!(obj instanceof BuckConfig)) {
+      return false;
+    }
+    BuckConfig that = (BuckConfig) obj;
+    return Objects.equal(this.sectionsToEntries, that.sectionsToEntries);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(sectionsToEntries);
   }
 }

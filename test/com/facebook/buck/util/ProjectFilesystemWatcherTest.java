@@ -65,7 +65,7 @@ public class ProjectFilesystemWatcherTest {
     event = createNiceMock(WatchEvent.class);
 
     expect(filesystem.getProjectRoot()).andReturn(new File("/"));
-    visitor = new Capture<FileVisitor<Path>>();
+    visitor = new Capture<>();
     filesystem.walkFileTree(anyObject(Path.class), capture(visitor));
     expect(path.normalize()).andReturn(path);
     expect(path.register(anyObject(WatchService.class),
@@ -93,64 +93,17 @@ public class ProjectFilesystemWatcherTest {
   }
 
   @Test
-  public void eventPostedWhenFileCreated() throws IOException {
+  public void eventPostedWhenFileChanged() throws IOException {
 
     // Return a single create event when WatchService polled.
     expect(watchService.poll()).andReturn(key).andReturn(null);
     expect(key.pollEvents()).andReturn(Lists.<WatchEvent<?>>newArrayList(event));
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
+    expect(filesystem.isPathChangeEvent(anyObject(WatchEvent.class))).andReturn(true).anyTimes();
     expect(event.context()).andReturn(path);
     expect(path.resolve(anyObject(Path.class))).andReturn(path);
     expect(path.normalize()).andReturn(path);
     expect(filesystem.isDirectory(
         anyObject(Path.class), eq(LinkOption.NOFOLLOW_LINKS))).andReturn(false);
-    expect(key.reset()).andReturn(false);
-    eventBus.post(anyObject(WatchEvent.class));
-    replay(filesystem, eventBus, watchService, path, key, event);
-
-    // Pump ProjectFilesystemWatcher.
-    watcher = new ProjectFilesystemWatcher(
-        filesystem, eventBus, ImmutableSet.<String>of(), watchService);
-    visitor.getValue().preVisitDirectory(path, null);
-    watcher.postEvents();
-
-    // Check event was posted to EventBus.
-    verify(filesystem, eventBus, watchService, path, key, event);
-  }
-
-  @Test
-  public void eventPostedWhenFileModified() throws IOException {
-
-    // Return a single modify event when WatchService polled.
-    expect(watchService.poll()).andReturn(key).andReturn(null);
-    expect(key.pollEvents()).andReturn(Lists.<WatchEvent<?>>newArrayList(event));
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(path);
-    expect(path.resolve(anyObject(Path.class))).andReturn(path);
-    expect(path.normalize()).andReturn(path);
-    expect(filesystem.isDirectory(
-        anyObject(Path.class), eq(LinkOption.NOFOLLOW_LINKS))).andReturn(false);
-    expect(key.reset()).andReturn(false);
-    eventBus.post(anyObject(WatchEvent.class));
-    replay(filesystem, eventBus, watchService, path, key, event);
-
-    // Pump ProjectFilesystemWatcher.
-    watcher = new ProjectFilesystemWatcher(
-        filesystem, eventBus, ImmutableSet.<String>of(), watchService);
-    visitor.getValue().preVisitDirectory(path, null);
-    watcher.postEvents();
-
-    // Check event was posted to EventBus.
-    verify(filesystem, eventBus, watchService, path, key, event);
-  }
-
-  @Test
-  public void eventPostedWhenFileDeleted() throws IOException {
-
-    // Return a single delete event when WatchService polled.
-    expect(watchService.poll()).andReturn(key).andReturn(null);
-    expect(key.pollEvents()).andReturn(Lists.<WatchEvent<?>>newArrayList(event));
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_DELETE).anyTimes();
     expect(key.reset()).andReturn(false);
     eventBus.post(anyObject(WatchEvent.class));
     replay(filesystem, eventBus, watchService, path, key, event);
@@ -171,7 +124,7 @@ public class ProjectFilesystemWatcherTest {
     // Return a single modify event when WatchService polled.
     expect(watchService.poll()).andReturn(key).andReturn(null);
     expect(key.pollEvents()).andReturn(Lists.<WatchEvent<?>>newArrayList(event));
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
+    expect(filesystem.isPathChangeEvent(anyObject(WatchEvent.class))).andReturn(true).anyTimes();
     expect(event.context()).andReturn(path);
     expect(path.resolve(anyObject(Path.class))).andReturn(path);
     expect(path.normalize()).andReturn(path);
