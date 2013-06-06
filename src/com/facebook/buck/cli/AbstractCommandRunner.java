@@ -38,26 +38,18 @@ import java.util.List;
 
 abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implements CommandRunner {
 
+  private final CommandRunnerParams commandRunnerParams;
   protected final Console console;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ArtifactCache artifactCache;
 
-  protected AbstractCommandRunner(CommandRunnerParams commandRunnerParams) {
-    this(commandRunnerParams.getConsole(),
-        commandRunnerParams.getProjectFilesystem(),
-        commandRunnerParams.getBuildRuleTypes(),
-        commandRunnerParams.getArtifactCache());
-  }
-
-  protected AbstractCommandRunner(Console console,
-      ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache) {
-    this.console = Preconditions.checkNotNull(console);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
-    this.artifactCache = Preconditions.checkNotNull(artifactCache);
+  protected AbstractCommandRunner(CommandRunnerParams params) {
+    this.commandRunnerParams = Preconditions.checkNotNull(params);
+    this.console = Preconditions.checkNotNull(params.getConsole());
+    this.projectFilesystem = Preconditions.checkNotNull(params.getProjectFilesystem());
+    this.buildRuleTypes = Preconditions.checkNotNull(params.getBuildRuleTypes());
+    this.artifactCache = Preconditions.checkNotNull(params.getArtifactCache());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -114,6 +106,14 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    */
   abstract String getUsageIntro();
 
+  /**
+   * Sometimes a {@link CommandRunner} needs to create another {@link CommandRunner}, so it should
+   * use this method so it can reuse the constructor parameter that it received.
+   */
+  protected CommandRunnerParams getCommandRunnerParams() {
+    return commandRunnerParams;
+  }
+
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
   }
@@ -130,7 +130,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
 
     // Create a Parser.
-    return new Parser(getProjectFilesystem(), getBuildRuleTypes(), getArtifactCache(), buildFiles);
+    return new Parser(getProjectFilesystem(), getBuildRuleTypes(), buildFiles);
   }
 
   /**

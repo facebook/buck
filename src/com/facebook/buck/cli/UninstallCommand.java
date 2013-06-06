@@ -55,10 +55,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
 
     // Create a parser.
     BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
-    Parser parser = new Parser(getProjectFilesystem(),
-        getBuildRuleTypes(),
-        getArtifactCache(),
-        buildFiles);
+    Parser parser = new Parser(getProjectFilesystem(), getBuildRuleTypes(), buildFiles);
 
     // Parse all of the build targets specified by the user.
     BuildTargetParser buildTargetParser = parser.getBuildTargetParser();

@@ -21,11 +21,10 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +35,7 @@ import java.util.Set;
 
 public class RobolectricTestRule extends JavaTestRule {
 
-  protected RobolectricTestRule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected RobolectricTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       Set<String> labels,
@@ -44,7 +43,7 @@ public class RobolectricTestRule extends JavaTestRule {
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<JavaLibraryRule> sourceUnderTest) {
-    super(cachingBuildRuleParams,
+    super(buildRuleParams,
         srcs,
         resources,
         labels,
@@ -87,7 +86,7 @@ public class RobolectricTestRule extends JavaTestRule {
       AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleIndex);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new RobolectricTestRule(createCachingBuildRuleParams(buildRuleIndex),
+      return new RobolectricTestRule(createBuildRuleParams(buildRuleIndex),
           srcs,
           resources,
           labels,
@@ -100,12 +99,6 @@ public class RobolectricTestRule extends JavaTestRule {
     @Override
     public Builder setBuildTarget(BuildTarget buildTarget) {
       super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

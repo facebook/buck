@@ -98,11 +98,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       // Build initial targets.
       if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
-        BuildCommand buildCommand = new BuildCommand(new CommandRunnerParams(
-            console,
-            getProjectFilesystem(),
-            getBuildRuleTypes(),
-            getArtifactCache()));
+        BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
 
         exitCode = runBuildCommand(
             buildCommand,
@@ -152,7 +148,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return PartialGraph.createPartialGraph(
         rulePredicate,
         getProjectFilesystem(),
-        getArtifactCache(),
         options.getDefaultIncludes());
   }
 

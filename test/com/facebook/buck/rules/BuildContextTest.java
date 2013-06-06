@@ -43,6 +43,7 @@ public class BuildContextTest {
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
     builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
+    builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
 
     AndroidPlatformTarget androidPlatformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
@@ -82,6 +83,7 @@ public class BuildContextTest {
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
     builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
+    builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
 
     BuildContext context = builder.build();
@@ -101,6 +103,7 @@ public class BuildContextTest {
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
     builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
+    builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
 
     // Set to absent value.

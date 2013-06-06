@@ -18,13 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
@@ -61,15 +60,15 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
   private final ImmutableList<String> flags;
 
   protected NdkLibraryRule(
-      CachingBuildRuleParams cachingBuildRuleParams,
+      BuildRuleParams buildRuleParams,
       Set<String> sources,
       List<String> flags) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     Preconditions.checkArgument(!sources.isEmpty(),
         "Must include at least one file (Android.mk?) in ndk_library rule");
     this.sources = ImmutableSortedSet.copyOf(sources);
 
-    String basePathWithSlash = cachingBuildRuleParams.getBuildTarget().getBasePathWithSlash();
+    String basePathWithSlash = buildRuleParams.getBuildTarget().getBasePathWithSlash();
     Preconditions.checkArgument(basePathWithSlash.endsWith("/"));
     this.makefileDirectory = basePathWithSlash;
     this.buildArtifactsDirectory =
@@ -121,7 +120,7 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder implements
+  public static class Builder extends AbstractBuildRuleBuilder implements
       SrcsAttributeBuilder {
     private Set<String> sources = Sets.newHashSet();
     private ImmutableList.Builder<String> flags = ImmutableList.builder();
@@ -131,7 +130,7 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     @Override
     public NdkLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
       return new NdkLibraryRule(
-          createCachingBuildRuleParams(buildRuleIndex),
+          createBuildRuleParams(buildRuleIndex),
           sources,
           flags.build());
     }
@@ -151,12 +150,6 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     @Override
     public Builder addSrc(String source) {
       this.sources.add(source);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

@@ -17,11 +17,11 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestCaseSummary;
@@ -55,10 +55,10 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   private final ImmutableSet<String> labels;
 
   protected ShTestRule(
-      CachingBuildRuleParams cachingBuildRuleParams,
+      BuildRuleParams buildRuleParams,
       String test,
       Set<String> labels) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.test = Preconditions.checkNotNull(test);
     this.labels = ImmutableSet.copyOf(labels);
   }
@@ -147,7 +147,7 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder implements
+  public static class Builder extends AbstractBuildRuleBuilder implements
       LabelsAttributeBuilder {
 
     private String test;
@@ -155,8 +155,8 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
 
     @Override
     public BuildRule build(Map<String, BuildRule> buildRuleIndex) {
-      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
-      return new ShTestRule(cachingBuildRuleParams, test, labels);
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+      return new ShTestRule(buildRuleParams, test, labels);
     }
 
     public Builder setTest(String test) {

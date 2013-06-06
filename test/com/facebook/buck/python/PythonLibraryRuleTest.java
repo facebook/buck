@@ -22,8 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
-import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -36,14 +35,13 @@ public class PythonLibraryRuleTest {
 
   @Test
   public void testGetters() {
-    CachingBuildRuleParams cachingBuildRuleParams = new CachingBuildRuleParams(
+    BuildRuleParams buildRuleParams = new BuildRuleParams(
         BuildTargetFactory.newInstance("//scripts/python:foo"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        new NoopArtifactCache());
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of());
     ImmutableSortedSet<String> srcs = ImmutableSortedSet.of("");
     PythonLibraryRule pythonLibraryRule = new PythonLibraryRule(
-        cachingBuildRuleParams,
+        buildRuleParams,
         srcs);
 
     assertTrue(pythonLibraryRule.isLibrary());

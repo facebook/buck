@@ -18,13 +18,12 @@ package com.facebook.buck.cpp;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -57,10 +56,10 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
 
   private final String nativeLibs;
 
-  protected PrebuiltNativeLibraryBuildRule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected PrebuiltNativeLibraryBuildRule(BuildRuleParams buildRuleParams,
       String nativeLibs,
       DirectoryTraverser directoryTraverser) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.nativeLibs = nativeLibs;
   }
@@ -101,7 +100,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
 
     @Nullable
     private String nativeLibs = null;
@@ -110,7 +109,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
 
     @Override
     public PrebuiltNativeLibraryBuildRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new PrebuiltNativeLibraryBuildRule(createCachingBuildRuleParams(buildRuleIndex),
+      return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(buildRuleIndex),
           nativeLibs,
           new DefaultDirectoryTraverser());
     }
@@ -130,12 +129,6 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

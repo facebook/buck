@@ -33,7 +33,6 @@ import java.util.Map;
  * Unit test for {@link RuleKey}.
  */
 public class RuleKeyTest {
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testRuleKeyFromHashString() {
@@ -51,7 +50,6 @@ public class RuleKeyTest {
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
     DefaultJavaLibraryRule commonRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"))
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put("//src/com/facebook/buck/cli:common", commonRule);
 
@@ -64,14 +62,12 @@ public class RuleKeyTest {
         // "not idempotent", which screws up this test.
         // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that file
         // access can be mocked appropriately during a unit test.
-        .addSrc("src/com/facebook/buck/cli/Main.java")
-        .setArtifactCache(artifactCache);
+        .addSrc("src/com/facebook/buck/cli/Main.java");
     DefaultJavaLibraryRule libraryNoCommon = javaLibraryBuilder.build(buildRuleIndex);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
     javaLibraryBuilder.addDep("//src/com/facebook/buck/cli:common");
     DefaultJavaLibraryRule libraryWithCommon = javaLibraryBuilder
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
 
     // Assert that the RuleKeys are distinct.

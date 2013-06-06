@@ -58,7 +58,6 @@ public class ProjectConfigRuleTest extends EasyMockSupport {
   private ProjectConfigRule createProjectConfig() {
     JavaLibraryRule javaRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//javatests:lib"))
-        .setArtifactCache(new NoopArtifactCache())
         .build(ImmutableMap.<String, BuildRule>of());
 
     BuildRuleParams buildRuleParams = new BuildRuleParams(

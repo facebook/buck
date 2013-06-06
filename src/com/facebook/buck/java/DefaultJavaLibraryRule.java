@@ -22,14 +22,13 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
@@ -145,13 +144,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    */
   protected ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
 
-  protected DefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
                                    Set<String> srcs,
                                    Set<String> resources,
                                    Optional<String> proguardConfig,
                                    boolean exportDeps,
                                    JavacOptions javacOptions) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
@@ -601,7 +600,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder implements
+  public static class Builder extends AbstractBuildRuleBuilder implements
       SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
     protected Set<String> srcs = Sets.newHashSet();
@@ -617,13 +616,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
     @Override
     public DefaultJavaLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       return new DefaultJavaLibraryRule(
-          cachingBuildRuleParams,
+          buildRuleParams,
           srcs,
           resources,
           proguardConfig,
@@ -663,12 +662,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

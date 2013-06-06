@@ -17,14 +17,13 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -64,12 +63,12 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   private final DirectoryTraverser directoryTraverser;
 
   JavaBinaryRule(
-      CachingBuildRuleParams cachingBuildRuleParams,
+      BuildRuleParams buildRuleParams,
       @Nullable String mainClass,
       @Nullable String manifestFile,
       @Nullable String metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.metaInfDirectory = metaInfDirectory;
@@ -186,7 +185,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
         mainClass);
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
 
     private String mainClass;
     private String manifestFile;
@@ -196,7 +195,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
     @Override
     public JavaBinaryRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new JavaBinaryRule(createCachingBuildRuleParams(buildRuleIndex),
+      return new JavaBinaryRule(createBuildRuleParams(buildRuleIndex),
           mainClass,
           manifestFile,
           metaInfDirectory,
@@ -212,12 +211,6 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     @Override
     public Builder addDep(String dep) {
       super.addDep(dep);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

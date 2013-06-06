@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.Console;
@@ -122,11 +123,15 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     return listeningExecutorService;
   }
 
-  Build createBuild(DependencyGraph graph, ProjectFilesystem projectFilesystem, Console console) {
+  Build createBuild(DependencyGraph graph,
+      ProjectFilesystem projectFilesystem,
+      ArtifactCache artifactCache,
+      Console console) {
     return new Build(graph,
         findAndroidSdkDir(),
         findAndroidNdkDir(),
         projectFilesystem,
+        artifactCache,
         getVerbosity(),
         getListeningExecutorService(),
         getBuckConfig().createDefaultJavaPackageFinder(),

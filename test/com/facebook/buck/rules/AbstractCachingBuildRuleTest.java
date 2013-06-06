@@ -105,8 +105,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         }),
         buildSteps,
         /* ruleKeyOnDisk */ Optional.<RuleKey>absent(),
-        output,
-        artifactCache);
+        output);
     verifyAll();
     resetAll();
 
@@ -165,6 +164,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     RuleKey expectedRuleKey = new RuleKey(expectedRuleKeyHash);
     expect(artifactCache.fetch(expectedRuleKey, output)).andReturn(false);
     artifactCache.store(expectedRuleKey, output);
+    expect(context.getArtifactCache()).andReturn(artifactCache).times(2);
 
     // The dependent rule will be built immediately with a distinct rule key.
     expect(dep.build(context)).andReturn(
@@ -208,16 +208,14 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
       final Iterable<InputRule> inputRules,
       final List<Step> buildSteps,
       final Optional<RuleKey> ruleKeyOnDisk,
-      @Nullable final File output,
-      final ArtifactCache artifactCache) {
+      @Nullable final File output) {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
-    CachingBuildRuleParams cachingBuildRuleParams = new CachingBuildRuleParams(buildTarget,
+    BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
         sortedDeps,
-        visibilityPatterns,
-        artifactCache);
-    return new AbstractCachingBuildRule(cachingBuildRuleParams) {
+        visibilityPatterns);
+    return new AbstractCachingBuildRule(buildRuleParams) {
 
       private Iterable<InputRule> inputs = inputRules;
 

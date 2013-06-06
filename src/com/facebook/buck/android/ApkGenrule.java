@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -54,15 +54,15 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   private final InstallableBuildRule apk;
 
-  private ApkGenrule(CachingBuildRuleParams cachingBuildRuleParams,
+  private ApkGenrule(BuildRuleParams buildRuleParams,
       List<String> srcs,
       String cmd,
       Function<String, String> relativeToAbsolutePathFunction,
       InstallableBuildRule apk) {
-    super(cachingBuildRuleParams,
+    super(buildRuleParams,
         srcs,
         cmd,
-        /* out */ cachingBuildRuleParams.getBuildTarget().getShortName() + ".apk",
+        /* out */ buildRuleParams.getBuildTarget().getShortName() + ".apk",
         relativeToAbsolutePathFunction);
 
     this.apk = Preconditions.checkNotNull(apk);
@@ -143,7 +143,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
             apkRule.getFullyQualifiedName());
       }
 
-      return new ApkGenrule(createCachingBuildRuleParams(buildRuleIndex),
+      return new ApkGenrule(createBuildRuleParams(buildRuleIndex),
           srcs,
           cmd,
           relativeToAbsolutePathFunction,

@@ -56,11 +56,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     }
 
     // Build the specified target.
-    BuildCommand buildCommand = new BuildCommand(new CommandRunnerParams(
-        console,
-        getProjectFilesystem(),
-        getBuildRuleTypes(),
-        getArtifactCache()));
+    BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
     int exitCode = buildCommand.runCommandWithOptions(options);
     if (exitCode != 0) {
       return exitCode;

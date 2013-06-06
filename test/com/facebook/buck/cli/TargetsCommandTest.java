@@ -273,12 +273,10 @@ public class TargetsCommandTest {
   @Test
   public void testGetMachingBuildTargets() throws CmdLineException, IOException {
     Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
-    ArtifactCache artifactCache = new NoopArtifactCache();
     PrebuiltJarRule emptyRule = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//empty:empty"))
         .setBinaryJar("")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(emptyRule.getFullyQualifiedName(), emptyRule);
     JavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
@@ -286,7 +284,6 @@ public class TargetsCommandTest {
         .addSrc("javasrc/JavaLibrary.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addDep("//empty:empty")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
     JavaTestRule javaTestRule =
@@ -294,7 +291,6 @@ public class TargetsCommandTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
             .addSrc("javatest/TestJavaLibrary.java")
             .addDep("//javasrc:java-library")
-            .setArtifactCache(artifactCache)
             .build(buildRuleIndex);
     buildRuleIndex.put(javaTestRule.getFullyQualifiedName(), javaTestRule);
 

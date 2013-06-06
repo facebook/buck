@@ -19,13 +19,12 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -57,11 +56,11 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   private final Supplier<ImmutableSetMultimap<BuildRule, String>>
       declaredClasspathEntriesSupplier;
 
-  PrebuiltJarRule(CachingBuildRuleParams cachingBuildRuleParams,
+  PrebuiltJarRule(BuildRuleParams buildRuleParams,
       String classesJar,
       Optional<String> sourceJar,
       Optional<String> javadocUrl) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.binaryJar = Preconditions.checkNotNull(classesJar);
     this.sourceJar = Preconditions.checkNotNull(sourceJar);
     this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
@@ -165,7 +164,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
 
     private String binaryJar;
     private Optional<String> sourceJar = Optional.absent();
@@ -175,7 +174,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
 
     @Override
     public PrebuiltJarRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new PrebuiltJarRule(createCachingBuildRuleParams(buildRuleIndex),
+      return new PrebuiltJarRule(createBuildRuleParams(buildRuleIndex),
           binaryJar,
           sourceJar,
           javadocUrl);
@@ -196,12 +195,6 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

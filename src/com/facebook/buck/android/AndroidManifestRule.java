@@ -17,11 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -52,10 +52,10 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   private final String skeletonFile;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
-  protected AndroidManifestRule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected AndroidManifestRule(BuildRuleParams buildRuleParams,
                                 String skeletonFile,
                                 String manifestFile) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.transitiveDependencyGraph = new AndroidTransitiveDependencyGraph(this);
@@ -103,7 +103,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
 
     protected String manifestFile;
     protected String skeletonFile;
@@ -111,7 +111,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
     @Override
     public AndroidManifestRule build(Map<String, BuildRule> buildRuleIndex) {
       return new AndroidManifestRule(
-          createCachingBuildRuleParams(buildRuleIndex),
+          createBuildRuleParams(buildRuleIndex),
           skeletonFile,
           manifestFile);
     }

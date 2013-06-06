@@ -21,10 +21,9 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -41,13 +40,13 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   private final Optional<String> manifestFile;
 
   @VisibleForTesting
-  public AndroidLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
+  public AndroidLibraryRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       Optional<String> proguardConfig,
       JavacOptions javacOptions,
       Optional<String> manifestFile) {
-    super(cachingBuildRuleParams,
+    super(buildRuleParams,
         srcs,
         resources,
         proguardConfig,
@@ -79,13 +78,13 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
 
     @Override
     public AndroidLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       return new AndroidLibraryRule(
-          cachingBuildRuleParams,
+          buildRuleParams,
           srcs,
           resources,
           proguardConfig,
@@ -113,12 +112,6 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

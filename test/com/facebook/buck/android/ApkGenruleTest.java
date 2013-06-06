@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -63,7 +62,7 @@ import java.util.Map;
  * Unit test for {@link com.facebook.buck.android.ApkGenrule}.
  */
 public class ApkGenruleTest {
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
+
   private static final Function<String, String> relativeToAbsolutePathFunction =
       new Function<String, String>() {
         @Override
@@ -78,7 +77,6 @@ public class ApkGenruleTest {
     JavaLibraryRule androidLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:lib-android"))
         .addSrc("java/com/facebook/util/Facebook.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidLibraryRule.getFullyQualifiedName(), androidLibraryRule);
 
@@ -89,7 +87,6 @@ public class ApkGenruleTest {
         .setKeystorePropertiesPath("keystore.properties")
         .addDep("//:lib-android")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(androidBinaryRule.getFullyQualifiedName(), androidBinaryRule);
   }
@@ -138,6 +135,7 @@ public class ApkGenruleTest {
         .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
         .setCommandRunner(EasyMock.createNiceMock(StepRunner.class))
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))
+        .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .build();
     ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
