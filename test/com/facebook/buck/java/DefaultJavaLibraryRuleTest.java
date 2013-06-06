@@ -28,14 +28,12 @@ import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.Verbosity;
@@ -72,7 +70,6 @@ public class DefaultJavaLibraryRuleTest {
       "//android/java/src/com/facebook:fb";
   private static final String ANNOTATION_SCENARIO_GEN_PATH =
       BuckConstant.ANNOTATION_DIR + "/android/java/src/com/facebook/__fb_gen__";
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
@@ -85,7 +82,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new CachingBuildRuleParams(buildTarget, deps, visibilityPatterns, artifactCache),
+        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
@@ -121,7 +118,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new CachingBuildRuleParams(buildTarget, deps, visibilityPatterns, artifactCache),
+        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
@@ -159,7 +156,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new CachingBuildRuleParams(buildTarget, deps, visibilityPatterns, artifactCache),
+        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             "android/java/src/com/facebook/base/data.json",
@@ -193,7 +190,6 @@ public class DefaultJavaLibraryRuleTest {
     DefaultJavaLibraryRule javaLibrary = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(buildTarget)
         .addSrc(src)
-        .setArtifactCache(artifactCache)
         .build(Maps.<String, BuildRule>newHashMap());
 
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
@@ -338,14 +334,12 @@ public class DefaultJavaLibraryRuleTest {
     JavaLibraryRule processorRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(processorTarget)
         .addSrc("java/processor/processor.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(processorRule.getFullyQualifiedName(), processorRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
     AndroidLibraryRule.Builder builder = new AndroidLibraryRule.Builder()
-      .setBuildTarget(libTarget)
-      .setArtifactCache(artifactCache);
+      .setBuildTarget(libTarget);
     builder.getAnnotationProcessingBuilder()
         .addAllProcessors(ImmutableList.of("MyProcessor"))
         .addProcessorBuildTarget(processorTarget);
@@ -363,7 +357,6 @@ public class DefaultJavaLibraryRuleTest {
     JavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -372,7 +365,6 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep("//:libone")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
 
@@ -381,7 +373,6 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
         .addDep("//:libtwo")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -435,7 +426,6 @@ public class DefaultJavaLibraryRuleTest {
     JavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -445,7 +435,6 @@ public class DefaultJavaLibraryRuleTest {
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep("//:libone")
         .setExportDeps(true)
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
 
@@ -454,7 +443,6 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
         .addDep("//:libtwo")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -483,7 +471,6 @@ public class DefaultJavaLibraryRuleTest {
     DefaultJavaLibraryRule libraryOne = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/bar.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -512,7 +499,6 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryOne.getFullyQualifiedName(), libraryOne);
 
@@ -521,7 +507,6 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep("//:libone")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(libraryTwo.getFullyQualifiedName(), libraryTwo);
 
@@ -531,7 +516,6 @@ public class DefaultJavaLibraryRuleTest {
         .addSrc("java/src/com/parent/Meh.java")
         .addDep("//:libtwo")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(parent.getFullyQualifiedName(), parent);
 
@@ -540,7 +524,6 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(grandparentTarget)
         .addSrc("java/src/com/parent/OldManRiver.java")
         .addDep("//:parent")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(grandparent.getFullyQualifiedName(), parent);
 
@@ -654,7 +637,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new PrebuiltJarRule(
-            createCachingBuildRuleParams(target),
+            createBuildRuleParams(target),
             "MyJar",
             Optional.<String>absent(),
             Optional.<String>absent());
@@ -664,7 +647,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new JavaBinaryRule(
-            createCachingBuildRuleParams(target),
+            createBuildRuleParams(target),
             "com.facebook.Main",
             null,
             null,
@@ -675,7 +658,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new DefaultJavaLibraryRule(
-            createCachingBuildRuleParams(target),
+            createBuildRuleParams(target),
             ImmutableSet.<String>of("MyClass.java"),
             ImmutableSet.<String>of(),
             Optional.of("MyProguardConfig"),
@@ -690,12 +673,11 @@ public class DefaultJavaLibraryRuleTest {
       this.targetName = targetName;
     }
 
-    protected CachingBuildRuleParams createCachingBuildRuleParams(BuildTarget target) {
-      return new CachingBuildRuleParams(
+    protected BuildRuleParams createBuildRuleParams(BuildTarget target) {
+      return new BuildRuleParams(
           target,
           ImmutableSortedSet.<BuildRule>of(),
-          ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-          artifactCache);
+          ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
     }
 
     public BuildTarget createTarget() {
@@ -761,12 +743,10 @@ public class DefaultJavaLibraryRuleTest {
       JavacOptions.Builder options = JavacOptions.builder().setAnnotationProcessingData(params);
 
       return new AndroidLibraryRule(
-          new CachingBuildRuleParams(
+          new BuildRuleParams(
               buildTarget,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
-              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-              artifactCache
-          ),
+              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of()),
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<String>of(),
           /* proguardConfig */ Optional.<String>absent(),

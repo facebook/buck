@@ -20,13 +20,12 @@ import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -152,7 +151,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
    *     {@code android list targets --compact}.
    */
   protected AndroidBinaryRule(
-      CachingBuildRuleParams cachingBuildRuleParams,
+      BuildRuleParams buildRuleParams,
       String manifest,
       String target,
       String keystorePropertiesPath,
@@ -164,7 +163,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       boolean compressResources,
       Set<String> primaryDexSubstrings,
       Optional<String> resourceFilter) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
     this.keystorePropertiesPath = Preconditions.checkNotNull(keystorePropertiesPath);
@@ -846,7 +845,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
     private static final PackageType DEFAULT_PACKAGE_TYPE = PackageType.DEBUG;
 
     private String manifest;
@@ -870,7 +869,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         false;
 
       return new AndroidBinaryRule(
-          createCachingBuildRuleParams(buildRuleIndex),
+          createBuildRuleParams(buildRuleIndex),
           manifest,
           target,
           keystorePropertiesPath,
@@ -901,12 +900,6 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       super.addVisibilityPattern(visibilityPattern);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

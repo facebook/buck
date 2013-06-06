@@ -18,11 +18,10 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestCaseSummary;
@@ -69,7 +68,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   private final ImmutableSet<String> labels;
 
-  protected JavaTestRule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected JavaTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<String> resources,
       Set<String> labels,
@@ -77,7 +76,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<JavaLibraryRule> sourceUnderTest) {
-    super(cachingBuildRuleParams,
+    super(buildRuleParams,
         srcs,
         resources,
         proguardConfig,
@@ -355,7 +354,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleIndex);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new JavaTestRule(createCachingBuildRuleParams(buildRuleIndex),
+      return new JavaTestRule(createBuildRuleParams(buildRuleIndex),
           srcs,
           resources,
           labels,
@@ -380,12 +379,6 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     @Override
     public Builder addSrc(String src) {
       super.addSrc(src);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

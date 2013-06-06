@@ -18,13 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -94,13 +93,13 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
   @Nullable
   private final String manifestFile;
 
-  protected AndroidResourceRule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected AndroidResourceRule(BuildRuleParams buildRuleParams,
       @Nullable String res,
       @Nullable String rDotJavaPackage,
       @Nullable String assets,
       @Nullable String manifestFile,
       DirectoryTraverser directoryTraverser) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
     this.res = res;
     this.rDotJavaPackage = rDotJavaPackage;
@@ -111,7 +110,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
       pathToTextSymbolsDir = null;
       pathToTextSymbolsFile = null;
     } else {
-      BuildTarget buildTarget = cachingBuildRuleParams.getBuildTarget();
+      BuildTarget buildTarget = buildRuleParams.getBuildTarget();
       pathToTextSymbolsDir = String.format("%s/%s__%s_text_symbols__",
           BuckConstant.BIN_DIR,
           buildTarget.getBasePathWithSlash(),
@@ -243,7 +242,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
     @Nullable
     private String res = null;
 
@@ -266,7 +265,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
             getBuildTarget().getFullyQualifiedName());
       }
 
-      return new AndroidResourceRule(createCachingBuildRuleParams(buildRuleIndex),
+      return new AndroidResourceRule(createBuildRuleParams(buildRuleIndex),
           res,
           rDotJavaPackage,
           assetsDirectory,
@@ -289,12 +288,6 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
     @Override
     public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
       visibilityPatterns.add(visibilityPattern);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

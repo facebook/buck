@@ -23,8 +23,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.io.Files;
@@ -43,7 +41,6 @@ public class BuildRuleFactoryParamsTest {
 
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
   private static ProjectFilesystem filesystem;
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
   private BuildTargetParser parser;
   private BuildFileTree tree;
 
@@ -86,7 +83,6 @@ public class BuildRuleFactoryParamsTest {
         null /* instance */,
         System.err,
         filesystem,
-        artifactCache,
         tree,
         parser,
         buildTarget);
@@ -103,7 +99,6 @@ public class BuildRuleFactoryParamsTest {
         null /* instance */,
         System.err,
         filesystem,
-        artifactCache,
         tree,
         parser,
         buildTarget);
@@ -118,7 +113,6 @@ public class BuildRuleFactoryParamsTest {
         null /* instance */,
         System.err,
         filesystem,
-        artifactCache,
         tree,
         parser,
         buildTarget);
@@ -143,7 +137,6 @@ public class BuildRuleFactoryParamsTest {
         null /* instance */,
         System.err,
         filesystem,
-        artifactCache,
         tree,
         parser,
         buildTarget);
@@ -168,7 +161,6 @@ public class BuildRuleFactoryParamsTest {
         null /* instance */,
         System.err,
         filesystem,
-        artifactCache,
         tree,
         parser,
         buildTarget);

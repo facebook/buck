@@ -24,14 +24,12 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -57,7 +55,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class ParserTest {
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   private File testBuildFile;
   private Parser testParser;
@@ -87,7 +84,6 @@ public class ParserTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
     testParser = new Parser(filesystem,
         buildRuleTypes,
-        artifactCache,
         new BuildFileTree(ImmutableSet.<BuildTarget>of()));
   }
 
@@ -111,7 +107,6 @@ public class ParserTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(projectDirectoryRoot);
     Parser parser = new Parser(filesystem,
         buildRuleTypes,
-        artifactCache,
         new BuildFileTree(ImmutableSet.<BuildTarget>of()));
 
     RawRulePredicate predicate = RawRulePredicates.alwaysTrue();
@@ -169,7 +164,6 @@ public class ParserTest {
 
     Parser parser = new Parser(projectFilesystem,
         buildRuleTypes,
-        artifactCache,
         buildFiles,
         buildTargetParser,
         knownBuildTargets);

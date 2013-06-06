@@ -21,12 +21,10 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
@@ -42,7 +40,6 @@ import java.util.Map;
 
 
 public class AndroidResourceRuleTest {
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testGetInputsToCompareToOutput() {
@@ -71,13 +68,12 @@ public class AndroidResourceRuleTest {
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base", "res");
-    CachingBuildRuleParams cachingBuildRuleParams = new CachingBuildRuleParams(
+    BuildRuleParams buildRuleParams = new BuildRuleParams(
         buildTarget,
         ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        new NoopArtifactCache());
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
     AndroidResourceRule androidResourceRule = new AndroidResourceRule(
-        cachingBuildRuleParams,
+        buildRuleParams,
         "java/src/com/facebook/base/res",
         "com.facebook",
         "java/src/com/facebook/base/assets",
@@ -123,7 +119,6 @@ public class AndroidResourceRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
         .setRes("res_c")
         .setRDotJavaPackage("com.facebook")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(c.getFullyQualifiedName(), c);
 
@@ -132,7 +127,6 @@ public class AndroidResourceRuleTest {
         .setRes("res_b")
         .setRDotJavaPackage("com.facebook")
         .addDep("//:c")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(b.getFullyQualifiedName(), b);
 
@@ -141,7 +135,6 @@ public class AndroidResourceRuleTest {
         .setRes("res_d")
         .setRDotJavaPackage("com.facebook")
         .addDep("//:c")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(d.getFullyQualifiedName(), d);
 
@@ -152,7 +145,6 @@ public class AndroidResourceRuleTest {
         .addDep("//:b")
         .addDep("//:c")
         .addDep("//:d")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(a.getFullyQualifiedName(), a);
 
@@ -179,7 +171,6 @@ public class AndroidResourceRuleTest {
         .setKeystorePropertiesPath("debug.keystore")
         .addDep("//:a")
         .addDep("//:c")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(e.getFullyQualifiedName(), e);
 

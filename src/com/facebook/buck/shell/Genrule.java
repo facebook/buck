@@ -17,14 +17,13 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -120,12 +119,12 @@ public class Genrule extends AbstractCachingBuildRule {
   private final String srcDirectory;
   protected final Function<String, String> relativeToAbsolutePathFunction;
 
-  protected Genrule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected Genrule(BuildRuleParams buildRuleParams,
       List<String> srcs,
       String cmd,
       String out,
       Function<String, String> relativeToAbsolutePathFunction) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.srcs = ImmutableSortedSet.<String>naturalOrder().addAll(srcs).build();
     this.cmd = Preconditions.checkNotNull(cmd);
     this.srcsToAbsolutePaths = Maps.toMap(srcs, relativeToAbsolutePathFunction);
@@ -133,20 +132,20 @@ public class Genrule extends AbstractCachingBuildRule {
     Preconditions.checkNotNull(out);
     this.outDirectory = String.format("%s/%s",
         BuckConstant.GEN_DIR,
-        cachingBuildRuleParams.getBuildTarget().getBasePathWithSlash());
+        buildRuleParams.getBuildTarget().getBasePathWithSlash());
     String outWithGenDirPrefix = String.format("%s%s", outDirectory, out);
     this.outAsAbsolutePath = relativeToAbsolutePathFunction.apply(outWithGenDirPrefix);
 
     String temp = String.format("%s/%s/%s__tmp",
         BuckConstant.GEN_DIR,
-        cachingBuildRuleParams.getBuildTarget().getBasePath(),
+        buildRuleParams.getBuildTarget().getBasePath(),
         getBuildTarget().getShortName()
         );
     this.tmpDirectory = relativeToAbsolutePathFunction.apply(temp);
 
     String srcdir = String.format("%s/%s/%s__srcs",
         BuckConstant.GEN_DIR,
-        cachingBuildRuleParams.getBuildTarget().getBasePath(),
+        buildRuleParams.getBuildTarget().getBasePath(),
         getBuildTarget().getShortName()
     );
     this.srcDirectory = relativeToAbsolutePathFunction.apply(srcdir);
@@ -355,7 +354,7 @@ public class Genrule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder
+  public static class Builder extends AbstractBuildRuleBuilder
       implements SrcsAttributeBuilder {
 
     protected List<String> srcs = Lists.newArrayList();
@@ -369,7 +368,7 @@ public class Genrule extends AbstractCachingBuildRule {
 
     @Override
     public Genrule build(Map<String, BuildRule> buildRuleIndex) {
-      return new Genrule(createCachingBuildRuleParams(buildRuleIndex),
+      return new Genrule(createBuildRuleParams(buildRuleIndex),
           srcs,
           cmd,
           out,
@@ -391,12 +390,6 @@ public class Genrule extends AbstractCachingBuildRule {
     @Override
     public Builder setBuildTarget(BuildTarget buildTarget) {
       this.buildTarget = buildTarget;
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      this.artifactCache = artifactCache;
       return this;
     }
 

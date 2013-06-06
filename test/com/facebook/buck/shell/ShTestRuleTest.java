@@ -20,11 +20,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
-import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
@@ -36,8 +34,6 @@ import org.junit.After;
 import org.junit.Test;
 
 public class ShTestRuleTest extends EasyMockSupport {
-
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @After
   public void tearDown() {
@@ -97,7 +93,7 @@ public class ShTestRuleTest extends EasyMockSupport {
    */
   private static ShTestRule createShTestRule(final boolean isRuleBuiltFromCache) {
     return new ShTestRule(
-        createCachingBuildRuleParams(),
+        createBuildRuleParams(),
         "run_test.sh",
         /* labels */ ImmutableSet.<String>of()) {
 
@@ -108,11 +104,10 @@ public class ShTestRuleTest extends EasyMockSupport {
     };
   }
 
-  private static CachingBuildRuleParams createCachingBuildRuleParams() {
-    return new CachingBuildRuleParams(
+  private static BuildRuleParams createBuildRuleParams() {
+    return new BuildRuleParams(
         BuildTargetFactory.newInstance("//test/com/example:my_sh_test"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        artifactCache);
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of());
   }
 }

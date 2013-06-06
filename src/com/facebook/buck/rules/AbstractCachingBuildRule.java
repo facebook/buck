@@ -71,9 +71,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   // TODO(mbolin): Make Console and Verbosity accessible through BuildContext and remove this.
   private final static Logger logger = Logger.getLogger(AbstractCachingBuildRule.class.getName());
 
-  // TODO(mbolin): This should be a property of the BuildContext.
-  private final ArtifactCache artifactCache;
-
   /**
    * Lock used to ensure that the logic to kick off a build is performed at most once.
    */
@@ -89,9 +86,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   /** @see #getInputsToCompareToOutput(BuildContext) */
   private Iterable<InputRule> inputsToCompareToOutputs;
 
-  protected AbstractCachingBuildRule(CachingBuildRuleParams cachingBuildRuleParams) {
-      super(cachingBuildRuleParams);
-    this.artifactCache = cachingBuildRuleParams.getArtifactCache();
+  protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
+      super(buildRuleParams);
     this.hasBuildStarted = new AtomicBoolean(false);
     this.buildRuleResult = SettableFuture.create();
   }
@@ -262,7 +258,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // Before deciding to build, check the ArtifactCache.
     File output = getOutput();
-    boolean fromCache = (output != null && artifactCache.fetch(getRuleKey(), output));
+    boolean fromCache = (output != null && context.getArtifactCache().fetch(getRuleKey(), output));
     CacheResult cacheResult = fromCache ? CacheResult.HIT : CacheResult.MISS;
 
     // Run the steps to build this rule since it was not found in the cache.
@@ -278,7 +274,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // Record that the build rule has built successfully.
     try {
-      recordBuildRuleCompleted(context.getProjectFilesystem(), fromCache);
+      recordBuildRuleCompleted(context.getProjectFilesystem(),
+          context.getArtifactCache(),
+          fromCache);
     } catch (IOException e) {
       // If we failed to record the success, then we are in a potentially bad state where we have a
       // new output but an old RuleKey record.
@@ -352,7 +350,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    *   <li>The build rule pulling down the output artifacts via the ArtifactCache.
    * </ol>
    */
-  private void recordBuildRuleCompleted(ProjectFilesystem projectFilesystem, boolean fromCache)
+  private void recordBuildRuleCompleted(ProjectFilesystem projectFilesystem,
+      ArtifactCache artifactCache,
+      boolean fromCache)
       throws IOException {
     // Drop our cached output key, since it probably changed.
     resetOutputKey();

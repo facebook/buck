@@ -59,7 +59,6 @@ public class AuditClasspathCommandTest {
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
   private final Ansi ansi = Ansi.withoutTty();
-  private final ArtifactCache artifactCache = new NoopArtifactCache();
   private CapturingPrintStream stdOutStream;
   private CapturingPrintStream stdErrStream;
   private AuditClasspathCommand auditClasspathCommand;
@@ -119,7 +118,6 @@ public class AuditClasspathCommandTest {
     DefaultJavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
         .addSrc("src/com/facebook/TestJavaLibrary.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
     JavaLibraryRule androidLibraryRule =
@@ -127,7 +125,6 @@ public class AuditClasspathCommandTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
         .addSrc("src/com/facebook/TestAndroidLibrary.java")
         .addDep("//:test-java-library")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(androidLibraryRule.getFullyQualifiedName(), androidLibraryRule);
     AndroidBinaryRule androidBinaryRule = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
@@ -137,7 +134,6 @@ public class AuditClasspathCommandTest {
         .setKeystorePropertiesPath("keystore.properties")
         .addDep("//:test-android-library")
         .addDep("//:test-java-library")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(androidBinaryRule.getFullyQualifiedName(), androidBinaryRule);
     JavaTestRule testRule = JavaTestRule.newJavaTestRuleBuilder()
@@ -145,7 +141,6 @@ public class AuditClasspathCommandTest {
         .addDep("//:test-java-library")
         .setSourceUnderTest(ImmutableSet.of("//:test-java-library"))
         .addSrc("src/com/facebook/test/ProjectTests.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex1);
     buildRuleIndex1.put(testRule.getFullyQualifiedName(), testRule);
     PartialGraph partialGraph2 = createGraphFromBuildRules(buildRuleIndex1.values(), targets);

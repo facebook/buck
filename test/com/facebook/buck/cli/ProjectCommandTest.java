@@ -72,7 +72,6 @@ public class ProjectCommandTest {
     DefaultJavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(javaLibraryTargetName))
         .addSrc("javasrc/JavaLibrary.java")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
 

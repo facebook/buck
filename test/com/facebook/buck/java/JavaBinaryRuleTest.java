@@ -21,9 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.google.common.collect.Maps;
 
 import org.junit.Test;
@@ -35,7 +33,6 @@ public class JavaBinaryRuleTest {
 
   private static final String PATH_TO_GUAVA_JAR = "third_party/guava/guava-10.0.1.jar";
   private static final String PATH_TO_GENERATOR_JAR = "third_party/guava/generator.jar";
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
   public void testGetExecutableCommand() {
@@ -46,7 +43,6 @@ public class JavaBinaryRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(prebuiltGeneratorJarRule.getFullyQualifiedName(), prebuiltGeneratorJarRule);
 
@@ -55,7 +51,6 @@ public class JavaBinaryRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(prebuiltJarRule.getFullyQualifiedName(), prebuiltJarRule);
 
@@ -64,7 +59,6 @@ public class JavaBinaryRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc("java/com/facebook/base/Base.java")
         .addDep("//third_party/guava:guava")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
 
@@ -73,7 +67,6 @@ public class JavaBinaryRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
         .addDep("//java/com/facebook/base:base")
         .setMainClass("com.facebook.base.Main")
-        .setArtifactCache(artifactCache)
         .build(buildRuleIndex);
     buildRuleIndex.put(javaBinaryRule.getFullyQualifiedName(), javaBinaryRule);
 

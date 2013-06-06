@@ -32,11 +32,9 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.shell.Genrule.Builder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -61,8 +59,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class GenruleTest {
-
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   private static final Function<String, String> relativeToAbsolutePathFunction =
       new Function<String, String>() {
@@ -304,7 +300,6 @@ public class GenruleTest {
         .addSrc("foo/bar.html")
         .addSrc("other/place.txt")
         .setOut("example-file")
-        .setArtifactCache(artifactCache)
         .build(ImmutableMap.<String, BuildRule>of());
 
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
@@ -335,7 +330,6 @@ public class GenruleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addSrc("java/com/facebook/util/ManifestGenerator.java")
-        .setArtifactCache(new NoopArtifactCache())
         .build(buildRuleIndex);
     buildRuleIndex.put(javaLibrary.getFullyQualifiedName(), javaLibrary);
 
@@ -343,7 +337,6 @@ public class GenruleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"))
         .setMainClass("com.facebook.util.ManifestGenerator")
         .addDep(javaLibrary.getFullyQualifiedName())
-        .setArtifactCache(new NoopArtifactCache())
         .build(buildRuleIndex);
     buildRuleIndex.put(javaBinary.getFullyQualifiedName(), javaBinary);
 
@@ -361,8 +354,7 @@ public class GenruleTest {
         .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
         .setCmd(originalCmd)
-        .setOut("example-file")
-        .setArtifactCache(artifactCache);
+        .setOut("example-file");
 
     for (BuildRule dep : deps) {
       ruleBuilder.addDep(dep.getFullyQualifiedName());

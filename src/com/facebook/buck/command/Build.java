@@ -19,6 +19,7 @@ package com.facebook.buck.command;
 import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEvents;
@@ -55,6 +56,8 @@ public class Build {
 
   private final ExecutionContext executionContext;
 
+  private final ArtifactCache artifactCache;
+
   private final StepRunner stepRunner;
 
   private final JavaPackageFinder javaPackageFinder;
@@ -74,6 +77,7 @@ public class Build {
       Optional<File> androidSdkDir,
       Optional<File> ndkRoot,
       ProjectFilesystem projectFilesystem,
+      ArtifactCache artifactCache,
       Verbosity verbosity,
       ListeningExecutorService listeningExecutorService,
       JavaPackageFinder javaPackageFinder,
@@ -93,6 +97,7 @@ public class Build {
         ndkRoot,
         isCodeCoverageEnabled,
         isDebugEnabled);
+    this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.stepRunner = new DefaultStepRunner(executionContext, listeningExecutorService);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
@@ -200,6 +205,7 @@ public class Build {
         .setDependencyGraph(dependencyGraph)
         .setCommandRunner(stepRunner)
         .setProjectFilesystem(executionContext.getProjectFilesystem())
+        .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(events)
         .setAndroidBootclasspathForAndroidPlatformTarget(

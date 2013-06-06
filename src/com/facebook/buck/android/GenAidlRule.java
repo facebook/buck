@@ -16,17 +16,16 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -60,10 +59,10 @@ public class GenAidlRule extends AbstractCachingBuildRule {
   private final String aidlFilePath;
   private final String importPath;
 
-  private GenAidlRule(CachingBuildRuleParams cachingBuildRuleParams,
+  private GenAidlRule(BuildRuleParams buildRuleParams,
       String aidlFilePath,
       String importPath) {
-    super(cachingBuildRuleParams);
+    super(buildRuleParams);
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importPath = Preconditions.checkNotNull(importPath);
   }
@@ -110,7 +109,7 @@ public class GenAidlRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
 
     private String aidl;
 
@@ -120,18 +119,12 @@ public class GenAidlRule extends AbstractCachingBuildRule {
 
     @Override
     public GenAidlRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new GenAidlRule(createCachingBuildRuleParams(buildRuleIndex), aidl, importPath);
+      return new GenAidlRule(createBuildRuleParams(buildRuleIndex), aidl, importPath);
     }
 
     @Override
     public Builder setBuildTarget(BuildTarget buildTarget) {
       super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      super.setArtifactCache(artifactCache);
       return this;
     }
 

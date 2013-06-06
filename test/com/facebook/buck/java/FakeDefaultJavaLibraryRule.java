@@ -17,7 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.google.common.base.Optional;
 
 import java.util.Map;
@@ -29,14 +29,14 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
   @SuppressWarnings("unused")
   private final boolean ruleInputsAreCached;
 
-  protected FakeDefaultJavaLibraryRule(CachingBuildRuleParams cachingBuildRuleParams,
+  protected FakeDefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
                                        Set<String> srcs,
                                        Set<String> resources,
                                        Optional<String> proguardConfig,
                                        AnnotationProcessingParams annotationProcessingParams,
                                        boolean exportDeps,
                                        boolean ruleInputsAreCached) {
-    super(cachingBuildRuleParams,
+    super(buildRuleParams,
         srcs,
         resources,
         proguardConfig,
@@ -56,12 +56,12 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
 
     @Override
     public FakeDefaultJavaLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      CachingBuildRuleParams cachingBuildRuleParams = createCachingBuildRuleParams(buildRuleIndex);
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(buildRuleIndex);
 
       return new FakeDefaultJavaLibraryRule(
-          cachingBuildRuleParams,
+          buildRuleParams,
           srcs,
           resources,
           proguardConfig,

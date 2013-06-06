@@ -39,6 +39,7 @@ public class BuildContext {
   private final DependencyGraph dependencyGraph;
   private final StepRunner stepRunner;
   private final ProjectFilesystem projectFilesystem;
+  private final ArtifactCache artifactCache;
   private final JavaPackageFinder javaPackageFinder;
   private final EventBus events;
   private final Supplier<String> androidBootclasspathSupplier;
@@ -49,6 +50,7 @@ public class BuildContext {
       DependencyGraph dependencyGraph,
       StepRunner stepRunner,
       ProjectFilesystem projectFilesystem,
+      ArtifactCache artifactCache,
       JavaPackageFinder javaPackageFinder,
       EventBus events,
       Supplier<String> androidBootclasspathSupplier,
@@ -57,6 +59,7 @@ public class BuildContext {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
     this.events = Preconditions.checkNotNull(events);
     this.androidBootclasspathSupplier = Preconditions.checkNotNull(androidBootclasspathSupplier);
@@ -79,12 +82,12 @@ public class BuildContext {
     return javaPackageFinder;
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
+  }
+
+  public ArtifactCache getArtifactCache() {
+    return artifactCache;
   }
 
   public EventBus getEventBus() {
@@ -99,12 +102,17 @@ public class BuildContext {
     return buildDependencies;
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
   public static class Builder {
 
     private File projectRoot = null;
     private DependencyGraph dependencyGraph = null;
     private StepRunner stepRunner = null;
     private ProjectFilesystem projectFilesystem = null;
+    private ArtifactCache artifactCache = null;
     private JavaPackageFinder javaPackgeFinder = null;
     private EventBus events = new EventBus();
     private Supplier<String> androidBootclasspathSupplier = null;
@@ -121,6 +129,7 @@ public class BuildContext {
           dependencyGraph,
           stepRunner,
           projectFilesystem,
+          artifactCache,
           javaPackgeFinder,
           events,
           androidBootclasspathSupplier,
@@ -144,6 +153,11 @@ public class BuildContext {
 
     public Builder setProjectFilesystem(ProjectFilesystem fileystemProject) {
       this.projectFilesystem = fileystemProject;
+      return this;
+    }
+
+    public Builder setArtifactCache(ArtifactCache artifactCache) {
+      this.artifactCache = artifactCache;
       return this;
     }
 

@@ -120,7 +120,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
       parser = new Parser(getProjectFilesystem(),
           getBuildRuleTypes(),
-          getArtifactCache(),
           buildFiles);
     }
 
@@ -149,6 +148,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // Create and execute the build.
     this.build = options.createBuild(dependencyGraph,
         getProjectFilesystem(),
+        getArtifactCache(),
         console);
     getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);

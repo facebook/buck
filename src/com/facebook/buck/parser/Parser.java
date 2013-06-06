@@ -21,7 +21,6 @@ import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleType;
@@ -68,18 +67,15 @@ public final class Parser {
   private final String absolutePathToProjectRoot;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
-  private final ArtifactCache artifactCache;
   private final BuildFileTree buildFiles;
 
   private boolean parserWasPopulatedViaParseRawRules = false;
 
   public Parser(ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache,
       BuildFileTree buildFiles) {
     this(projectFilesystem,
         buildRuleTypes,
-        artifactCache,
         buildFiles,
         new BuildTargetParser(projectFilesystem),
         Maps.<String, BuildRuleBuilder>newHashMap());
@@ -88,13 +84,11 @@ public final class Parser {
   @VisibleForTesting
   Parser(ProjectFilesystem projectFilesystem,
          KnownBuildRuleTypes buildRuleTypes,
-         ArtifactCache artifactCache,
          BuildFileTree buildFiles,
          BuildTargetParser buildTargetParser,
          Map<String, BuildRuleBuilder> knownBuildTargets) {
     this.projectFilesystem = projectFilesystem;
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
-    this.artifactCache = artifactCache;
     this.buildFiles = Preconditions.checkNotNull(buildFiles);
 
     this.knownBuildTargets = Preconditions.checkNotNull(knownBuildTargets);
@@ -311,7 +305,6 @@ public final class Parser {
           map,
           System.err, // TODO(simons): Injecting a Console instance turns out to be a nightmare.
           projectFilesystem,
-          artifactCache,
           buildFiles,
           buildTargetParser,
           target));

@@ -17,11 +17,11 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.AbstractCachingBuildRule;
-import com.facebook.buck.rules.AbstractCachingBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
@@ -83,7 +83,7 @@ public class ExportFileRule extends AbstractCachingBuildRule {
 
 
   @VisibleForTesting
-  ExportFileRule(CachingBuildRuleParams params, Optional<String> src, Optional<String> out) {
+  ExportFileRule(BuildRuleParams params, Optional<String> src, Optional<String> out) {
     super(params);
 
     String shortName = params.getBuildTarget().getShortName();
@@ -137,7 +137,7 @@ public class ExportFileRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractCachingBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder {
     private Optional<String> src;
     private Optional<String> out;
 
@@ -153,7 +153,7 @@ public class ExportFileRule extends AbstractCachingBuildRule {
 
     @Override
     public ExportFileRule build(Map<String, BuildRule> buildRuleIndex) {
-      CachingBuildRuleParams params = createCachingBuildRuleParams(buildRuleIndex);
+      BuildRuleParams params = createBuildRuleParams(buildRuleIndex);
 
       return new ExportFileRule(params, src, out);
     }

@@ -21,8 +21,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
-import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
@@ -58,13 +57,12 @@ public class PrebuiltNativeLibraryRuleTest {
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base", "base");
-    CachingBuildRuleParams cachingBuildRuleParams = new CachingBuildRuleParams(
+    BuildRuleParams buildRuleParams = new BuildRuleParams(
         buildTarget,
         ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        new NoopArtifactCache());
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
     PrebuiltNativeLibraryBuildRule nativeLibraryRule = new PrebuiltNativeLibraryBuildRule(
-        cachingBuildRuleParams,
+        buildRuleParams,
         "java/src/com/facebook/base/libs",
         traverser);
 

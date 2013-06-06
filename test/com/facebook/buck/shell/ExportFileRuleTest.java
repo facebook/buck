@@ -24,10 +24,9 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -43,6 +42,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,18 +53,16 @@ import java.util.concurrent.Callable;
 
 public class ExportFileRuleTest {
 
-  private CachingBuildRuleParams params;
+  private BuildRuleParams params;
   private BuildContext context;
   private File root;
-  private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Before
   public void createFixtures() {
     BuildTarget target = BuildTargetFactory.newInstance("//:example.html");
-    params = new CachingBuildRuleParams(target,
+    params = new BuildRuleParams(target,
         ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of(),
-        artifactCache);
+        ImmutableSet.<BuildTargetPattern>of());
     root = new File(".");
     context = getBuildContext(root);
   }
@@ -108,6 +106,7 @@ public class ExportFileRuleTest {
     return BuildContext.builder()
         .setProjectRoot(root)
         .setProjectFilesystem(new ProjectFilesystem(root))
+        .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setEventBus(new EventBus())
         .setAndroidBootclasspathForAndroidPlatformTarget(Optional.<AndroidPlatformTarget>absent())
         .setJavaPackageFinder(new JavaPackageFinder() {
