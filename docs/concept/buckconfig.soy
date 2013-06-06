@@ -85,11 +85,12 @@ Cassandra-related settings are ignored.
 [cache]
     # Build artifact caching configuration.
     #
-    # mode is one of the following:
-    #   noop      : No caching (default).
+    # mode is a comma-separated set of caching mechanisms to use:
     #   dir       : Use a directory-based cache.
     #   cassandra : Use a distributed Cassandra cache.
-    mode = dir
+    #
+    # The default set is empty.
+    mode = dir, cassandra
 
     # Directory path used for directory-based caching. The default directory is
     # buck-cache.
