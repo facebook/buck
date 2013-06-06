@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DirectoryTraversal;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -118,7 +119,7 @@ public class JarDirectoryStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try {
-      createJarFile();
+      createJarFile(context);
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return 1;
@@ -126,12 +127,14 @@ public class JarDirectoryStep implements Step {
     return 0;
   }
 
-  private void createJarFile() throws IOException {
+  private void createJarFile(ExecutionContext context) throws IOException {
     Manifest manifest = new Manifest();
 
     // Write the manifest, as appropriate.
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
     if (manifestFile != null) {
-      FileInputStream manifestStream = new FileInputStream(new File(manifestFile));
+      FileInputStream manifestStream = new FileInputStream(
+          filesystem.getFileForRelativePath(manifestFile));
       boolean readSuccessfully = false;
       try {
         manifest.read(manifestStream);
@@ -147,11 +150,13 @@ public class JarDirectoryStep implements Step {
     Closer closer = Closer.create();
     try {
       JarOutputStream outputFile = closer.register(new JarOutputStream(
-          new BufferedOutputStream(new FileOutputStream(pathToOutputFile))));
+          new BufferedOutputStream(new FileOutputStream(
+              filesystem.getFileForRelativePath(pathToOutputFile)))));
 
       Set<String> directoryEntriesInsertedIntoOutputJar = Sets.newHashSet();
+      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (String entry : entriesToJar) {
-        File file = new File(entry);
+        File file = projectFilesystem.getFileForRelativePath(entry);
         if (file.isFile()) {
           // Assume the file is a ZIP/JAR file.
           copyZipEntriesToJar(file, outputFile, manifest, directoryEntriesInsertedIntoOutputJar);

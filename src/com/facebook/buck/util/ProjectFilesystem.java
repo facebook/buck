@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -34,6 +35,7 @@ import java.util.Properties;
 public class ProjectFilesystem {
 
   private final File projectRoot;
+  private final Function<String, String> pathRelativizer;
 
   /**
    * There should only be one {@link ProjectFilesystem} created per process.
@@ -46,6 +48,12 @@ public class ProjectFilesystem {
   public ProjectFilesystem(File projectRoot) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     Preconditions.checkArgument(projectRoot.isDirectory());
+    this.pathRelativizer = new Function<String, String>() {
+      @Override
+      public String apply(String relativePath) {
+        return ProjectFilesystem.this.getFileForRelativePath(relativePath).getAbsolutePath();
+      }
+    };
   }
 
   public File getProjectRoot() {
@@ -122,5 +130,15 @@ public class ProjectFilesystem {
     } else {
       return Optional.absent();
     }
+  }
+
+  /**
+   * @return a function that takes a path relative to the project root and resolves it to an
+   *     absolute path. This is particularly useful for {@link com.facebook.buck.step.Step}s that do
+   *     not extend {@link com.facebook.buck.shell.ShellStep} because they are not guaranteed to be
+   *     run from the project root.
+   */
+  public Function<String, String> getPathRelativizer() {
+    return pathRelativizer;
   }
 }
