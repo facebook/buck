@@ -227,6 +227,9 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
 
   @Override
   protected RuleKey.Builder ruleKeyBuilder() {
+    // TODO(#2493457): This rule uses the aapt binary (part of the Android SDK), so the RuleKey
+    // should incorporate which version of aapt is used.
+
     ImmutableSortedSet.Builder<String> resFiles = ImmutableSortedSet.naturalOrder();
     addResContents(resFiles);
 
