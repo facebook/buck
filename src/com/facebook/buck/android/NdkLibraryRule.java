@@ -88,6 +88,9 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
 
   @Override
   protected RuleKey.Builder ruleKeyBuilder() {
+    // TODO(#2493457): This rule uses the ndk-build script (part of the Android NDK), so the RuleKey
+    // should incorporate which version of the NDK is used.
+
     return super.ruleKeyBuilder()
         .set("makefileDirectory", makefileDirectory)
         .set("buildArtifactsDirectory", buildArtifactsDirectory)
