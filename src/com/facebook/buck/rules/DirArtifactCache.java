@@ -69,11 +69,12 @@ public class DirArtifactCache implements ArtifactCache {
       return;
     }
     File cacheEntry = new File(cacheDir, ruleKey.toString());
+    File tmpCacheEntry = null;
     try {
       // Write to a temporary file and move the file to its final location atomically to protect
       // against partial artifacts (whether due to buck interruption or filesystem failure) posing
       // as valid artifacts during subsequent buck runs.
-      File tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir);
+      tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir);
       Files.copy(output, tmpCacheEntry);
       Files.move(tmpCacheEntry, cacheEntry);
     } catch (IOException e) {
@@ -81,6 +82,9 @@ public class DirArtifactCache implements ArtifactCache {
           ruleKey,
           output.getPath(),
           e.getMessage()));
+      if (tmpCacheEntry != null) {
+        tmpCacheEntry.delete();
+      }
     }
   }
 }

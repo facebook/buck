@@ -338,4 +338,16 @@ public class BuckConfigTest {
     BuckConfig config = BuckConfig.createFromReader(reader, null);
     assertEquals(54321L, config.getDefaultTestTimeoutMillis());
   }
+
+  @Test
+  public void testOverride() throws IOException {
+    Reader readerA = new StringReader(Joiner.on('\n').join(
+        "[cache]",
+        "    mode = dir,cassandra"));
+    Reader readerB = new StringReader(Joiner.on('\n').join(
+        "[cache]",
+        "    mode ="));
+    // Verify that no exception is thrown when a definition is overridden.
+    BuckConfig.createFromReaders(ImmutableList.of(readerA, readerB));
+  }
 }

@@ -24,8 +24,10 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.DirArtifactCache;
+import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
@@ -43,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -52,6 +55,7 @@ import org.ini4j.Profile.Section;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,13 +91,9 @@ class BuckConfig {
   private final BuildTargetParser buildTargetParser;
 
   private enum ArtifactCacheNames {
-    noop,
     dir,
     cassandra
   }
-  private final ArtifactCache artifactCache;
-
-  private final Ansi ansi;
 
   @VisibleForTesting
   BuckConfig(Map<String, Map<String, String>> sectionsToEntries,
@@ -112,8 +112,6 @@ class BuckConfig {
     this.aliasToBuildTargetMap = createAliasToBuildTargetMap(
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
-    this.artifactCache = initArtifactCache();
-    this.ansi = initAnsi();
   }
 
   public static BuckConfig emptyConfig() {
@@ -192,7 +190,14 @@ class BuckConfig {
 
     Ini ini = new Ini();
     for (Reader reader : readers) {
-      ini.load(reader);
+      // The data contained by reader need to be processed twice (first during validation, then
+      // when merging into ini), so read the data into a string that can be used as the source of
+      // two StringReaders.
+      try (Reader r = reader) {
+        String iniString = CharStreams.toString(r);
+        validateReader(new StringReader(iniString));
+        ini.load(new StringReader(iniString));
+      }
     }
 
     Map<String, Map<String, String>> sectionsToEntries = Maps.newHashMap();
@@ -200,13 +205,6 @@ class BuckConfig {
       ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
       Section section = ini.get(sectionName);
       for (String propertyName : section.keySet()) {
-        // Verify that a section does not have the same key specified more than once.
-        if (section.getAll(propertyName).size() > 1) {
-          throw new HumanReadableException("Duplicate definition for %s in [%s].",
-              propertyName,
-              sectionName);
-        }
-
         String propertyValue = section.get(propertyName);
         builder.put(propertyName, propertyValue);
       }
@@ -216,6 +214,22 @@ class BuckConfig {
     }
 
     return sectionsToEntries;
+  }
+
+  private static void validateReader(Reader reader) throws IOException {
+    // Verify that within each ini file, no section has the same key specified more than once.
+    Ini ini = new Ini();
+    ini.load(reader);
+    for (String sectionName : ini.keySet()) {
+      Section section = ini.get(sectionName);
+      for (String propertyName : section.keySet()) {
+        if (section.getAll(propertyName).size() > 1) {
+          throw new HumanReadableException("Duplicate definition for %s in [%s].",
+              propertyName,
+              sectionName);
+        }
+      }
+    }
   }
 
   @VisibleForTesting
@@ -406,11 +420,54 @@ class BuckConfig {
         : ImmutableList.<String>of();
   }
 
-  private ArtifactCache initNoopArtifactCache() {
-    return new NoopArtifactCache();
+  public Ansi createAnsi() {
+    String color = getValue("color", "ui").or("auto");
+    switch (color) {
+      case "false":
+        return Ansi.withoutTty();
+      // Git also supports "always" and "never" for color.ui:
+      // https://www.kernel.org/pub/software/scm/git/docs/git-config.html
+      // It would be nice to be able to mirror those nuances.
+      case "auto":
+      default:
+        return new Ansi();
+    }
   }
 
-  private ArtifactCache initDirArtifactCache() {
+  public ArtifactCache createArtifactCache(Console console) {
+    String cacheMode = getValue("cache", "mode").or("");
+    if (cacheMode.isEmpty()) {
+      return new NoopArtifactCache();
+    }
+    ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
+    Iterable<String> modes = Splitter.on(',').trimResults().split(cacheMode);
+    try {
+      for (String mode : modes) {
+        switch (ArtifactCacheNames.valueOf(mode)) {
+        case dir:
+          builder.add(createDirArtifactCache());
+          break;
+        case cassandra:
+          ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(console);
+          if (cassandraArtifactCache != null) {
+            builder.add(cassandraArtifactCache);
+          }
+          break;
+        }
+      }
+    } catch (IllegalArgumentException e) {
+      throw new HumanReadableException("Unusable cache.mode: '%s'", cacheMode);
+    }
+    ImmutableList<ArtifactCache> artifactCaches = builder.build();
+    if (artifactCaches.size() == 1) {
+      // Don't bother wrapping a single artifact cache in MultiArtifactCache.
+      return artifactCaches.get(0);
+    } else {
+      return new MultiArtifactCache(artifactCaches);
+    }
+  }
+
+  private ArtifactCache createDirArtifactCache() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
     File dir = new File(cacheDir);
     try {
@@ -420,7 +477,8 @@ class BuckConfig {
     }
   }
 
-  private ArtifactCache initCassandraArtifactCache() {
+  @Nullable
+  private ArtifactCache createCassandraArtifactCache(Console console) {
     // cache.hosts
     String cacheHosts = getValue("cache", "hosts").or("");
     // cache.port
@@ -429,49 +487,10 @@ class BuckConfig {
     try {
       return new CassandraArtifactCache(cacheHosts, port);
     } catch (ConnectionException e) {
-      throw new HumanReadableException("Cassandra cache connection failure: %s", e.getMessage());
+      console.getStdErr().println(String.format("Cassandra cache connection failure: %s",
+          e.getMessage()));
+      return null;
     }
-  }
-
-  private ArtifactCache initArtifactCache() {
-    String cacheMode = getValue("cache", "mode").or("noop");
-    try {
-      switch (ArtifactCacheNames.valueOf(cacheMode)) {
-      case noop:
-        return initNoopArtifactCache();
-      case dir:
-        return initDirArtifactCache();
-      case cassandra:
-        return initCassandraArtifactCache();
-      }
-    } catch (IllegalArgumentException e) {
-      throw new HumanReadableException("Unusable cache.mode: '%s'", cacheMode);
-    }
-
-    throw new HumanReadableException("Unusable cache.mode: '%s'", cacheMode);
-  }
-
-  public ArtifactCache getArtifactCache() {
-    return artifactCache;
-  }
-
-  private Ansi initAnsi() {
-    String color = getValue("color", "ui").or("auto");
-    switch (color) {
-    case "false":
-      return Ansi.withoutTty();
-      // Git also supports "always" and "never" for color.ui:
-      // https://www.kernel.org/pub/software/scm/git/docs/git-config.html
-      // It would be nice to be able to mirror those nuances.
-    case "auto":
-    default:
-      return new Ansi();
-    }
-  }
-
-  /** This method always returns the same exact object. */
-  public Ansi getAnsi() {
-    return ansi;
   }
 
   private Optional<String> getValue(String sectionName, String propertyName) {

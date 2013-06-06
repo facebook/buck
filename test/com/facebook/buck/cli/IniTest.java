@@ -44,12 +44,12 @@ public class IniTest {
         "[alias]",
         "  buck = //src/com/facebook/buck/cli:cli",
         "[cache]",
-        "  mode = noop"));
+        "  mode = dir"));
     Reader overrideInput = new StringReader(Joiner.on("\n").join(
         "[alias]",
         "  test_util = //test/com/facebook/buck/util:util",
         "[cache]",
-        "  mode = dir"));
+        "  mode ="));
     ini.load(originalInput);
     ini.load(overrideInput);
 
@@ -64,7 +64,7 @@ public class IniTest {
     Section cacheSection = ini.get("cache");
     assertEquals(
         "Values from overrideInput should supercede those from originalInput, as appropriate.",
-        ImmutableMap.of("mode", "dir"),
+        ImmutableMap.of("mode", ""),
         cacheSection);
   }
 }

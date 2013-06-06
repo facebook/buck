@@ -168,7 +168,7 @@ public final class Main {
     // Create common command parameters.
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     BuckConfig config = createBuckConfig(projectFilesystem);
-    Console console = new Console(stdOut, stdErr, config.getAnsi());
+    Console console = new Console(stdOut, stdErr, config.createAnsi());
     KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
 
     // Create or get and invalidate cached command parameters.
@@ -190,7 +190,7 @@ public final class Main {
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
-          config.getArtifactCache(),
+          config.createArtifactCache(console),
           parser));
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
