@@ -737,7 +737,7 @@ public class DefaultJavaLibraryRuleTest {
 
       executionContext = new ExecutionContext(
           Verbosity.SILENT,
-          EasyMock.createMock(ProjectFilesystem.class),
+          new ProjectFilesystem(new File(".")),
           new Console(System.out, System.err, Ansi.withoutTty()),
           Optional.<AndroidPlatformTarget>absent(),
           Optional.<File>absent(),

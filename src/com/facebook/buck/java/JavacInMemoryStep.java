@@ -19,10 +19,12 @@ package com.facebook.buck.java;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -39,7 +41,7 @@ import javax.tools.ToolProvider;
 
 public class JavacInMemoryStep implements Step {
 
-  private final File outputDirectory;
+  private final String pathToOutputDirectory;
 
   private final Set<String> javaSourceFilePaths;
 
@@ -47,12 +49,12 @@ public class JavacInMemoryStep implements Step {
   private final JavacOptions javacOptions;
 
   public JavacInMemoryStep(
-        String outputDirectory,
+        String pathToOutputDirectory,
         Set<String> javaSourceFilePaths,
         Set<String> classpathEntries,
         JavacOptions javacOptions) {
-    Preconditions.checkNotNull(outputDirectory);
-    this.outputDirectory = new File(outputDirectory);
+    Preconditions.checkNotNull(pathToOutputDirectory);
+    this.pathToOutputDirectory = pathToOutputDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
@@ -78,11 +80,13 @@ public class JavacInMemoryStep implements Step {
     }
 
     // Specify the output directory.
-    builder.add("-d").add(outputDirectory.getAbsolutePath());
+    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    builder.add("-d").add(pathRelativizer.apply(pathToOutputDirectory));
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {
-      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
+      String classpath = Joiner.on(File.pathSeparator).join(
+          Iterables.transform(buildClasspathEntries, pathRelativizer));
       builder.add("-classpath", classpath);
     }
 
@@ -108,7 +112,9 @@ public class JavacInMemoryStep implements Step {
     List<String> options = getOptions(context, buildClasspathEntries);
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Iterable<? extends JavaFileObject> compilationUnits =
-        fileManager.getJavaFileObjectsFromStrings(javaSourceFilePaths);
+        fileManager.getJavaFileObjectsFromStrings(
+            Iterables.transform(javaSourceFilePaths,
+                                context.getProjectFilesystem().getPathRelativizer()));
 
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
     JavaCompiler.CompilationTask compilationTask = compiler.getTask(
@@ -146,7 +152,7 @@ public class JavacInMemoryStep implements Step {
 
   @Override
   public String getShortName(ExecutionContext context) {
-    return String.format("javac %s", outputDirectory);
+    return String.format("javac %s", pathToOutputDirectory);
   }
 
   public Set<String> getSrcs() {
