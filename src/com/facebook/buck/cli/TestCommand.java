@@ -248,7 +248,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     };
     PartialGraph partialGraph = PartialGraph.createPartialGraph(predicate,
         getProjectFilesystem(),
-        options.getDefaultIncludes());
+        options.getDefaultIncludes(),
+        getParser());
+
     final DependencyGraph graph = partialGraph.getDependencyGraph();
 
     // Look up all of the test rules in the dependency graph.

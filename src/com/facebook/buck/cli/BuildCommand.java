@@ -18,10 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.debug.Tracer;
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
@@ -30,23 +28,15 @@ import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
-
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.WatchEvent;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
@@ -56,21 +46,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   private Build build;
 
   private ImmutableList<BuildTarget> buildTargets = ImmutableList.of();
-
-  // Static fields persist between builds when running as a daemon.
-  private static final boolean isDaemon = Boolean.getBoolean("buck.daemon");
-
-  @Nullable
-  private static Parser parser;
-
-  @Nullable
-  private static BuildFileTree buildFiles;
-
-  @Nullable
-  private static EventBus fileChangeEventBus;
-
-  @Nullable
-  private static ProjectFilesystemWatcher filesystemWatcher;
 
   public BuildCommand(CommandRunnerParams params) {
     super(params);
@@ -100,31 +75,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     Verbosity verbosity = options.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);
 
-    // Watch filesystem to invalidate parsed build files on changes if daemon.
-    if (isDaemon) {
-      if (filesystemWatcher == null) {
-        fileChangeEventBus = new EventBus("file-change-events");
-        filesystemWatcher = new ProjectFilesystemWatcher(
-            getProjectFilesystem(),
-            fileChangeEventBus,
-            options.getBuckConfig().getIgnoredDirectories(),
-            FileSystems.getDefault().newWatchService());
-        fileChangeEventBus.register(this);
-      } else {
-        filesystemWatcher.postEvents();
-      }
-    }
-
-    // Create static members on first run, cache parsed build files between runs if daemon.
-    if (buildFiles == null) {
-      buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
-      parser = new Parser(getProjectFilesystem(),
-          getBuildRuleTypes(),
-          buildFiles);
-    }
-
     try {
-      buildTargets = getBuildTargets(parser, options.getArgumentsFormattedAsBuildTargets());
+      buildTargets = getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
       return 1;
@@ -138,7 +90,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // Parse the build files to create a DependencyGraph.
     DependencyGraph dependencyGraph;
     try {
-      dependencyGraph = parser.parseBuildFilesForTargets(buildTargets,
+      dependencyGraph = getParser().parseBuildFilesForTargets(buildTargets,
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
@@ -225,18 +177,4 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     return "Specify one build rule to build.";
   }
 
-  @Subscribe
-  public void onFileSystemChange(WatchEvent<?> event) {
-    if (filesystemWatcher.isPathChangeEvent(event)) {
-      // TODO(user): Track the files imported by build files, rather than just assuming source files can't affect them.
-      final String SRC_EXTENSION = ".java";
-      Path path = (Path) event.context();
-      if (path.toString().endsWith(SRC_EXTENSION)) {
-        return;
-      }
-    }
-    // TODO(user): invalidate affected build files, rather than nuking buildFiles and parser completely.
-    buildFiles = null;
-    parser = null;
-  }
 }

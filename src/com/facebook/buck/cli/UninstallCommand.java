@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -53,9 +52,8 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
       return 1;
     }
 
-    // Create a parser.
-    BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(getProjectFilesystem());
-    Parser parser = new Parser(getProjectFilesystem(), getBuildRuleTypes(), buildFiles);
+    // Get a parser.
+    Parser parser = getParser();
 
     // Parse all of the build targets specified by the user.
     BuildTargetParser buildTargetParser = parser.getBuildTargetParser();

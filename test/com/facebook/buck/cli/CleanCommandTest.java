@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.command.Project;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
@@ -102,7 +103,8 @@ public class CleanCommandTest extends EasyMockSupport {
             Ansi.withoutTty()),
         createMock(ProjectFilesystem.class),
         createMock(KnownBuildRuleTypes.class),
-        createMock(ArtifactCache.class));
+        createMock(ArtifactCache.class),
+        createMock(Parser.class));
     return new CleanCommand(params);
   }
 

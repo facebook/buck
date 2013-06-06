@@ -33,9 +33,24 @@ public class RawRulePredicates {
 
   };
 
+  private static final RawRulePredicate alwaysFalse = new RawRulePredicate() {
+
+    @Override
+    public boolean isMatch(Map<String, Object> rawParseData,
+                           BuildRuleType buildRuleType, BuildTarget buildTarget) {
+      return false;
+    }
+
+  };
+
   private RawRulePredicates() {}
 
   public static RawRulePredicate alwaysTrue() {
     return alwaysTrue;
   }
+
+  public static RawRulePredicate alwaysFalse() {
+    return alwaysFalse;
+  }
+
 }

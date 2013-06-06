@@ -80,7 +80,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     try {
       graph = PartialGraph.createFullGraph(
           getProjectFilesystem(),
-          options.getDefaultIncludes());
+          options.getDefaultIncludes(),
+          getParser());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
       return 1;

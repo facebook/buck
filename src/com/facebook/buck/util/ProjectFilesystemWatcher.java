@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.LinkOption;
@@ -38,7 +39,7 @@ import java.util.Map;
  * Change events are posted to a given EventBus when postEvents are called unless the affected files are
  * contained within the given excludeDirectories.
  */
-public class ProjectFilesystemWatcher {
+public class ProjectFilesystemWatcher implements Closeable {
 
   private final WatchService watchService; // TODO(user): use intellij file watching?
   private final Map<WatchKey,Path> keys;
@@ -58,13 +59,6 @@ public class ProjectFilesystemWatcher {
     registerAll(filesystem.getProjectRoot().toPath());
   }
 
-  /** Returns true if event refers to a specific Path */
-  public boolean isPathChangeEvent(WatchEvent<?> event) {
-    return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
-        event.kind() == StandardWatchEventKinds.ENTRY_MODIFY ||
-        event.kind() == StandardWatchEventKinds.ENTRY_CREATE;
-  }
-
   /** Post filesystem events to eventBus */
   public void postEvents() throws IOException {
     WatchKey key;
@@ -74,7 +68,7 @@ public class ProjectFilesystemWatcher {
         continue; // Ignored or unknown directory.
       }
       for (WatchEvent<?> event : key.pollEvents()) {
-        if (isPathChangeEvent(event)) {
+        if (filesystem.isPathChangeEvent(event)) {
           Path name = (Path) event.context();
           Path child = dir.resolve(name);
           if (shouldIgnore(child)) {
@@ -134,5 +128,10 @@ public class ProjectFilesystemWatcher {
         return FileVisitResult.CONTINUE;
       }
     });
+  }
+
+  @Override
+  public void close() throws IOException {
+    watchService.close();
   }
 }

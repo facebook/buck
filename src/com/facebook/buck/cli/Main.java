@@ -16,20 +16,27 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.EventBus;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.FileSystems;
+
+import javax.annotation.Nullable;
 
 public final class Main {
 
@@ -39,6 +46,79 @@ public final class Main {
   private final PrintStream stdOut;
   private final PrintStream stdErr;
 
+  /**
+   * Daemon used to monitor the file system and cache build rules between Main() method
+   * invocations is static so that it can outlive Main() objects and survive for the lifetime
+   * of the potentially long running Buck process.
+   */
+  private final class Daemon implements Closeable {
+
+    private final Parser parser;
+    private final EventBus eventBus;
+    private final ProjectFilesystemWatcher filesystemWatcher;
+    private final BuckConfig config;
+
+    public Daemon(ProjectFilesystem projectFilesystem, BuckConfig config) throws IOException {
+      this.config = config;
+      this.parser = new Parser(projectFilesystem, new KnownBuildRuleTypes());
+      this.eventBus = new EventBus("file-change-events");
+      this.filesystemWatcher = new ProjectFilesystemWatcher(
+          projectFilesystem,
+          eventBus,
+          config.getIgnoredDirectories(),
+          FileSystems.getDefault().newWatchService());
+      eventBus.register(parser);
+    }
+
+    private Parser getParser() {
+      return parser;
+    }
+
+    private void watchFileSystem() throws IOException {
+      filesystemWatcher.postEvents();
+    }
+
+    public BuckConfig getConfig() {
+      return config;
+    }
+
+    @Override
+    public void close() throws IOException {
+      filesystemWatcher.close();
+    }
+  }
+
+  @Nullable private static Daemon daemon;
+
+  private boolean isDaemon() {
+    return Boolean.getBoolean("buck.daemon");
+  }
+
+  private Daemon getDaemon(ProjectFilesystem filesystem, BuckConfig config) throws IOException {
+    if (daemon == null) {
+      daemon = new Daemon(filesystem, config);
+    } else {
+      // Buck daemons cache build files within a single project root, changing to a different
+      // project root is not supported and will likely result in incorrect builds. The buck and
+      // buckd scripts attempt to enforce this, so a change in project root is an error that
+      // should be reported rather than silently worked around by invalidating the cache and
+      // creating a new daemon object.
+      File parserRoot = daemon.getParser().getProjectRoot();
+      if (!filesystem.getProjectRoot().equals(parserRoot)) {
+        throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
+            filesystem.getProjectRoot(), parserRoot));
+      }
+
+      // If Buck config has changed, invalidate the cache and create a new daemon.
+      if (!daemon.getConfig().equals(config)) {
+        daemon.close();
+        daemon = new Daemon(filesystem, config);
+      }
+    }
+    return daemon;
+  }
+
+  @VisibleForTesting
   public Main(PrintStream stdOut, PrintStream stdErr) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
@@ -85,19 +165,33 @@ public final class Main {
       return usage();
     }
 
+    // Create common command parameters.
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
-    BuckConfig buckConfig = createBuckConfig(projectFilesystem);
+    BuckConfig config = createBuckConfig(projectFilesystem);
+    Console console = new Console(stdOut, stdErr, config.getAnsi());
+    KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
+
+    // Create or get and invalidate cached command parameters.
+    Parser parser;
+    if (isDaemon()) {
+      Daemon daemon = getDaemon(projectFilesystem, config);
+      daemon.watchFileSystem();
+      parser = daemon.getParser();
+    } else {
+      parser = new Parser(projectFilesystem, knownBuildRuleTypes);
+    }
+
+    // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
-      Console console = new Console(stdOut, stdErr, buckConfig.getAnsi());
-      CommandRunnerParams params = new CommandRunnerParams(
+      return command.get().execute(remainingArgs, config, new CommandRunnerParams(
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
-          buckConfig.getArtifactCache());
-      return command.get().execute(remainingArgs, buckConfig, params);
+          config.getArtifactCache(),
+          parser));
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
@@ -109,7 +203,7 @@ public final class Main {
   }
 
   /**
-   * @param projectRoot The directory that is the root of the project being built.
+   * @param projectFilesystem The directory that is the root of the project being built.
    */
   private static BuckConfig createBuckConfig(ProjectFilesystem projectFilesystem)
       throws IOException {

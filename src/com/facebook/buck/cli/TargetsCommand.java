@@ -17,11 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.json.BuildFileToJsonParser;
+import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -53,6 +52,8 @@ import javax.annotation.Nullable;
 
 public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions> {
 
+  private final ProjectBuildFileParser projectBuildFileParser = new ProjectBuildFileParser();
+
   public TargetsCommand(CommandRunnerParams params) {
     super(params);
   }
@@ -82,11 +83,10 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     // Find the build targets that match the specified options.
-    Parser parser = createParser();
     ImmutableSet<BuildTarget> matchingBuildTargets;
     try {
       matchingBuildTargets = ImmutableSet.copyOf(
-          getBuildTargets(parser, options.getArgumentsFormattedAsBuildTargets()));
+          getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
       return 1;
@@ -96,7 +96,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     PartialGraph graph;
     try {
       graph = PartialGraph.createFullGraph(getProjectFilesystem(),
-          options.getDefaultIncludes());
+          options.getDefaultIncludes(),
+          getParser());
     } catch (NoSuchBuildTargetException e) {
       console.printFailureWithoutStacktrace(e);
       return 1;
@@ -182,7 +183,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       BuildTarget buildTarget = buildRule.getBuildTarget();
       File buildFile = buildTarget.getBuildFile();
 
-      List<Map<String, Object>> rules = BuildFileToJsonParser.getAllRules(
+      // TODO(user): get cached JSON from Parser rather than using ProjectBuildFileParser directly.
+      List<Map<String, Object>> rules = projectBuildFileParser.getAllRules(
           getProjectFilesystem().getProjectRoot().getAbsolutePath(),
           Optional.of(buildFile.getPath()),
           defaultIncludes);
@@ -271,7 +273,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     // Get all valid targets in our target directory by reading the build file.
-    List<Map<String, Object>> ruleObjects = BuildFileToJsonParser.getAllRules(
+    // TODO(user): get cached JSON from Parser rather than using ProjectBuildFileParser directly.
+    List<Map<String, Object>> ruleObjects = projectBuildFileParser.getAllRules(
         getProjectFilesystem().getProjectRoot().getAbsolutePath(),
         Optional.of(buildTarget.getBuildFile().toString()),
         options.getDefaultIncludes());

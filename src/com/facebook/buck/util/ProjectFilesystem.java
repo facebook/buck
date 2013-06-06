@@ -21,12 +21,13 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
 import java.util.Properties;
 
 /**
@@ -140,5 +141,15 @@ public class ProjectFilesystem {
    */
   public Function<String, String> getPathRelativizer() {
     return pathRelativizer;
+  }
+
+  /**
+   * @param event The event to be tested.
+   * @return true if event is a path change notification.
+   */
+  public boolean isPathChangeEvent(WatchEvent<?> event) {
+    return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
+        event.kind() == StandardWatchEventKinds.ENTRY_MODIFY ||
+        event.kind() == StandardWatchEventKinds.ENTRY_CREATE;
   }
 }

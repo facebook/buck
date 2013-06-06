@@ -16,18 +16,16 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.json.BuildFileToJsonParser;
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.KnownBuildRuleTypes;
+
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A subgraph of the full dependency graph, which is also a valid dependency graph.
@@ -53,22 +51,23 @@ public class PartialGraph {
 
   public static PartialGraph createFullGraph(
       ProjectFilesystem projectFilesystem,
-      Iterable<String> includes) throws NoSuchBuildTargetException, IOException {
+      Iterable<String> includes,
+      Parser parser) throws NoSuchBuildTargetException, IOException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectFilesystem,
-        includes);
+        includes,
+        parser);
   }
 
   public static PartialGraph createPartialGraph(
       RawRulePredicate predicate,
-      ProjectFilesystem projectFilesystem,
-      Iterable<String> includes) throws NoSuchBuildTargetException, IOException {
-    List<Map<String, Object>> ruleObjects = BuildFileToJsonParser.getAllRulesInProject(
-        projectFilesystem.getProjectRoot(), includes);
-    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
-    BuildFileTree buildFiles = BuildFileTree.constructBuildFileTree(projectFilesystem);
-    Parser parser = new Parser(projectFilesystem, buildRuleTypes, buildFiles);
-    List<BuildTarget> targets = parser.parseRawRules(ruleObjects, predicate);
+      ProjectFilesystem filesystem,
+      Iterable<String> includes,
+      Parser parser) throws NoSuchBuildTargetException, IOException {
+
+    Preconditions.checkNotNull(parser);
+
+    List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem, includes, predicate);
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a
     // DependencyGraph of only the targets we want to build.

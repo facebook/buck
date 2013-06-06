@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -36,9 +37,12 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +51,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
-public final class Parser {
+public class Parser {
 
   private static final Logger logger = Logger.getLogger(Parser.class.getCanonicalName());
 
@@ -62,23 +66,33 @@ public final class Parser {
    * We parse a build file in search for one particular rule; however, we also keep track of the
    * other rules that were also parsed from it.
    */
-  private final Map<String, BuildRuleBuilder> knownBuildTargets;
+  private final Map<BuildTarget, BuildRuleBuilder> knownBuildTargets;
+
+  /**
+   * If filterAllTargetsInProject is called, we cache the rule objects for subsequent calls with matching
+   * rootPath and includes.
+   */
+  @Nullable
+  private List<Map<String, Object>> rawRuleObjects;
+
+  @Nullable
+  private List<String> includesList;
 
   private final String absolutePathToProjectRoot;
+
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
-  private final BuildFileTree buildFiles;
-
-  private boolean parserWasPopulatedViaParseRawRules = false;
+  private final ProjectBuildFileParser buildFileParser;
+  private BuildFileTree buildFiles;
 
   public Parser(ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      BuildFileTree buildFiles) {
+      KnownBuildRuleTypes buildRuleTypes) {
     this(projectFilesystem,
         buildRuleTypes,
-        buildFiles,
+        BuildFileTree.constructBuildFileTree(projectFilesystem),
         new BuildTargetParser(projectFilesystem),
-        Maps.<String, BuildRuleBuilder>newHashMap());
+         /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder>newHashMap(),
+        new ProjectBuildFileParser());
   }
 
   @VisibleForTesting
@@ -86,14 +100,14 @@ public final class Parser {
          KnownBuildRuleTypes buildRuleTypes,
          BuildFileTree buildFiles,
          BuildTargetParser buildTargetParser,
-         Map<String, BuildRuleBuilder> knownBuildTargets) {
-    this.projectFilesystem = projectFilesystem;
+         Map<BuildTarget, BuildRuleBuilder> knownBuildTargets,
+         ProjectBuildFileParser buildFileParser) {
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.buildFiles = Preconditions.checkNotNull(buildFiles);
-
-    this.knownBuildTargets = Preconditions.checkNotNull(knownBuildTargets);
-
+    this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
+    this.buildFileParser = Preconditions.checkNotNull(buildFileParser);
     this.parsedBuildFiles = Sets.newHashSet();
     this.absolutePathToProjectRoot = projectFilesystem.getProjectRoot().getAbsolutePath();
   }
@@ -102,13 +116,21 @@ public final class Parser {
     return buildTargetParser;
   }
 
+  public File getProjectRoot() {
+    return projectFilesystem.getProjectRoot();
+  }
+
+  private boolean parsedAllBuildFiles() {
+    return rawRuleObjects != null;
+  }
+
   public DependencyGraph parseBuildFilesForTargets(
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes)
       throws IOException, NoSuchBuildTargetException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
-    if (!parserWasPopulatedViaParseRawRules) {
+    if (!parsedAllBuildFiles()) {
       Set<File> buildTargetFiles = Sets.newHashSet();
       for (BuildTarget buildTarget : buildTargets) {
         File buildFile = buildTarget.getBuildFile();
@@ -141,20 +163,19 @@ public final class Parser {
             ParseContext parseContext = ParseContext.forBaseName(buildTarget.getBaseName());
 
             // Verify that the BuildTarget actually exists in the map of known BuildTargets
-            // before trying to recurse though its children.
-            if (!knownBuildTargets.containsKey(buildTarget.getFullyQualifiedName())) {
+            // before trying to recurse through its children.
+            if (!knownBuildTargets.containsKey(buildTarget)) {
               throw new HumanReadableException(
                   NoSuchBuildTargetException.createForMissingBuildRule(buildTarget, parseContext));
             }
 
-            BuildRuleBuilder buildRuleBuilder = knownBuildTargets.get(
-                buildTarget.getFullyQualifiedName());
+            BuildRuleBuilder buildRuleBuilder = knownBuildTargets.get(buildTarget);
 
             Set<BuildTarget> deps = Sets.newHashSet();
             for (String dep : buildRuleBuilder.getDeps()) {
               try {
                 BuildTarget buildTargetForDep = buildTargetParser.parse(dep, parseContext);
-                if (!knownBuildTargets.containsKey(buildTargetForDep.getFullyQualifiedName())) {
+                if (!knownBuildTargets.containsKey(buildTargetForDep)) {
                   parseBuildFileContainingTarget(buildTargetForDep, defaultIncludes);
                 }
                 deps.add(buildTargetForDep);
@@ -170,8 +191,7 @@ public final class Parser {
 
           @Override
           protected void onNodeExplored(BuildTarget buildTarget) {
-            String fullyQualifiedName = buildTarget.getFullyQualifiedName();
-            BuildRuleBuilder builderForTarget = knownBuildTargets.get(fullyQualifiedName);
+            BuildRuleBuilder builderForTarget = knownBuildTargets.get(buildTarget);
             BuildRule buildRule = builderForTarget.build(buildRuleIndex);
 
             // Update the graph.
@@ -185,7 +205,7 @@ public final class Parser {
               }
             }
 
-            buildRuleIndex.put(fullyQualifiedName, buildRule);
+            buildRuleIndex.put(buildTarget.getFullyQualifiedName(), buildRule);
           }
 
           @Override
@@ -204,13 +224,13 @@ public final class Parser {
   }
 
   /**
-   * Note that if this Parser is populated via {@link #parseRawRules(List, RawRulePredicate)},
-   * then this method should not be called.
+   * Note that if this Parser is populated via
+   * {@link #filterAllTargetsInProject}, then this method should not be called.
    */
   private void parseBuildFileContainingTarget(
       BuildTarget buildTarget, Iterable<String> defaultIncludes)
       throws IOException, NoSuchBuildTargetException {
-    if (parserWasPopulatedViaParseRawRules) {
+    if (parsedAllBuildFiles()) {
       // In this case, all of the build rules should have been loaded into the knownBuildTargets
       // Map before this method was invoked. Therefore, there should not be any more build files to
       // parse. This must be the result of traversing a non-existent dep in a build rule, so an
@@ -237,36 +257,21 @@ public final class Parser {
 
   private void parseBuildFile(File buildFile, Iterable<String> defaultIncludes)
       throws IOException, NoSuchBuildTargetException {
-    if (parsedBuildFiles.contains(buildFile)) {
-      return; // Use cached build file.
+    if (parsedBuildFiles.contains(buildFile) || parsedAllBuildFiles()) {
+      return; // Use cached rules.
     }
     logger.info(String.format("Parsing %s file: %s",
         BuckConstant.BUILD_RULES_FILE_NAME,
         buildFile));
-    List<Map<String, Object>> rules = com.facebook.buck.json.BuildFileToJsonParser.getAllRules(
+    List<Map<String, Object>> rules = buildFileParser.getAllRules(
         absolutePathToProjectRoot, Optional.of(buildFile.getPath()), defaultIncludes);
     parseRawRulesInternal(rules, null /* filter */, buildFile);
-
     parsedBuildFiles.add(buildFile);
   }
 
-  /**
-   * Populates the collection of known build targets that this Parser will use to construct a
-   * dependency graph.
-   * @param rules a list of raw data objects, each of which represents a build rule parsed from a
-   *     build file
-   * @param filter if specified, applied to each rule in rules. All matching rules will be included
-   *     in the List returned by this method. If filter is null, then this method returns null.
-   */
+  @VisibleForTesting
   @Nullable
-  public List<BuildTarget> parseRawRules(List<Map<String, Object>> rules,
-      @Nullable RawRulePredicate filter) throws NoSuchBuildTargetException {
-    this.parserWasPopulatedViaParseRawRules = true;
-    return parseRawRulesInternal(rules, filter, /* source */ null);
-  }
-
-  @Nullable
-  private List<BuildTarget> parseRawRulesInternal(List<Map<String, Object>> rules,
+  List<BuildTarget> parseRawRulesInternal(List<Map<String, Object>> rules,
       @Nullable RawRulePredicate filter,
       @Nullable File source) throws NoSuchBuildTargetException {
     List<BuildTarget> matchingTargets = (filter == null) ? null : Lists.<BuildTarget>newArrayList();
@@ -308,12 +313,67 @@ public final class Parser {
           buildFiles,
           buildTargetParser,
           target));
-      Object existingRule = knownBuildTargets.put(target.getFullyQualifiedName(), buildRuleBuilder);
+      Object existingRule = knownBuildTargets.put(target, buildRuleBuilder);
       if (existingRule != null) {
         throw new RuntimeException("Duplicate definition for " + target.getFullyQualifiedName());
       }
     }
 
     return matchingTargets;
+  }
+
+  /**
+   * Populates the collection of known build targets that this Parser will use to construct a
+   * dependency graph using all build files inside the given project root and returns an optionally
+   * filtered set of build targets.
+   *
+   *
+   * @param filesystem The project filesystem.
+   * @param includes A list of python files that should be imported by each build file.
+   *
+   * @param filter if specified, applied to each rule in rules. All matching rules will be included
+   *     in the List returned by this method. If filter is null, then this method returns null.
+   *
+   * @return The build targets in the project filtered by the given filter.
+   */
+  public List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
+                                                     Iterable<String> includes,
+                                                     @Nullable RawRulePredicate filter)
+      throws IOException, NoSuchBuildTargetException {
+    Preconditions.checkNotNull(filesystem);
+    Preconditions.checkNotNull(includes);
+    if (!projectFilesystem.getProjectRoot().equals(filesystem.getProjectRoot())) {
+      throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
+          projectFilesystem.getProjectRoot(), filesystem.getProjectRoot()));
+    }
+    List<String> includesList = Lists.newArrayList(includes);
+    if (!parsedAllBuildFiles() || !includesList.equals(this.includesList)) {
+      this.includesList = includesList;
+      rawRuleObjects = buildFileParser.getAllRulesInProject(filesystem.getProjectRoot(), includes);
+    }
+    knownBuildTargets.clear();
+    return parseRawRulesInternal(rawRuleObjects, filter, null /* source */);
+  }
+
+  /**
+   * Called when file change events are posted to the file change EventBus to invalidate cached
+   * build rules if required.
+   */
+  @Subscribe
+  public synchronized void onFileSystemChange(WatchEvent<?> event) {
+    if (projectFilesystem.isPathChangeEvent(event)) {
+      // TODO(user): Track the files imported by build files
+      // Currently we just assume ".java" files are the only ones that can't affect build files.
+      final String SRC_EXTENSION = ".java";
+      Path path = (Path) event.context();
+      if (path.toString().endsWith(SRC_EXTENSION)) {
+        return;
+      }
+    }
+    // TODO(user): invalidate affected build files, rather than nuking all rules completely.
+    buildFiles = BuildFileTree.constructBuildFileTree(projectFilesystem);
+    parsedBuildFiles.clear();
+    knownBuildTargets.clear();
+    rawRuleObjects = null;
   }
 }
