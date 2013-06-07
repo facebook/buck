@@ -62,6 +62,14 @@ public interface BuildRule extends Comparable<BuildRule> {
   public ListenableFuture<BuildRuleSuccess> build(BuildContext context);
 
   /**
+   * Returns the way in which this rule was built.
+   * <p>
+   * <strong>IMPORTANT:</strong> This rule must have finished building before this method is
+   * invoked.
+   */
+  public BuildRuleSuccess.Type getBuildResultType();
+
+  /**
    * @return whether this rule exists only in an Android project.
    */
   public boolean isAndroidRule();

@@ -17,6 +17,10 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -27,11 +31,14 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +46,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
-import org.easymock.EasyMock;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.BeforeClass;
@@ -71,17 +77,17 @@ public class TestCommandTest {
 
     ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
 
-    JavaLibraryRule javaLibraryRule = EasyMock.createMock(JavaLibraryRule.class);
-    EasyMock.expect(javaLibraryRule.getJavaSrcs())
+    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
+    expect(javaLibraryRule.getJavaSrcs())
         .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        EasyMock.createMock(DefaultJavaPackageFinder.class);
+        createMock(DefaultJavaPackageFinder.class);
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
     Object[] mocks = new Object[] {projectFilesystem, defaultJavaPackageFinder, javaLibraryRule};
-    EasyMock.replay(mocks);
+    replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
         javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
@@ -89,7 +95,7 @@ public class TestCommandTest {
     assertTrue("No path should be returned if the library contains only generated files.",
         result.isEmpty());
 
-    EasyMock.verify(mocks);
+    verify(mocks);
   }
 
   /**
@@ -103,24 +109,24 @@ public class TestCommandTest {
 
     ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
 
-    File parentFile = EasyMock.createMock(File.class);
-    EasyMock.expect(parentFile.getName()).andReturn("src");
-    EasyMock.expect(parentFile.getPath()).andReturn("package/src");
+    File parentFile = createMock(File.class);
+    expect(parentFile.getName()).andReturn("src");
+    expect(parentFile.getPath()).andReturn("package/src");
 
-    File sourceFile = EasyMock.createMock(File.class);
-    EasyMock.expect(sourceFile.getParentFile()).andReturn(parentFile);
+    File sourceFile = createMock(File.class);
+    expect(sourceFile.getParentFile()).andReturn(parentFile);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        EasyMock.createMock(DefaultJavaPackageFinder.class);
-    EasyMock.expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot);
-    EasyMock.expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements);
+        createMock(DefaultJavaPackageFinder.class);
+    expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot);
+    expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements);
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile))
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile))
         .andReturn(sourceFile);
 
-    JavaLibraryRule javaLibraryRule = EasyMock.createMock(JavaLibraryRule.class);
-    EasyMock.expect(javaLibraryRule.getJavaSrcs())
+    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
+    expect(javaLibraryRule.getJavaSrcs())
         .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
 
     Object[] mocks = new Object[] {
@@ -129,7 +135,7 @@ public class TestCommandTest {
         defaultJavaPackageFinder,
         projectFilesystem,
         javaLibraryRule};
-    EasyMock.replay(mocks);
+    replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
         javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
@@ -137,7 +143,7 @@ public class TestCommandTest {
     assertEquals("All non-generated source files are under one source folder.",
         ImmutableSet.of("package/src/"), result);
 
-    EasyMock.verify(mocks);
+    verify(mocks);
   }
 
   /**
@@ -152,17 +158,17 @@ public class TestCommandTest {
     ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        EasyMock.createMock(DefaultJavaPackageFinder.class);
-    EasyMock.expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot);
+        createMock(DefaultJavaPackageFinder.class);
+    expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot);
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
-    JavaLibraryRule javaLibraryRule = EasyMock.createMock(JavaLibraryRule.class);
-    EasyMock.expect(javaLibraryRule.getJavaSrcs())
+    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
+    expect(javaLibraryRule.getJavaSrcs())
         .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
 
     Object[] mocks = new Object[] {defaultJavaPackageFinder, projectFilesystem, javaLibraryRule};
-    EasyMock.replay(mocks);
+    replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
         javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
@@ -170,7 +176,7 @@ public class TestCommandTest {
     assertEquals("All non-generated source files are under one source folder.",
         ImmutableSet.of("java/"), result);
 
-    EasyMock.verify(mocks);
+    verify(mocks);
   }
 
   /**
@@ -187,33 +193,33 @@ public class TestCommandTest {
     ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(
         pathToGenFile, pathToNonGenFile1, pathToNonGenFile2);
 
-    File parentFile1 = EasyMock.createMock(File.class);
-    EasyMock.expect(parentFile1.getName()).andReturn("src");
-    EasyMock.expect(parentFile1.getPath()).andReturn("package/src");
+    File parentFile1 = createMock(File.class);
+    expect(parentFile1.getName()).andReturn("src");
+    expect(parentFile1.getPath()).andReturn("package/src");
 
-    File sourceFile1 = EasyMock.createMock(File.class);
-    EasyMock.expect(sourceFile1.getParentFile()).andReturn(parentFile1);
+    File sourceFile1 = createMock(File.class);
+    expect(sourceFile1.getParentFile()).andReturn(parentFile1);
 
-    File parentFile2 = EasyMock.createMock(File.class);
-    EasyMock.expect(parentFile2.getName()).andReturn("src");
-    EasyMock.expect(parentFile2.getPath()).andReturn("package/src-gen");
+    File parentFile2 = createMock(File.class);
+    expect(parentFile2.getName()).andReturn("src");
+    expect(parentFile2.getPath()).andReturn("package/src-gen");
 
-    File sourceFile2 = EasyMock.createMock(File.class);
-    EasyMock.expect(sourceFile2.getParentFile()).andReturn(parentFile2);
+    File sourceFile2 = createMock(File.class);
+    expect(sourceFile2.getParentFile()).andReturn(parentFile2);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
-        EasyMock.createMock(DefaultJavaPackageFinder.class);
-    EasyMock.expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot).times(2);
-    EasyMock.expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements).times(2);
+        createMock(DefaultJavaPackageFinder.class);
+    expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot).times(2);
+    expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements).times(2);
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile1))
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile1))
         .andReturn(sourceFile1);
-    EasyMock.expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile2))
+    expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile2))
         .andReturn(sourceFile2);
 
-    JavaLibraryRule javaLibraryRule = EasyMock.createMock(JavaLibraryRule.class);
-    EasyMock.expect(javaLibraryRule.getJavaSrcs())
+    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
+    expect(javaLibraryRule.getJavaSrcs())
         .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
 
     Object[] mocks = new Object[] {
@@ -224,7 +230,7 @@ public class TestCommandTest {
         defaultJavaPackageFinder,
         projectFilesystem,
         javaLibraryRule};
-    EasyMock.replay(mocks);
+    replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
         javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
@@ -232,7 +238,7 @@ public class TestCommandTest {
     assertEquals("The non-generated source files are under two different source folders.",
         ImmutableSet.of("package/src-gen/", "package/src/"), result);
 
-    EasyMock.verify(mocks);
+    verify(mocks);
   }
 
   private TestCommandOptions getOptions(String...args) throws CmdLineException {
@@ -307,5 +313,58 @@ public class TestCommandTest {
 
     Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
     assertThat(result, IsIterableContainingInOrder.contains(rule2));
+  }
+
+  @Test
+  public void testIsTestRunRequiredForTestInDebugMode() {
+    ExecutionContext executionContext = createMock(ExecutionContext.class);
+    expect(executionContext.isDebugEnabled()).andReturn(true);
+    replay(executionContext);
+
+    assertTrue(TestCommand.isTestRunRequiredForTest(
+        createMock(TestRule.class),
+        createMock(BuildContext.class),
+        executionContext));
+
+    verify(executionContext);
+  }
+
+  @Test
+  public void testIsTestRunRequiredForTestBuiltFromCacheIfHasTestResultFiles() {
+    ExecutionContext executionContext = createMock(ExecutionContext.class);
+    expect(executionContext.isDebugEnabled()).andReturn(false);
+
+    BuildContext buildContext = createMock(BuildContext.class);
+
+    TestRule testRule = createMock(TestRule.class);
+    expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.FETCHED_FROM_CACHE);
+    expect(testRule.hasTestResultFiles(buildContext)).andReturn(true);
+
+    replay(executionContext, buildContext, testRule);
+
+    assertFalse(TestCommand.isTestRunRequiredForTest(
+        testRule,
+        buildContext,
+        executionContext));
+
+    verify(executionContext, buildContext, testRule);
+  }
+
+  @Test
+  public void testIsTestRunRequiredForTestBuiltLocally() {
+    ExecutionContext executionContext = createMock(ExecutionContext.class);
+    expect(executionContext.isDebugEnabled()).andReturn(false);
+
+    TestRule testRule = createMock(TestRule.class);
+    expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.BUILT_LOCALLY);
+
+    replay(executionContext, testRule);
+
+    assertTrue(TestCommand.isTestRunRequiredForTest(
+        testRule,
+        createMock(BuildContext.class),
+        executionContext));
+
+    verify(executionContext, testRule);
   }
 }

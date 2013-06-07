@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
@@ -29,18 +29,13 @@ import java.util.concurrent.Callable;
 public interface TestRule extends BuildRule {
 
   /**
-   * Returns a boolean indicating whether this test should be run at all. Default implementation:
-   * <pre>
-   * @Override
-   * public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
-   *   // TODO: Also check whether the files that contain the test results are present.
-   *   return executionContext.isDebugEnabled || !isRuleBuiltFromCache();
-   * }
-   * </pre>
+   * Returns a boolean indicating whether the files that contain the test results for this rule are
+   * present.
+   * <p>
    * If this method returns {@code true}, then {@link #interpretTestResults()} should be able to be
    * called directly.
    */
-  public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext context);
+  public boolean hasTestResultFiles(BuildContext buildContext);
 
   /**
    * Returns the commands required to run the tests.

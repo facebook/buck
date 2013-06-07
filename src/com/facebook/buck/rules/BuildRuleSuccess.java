@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 
 /**
@@ -25,15 +26,29 @@ import com.google.common.base.Preconditions;
 public class BuildRuleSuccess {
 
   private final BuildRule rule;
-  private final boolean isFromBuildCache;
+  private final Type type;
 
-  public BuildRuleSuccess(BuildRule rule, boolean isFromBuildCache) {
-    this.rule = Preconditions.checkNotNull(rule);
-    this.isFromBuildCache = isFromBuildCache;
+  public static enum Type {
+    /** Built by executing the {@link Step}s for the rule. */
+    BUILT_LOCALLY,
+
+    /** Fetched via the {@link ArtifactCache}. */
+    FETCHED_FROM_CACHE,
+
+    /** Computed {@link RuleKey} matches the one on disk. */
+    MATCHING_RULE_KEY,
+
+    /** Created trivially, such as an {@link InputRule} or {@link ProjectConfigRule}. */
+    BY_DEFINITION,
   }
 
-  public boolean isFromBuildCache() {
-    return isFromBuildCache;
+  public BuildRuleSuccess(BuildRule rule, Type type) {
+    this.rule = Preconditions.checkNotNull(rule);
+    this.type = type;
+  }
+
+  public Type getType() {
+    return type;
   }
 
   @Override

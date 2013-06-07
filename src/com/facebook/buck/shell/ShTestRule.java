@@ -16,12 +16,12 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestCaseSummary;
@@ -91,14 +91,10 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
-    if (executionContext.isDebugEnabled() || !isRuleBuiltFromCache()) {
-      return true;
-    }
-
+  public boolean hasTestResultFiles(BuildContext buildContext) {
     // If result.json was not written, then the test needs to be run.
     ProjectFilesystem filesystem = buildContext.getProjectFilesystem();
-    return !filesystem.isFile(getPathToTestOutputResult());
+    return filesystem.isFile(getPathToTestOutputResult());
   }
 
   @Override

@@ -117,6 +117,11 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
+    public BuildRuleSuccess.Type getBuildResultType() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public boolean isAndroidRule() {
       throw new UnsupportedOperationException();
     }
