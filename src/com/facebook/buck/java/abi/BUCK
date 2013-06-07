@@ -1,0 +1,10 @@
+java_library(
+  name = 'abi',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/java/...'
+  ],
+)
