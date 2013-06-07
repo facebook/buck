@@ -1,0 +1,12 @@
+java_test(
+  name = 'abi',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/java/abi:abi',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/java/abi:abi',
+  ],
+)
