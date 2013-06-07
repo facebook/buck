@@ -20,7 +20,6 @@ import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -168,7 +167,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // The dependent rule will be built immediately with a distinct rule key.
     expect(dep.build(context)).andReturn(
-        Futures.immediateFuture(new BuildRuleSuccess(dep, /* isFromBuildCache */ false)));
+        Futures.immediateFuture(new BuildRuleSuccess(dep, BuildRuleSuccess.Type.BUILT_LOCALLY)));
     expect(dep.getRuleKey()).andReturn(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208"));
 
     // Add a build step so we can verify that the steps are executed.
@@ -179,7 +178,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     // Attempting to build the rule should force a rebuild due to a cache miss.
     replayAll();
     BuildRuleSuccess result = cachingRule.build(context).get();
-    assertFalse(result.isFromBuildCache());
+    assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, result.getType());
     verifyAll();
 
     // Verify that the correct value was written to the .success file.

@@ -29,6 +29,7 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.TestCaseSummary;
@@ -357,10 +358,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     for (TestRule test : tests) {
       List<Step> steps;
 
-      // See if there is any work to do to run the test.
-      if (test.isTestRunRequired(buildContext, executionContext)) {
-        // This list will be empty if the java_test() is simply a rule that depends on other
-        // java_test()s.
+      // Determine whether the test needs to be executed.
+      boolean isTestRunRequired = isTestRunRequiredForTest(test, buildContext, executionContext);
+      if (isTestRunRequired) {
         steps = test.runTests(buildContext, executionContext);
       } else {
         steps = ImmutableList.of();
@@ -429,6 +429,29 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
 
     return isAllTestsPassed ? 0 : 1;
+  }
+
+  @VisibleForTesting
+  static boolean isTestRunRequiredForTest(TestRule test,
+      BuildContext buildContext, ExecutionContext executionContext) {
+    boolean isTestRunRequired;
+    BuildRuleSuccess.Type successType;
+    if (executionContext.isDebugEnabled()) {
+      // If debug is enabled, then we should always run the tests as the user is expecting to
+      // hook up a debugger.
+      isTestRunRequired = true;
+    } else if (((successType = test.getBuildResultType()) != null)
+               && (successType == BuildRuleSuccess.Type.FETCHED_FROM_CACHE
+                      || successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY)
+               && test.hasTestResultFiles(buildContext)) {
+      // If this build rule's artifacts (which includes the rule's output and its test result
+      // files) are up to date, then no commands are necessary to run the tests. The test result
+      // files will be read from the XML files in interpretTestResults().
+      isTestRunRequired = false;
+    } else {
+      isTestRunRequired = true;
+    }
+    return isTestRunRequired;
   }
 
   /**

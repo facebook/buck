@@ -35,14 +35,16 @@ public class BuildRuleSuccessTest {
     expect(rule.getFullyQualifiedName()).andReturn("//java/com/example/base:base");
     replay(rule);
 
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, /* isFromBuildCache */ false);
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(
+        rule, BuildRuleSuccess.Type.FETCHED_FROM_CACHE);
     assertEquals("//java/com/example/base:base", buildRuleSuccess.toString());
+    assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, buildRuleSuccess.getType());
 
     verify(rule);
   }
 
   @Test(expected = NullPointerException.class)
   public void testConstructor() {
-    new BuildRuleSuccess(null, /* isFromBuildCache */ false);
+    new BuildRuleSuccess(null, null);
   }
 }

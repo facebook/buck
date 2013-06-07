@@ -35,6 +35,9 @@ import javax.annotation.Nullable;
  * entire dependency graph to deal with BuildRules, rather than having leaves of a different type.
  */
 public class InputRule implements BuildRule {
+
+  private static final BuildRuleSuccess.Type SUCCESS_TYPE = BuildRuleSuccess.Type.BY_DEFINITION;
+
   private final File inputFile;
   private final BuildTarget buildTarget;
   @Nullable private OutputKey outputKey;
@@ -64,8 +67,13 @@ public class InputRule implements BuildRule {
     inputFile = Preconditions.checkNotNull(input);
     buildTarget = new BuildTarget(input);
 
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, /* isFromBuildCache */ false);
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, SUCCESS_TYPE);
     this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
+  }
+
+  @Override
+  public BuildRuleSuccess.Type getBuildResultType() {
+    return SUCCESS_TYPE;
   }
 
   public InputRule(String input) {

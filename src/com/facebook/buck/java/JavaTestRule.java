@@ -175,34 +175,23 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   }
 
   @Override
-  public boolean isTestRunRequired(BuildContext buildContext, ExecutionContext executionContext) {
-    // If this rule was cached, then no commands are necessary to run the tests. The results will be
-    // read from the XML files in interpretTestResults(); If debug is enabled we should run the
-    // tests as the user is expecting to hook up a debugger.
-    if (executionContext.isDebugEnabled() || !isRuleBuiltFromCache()) {
-      return true;
-    }
-
-    // The rule has been built from the cache. However, it's possible for the results file not to
-    // have been written (eg. if a user runs with the --debug flag and then aborts the build) To
-    // prevent a FileNotFoundException later on, check that the output files are present.
-
+  public boolean hasTestResultFiles(BuildContext buildContext) {
     // It is possible that this rule was not responsible for running any tests because all tests
     // were run by its deps. In this case, return an empty TestResults.
     Set<String> testClassNames = getClassNamesForSources();
     if (testClassNames.isEmpty()) {
-      return false;
+      return true;
     }
 
     File outputDirectory = new File(getPathToTestOutput());
     for (String testClass : testClassNames) {
       File testResultFile = new File(outputDirectory, testClass + ".xml");
-      if (!testResultFile.exists()) {
-        return true;
+      if (!testResultFile.isFile()) {
+        return false;
       }
     }
 
-    return false;
+    return true;
   }
 
   private String getPathToTestOutput() {

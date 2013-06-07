@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,66 +41,21 @@ public class ShTestRuleTest extends EasyMockSupport {
   }
 
   @Test
-  public void testIsTestRequiredIfDebug() {
-    ShTestRule shTest = createShTestRule(/* isRuleBuiltFromCache */ true);
-
-    BuildContext buildContext = createMock(BuildContext.class);
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    EasyMock.expect(executionContext.isDebugEnabled()).andReturn(true);
-
-    replayAll();
-
-    assertTrue("Test run should be required when --debug is passed to `buck test`.",
-        shTest.isTestRunRequired(buildContext, executionContext));
-  }
-
-  @Test
-  public void testIsTestRequiredIfNotDebugAndNotCached() {
-    ShTestRule shTest = createShTestRule(/* isRuleBuiltFromCache */ false);
-
-    BuildContext buildContext = createMock(BuildContext.class);
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    EasyMock.expect(executionContext.isDebugEnabled()).andReturn(false);
-
-    replayAll();
-
-    assertTrue("Test run should be required if the rule is not cached.",
-        shTest.isTestRunRequired(buildContext, executionContext));
-  }
-
-  @Test
-  public void testIsTestRequiredIfNotDebugAndCachedButResultDotJsonDoesNotExist() {
-    ShTestRule shTest = createShTestRule(/* isRuleBuiltFromCache */ true);
-
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    EasyMock.expect(executionContext.isDebugEnabled()).andReturn(false);
+  public void testHasTestResultFiles() {
+    ShTestRule shTest = new ShTestRule(
+        createBuildRuleParams(),
+        "run_test.sh",
+        /* labels */ ImmutableSet.<String>of());
 
     ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(false);
+    EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(true);
     BuildContext buildContext = createMock(BuildContext.class);
     EasyMock.expect(buildContext.getProjectFilesystem()).andReturn(filesystem);
 
     replayAll();
 
-    assertTrue("Test run should be required if the result.json file does not exist.",
-        shTest.isTestRunRequired(buildContext, executionContext));
-  }
-
-  /**
-   * An {@code ShTestRule} whose {@link ShTestRule#isRuleBuiltFromCache()} method always returns
-   * {@code true}.
-   */
-  private static ShTestRule createShTestRule(final boolean isRuleBuiltFromCache) {
-    return new ShTestRule(
-        createBuildRuleParams(),
-        "run_test.sh",
-        /* labels */ ImmutableSet.<String>of()) {
-
-      @Override
-      public boolean isRuleBuiltFromCache() {
-        return isRuleBuiltFromCache;
-      }
-    };
+    assertTrue("hasTestResultFiles() should return true if result.json exists.",
+        shTest.hasTestResultFiles(buildContext));
   }
 
   private static BuildRuleParams createBuildRuleParams() {

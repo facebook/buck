@@ -101,18 +101,13 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     return MoreFutures.isSuccess(buildRuleResult);
   }
 
-  // TODO(mbolin): This method should probably be removed since its meaning is unclear.
-  protected boolean isRuleBuiltFromCache() {
-    Preconditions.checkArgument(buildRuleResult.isDone(),
-        "rule must be built before this method is invoked");
-    if (isRuleBuilt()) {
-      try {
-        return buildRuleResult.get().isFromBuildCache();
-      } catch (InterruptedException | ExecutionException ignored) {
-        return false;
-      }
-    } else {
-      return false;
+  @Override
+  public BuildRuleSuccess.Type getBuildResultType() {
+    Preconditions.checkState(isRuleBuilt());
+    try {
+      return buildRuleResult.get().getType();
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -246,7 +241,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       // If the RuleKeys match, then there is nothing to build.
       if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
         logger.info(String.format("[UNCHANGED %s]", getFullyQualifiedName()));
-        buildRuleResult.set(new BuildRuleSuccess(this, /* isFromBuildCache */ false));
+        buildRuleResult.set(new BuildRuleSuccess(this, BuildRuleSuccess.Type.MATCHING_RULE_KEY));
         return;
       }
     }
@@ -255,6 +250,11 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // Record the start of the build.
     context.getEventBus().post(BuildEvents.started(this));
+
+    // TODO(mbolin): Make sure that all output files are deleted before proceeding. This is
+    // particularly important for tests: their test result files must be deleted. Otherwise, we
+    // might replace the artifact for the rule, but leave the old test result files in place. We
+    // should organize our output directories so we can solve this for all rules at once.
 
     // Before deciding to build, check the ArtifactCache.
     File output = getOutput();
@@ -287,7 +287,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     }
 
     // We made it to the end of the method! Record our success.
-    buildRuleResult.set(new BuildRuleSuccess(this, /* isFromBuildCache */ fromCache));
+    BuildRuleSuccess.Type successType = fromCache ? BuildRuleSuccess.Type.FETCHED_FROM_CACHE
+                                                  : BuildRuleSuccess.Type.BUILT_LOCALLY;
+    buildRuleResult.set(new BuildRuleSuccess(this, successType));
     context.getEventBus().post(
         BuildEvents.finished(this, BuildRuleStatus.SUCCESS, cacheResult));
     return;

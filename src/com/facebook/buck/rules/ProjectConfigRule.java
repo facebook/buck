@@ -36,6 +36,8 @@ import javax.annotation.Nullable;
 
 public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
+  private static final BuildRuleSuccess.Type SUCCESS_TYPE = BuildRuleSuccess.Type.BY_DEFINITION;
+
   @Nullable
   private final BuildRule srcRule;
 
@@ -96,7 +98,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
     this.isIntelliJPlugin = isIntelliJPlugin;
 
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, /* isFromBuildCache */ false);
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, SUCCESS_TYPE);
     this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
   }
 
@@ -144,6 +146,11 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   @Override
   public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
     return buildOutput;
+  }
+
+  @Override
+  public BuildRuleSuccess.Type getBuildResultType() {
+    return SUCCESS_TYPE;
   }
 
   @Override
