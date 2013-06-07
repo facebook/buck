@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DefaultStepRunnerTest {
 
-  @Test(expected=StepFailedException.class, timeout=1000)
+  @Test(expected=StepFailedException.class, timeout=5000)
   public void testParallelCommandFailure() throws Exception {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new SleepingStep(0, 0));
