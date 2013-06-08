@@ -70,7 +70,6 @@ public class JUnitStepTest {
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL).times(2);
     EasyMock.expect(executionContext.getAndroidPlatformTargetOptional()).andReturn(
         Optional.<AndroidPlatformTarget>absent());
-    EasyMock.expect(executionContext.getDefaultTestTimeoutMillis()).andReturn(5000L);
     EasyMock.replay(executionContext);
 
     List<String> observedArgs = junit.getShellCommand(executionContext);
@@ -85,7 +84,6 @@ public class JUnitStepTest {
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
             "true",
-            "5000",
             testClass1,
             testClass2),
         observedArgs);
@@ -144,7 +142,6 @@ public class JUnitStepTest {
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
             "true",
-            "0",
             testClass1,
             testClass2),
         observedArgs);
