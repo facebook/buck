@@ -167,7 +167,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         testClassNames,
         vmArgs,
         pathToTestOutput,
-        executionContext.isCodeCoverageEnabled,
+        executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled());
     steps.add(junit);
 

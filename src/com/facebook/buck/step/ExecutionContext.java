@@ -35,7 +35,7 @@ public class ExecutionContext {
   private final Console console;
   private final Optional<AndroidPlatformTarget> androidPlatformTarget;
   private final Optional<File> ndkRoot;
-  public final boolean isCodeCoverageEnabled;
+  private final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
   private final ProcessExecutor processExecutor;
 
@@ -67,7 +67,7 @@ public class ExecutionContext {
         new Console(newStdout, newStderr, console.getAnsi()),
         this.androidPlatformTarget,
         this.ndkRoot,
-        this.isCodeCoverageEnabled,
+        this.isCodeCoverageEnabled(),
         this.isDebugEnabled);
   }
 
@@ -81,10 +81,6 @@ public class ExecutionContext {
 
   public File getProjectDirectoryRoot() {
     return projectFilesystem.getProjectRoot();
-  }
-
-  public boolean isDebugEnabled() {
-    return isDebugEnabled;
   }
 
   public PrintStream getStdErr() {
@@ -128,6 +124,14 @@ public class ExecutionContext {
 
   public Optional<File> getNdkRoot() {
     return ndkRoot;
+  }
+
+  public boolean isCodeCoverageEnabled() {
+    return isCodeCoverageEnabled;
+  }
+
+  public boolean isDebugEnabled() {
+    return isDebugEnabled;
   }
 
   public String getPathToAdbExecutable() throws NoAndroidSdkException {
