@@ -89,14 +89,15 @@ public class Build {
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
         dependencyGraph, androidSdkDir, console.getStdErr());
-    this.executionContext = new ExecutionContext(
-        verbosity,
-        projectFilesystem,
-        console,
-        androidPlatformTarget,
-        ndkRoot,
-        isCodeCoverageEnabled,
-        isDebugEnabled);
+    this.executionContext = ExecutionContext.builder()
+        .setVerbosity(verbosity)
+        .setProjectFilesystem(projectFilesystem)
+        .setConsole(console)
+        .setAndroidPlatformTarget(androidPlatformTarget)
+        .setNdkRoot(ndkRoot)
+        .setCodeCoverageEnabled(isCodeCoverageEnabled)
+        .setDebugEnabled(isDebugEnabled)
+        .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.stepRunner = new DefaultStepRunner(executionContext, listeningExecutorService);
     this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);

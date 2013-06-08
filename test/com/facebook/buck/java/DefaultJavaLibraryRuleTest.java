@@ -40,7 +40,6 @@ import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
@@ -717,14 +716,12 @@ public class DefaultJavaLibraryRuleTest {
       List<Step> steps = javaLibrary.buildInternal(buildContext);
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
-      executionContext = new ExecutionContext(
-          Verbosity.SILENT,
-          new ProjectFilesystem(new File(".")),
-          new Console(System.out, System.err, Ansi.withoutTty()),
-          Optional.<AndroidPlatformTarget>absent(),
-          Optional.<File>absent(),
-          /* code coverage enabled */ false,
-          /* debug enabled */ true);
+      executionContext = ExecutionContext.builder()
+          .setVerbosity(Verbosity.SILENT)
+          .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+          .setConsole(new Console(System.out, System.err, Ansi.withoutTty()))
+          .setDebugEnabled(true)
+          .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,
           /* buildClasspathEntries */ ImmutableSet.<String>of());

@@ -39,7 +39,7 @@ public class ExecutionContext {
   private final boolean isDebugEnabled;
   private final ProcessExecutor processExecutor;
 
-  public ExecutionContext(
+  private ExecutionContext(
       Verbosity verbosity,
       ProjectFilesystem projectFilesystem,
       Console console,
@@ -140,5 +140,68 @@ public class ExecutionContext {
 
   public ProcessExecutor getProcessExecutor() {
     return processExecutor;
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+
+    private Verbosity verbosity = Verbosity.STANDARD_INFORMATION;
+    private ProjectFilesystem projectFilesystem = null;
+    private Console console = null;
+    private Optional<AndroidPlatformTarget> androidPlatformTarget = Optional.absent();
+    private Optional<File> ndkRoot = Optional.absent();
+    private boolean isCodeCoverageEnabled = false;
+    private boolean isDebugEnabled = false;
+
+    private Builder() {}
+
+    public ExecutionContext build() {
+      return new ExecutionContext(
+          verbosity,
+          projectFilesystem,
+          console,
+          androidPlatformTarget,
+          ndkRoot,
+          isCodeCoverageEnabled,
+          isDebugEnabled);
+    }
+
+    public Builder setVerbosity(Verbosity verbosity) {
+      this.verbosity = Preconditions.checkNotNull(verbosity);
+      return this;
+    }
+
+    public Builder setProjectFilesystem(ProjectFilesystem projectFilesystem) {
+      this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+      return this;
+    }
+
+    public Builder setConsole(Console console) {
+      this.console = Preconditions.checkNotNull(console);
+      return this;
+    }
+
+    public Builder setAndroidPlatformTarget(Optional<AndroidPlatformTarget> androidPlatformTarget) {
+      this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
+      return this;
+    }
+
+    public Builder setNdkRoot(Optional<File> ndkRoot) {
+      this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
+      return this;
+    }
+
+    public Builder setCodeCoverageEnabled(boolean isCodeCoverageEnabled) {
+      this.isCodeCoverageEnabled = isCodeCoverageEnabled;
+      return this;
+    }
+
+    public Builder setDebugEnabled(boolean isDebugEnabled) {
+      this.isDebugEnabled = isDebugEnabled;
+      return this;
+    }
   }
 }

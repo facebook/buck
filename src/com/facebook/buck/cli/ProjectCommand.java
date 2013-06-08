@@ -70,14 +70,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throw new HumanReadableException(e);
     }
 
-    ExecutionContext executionContext = new ExecutionContext(
-        options.getVerbosity(),
-        getProjectFilesystem(),
-        console,
-        options.findAndroidPlatformTarget(partialGraph.getDependencyGraph(), getStdErr()),
-        options.findAndroidNdkDir(),
-        /* isCodeCoverageEnabled */ false,
-        /* isDebugEnabled */ false);
+    ExecutionContext executionContext = ExecutionContext.builder()
+        .setVerbosity(options.getVerbosity())
+        .setProjectFilesystem(getProjectFilesystem())
+        .setConsole(console)
+        .setAndroidPlatformTarget(
+            options.findAndroidPlatformTarget(partialGraph.getDependencyGraph(), getStdErr()))
+        .setNdkRoot(options.findAndroidNdkDir())
+        .build();
 
     Project project = new Project(partialGraph,
         options.getBasePathToAliasMap(),

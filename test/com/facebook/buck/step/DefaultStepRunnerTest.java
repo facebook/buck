@@ -16,11 +16,9 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -30,7 +28,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -47,14 +44,11 @@ public class DefaultStepRunnerTest {
     // command will fail so quickly, the result of the 5000ms command will not be observed).
     commands.add(new SleepingStep(5000, 1));
 
-    ExecutionContext context = new ExecutionContext(
-        Verbosity.SILENT,
-        EasyMock.createMock(ProjectFilesystem.class),
-        new Console(System.out, System.err, Ansi.withoutTty()),
-        Optional.<AndroidPlatformTarget>absent(),
-        Optional.<File>absent(),
-        false,
-        false);
+    ExecutionContext context = ExecutionContext.builder()
+        .setVerbosity(Verbosity.SILENT)
+        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
+        .setConsole(new Console(System.out, System.err, Ansi.withoutTty()))
+        .build();
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
         .setDaemon(true)
         .setNameFormat(getClass().getSimpleName() + "-%d")

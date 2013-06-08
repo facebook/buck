@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableSet;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
@@ -121,14 +120,12 @@ public class JUnitStepTest {
 
     CapturingPrintStream stderr = new CapturingPrintStream();
     PrintStream stdout = EasyMock.createNiceMock(PrintStream.class);
-    ExecutionContext executionContext = new ExecutionContext(
-        Verbosity.ALL,
-        EasyMock.createMock(ProjectFilesystem.class),
-        new Console(stdout, stderr, Ansi.withoutTty()),
-        Optional.<AndroidPlatformTarget>absent(),
-        Optional.<File>absent(),
-        /* coverageEnabled */ false,
-        /* debugEnabled */ true);
+    ExecutionContext executionContext = ExecutionContext.builder()
+        .setVerbosity(Verbosity.ALL)
+        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
+        .setConsole(new Console(stdout, stderr, Ansi.withoutTty()))
+        .setDebugEnabled(true)
+        .build();
 
     EasyMock.replay(stdout);
 
