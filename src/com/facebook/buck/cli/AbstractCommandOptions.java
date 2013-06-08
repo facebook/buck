@@ -169,14 +169,14 @@ public abstract class AbstractCommandOptions {
       ProjectFilesystem projectFilesystem,
       Console console,
       DependencyGraph dependencyGraph) {
-    return new ExecutionContext(
-        getVerbosity(),
-        projectFilesystem,
-        console,
-        findAndroidPlatformTarget(dependencyGraph, commandRunner.getStdErr()),
-        findAndroidNdkDir(),
-        /* isCodeCoverageEnabled */ false,
-        /* isDebugEnabled */ false);
+    return ExecutionContext.builder()
+        .setVerbosity(getVerbosity())
+        .setProjectFilesystem(projectFilesystem)
+        .setConsole(console)
+        .setAndroidPlatformTarget(
+            findAndroidPlatformTarget(dependencyGraph, commandRunner.getStdErr()))
+        .setNdkRoot(findAndroidNdkDir())
+        .build();
   }
 
   protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
