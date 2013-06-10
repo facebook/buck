@@ -81,11 +81,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
     InstallableBuildRule installableBuildRule = (InstallableBuildRule)buildRule;
 
     // We need this in case adb isn't already running.
-    ExecutionContext context = options.createExecutionContext(
-        this,
-        getProjectFilesystem(),
-        console,
-        dependencyGraph);
+    ExecutionContext context = createExecutionContext(options, dependencyGraph);
 
     // Find application package name from manifest and uninstall from matching devices.
     String appId = tryToExtractPackageNameFromManifest(installableBuildRule);

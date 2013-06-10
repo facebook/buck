@@ -18,11 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -162,21 +159,6 @@ public abstract class AbstractCommandOptions {
       }
       return Optional.of(directory);
     }
-  }
-
-  protected ExecutionContext createExecutionContext(
-      AbstractCommandRunner<?> commandRunner,
-      ProjectFilesystem projectFilesystem,
-      Console console,
-      DependencyGraph dependencyGraph) {
-    return ExecutionContext.builder()
-        .setVerbosity(getVerbosity())
-        .setProjectFilesystem(projectFilesystem)
-        .setConsole(console)
-        .setAndroidPlatformTarget(
-            findAndroidPlatformTarget(dependencyGraph, commandRunner.getStdErr()))
-        .setNdkRoot(findAndroidNdkDir())
-        .build();
   }
 
   protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
