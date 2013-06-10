@@ -58,14 +58,18 @@ public final class JUnitRunner {
 
   private final File outputDirectory;
   private final List<String> testClassNames;
+  @SuppressWarnings("unused")
+  private final long defaultTestTimeoutMillis;
   private final boolean shouldPrintOutWhenTestsStartAndStop;
 
   public JUnitRunner(
       File outputDirectory,
       List<String> testClassNames,
+      long defaultTestTimeoutMillis,
       boolean shouldPrintOutWhenTestsStartAndStop) {
     this.outputDirectory = outputDirectory;
     this.testClassNames = testClassNames;
+    this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.shouldPrintOutWhenTestsStartAndStop = shouldPrintOutWhenTestsStartAndStop;
   }
 
@@ -209,6 +213,15 @@ public final class JUnitRunner {
         && method.getReturnType().equals(Void.TYPE));
   }
 
+  /**
+   * Expected arguments are:
+   * <ul>
+   *   <li>(string) output directory
+   *   <li>(boolean) should print when tests start and stop
+   *   <li>(long) default timeout in milliseconds (0 for no timeout)
+   *   <li>(string...) fully-qualified names of test classes
+   * </ul>
+   */
   public static void main(String[] args) throws
       ClassNotFoundException,
       IOException,
@@ -233,11 +246,17 @@ public final class JUnitRunner {
 
     boolean shouldPrintOutWhenTestsStartAndStop = Boolean.parseBoolean(args[1]);
 
+    long defaultTestTimeoutMillis = Long.parseLong(args[2]);
+
     // Each argument other than the first one should be a class name to run.
-    List<String> testClassNames = Arrays.asList(args).subList(2, args.length);
+    List<String> testClassNames = Arrays.asList(args).subList(3, args.length);
 
     // Run the tests.
-    new JUnitRunner(outputDirectory, testClassNames, shouldPrintOutWhenTestsStartAndStop).run();
+    new JUnitRunner(outputDirectory,
+        testClassNames,
+        defaultTestTimeoutMillis,
+        shouldPrintOutWhenTestsStartAndStop)
+    .run();
 
     // Explicitly exit to force the test runner to complete even if tests have sloppily left behind
     // non-daemon threads that would have otherwise forced the process to wait and eventually
