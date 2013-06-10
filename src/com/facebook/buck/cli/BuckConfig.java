@@ -344,6 +344,10 @@ class BuckConfig {
     return ImmutableMap.copyOf(basePathToAlias);
   }
 
+  public long getDefaultTestTimeoutMillis() {
+    return Long.parseLong(getValue("test", "timeout").or("0"));
+  }
+
   @VisibleForTesting
   DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
     Optional<String> srcRootsOptional = getValue("java", "src_roots");

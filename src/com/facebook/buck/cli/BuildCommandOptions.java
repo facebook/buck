@@ -123,7 +123,8 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     return listeningExecutorService;
   }
 
-  Build createBuild(DependencyGraph graph,
+  Build createBuild(BuckConfig buckConfig,
+      DependencyGraph graph,
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
       Console console) {
@@ -136,6 +137,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         getListeningExecutorService(),
         getBuckConfig().createDefaultJavaPackageFinder(),
         console,
+        buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled(),
         getBuildDependencies());

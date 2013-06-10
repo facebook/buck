@@ -82,6 +82,7 @@ public class Build {
       ListeningExecutorService listeningExecutorService,
       JavaPackageFinder javaPackageFinder,
       Console console,
+      long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
       BuildDependencies buildDependencies) {
@@ -95,6 +96,7 @@ public class Build {
         .setConsole(console)
         .setAndroidPlatformTarget(androidPlatformTarget)
         .setNdkRoot(ndkRoot)
+        .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setDebugEnabled(isDebugEnabled)
         .build();

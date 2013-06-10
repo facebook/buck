@@ -35,6 +35,7 @@ public class ExecutionContext {
   private final Console console;
   private final Optional<AndroidPlatformTarget> androidPlatformTarget;
   private final Optional<File> ndkRoot;
+  private final long defaultTestTimeoutMillis;
   private final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
   private final ProcessExecutor processExecutor;
@@ -45,6 +46,7 @@ public class ExecutionContext {
       Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<File> ndkRoot,
+      long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled) {
     this.verbosity = Preconditions.checkNotNull(verbosity);
@@ -52,6 +54,7 @@ public class ExecutionContext {
     this.console = Preconditions.checkNotNull(console);
     this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
     this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
+    this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.processExecutor = new ProcessExecutor(console);
@@ -62,13 +65,15 @@ public class ExecutionContext {
    *    redirected to the provided {@link PrintStream}s.
    */
   public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
-    return new ExecutionContext(verbosity,
-        this.projectFilesystem,
+    return new ExecutionContext(
+        getVerbosity(),
+        getProjectFilesystem(),
         new Console(newStdout, newStderr, console.getAnsi()),
-        this.androidPlatformTarget,
-        this.ndkRoot,
-        this.isCodeCoverageEnabled(),
-        this.isDebugEnabled);
+        getAndroidPlatformTargetOptional(),
+        getNdkRoot(),
+        getDefaultTestTimeoutMillis(),
+        isCodeCoverageEnabled(),
+        isDebugEnabled);
   }
 
   public Verbosity getVerbosity() {
@@ -126,6 +131,10 @@ public class ExecutionContext {
     return ndkRoot;
   }
 
+  public long getDefaultTestTimeoutMillis() {
+    return defaultTestTimeoutMillis;
+  }
+
   public boolean isCodeCoverageEnabled() {
     return isCodeCoverageEnabled;
   }
@@ -153,6 +162,7 @@ public class ExecutionContext {
     private Console console = null;
     private Optional<AndroidPlatformTarget> androidPlatformTarget = Optional.absent();
     private Optional<File> ndkRoot = Optional.absent();
+    private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
     private boolean isDebugEnabled = false;
 
@@ -165,6 +175,7 @@ public class ExecutionContext {
           console,
           androidPlatformTarget,
           ndkRoot,
+          defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
           isDebugEnabled);
     }
@@ -191,6 +202,14 @@ public class ExecutionContext {
 
     public Builder setNdkRoot(Optional<File> ndkRoot) {
       this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
+      return this;
+    }
+
+    /** Specify 0 for no timeout. */
+    public Builder setDefaultTestTimeoutMillis(long defaultTestTimeoutMillis) {
+      Preconditions.checkArgument(defaultTestTimeoutMillis >= 0,
+          "Default timeout cannot be negative.");
+      this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
       return this;
     }
 
