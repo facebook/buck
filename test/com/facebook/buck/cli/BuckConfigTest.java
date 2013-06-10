@@ -327,4 +327,15 @@ public class BuckConfigTest {
 
     assertEquals(ImmutableSet.of(".git", ".idea"), config.getIgnoredDirectories());
   }
+
+  @Test
+  public void testGetDefaultTestTimeoutMillis() throws IOException {
+    assertEquals(0L, BuckConfig.emptyConfig().getDefaultTestTimeoutMillis());
+
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[test]",
+        "timeout = 54321"));
+    BuckConfig config = BuckConfig.createFromReader(reader, null);
+    assertEquals(54321L, config.getDefaultTestTimeoutMillis());
+  }
 }

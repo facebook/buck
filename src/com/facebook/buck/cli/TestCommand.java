@@ -265,7 +265,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     testRules = filterTestRules(options, testRules);
 
     // Build all of the test rules.
-    Build build = options.createBuild(graph, getProjectFilesystem(), getArtifactCache(), console);
+    Build build = options.createBuild(options.getBuckConfig(),
+        graph,
+        getProjectFilesystem(),
+        getArtifactCache(),
+        console);
     int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
     if (exitCode != 0) {
       return exitCode;

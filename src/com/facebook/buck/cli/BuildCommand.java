@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -98,7 +99,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     // Create and execute the build.
-    this.build = options.createBuild(dependencyGraph,
+    this.build = options.createBuild(
+        options.getBuckConfig(),
+        dependencyGraph,
         getProjectFilesystem(),
         getArtifactCache(),
         console);
