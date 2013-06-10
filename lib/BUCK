@@ -121,6 +121,7 @@ java_library(
 prebuilt_jar(
   name = 'junit_jar',
   binary_jar = 'junit-4.11.jar',
+  source_jar = 'junit-4.11-sources.jar',
   deps = [
     ':hamcrest-core',
     ':hamcrest-library',

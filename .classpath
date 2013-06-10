@@ -16,7 +16,7 @@
 	<classpathentry kind="lib" path="lib/jackson-databind-2.0.5.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-annotations-2.0.5.jar"/>
 	<classpathentry kind="lib" path="lib/jsr305.jar"/>
-	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.11.jar" sourcepath="lib/junit-4.11-sources.jar"/>
 	<classpathentry kind="lib" path="lib/objenesis-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/sdklib.jar"/>
 	<classpathentry kind="lib" path="lib/jyson-1.0.2.jar"/>
