@@ -171,6 +171,9 @@ public class JUnitStep extends ShellStep {
     boolean shouldPrintOutWhenTestsStartAndStop = context.getVerbosity().shouldPrintCommand();
     args.add(String.valueOf(shouldPrintOutWhenTestsStartAndStop));
 
+    // Add the default test timeout.
+    args.add(String.valueOf(context.getDefaultTestTimeoutMillis()));
+
     // List all of the tests to be run.
     for (String testClassName : testClassNames) {
       args.add(testClassName);
