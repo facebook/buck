@@ -22,7 +22,9 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -169,4 +171,18 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
       this.parser = new CmdLineParserAdditionalOptions(options);
     }
   }
+
+  protected ExecutionContext createExecutionContext(
+      T options,
+      DependencyGraph dependencyGraph) {
+    return ExecutionContext.builder()
+        .setVerbosity(options.getVerbosity())
+        .setProjectFilesystem(getProjectFilesystem())
+        .setConsole(console)
+        .setAndroidPlatformTarget(
+            options.findAndroidPlatformTarget(dependencyGraph, getStdErr()))
+        .setNdkRoot(options.findAndroidNdkDir())
+        .build();
+  }
+
 }
