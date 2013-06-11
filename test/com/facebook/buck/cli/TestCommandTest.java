@@ -31,7 +31,6 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
@@ -323,7 +322,6 @@ public class TestCommandTest {
 
     assertTrue(TestCommand.isTestRunRequiredForTest(
         createMock(TestRule.class),
-        createMock(BuildContext.class),
         executionContext));
 
     verify(executionContext);
@@ -334,20 +332,17 @@ public class TestCommandTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
-    BuildContext buildContext = createMock(BuildContext.class);
-
     TestRule testRule = createMock(TestRule.class);
     expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.FETCHED_FROM_CACHE);
-    expect(testRule.hasTestResultFiles(buildContext)).andReturn(true);
+    expect(testRule.hasTestResultFiles(executionContext)).andReturn(true);
 
-    replay(executionContext, buildContext, testRule);
+    replay(executionContext, testRule);
 
     assertFalse(TestCommand.isTestRunRequiredForTest(
         testRule,
-        buildContext,
         executionContext));
 
-    verify(executionContext, buildContext, testRule);
+    verify(executionContext, testRule);
   }
 
   @Test
@@ -362,7 +357,6 @@ public class TestCommandTest {
 
     assertTrue(TestCommand.isTestRunRequiredForTest(
         testRule,
-        createMock(BuildContext.class),
         executionContext));
 
     verify(executionContext, testRule);

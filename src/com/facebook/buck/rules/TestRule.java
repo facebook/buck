@@ -32,10 +32,10 @@ public interface TestRule extends BuildRule {
    * Returns a boolean indicating whether the files that contain the test results for this rule are
    * present.
    * <p>
-   * If this method returns {@code true}, then {@link #interpretTestResults()} should be able to be
-   * called directly.
+   * If this method returns {@code true}, then {@link #interpretTestResults(ExecutionContext)}
+   * should be able to be called directly.
    */
-  public boolean hasTestResultFiles(BuildContext buildContext);
+  public boolean hasTestResultFiles(ExecutionContext executionContext);
 
   /**
    * Returns the commands required to run the tests.
@@ -50,7 +50,7 @@ public interface TestRule extends BuildRule {
    */
   public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext);
 
-  public Callable<TestResults> interpretTestResults();
+  public Callable<TestResults> interpretTestResults(ExecutionContext executionContext);
 
   /**
    * @return The set of labels for this build rule.
