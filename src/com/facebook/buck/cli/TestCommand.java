@@ -363,7 +363,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       List<Step> steps;
 
       // Determine whether the test needs to be executed.
-      boolean isTestRunRequired = isTestRunRequiredForTest(test, buildContext, executionContext);
+      boolean isTestRunRequired = isTestRunRequiredForTest(test, executionContext);
       if (isTestRunRequired) {
         steps = test.runTests(buildContext, executionContext);
       } else {
@@ -374,7 +374,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // because the rule is cached, but its results must still be processed.
       ListenableFuture<TestResults> testResults =
           stepRunner.runStepsAndYieldResult(steps,
-              test.interpretTestResults(),
+              test.interpretTestResults(executionContext),
               test.getBuildTarget());
       results.add(testResults);
     }
@@ -436,8 +436,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @VisibleForTesting
-  static boolean isTestRunRequiredForTest(TestRule test,
-      BuildContext buildContext, ExecutionContext executionContext) {
+  static boolean isTestRunRequiredForTest(TestRule test, ExecutionContext executionContext) {
     boolean isTestRunRequired;
     BuildRuleSuccess.Type successType;
     if (executionContext.isDebugEnabled()) {
@@ -447,7 +446,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     } else if (((successType = test.getBuildResultType()) != null)
                && (successType == BuildRuleSuccess.Type.FETCHED_FROM_CACHE
                       || successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY)
-               && test.hasTestResultFiles(buildContext)) {
+               && test.hasTestResultFiles(executionContext)) {
       // If this build rule's artifacts (which includes the rule's output and its test result
       // files) are up to date, then no commands are necessary to run the tests. The test result
       // files will be read from the XML files in interpretTestResults().

@@ -69,7 +69,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public boolean hasTestResultFiles(BuildContext buildContext) {
+  public boolean hasTestResultFiles(ExecutionContext executionContext) {
     return false;
   }
 
@@ -79,7 +79,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public Callable<TestResults> interpretTestResults() {
+  public Callable<TestResults> interpretTestResults(ExecutionContext executionContext) {
     throw new UnsupportedOperationException("interpretTestResults() not supported in fake");
   }
 

@@ -20,9 +20,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,13 +49,13 @@ public class ShTestRuleTest extends EasyMockSupport {
 
     ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);
     EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(true);
-    BuildContext buildContext = createMock(BuildContext.class);
-    EasyMock.expect(buildContext.getProjectFilesystem()).andReturn(filesystem);
+    ExecutionContext executionContext = createMock(ExecutionContext.class);
+    EasyMock.expect(executionContext.getProjectFilesystem()).andReturn(filesystem);
 
     replayAll();
 
     assertTrue("hasTestResultFiles() should return true if result.json exists.",
-        shTest.hasTestResultFiles(buildContext));
+        shTest.hasTestResultFiles(executionContext));
   }
 
   private static BuildRuleParams createBuildRuleParams() {

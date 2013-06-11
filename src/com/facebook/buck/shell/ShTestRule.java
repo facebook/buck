@@ -91,9 +91,9 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  public boolean hasTestResultFiles(BuildContext buildContext) {
+  public boolean hasTestResultFiles(ExecutionContext executionContext) {
     // If result.json was not written, then the test needs to be run.
-    ProjectFilesystem filesystem = buildContext.getProjectFilesystem();
+    ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
     return filesystem.isFile(getPathToTestOutputResult());
   }
 
@@ -122,7 +122,7 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  public Callable<TestResults> interpretTestResults() {
+  public Callable<TestResults> interpretTestResults(ExecutionContext context) {
     return new Callable<TestResults>() {
 
       @Override

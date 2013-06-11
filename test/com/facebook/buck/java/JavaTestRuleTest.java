@@ -22,14 +22,13 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.util.Set;
 
 public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSources() {
-    File classesFolder = new File("testdata/javatestrule/default.jar");
+    String classesFolder = "testdata/javatestrule/default.jar";
     Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
@@ -37,7 +36,7 @@ public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSourcesWithInnerClasses() {
-    File classesFolder = new File("testdata/javatestrule/case1.jar");
+    String classesFolder = "testdata/javatestrule/case1.jar";
     Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
@@ -45,7 +44,7 @@ public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSourcesWithMultipleTopLevelClasses() {
-    File classesFolder = new File("testdata/javatestrule/case2.jar");
+    String classesFolder = "testdata/javatestrule/case2.jar";
     Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
@@ -53,7 +52,7 @@ public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSourcesWithImperfectHeuristic() {
-    File classesFolder = new File("testdata/javatestrule/case2fail.jar");
+    String classesFolder = "testdata/javatestrule/case2fail.jar";
     Set<String> sources = ImmutableSet.of(
         "src/com/facebook/feed/DummyTest.java",
         "src/com/facebook/nav/OtherDummyTest.java");

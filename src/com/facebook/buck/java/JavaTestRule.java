@@ -33,6 +33,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -129,7 +130,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
     // empty list of commands.
-    Set<String> testClassNames = getClassNamesForSources();
+    Set<String> testClassNames = getClassNamesForSources(executionContext);
     if (testClassNames.isEmpty()) {
       return ImmutableList.of();
     }
@@ -175,10 +176,10 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   }
 
   @Override
-  public boolean hasTestResultFiles(BuildContext buildContext) {
+  public boolean hasTestResultFiles(ExecutionContext executionContext) {
     // It is possible that this rule was not responsible for running any tests because all tests
     // were run by its deps. In this case, return an empty TestResults.
-    Set<String> testClassNames = getClassNamesForSources();
+    Set<String> testClassNames = getClassNamesForSources(executionContext);
     if (testClassNames.isEmpty()) {
       return true;
     }
@@ -195,29 +196,30 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   }
 
   private String getPathToTestOutput() {
-    return String.format("%s/%s/__java_test_%s_output__",
+    return String.format("%s/%s__java_test_%s_output__",
         BuckConstant.GEN_DIR,
-        getBuildTarget().getBasePath(),
+        getBuildTarget().getBasePathWithSlash(),
         getBuildTarget().getShortName());
   }
 
   @Override
-  public Callable<TestResults> interpretTestResults() {
+  public Callable<TestResults> interpretTestResults(final ExecutionContext context) {
     return new Callable<TestResults>() {
 
       @Override
       public TestResults call() throws Exception {
         // It is possible that this rule was not responsible for running any tests because all tests
         // were run by its deps. In this case, return an empty TestResults.
-        Set<String> testClassNames = getClassNamesForSources();
+        Set<String> testClassNames = getClassNamesForSources(context);
         if (testClassNames.isEmpty()) {
           return TestResults.getEmptyTestResults();
         }
 
-        File outputDirectory = new File(getPathToTestOutput());
         List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
+        ProjectFilesystem filesystem = context.getProjectFilesystem();
         for (String testClass : testClassNames) {
-          File testResultFile = new File(outputDirectory, testClass + ".xml");
+          File testResultFile = filesystem.getFileForRelativePath(
+              String.format("%s/%s.xml", getPathToTestOutput(), testClass));
           TestCaseSummary summary = XmlTestResultParser.parse(testResultFile);
           summaries.add(summary);
         }
@@ -228,9 +230,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     };
   }
 
-  private Set<String> getClassNamesForSources() {
+  private Set<String> getClassNamesForSources(ExecutionContext context) {
     if (compiledClassFileFinder == null) {
-      compiledClassFileFinder = new CompiledClassFileFinder(this);
+      compiledClassFileFinder = new CompiledClassFileFinder(this, context);
     }
     return compiledClassFileFinder.getClassNamesForSources();
   }
@@ -240,10 +242,18 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     private final Set<String> classNamesForSources;
 
-    CompiledClassFileFinder(JavaTestRule rule) {
+    CompiledClassFileFinder(JavaTestRule rule, ExecutionContext context) {
       Preconditions.checkState(rule.isRuleBuilt(),
           "Rule must be built so that the classes folder is available");
-      classNamesForSources = getClassNamesForSources(rule.getJavaSrcs(), rule.getOutput());
+      String outputPath;
+      File outputFile = rule.getOutput();
+      if (outputFile != null) {
+        outputPath = context.getProjectFilesystem().getPathRelativizer().apply(
+            outputFile.getPath());
+      } else {
+        outputPath = null;
+      }
+      classNamesForSources = getClassNamesForSources(rule.getJavaSrcs(), outputPath);
     }
 
     public Set<String> getClassNamesForSources() {
@@ -268,7 +278,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      * @param jarFile jar where the generated .class files were written
      */
     @VisibleForTesting
-    static Set<String> getClassNamesForSources(Set<String> sources, @Nullable File jarFile) {
+    static Set<String> getClassNamesForSources(Set<String> sources, @Nullable String jarFile) {
       if (jarFile == null) {
         return ImmutableSet.of();
       }
@@ -284,7 +294,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       }
 
       final ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
-      ZipFileTraversal traversal = new ZipFileTraversal(jarFile) {
+      ZipFileTraversal traversal = new ZipFileTraversal(new File(jarFile)) {
 
         @Override
         public void visit(ZipFile zipFile, ZipEntry zipEntry) {
