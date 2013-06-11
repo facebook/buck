@@ -45,6 +45,7 @@ java_library(
   deps = [
     ':test',
     '//lib:guava',
+    '//lib:jackson-core',
     '//lib:jsr305',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/graph:graph',
