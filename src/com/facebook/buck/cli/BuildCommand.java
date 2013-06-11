@@ -157,7 +157,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       buildTracer.stop(TRACER_THRESHOLD);
     }
 
-    events.post(BuildEvents.finished(exitCode));
+    events.post(BuildEvents.buildFinished(exitCode));
     return exitCode;
   }
 

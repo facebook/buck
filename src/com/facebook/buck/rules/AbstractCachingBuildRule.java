@@ -251,7 +251,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     }
 
     // Record the start of the build.
-    context.getEventBus().post(BuildEvents.started(this));
+    context.getEventBus().post(BuildEvents.buildRuleStarted(this));
 
     // TODO(mbolin): Make sure that all output files are deleted before proceeding. This is
     // particularly important for tests: their test result files must be deleted. Otherwise, we
@@ -273,7 +273,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         executeCommandsNowThatDepsAreBuilt(context);
       } catch (IOException|StepFailedException e) {
         buildRuleResult.setException(e);
-        BuildEvents.finished(this, BuildRuleStatus.FAIL, cacheResult);
+        BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult);
         return;
       }
     }
@@ -286,7 +286,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       // new output but an old RuleKey record.
       // TODO(mbolin): Make a final attempt to clear the invalid RuleKey record.
       buildRuleResult.setException(e);
-      BuildEvents.finished(this, BuildRuleStatus.FAIL, cacheResult);
+      BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult);
       return;
     }
 
@@ -295,7 +295,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
                                                   : BuildRuleSuccess.Type.BUILT_LOCALLY;
     buildRuleResult.set(new BuildRuleSuccess(this, successType));
     context.getEventBus().post(
-        BuildEvents.finished(this, BuildRuleStatus.SUCCESS, cacheResult));
+        BuildEvents.buildRuleFinished(this, BuildRuleStatus.SUCCESS, cacheResult));
     return;
   }
 

@@ -200,7 +200,7 @@ public class Build {
 
   public ListenableFuture<List<BuildRuleSuccess>> executeBuild(EventBus events)
       throws IOException, StepFailedException {
-    events.post(BuildEvents.started());
+    events.post(BuildEvents.buildStarted());
     Set<BuildRule> rulesToBuild = dependencyGraph.getNodesWithNoIncomingEdges();
 
     buildContext = BuildContext.builder()

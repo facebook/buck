@@ -22,19 +22,22 @@ public class BuildEvents {
     // Utility class.
   }
 
-  public static BuildEvent started() {
+  public static BuildEvent buildStarted() {
     return new BuildStarted();
   }
 
-  public static BuildEvent finished(int exitCode) {
+  public static BuildEvent buildFinished(int exitCode) {
     return new BuildFinished(exitCode);
   }
 
-  public static BuildEvent started(BuildRule rule) {
+  public static BuildEvent buildRuleStarted(BuildRule rule) {
     return new BuildRuleStarted(rule);
   }
 
-  public static BuildEvent finished(BuildRule rule, BuildRuleStatus success, CacheResult isCacheHit) {
+  public static BuildEvent buildRuleFinished(
+      BuildRule rule,
+      BuildRuleStatus success,
+      CacheResult isCacheHit) {
     return new BuildRuleFinished(rule, success, isCacheHit);
   }
 }
