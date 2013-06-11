@@ -273,7 +273,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         executeCommandsNowThatDepsAreBuilt(context);
       } catch (IOException|StepFailedException e) {
         buildRuleResult.setException(e);
-        BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult);
+        context.getEventBus().post(
+            BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult));
         return;
       }
     }
@@ -286,7 +287,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       // new output but an old RuleKey record.
       // TODO(mbolin): Make a final attempt to clear the invalid RuleKey record.
       buildRuleResult.setException(e);
-      BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult);
+      context.getEventBus().post(
+          BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult));
       return;
     }
 
