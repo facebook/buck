@@ -16,6 +16,18 @@
 
 package com.facebook.buck.rules;
 
-// TODO(simons): List the targets we're building
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Set;
+
 public class BuildStarted extends BuildEvent {
+  private final ImmutableSet<BuildRule> rulesToBuild;
+
+  public BuildStarted(Set<BuildRule> rulesToBuild) {
+    this.rulesToBuild = ImmutableSet.copyOf(rulesToBuild);
+  }
+
+  public ImmutableSet<BuildRule> getRulesToBuild() {
+    return rulesToBuild;
+  }
 }

@@ -16,14 +16,16 @@
 
 package com.facebook.buck.rules;
 
+import java.util.Set;
+
 public class BuildEvents {
 
   private BuildEvents() {
     // Utility class.
   }
 
-  public static BuildEvent buildStarted() {
-    return new BuildStarted();
+  public static BuildEvent buildStarted(Set<BuildRule> rulesToBuild) {
+    return new BuildStarted(rulesToBuild);
   }
 
   public static BuildEvent buildFinished(int exitCode) {
