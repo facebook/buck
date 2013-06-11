@@ -18,8 +18,15 @@ package com.facebook.buck.junit;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
+import org.junit.internal.builders.JUnit4Builder;
 import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
+import org.junit.runner.Result;
+import org.junit.runner.Runner;
+import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.Failure;
+import org.junit.runners.model.RunnerBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -34,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -73,15 +81,12 @@ public final class JUnitRunner {
     this.shouldPrintOutWhenTestsStartAndStop = shouldPrintOutWhenTestsStartAndStop;
   }
 
-  public void run() throws
-      ClassNotFoundException, IOException, ParserConfigurationException, TransformerException {
-    // TODO(mbolin): Set some sort of timeout so that tests will not run forever. See
-    // http://stackoverflow.com/questions/9312021/junitcore-stopping
-    // for suggestions on how to safely make this interruptable.
-    JUnitCore testRunner = new JUnitCore();
+  public void run() throws Throwable {
+    RunnerBuilder runnerBuilder = createRunnerBuilder();
+    final JUnitCore jUnit3TestRunner = new JUnitCore();
 
     for (String className : testClassNames) {
-      Class<?> testClass = Class.forName(className);
+      final Class<?> testClass = Class.forName(className);
       Ignore ignore = testClass.getAnnotation(Ignore.class);
       boolean isTestClassIgnored = ignore != null;
 
@@ -93,27 +98,72 @@ public final class JUnitRunner {
         // Run each test method individually.
         results = new ArrayList<TestResult>();
         Method[] publicInstanceMethods = testClass.getMethods();
-        for (Method method : publicInstanceMethods) {
-          if (isTestMethod(method)) {
-            PrintStream stderr = System.err;
+        for (final Method method : publicInstanceMethods) {
+          if (!isTestMethod(method)) {
+            continue;
+          }
 
-            if (shouldPrintOutWhenTestsStartAndStop) {
-              stderr.printf("START TEST %s#%s\n", testClass.getName(), method.getName());
-              stderr.flush();
-            }
+          PrintStream stderr = System.err;
 
-            TestResult result = TestResult.runTestMethod(testClass, method.getName(), testRunner);
-            results.add(result);
+          if (shouldPrintOutWhenTestsStartAndStop) {
+            stderr.printf("START TEST %s#%s\n", method.getDeclaringClass(), method.getName());
+            stderr.flush();
+          }
 
-            if (shouldPrintOutWhenTestsStartAndStop) {
-              stderr.printf("STOP TEST %s#%s\n", testClass.getName(), method.getName());
-              stderr.flush();
-            }
+          Runner runner = runnerBuilder.runnerForClass(testClass);
+          Callable<Result> runTestAndProduceJUnitResult;
+          if (runner instanceof BuckBlockJUnit4ClassRunner) {
+            final BuckBlockJUnit4ClassRunner jUnit4Runner = (BuckBlockJUnit4ClassRunner)runner;
+            runTestAndProduceJUnitResult = new Callable<Result>() {
+              @Override
+              public Result call() throws NoTestsRemainException {
+                return jUnit4Runner.runTest(method);
+              }
+            };
+          } else {
+            runTestAndProduceJUnitResult = new Callable<Result>() {
+              @Override
+              public Result call() {
+                Request request = Request.method(testClass, method.getName());
+                return jUnit3TestRunner.run(request);
+              }
+            };
+          }
+
+          TestResult testResult = TestResult.runTestMethod(runTestAndProduceJUnitResult, method);
+          results.add(testResult);
+
+          if (shouldPrintOutWhenTestsStartAndStop) {
+            stderr.printf("STOP TEST %s#%s\n", method.getDeclaringClass(), method.getName());
+            stderr.flush();
           }
         }
       }
       writeResult(className, results);
     }
+  }
+
+  /**
+   * Creates an {@link AllDefaultPossibilitiesBuilder} that returns our custom
+   * {@link BuckBlockJUnit4ClassRunner} when a {@link JUnit4Builder} is requested. This ensures that
+   * JUnit 4 tests are executed using our runner whereas other types of tests are run with whatever
+   * JUnit thinks is best.
+   */
+  private RunnerBuilder createRunnerBuilder() {
+    final JUnit4Builder jUnit4RunnerBuilder = new JUnit4Builder() {
+      @Override
+      public Runner runnerForClass(Class<?> testClass) throws Throwable {
+        return new BuckBlockJUnit4ClassRunner(testClass, defaultTestTimeoutMillis);
+      }
+    };
+
+    return new AllDefaultPossibilitiesBuilder(
+        /* canUseSuiteMethod */ true) {
+      @Override
+      protected JUnit4Builder junit4Builder() {
+        return jUnit4RunnerBuilder;
+      }
+    };
   }
 
   /**
@@ -222,11 +272,7 @@ public final class JUnitRunner {
    *   <li>(string...) fully-qualified names of test classes
    * </ul>
    */
-  public static void main(String[] args) throws
-      ClassNotFoundException,
-      IOException,
-      ParserConfigurationException,
-      TransformerException {
+  public static void main(String... args) throws Throwable {
     // Verify the arguments.
     if (args.length == 0) {
       System.err.println("Must specify an output directory.");

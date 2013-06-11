@@ -16,14 +16,13 @@
 
 package com.facebook.buck.junit;
 
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
+import java.util.concurrent.Callable;
 
 /**
  * Result of an individual test method in JUnit. Similar to {@link Result}, except that it always
@@ -61,9 +60,8 @@ final class TestResult {
   /**
    * Runs the specified test method using the specified test runner.
    */
-  static TestResult runTestMethod(Class<?> clazz, String methodName, JUnitCore testRunner)
-      throws UnsupportedEncodingException {
-    Request request = Request.method(clazz, methodName);
+  static TestResult runTestMethod(Callable<Result> runTestAndProduceJUnitResult, Method testMethod)
+      throws Exception {
 
     // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
     // form of System.out.println) the developer is using to debug the test.
@@ -79,7 +77,7 @@ final class TestResult {
     System.setErr(stdErrStream);
 
     // Run the test!
-    Result result = testRunner.run(request);
+    Result result = runTestAndProduceJUnitResult.call();
 
     // Restore the original stdout/stderr.
     System.setOut(originalOut);
@@ -90,13 +88,15 @@ final class TestResult {
     stdErrStream.flush();
 
     int numFailures = result.getFailureCount();
+    String className = testMethod.getDeclaringClass().getCanonicalName();
+    String methodName = testMethod.getName();
     // In practice, I have seen one case of a test having more than one failure:
     // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2 failures.
     // However, I am not sure what to make of it, so we let it through.
     if (numFailures < 0) {
       throw new IllegalStateException(String.format(
           "Unexpected number of failures while testing %s#%s(): %d (%s)",
-          clazz.getName(),
+          className,
           methodName,
           numFailures,
           result.getFailures()));
@@ -105,7 +105,7 @@ final class TestResult {
 
     String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
     String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
-    return new TestResult(clazz.getName(),
+    return new TestResult(className,
         methodName,
         result.getRunTime(),
         failure,
