@@ -21,13 +21,17 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,6 +71,24 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   @Override
   public boolean isAndroidRule() {
     return true;
+  }
+
+  @Override
+  protected RuleKey.Builder ruleKeyBuilder() {
+     return super.ruleKeyBuilder()
+         .set("manifest", manifestFile.orNull());
+  }
+
+  @Override
+  protected List<String> getInputsToCompareToOutput(BuildContext context) {
+    if (manifestFile.isPresent()) {
+      return ImmutableList.<String>builder()
+          .addAll(super.getInputsToCompareToOutput(context))
+          .add(manifestFile.get())
+          .build();
+    } else {
+      return super.getInputsToCompareToOutput(context);
+    }
   }
 
   public static Builder newAndroidLibraryRuleBuilder() {
