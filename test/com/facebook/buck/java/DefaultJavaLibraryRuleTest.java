@@ -550,6 +550,7 @@ public class DefaultJavaLibraryRuleTest {
     EasyMock.verify(context);
   }
 
+
   // Utilities
 
   private DefaultJavaLibraryRule.JarResolver createJarResolver(

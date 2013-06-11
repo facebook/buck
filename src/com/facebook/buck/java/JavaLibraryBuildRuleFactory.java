@@ -44,6 +44,7 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
     builder.setProguardConfig(
         proguardConfig.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 
+
     boolean exportDeps = params.getBooleanAttribute("export_deps");
     builder.setExportDeps(exportDeps);
 
