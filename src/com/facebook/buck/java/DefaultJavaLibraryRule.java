@@ -93,6 +93,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final Optional<String> proguardConfig;
 
+
   private final boolean exportDeps;
 
   private final Supplier<ImmutableSet<String>> outputClasspathEntriesSupplier;
@@ -447,6 +448,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         suggestBuildRule);
     commands.addAll(javac);
 
+
     // If there are resources, then link them to the appropriate place in the classes directory.
     addResourceCommands(commands, outputDirectory, context.getJavaPackageFinder());
 
@@ -549,6 +551,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return Optional.of(suggestBuildRuleFn);
   }
 
+
   @VisibleForTesting
   void addResourceCommands(ImmutableList.Builder<Step> commands,
                            String outputDirectory,
@@ -609,7 +612,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         new AnnotationProcessingParams.Builder();
     protected boolean exportDeps = false;
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
-
     protected Optional<String> proguardConfig = Optional.absent();
 
     protected Builder() {}
@@ -669,6 +671,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
       return this;
     }
+
 
     public Builder setSourceLevel(String sourceLevel) {
       javacOptions.setSourceLevel(sourceLevel);
