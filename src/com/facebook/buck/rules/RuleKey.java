@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,12 +59,14 @@ public class RuleKey implements Comparable<RuleKey> {
   // TODO(mbolin): Do not let this be @Nullable anymore.
   @Nullable private final HashCode hashCode;
 
+  private final BuildRule buildRule;
+
   /**
    * @param hashString string that conforms to the contract of the return value of
    *     {@link com.google.common.hash.HashCode#toString()}.
    */
-  public RuleKey(String hashString) {
-    this(HashCodes.fromBytes(hashStringToBytes(hashString)));
+  public RuleKey(String hashString, BuildRule buildRule) {
+    this(HashCodes.fromBytes(hashStringToBytes(hashString)), buildRule);
   }
 
   private static byte[] hashStringToBytes(String hashString) {
@@ -78,13 +81,26 @@ public class RuleKey implements Comparable<RuleKey> {
     return bytes;
   }
 
-  private RuleKey(HashCode hashCode) {
+  private RuleKey(HashCode hashCode, BuildRule buildRule) {
     this.hashCode = hashCode;
+    this.buildRule = Preconditions.checkNotNull(buildRule);
   }
 
   @Nullable
   public HashCode getHashCode() {
     return hashCode;
+  }
+
+  /**
+   * The {@link BuildRule} with which this {@link RuleKey} is associated.
+   * This is used as pure metadata: it should not be used when computing the hashcode of this
+   * {@link RuleKey}, or when comparing to another {@link RuleKey} for equality.
+   * <p>
+   * However, it may be used by an {@link ArtifactCache} to determine the caching strategy for this
+   * {@link RuleKey}.
+   */
+  public BuildRule getBuildRule() {
+    return buildRule;
   }
 
   public boolean isIdempotent() {
@@ -107,6 +123,10 @@ public class RuleKey implements Comparable<RuleKey> {
   @Override
   public String toString() {
     return toString(false);
+  }
+
+  public String toDebugString() {
+    return String.format("%s %s", toString(), getBuildRule().getFullyQualifiedName());
   }
 
   /**
@@ -162,12 +182,8 @@ public class RuleKey implements Comparable<RuleKey> {
     return ruleKey;
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
   public static Builder builder(final BuildRule rule) {
-    Builder builder = new Builder()
+    Builder builder = new Builder(rule)
         .set("name", rule.getFullyQualifiedName())
 
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
@@ -195,11 +211,16 @@ public class RuleKey implements Comparable<RuleKey> {
     private static final Logger logger = Logger.getLogger(Builder.class.getName());
 
     private final Hasher hasher;
+
+    /** The {@link BuildRule} with which this {@link Builder} is associated. */
+    private final BuildRule buildRule;
+
     private boolean idempotent;
     @Nullable private List<String> logElms;
 
-    private Builder() {
-      hasher = Hashing.sha1().newHasher();
+    private Builder(BuildRule buildRule) {
+      this.hasher = Hashing.sha1().newHasher();
+      this.buildRule = Preconditions.checkNotNull(buildRule);
       idempotent = true;
       if (logger.isLoggable(Level.INFO)) {
         logElms = Lists.newArrayList();
@@ -208,7 +229,7 @@ public class RuleKey implements Comparable<RuleKey> {
     }
 
     private Builder(String header) {
-      this();
+      this(/* buildRule */ (BuildRule)null);
       setHeader(header);
     }
 
@@ -396,7 +417,9 @@ public class RuleKey implements Comparable<RuleKey> {
     }
 
     public RuleKey build() {
-      RuleKey ruleKey = idempotent ? new RuleKey(hasher.hash()) : new RuleKey((HashCode)null);
+      RuleKey ruleKey = idempotent
+          ? new RuleKey(hasher.hash(), buildRule)
+          : new RuleKey((String)null, buildRule);
       if (logElms != null) {
         logger.info(String.format("%sRuleKey %s=%s",
             ruleKey.isIdempotent() ? "" : "non-idempotent ", ruleKey.toString(),

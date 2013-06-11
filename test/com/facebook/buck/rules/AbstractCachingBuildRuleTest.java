@@ -99,7 +99,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         ImmutableList.<InputRule>of(new InputRule("/dev/null") {
           @Override
           public RuleKey getRuleKey() {
-            return new RuleKey("ae8c0f860a0ecad94ecede79b69460434eddbfbc");
+            return new RuleKey("ae8c0f860a0ecad94ecede79b69460434eddbfbc", this);
           }
         }),
         buildSteps,
@@ -160,7 +160,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     projectFilesystem.writeLinesToPath(capture(linesCapture), eq(pathToSuccessFile));
 
     // There will initially be a cache miss, later followed by a cache store.
-    RuleKey expectedRuleKey = new RuleKey(expectedRuleKeyHash);
+    RuleKey expectedRuleKey = new RuleKey(expectedRuleKeyHash, cachingRule);
     expect(artifactCache.fetch(expectedRuleKey, output)).andReturn(false);
     artifactCache.store(expectedRuleKey, output);
     expect(context.getArtifactCache()).andReturn(artifactCache).times(2);
@@ -168,7 +168,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     // The dependent rule will be built immediately with a distinct rule key.
     expect(dep.build(context)).andReturn(
         Futures.immediateFuture(new BuildRuleSuccess(dep, BuildRuleSuccess.Type.BUILT_LOCALLY)));
-    expect(dep.getRuleKey()).andReturn(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208"));
+    expect(dep.getRuleKey())
+        .andReturn(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208", dep));
 
     // Add a build step so we can verify that the steps are executed.
     Step buildStep = createMock(Step.class);

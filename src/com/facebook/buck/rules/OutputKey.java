@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -29,6 +30,7 @@ import javax.annotation.Nullable;
  */
 public class OutputKey implements Comparable<OutputKey> {
   @Nullable private final HashCode hashCode;
+  private final BuildRule buildRule;
   private final boolean idempotent;
 
   /**
@@ -36,7 +38,8 @@ public class OutputKey implements Comparable<OutputKey> {
    * distinct from other idempotent OutputKeys. OutputKeys associated with actual outputs are
    * non-idempotent if the outputs cannot be read during key generation.
    */
-  public OutputKey(@Nullable File output) {
+  public OutputKey(@Nullable File output, BuildRule buildRule) {
+    this.buildRule = Preconditions.checkNotNull(buildRule);
     if (output == null) {
       this.hashCode = null;
       this.idempotent = true;
@@ -52,7 +55,7 @@ public class OutputKey implements Comparable<OutputKey> {
       return null;
     }
     // Use RuleKey's Builder to do the hard work of hashing the output file.
-    RuleKey.Builder builder = RuleKey.builder();
+    RuleKey.Builder builder = RuleKey.builder(buildRule);
     builder.set(output.getPath(), output);
     RuleKey ruleKey = builder.build();
     if (!ruleKey.isIdempotent()) {
