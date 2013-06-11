@@ -166,17 +166,35 @@ public class RuleKey implements Comparable<RuleKey> {
     return new Builder();
   }
 
-  public static Builder builder(final BuildRule rule) {
+  /**
+   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
+   * arguments.
+   */
+  public static Builder builder(BuildRule rule) {
+    return builder(rule, /* includeDeps */ true);
+  }
+
+  /**
+   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
+   * arguments <em>except</em> for its <code>deps</doe>.
+   */
+  public static Builder builderWithoutDeps(BuildRule rule) {
+    return builder(rule, /* includeDeps */ false);
+  }
+
+  private static Builder builder(BuildRule rule, boolean includeDeps) {
     Builder builder = new Builder()
         .set("name", rule.getFullyQualifiedName())
 
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .set("buck.type", rule.getType().getName());
 
-    builder.setKey("deps");
-    // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
-    for (BuildRule buildRule : rule.getDeps()) {
-      builder.setVal(buildRule.getRuleKey());
+    if (includeDeps) {
+      builder.setKey("deps");
+      // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
+      for (BuildRule buildRule : rule.getDeps()) {
+        builder.setVal(buildRule.getRuleKey());
+      }
     }
     builder.separate();
 
