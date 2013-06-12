@@ -28,6 +28,8 @@ java_test(
     '//lib:ddmlib',
     '//lib:easymock',
     '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
     '//lib:ini4j',
     '//lib:jackson-core',
     '//lib:jackson-databind',

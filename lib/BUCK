@@ -12,34 +12,23 @@ prebuilt_jar(
   binary_jar = 'cglib-nodep-2.2.jar',
 )
 
-java_library(
-  name = 'easymock',
-  deps = [
-    ':cglib',
-    ':easymock_jar_only',
-    ':objenesis',
-  ],
-  export_deps = True,
-  visibility = [
-    '//test/...',
-  ],
-)
-
-prebuilt_jar(
-  name = 'easymock_jar_only',
-  binary_jar = 'easymock-3.0.jar',
-  visibility = [
-    # This build rule should not be public:
-    # Users should depend on the java_library() rule so that
-    # cglib and objenesis are always included with EasyMock.
-  ],
-)
-
 prebuilt_jar(
   name = 'ddmlib',
   binary_jar = 'ddmlib-r21.jar',
   visibility = [
     'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'easymock',
+  binary_jar = 'easymock-3.0.jar',
+  deps = [
+    ':cglib',
+    ':objenesis',
+  ],
+  visibility = [
+    '//test/...',
   ],
 )
 
@@ -55,11 +44,20 @@ prebuilt_jar(
 prebuilt_jar(
   name = 'hamcrest-core',
   binary_jar = 'hamcrest-core-1.3.jar',
+  visibility = [
+    '//test/...',
+  ],
 )
 
 prebuilt_jar(
   name = 'hamcrest-library',
   binary_jar = 'hamcrest-library-1.3.jar',
+  deps = [
+    ':hamcrest-core',
+  ],
+  visibility = [
+    '//test/...',
+  ],
 )
 
 prebuilt_jar(
@@ -108,23 +106,17 @@ prebuilt_jar(
   ],
 )
 
-java_library(
-  name = 'junit',
-  deps = [':junit_jar'],
-  export_deps = True,
-  visibility = [
-    '//src/com/facebook/buck/junit:junit',
-    '//test/...',
-  ]
-)
-
 prebuilt_jar(
-  name = 'junit_jar',
+  name = 'junit',
   binary_jar = 'junit-4.11.jar',
   source_jar = 'junit-4.11-sources.jar',
   deps = [
     ':hamcrest-core',
     ':hamcrest-library',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/junit:junit',
+    '//test/...',
   ],
 )
 
