@@ -21,6 +21,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
 
@@ -57,7 +58,10 @@ public class ProjectBuildFileParser {
       "sys.argv=[\"%s\"]",
       "buck.main()");
 
-  public ProjectBuildFileParser() {
+  private final ImmutableSet<String> ignorePaths;
+
+  public ProjectBuildFileParser(ImmutableSet<String> ignorePaths) {
+    this.ignorePaths = ignorePaths;
   }
 
   private class BuildFileRunner implements Runnable {
@@ -124,6 +128,12 @@ public class ProjectBuildFileParser {
     if (buildFile.isPresent()) {
       argBuilder.add(buildFile.get());
     }
+
+    for (String path : ignorePaths) {
+      argBuilder.add("--ignore_path");
+      argBuilder.add(path);
+    }
+
     return argBuilder.build();
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.util.ArrayDeque;
@@ -33,10 +34,16 @@ import java.util.Deque;
 public abstract class DirectoryTraversal {
 
   private final File root;
+  private final ImmutableSet<String> ignorePaths;
 
   /** @param root must be a directory with no cyclic symlinks as children */
-  public DirectoryTraversal(File root) {
+  public DirectoryTraversal(File root, ImmutableSet<String> ignorePaths) {
     this.root = Preconditions.checkNotNull(root);
+    this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
+  }
+
+  public DirectoryTraversal(File root) {
+    this(root, ImmutableSet.<String>of());
   }
 
   public File getRoot() {
@@ -65,7 +72,9 @@ public abstract class DirectoryTraversal {
         if (entry.isDirectory()) {
           String directoryPath = relativePath + (relativePath.isEmpty() ? "" : "/")
               + entry.getName();
-          directoriesToVisit.push(new DirectoryWithRelativePath(entry, directoryPath));
+          if (!ignorePaths.contains(directoryPath)) {
+            directoriesToVisit.push(new DirectoryWithRelativePath(entry, directoryPath));
+          }
         } else {
           // We do not assert that entry.isFile() because it may be a symlink to a file.
           visit(entry, relativePath + (relativePath.isEmpty() ? "" : "/") + entry.getName());

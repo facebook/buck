@@ -90,13 +90,14 @@ public class ParserTest {
         "java_library(name = 'bar')\n",
         testBuildFile,
         Charsets.UTF_8);
+    tempDir.newFile("bar.py");
 
     // Create a temp directory with some build files.
     File root = tempDir.getRoot();
     filesystem = new ProjectFilesystem(root);
 
     buildRuleTypes = new KnownBuildRuleTypes();
-    buildFileParser = new ProjectBuildFileParser();
+    buildFileParser = new ProjectBuildFileParser(filesystem.getIgnorePaths());
     testParser = createParser(emptyBuildTargets(), buildFileParser);
   }
 
@@ -381,7 +382,7 @@ public class ParserTest {
     Parser parser = createParser(emptyBuildTargets(), buildFileParser);
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    parser.filterAllTargetsInProject(filesystem, ImmutableList.of("bar.py"), alwaysTrue());
+    parser.filterAllTargetsInProject(filesystem, ImmutableList.of("//bar.py"), alwaysTrue());
 
     assertEquals("Should have invalidated cache.", 2, buildFileParser.calls);
   }
@@ -477,6 +478,10 @@ public class ParserTest {
   private class TestProjectBuildFileParser extends ProjectBuildFileParser {
 
     public int calls = 0;
+
+    public TestProjectBuildFileParser() {
+      super(ImmutableSet.<String>of());
+    }
 
     @Override
     public List<Map<String, Object>> getAllRules(String rootPath, Optional<String> buildFile,

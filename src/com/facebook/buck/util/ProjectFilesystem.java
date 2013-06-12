@@ -20,6 +20,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -38,6 +39,7 @@ public class ProjectFilesystem {
 
   private final File projectRoot;
   private final Function<String, String> pathRelativizer;
+  private final ImmutableSet<String> ignorePaths;
 
   /**
    * There should only be one {@link ProjectFilesystem} created per process.
@@ -47,7 +49,7 @@ public class ProjectFilesystem {
    * a mock filesystem via EasyMock instead. Note that there are cases (such as integration tests)
    * where specifying {@code new File(".")} as the project root might be the appropriate thing.
    */
-  public ProjectFilesystem(File projectRoot) {
+  public ProjectFilesystem(File projectRoot, ImmutableSet<String> ignorePaths) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     Preconditions.checkArgument(projectRoot.isDirectory());
     this.pathRelativizer = new Function<String, String>() {
@@ -56,10 +58,19 @@ public class ProjectFilesystem {
         return ProjectFilesystem.this.getFileForRelativePath(relativePath).getAbsolutePath();
       }
     };
+    this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
+  }
+
+  public ProjectFilesystem(File projectRoot) {
+    this(projectRoot, ImmutableSet.<String>of());
   }
 
   public File getProjectRoot() {
     return projectRoot;
+  }
+
+  public ImmutableSet<String> getIgnorePaths() {
+    return ignorePaths;
   }
 
   public File getFileForRelativePath(String pathRelativeToProjectRoot) {

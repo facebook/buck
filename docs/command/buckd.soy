@@ -14,7 +14,7 @@ Starts a buck daemon process
 This command starts a Buck daemon process for the current project in
 the current working directory. When running other commands, Buck first
 checks for a running daemon process and if found uses that daemon to
-execute the command.  Using a Buck daemon can save significant
+execute the command. Using a Buck daemon can save significant
 amounts of time as it avoids the overhead of starting a Java virtual
 machine, loading the buck class files and parsing the build files for
 each command.
@@ -33,14 +33,12 @@ projects are being worked on concurrently.
 </p>
 <p>
 Buck daemon processes monitor the project file system while running and
-invalidate cached build rules if any non source files are changed. Sub-trees
-within the project file system can be excluded from this monitoring by adding
-them as a comma separated list to the "ignore" setting in the "buckd"
-section of .buckconfig. Output directories should always be added to this 
-setting to avoid cached build rules being invalidated on every run and adding 
-.buckd, IDE directories like .idea and source control directories like .git can
-significantly improve performance and may be nescessary to avoid file change
-overflows when buck daemons are being used to build very large projects.
+invalidate cached build rules if any non source files are changed. Subtrees
+within the project file system that are specified via the "ignore" setting of the
+"project" section of .buckconfig are excluded from monitoring. Adding
+project-specific output directories and source control directories like .git
+can significantly improve performance and may be nescessary to avoid file
+change overflows when buck daemons are being used to build very large projects.
 </p>
 
     {/param}  // content

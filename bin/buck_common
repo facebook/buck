@@ -181,6 +181,7 @@ BUCK_JAVA_ARGS="-XX:MaxPermSize=256m \
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
 -Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
 -Dbuck.version_uid=${BUCK_VERSION_UID} \
+-Dbuck.buckd_dir=${BUCKD_DIR} \
 -Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties"
 
 # To debug BUCK, uncomment the following line to wait on port 8888 for Eclipse.

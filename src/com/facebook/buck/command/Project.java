@@ -612,11 +612,12 @@ public class Project {
       module.excludeFolders.add(excludeFolder);
     }
 
-    // If in the root of the project, specify buck-out as ignored files.
+    // If in the root of the project, specify ignored paths.
     if ("".equals(buildRule.getBuildTarget().getBasePathWithSlash())) {
-      module.excludeFolders.add(new SourceFolder(
-          "file://$MODULE_DIR$/" + BuckConstant.BUCK_OUTPUT_DIRECTORY,
-          /* isTestSource */ false));
+      for (String path : projectFilesystem.getIgnorePaths()) {
+        module.excludeFolders.add(new SourceFolder(String.format("file://$MODULE_DIR$/%s", path),
+            false));
+      }
     }
 
     return true;

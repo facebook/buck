@@ -6,8 +6,8 @@
     buck = //src/com/facebook/buck/cli:cli
 [buildfile]
     includes = //DEFS
-[buckd]
-    ignore = .git, .idea, .buckd, buck-out, buck-bin, buck-gen, build
+[project]
+    ignore = .git, build
 [test]
     # Maximum timeout of 1 minute per test.
     timeout = 60000

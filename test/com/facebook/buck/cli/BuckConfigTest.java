@@ -19,12 +19,17 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -34,7 +39,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.easymock.EasyMock;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -43,6 +50,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class BuckConfigTest {
+
+  @Rule
+  public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Test
   public void testSortOrder() throws IOException {
@@ -201,7 +211,6 @@ public class BuckConfigTest {
     assertNull(emptyConfig.getBuildTargetForAlias("fb4a"));
     assertEquals(ImmutableMap.of(), emptyConfig.getBasePathToAliasMap());
     assertEquals(0, Iterables.size(emptyConfig.getDefaultIncludes()));
-    assertEquals(ImmutableSet.of(), emptyConfig.getIgnoredDirectories());
   }
 
   @Test
@@ -319,13 +328,58 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testExcludedDirectories() throws IOException {
+  public void testIgnorePaths() throws IOException {
     Reader reader = new StringReader(Joiner.on('\n').join(
-        "[buckd]",
-        "ignore = .git, .idea"));
+        "[project]",
+        "ignore = .git, foo, bar/, baz//, a/b/c"));
     BuckConfig config = BuckConfig.createFromReader(reader, null);
 
-    assertEquals(ImmutableSet.of(".git", ".idea"), config.getIgnoredDirectories());
+    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
+    assertEquals("Should ignore paths, sans trailing slashes", ignorePaths, ImmutableSet.of(
+        BuckConstant.BUCK_OUTPUT_DIRECTORY,
+        ".idea",
+        System.getProperty(BuckConfig.BUCK_BUCKD_DIR_KEY, ".buckd"),
+        config.getCacheDir(),
+        ".git",
+        "foo",
+        "bar",
+        "baz",
+        "a/b/c"
+    ));
+  }
+
+  @Test
+  public void testIgnorePathsWithRelativeCacheDir() throws IOException {
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[cache]",
+        "dir = cache_dir"));
+    BuckConfig config = BuckConfig.createFromReader(reader, null);
+
+    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
+    assertTrue("Relative cache directory should be in set of ignored paths",
+        ignorePaths.contains("cache_dir"));
+  }
+
+  @Test
+  public void testIgnorePathsWithAbsoluteCacheDir() throws IOException {
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[cache]",
+        "dir = /cache_dir"));
+    BuckConfig config = BuckConfig.createFromReader(reader, null);
+
+    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
+    assertFalse("Absolute cache directory should not be in set of ignored paths",
+        ignorePaths.contains("/cache_dir"));
+  }
+
+  @Test
+  public void testBuckPyIgnorePaths() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "buck_py_ignore_paths", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("test", "--all");
+    assertEquals("buck test --all should exit cleanly", 0, result.getExitCode());
   }
 
   @Test

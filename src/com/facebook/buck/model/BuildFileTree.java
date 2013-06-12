@@ -112,7 +112,7 @@ public class BuildFileTree {
 
     final Set<String> targets = Sets.newHashSet();
 
-    DirectoryTraversal traversal = new DirectoryTraversal(root) {
+    DirectoryTraversal traversal = new DirectoryTraversal(root, filesystem.getIgnorePaths()) {
       @Override public void visit(File file, String relativePath) {
         if (!BUILD_RULES_FILE_NAME.equals(file.getName())) {
           return;

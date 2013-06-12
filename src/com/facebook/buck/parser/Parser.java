@@ -97,7 +97,7 @@ public class Parser {
         BuildFileTree.constructBuildFileTree(projectFilesystem),
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
-        new ProjectBuildFileParser());
+        new ProjectBuildFileParser(projectFilesystem.getIgnorePaths()));
   }
 
   @VisibleForTesting

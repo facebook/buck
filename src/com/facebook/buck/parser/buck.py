@@ -537,7 +537,7 @@ def include_defs(name, build_env=None):
   which loads a list called NO_DX which can then be used in the build file.
   """
   if name[:2] != '//':
-    raise ValueError('include_defs argument must begin with //')
+    raise ValueError('include_defs argument "%s" must begin with //' % name)
   relative_path = name[2:]
   include_file = os.path.join(build_env['PROJECT_ROOT'], relative_path)
   execfile(include_file, build_env['BUILD_FILE_SYMBOL_TABLE'])
@@ -585,27 +585,6 @@ def get_base_path(build_env=None):
   return build_env['BASE']
 
 
-def parse_git_ignore(gitignore_data):
-  """Parse the patterns stored in a .gitignore file, returning only top-level
-  directories found in it.
-
-  Returns: a list of patterns parsed from the file.
-  """
-  lines = gitignore_data
-  dirs = []
-
-  for line in lines:
-    line = line.strip()
-    if line.startswith('/') and line.endswith('/'):
-      # line.split('/x/') results in an array with 3 elements:
-      # ['', 'x', ''], so detect paths like this based on this condition.
-      path_elements = line.split('/')
-      if len(path_elements) == 3:
-        dirs.append(path_elements[1])
-
-  return dirs
-
-
 # Inexplicably, this script appears to run faster when the arguments passed into it are absolute
 # paths. However, we want the "buck_base_path" property of each rule to be printed out to be the
 # base path of the build target that identifies the rule. That means that when parsing a BUILD file,
@@ -623,6 +602,7 @@ def main():
   parser = optparse.OptionParser()
   parser.add_option('--project_root', action='store', type='string', dest='project_root')
   parser.add_option('--include', action='append', dest='include')
+  parser.add_option('--ignore_path', action='append', dest='ignore_paths')
   (options, args) = parser.parse_args()
 
   project_root = options.project_root
@@ -635,25 +615,12 @@ def main():
   else:
     # Find all of the build files in the project root. Symlinks will not be traversed.
     # Search must be done top-down so that directory filtering works as desired.
+    ignore_paths = [posixpath.join(project_root, d) for d in options.ignore_paths or []]
     build_files = []
     for dirpath, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=False):
       # Do not walk directories that contain generated/non-source files.
-      if dirpath == project_root:
-        # TODO(user): do a better job parsing gitignore and matching patterns therein.
-        gitignore_dirs = []
-        try:
-          with open('.gitignore') as f:
-            gitignore_data = f.readlines()
-            f.close()
-
-            gitignore_dirs = parse_git_ignore(gitignore_data)
-        except:
-          # Ignore failure.
-          pass
-        excluded = ['.git'] + gitignore_dirs
-
-        # All modifications to dirnames must occur in-place.
-        dirnames[:] = [d for d in dirnames if not (d in excluded)]
+      # All modifications to dirnames must occur in-place.
+      dirnames[:] = [d for d in dirnames if not (posixpath.join(dirpath, d) in ignore_paths)]
 
       if BUILD_RULES_FILE_NAME in filenames:
         build_file = os.path.join(dirpath, BUILD_RULES_FILE_NAME)

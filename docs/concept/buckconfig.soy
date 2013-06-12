@@ -41,20 +41,6 @@ buck build app
 buck test apptest
 </pre>{/literal}
 
-<h2>[buckd]</h2>
-
-This section may define an <code>ignore</code> property that can specify a comma separated list
-of subtrees within the project root which should be ignored by Buck when it is running in daemon
-mode and monitoring the filesystem for changes that may affect build files. Typically source
-control, IDE and output directories along with the <code>.buckd</code> directory should be added to
-this list to avoid the build file cache being invalidated on every build and source control
-operation.
-
-{literal}<pre>
-[buckd]
-  ignore = .git, .buckd, .idea, buck-out
-</pre>{/literal}
-
 <h2>[buildfile]</h2>
 
 This section may define an <code>includes</code> property that can specify a
@@ -70,7 +56,6 @@ is the equivalent of manually invoking <code>include_defs('//core/DEFS')</code>
 {sp}at the start of every build file. See
 {sp}<a href="{ROOT}function/include_defs.html"><code>include_defs()</code></a>
 {sp}for more details.
-
 
 <h2>[cache]</h2>
 
@@ -186,10 +171,27 @@ want to be sure that <code>genrule()</code> was built before importing the
 project into IntelliJ because IntelliJ does not know how to build
 your <code>genrule()</code> as part of its built-in build process:
 
-
 {literal}<pre>
 [project]
   initial_targets = //java/com/facebook/schema:generate_thrift_jar
+</pre>{/literal}
+
+This section may also define an <code>ignore</code> property that specifies a
+comma-separated list of subtrees within the project root which are ignored in
+the following contexts:
+<ul>
+  <li>Buck daemon filesystem monitoring
+  <li>Filesystem traversal when searching for tests and BUCK files
+  <li>IntelliJ project indexing
+</ul>
+Buck automatically excludes its own output, e.g. <code>buck-out</code>,
+{sp}<code>.buckd</code>, and <code>.idea</code>, as well as the cache directory
+(see the "dir" setting of the "cache" section), but it makes no assumptions
+about source control systems.
+
+{literal}<pre>
+[project]
+  ignore = .git
 </pre>{/literal}
 
 

@@ -28,12 +28,14 @@ import com.facebook.buck.rules.DirArtifactCache;
 import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -80,6 +82,9 @@ class BuckConfig {
 
   private static final BuckConfig EMPTY_INSTANCE = new BuckConfig(
       ImmutableMap.<String, Map<String, String>>of(), null /* buildTargetParser */);
+
+  @VisibleForTesting
+  static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
@@ -261,23 +266,41 @@ class BuckConfig {
   }
 
   /**
-   * A (possibly empty) set of paths to sub-trees that do not contain source files,
-   * build files or files that could affect either (typically .git, .idea, .buckd, buck-out, etc.)
+   * A set of paths to subtrees that do not contain source files, build files or files that could
+   * affect either (buck-out, .idea, .buckd, buck-cache, .git, etc.).
    */
-  public ImmutableSet<String> getIgnoredDirectories() {
-    final ImmutableMap<String, String> directoriesConfig = getEntriesForSection("buckd");
-    final String EXCLUDED_KEY = "ignore";
+  public ImmutableSet<String> getIgnorePaths() {
+    final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
+    final String IGNORE_KEY = "ignore";
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
-    if (!directoriesConfig.containsKey(EXCLUDED_KEY)) {
-      return ImmutableSet.of();
+    builder.add(BuckConstant.BUCK_OUTPUT_DIRECTORY);
+    builder.add(".idea");
+
+    // Take care not to ignore absolute paths.
+    String buckdDir = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
+    String cacheDir = getCacheDir();
+    for (String path : ImmutableList.of(buckdDir, cacheDir)) {
+      if (!path.isEmpty() && path.charAt(0) != '/') {
+        builder.add(path);
+      }
     }
 
-    final String excludedString = directoriesConfig.get(EXCLUDED_KEY);
-    return ImmutableSet.copyOf(
-        Splitter.on(',')
-        .omitEmptyStrings()
-        .trimResults()
-        .split(excludedString));
+    if (projectConfig.containsKey(IGNORE_KEY)) {
+      builder.addAll(Splitter.on(',')
+          .omitEmptyStrings()
+          .trimResults()
+          .split(projectConfig.get(IGNORE_KEY)));
+    }
+
+    // Normalize paths in order to eliminate trailing '/' characters and whatnot.
+    return ImmutableSet.<String>builder().addAll(Iterables.transform(builder.build(),
+        new Function<String, String>() {
+      @Override
+      public String apply(String path) {
+        return new File(path).getPath();
+      }
+    })).build();
   }
 
   @Nullable
@@ -468,8 +491,13 @@ class BuckConfig {
     }
   }
 
+  @VisibleForTesting
+  String getCacheDir() {
+    return getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+  }
+
   private ArtifactCache createDirArtifactCache() {
-    String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+    String cacheDir = getCacheDir();
     File dir = new File(cacheDir);
     try {
       return new DirArtifactCache(dir);

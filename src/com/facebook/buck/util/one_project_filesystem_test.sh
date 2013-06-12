@@ -10,7 +10,7 @@ set -e
 # At the time of this writing, this occurs in src/com/facebook/buck/cli/Main.java, which is
 # sensible because a ProjectFilesystem should be created at the start of a Buck process and
 # then injected throughout.
-NUM=`find src -name '*.java' | xargs grep 'new ProjectFilesystem(' | wc -l`
+NUM=`find src -name '*.java' | xargs grep ' = new ProjectFilesystem(' | wc -l`
 
 # Remove leading and trailing whitespace.
 NUM=$(echo $NUM)
