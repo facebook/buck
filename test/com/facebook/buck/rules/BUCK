@@ -27,6 +27,7 @@ java_test(
   deps = [
     '//lib:easymock',
     '//lib:guava',
+    '//lib:hamcrest-core',
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/graph:graph',
