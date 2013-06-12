@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
+import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
@@ -128,7 +129,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   private final Optional<String> proguardConfig;
   private final boolean compressResources;
   private final ImmutableSet<String> primaryDexSubstrings;
-  private final Optional<String> resourceFilter;
+  private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final Optional<TargetCpuType> cpuFilter;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
@@ -152,7 +153,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       Optional<SourcePath> proguardConfig,
       boolean compressResources,
       Set<String> primaryDexSubstrings,
-      Optional<String> resourceFilter,
+      FilterResourcesStep.ResourceFilter resourceFilter,
       Optional<TargetCpuType> cpuFilter) {
     super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
@@ -208,7 +209,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         .set("compressResources", compressResources)
         .set("primaryDexSubstrings", primaryDexSubstrings)
         .set("outputGenDirectory", outputGenDirectory)
-        .set("resourceFilter", resourceFilter);
+        .set("resourceFilter", resourceFilter.getDescription());
    }
 
   public ImmutableSortedSet<BuildRule> getBuildRulesToExcludeFromDex() {
@@ -231,7 +232,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return this.compressResources;
   }
 
-  public Optional<String> getResourceFilter() {
+  public FilterResourcesStep.ResourceFilter getResourceFilter() {
     return this.resourceFilter;
   }
 
@@ -323,16 +324,17 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     Set<String> resDirectories = transitiveDependencies.resDirectories;
     Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
 
-    Optional<String> resourceFilter = getResourceFilter();
 
+    FilterResourcesStep.ResourceFilter resourceFilter = getResourceFilter();
     // If resource filtering was requested (currently only by dpi).
-    if (resourceFilter.isPresent()) {
+    if (resourceFilter.isEnabled()) {
       FilterResourcesStep filterResourcesCommand = new FilterResourcesStep(
           resDirectories,
           new File(getBinPath("__filtered__%s__")),
-          resourceFilter.get(),
+          resourceFilter.getDensity(),
           DefaultFilteredDirectoryCopier.getInstance(),
-          FilterResourcesStep.DefaultDrawableFinder.getInstance()
+          FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+          resourceFilter.shouldDownscale() ? FilterResourcesStep.ImageMagickScaler.getInstance() : null
       );
       commands.add(filterResourcesCommand);
       resDirectories = filterResourcesCommand.getFilteredResourceDirectories();
@@ -908,7 +910,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private boolean compressResources = false;
     private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
-    private Optional<String> resourceFilter = Optional.absent();
+    private FilterResourcesStep.ResourceFilter resourceFilter =
+        new FilterResourcesStep.ResourceFilter(ImmutableList.<String>of());
     private Optional<TargetCpuType> cpuFilter = Optional.absent();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
@@ -1011,7 +1014,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       return this;
     }
 
-    public Builder setResourceFilter(Optional<String> resourceFilter) {
+    public Builder setResourceFilter(ResourceFilter resourceFilter) {
       this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
       return this;
     }

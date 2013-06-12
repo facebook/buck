@@ -31,17 +31,14 @@ import java.util.Set;
 
 public class Filters {
 
-  // TODO(user): maybe support ldpi in the future. So far it's a non issue. it's implicitly
-  // treates as a non-density qualifier because it's not in ORDERING, so it's kept separate of
-  // all others. We don't have enough ldpi drawables for this to be worth pursuing right now.
 
-  private static final ImmutableMap<String, ImmutableList<String>> ORDERING = ImmutableMap.of(
+  public static final ImmutableMap<String, ImmutableList<String>> ORDERING = ImmutableMap.of(
       "mdpi", ImmutableList.of("mdpi", "", "hdpi", "xhdpi"),
       "hdpi", ImmutableList.of("hdpi", "xhdpi", "mdpi", ""),
       "xhdpi", ImmutableList.of("xhdpi", "hdpi", "mdpi", "")
   );
 
-  static class Qualifiers {
+  public static class Qualifiers {
     public final String density;
     public final String others;
 

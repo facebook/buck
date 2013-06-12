@@ -122,6 +122,13 @@ public class ProjectFilesystem {
   }
 
   /**
+   * Allows {@link java.io.File#listFiles} to be faked in tests.
+   */
+  public File[] listFiles(String pathRelativeToProjectRoot) {
+    return getFileForRelativePath(pathRelativeToProjectRoot).listFiles();
+  }
+
+  /**
    * Recursively delete everything under the specified path.
    */
   public void rmdir(String path, ProcessExecutor processExecutor) throws IOException {

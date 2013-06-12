@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -30,8 +31,12 @@ public class BashStep extends ShellStep {
 
   private final String bashCommand;
 
-  public BashStep(String bashCommand) {
-    this.bashCommand = Preconditions.checkNotNull(bashCommand);
+  /**
+   * @param bashCommand command to execute. For convenience, multiple arguments are supported
+   *     and will be joined with space characters if more than one is present.
+   */
+  public BashStep(String... bashCommand) {
+    this.bashCommand = Joiner.on(' ').join(Preconditions.checkNotNull(bashCommand));
   }
 
   @Override

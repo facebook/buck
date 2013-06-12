@@ -108,7 +108,7 @@ public class FiltersTest {
     Set<File> mdpiExpected = absoluteFileSet(
         path("dmhx", DRAWABLE, HDPI, XHDPI), // We only keep the drawable-mdpi.
         path("dmh", DRAWABLE, HDPI), // We only keep the drawable-mdpi.
-        path("dmx", DRAWABLE, XHDPI), // We only keep the drwable-mdpi.
+        path("dmx", DRAWABLE, XHDPI), // We only keep the drawable-mdpi.
         path("hx", XHDPI), // drawable-hdpi closest, drawable-xhdpi removed.
         path("md", DRAWABLE), // drawable-mdpi preferred over drawable.
         path("dmhx_rx", DRAWABLE, HDPI, XHDPI), // We only keep drawable-mdpi and drawable-xhdpi-ro.
