@@ -98,11 +98,19 @@ A <code>java_test()</code> rule is used to define a set of
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
-  Same as <a href="java_library.html"><code>java_library()</code></a>. 
+  Same as <a href="java_library.html"><code>java_library()</code></a>.
   {/param}
 {/call}
 
 {call buck.visibility_arg /}
+
+{call buck.arg}
+  {param name: 'vm_args' /}
+  {param default : '[]' /}
+  {param desc}
+  Runtime arguments to the JVM running the tests.
+  {/param}
+{/call}
 
 {/param} // close args
 
