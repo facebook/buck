@@ -83,7 +83,8 @@ public class JUnitStep extends ShellStep {
         directoryForTestResults,
         isCodeCoverageEnabled,
         isDebugEnabled,
-        System.getProperty("buck.testrunner_classes"));
+        System.getProperty("buck.testrunner_classes",
+            new File("build/testrunner/classes").getAbsolutePath()));
   }
 
   @VisibleForTesting

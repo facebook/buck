@@ -124,6 +124,7 @@ JYTHON_VISIBILITY = [
   '//src/com/facebook/buck/shell:shell',
   '//test/com/facebook/buck/cli:testutil',
   '//test/com/facebook/buck/parser:parser',
+  '//test/com/facebook/buck/testutil/integration:integration',
 ]
 
 prebuilt_jar(
