@@ -16,6 +16,7 @@
 
 package com.facebook.buck.junit;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;
@@ -26,11 +27,13 @@ import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * JUnit-4-compatible test class runner that supports the concept of a "default timeout." If the
@@ -100,7 +103,8 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
    * <strong>IMPORTANT</strong> In JUnit 4.11, this method is tagged as deprecated with the note:
    * "Will be private soon: use Rules instead." That suggests that we should override
    * {@link #getTestRules(Object)} so that it includes an additional {@link Timeout}, if
-   * appropriate. However, {@link Timeout} was not introduced until JUnit 4.7 and {@link TestRule}
+   * appropriate. However, {@link Timeout} was not introduced until JUnit 4.7 and
+   * {@link org.junit.rules.TestRule}
    * was not introduced until JUnit 4.9, so the current solution is more backwards-compatible. We
    * will likely have to revisit this in the future.
    */
@@ -110,11 +114,35 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     if (timeout > 0) {
       return new FailOnTimeout(next, timeout);
     } else if (defaultTestTimeoutMillis > 0) {
-      return new FailOnTimeout(next, defaultTestTimeoutMillis);
+      // If the test class has a Timeout @Rule, then that should supercede the default timeout.
+      // Note that the Timeout is likely being used to workaround the threading issues with
+      // org.junit.Test#timeout(): https://github.com/junit-team/junit/issues/686.
+      return hasTimeoutRule() ? next : new FailOnTimeout(next, defaultTestTimeoutMillis);
     } else {
       return next;
     }
   }
+
+  /**
+   * @return {@code true} if the test class has any fields annotated with {@code Rule} whose type
+   *     is {@link Timeout}.
+   */
+  private boolean hasTimeoutRule() {
+    // Many protected convenience methods in BlockJUnit4ClassRunner that are available in JUnit 4.11
+    // such as getTestRules(Object) were not public until
+    // https://github.com/junit-team/junit/commit/8782efa08abf5d47afdc16740678661443706740,
+    // which appears to be JUnit 4.9. Because we allow users to use JUnit 4.7, we need to include a
+    // custom implementation that is backwards compatible to JUnit 4.7.
+    List<FrameworkField> fields = getTestClass().getAnnotatedFields(Rule.class);
+    for (FrameworkField field : fields) {
+      if (field.getField().getType().equals(Timeout.class)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
 
   // Copied from BuckBlockJUnit4ClassRunner in JUnit 4.11.
   private long getTimeout(Test annotation) {
