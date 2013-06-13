@@ -168,9 +168,6 @@ public class JUnitStep extends ShellStep {
     // tests written to those file descriptors, as well.
     args.add(directoryForTestResults);
 
-    boolean shouldPrintOutWhenTestsStartAndStop = context.getVerbosity().shouldPrintCommand();
-    args.add(String.valueOf(shouldPrintOutWhenTestsStartAndStop));
-
     // Add the default test timeout.
     args.add(String.valueOf(context.getDefaultTestTimeoutMillis()));
 
@@ -180,11 +177,6 @@ public class JUnitStep extends ShellStep {
     }
 
     return args.build();
-  }
-
-  @Override
-  protected boolean shouldPrintStdErr(ExecutionContext context) {
-    return true;
   }
 
   private void warnUser(ExecutionContext context, String message) {
