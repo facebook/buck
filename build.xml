@@ -178,6 +178,7 @@
             classes.
           -->
           <include name="**/*Test.java" />
+          <exclude name="**/testdata/**" />
         </fileset>
       </batchtest>
       <classpath refid="tests.classpath" />
