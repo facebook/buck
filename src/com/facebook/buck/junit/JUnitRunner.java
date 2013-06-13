@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,17 +67,14 @@ public final class JUnitRunner {
   private final List<String> testClassNames;
   @SuppressWarnings("unused")
   private final long defaultTestTimeoutMillis;
-  private final boolean shouldPrintOutWhenTestsStartAndStop;
 
   public JUnitRunner(
       File outputDirectory,
       List<String> testClassNames,
-      long defaultTestTimeoutMillis,
-      boolean shouldPrintOutWhenTestsStartAndStop) {
+      long defaultTestTimeoutMillis) {
     this.outputDirectory = outputDirectory;
     this.testClassNames = testClassNames;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
-    this.shouldPrintOutWhenTestsStartAndStop = shouldPrintOutWhenTestsStartAndStop;
   }
 
   public void run() throws Throwable {
@@ -103,13 +99,6 @@ public final class JUnitRunner {
             continue;
           }
 
-          PrintStream stderr = System.err;
-
-          if (shouldPrintOutWhenTestsStartAndStop) {
-            stderr.printf("START TEST %s#%s\n", method.getDeclaringClass(), method.getName());
-            stderr.flush();
-          }
-
           Runner runner = runnerBuilder.runnerForClass(testClass);
           Callable<Result> runTestAndProduceJUnitResult;
           if (runner instanceof BuckBlockJUnit4ClassRunner) {
@@ -132,11 +121,6 @@ public final class JUnitRunner {
 
           TestResult testResult = TestResult.runTestMethod(runTestAndProduceJUnitResult, method);
           results.add(testResult);
-
-          if (shouldPrintOutWhenTestsStartAndStop) {
-            stderr.printf("STOP TEST %s#%s\n", method.getDeclaringClass(), method.getName());
-            stderr.flush();
-          }
         }
       }
       writeResult(className, results);
@@ -267,7 +251,6 @@ public final class JUnitRunner {
    * Expected arguments are:
    * <ul>
    *   <li>(string) output directory
-   *   <li>(boolean) should print when tests start and stop
    *   <li>(long) default timeout in milliseconds (0 for no timeout)
    *   <li>(string...) fully-qualified names of test classes
    * </ul>
@@ -277,8 +260,10 @@ public final class JUnitRunner {
     if (args.length == 0) {
       System.err.println("Must specify an output directory.");
       System.exit(1);
-    }
-    if (args.length < 2) {
+    } else if (args.length == 1) {
+      System.err.println("Must specify an output directory and a default timeout.");
+      System.exit(1);
+    } else if (args.length == 2) {
       System.err.println("Must specify at least one test.");
       System.exit(1);
     }
@@ -290,18 +275,15 @@ public final class JUnitRunner {
       System.exit(1);
     }
 
-    boolean shouldPrintOutWhenTestsStartAndStop = Boolean.parseBoolean(args[1]);
-
-    long defaultTestTimeoutMillis = Long.parseLong(args[2]);
+    long defaultTestTimeoutMillis = Long.parseLong(args[1]);
 
     // Each argument other than the first one should be a class name to run.
-    List<String> testClassNames = Arrays.asList(args).subList(3, args.length);
+    List<String> testClassNames = Arrays.asList(args).subList(2, args.length);
 
     // Run the tests.
     new JUnitRunner(outputDirectory,
         testClassNames,
-        defaultTestTimeoutMillis,
-        shouldPrintOutWhenTestsStartAndStop)
+        defaultTestTimeoutMillis)
     .run();
 
     // Explicitly exit to force the test runner to complete even if tests have sloppily left behind
