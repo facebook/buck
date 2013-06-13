@@ -311,7 +311,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     if (successFile.isPresent()) {
       try {
         String ruleKeyHash = Files.readFirstLine(successFile.get(), Charsets.US_ASCII);
-        return Optional.of(new RuleKey(ruleKeyHash, this));
+        return Optional.of(new RuleKey(ruleKeyHash));
       } catch (IOException|NumberFormatException|NullPointerException e) {
         // As we transition into a new format for a .success file, old versions of .success files
         // may be lying around, which could throw any of these exceptions. When this happens, we

@@ -150,7 +150,7 @@ public class InputRule implements BuildRule {
     if (this.outputKey != null) {
       return this.outputKey;
     }
-    OutputKey outputKey = new OutputKey(getOutput(), this);
+    OutputKey outputKey = new OutputKey(getOutput());
     this.outputKey = OutputKey.filter(outputKey);
     return outputKey;
   }

@@ -25,7 +25,6 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.Maps;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.util.Map;
@@ -37,8 +36,7 @@ public class RuleKeyTest {
 
   @Test
   public void testRuleKeyFromHashString() {
-    RuleKey ruleKey = new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208",
-        EasyMock.createMock(BuildRule.class));
+    RuleKey ruleKey = new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208");
     assertEquals("19d2558a6bd3a34fb3f95412de9da27ed32fe208", ruleKey.toString());
   }
 
