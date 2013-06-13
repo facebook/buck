@@ -99,7 +99,8 @@ A <code>java_test()</code> rule is used to define a set of
   {param default : '[]' /}
   {param desc}
   Same as <a href="java_library.html"><code>java_library()</code></a>.
-  Must include JUnit as a dependency (version 4.5 or later).
+  // org.junit.rules.Timeout was not introduced until 4.7.
+  Must include JUnit as a dependency (version 4.7 or later).
   {/param}
 {/call}
 
