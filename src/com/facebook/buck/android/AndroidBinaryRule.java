@@ -231,8 +231,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  public File getOutput() {
-    return new File(getApkPath());
+  public String getPathToOutputFile() {
+    return getApkPath();
   }
 
   @Override

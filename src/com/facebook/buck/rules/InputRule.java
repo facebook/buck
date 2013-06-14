@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -141,16 +142,20 @@ public class InputRule implements BuildRule {
   }
 
   @Override
-  public File getOutput() {
-    return inputFile;
+  public String getPathToOutputFile() {
+    return inputFile.getPath();
   }
 
   @Override
-  public OutputKey getOutputKey() {
+  public OutputKey getOutputKey(ProjectFilesystem projectFilesystem) {
     if (this.outputKey != null) {
       return this.outputKey;
     }
-    OutputKey outputKey = new OutputKey(getOutput());
+    String pathToOutputFile = getPathToOutputFile();
+    File outputFile = pathToOutputFile == null
+        ? null
+        : projectFilesystem.getFileForRelativePath(pathToOutputFile);
+    OutputKey outputKey = new OutputKey(outputFile);
     this.outputKey = OutputKey.filter(outputKey);
     return outputKey;
   }

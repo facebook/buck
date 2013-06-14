@@ -60,6 +60,7 @@ public interface AnnotationProcessingData {
 
   /**
    * Path to search for annotation processors.
+   * Each element is a path relative to the project root.
    */
   public ImmutableSortedSet<String> getSearchPathElements();
 

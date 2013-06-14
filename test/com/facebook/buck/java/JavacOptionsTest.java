@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.BuildRule;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,7 +118,8 @@ public class JavacOptionsTest {
 
   private String optionsAsString(JavacOptions options) {
     ImmutableList.Builder<String> paramBuilder = ImmutableList.builder();
-    options.appendOptionsToList(paramBuilder);
+
+    options.appendOptionsToList(paramBuilder, /* pathRelativizer */ Functions.<String>identity());
 
     ImmutableList<String> params = paramBuilder.build();
     return " " + Joiner.on(" ").join(params) + " ";

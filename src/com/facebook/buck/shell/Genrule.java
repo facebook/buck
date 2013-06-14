@@ -169,8 +169,8 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  public File getOutput() {
-    return new File(getOutputFilePath());
+  public String getPathToOutputFile() {
+    return getOutputFilePath();
   }
 
   @Override
@@ -203,9 +203,9 @@ public class Genrule extends AbstractCachingBuildRule {
     }
     processedBuildRules.add(rule);
 
-    File output = rule.getOutput();
+    String output = rule.getPathToOutputFile();
     if (output != null) {
-      appendTo.add(relativeToAbsolutePathFunction.apply(output.getPath()));
+      appendTo.add(relativeToAbsolutePathFunction.apply(output));
     }
 
     for (BuildRule dep : rule.getDeps()) {

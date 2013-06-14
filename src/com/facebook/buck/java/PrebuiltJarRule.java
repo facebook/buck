@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -143,8 +142,8 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public File getOutput() {
-    return new File(getBinaryJar());
+  public String getPathToOutputFile() {
+    return getBinaryJar();
   }
 
   @Override

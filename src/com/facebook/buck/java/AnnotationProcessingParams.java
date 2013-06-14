@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -159,9 +158,9 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         // We're using raw strings here to avoid circular dependencies.
         // TODO(simons): don't use raw strings.
         if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
-          File output = rule.getOutput();
-          if (output != null) {
-            searchPathElements.add(output.getAbsolutePath());
+          String pathToOutput = rule.getPathToOutputFile();
+          if (pathToOutput != null) {
+            searchPathElements.add(pathToOutput);
           }
         } else if (rule instanceof HasClasspathEntries) {
           HasClasspathEntries javaLibraryRule = (HasClasspathEntries)rule;

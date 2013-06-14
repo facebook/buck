@@ -77,7 +77,7 @@ public class JavaBinaryRuleTest {
     // run from a /tmp directory, if necessary.
     String expectedClasspath =
         basePath + PATH_TO_GUAVA_JAR + ":" +
-        basePath + javaLibraryRule.getOutput().getPath();
+        basePath + javaLibraryRule.getPathToOutputFile();
 
     String expectedCommand = String.format("java -classpath %s com.facebook.base.Main",
         expectedClasspath);

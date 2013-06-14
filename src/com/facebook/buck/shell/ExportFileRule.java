@@ -16,12 +16,12 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
@@ -79,7 +79,7 @@ import javax.annotation.Nullable;
 public class ExportFileRule extends AbstractCachingBuildRule {
 
   private final String src;
-  private final Supplier<File> out;
+  private final Supplier<String> out;
 
 
   @VisibleForTesting
@@ -92,16 +92,14 @@ public class ExportFileRule extends AbstractCachingBuildRule {
 
     final String outName = out.or(shortName);
 
-    this.out = Suppliers.memoize(new Supplier<File>() {
+    this.out = Suppliers.memoize(new Supplier<String>() {
       @Override
-      public File get() {
+      public String get() {
         String name = new File(outName).getName();
-        String outputPath = String.format("%s/%s%s",
+        return String.format("%s/%s%s",
             BuckConstant.GEN_DIR,
             getBuildTarget().getBasePathWithSlash(),
             name);
-
-        return new File(outputPath);
       }
     });
   }
@@ -119,17 +117,17 @@ public class ExportFileRule extends AbstractCachingBuildRule {
   @Override
   protected List<Step> buildInternal(BuildContext context) throws IOException {
     File inputFile = context.getProjectFilesystem().getFileForRelativePath(src);
-    File outputFile = out.get();
+    String pathToOutputFile = out.get();
 
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
-        .add(new MkdirAndSymlinkFileStep(inputFile, outputFile));
+        .add(new MkdirAndSymlinkFileStep(inputFile, pathToOutputFile));
 
     return builder.build();
   }
 
   @Nullable
   @Override
-  public File getOutput() {
+  public String getPathToOutputFile() {
     return out.get();
   }
 

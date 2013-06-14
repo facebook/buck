@@ -18,10 +18,12 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import javax.annotation.Nullable;
 
@@ -57,7 +59,8 @@ public class JavacOptions {
     this.annotationProcessingData = Preconditions.checkNotNull(annotationProcessingData);
   }
 
-  public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder) {
+  public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
+      Function<String, String> pathRelativizer) {
     Preconditions.checkNotNull(optionsBuilder);
 
     // Add some standard options.
@@ -88,7 +91,9 @@ public class JavacOptions {
 
       // Specify processorpath to search for processors.
       optionsBuilder.add("-processorpath",
-          Joiner.on(':').join(annotationProcessingData.getSearchPathElements()));
+          Joiner.on(':').join(
+              Iterables.transform(annotationProcessingData.getSearchPathElements(),
+                  pathRelativizer)));
 
       // Specify names of processors.
       if (!annotationProcessingData.getNames().isEmpty()) {

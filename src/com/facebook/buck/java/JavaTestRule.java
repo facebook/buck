@@ -246,10 +246,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       Preconditions.checkState(rule.isRuleBuilt(),
           "Rule must be built so that the classes folder is available");
       String outputPath;
-      File outputFile = rule.getOutput();
-      if (outputFile != null) {
-        outputPath = context.getProjectFilesystem().getPathRelativizer().apply(
-            outputFile.getPath());
+      String relativeOutputPath = rule.getPathToOutputFile();
+      if (relativeOutputPath != null) {
+        outputPath = context.getProjectFilesystem().getPathRelativizer().apply(relativeOutputPath);
       } else {
         outputPath = null;
       }

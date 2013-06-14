@@ -120,17 +120,16 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    * and generate a EMMA instr shell command object, which can run in a CommandRunner.
    */
   private Step getInstrumentCommand(
-      ImmutableSet<JavaLibraryRule> rulesUnderTest) {
+      ImmutableSet<JavaLibraryRule> rulesUnderTest, ProjectFilesystem projectFilesystem) {
     ImmutableSet.Builder<String> pathsToInstrumentedClasses = ImmutableSet.builder();
 
-    // Add all class directories of java libraries that we are testing to -instrpath.
+    // Add all JAR files produced by java libraries that we are testing to -instrpath.
     for (JavaLibraryRule path : rulesUnderTest) {
-      File output = path.getOutput();
-      if (output == null) {
+      String pathToOutput = path.getPathToOutputFile();
+      if (pathToOutput == null) {
         continue;
       }
-      String classDirectory = output.getAbsolutePath();
-      pathsToInstrumentedClasses.add(classDirectory);
+      pathsToInstrumentedClasses.add(projectFilesystem.getPathRelativizer().apply(pathToOutput));
     }
 
     // Run EMMA instrumentation. This will instrument the classes we generated in the build command.
@@ -337,7 +336,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         try {
           stepRunner.runStep(
               new MakeCleanDirectoryStep(JUnitStep.EMMA_OUTPUT_DIR));
-          stepRunner.runStep(getInstrumentCommand(rulesUnderTest));
+          stepRunner.runStep(
+              getInstrumentCommand(
+                  rulesUnderTest,
+                  buildContext.getProjectFilesystem()));
         } catch (StepFailedException e) {
           console.printFailureWithoutStacktrace(e);
           return 1;

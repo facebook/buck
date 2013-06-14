@@ -72,7 +72,7 @@ public class JavacInMemoryStep implements Step {
       Set<String> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    javacOptions.appendOptionsToList(builder);
+    javacOptions.appendOptionsToList(builder, context.getProjectFilesystem().getPathRelativizer());
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

@@ -127,9 +127,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     for (Map.Entry<String, BuildRule> target : matchingBuildRules.entrySet()) {
       String output = target.getKey();
       if (showOutput) {
-        File outputFile = target.getValue().getOutput();
-        if (outputFile != null) {
-          output += " " + outputFile.getPath();
+        String outputPath = target.getValue().getPathToOutputFile();
+        if (outputPath != null) {
+          output += " " + outputPath;
         }
       }
       getStdOut().println(output);
@@ -205,9 +205,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         continue;
       }
 
-      File outputFile = buildRule.getOutput();
-      if (outputFile != null) {
-        targetRule.put("buck.output_file", outputFile.getPath());
+      String outputPath = buildRule.getPathToOutputFile();
+      if (outputPath != null) {
+        targetRule.put("buck.output_file", outputPath);
       }
 
       // Sort the rule items, both so we have a stable order for unit tests and

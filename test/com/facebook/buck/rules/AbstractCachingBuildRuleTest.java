@@ -94,7 +94,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // Replay the mocks to instantiate the AbstractCachingBuildRule.
     replayAll();
-    File output = new File("some_file");
+    String output = "some_file";
+    File outputFile = new File(output);
     List<Step> buildSteps = Lists.newArrayList();
     AbstractCachingBuildRule cachingRule = createRule(
         ImmutableSet.of(dep),
@@ -161,11 +162,12 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     projectFilesystem.createParentDirs(new File(pathToSuccessFile));
     Capture<Iterable<String>> linesCapture = new Capture<Iterable<String>>();
     projectFilesystem.writeLinesToPath(capture(linesCapture), eq(pathToSuccessFile));
+    expect(projectFilesystem.getFileForRelativePath(output)).andReturn(outputFile).times(2);
 
     // There will initially be a cache miss, later followed by a cache store.
     RuleKey expectedRuleKey = new RuleKey(expectedRuleKeyHash);
-    expect(artifactCache.fetch(expectedRuleKey, output)).andReturn(false);
-    artifactCache.store(expectedRuleKey, output);
+    expect(artifactCache.fetch(expectedRuleKey, outputFile)).andReturn(false);
+    artifactCache.store(expectedRuleKey, outputFile);
     expect(context.getArtifactCache()).andReturn(artifactCache).times(2);
 
     // The dependent rule will be built immediately with a distinct rule key.
@@ -233,7 +235,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
       final Iterable<InputRule> inputRules,
       final List<Step> buildSteps,
       final Optional<RuleKey> ruleKeyOnDisk,
-      @Nullable final File output) {
+      @Nullable final String output) {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
@@ -255,7 +257,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
       }
 
       @Override
-      public File getOutput() {
+      public String getPathToOutputFile() {
         return output;
       }
 

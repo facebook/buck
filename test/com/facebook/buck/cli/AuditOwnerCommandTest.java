@@ -72,12 +72,12 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
-    public File getOutput() {
+    public String getPathToOutputFile() {
       return null;
     }
 
     @Override
-    public final OutputKey getOutputKey() {
+    public final OutputKey getOutputKey(ProjectFilesystem projectFilesystem) {
       throw new UnsupportedOperationException();
     }
 

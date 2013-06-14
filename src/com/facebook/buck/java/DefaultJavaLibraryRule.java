@@ -87,7 +87,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final ImmutableSortedSet<String> resources;
 
-  private final Optional<File> outputJar;
+  private final Optional<String> outputJar;
 
   private final List<String> inputsToConsiderForCachingPurposes;
 
@@ -159,8 +159,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
-      File file = new File(getOutputJarPath(getBuildTarget()));
-      this.outputJar = Optional.of(file);
+      this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
     } else {
       this.outputJar = Optional.absent();
     }
@@ -185,7 +184,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
               outputClasspathEntries = ImmutableSet.copyOf(
                   getTransitiveClasspathEntries().values());
             } else if (outputJar.isPresent()) {
-              outputClasspathEntries = ImmutableSet.of(getOutput().getPath());
+              outputClasspathEntries = ImmutableSet.of(getPathToOutputFile());
             } else {
               outputClasspathEntries = ImmutableSet.of();
             }
@@ -212,8 +211,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
             // Only add ourselves to the classpath if there's a jar to be built.
             if (outputJar.isPresent()) {
-              classpathEntries.putAll(DefaultJavaLibraryRule.this,
-                  getOutput().getPath());
+              classpathEntries.putAll(DefaultJavaLibraryRule.this, getPathToOutputFile());
             }
 
             return classpathEntries.build();
@@ -277,12 +275,18 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return commands.build();
   }
 
-  private static String getOutputJarPath(BuildTarget target) {
+  private static String getOutputJarDirPath(BuildTarget target) {
     return String.format(
-        "%s/%slib__%s__output/%s.jar",
+        "%s/%slib__%s__output",
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
-        target.getShortName(),
+        target.getShortName());
+  }
+
+  private static String getOutputJarPath(BuildTarget target) {
+    return String.format(
+        "%s/%s.jar",
+        getOutputJarDirPath(target),
         target.getShortName());
   }
 
@@ -453,9 +457,9 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     addResourceCommands(commands, outputDirectory, context.getJavaPackageFinder());
 
     if (outputJar.isPresent()) {
-      commands.add(new MakeCleanDirectoryStep(outputJar.get().getParent()));
+      commands.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));
       commands.add(new JarDirectoryStep(
-          outputJar.get().getPath(),
+          outputJar.get(),
           Collections.singleton(outputDirectory),
           /* mainClass */ null,
           /* manifestFile */ null));
@@ -595,7 +599,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public File getOutput() {
+  public String getPathToOutputFile() {
     return outputJar.orNull();
   }
 

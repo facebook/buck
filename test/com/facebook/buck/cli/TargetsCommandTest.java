@@ -94,7 +94,7 @@ public class TargetsCommandTest {
         buildTarget,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
-    buildRule.setOutputFile(new File(outputFile));
+    buildRule.setOutputFile(outputFile);
 
     buildRules.put(buildTarget.getFullyQualifiedName(), buildRule);
     return buildRules;

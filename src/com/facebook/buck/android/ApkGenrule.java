@@ -20,9 +20,9 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -30,7 +30,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -107,8 +106,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   }
 
   @Override
-  public File getOutput() {
-    return new File(getApkPath());
+  public String getPathToOutputFile() {
+    return getApkPath();
   }
 
   public static Builder newApkGenruleBuilder() {

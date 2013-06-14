@@ -259,8 +259,12 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // should organize our output directories so we can solve this for all rules at once.
 
     // Before deciding to build, check the ArtifactCache.
-    File output = getOutput();
-    boolean fromCache = (output != null && context.getArtifactCache().fetch(getRuleKey(), output));
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    String pathToOutputFile = getPathToOutputFile();
+    boolean fromCache = pathToOutputFile != null
+        && context.getArtifactCache().fetch(
+            getRuleKey(),
+            projectFilesystem.getFileForRelativePath(pathToOutputFile));
     CacheResult cacheResult = fromCache ? CacheResult.HIT : CacheResult.MISS;
 
     // Run the steps to build this rule since it was not found in the cache.
@@ -276,9 +280,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // Record that the build rule has built successfully.
     try {
-      recordBuildRuleCompleted(context.getProjectFilesystem(),
-          context.getArtifactCache(),
-          fromCache);
+      recordBuildRuleCompleted(projectFilesystem, context.getArtifactCache(), fromCache);
     } catch (IOException e) {
       // If we failed to record the success, then we are in a potentially bad state where we have a
       // new output but an old RuleKey record.
@@ -360,8 +362,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     writeSuccessFile(projectFilesystem);
 
     // Store output to cache.
-    File output = getOutput();
-    if (output != null && !fromCache) {
+    String pathToOutputFile = getPathToOutputFile();
+    if (pathToOutputFile != null && !fromCache) {
+      File output = projectFilesystem.getFileForRelativePath(pathToOutputFile);
       artifactCache.store(getRuleKey(), output);
     }
   }
