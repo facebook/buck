@@ -105,6 +105,12 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
       String trimmedResourceFilter = Strings.emptyToNull(resourceFilter.get().trim());
       builder.setResourceFilter(Optional.fromNullable(trimmedResourceFilter));
     }
+
+    // CPU ABI
+    Optional<String> cpuFilter = params.getOptionalStringAttribute("cpu_filter");
+    if (cpuFilter.isPresent()) {
+      builder.setCpuFilter(Strings.emptyToNull(cpuFilter.get().trim()));
+    }
   }
 
 }
