@@ -16,12 +16,12 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 public class PythonLibraryRule extends AbstractCachingBuildRule {
 
@@ -116,21 +115,21 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder
+  public static class Builder extends AbstractBuildRuleBuilder<PythonLibraryRule>
       implements SrcsAttributeBuilder {
     protected ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
 
     private Builder() {}
 
     @Override
-    public AbstractBuildRuleBuilder addSrc(String src) {
+    public Builder addSrc(String src) {
       srcs.add(src);
       return this;
     }
 
     @Override
-    public PythonLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+    public PythonLibraryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleBuilderParams);
       return new PythonLibraryRule(buildRuleParams, srcs.build());
     }
   }

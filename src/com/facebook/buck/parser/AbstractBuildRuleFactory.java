@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.util.HumanReadableException;
@@ -29,22 +28,22 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
 @Beta
-public abstract class AbstractBuildRuleFactory implements BuildRuleFactory {
+public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilder<?>>
+    implements BuildRuleFactory<T> {
 
-  protected abstract AbstractBuildRuleBuilder newBuilder();
+  protected abstract T newBuilder();
 
   /**
    * Subclasses should override this method to extract any information from the Python object that
    * is not extracted by default.
    */
-  protected abstract void amendBuilder(AbstractBuildRuleBuilder builder,
-      BuildRuleFactoryParams params)
+  protected abstract void amendBuilder(T builder, BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException;
 
   @Override
-  public BuildRuleBuilder newInstance(BuildRuleFactoryParams params)
+  public T newInstance(BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
-    AbstractBuildRuleBuilder builder = newBuilder();
+    T builder = newBuilder();
     BuildTarget target = params.target;
 
     // name

@@ -48,8 +48,8 @@ import java.util.Map;
  * A registry of all the build rules types understood by Buck.
  */
 public class KnownBuildRuleTypes {
-  
-  private Map<BuildRuleType, BuildRuleFactory> factories = Maps.newConcurrentMap();
+
+  private Map<BuildRuleType, BuildRuleFactory<?>> factories = Maps.newConcurrentMap();
   private Map<String, BuildRuleType> types = Maps.newConcurrentMap();
 
   public KnownBuildRuleTypes() {
@@ -76,8 +76,8 @@ public class KnownBuildRuleTypes {
     register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
     register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());
   }
-  
-  public void register(BuildRuleType type, BuildRuleFactory factory) {
+
+  public void register(BuildRuleType type, BuildRuleFactory<?> factory) {
     Preconditions.checkNotNull(type);
     types.put(type.getName(), type);
     factories.put(type, factory);
@@ -91,8 +91,8 @@ public class KnownBuildRuleTypes {
     return type;
   }
 
-  public BuildRuleFactory getFactory(BuildRuleType buildRuleType) {
-    BuildRuleFactory factory = factories.get(buildRuleType);
+  public BuildRuleFactory<?> getFactory(BuildRuleType buildRuleType) {
+    BuildRuleFactory<?> factory = factories.get(buildRuleType);
     if (factory == null) {
       throw new HumanReadableException(
           "Unable to find factory for build rule type: " + buildRuleType);

@@ -21,14 +21,13 @@ import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 import java.util.List;
 
-public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
 
   @Override
   public AndroidBinaryRule.Builder newBuilder() {
@@ -36,10 +35,8 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(AndroidBinaryRule.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    AndroidBinaryRule.Builder builder = ((AndroidBinaryRule.Builder)abstractBuilder);
-
     // manifest
     String manifestAttribute = params.getRequiredStringAttribute("manifest");
     String manifestPath = params.resolveFilePathRelativeToBuildFileDirectory(manifestAttribute);

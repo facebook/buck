@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.Step;
@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -135,7 +134,7 @@ public class ExportFileRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<ExportFileRule> {
     private Optional<String> src;
     private Optional<String> out;
 
@@ -150,8 +149,8 @@ public class ExportFileRule extends AbstractCachingBuildRule {
     }
 
     @Override
-    public ExportFileRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams params = createBuildRuleParams(buildRuleIndex);
+    public ExportFileRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      BuildRuleParams params = createBuildRuleParams(buildRuleBuilderParams);
 
       return new ExportFileRule(params, src, out);
     }

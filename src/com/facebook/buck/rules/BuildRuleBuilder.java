@@ -19,10 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 
-import java.util.Map;
 import java.util.Set;
 
-public interface BuildRuleBuilder {
+public interface BuildRuleBuilder<T extends BuildRule> {
 
   /** @return the build target of this rule */
   public BuildTarget getBuildTarget();
@@ -33,6 +32,6 @@ public interface BuildRuleBuilder {
   /** @return a view of the visibility patterns of this rule */
   public Set<BuildTargetPattern> getVisibilityPatterns();
 
-  public BuildRule build(Map<String, BuildRule> buildRuleIndex);
+  public T build(BuildRuleBuilderParams buildRuleBuilderParams);
 
 }

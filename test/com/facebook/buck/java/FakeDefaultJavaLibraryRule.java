@@ -16,11 +16,10 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.google.common.base.Optional;
 
-import java.util.Map;
 import java.util.Set;
 
 public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
@@ -55,10 +54,10 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
     private boolean ruleInputsAreCached;
 
     @Override
-    public FakeDefaultJavaLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+    public FakeDefaultJavaLibraryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleBuilderParams);
       AnnotationProcessingParams processingParams =
-          annotationProcessingBuilder.build(buildRuleIndex);
+          annotationProcessingBuilder.build(buildRuleBuilderParams);
 
       return new FakeDefaultJavaLibraryRule(
           buildRuleParams,

@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -35,7 +35,6 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -123,17 +122,17 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder implements
-      SrcsAttributeBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<NdkLibraryRule>
+      implements SrcsAttributeBuilder {
     private Set<String> sources = Sets.newHashSet();
     private ImmutableList.Builder<String> flags = ImmutableList.builder();
 
     private Builder() {}
 
     @Override
-    public NdkLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
+    public NdkLibraryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
       return new NdkLibraryRule(
-          createBuildRuleParams(buildRuleIndex),
+          createBuildRuleParams(buildRuleBuilderParams),
           sources,
           flags.build());
     }

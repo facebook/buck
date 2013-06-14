@@ -15,18 +15,19 @@
  */
 package com.facebook.buck.parser;
 
-import com.facebook.buck.rules.BuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
-public abstract class AbstractTestRuleFactory extends AbstractBuildRuleFactory {
+public abstract class AbstractTestRuleFactory<T extends AbstractBuildRuleBuilder<?>>
+    extends AbstractBuildRuleFactory<T> {
 
   @Override
-  public BuildRuleBuilder newInstance(BuildRuleFactoryParams params)
+  public T newInstance(BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
-    BuildRuleBuilder builder = super.newInstance(params);
+    T builder = super.newInstance(params);
 
     // labels
     if (builder instanceof LabelsAttributeBuilder) {

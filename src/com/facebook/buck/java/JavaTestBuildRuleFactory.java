@@ -19,13 +19,12 @@ package com.facebook.buck.java;
 import com.facebook.buck.parser.AbstractTestRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory {
+public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTestRule.Builder> {
 
   @Override
   public JavaTestRule.Builder newBuilder() {
@@ -33,10 +32,8 @@ public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(JavaTestRule.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    JavaTestRule.Builder builder = ((JavaTestRule.Builder)abstractBuilder);
-
     JavaLibraryBuildRuleFactory.extractAnnotationProcessorParameters(
         builder.getAnnotationProcessingBuilder(), builder, params);
 

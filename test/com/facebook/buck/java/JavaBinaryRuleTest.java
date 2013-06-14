@@ -21,13 +21,11 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRule;
-import com.google.common.collect.Maps;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 
 import org.junit.Test;
 
 import java.io.File;
-import java.util.Map;
 
 public class JavaBinaryRuleTest {
 
@@ -36,39 +34,35 @@ public class JavaBinaryRuleTest {
 
   @Test
   public void testGetExecutableCommand() {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
     // prebuilt_jar //third_party/generator:generator
-    PrebuiltJarRule prebuiltGeneratorJarRule = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(prebuiltGeneratorJarRule.getFullyQualifiedName(), prebuiltGeneratorJarRule);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // prebuilt_jar //third_party/guava:guava
-    PrebuiltJarRule prebuiltJarRule = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(prebuiltJarRule.getFullyQualifiedName(), prebuiltJarRule);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // java_library //java/com/facebook/base:base
-    JavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    JavaLibraryRule javaLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc("java/com/facebook/base/Base.java")
-        .addDep("//third_party/guava:guava")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
+        .addDep("//third_party/guava:guava"));
 
     // java_binary //java/com/facebook/base:Main
-    JavaBinaryRule javaBinaryRule = JavaBinaryRule.newJavaBinaryRuleBuilder()
+    JavaBinaryRule javaBinaryRule = buildRuleBuilderParams.buildAndAddToIndex(
+        JavaBinaryRule.newJavaBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
         .addDep("//java/com/facebook/base:base")
-        .setMainClass("com.facebook.base.Main")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(javaBinaryRule.getFullyQualifiedName(), javaBinaryRule);
+        .setMainClass("com.facebook.base.Main"));
 
     // Strip the trailing "." from the absolute path to the current directory.
     String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");

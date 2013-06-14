@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -32,7 +31,7 @@ import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -48,7 +47,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -71,31 +69,29 @@ public class ApkGenruleTest {
         }
       };
 
-  private void createSampleAndroidBinaryRule(Map<String, BuildRule> buildRuleIndex) {
+  private void createSampleAndroidBinaryRule(BuildRuleBuilderParams buildRuleBuilderParams) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    JavaLibraryRule androidLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:lib-android"))
-        .addSrc("java/com/facebook/util/Facebook.java")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(androidLibraryRule.getFullyQualifiedName(), androidLibraryRule);
+        .addSrc("java/com/facebook/util/Facebook.java"));
 
-    AndroidBinaryRule androidBinaryRule = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("keystore.properties")
         .addDep("//:lib-android")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(androidBinaryRule.getFullyQualifiedName(), androidBinaryRule);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
   }
 
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
-    createSampleAndroidBinaryRule(buildRuleIndex);
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    createSampleAndroidBinaryRule(buildRuleBuilderParams);
     Map<String, ?> instance = new ImmutableMap.Builder<String, Object>()
         .put("name", "fb4a_signed")
         .put("srcs", ImmutableList.<String>of("signer.py", "key.properties"))
@@ -121,9 +117,9 @@ public class ApkGenruleTest {
             buildTarget);
 
     ApkGenruleBuildRuleFactory factory = new ApkGenruleBuildRuleFactory();
-    ApkGenrule.Builder builder = (ApkGenrule.Builder)factory.newInstance(params);
+    ApkGenrule.Builder builder = factory.newInstance(params);
     builder.setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction);
-    ApkGenrule apk_genrule = builder.build(buildRuleIndex);
+    ApkGenrule apk_genrule = (ApkGenrule) buildRuleBuilderParams.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";

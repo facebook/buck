@@ -16,12 +16,12 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The build rule generates the application's manifest file from the skeleton manifest and
@@ -103,15 +102,15 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<AndroidManifestRule> {
 
     protected String manifestFile;
     protected String skeletonFile;
 
     @Override
-    public AndroidManifestRule build(Map<String, BuildRule> buildRuleIndex) {
+    public AndroidManifestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
       return new AndroidManifestRule(
-          createBuildRuleParams(buildRuleIndex),
+          createBuildRuleParams(buildRuleBuilderParams),
           skeletonFile,
           manifestFile);
     }

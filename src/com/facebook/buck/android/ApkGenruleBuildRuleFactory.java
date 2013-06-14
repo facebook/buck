@@ -21,10 +21,9 @@ import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.util.HumanReadableException;
 
-public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory {
+public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory<ApkGenrule.Builder> {
 
   @Override
   public ApkGenrule.Builder newBuilder() {
@@ -32,10 +31,7 @@ public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-                              BuildRuleFactoryParams params) {
-    ApkGenrule.Builder builder = ((ApkGenrule.Builder)abstractBuilder);
-
+  protected void amendBuilder(ApkGenrule.Builder builder, BuildRuleFactoryParams params) {
     String cmd = params.getRequiredStringAttribute("cmd");
     builder.setCmd(cmd);
 

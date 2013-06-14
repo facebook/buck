@@ -19,9 +19,8 @@ package com.facebook.buck.python;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
-public class PythonBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class PythonBinaryBuildRuleFactory extends AbstractBuildRuleFactory<PythonBinaryRule.Builder> {
 
   @Override
   protected PythonBinaryRule.Builder newBuilder() {
@@ -29,10 +28,8 @@ public class PythonBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(PythonBinaryRule.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    PythonBinaryRule.Builder builder = (PythonBinaryRule.Builder)abstractBuilder;
-
     // main
     String main = params.getRequiredStringAttribute("main");
     String pathToMain = params.resolveFilePathRelativeToBuildFileDirectory(main);

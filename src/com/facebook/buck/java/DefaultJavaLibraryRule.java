@@ -27,6 +27,7 @@ import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -58,7 +59,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -607,7 +607,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder implements
+  public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibraryRule> implements
       SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
     protected Set<String> srcs = Sets.newHashSet();
@@ -621,10 +621,10 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     protected Builder() {}
 
     @Override
-    public DefaultJavaLibraryRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+    public DefaultJavaLibraryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleBuilderParams);
       AnnotationProcessingParams processingParams =
-          annotationProcessingBuilder.build(buildRuleIndex);
+          annotationProcessingBuilder.build(buildRuleBuilderParams);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       return new DefaultJavaLibraryRule(

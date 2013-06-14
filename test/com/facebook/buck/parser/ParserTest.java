@@ -33,6 +33,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -98,8 +99,8 @@ public class ParserTest {
     testParser = createParser(emptyBuildTargets(), buildFileParser);
   }
 
-  private Parser createParser(Map<BuildTarget, BuildRuleBuilder> knownBuildTargets,
-                              ProjectBuildFileParser buildFileParser) {
+  private Parser createParser(Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
+      ProjectBuildFileParser buildFileParser) {
     return new Parser(
         filesystem,
         buildRuleTypes,
@@ -404,12 +405,12 @@ public class ParserTest {
     assertEquals("Should have replaced build rules", 2, buildFileParser.calls);
   }
 
-  private Map<BuildTarget, BuildRuleBuilder> emptyBuildTargets() {
+  private Map<BuildTarget, BuildRuleBuilder<?>> emptyBuildTargets() {
     return Maps.newHashMap();
   }
 
-  private Map<BuildTarget, BuildRuleBuilder> circularBuildTargets() {
-    return ImmutableMap.<BuildTarget, BuildRuleBuilder>builder()
+  private Map<BuildTarget, BuildRuleBuilder<?>> circularBuildTargets() {
+    return ImmutableMap.<BuildTarget, BuildRuleBuilder<?>>builder()
         .put(BuildTargetFactory.newInstance("//:A"), createBuildRuleBuilder("A", "B", "C"))
         .put(BuildTargetFactory.newInstance("//:B"), createBuildRuleBuilder("B", "D", "E"))
         .put(BuildTargetFactory.newInstance("//:C"), createBuildRuleBuilder("C", "E"))
@@ -419,7 +420,7 @@ public class ParserTest {
         .build();
   }
 
-  private static BuildRuleBuilder createBuildRuleBuilder(String name, String... qualifiedDeps) {
+  private static BuildRuleBuilder<?> createBuildRuleBuilder(String name, String... qualifiedDeps) {
     final BuildTarget buildTarget = BuildTargetFactory.newInstance("//:" + name);
     ImmutableSortedSet.Builder<String> depsBuilder = ImmutableSortedSet.naturalOrder();
     for (String dep : qualifiedDeps) {
@@ -427,7 +428,7 @@ public class ParserTest {
     }
     final ImmutableSortedSet<String> deps = depsBuilder.build();
 
-    return new BuildRuleBuilder() {
+    return new BuildRuleBuilder<BuildRule>() {
 
       @Override
       public BuildTarget getBuildTarget() {
@@ -445,7 +446,7 @@ public class ParserTest {
       }
 
       @Override
-      public BuildRule build(final Map<String, BuildRule> buildRuleIndex) {
+      public BuildRule build(final BuildRuleBuilderParams buildRuleBuilderParams) {
         return new FakeBuildRule(
             BuildRuleType.JAVA_LIBRARY,
             buildTarget,
@@ -453,7 +454,7 @@ public class ParserTest {
               .addAll(Iterables.transform(deps, new Function<String, BuildRule>() {
                 @Override
                 public BuildRule apply(String target) {
-                  return buildRuleIndex.get(target);
+                  return buildRuleBuilderParams.get(target);
                 }
               }))
               .build(),

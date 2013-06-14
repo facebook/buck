@@ -19,20 +19,18 @@ package com.facebook.buck.cpp;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
-public class PrebuiltNativeLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class PrebuiltNativeLibraryBuildRuleFactory
+    extends AbstractBuildRuleFactory<PrebuiltNativeLibraryBuildRule.Builder> {
 
   @Override
-  protected AbstractBuildRuleBuilder newBuilder() {
+  protected PrebuiltNativeLibraryBuildRule.Builder newBuilder() {
     return PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary();
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(PrebuiltNativeLibraryBuildRule.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    PrebuiltNativeLibraryBuildRule.Builder builder = ((PrebuiltNativeLibraryBuildRule.Builder)abstractBuilder);
-
     // native_libs
     String nativeLibs = params.getRequiredStringAttribute("native_libs");
     String nativeLibsDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(nativeLibs);

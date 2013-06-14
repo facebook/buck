@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -32,11 +33,8 @@ import com.facebook.buck.util.DirectoryTraverser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import org.junit.Test;
-
-import java.util.Map;
 
 
 public class AndroidResourceRuleTest {
@@ -114,41 +112,37 @@ public class AndroidResourceRuleTest {
    */
   @Test
   public void testGetAndroidResourceDeps() {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
-    AndroidResourceRule c = AndroidResourceRule.newAndroidResourceRuleBuilder()
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    AndroidResourceRule c = buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
         .setRes("res_c")
-        .setRDotJavaPackage("com.facebook")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(c.getFullyQualifiedName(), c);
+        .setRDotJavaPackage("com.facebook"));
 
-    AndroidResourceRule b = AndroidResourceRule.newAndroidResourceRuleBuilder()
+    AndroidResourceRule b = buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
         .setRes("res_b")
         .setRDotJavaPackage("com.facebook")
-        .addDep("//:c")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(b.getFullyQualifiedName(), b);
+        .addDep("//:c"));
 
-    AndroidResourceRule d = AndroidResourceRule.newAndroidResourceRuleBuilder()
+    AndroidResourceRule d = buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
         .setRes("res_d")
         .setRDotJavaPackage("com.facebook")
-        .addDep("//:c")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(d.getFullyQualifiedName(), d);
+        .addDep("//:c"));
 
-    AndroidResourceRule a = AndroidResourceRule.newAndroidResourceRuleBuilder()
+    AndroidResourceRule a = buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
         .setRes("res_a")
         .setRDotJavaPackage("com.facebook")
         .addDep("//:b")
         .addDep("//:c")
-        .addDep("//:d")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(a.getFullyQualifiedName(), a);
+        .addDep("//:d"));
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
     ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a, graph);
 
     // Note that a topological sort for a DAG is not guaranteed to be unique. In this particular
@@ -164,17 +158,16 @@ public class AndroidResourceRuleTest {
     // Introduce an AndroidBinaryRule that depends on A and C and verify that the same topological
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
-    AndroidBinaryRule e = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+    AndroidBinaryRule e = buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
         .setManifest("AndroidManfiest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("debug.keystore")
         .addDep("//:a")
-        .addDep("//:c")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(e.getFullyQualifiedName(), e);
+        .addDep("//:c"));
 
-    DependencyGraph graph2 = RuleMap.createGraphFromBuildRules(buildRuleIndex);
+    DependencyGraph graph2 = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
     ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e, graph2);
     assertTrue(
         String.format(

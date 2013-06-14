@@ -20,5 +20,5 @@ package com.facebook.buck.rules;
 
 public interface SrcsAttributeBuilder {
 
-  public AbstractBuildRuleBuilder addSrc(String relativePathToSrc);
+  public AbstractBuildRuleBuilder<?> addSrc(String relativePathToSrc);
 }

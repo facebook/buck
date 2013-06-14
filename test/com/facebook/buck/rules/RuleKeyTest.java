@@ -23,11 +23,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.google.common.collect.Maps;
 
 import org.junit.Test;
-
-import java.util.Map;
 
 /**
  * Unit test for {@link RuleKey}.
@@ -45,13 +42,12 @@ public class RuleKeyTest {
    */
   @Test
   public void testRuleKeyDependsOnDeps() {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
-    DefaultJavaLibraryRule commonRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put("//src/com/facebook/buck/cli:common", commonRule);
+    buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common")));
 
     // Create a java_library() rule with no deps.
     DefaultJavaLibraryRule.Builder javaLibraryBuilder = DefaultJavaLibraryRule
@@ -63,12 +59,13 @@ public class RuleKeyTest {
         // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that file
         // access can be mocked appropriately during a unit test.
         .addSrc("src/com/facebook/buck/cli/Main.java");
-    DefaultJavaLibraryRule libraryNoCommon = javaLibraryBuilder.build(buildRuleIndex);
+    DefaultJavaLibraryRule libraryNoCommon = buildRuleBuilderParams.buildAndAddToIndex(
+        javaLibraryBuilder);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
     javaLibraryBuilder.addDep("//src/com/facebook/buck/cli:common");
-    DefaultJavaLibraryRule libraryWithCommon = javaLibraryBuilder
-        .build(buildRuleIndex);
+    DefaultJavaLibraryRule libraryWithCommon = buildRuleBuilderParams.buildAndAddToIndex(
+        javaLibraryBuilder);
 
     // Assert that the RuleKeys are distinct.
     RuleKey r1 = libraryNoCommon.getRuleKey();

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -31,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * A specialization of a genrule that specifically allows the modification of apks.  This is
@@ -126,9 +126,9 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
     private String apk;
 
     @Override
-    public ApkGenrule build(Map<String, BuildRule> buildRuleIndex) {
+    public ApkGenrule build(BuildRuleBuilderParams buildRuleBuilderParams) {
       // Verify that the 'apk' field is set and corresponds to an installable rule.
-      BuildRule apkRule = buildRuleIndex.get(apk);
+      BuildRule apkRule = buildRuleBuilderParams.get(apk);
 
       Preconditions.checkState(apk != null && apkRule != null,
           "Buck should guarantee that apk was set and included in the deps of this rule, " +
@@ -142,7 +142,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
             apkRule.getFullyQualifiedName());
       }
 
-      return new ApkGenrule(createBuildRuleParams(buildRuleIndex),
+      return new ApkGenrule(createBuildRuleParams(buildRuleBuilderParams),
           srcs,
           cmd,
           relativeToAbsolutePathFunction,

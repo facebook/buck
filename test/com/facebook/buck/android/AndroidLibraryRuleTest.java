@@ -21,22 +21,20 @@ import static org.easymock.EasyMock.replay;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
-
-import java.util.Map;
 
 public class AndroidLibraryRuleTest {
 
   @Test
   public void testGetInputsToCompareToOuts() {
-    AndroidLibraryRule androidLibraryRuleBuilderFoo = getAndroidLibraryRuleFoo();
-    AndroidLibraryRule androidLibraryRuleBuilderBar = getAndroidLibraryRuleBar();
+    BuildRuleBuilderParams params = new BuildRuleBuilderParams();
+    AndroidLibraryRule androidLibraryRuleBuilderFoo = getAndroidLibraryRuleFoo(params);
+    AndroidLibraryRule androidLibraryRuleBuilderBar = getAndroidLibraryRuleBar(params);
     BuildContext context = createMock(BuildContext.class);
     replay(context);
 
@@ -54,23 +52,19 @@ public class AndroidLibraryRuleTest {
         androidLibraryRuleBuilderBar.getInputsToCompareToOutput(context));
   }
 
-  private AndroidLibraryRule getAndroidLibraryRuleFoo() {
-    Map<String, BuildRule> buildRuleIndex = ImmutableMap.of();
-    return AndroidLibraryRule
-        .newAndroidLibraryRuleBuilder()
+  private AndroidLibraryRule getAndroidLibraryRuleFoo(BuildRuleBuilderParams params) {
+    return (AndroidLibraryRule)params.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
         .addSrc("java/src/com/foo/Foo.java")
-        .setManifestFile((Optional.of("java/src/com/foo/AndroidManifest.xml")))
-        .build(buildRuleIndex);
+        .setManifestFile((Optional.of("java/src/com/foo/AndroidManifest.xml"))));
   }
 
-  private AndroidLibraryRule getAndroidLibraryRuleBar() {
-    Map<String, BuildRule> buildRuleIndex = ImmutableMap.of();
-    return AndroidLibraryRule
-        .newAndroidLibraryRuleBuilder()
+  private AndroidLibraryRule getAndroidLibraryRuleBar(BuildRuleBuilderParams params) {
+    return (AndroidLibraryRule)params.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/bar:bar"))
         .addSrc("java/src/com/bar/Bar.java")
-        .setManifestFile((Optional.<String>absent()))
-        .build(buildRuleIndex);
+        .setManifestFile((Optional.<String>absent())));
   }
 }

@@ -17,9 +17,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
-public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory {
+public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory<AndroidManifestRule.Builder> {
 
   @Override
   public AndroidManifestRule.Builder newBuilder() {
@@ -27,10 +26,7 @@ public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFact
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-                              BuildRuleFactoryParams params) {
-    AndroidManifestRule.Builder builder = ((AndroidManifestRule.Builder) abstractBuilder);
-
+  protected void amendBuilder(AndroidManifestRule.Builder builder, BuildRuleFactoryParams params) {
     // manifest file
     String manifestFile = params.getRequiredStringAttribute("manifest");
     String manifestPath =

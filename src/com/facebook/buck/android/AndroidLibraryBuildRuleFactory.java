@@ -16,10 +16,10 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
+import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.google.common.base.Optional;
 
 public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory {
@@ -30,10 +30,10 @@ public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory 
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(DefaultJavaLibraryRule.Builder abstractBuilder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     super.amendBuilder(abstractBuilder, params);
-    AndroidLibraryRule.Builder builder = ((AndroidLibraryRule.Builder)abstractBuilder);
+    AndroidLibraryRule.Builder builder = (AndroidLibraryRule.Builder)abstractBuilder;
 
     // manifest
     Optional<String> manifestFile = params.getOptionalStringAttribute("manifest");

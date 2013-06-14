@@ -18,11 +18,10 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.google.common.base.Optional;
 
 
-public class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory {
+public class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory<PrebuiltJarRule.Builder> {
 
   @Override
   public PrebuiltJarRule.Builder newBuilder() {
@@ -30,10 +29,7 @@ public class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-      BuildRuleFactoryParams params) {
-    PrebuiltJarRule.Builder builder = ((PrebuiltJarRule.Builder)abstractBuilder);
-
+  protected void amendBuilder(PrebuiltJarRule.Builder builder, BuildRuleFactoryParams params) {
     // binary_jar
     String binaryJar = params.getRequiredStringAttribute("binary_jar");
     String binaryJarFile = params.resolveFilePathRelativeToBuildFileDirectory(binaryJar);

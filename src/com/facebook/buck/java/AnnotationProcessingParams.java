@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -26,7 +27,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -142,8 +142,8 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       return this;
     }
 
-    public AnnotationProcessingParams build(Map<String, BuildRule> buildRuleIndex) {
-      Preconditions.checkNotNull(buildRuleIndex);
+    public AnnotationProcessingParams build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      Preconditions.checkNotNull(buildRuleBuilderParams);
 
       if (names.isEmpty() && targets.isEmpty() && parameters.isEmpty()) {
         return EMPTY;
@@ -152,7 +152,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       Set<String> searchPathElements = Sets.newHashSet();
 
       for (BuildTarget target : targets) {
-        BuildRule rule = buildRuleIndex.get(target.getFullyQualifiedName());
+        BuildRule rule = buildRuleBuilderParams.get(target.getFullyQualifiedName());
         String type = rule.getType().getName();
 
         // We're using raw strings here to avoid circular dependencies.

@@ -21,8 +21,8 @@ import com.google.common.annotations.Beta;
 
 /** Implementations should be stateless. */
 @Beta
-public interface BuildRuleFactory {
+public interface BuildRuleFactory<T extends BuildRuleBuilder<?>> {
 
-  public BuildRuleBuilder newInstance(BuildRuleFactoryParams params) throws NoSuchBuildTargetException;
+  public T newInstance(BuildRuleFactoryParams params) throws NoSuchBuildTargetException;
 
 }

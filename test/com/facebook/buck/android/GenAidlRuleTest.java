@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -33,14 +33,12 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Unit test for {@link com.facebook.buck.android.GenAidlRule}.
@@ -50,16 +48,16 @@ public class GenAidlRuleTest {
   @Test
   public void testSimpleGenAidlRule() throws IOException {
     BuildContext context = null;
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
 
     String pathToAidl = "java/com/example/base/IWhateverService.aidl";
     String importPath = "java/com/example/base/";
 
-    GenAidlRule genAidlRule = GenAidlRule.newGenAidlRuleBuilder()
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    GenAidlRule genAidlRule = buildRuleBuilderParams.buildAndAddToIndex(
+        GenAidlRule.newGenAidlRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService"))
         .setAidl(pathToAidl)
-        .setImportPath(importPath)
-        .build(buildRuleIndex);
+        .setImportPath(importPath));
 
     assertEquals(BuildRuleType.GEN_AIDL, genAidlRule.getType());
     assertTrue(genAidlRule.isAndroidRule());

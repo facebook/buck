@@ -20,6 +20,7 @@ import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
@@ -48,7 +49,6 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
@@ -346,13 +346,13 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     protected Builder() {}
 
     @Override
-    public JavaTestRule build(Map<String, BuildRule> buildRuleIndex) {
+    public JavaTestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
       ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourceUnderTestNames,
-          buildRuleIndex);
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleIndex);
+          buildRuleBuilderParams);
+      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleBuilderParams);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new JavaTestRule(createBuildRuleParams(buildRuleIndex),
+      return new JavaTestRule(createBuildRuleParams(buildRuleBuilderParams),
           srcs,
           resources,
           labels,
@@ -400,11 +400,11 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      * Generates the set of build rules that contain the source that will be under test.
      */
     protected ImmutableSet<JavaLibraryRule> generateSourceUnderTest(
-        ImmutableSet<String> sourceUnderTestNames, Map<String, BuildRule> buildRuleIndex) {
+        ImmutableSet<String> sourceUnderTestNames, BuildRuleBuilderParams buildRuleBuilderParams) {
       ImmutableSet.Builder<JavaLibraryRule> sourceUnderTest = ImmutableSet.builder();
       for (String sourceUnderTestName : sourceUnderTestNames) {
         // Generates the set by matching its path with the full path names that are passed in.
-        BuildRule rule = buildRuleIndex.get(sourceUnderTestName);
+        BuildRule rule = buildRuleBuilderParams.get(sourceUnderTestName);
         if (rule instanceof JavaLibraryRule) {
           sourceUnderTest.add((JavaLibraryRule) rule);
         } else {
@@ -412,8 +412,10 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
           // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
           // not continue with the tests.
           throw new HumanReadableException(
-              "Specified source under test for %s is not a Java library: %s.",
-              getBuildTarget().getFullyQualifiedName(), sourceUnderTestName);
+              "Specified source under test for %s is not a Java library: %s (%s).",
+              getBuildTarget().getFullyQualifiedName(),
+              rule.getFullyQualifiedName(),
+              rule.getType());
         }
       }
 

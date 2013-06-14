@@ -37,6 +37,7 @@ import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigRule;
@@ -50,7 +51,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -65,6 +65,8 @@ import javax.annotation.Nullable;
 public class ProjectTest {
 
   private static final String PATH_TO_GUAVA_JAR = "third_party/guava/guava-10.0.1.jar";
+
+  @SuppressWarnings("PMD.UnusedPrivateField")
   private PrebuiltJarRule guava;
 
   /**
@@ -77,145 +79,122 @@ public class ProjectTest {
    */
   public ProjectWithModules createPartialGraphForTesting(
       @Nullable JavaPackageFinder javaPackageFinder) throws IOException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
     // java_library //buck-android/com/facebook:R
-    JavaLibraryRule rDotJavaRule =
+    buildRuleBuilderParams.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//buck-android/com/facebook:R"))
         .addSrc("buck-android/com/facebook/R.java")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(rDotJavaRule.getFullyQualifiedName(), rDotJavaRule);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // prebuilt_jar //third_party/guava:guava
-    guava = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    guava = buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(guava.getFullyQualifiedName(), guava);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // android_resouce android_res/base:res
-    AndroidResourceRule androidResourceRule = AndroidResourceRule.newAndroidResourceRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
         .setRes("android_res/base/res")
         .setRDotJavaPackage("com.facebook")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(androidResourceRule.getFullyQualifiedName(), androidResourceRule);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // project_config android_res/base:res
-    ProjectConfigRule projectConfigRuleForResource = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfigRuleForResource = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:project_config"))
         .setSrcTarget(Optional.of("//android_res/base:res"))
-        .setSrcRoots(ImmutableList.of("res"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfigRuleForResource.getFullyQualifiedName(),
-        projectConfigRuleForResource);
+        .setSrcRoots(ImmutableList.of("res")));
 
     // java_library //java/src/com/facebook/grandchild:grandchild
-    JavaLibraryRule grandchildLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/grandchild:grandchild"))
         .addSrc("Grandchild.java")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(grandchildLib.getFullyQualifiedName(), grandchildLib);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // java_library //java/src/com/facebook/child:child
-    JavaLibraryRule childLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/child:child"))
         .addSrc("Child.java")
         .addDep("//java/src/com/facebook/grandchild:grandchild")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(childLib.getFullyQualifiedName(), childLib);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // java_library //java/src/com/facebook/exportlib:exportlib
-    JavaLibraryRule exportingLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/exportlib:exportlib"))
         .addSrc("ExportLib.java")
         .addDep("//third_party/guava:guava")
         .setExportDeps(true)
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(exportingLib.getFullyQualifiedName(), exportingLib);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // android_library //java/src/com/facebook/base:base
-    AndroidLibraryRule androidLibraryRule = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
         .addSrc("Base.java")
         .addDep("//buck-android/com/facebook:R")
         .addDep("//java/src/com/facebook/exportlib:exportlib")
         .addDep("//java/src/com/facebook/child:child")
         .addDep("//android_res/base:res")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(androidLibraryRule.getFullyQualifiedName(), androidLibraryRule);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // project_config //java/src/com/facebook/base:project_config
-    ProjectConfigRule projectConfigRuleForLibrary = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfigRuleForLibrary = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/base:project_config"))
         .setSrcTarget(Optional.of("//java/src/com/facebook/base:base"))
-        .setSrcRoots(ImmutableList.of("src", "src-gen"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfigRuleForLibrary.getFullyQualifiedName(),
-        projectConfigRuleForLibrary);
+        .setSrcRoots(ImmutableList.of("src", "src-gen")));
 
-    ProjectConfigRule projectConfigRuleForExportLibrary =
+    ProjectConfigRule projectConfigRuleForExportLibrary = buildRuleBuilderParams.buildAndAddToIndex(
           ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//java/src/com/facebook/exportlib:project_config"))
         .setSrcTarget(Optional.of("//java/src/com/facebook/exportlib:exportlib"))
-        .setSrcRoots(ImmutableList.of("src"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfigRuleForExportLibrary.getFullyQualifiedName(),
-        projectConfigRuleForExportLibrary);
-
+        .setSrcRoots(ImmutableList.of("src")));
 
     // android_binary //foo:app
-    AndroidBinaryRule androidBinaryRuleUsingNoDx = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:app"))
         .addDep("//java/src/com/facebook/base:base")
         .setManifest("foo/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("foo/../keystore.properties")
-        .addBuildRuleToExcludeFromDex("//third_party/guava:guava")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(androidBinaryRuleUsingNoDx.getFullyQualifiedName(),
-        androidBinaryRuleUsingNoDx);
+        .addBuildRuleToExcludeFromDex("//third_party/guava:guava"));
 
     // project_config //foo:project_config
-    ProjectConfigRule projectConfigRuleUsingNoDx = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfigRuleUsingNoDx = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:project_config"))
-        .setSrcTarget(Optional.of("//foo:app"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfigRuleUsingNoDx.getFullyQualifiedName(),
-        projectConfigRuleUsingNoDx);
+        .setSrcTarget(Optional.of("//foo:app")));
 
     // android_binary //bar:app
-    AndroidBinaryRule androidBinaryRule = AndroidBinaryRule.newAndroidBinaryRuleBuilder()
-    .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
-    .addDep("//java/src/com/facebook/base:base")
-        .setManifest("foo/AndroidManifest.xml")
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystorePropertiesPath("bar/../keystore.properties")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(androidBinaryRule.getFullyQualifiedName(),
-        androidBinaryRule);
+    buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
+        .addDep("//java/src/com/facebook/base:base")
+            .setManifest("foo/AndroidManifest.xml")
+            .setTarget("Google Inc.:Google APIs:16")
+            .setKeystorePropertiesPath("bar/../keystore.properties"));
 
     // project_config //bar:project_config
-    ProjectConfigRule projectConfigRule = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfigRule = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//bar:project_config"))
-        .setSrcTarget(Optional.of("//bar:app"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfigRule.getFullyQualifiedName(), projectConfigRule);
+        .setSrcTarget(Optional.of("//bar:app")));
 
-    return getModulesForPartialGraph(buildRuleIndex,
+    return getModulesForPartialGraph(buildRuleBuilderParams,
         ImmutableList.of(
             projectConfigRuleForExportLibrary,
             projectConfigRuleForLibrary,
@@ -395,7 +374,7 @@ public class ProjectTest {
 
   @Test
   public void testPrebuiltJarIncludesDeps() throws IOException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
     // Build up a the graph that corresponds to:
     //
@@ -428,40 +407,35 @@ public class ProjectTest {
     // project_config(
     //   src_target = ':example',
     // )
-    PrebuiltJarRule cglib = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    PrebuiltJarRule cglib = buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:cglib"))
-        .setBinaryJar("third_party/java/easymock/cglib.jar")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(cglib.getFullyQualifiedName(), cglib);
+        .setBinaryJar("third_party/java/easymock/cglib.jar"));
 
-    PrebuiltJarRule objenesis = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    PrebuiltJarRule objenesis = buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:objenesis"))
-        .setBinaryJar("third_party/java/easymock/objenesis.jar")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(objenesis.getFullyQualifiedName(), objenesis);
+        .setBinaryJar("third_party/java/easymock/objenesis.jar"));
 
-    PrebuiltJarRule easymock = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    PrebuiltJarRule easymock = buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:easymock"))
         .setBinaryJar("third_party/java/easymock/easymock.jar")
         .addDep("//third_party/java/easymock:cglib")
-        .addDep("//third_party/java/easymock:objenesis")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(easymock.getFullyQualifiedName(), easymock);
+        .addDep("//third_party/java/easymock:objenesis"));
 
-    AndroidLibraryRule androidLibrary = AndroidLibraryRule.newAndroidLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:example"))
-        .addDep("//third_party/java/easymock:easymock")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(androidLibrary.getFullyQualifiedName(), androidLibrary);
+        .addDep("//third_party/java/easymock:easymock"));
 
-    ProjectConfigRule projectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfig = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(
             BuildTargetFactory.newInstance("//third_party/java/easymock:project_config"))
-        .setSrcTarget(Optional.of("//third_party/java/easymock:example"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfig.getFullyQualifiedName(), projectConfig);
+        .setSrcTarget(Optional.of("//third_party/java/easymock:example")));
 
-    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleIndex,
+    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleBuilderParams,
         ImmutableList.of(projectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
@@ -480,39 +454,35 @@ public class ProjectTest {
 
   @Test
   public void testIfModuleIsBothTestAndCompileDepThenTreatAsCompileDep() throws IOException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
     // Create a java_library() and a java_test() that both depend on Guava.
     // When they are part of the same project_config() rule, then the resulting module should
     // include Guava as scope="COMPILE" in IntelliJ.
-    PrebuiltJarRule guava = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    PrebuiltJarRule guava = buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/guava:guava"))
         .setBinaryJar("third_party/java/guava.jar")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(guava.getFullyQualifiedName(), guava);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    JavaLibraryRule javaLib = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addDep("//third_party/java/guava:guava")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(javaLib.getFullyQualifiedName(), javaLib);
+        .addDep("//third_party/java/guava:guava"));
 
-    JavaTestRule javaTest = JavaTestRule.newJavaTestRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        JavaTestRule.newJavaTestRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
-        .addDep("//third_party/java/guava:guava")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(javaTest.getFullyQualifiedName(), javaTest);
+        .addDep("//third_party/java/guava:guava"));
 
-    ProjectConfigRule projectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfig = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcTarget(Optional.of("//java/com/example/base:base"))
         .setTestTarget(Optional.of("//java/com/example/base:tests"))
-        .setTestRoots(ImmutableList.of("tests"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfig.getFullyQualifiedName(), projectConfig);
+        .setTestRoots(ImmutableList.of("tests")));
 
-    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleIndex,
+    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleBuilderParams,
         ImmutableList.of(projectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
@@ -541,40 +511,36 @@ public class ProjectTest {
    */
   @Test
   public void testThatJarsAreListedBeforeModules() throws IOException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
-    JavaLibraryRule supportV4 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    JavaLibraryRule supportV4 = buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/android/support/v4:v4"))
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(supportV4.getFullyQualifiedName(), supportV4);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    PrebuiltJarRule httpCore = PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+    PrebuiltJarRule httpCore = buildRuleBuilderParams.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/httpcore:httpcore"))
         .setBinaryJar("httpcore-4.0.1.jar")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(httpCore.getFullyQualifiedName(), httpCore);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // The support-v4 library is loaded as a java_library() rather than a prebuilt_jar() because it
     // contains our local changes to the library.
-    JavaLibraryRule robolectric = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//third_party/java/robolectric:robolectric"))
         .addDep("//java/com/android/support/v4:v4")
-        .addDep("//third_party/java/httpcore:httpcore")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(robolectric.getFullyQualifiedName(), robolectric);
+        .addDep("//third_party/java/httpcore:httpcore"));
 
-    ProjectConfigRule projectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule projectConfig = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             "//third_party/java/robolectric:project_config"))
         .setSrcTarget(Optional.of("//third_party/java/robolectric:robolectric"))
-        .setSrcRoots(ImmutableList.of("src/main/java"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(projectConfig.getFullyQualifiedName(), projectConfig);
+        .setSrcRoots(ImmutableList.of("src/main/java")));
 
-    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleIndex,
+    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleBuilderParams,
         ImmutableList.of(projectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
@@ -616,21 +582,16 @@ public class ProjectTest {
   @Test
   public void testSrcRoots() throws IOException {
     // Create a project_config() with src_roots=None.
-    Map<String, BuildRule> buildRuleIndex1 = Maps.newHashMap();
-    AndroidResourceRule androidResourceRule = AndroidResourceRule
-        .newAndroidResourceRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res"))
-        .build(buildRuleIndex1);
-    buildRuleIndex1.put(androidResourceRule.getFullyQualifiedName(),
-        androidResourceRule);
-    ProjectConfigRule projectConfigNullSrcRoots = ProjectConfigRule.newProjectConfigRuleBuilder()
+    BuildRuleBuilderParams buildRuleBuilderParams1 = new BuildRuleBuilderParams();
+    buildRuleBuilderParams1.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res")));
+    ProjectConfigRule projectConfigNullSrcRoots = buildRuleBuilderParams1.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:project_config"))
         .setSrcTarget(Optional.of("//resources/com/example:res"))
-        .setSrcRoots(null)
-        .build(buildRuleIndex1);
-    buildRuleIndex1.put(projectConfigNullSrcRoots.getFullyQualifiedName(),
-        projectConfigNullSrcRoots);
-    ProjectWithModules projectWithModules1 = getModulesForPartialGraph(buildRuleIndex1,
+        .setSrcRoots(null));
+    ProjectWithModules projectWithModules1 = getModulesForPartialGraph(buildRuleBuilderParams1,
         ImmutableList.of(projectConfigNullSrcRoots),
         null /* javaPackageFinder */);
 
@@ -643,26 +604,22 @@ public class ProjectTest {
         moduleNoJavaSource.sourceFolders);
 
     // Create a project_config() with src_roots=[].
-    Map<String, BuildRule> buildRuleIndex2 = Maps.newHashMap();
-    AndroidLibraryRule inPackageJavaLibraryRule = AndroidLibraryRule
-        .newAndroidLibraryRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .build(buildRuleIndex2);
-    buildRuleIndex2.put(inPackageJavaLibraryRule.getFullyQualifiedName(),
-        inPackageJavaLibraryRule);
-    ProjectConfigRule inPackageProjectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
+    BuildRuleBuilderParams buildRuleBuilderParams2 = new BuildRuleBuilderParams();
+    buildRuleBuilderParams2.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base")));
+    ProjectConfigRule inPackageProjectConfig = buildRuleBuilderParams2.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcTarget(Optional.of("//java/com/example/base:base"))
-        .setSrcRoots(ImmutableList.<String>of())
-        .build(buildRuleIndex2);
-    buildRuleIndex2.put(inPackageProjectConfig.getFullyQualifiedName(), inPackageProjectConfig);
+        .setSrcRoots(ImmutableList.<String>of()));
 
     // Verify that the correct source folders are created.
     JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
     EasyMock.expect(javaPackageFinder.findJavaPackageForPath(
         "java/com/example/base/module_java_com_example_base.iml")).andReturn("com.example.base");
     EasyMock.replay(javaPackageFinder);
-    ProjectWithModules projectWithModules2 = getModulesForPartialGraph(buildRuleIndex2,
+    ProjectWithModules projectWithModules2 = getModulesForPartialGraph(buildRuleBuilderParams2,
         ImmutableList.of(inPackageProjectConfig),
         javaPackageFinder);
     EasyMock.verify(javaPackageFinder);
@@ -677,21 +634,16 @@ public class ProjectTest {
         moduleWithPackagePrefix.sourceFolders);
 
     // Create a project_config() with src_roots=['src'].
-    Map<String, BuildRule> buildRuleIndex3 = Maps.newHashMap();
-    AndroidLibraryRule hasSrcFolderAndroidLibraryRule = AndroidLibraryRule
-        .newAndroidLibraryRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .build(buildRuleIndex3);
-    buildRuleIndex3.put(hasSrcFolderAndroidLibraryRule.getFullyQualifiedName(),
-        hasSrcFolderAndroidLibraryRule);
-    ProjectConfigRule hasSrcFolderProjectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
+    BuildRuleBuilderParams buildRuleBuilderParams3 = new BuildRuleBuilderParams();
+    buildRuleBuilderParams3.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:base")));
+    ProjectConfigRule hasSrcFolderProjectConfig = buildRuleBuilderParams3.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcTarget(Optional.of("//java/com/example/base:base"))
-        .setSrcRoots(ImmutableList.of("src"))
-        .build(buildRuleIndex3);
-    buildRuleIndex3.put(hasSrcFolderProjectConfig.getFullyQualifiedName(),
-        hasSrcFolderProjectConfig);
-    ProjectWithModules projectWithModules3 = getModulesForPartialGraph(buildRuleIndex3,
+        .setSrcRoots(ImmutableList.of("src")));
+    ProjectWithModules projectWithModules3 = getModulesForPartialGraph(buildRuleBuilderParams3,
         ImmutableList.of(hasSrcFolderProjectConfig),
         null /* javaPackageFinder */);
 
@@ -715,14 +667,15 @@ public class ProjectTest {
     }
   }
 
-  private ProjectWithModules getModulesForPartialGraph(Map<String, BuildRule> buildRuleIndex,
+  private ProjectWithModules getModulesForPartialGraph(
+      BuildRuleBuilderParams buildRuleBuilderParams,
       ImmutableList<ProjectConfigRule> projectConfigs,
       @Nullable JavaPackageFinder javaPackageFinder) throws IOException {
     if (javaPackageFinder == null) {
       javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
     }
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleIndex);
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
     List<BuildTarget> targets = ImmutableList.copyOf(Iterables.transform(projectConfigs,
         new Function<ProjectConfigRule, BuildTarget>() {
 
@@ -776,7 +729,7 @@ public class ProjectTest {
 
   @Test
   public void testNdkLibraryHasCorrectPath() throws IOException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
     // Build up a the graph that corresponds to:
     //
@@ -788,20 +741,18 @@ public class ProjectTest {
     //   src_target = ':foo-jni',
     // )
 
-    NdkLibraryRule ndkLibrary = NdkLibraryRule.newNdkLibraryRuleBuilder()
+    NdkLibraryRule ndkLibrary = buildRuleBuilderParams.buildAndAddToIndex(
+        NdkLibraryRule.newNdkLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni"))
         .addSrc("Android.mk")
-        .addVisibilityPattern(new SingletonBuildTargetPattern("//third_party/java/foo:foo"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(ndkLibrary.getFullyQualifiedName(), ndkLibrary);
+        .addVisibilityPattern(new SingletonBuildTargetPattern("//third_party/java/foo:foo")));
 
-    ProjectConfigRule ndkProjectConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule ndkProjectConfig = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/foo/jni:project_config"))
-        .setSrcTarget(Optional.of("//third_party/java/foo/jni:foo-jni"))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(ndkProjectConfig.getFullyQualifiedName(), ndkProjectConfig);
+        .setSrcTarget(Optional.of("//third_party/java/foo/jni:foo-jni")));
 
-    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleIndex,
+    ProjectWithModules projectWithModules = getModulesForPartialGraph(buildRuleBuilderParams,
         ImmutableList.of(ndkProjectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
@@ -820,40 +771,36 @@ public class ProjectTest {
   @Test
   public void shouldThrowAnExceptionIfAModuleIsMissingADependencyWhenGeneratingProjectFiles()
       throws IOException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
-    DefaultJavaLibraryRule ex1 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    DefaultJavaLibraryRule ex1 = buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//example/parent:ex1"))
         .addSrc("DoesNotExist.java")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(ex1.getFullyQualifiedName(), ex1);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    DefaultJavaLibraryRule ex2 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    DefaultJavaLibraryRule ex2 = buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//example/child:ex2"))
         .addSrc("AlsoDoesNotExist.java")
         .addDep(ex1.getFullyQualifiedName())
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(ex2.getFullyQualifiedName(), ex2);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    DefaultJavaLibraryRule tests = JavaTestRule.newJavaTestRuleBuilder()
+    DefaultJavaLibraryRule tests = buildRuleBuilderParams.buildAndAddToIndex(
+        JavaTestRule.newJavaTestRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//example/child:tests"))
         .addSrc("SomeTestFile.java")
         .addDep(ex2.getFullyQualifiedName())
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(tests.getFullyQualifiedName(), tests);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    ProjectConfigRule config = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule config = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//example/child:config"))
         .setSrcTarget(Optional.of(ex2.getFullyQualifiedName()))
-        .setTestTarget(Optional.of(tests.getFullyQualifiedName()))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(config.getFullyQualifiedName(), config);
+        .setTestTarget(Optional.of(tests.getFullyQualifiedName())));
 
     ProjectWithModules projectWithModules = getModulesForPartialGraph(
-        buildRuleIndex, ImmutableList.of(config), null);
+        buildRuleBuilderParams, ImmutableList.of(config), null);
 
     Module module = Iterables.getOnlyElement(projectWithModules.modules);
     List<Module> modules = projectWithModules.project.createModulesForProjectConfigs();

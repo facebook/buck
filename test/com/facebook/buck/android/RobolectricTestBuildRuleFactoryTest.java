@@ -26,12 +26,14 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -43,6 +45,9 @@ public class RobolectricTestBuildRuleFactoryTest {
 
   @Test
   public void testAmendBuilder() throws NoSuchBuildTargetException {
+    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams(buildRuleIndex);
+
     // Set up mocks.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
@@ -78,8 +83,9 @@ public class RobolectricTestBuildRuleFactoryTest {
         buildTarget,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
-    Map<String, BuildRule> buildRuleIndex = ImmutableMap.of("//java/com/facebook/base:base", base);
-    RobolectricTestRule robolectricRule = builder.build(buildRuleIndex);
+    buildRuleIndex.put("//java/com/facebook/base:base", base);
+    RobolectricTestRule robolectricRule = (RobolectricTestRule) buildRuleBuilderParams
+        .buildAndAddToIndex(builder);
 
     // Verify the build rule built from the builder.
     assertEquals(ImmutableList.of("-Dbuck.robolectric_dir=javatests/com/facebook/base"),

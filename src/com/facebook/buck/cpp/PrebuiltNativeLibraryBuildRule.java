@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -100,7 +99,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<PrebuiltNativeLibraryBuildRule> {
 
     @Nullable
     private String nativeLibs = null;
@@ -108,8 +107,8 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     private Builder() {}
 
     @Override
-    public PrebuiltNativeLibraryBuildRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(buildRuleIndex),
+    public PrebuiltNativeLibraryBuildRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(buildRuleBuilderParams),
           nativeLibs,
           new DefaultDirectoryTraverser());
     }

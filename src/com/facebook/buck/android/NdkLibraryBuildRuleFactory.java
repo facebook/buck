@@ -18,11 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
 import java.util.List;
 
-public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory<NdkLibraryRule.Builder> {
 
   public NdkLibraryBuildRuleFactory() {
   }
@@ -33,10 +32,7 @@ public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-      BuildRuleFactoryParams params) {
-    NdkLibraryRule.Builder builder = ((NdkLibraryRule.Builder)abstractBuilder);
-
+  protected void amendBuilder(NdkLibraryRule.Builder builder, BuildRuleFactoryParams params) {
     // flags
     List<String> flags = params.getOptionalListAttribute("flags");
     for (String flag : flags) {

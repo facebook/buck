@@ -18,22 +18,18 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
 import java.io.File;
 
-public class GenAidlBuildRuleFactory extends AbstractBuildRuleFactory {
+public class GenAidlBuildRuleFactory extends AbstractBuildRuleFactory<GenAidlRule.Builder> {
 
   @Override
-  public AbstractBuildRuleBuilder newBuilder() {
+  public GenAidlRule.Builder newBuilder() {
     return GenAidlRule.newGenAidlRuleBuilder();
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-      BuildRuleFactoryParams params) {
-    GenAidlRule.Builder builder = ((GenAidlRule.Builder)abstractBuilder);
-
+  protected void amendBuilder(GenAidlRule.Builder builder, BuildRuleFactoryParams params) {
     // aidl
     String aidlAttribute = params.getRequiredStringAttribute("aidl");
     String aidlPath = params.resolveFilePathRelativeToBuildFileDirectory(aidlAttribute);

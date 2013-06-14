@@ -19,13 +19,11 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
@@ -78,7 +76,7 @@ public class JavacOptionsTest {
     AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
         .addAllProcessors(Collections.singleton("processor"))
         .setProcessOnly(true)
-        .build(ImmutableMap.<String, BuildRule>of());
+        .build(new BuildRuleBuilderParams());
 
     JavacOptions options = JavacOptions.builder()
         .setAnnotationProcessingData(params)
@@ -92,7 +90,7 @@ public class JavacOptionsTest {
     AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
         .addAllProcessors(Lists.newArrayList("myproc", "theirproc"))
         .setProcessOnly(true)
-        .build(Maps.<String, BuildRule>newHashMap());
+        .build(new BuildRuleBuilderParams());
 
     JavacOptions options = JavacOptions.builder()
         .setAnnotationProcessingData(params)

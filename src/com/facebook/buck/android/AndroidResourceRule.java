@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -40,7 +40,6 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -244,7 +243,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<AndroidResourceRule> {
     @Nullable
     private String res = null;
 
@@ -260,14 +259,14 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
     private Builder() {}
 
     @Override
-    public AndroidResourceRule build(Map<String, BuildRule> buildRuleIndex) {
+    public AndroidResourceRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
       if ((res == null && rDotJavaPackage != null)
           || (res != null && rDotJavaPackage == null)) {
         throw new HumanReadableException("Both res and package must be set together in %s.",
             getBuildTarget().getFullyQualifiedName());
       }
 
-      return new AndroidResourceRule(createBuildRuleParams(buildRuleIndex),
+      return new AndroidResourceRule(createBuildRuleParams(buildRuleBuilderParams),
           res,
           rDotJavaPackage,
           assetsDirectory,

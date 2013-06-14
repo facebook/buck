@@ -16,14 +16,15 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Functions;
@@ -36,7 +37,6 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 public class PythonBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule {
 
@@ -121,15 +121,15 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<PythonBinaryRule> {
 
     private String main;
 
     private Builder() {}
 
     @Override
-    public PythonBinaryRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new PythonBinaryRule(createBuildRuleParams(buildRuleIndex), main);
+    public PythonBinaryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      return new PythonBinaryRule(createBuildRuleParams(buildRuleBuilderParams), main);
     }
 
     public Builder setMain(String main) {

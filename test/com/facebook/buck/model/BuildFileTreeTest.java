@@ -21,11 +21,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
@@ -35,7 +34,6 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class BuildFileTreeTest {
@@ -123,14 +121,13 @@ public class BuildFileTreeTest {
   }
 
   private static PartialGraph createGraphForRules(String... ruleNames) {
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
     List<BuildTarget> targets = Lists.newArrayList();
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
     for (String ruleName : ruleNames) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ruleName);
-      BuildRule buildRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
-          .setBuildTarget(buildTarget)
-          .build(buildRuleIndex);
-      buildRuleIndex.put(ruleName, buildRule);
+      buildRuleBuilderParams.buildAndAddToIndex(
+          DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+          .setBuildTarget(buildTarget));
       targets.add(buildTarget);
     }
 

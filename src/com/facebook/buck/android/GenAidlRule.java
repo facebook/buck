@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Build rule for generating a .java file from an .aidl file. Example:
@@ -111,7 +110,7 @@ public class GenAidlRule extends AbstractCachingBuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<GenAidlRule> {
 
     private String aidl;
 
@@ -120,8 +119,8 @@ public class GenAidlRule extends AbstractCachingBuildRule {
     private Builder() {}
 
     @Override
-    public GenAidlRule build(Map<String, BuildRule> buildRuleIndex) {
-      return new GenAidlRule(createBuildRuleParams(buildRuleIndex), aidl, importPath);
+    public GenAidlRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      return new GenAidlRule(createBuildRuleParams(buildRuleBuilderParams), aidl, importPath);
     }
 
     @Override

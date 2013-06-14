@@ -19,20 +19,17 @@ package com.facebook.buck.shell;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.google.common.base.Optional;
 
-public class ExportFileBuildRuleFactory extends AbstractBuildRuleFactory {
+public class ExportFileBuildRuleFactory extends AbstractBuildRuleFactory<ExportFileRule.Builder> {
   @Override
   public ExportFileRule.Builder newBuilder() {
     return ExportFileRule.newExportFileBuilder();
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder, BuildRuleFactoryParams params)
+  protected void amendBuilder(ExportFileRule.Builder builder, BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
-    ExportFileRule.Builder builder = (ExportFileRule.Builder) abstractBuilder;
-
     Optional<String> src = params.getOptionalStringAttribute("src");
     builder.setSrc(src.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 

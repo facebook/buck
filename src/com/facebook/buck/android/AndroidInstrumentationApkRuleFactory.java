@@ -21,9 +21,9 @@ import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
-public class AndroidInstrumentationApkRuleFactory extends AbstractBuildRuleFactory {
+public class AndroidInstrumentationApkRuleFactory
+    extends AbstractBuildRuleFactory<AndroidInstrumentationApk.Builder> {
 
   @Override
   public AndroidInstrumentationApk.Builder newBuilder() {
@@ -31,11 +31,8 @@ public class AndroidInstrumentationApkRuleFactory extends AbstractBuildRuleFacto
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(AndroidInstrumentationApk.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    AndroidInstrumentationApk.Builder builder = (AndroidInstrumentationApk.Builder)abstractBuilder;
-    BuildTarget target = params.target;
-
     // manifest
     String manifestAttribute = params.getRequiredStringAttribute("manifest");
     String manifestPath = params.resolveFilePathRelativeToBuildFileDirectory(manifestAttribute);
@@ -43,7 +40,7 @@ public class AndroidInstrumentationApkRuleFactory extends AbstractBuildRuleFacto
 
     // apk
     String apk = params.getRequiredStringAttribute("apk");
-    ParseContext buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
+    ParseContext buildFileParseContext = ParseContext.forBaseName(params.target.getBaseName());
     BuildTarget buildTarget = params.buildTargetParser.parse(apk, buildFileParseContext);
     builder.setApk(buildTarget.getFullyQualifiedName());
   }

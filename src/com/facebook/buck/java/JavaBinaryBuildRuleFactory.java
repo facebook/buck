@@ -19,11 +19,10 @@ package com.facebook.buck.java;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.google.common.base.Optional;
 
 
-public class JavaBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class JavaBinaryBuildRuleFactory extends AbstractBuildRuleFactory<JavaBinaryRule.Builder> {
 
   @Override
   public JavaBinaryRule.Builder newBuilder() {
@@ -31,10 +30,8 @@ public class JavaBinaryBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(JavaBinaryRule.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    JavaBinaryRule.Builder builder = (JavaBinaryRule.Builder)abstractBuilder;
-
     // main_class
     Optional<String> mainClass = params.getOptionalStringAttribute("main_class");
     if (mainClass.isPresent()) {

@@ -22,7 +22,7 @@ import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class RobolectricTestRule extends JavaTestRule {
@@ -76,17 +75,17 @@ public class RobolectricTestRule extends JavaTestRule {
 
 
     @Override
-    public RobolectricTestRule build(Map<String, BuildRule> buildRuleIndex) {
+    public RobolectricTestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
       ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourceUnderTestNames,
-          buildRuleIndex);
+          buildRuleBuilderParams);
 
       ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();
       allVmArgs.addAll(vmArgs);
 
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleIndex);
+      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleBuilderParams);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new RobolectricTestRule(createBuildRuleParams(buildRuleIndex),
+      return new RobolectricTestRule(createBuildRuleParams(buildRuleBuilderParams),
           srcs,
           resources,
           labels,

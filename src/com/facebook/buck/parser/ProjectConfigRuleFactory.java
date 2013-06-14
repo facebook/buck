@@ -16,14 +16,13 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.util.List;
 
-public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory {
+public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory<ProjectConfigRule.Builder> {
 
   @Override
   public ProjectConfigRule.Builder newBuilder() {
@@ -31,10 +30,9 @@ public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(ProjectConfigRule.Builder builder,
       BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
-    ProjectConfigRule.Builder builder = ((ProjectConfigRule.Builder)abstractBuilder);
     Function<String, String> contextualBuildParser = createBuildTargetParseFunction(params);
 
     // src_target

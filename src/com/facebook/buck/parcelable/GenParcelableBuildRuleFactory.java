@@ -19,9 +19,8 @@ package com.facebook.buck.parcelable;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
-public class GenParcelableBuildRuleFactory extends AbstractBuildRuleFactory {
+public class GenParcelableBuildRuleFactory extends AbstractBuildRuleFactory<GenParcelableRule.Builder> {
 
   @Override
   public GenParcelableRule.Builder newBuilder() {
@@ -29,7 +28,7 @@ public class GenParcelableBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder builder,
+  protected void amendBuilder(GenParcelableRule.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
   }
 

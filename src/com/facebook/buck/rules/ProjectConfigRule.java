@@ -28,7 +28,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -162,7 +161,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder {
+  public static class Builder extends AbstractBuildRuleBuilder<ProjectConfigRule> {
 
     private Optional<String> srcTargetId = Optional.absent();
     @Nullable private List<String> srcRoots = null;
@@ -173,11 +172,11 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     private Builder() {}
 
     @Override
-    public ProjectConfigRule build(final Map<String, BuildRule> buildRuleIndex) {
-      BuildRule srcRule = buildRuleIndex.get(srcTargetId.orNull());
-      BuildRule testRule = buildRuleIndex.get(testTargetId.orNull());
+    public ProjectConfigRule build(final BuildRuleBuilderParams buildRuleBuilderParams) {
+      BuildRule srcRule = buildRuleBuilderParams.get(srcTargetId.orNull());
+      BuildRule testRule = buildRuleBuilderParams.get(testTargetId.orNull());
 
-      return new ProjectConfigRule(createBuildRuleParams(buildRuleIndex),
+      return new ProjectConfigRule(createBuildRuleParams(buildRuleBuilderParams),
           srcRule,
           srcRoots,
           testRule,

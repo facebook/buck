@@ -18,9 +18,8 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
-public final class GenruleBuildRuleFactory extends AbstractBuildRuleFactory {
+public final class GenruleBuildRuleFactory extends AbstractBuildRuleFactory<Genrule.Builder> {
 
   @Override
   public Genrule.Builder newBuilder() {
@@ -28,10 +27,7 @@ public final class GenruleBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-      BuildRuleFactoryParams params) {
-    Genrule.Builder builder = ((Genrule.Builder)abstractBuilder);
-
+  protected void amendBuilder(Genrule.Builder builder, BuildRuleFactoryParams params) {
     // cmd
     String cmd = params.getRequiredStringAttribute("cmd");
     builder.setCmd(cmd);

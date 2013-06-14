@@ -21,12 +21,11 @@ import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.google.common.base.Optional;
 
 import java.util.List;
 
-public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
+public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<DefaultJavaLibraryRule.Builder> {
 
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 
@@ -36,10 +35,8 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
+  protected void amendBuilder(DefaultJavaLibraryRule.Builder builder,
                               BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    DefaultJavaLibraryRule.Builder builder = ((DefaultJavaLibraryRule.Builder) abstractBuilder);
-
     Optional<String> proguardConfig = params.getOptionalStringAttribute("proguard_config");
     builder.setProguardConfig(
         proguardConfig.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
@@ -64,7 +61,7 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory {
 
   static void extractAnnotationProcessorParameters(
       AnnotationProcessingParams.Builder annotationProcessingBuilder,
-      AbstractBuildRuleBuilder buildRuleBuilder,
+      DefaultJavaLibraryRule.Builder buildRuleBuilder,
       BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
 

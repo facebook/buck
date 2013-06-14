@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -143,15 +142,15 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
     return new Builder();
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder implements
+  public static class Builder extends AbstractBuildRuleBuilder<ShTestRule> implements
       LabelsAttributeBuilder {
 
     private String test;
     private ImmutableSet<String> labels = ImmutableSet.of();
 
     @Override
-    public BuildRule build(Map<String, BuildRule> buildRuleIndex) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleIndex);
+    public ShTestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleBuilderParams);
       return new ShTestRule(buildRuleParams, test, labels);
     }
 

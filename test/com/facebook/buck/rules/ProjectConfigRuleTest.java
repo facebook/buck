@@ -23,7 +23,6 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -56,9 +55,10 @@ public class ProjectConfigRuleTest extends EasyMockSupport {
   }
 
   private ProjectConfigRule createProjectConfig() {
-    JavaLibraryRule javaRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//javatests:lib"))
-        .build(ImmutableMap.<String, BuildRule>of());
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    JavaLibraryRule javaRule = buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        .setBuildTarget(BuildTargetFactory.newInstance("//javatests:lib")));
 
     BuildRuleParams buildRuleParams = new BuildRuleParams(
         BuildTargetFactory.newInstance("//javatests:project_config"),

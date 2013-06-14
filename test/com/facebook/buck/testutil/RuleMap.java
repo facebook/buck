@@ -18,17 +18,25 @@ package com.facebook.buck.testutil;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
-
-import java.util.Map;
+import com.google.common.collect.ImmutableList;
 
 public class RuleMap {
 
   /** Utility class: do not instantiate. */
   private RuleMap() {}
 
-  public static DependencyGraph createGraphFromBuildRules(Map<String, BuildRule> buildRuleIndex) {
-    Iterable<BuildRule> rules = buildRuleIndex.values();
+  public static DependencyGraph createGraphFromBuildRules(BuildRuleBuilderParams params) {
+    Iterable<BuildRule> rules = params.getBuildRules();
+    return createGraphFromBuildRules(rules);
+  }
+
+  public static DependencyGraph createGraphFromSingleRule(BuildRule buildRule) {
+    return createGraphFromBuildRules(ImmutableList.of(buildRule));
+  }
+
+  private static DependencyGraph createGraphFromBuildRules(Iterable<BuildRule> rules) {
     MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
     for (BuildRule rule : rules) {
       for (BuildRule dep : rule.getDeps()) {

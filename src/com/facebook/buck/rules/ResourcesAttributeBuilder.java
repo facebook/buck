@@ -22,5 +22,5 @@ public interface ResourcesAttributeBuilder {
   /**
    * @param relativePathToResource
    */
-  public AbstractBuildRuleBuilder addResource(String relativePathToResource);
+  public AbstractBuildRuleBuilder<?> addResource(String relativePathToResource);
 }

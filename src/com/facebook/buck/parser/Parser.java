@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -66,7 +67,7 @@ public class Parser {
    * We parse a build file in search for one particular rule; however, we also keep track of the
    * other rules that were also parsed from it.
    */
-  private final Map<BuildTarget, BuildRuleBuilder> knownBuildTargets;
+  private final Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets;
 
   /**
    * If filterAllTargetsInProject is called, we cache the rule objects for subsequent calls with matching
@@ -91,7 +92,7 @@ public class Parser {
         buildRuleTypes,
         BuildFileTree.constructBuildFileTree(projectFilesystem),
         new BuildTargetParser(projectFilesystem),
-         /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder>newHashMap(),
+         /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
         new ProjectBuildFileParser());
   }
 
@@ -100,7 +101,7 @@ public class Parser {
          KnownBuildRuleTypes buildRuleTypes,
          BuildFileTree buildFiles,
          BuildTargetParser buildTargetParser,
-         Map<BuildTarget, BuildRuleBuilder> knownBuildTargets,
+         Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
          ProjectBuildFileParser buildFileParser) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
@@ -153,7 +154,7 @@ public class Parser {
   DependencyGraph findAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes) {
-    final Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    final BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
     final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
@@ -169,7 +170,7 @@ public class Parser {
                   NoSuchBuildTargetException.createForMissingBuildRule(buildTarget, parseContext));
             }
 
-            BuildRuleBuilder buildRuleBuilder = knownBuildTargets.get(buildTarget);
+            BuildRuleBuilder<?> buildRuleBuilder = knownBuildTargets.get(buildTarget);
 
             Set<BuildTarget> deps = Sets.newHashSet();
             for (String dep : buildRuleBuilder.getDeps()) {
@@ -191,8 +192,8 @@ public class Parser {
 
           @Override
           protected void onNodeExplored(BuildTarget buildTarget) {
-            BuildRuleBuilder builderForTarget = knownBuildTargets.get(buildTarget);
-            BuildRule buildRule = builderForTarget.build(buildRuleIndex);
+            BuildRuleBuilder<?> builderForTarget = knownBuildTargets.get(buildTarget);
+            BuildRule buildRule = buildRuleBuilderParams.buildAndAddToIndex(builderForTarget);
 
             // Update the graph.
             if (buildRule.getDeps().isEmpty()) {
@@ -204,8 +205,6 @@ public class Parser {
                 graph.addEdge(buildRule, dep);
               }
             }
-
-            buildRuleIndex.put(buildTarget.getFullyQualifiedName(), buildRule);
           }
 
           @Override
@@ -292,7 +291,7 @@ public class Parser {
         sourceOfBuildTarget = source;
       }
 
-      BuildRuleFactory factory = buildRuleTypes.getFactory(buildRuleType);
+      BuildRuleFactory<?> factory = buildRuleTypes.getFactory(buildRuleType);
       if (factory == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
             type,
@@ -306,7 +305,7 @@ public class Parser {
         matchingTargets.add(target);
       }
 
-      BuildRuleBuilder buildRuleBuilder = factory.newInstance(new BuildRuleFactoryParams(
+      BuildRuleBuilder<?> buildRuleBuilder = factory.newInstance(new BuildRuleFactoryParams(
           map,
           System.err, // TODO(simons): Injecting a Console instance turns out to be a nightmare.
           projectFilesystem,

@@ -33,6 +33,7 @@ import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -47,16 +48,16 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+
 import org.easymock.EasyMock;
 import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 public class ProjectCommandTest {
 
@@ -66,21 +67,19 @@ public class ProjectCommandTest {
   @Test
   public void testBasicProjectCommand()
       throws IOException, NoSuchBuildTargetException, NoSuchMethodException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
     String javaLibraryTargetName = "//javasrc:java-library";
-    DefaultJavaLibraryRule javaLibraryRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+    DefaultJavaLibraryRule javaLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(javaLibraryTargetName))
-        .addSrc("javasrc/JavaLibrary.java")
-        .build(buildRuleIndex);
-    buildRuleIndex.put(javaLibraryRule.getFullyQualifiedName(), javaLibraryRule);
+        .addSrc("javasrc/JavaLibrary.java"));
 
     String projectConfigTargetName = "//javasrc:project-config";
-    ProjectConfigRule ruleConfig = ProjectConfigRule.newProjectConfigRuleBuilder()
+    ProjectConfigRule ruleConfig = buildRuleBuilderParams.buildAndAddToIndex(
+        ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(projectConfigTargetName))
-        .setSrcTarget(Optional.of(javaLibraryTargetName))
-        .build(buildRuleIndex);
-    buildRuleIndex.put(ruleConfig.getFullyQualifiedName(), ruleConfig);
+        .setSrcTarget(Optional.of(javaLibraryTargetName)));
 
     BuckConfig buckConfig = createBuckConfig(
         Joiner.on("\n").join(

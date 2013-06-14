@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,7 +40,6 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Unit test for {@link com.facebook.buck.android.NdkLibraryRule}.
@@ -52,9 +50,10 @@ public class NdkLibraryRuleTest {
   public void testSimpleNdkLibraryRule() throws IOException {
     BuildContext context = null;
 
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
     String basePath = "java/src/com/facebook/base";
-    NdkLibraryRule ndkLibraryRule = NdkLibraryRule.newNdkLibraryRuleBuilder()
+    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    NdkLibraryRule ndkLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+        NdkLibraryRule.newNdkLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             String.format("//%s:base", basePath)))
         .addSrc(basePath + "/Application.mk")
@@ -62,9 +61,7 @@ public class NdkLibraryRuleTest {
         .addSrc(basePath + "/Android.mk")
         .addFlag("flag1")
         .addFlag("flag2")
-        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .build(buildRuleIndex);
-    buildRuleIndex.put(ndkLibraryRule.getFullyQualifiedName(), ndkLibraryRule);
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     Assert.assertEquals(BuildRuleType.NDK_LIBRARY, ndkLibraryRule.getType());
     assertTrue(ndkLibraryRule.isAndroidRule());

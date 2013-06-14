@@ -16,12 +16,11 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.parser.AbstractTestRuleFactory;
+import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 
-public class ShTestBuildRuleFactory extends AbstractTestRuleFactory {
+public class ShTestBuildRuleFactory extends AbstractBuildRuleFactory<ShTestRule.Builder> {
 
   @Override
   public ShTestRule.Builder newBuilder() {
@@ -29,10 +28,8 @@ public class ShTestBuildRuleFactory extends AbstractTestRuleFactory {
   }
 
   @Override
-  protected void amendBuilder(AbstractBuildRuleBuilder abstractBuilder,
-      BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
-    ShTestRule.Builder builder = ((ShTestRule.Builder)abstractBuilder);
-
+  protected void amendBuilder(ShTestRule.Builder builder, BuildRuleFactoryParams params)
+      throws NoSuchBuildTargetException {
     // test
     String test = params.getRequiredStringAttribute("test");
     String testPath = params.resolveFilePathRelativeToBuildFileDirectory(test);
