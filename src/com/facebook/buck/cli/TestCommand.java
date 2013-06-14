@@ -58,6 +58,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -361,6 +362,29 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
     List<ListenableFuture<TestResults>> results = Lists.newArrayList();
+
+    // Unless `--verbose 0` is specified, print out test results as they become available.
+    // Failures with the ListenableFuture should always be printed, as they indicate an error with
+    // Buck, not the test being run.
+    final boolean printTestResultsAsTheyFinish =
+        options.getVerbosity().shouldPrintStandardInformation();
+    FutureCallback<TestResults> onTestFinishedCallback = new FutureCallback<TestResults>() {
+
+      @Override
+      public void onSuccess(TestResults testResults) {
+        if (printTestResultsAsTheyFinish) {
+          getStdErr().print(testResults.getSummaryWithFailureDetails(console.getAnsi()));
+        }
+      }
+
+      @Override
+      public void onFailure(Throwable throwable) {
+        // This should never happen, but if it does, that means that something has gone awry, so
+        // we should bubble it up.
+        throwable.printStackTrace(getStdErr());
+      }
+    };
+
     for (TestRule test : tests) {
       List<Step> steps;
 
@@ -378,6 +402,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           stepRunner.runStepsAndYieldResult(steps,
               test.interpretTestResults(executionContext),
               test.getBuildTarget());
+      Futures.addCallback(testResults, onTestFinishedCallback);
       results.add(testResults);
     }
 
@@ -408,7 +433,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         isAllTestsPassed = false;
         numFailures += summary.getFailureCount();
       }
-      getStdErr().print(summary.getSummaryWithFailureDetails(ansi));
+      if (!printTestResultsAsTheyFinish) {
+        getStdErr().print(summary.getSummaryWithFailureDetails(ansi));
+      }
     }
 
     // Print the summary of the test results.
