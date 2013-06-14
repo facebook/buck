@@ -8,3 +8,6 @@
     includes = //DEFS
 [buckd]
     ignore = .git, .idea, .buckd, buck-out, buck-bin, buck-gen, build
+[test]
+    # Maximum timeout of 1 minute per test.
+    timeout = 60000
