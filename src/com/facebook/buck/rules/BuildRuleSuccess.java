@@ -38,6 +38,12 @@ public class BuildRuleSuccess {
     /** Computed {@link RuleKey} matches the one on disk. */
     MATCHING_RULE_KEY,
 
+    /**
+     * Computed {@link RuleKey} without deps matches the one on disk <em>AND</em> the ABI key for
+     * the deps matches the one on disk.
+     */
+    MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
+
     /** Created trivially, such as an {@link InputRule} or {@link ProjectConfigRule}. */
     BY_DEFINITION,
   }

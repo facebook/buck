@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -27,6 +28,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +39,7 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.Capture;
@@ -187,6 +190,29 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     assertEquals(expectedRuleKeyHash, firstLineInSuccessFile);
   }
 
+  @Test
+  public void testAbiRuleCanAvoidRebuild() throws InterruptedException, ExecutionException {
+    BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
+        /* sortedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of());
+    TestAbstractCachingBuildRule buildRule = new TestAbstractCachingBuildRule(buildRuleParams);
+
+    BuildContext buildContext = createMock(BuildContext.class);
+    expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
+
+    replayAll();
+
+    ListenableFuture<BuildRuleSuccess> result = buildRule.build(buildContext);
+    assertTrue("We expect build() to be synchronous in this case, " +
+    		       "so the future should already be resolved.",
+               MoreFutures.isSuccess(result));
+
+    BuildRuleSuccess success = result.get();
+    assertEquals(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, success.getType());
+
+    verifyAll();
+  }
+
 
   // TODO(mbolin): Test that when the success files match, nothing is built and nothing is written
   // back to the cache.
@@ -248,5 +274,52 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         throw new UnsupportedOperationException();
       }
     };
+  }
+
+  /**
+   * {@link AbstractCachingBuildRule} that implements {@link AbiRule}.
+   */
+  private static class TestAbstractCachingBuildRule extends AbstractCachingBuildRule
+      implements AbiRule {
+
+    TestAbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
+      super(buildRuleParams);
+    }
+
+    @Override
+    protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+      throw new UnsupportedOperationException("method should not be called");
+    }
+
+    @Override
+    protected List<Step> buildInternal(BuildContext context)
+        throws IOException {
+      throw new UnsupportedOperationException("method should not be called");
+    }
+
+    @Override
+    public BuildRuleType getType() {
+      throw new UnsupportedOperationException("method should not be called");
+    }
+
+    @Override
+    public RuleKey getRuleKeyWithoutDeps() {
+      return new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9");
+    }
+
+    @Override
+    public RuleKey getRuleKeyWithoutDepsOnDisk() {
+      return new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9");
+    }
+
+    @Override
+    public String getAbiKeyForDeps() {
+      return "92d6de0a59080284055bcde5d2923f144b216a59";
+    }
+
+    @Override
+    public String getAbiKeyForDepsOnDisk() {
+      return "92d6de0a59080284055bcde5d2923f144b216a59";
+    }
   }
 }

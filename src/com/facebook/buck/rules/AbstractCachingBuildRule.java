@@ -59,7 +59,6 @@ import javax.annotation.Nullable;
  *   <li>getInputsToCompareToOutput()
  *   <li>buildInternal()
  *   <li>appendToRuleKey()
- *   <li>canSkipRebuildIfInterfacesOfDepsAreUnchanged()
  * </ul>
  * Ultimately, we plan to define a BuildRuleDescriptor, from which we will at least be able to
  * provide the implementation of getInputsToCompareToOutput() and appendToRuleKey() automatically.
@@ -222,31 +221,34 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // means a change in one of the leaves can result in almost all rules being rebuilt, which is
     // slow. Fortunately, we limit the effects of this when building Java code when checking the ABI
     // of deps instead of the RuleKey for deps.
-    //
-    // TODO(mbolin): It appears that we need to be able to compute a RuleKey with and without its
-    // deps. Right now, it looks like a RuleKey includes its deps via
-    // RuleKey.Builder.builder() when it creates the Builder. We almost always want to do it with
-    // deps, with the exception of java_library() when we want to test (1) and (2) but not (3).
-    RuleKey ruleKey;
-    if (canSkipRebuildIfInterfacesOfDepsAreUnchanged()) {
-      // TODO(mbolin): Implement this case.
+    if (this instanceof AbiRule) {
+      AbiRule abiRule = (AbiRule)this;
 
-      // Compute the current ruleKey only if necessary.
-      ruleKey = null;
-    } else {
-      // Compute the current RuleKey and compare it to the one stored on disk.
-      ruleKey = getRuleKey();
-      Optional<RuleKey> cachedRuleKey = getRuleKeyOnDisk(context.getProjectFilesystem());
-
-      // If the RuleKeys match, then there is nothing to build.
-      if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
-        logger.info(String.format("[UNCHANGED %s]", getFullyQualifiedName()));
-        buildRuleResult.set(new BuildRuleSuccess(this, BuildRuleSuccess.Type.MATCHING_RULE_KEY));
-        return;
+      RuleKey ruleKeyNoDeps = abiRule.getRuleKeyWithoutDeps();
+      RuleKey cachedRuleKeyNoDeps = abiRule.getRuleKeyWithoutDepsOnDisk();
+      if (ruleKeyNoDeps != null && ruleKeyNoDeps.equals(cachedRuleKeyNoDeps)) {
+        // The RuleKey for the definition of this build rule and its input files has not changed.
+        // Therefore, if the ABI of its deps has not changed, there is nothing to rebuild.
+        String abiKeyForDeps = abiRule.getAbiKeyForDeps();
+        String cachedAbiKeyForDeps = abiRule.getAbiKeyForDepsOnDisk();
+        if (abiKeyForDeps != null && abiKeyForDeps.equals(cachedAbiKeyForDeps)) {
+          buildRuleResult.set(new BuildRuleSuccess(this,
+              BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS));
+          return;
+        }
       }
     }
 
-    Preconditions.checkNotNull(ruleKey, "ruleKey must be set by the preceding codepath.");
+    // Compute the current RuleKey and compare it to the one stored on disk.
+    RuleKey ruleKey = getRuleKey();
+    Optional<RuleKey> cachedRuleKey = getRuleKeyOnDisk(context.getProjectFilesystem());
+
+    // If the RuleKeys match, then there is nothing to build.
+    if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
+      logger.info(String.format("[UNCHANGED %s]", getFullyQualifiedName()));
+      buildRuleResult.set(new BuildRuleSuccess(this, BuildRuleSuccess.Type.MATCHING_RULE_KEY));
+      return;
+    }
 
     // Record the start of the build.
     context.getEventBus().post(BuildEvents.started(this));
@@ -293,11 +295,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     context.getEventBus().post(
         BuildEvents.finished(this, BuildRuleStatus.SUCCESS, cacheResult));
     return;
-  }
-
-  protected boolean canSkipRebuildIfInterfacesOfDepsAreUnchanged() {
-    // TODO(mbolin): Override this to return true for java_library() and friends.
-    return false;
   }
 
   /**
@@ -378,26 +375,18 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   private void writeSuccessFile(ProjectFilesystem projectFilesystem) throws IOException {
     String path = getPathToSuccessFile();
     projectFilesystem.createParentDirs(new File(path));
-    Iterable<String> lines = getSuccessFileStringsForBuildRules(/* mangleNonIdempotent */ false);
+    Iterable<String> lines = getSuccessFileStringsForBuildRules();
     projectFilesystem.writeLinesToPath(lines, path);
   }
 
-  private Iterable<String> getSuccessFileStringsForBuildRules(
-      boolean mangleNonIdempotent) {
+  private Iterable<String> getSuccessFileStringsForBuildRules() {
     List<String> lines = Lists.newArrayList();
 
     // The first line should always be the RuleKey.
     lines.add(getRuleKey().toString());
 
-    // These lines are still written for now for debugging purposes, but may ultimately be removed.
-    for (BuildRule buildRule : getInputs()) {
-      if (buildRule.getOutput() != null) {
-        lines.add(String.format("%s %s %s",
-            buildRule.getOutputKey().toString(mangleNonIdempotent),
-            buildRule.getRuleKey().toString(mangleNonIdempotent),
-            buildRule.getFullyQualifiedName()));
-      }
-    }
+    // In the future, rules such as AbiRule will be able to add more lines to this list.
+
     return lines;
   }
 
