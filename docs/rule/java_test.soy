@@ -106,6 +106,14 @@ A <code>java_test()</code> rule is used to define a set of
 
 {call buck.visibility_arg /}
 
+{call buck.arg}
+  {param name: 'vm_args' /}
+  {param default : '[]' /}
+  {param desc}
+  Runtime arguments to the JVM running the tests.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {/call} // close buck.rule
