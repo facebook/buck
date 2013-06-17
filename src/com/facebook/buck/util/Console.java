@@ -61,6 +61,13 @@ public class Console {
     printFailure("Unexpected internal error (this is probably a buck bug).");
   }
 
+  /**
+   * Prints an error message to stderr that will be highlighted in red if stderr is a tty.
+   */
+  public void printErrorText(String message) {
+    stdErr.print(ansi.asErrorText(message));
+  }
+
   public void printFailureWithoutStacktrace(Throwable t) {
     printFailure(Throwables.getRootCause(t).getMessage());
   }

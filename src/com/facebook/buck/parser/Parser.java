@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -88,12 +89,15 @@ public class Parser {
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ProjectBuildFileParser buildFileParser;
+  private final Console console;
   private BuildFileTree buildFiles;
 
   public Parser(ProjectFilesystem projectFilesystem,
-      KnownBuildRuleTypes buildRuleTypes) {
+      KnownBuildRuleTypes buildRuleTypes,
+      Console console) {
     this(projectFilesystem,
         buildRuleTypes,
+        console,
         BuildFileTree.constructBuildFileTree(projectFilesystem),
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
@@ -103,12 +107,14 @@ public class Parser {
   @VisibleForTesting
   Parser(ProjectFilesystem projectFilesystem,
          KnownBuildRuleTypes buildRuleTypes,
+         Console console,
          BuildFileTree buildFiles,
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
          ProjectBuildFileParser buildFileParser) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+    this.console = Preconditions.checkNotNull(console);
     this.buildFiles = Preconditions.checkNotNull(buildFiles);
     this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
@@ -335,7 +341,7 @@ public class Parser {
 
       BuildRuleBuilder<?> buildRuleBuilder = factory.newInstance(new BuildRuleFactoryParams(
           map,
-          System.err, // TODO(simons): Injecting a Console instance turns out to be a nightmare.
+          console,
           projectFilesystem,
           buildFiles,
           buildTargetParser,

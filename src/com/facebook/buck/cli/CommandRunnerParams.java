@@ -45,7 +45,7 @@ class CommandRunnerParams {
         projectFilesystem,
         buildRuleTypes,
         artifactCache,
-        new Parser(projectFilesystem, buildRuleTypes));
+        new Parser(projectFilesystem, buildRuleTypes, console));
   }
 
   public CommandRunnerParams(

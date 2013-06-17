@@ -58,9 +58,11 @@ public final class Main {
     private final ProjectFilesystemWatcher filesystemWatcher;
     private final BuckConfig config;
 
-    public Daemon(ProjectFilesystem projectFilesystem, BuckConfig config) throws IOException {
+    public Daemon(ProjectFilesystem projectFilesystem,
+        BuckConfig config,
+        Console console) throws IOException {
       this.config = config;
-      this.parser = new Parser(projectFilesystem, new KnownBuildRuleTypes());
+      this.parser = new Parser(projectFilesystem, new KnownBuildRuleTypes(), console);
       this.eventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
@@ -94,9 +96,11 @@ public final class Main {
     return Boolean.getBoolean("buck.daemon");
   }
 
-  private Daemon getDaemon(ProjectFilesystem filesystem, BuckConfig config) throws IOException {
+  private Daemon getDaemon(ProjectFilesystem filesystem,
+      BuckConfig config,
+      Console console) throws IOException {
     if (daemon == null) {
-      daemon = new Daemon(filesystem, config);
+      daemon = new Daemon(filesystem, config, console);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -112,7 +116,7 @@ public final class Main {
       // If Buck config has changed, invalidate the cache and create a new daemon.
       if (!daemon.getConfig().equals(config)) {
         daemon.close();
-        daemon = new Daemon(filesystem, config);
+        daemon = new Daemon(filesystem, config, console);
       }
     }
     return daemon;
@@ -174,11 +178,11 @@ public final class Main {
     // Create or get and invalidate cached command parameters.
     Parser parser;
     if (isDaemon()) {
-      Daemon daemon = getDaemon(projectFilesystem, config);
+      Daemon daemon = getDaemon(projectFilesystem, config, console);
       daemon.watchFileSystem();
       parser = daemon.getParser();
     } else {
-      parser = new Parser(projectFilesystem, knownBuildRuleTypes);
+      parser = new Parser(projectFilesystem, knownBuildRuleTypes, console);
     }
 
     // Find and execute command.

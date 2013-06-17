@@ -6,6 +6,7 @@ java_test(
     '//src/com/facebook/buck/parser:support',
   ],
   deps = [
+    ':NonCheckingBuildRuleFactoryParams',
     '//lib:easymock',
     '//lib:guava',
     '//lib:junit',
@@ -26,7 +27,7 @@ java_test(
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
-    ':NonCheckingBuildRuleFactoryParams',
+    '//test/com/facebook/buck/testutil:testutil',
   ],
 )
 
@@ -60,6 +61,7 @@ java_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/testutil:testutil',
   ],
   visibility = [
     '//test/...',

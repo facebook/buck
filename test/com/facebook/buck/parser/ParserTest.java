@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -104,6 +105,7 @@ public class ParserTest {
     return new Parser(
         filesystem,
         buildRuleTypes,
+        new TestConsole(),
         new BuildFileTree(ImmutableSet.<BuildTarget>of()),
         new BuildTargetParser(filesystem),
         knownBuildTargets,
@@ -125,7 +127,10 @@ public class ParserTest {
         "buck_base_path", "testdata/com/facebook/feed/model");
     List<Map<String, Object>> ruleObjects = ImmutableList.of(rawRule);
 
-    Parser parser = new Parser(new ProjectFilesystem(new File(".")), new KnownBuildRuleTypes());
+    Parser parser = new Parser(
+        new ProjectFilesystem(new File(".")),
+        new KnownBuildRuleTypes(),
+        new TestConsole());
 
     parser.parseRawRulesInternal(ruleObjects, null);
     RawRulePredicate predicate = alwaysTrue();
@@ -182,6 +187,7 @@ public class ParserTest {
     // logic, only its graph traversal algorithms.
     Parser parser = new Parser(projectFilesystem,
         buildRuleTypes,
+        new TestConsole(),
         buildFiles,
         buildTargetParser,
         circularBuildTargets(),

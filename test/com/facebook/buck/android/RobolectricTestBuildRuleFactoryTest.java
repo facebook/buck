@@ -28,6 +28,7 @@ import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,6 @@ import com.google.common.collect.Maps;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import java.io.PrintStream;
 import java.util.Map;
 
 public class RobolectricTestBuildRuleFactoryTest {
@@ -63,7 +63,7 @@ public class RobolectricTestBuildRuleFactoryTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//javatests/com/facebook/base:base");
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance,
-        /* stdErr */ EasyMock.createMock(PrintStream.class),
+        new TestConsole(),
         projectFilesystem,
         /* buildFiles */ null,
         buildTargetParser,

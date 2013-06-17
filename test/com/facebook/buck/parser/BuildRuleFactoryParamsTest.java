@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.io.Files;
@@ -81,7 +82,7 @@ public class BuildRuleFactoryParamsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:wakizashi");
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        System.err,
+        new TestConsole(),
         filesystem,
         tree,
         parser,
@@ -97,7 +98,7 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        System.err,
+        new TestConsole(),
         filesystem,
         tree,
         parser,
@@ -111,7 +112,7 @@ public class BuildRuleFactoryParamsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook/demo:Main");
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        System.err,
+        new TestConsole(),
         filesystem,
         tree,
         parser,
@@ -135,7 +136,7 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        System.err,
+        new TestConsole(),
         filesystem,
         tree,
         parser,
@@ -159,7 +160,7 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        System.err,
+        new TestConsole(),
         filesystem,
         tree,
         parser,

@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -29,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
@@ -54,13 +54,13 @@ public final class BuildRuleFactoryParams {
 
   public BuildRuleFactoryParams(
       Map<String, ?> instance,
-      PrintStream stdErr,
+      Console console,
       ProjectFilesystem filesystem,
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
       BuildTarget target) {
     this(instance,
-        stdErr,
+        console,
         filesystem,
         buildFiles,
         buildTargetParser,
@@ -71,14 +71,14 @@ public final class BuildRuleFactoryParams {
   @VisibleForTesting
   BuildRuleFactoryParams(
       Map<String, ?> instance,
-      PrintStream stdErr,
+      Console console,
       ProjectFilesystem filesystem,
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
       BuildTarget target,
       boolean ignoreFileExistenceChecks) {
     this.instance = instance;
-    Preconditions.checkNotNull(stdErr);
+    Preconditions.checkNotNull(console);
     this.filesystem = filesystem;
     this.buildFiles = buildFiles;
     this.buildTargetParser = buildTargetParser;
