@@ -56,6 +56,9 @@ public abstract class ShellStep implements Step {
   @Nullable
   private String stdOut;
 
+  private long startTime = 0L;
+  private long endTime = 0L;
+
   /**
    * Creates a new {@link ShellStep} using the default logic to return a description from
    * {@link #getDescription(com.facebook.buck.step.ExecutionContext)}.
@@ -135,13 +138,16 @@ public abstract class ShellStep implements Step {
 
     Process process;
     try {
+      startTime = System.currentTimeMillis();
       process = processBuilder.start();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return 1;
     }
 
-    return interactWithProcess(context, process);
+    int exitCode = interactWithProcess(context, process);
+    endTime = System.currentTimeMillis();
+    return exitCode;
   }
 
   @VisibleForTesting
@@ -157,6 +163,12 @@ public abstract class ShellStep implements Step {
       this.stdOut = result.getStdOut();
     }
     return result.getExitCode();
+  }
+
+  public long getDuration() {
+    Preconditions.checkState(startTime > 0);
+    Preconditions.checkState(endTime > 0);
+    return endTime - startTime;
   }
 
   /**

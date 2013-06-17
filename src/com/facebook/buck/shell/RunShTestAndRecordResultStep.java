@@ -78,7 +78,7 @@ public class RunShTestAndRecordResultStep implements Step {
         pathToShellScript,
         "sh_test",
         /* isSuccess */ exitCode == 0,
-        /* time */ -1L, // TODO(mbolin): Time sh_test
+        test.getDuration(),
         /* message */ null,
         /* stacktrace */ null,
         test.getStdOut(),
