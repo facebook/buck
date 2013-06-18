@@ -13,6 +13,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="module" module-name="buck" />
+    <orderEntry type="library" name="buck-lib" level="project" />
   </component>
 </module>
 
