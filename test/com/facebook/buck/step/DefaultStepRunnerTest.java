@@ -16,8 +16,7 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -45,9 +44,8 @@ public class DefaultStepRunnerTest {
     commands.add(new SleepingStep(5000, 1));
 
     ExecutionContext context = ExecutionContext.builder()
-        .setVerbosity(Verbosity.SILENT)
         .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
-        .setConsole(new Console(System.out, System.err, Ansi.withoutTty()))
+        .setConsole(new TestConsole())
         .build();
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
         .setDaemon(true)

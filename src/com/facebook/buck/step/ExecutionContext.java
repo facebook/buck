@@ -22,6 +22,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -41,7 +42,6 @@ public class ExecutionContext {
   private final ProcessExecutor processExecutor;
 
   private ExecutionContext(
-      Verbosity verbosity,
       ProjectFilesystem projectFilesystem,
       Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
@@ -49,7 +49,7 @@ public class ExecutionContext {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled) {
-    this.verbosity = Preconditions.checkNotNull(verbosity);
+    this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
     this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
@@ -66,9 +66,8 @@ public class ExecutionContext {
    */
   public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
     return new ExecutionContext(
-        getVerbosity(),
         getProjectFilesystem(),
-        new Console(newStdout, newStderr, console.getAnsi()),
+        new Console(console.getVerbosity(), newStdout, newStderr, console.getAnsi()),
         getAndroidPlatformTargetOptional(),
         getNdkRoot(),
         getDefaultTestTimeoutMillis(),
@@ -157,7 +156,6 @@ public class ExecutionContext {
 
   public static class Builder {
 
-    private Verbosity verbosity = Verbosity.STANDARD_INFORMATION;
     private ProjectFilesystem projectFilesystem = null;
     private Console console = null;
     private Optional<AndroidPlatformTarget> androidPlatformTarget = Optional.absent();
@@ -170,7 +168,6 @@ public class ExecutionContext {
 
     public ExecutionContext build() {
       return new ExecutionContext(
-          verbosity,
           projectFilesystem,
           console,
           androidPlatformTarget,
@@ -178,11 +175,6 @@ public class ExecutionContext {
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
           isDebugEnabled);
-    }
-
-    public Builder setVerbosity(Verbosity verbosity) {
-      this.verbosity = Preconditions.checkNotNull(verbosity);
-      return this;
     }
 
     public Builder setProjectFilesystem(ProjectFilesystem projectFilesystem) {

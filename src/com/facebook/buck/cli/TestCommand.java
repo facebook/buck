@@ -39,12 +39,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -235,7 +235,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   private int runAllTests(TestCommandOptions options) throws IOException,
       NoSuchBuildTargetException {
-    Logging.setLoggingLevelForVerbosity(options.getVerbosity());
+    Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
@@ -367,7 +367,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Unless `--verbose 0` is specified, print out test results as they become available.
     // Failures with the ListenableFuture should always be printed, as they indicate an error with
     // Buck, not the test being run.
-    Verbosity verbosity = options.getVerbosity();
+    Verbosity verbosity = console.getVerbosity();
     final boolean printTestResults = (verbosity != Verbosity.SILENT);
     FutureCallback<TestResults> onTestFinishedCallback = new FutureCallback<TestResults>() {
 

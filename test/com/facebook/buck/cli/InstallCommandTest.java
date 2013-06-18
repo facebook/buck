@@ -29,18 +29,15 @@ import com.android.ddmlib.InstallException;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
-import com.facebook.buck.util.Ansi;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.io.ByteStreams;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -85,9 +82,7 @@ public class InstallCommandTest {
   }
 
   private InstallCommand createInstallCommand() {
-    OutputStream nullOut = ByteStreams.nullOutputStream();
-    PrintStream out = new PrintStream(nullOut);
-    Console console = new Console(out, out, Ansi.withoutTty());
+    Console console = new TestConsole();
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();

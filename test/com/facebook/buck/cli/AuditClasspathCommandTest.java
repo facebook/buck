@@ -32,11 +32,8 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -55,16 +52,12 @@ public class AuditClasspathCommandTest {
 
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
-  private final Ansi ansi = Ansi.withoutTty();
-  private CapturingPrintStream stdOutStream;
-  private CapturingPrintStream stdErrStream;
+  private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
 
   @Before
   public void setUp() {
-    stdOutStream = new CapturingPrintStream();
-    stdErrStream = new CapturingPrintStream();
-    Console console = new Console(stdOutStream, stdErrStream, ansi);
+    console = new TestConsole();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
@@ -74,10 +67,6 @@ public class AuditClasspathCommandTest {
         projectFilesystem,
         buildRuleTypes,
         artifactCache));
-  }
-
-  private String getCapturedOutput(CapturingPrintStream stream) {
-    return stream.getContentsAsString(Charsets.UTF_8);
   }
 
   private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,
@@ -102,8 +91,8 @@ public class AuditClasspathCommandTest {
     // Test that no output is created.
     PartialGraph partialGraph1 = createGraphFromBuildRules(ruleResolver, targets);
     auditClasspathCommand.printClasspath(partialGraph1);
-    assertEquals("", getCapturedOutput(stdOutStream));
-    assertEquals("", getCapturedOutput(stdErrStream));
+    assertEquals("", console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
 
     // Add build rules such that all implementations of HasClasspathEntries are tested.
     ruleResolver.buildAndAddToIndex(
@@ -133,8 +122,8 @@ public class AuditClasspathCommandTest {
     auditClasspathCommand.printClasspath(partialGraph2);
 
     // Still empty.
-    assertEquals("", getCapturedOutput(stdOutStream));
-    assertEquals("", getCapturedOutput(stdErrStream));
+    assertEquals("", console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
 
     // Request the top build target. This will test the following:
     // - paths don't appear multiple times when dependencies are referenced multiple times.
@@ -152,8 +141,8 @@ public class AuditClasspathCommandTest {
     );
     String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
 
-    assertEquals(expectedClasspath, getCapturedOutput(stdOutStream));
-    assertEquals("", getCapturedOutput(stdErrStream));
+    assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
 
     // Add independent test target. This will test:
     // - the union of the classpath is output.
@@ -168,7 +157,7 @@ public class AuditClasspathCommandTest {
 
     expectedPaths.add(GEN_DIR + "/lib__project-tests__output/project-tests.jar");
     expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
-    assertEquals(expectedClasspath, getCapturedOutput(stdOutStream));
-    assertEquals("", getCapturedOutput(stdErrStream));
+    assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
   }
 }

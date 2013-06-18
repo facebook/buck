@@ -18,17 +18,25 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertSame;
 
-import org.easymock.EasyMockSupport;
+import com.facebook.buck.util.Verbosity;
+
 import org.junit.Test;
 
-/** Unit test for {@link AbstractCommandOptions}. */
-public class AbstractCommandOptionsTest extends EasyMockSupport {
+/**
+ * Unit test for {@link VerbosityParser}.
+ */
+public class VerbosityParserTest {
 
   @Test
-  public void testConstructor() {
-    BuckConfig buckConfig = createMock(BuckConfig.class);
-    AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
+  public void testVerbosity() {
+    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse());
+    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("-v"));
+    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("--verbose"));
 
-    assertSame(buckConfig, options.getBuckConfig());
+    assertSame(Verbosity.COMMANDS_AND_OUTPUT, VerbosityParser.parse("--verbose", "5"));
+
+    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("-v", "2"));
+
+    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("build", "-v", "2", "--num-threads", "4"));
   }
 }

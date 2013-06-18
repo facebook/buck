@@ -37,7 +37,6 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
@@ -46,6 +45,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -707,9 +707,8 @@ public class DefaultJavaLibraryRuleTest {
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
       executionContext = ExecutionContext.builder()
-          .setVerbosity(Verbosity.SILENT)
           .setProjectFilesystem(new ProjectFilesystem(new File(".")))
-          .setConsole(new Console(System.out, System.err, Ansi.withoutTty()))
+          .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
           .build();
 

@@ -176,7 +176,6 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
       T options,
       DependencyGraph dependencyGraph) {
     return ExecutionContext.builder()
-        .setVerbosity(options.getVerbosity())
         .setProjectFilesystem(getProjectFilesystem())
         .setConsole(console)
         .setAndroidPlatformTarget(

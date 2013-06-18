@@ -23,6 +23,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -172,7 +173,8 @@ public final class Main {
     // Create common command parameters.
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     BuckConfig config = createBuckConfig(projectFilesystem);
-    Console console = new Console(stdOut, stdErr, config.createAnsi());
+    Verbosity verbosity = VerbosityParser.parse(args);
+    Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
     KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
 
     // Create or get and invalidate cached command parameters.
@@ -230,7 +232,7 @@ public final class Main {
     try {
       return runMainWithExitCode(projectRoot, args);
     } catch (HumanReadableException e) {
-      Console console = new Console(stdOut, stdErr, new Ansi());
+      Console console = new Console(Verbosity.STANDARD_INFORMATION, stdOut, stdErr, new Ansi());
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return 1;
     }

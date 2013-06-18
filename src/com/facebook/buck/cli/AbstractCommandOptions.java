@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -32,29 +31,26 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Properties;
 
-import javax.annotation.Nullable;
-
 public abstract class AbstractCommandOptions {
 
   @VisibleForTesting static final String HELP_LONG_ARG = "--help";
-  @VisibleForTesting static final String VERBOSE_LONG_ARG = "--verbose";
-  @VisibleForTesting static final String VERBOSE_SHORT_ARG = "-v";
+
+  /**
+   * This value should never be read. {@link VerbosityParser} should be used instead.
+   * args4j requires that all options that could be passed in are listed as fields, so we include
+   * this field so that {@code --verbose} is universally available to all commands.
+   */
+  @Option(
+      name = VerbosityParser.VERBOSE_LONG_ARG,
+      aliases = { VerbosityParser.VERBOSE_SHORT_ARG },
+      usage = "Specify a number between 1 and 10.")
+  @SuppressWarnings("unused")
+  private int verbosityLevel = -1;
 
   @Option(
       name = HELP_LONG_ARG,
       usage = "Prints the available options and exits.")
   private boolean help = false;
-
-  /** Verbosity level to use when running Buck. */
-  @Option(
-      name = VERBOSE_LONG_ARG,
-      aliases = { VERBOSE_SHORT_ARG },
-      usage = "Specify a number between 1 and 10.")
-  private int verbosityLevel = Verbosity.STANDARD_INFORMATION.ordinal();
-
-  /** Determined by {@link #verbosityLevel}, if not set explicitly. */
-  @Nullable
-  private Verbosity verbosity;
 
   private final BuckConfig buckConfig;
 
@@ -72,30 +68,6 @@ public abstract class AbstractCommandOptions {
 
   public boolean showHelp() {
     return help;
-  }
-
-  public Verbosity getVerbosity() {
-    if (verbosity != null) {
-      return verbosity;
-    }
-
-    if (verbosityLevel >= 8) {
-      verbosity = Verbosity.ALL;
-    } else if (verbosityLevel >= 5) {
-      verbosity = Verbosity.COMMANDS_AND_OUTPUT;
-    } else if (verbosityLevel >= 2) {
-      verbosity = Verbosity.COMMANDS;
-    } else if (verbosityLevel >= 1) {
-      verbosity = Verbosity.STANDARD_INFORMATION;
-    } else {
-      verbosity = Verbosity.SILENT;
-    }
-
-    return verbosity;
-  }
-
-  public void setVerbosity(@Nullable Verbosity verbosity) {
-    this.verbosity = verbosity;
   }
 
   /** @return androidSdkDir */

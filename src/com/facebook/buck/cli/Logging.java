@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.step.Verbosity;
+import com.facebook.buck.util.Verbosity;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

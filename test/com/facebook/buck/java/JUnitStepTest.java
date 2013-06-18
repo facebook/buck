@@ -16,17 +16,14 @@
 
 package com.facebook.buck.java;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -34,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
 
@@ -119,16 +115,13 @@ public class JUnitStepTest {
         testRunnerClassesDirectory);
 
 
-    CapturingPrintStream stderr = new CapturingPrintStream();
-    PrintStream stdout = EasyMock.createNiceMock(PrintStream.class);
+    TestConsole console = new TestConsole();
+    console.setVerbosity(Verbosity.ALL);
     ExecutionContext executionContext = ExecutionContext.builder()
-        .setVerbosity(Verbosity.ALL)
         .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
-        .setConsole(new Console(stdout, stderr, Ansi.withoutTty()))
+        .setConsole(console)
         .setDebugEnabled(true)
         .build();
-
-    EasyMock.replay(stdout);
 
     List<String> observedArgs = junit.getShellCommand(executionContext);
     MoreAsserts.assertListEquals(
@@ -149,6 +142,6 @@ public class JUnitStepTest {
 
     // TODO(simons): Why does the CapturingPrintStream append spaces?
     assertEquals("Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.",
-        stderr.getContentsAsString(UTF_8).trim());
+        console.getTextWrittenToStdErr().trim());
   }
 }

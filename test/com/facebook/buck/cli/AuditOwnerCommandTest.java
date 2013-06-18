@@ -34,12 +34,11 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.OutputKey;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.Ansi;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
@@ -48,8 +47,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
-import java.io.OutputStream;
-import java.io.PrintStream;
 
 /**
  * Outputs targets that own a specified list of files.
@@ -238,9 +235,7 @@ public class AuditOwnerCommandTest {
   }
 
   private AuditOwnerCommand createAuditOwnerCommand(ProjectFilesystem filesystem) {
-    OutputStream nullOut = ByteStreams.nullOutputStream();
-    PrintStream out = new PrintStream(nullOut);
-    Console console = new Console(out, out, Ansi.withoutTty());
+    Console console = new TestConsole();
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
     return new AuditOwnerCommand(new CommandRunnerParams(

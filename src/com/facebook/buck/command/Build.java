@@ -32,7 +32,6 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -78,7 +77,6 @@ public class Build {
       Optional<File> ndkRoot,
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
-      Verbosity verbosity,
       ListeningExecutorService listeningExecutorService,
       JavaPackageFinder javaPackageFinder,
       Console console,
@@ -91,7 +89,6 @@ public class Build {
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
         dependencyGraph, androidSdkDir, console.getStdErr());
     this.executionContext = ExecutionContext.builder()
-        .setVerbosity(verbosity)
         .setProjectFilesystem(projectFilesystem)
         .setConsole(console)
         .setAndroidPlatformTarget(androidPlatformTarget)

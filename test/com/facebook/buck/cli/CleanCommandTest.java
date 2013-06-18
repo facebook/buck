@@ -24,9 +24,8 @@ import com.facebook.buck.command.Project;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.util.Ansi;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 
@@ -36,7 +35,6 @@ import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.IOException;
-import java.io.PrintStream;
 
 /**
  * Unit test for {@link CleanCommand}.
@@ -97,10 +95,7 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private CleanCommand createCommand() {
     CommandRunnerParams params = new CommandRunnerParams(
-        new Console(
-            /* stdout */ createMock(PrintStream.class),
-            /* stderr */ createMock(PrintStream.class),
-            Ansi.withoutTty()),
+        new TestConsole(),
         createMock(ProjectFilesystem.class),
         createMock(KnownBuildRuleTypes.class),
         createMock(ArtifactCache.class),

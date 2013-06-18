@@ -23,14 +23,23 @@ import java.io.PrintStream;
 
 public class Console {
 
+  private final Verbosity verbosity;
   private final PrintStream stdOut;
   private final PrintStream stdErr;
   private final Ansi ansi;
 
-  public Console(PrintStream stdOut, PrintStream stdErr, Ansi ansi) {
+  public Console(Verbosity verbosity,
+      PrintStream stdOut,
+      PrintStream stdErr,
+      Ansi ansi) {
+    this.verbosity = Preconditions.checkNotNull(verbosity);
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
     this.ansi = Preconditions.checkNotNull(ansi);
+  }
+
+  public Verbosity getVerbosity() {
+    return verbosity;
   }
 
   public Ansi getAnsi() {

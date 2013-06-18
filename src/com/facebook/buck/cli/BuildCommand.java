@@ -24,10 +24,10 @@ import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +64,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return runCommandWithOptionsWithTracerRunning(options);
     } finally {
       tracer.stop(TRACER_THRESHOLD);
-      if (options.getVerbosity().shouldPrintCommand()) {
+      if (console.getVerbosity().shouldPrintCommand()) {
         Tracer.clearAndPrintCurrentTrace(getStdErr());
       }
     }
@@ -73,7 +73,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   private synchronized int runCommandWithOptionsWithTracerRunning(BuildCommandOptions options)
       throws IOException {
     // Set the logger level based on the verbosity option.
-    Verbosity verbosity = options.getVerbosity();
+    Verbosity verbosity = console.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);
 
     try {

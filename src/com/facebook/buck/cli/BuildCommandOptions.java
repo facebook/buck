@@ -133,7 +133,6 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         findAndroidNdkDir(),
         projectFilesystem,
         artifactCache,
-        getVerbosity(),
         getListeningExecutorService(),
         getBuckConfig().createDefaultJavaPackageFinder(),
         console,

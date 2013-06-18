@@ -43,10 +43,8 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -70,7 +68,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.SortedMap;
 
@@ -78,9 +75,7 @@ public class TargetsCommandTest {
 
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
-  private final Ansi ansi = Ansi.withoutTty();
-  private CapturingPrintStream stdOutStream;
-  private CapturingPrintStream stdErrStream;
+  private TestConsole console;
   private TargetsCommand targetsCommand;
 
   private SortedMap<String, BuildRule> buildBuildTargets(String buildFile,
@@ -111,9 +106,7 @@ public class TargetsCommandTest {
 
   @Before
   public void setUp() {
-    stdOutStream = new CapturingPrintStream();
-    stdErrStream = new CapturingPrintStream();
-    Console console = new Console(stdOutStream, stdErrStream, ansi);
+    console = new TestConsole();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
@@ -140,7 +133,7 @@ public class TargetsCommandTest {
         "//testdata/com/facebook/buck/cli");
 
     targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
-    String observedOutput = stdOutStream.getContentsAsString(Charsets.UTF_8);
+    String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = mapper.readTree(jsonFactory.createJsonParser(observedOutput));
 
     // parse the expected JSON.
@@ -152,7 +145,7 @@ public class TargetsCommandTest {
     assertEquals("Output from targets command should match expected JSON.", expected, observed);
     assertEquals("Nothing should be printed to stderr.",
         "",
-        stdErrStream.getContentsAsString(Charsets.UTF_8));
+        console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -166,14 +159,14 @@ public class TargetsCommandTest {
         "test-library");
 
     targetsCommand.printTargetsList(buildRules, /* showOutput */ false);
-    String observedOutput = stdOutStream.getContentsAsString(Charsets.UTF_8);
+    String observedOutput = console.getTextWrittenToStdOut();
 
     assertEquals("Output from targets command should match expected output.",
         "//:test-library",
         observedOutput.trim());
     assertEquals("Nothing should be printed to stderr.",
         "",
-        stdErrStream.getContentsAsString(Charsets.UTF_8));
+        console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -187,14 +180,14 @@ public class TargetsCommandTest {
         "test-library");
 
     targetsCommand.printTargetsList(buildRules, /* showOutput */ true);
-    String observedOutput = stdOutStream.getContentsAsString(Charsets.UTF_8);
+    String observedOutput = console.getTextWrittenToStdOut();
 
     assertEquals("Output from targets command should match expected output.",
         "//:test-library " + outputFile,
         observedOutput.trim());
     assertEquals("Nothing should be printed to stderr.",
         "",
-        stdErrStream.getContentsAsString(Charsets.UTF_8));
+        console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -207,10 +200,10 @@ public class TargetsCommandTest {
         outputFile, "nonexistent");
     targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
 
-    String output = stdOutStream.getContentsAsString(Charset.defaultCharset());
+    String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);
     assertEquals("BUILD FAILED: unable to find rule for target //:nonexistent\n",
-        stdErrStream.getContentsAsString(Charsets.UTF_8));
+        console.getTextWrittenToStdErr());
   }
 
   @Test

@@ -34,6 +34,7 @@ IO_SRCS = [
   'MoreFiles.java',
   'ProcessExecutor.java',
   'ProjectFilesystem.java',
+  'Verbosity.java',
 ]
 java_library(
   name = 'io',

@@ -16,23 +16,18 @@
 
 package com.facebook.buck.shell;
 
-import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Verbosity;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.easymock.EasyMock;
+import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,11 +37,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class ShellStepTest {
+public class ShellStepTest extends EasyMockSupport {
 
   private ExecutionContext context;
-  private CapturingPrintStream stdout;
-  private CapturingPrintStream stderr;
+  private TestConsole console;
 
   private static final ImmutableList<String> ARGS = ImmutableList.of("bash", "-c", "echo $V1 $V2");
 
@@ -64,28 +58,25 @@ public class ShellStepTest {
   @Before
   public void setUp() {
     context = createMock(ExecutionContext.class);
-    stdout = new CapturingPrintStream();
-    stderr = new CapturingPrintStream();
-    replay(context);
+    replayAll();
   }
 
   @After
   public void tearDown() {
-    verify(context);
+    verifyAll();
   }
 
   private void prepareContextForOutput(Verbosity verbosity) {
-    EasyMock.reset(context);
+    resetAll();
 
-    Ansi ansi = Ansi.withoutTty();
-    ProcessExecutor processExecutor = new ProcessExecutor(new Console(stdout, stderr, ansi));
+    console = new TestConsole();
+    console.setVerbosity(verbosity);
+    ProcessExecutor processExecutor = new ProcessExecutor(console);
 
-    expect(context.getStdErr()).andReturn(stderr).anyTimes();
-    expect(context.getStdOut()).andReturn(stdout).anyTimes();
-    expect(context.getAnsi()).andReturn(ansi).anyTimes();
+    expect(context.getStdErr()).andReturn(console.getStdErr()).anyTimes();
     expect(context.getVerbosity()).andReturn(verbosity).anyTimes();
     expect(context.getProcessExecutor()).andReturn(processExecutor).anyTimes();
-    replay(context);
+    replayAll();
   }
 
   private static Process createProcess(
@@ -206,7 +197,7 @@ public class ShellStepTest {
     Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.STANDARD_INFORMATION);
     command.interactWithProcess(context, process);
-    assertEquals(ERROR_MSG, stderr.getContentsAsString(Charsets.US_ASCII));
+    assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -215,7 +206,7 @@ public class ShellStepTest {
     Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.SILENT);
     command.interactWithProcess(context, process);
-    assertEquals("", stderr.getContentsAsString(Charsets.US_ASCII));
+    assertEquals("", console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -224,7 +215,7 @@ public class ShellStepTest {
     Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.SILENT);
     command.interactWithProcess(context, process);
-    assertEquals(ERROR_MSG, stderr.getContentsAsString(Charsets.US_ASCII));
+    assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -233,7 +224,7 @@ public class ShellStepTest {
     Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.STANDARD_INFORMATION);
     command.interactWithProcess(context, process);
-    assertEquals("", stderr.getContentsAsString(Charsets.US_ASCII));
+    assertEquals("", console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -242,7 +233,7 @@ public class ShellStepTest {
     Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.SILENT);
     command.interactWithProcess(context, process);
-    assertEquals(ERROR_MSG, stderr.getContentsAsString(Charsets.US_ASCII));
+    assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -260,7 +251,7 @@ public class ShellStepTest {
     Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.ALL);
     command.interactWithProcess(context, process);
-    assertEquals("", stdout.getContentsAsString(Charsets.US_ASCII));
+    assertEquals("", console.getTextWrittenToStdErr());
   }
 
 }

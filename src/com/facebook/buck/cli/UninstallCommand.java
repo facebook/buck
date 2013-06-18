@@ -25,7 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Verbosity;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
   @Override
   int runCommandWithOptions(UninstallCommandOptions options) throws IOException {
     // Set the logger level based on the verbosity option.
-    Verbosity verbosity = options.getVerbosity();
+    Verbosity verbosity = console.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);
 
     // Make sure that only one build target is specified.

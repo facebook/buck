@@ -11,5 +11,6 @@ java_test(
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/testutil:testutil',
   ],
 )

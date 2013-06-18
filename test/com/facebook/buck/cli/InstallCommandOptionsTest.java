@@ -48,7 +48,7 @@ public class InstallCommandOptionsTest {
   public void testInstallCommandOptionsRun() throws CmdLineException {
     InstallCommandOptions options = getOptions(
         InstallCommandOptions.RUN_SHORT_ARG, "katana",
-        InstallCommandOptions.VERBOSE_SHORT_ARG, "10");
+        VerbosityParser.VERBOSE_SHORT_ARG, "10");
     assertTrue(options.shouldStartActivity());
     assertNull(options.getActivityToStart());
   }
@@ -57,7 +57,7 @@ public class InstallCommandOptionsTest {
   public void testInstallCommandOptionsRunAndActivity() throws CmdLineException {
     InstallCommandOptions options = getOptions(
         InstallCommandOptions.RUN_SHORT_ARG,
-        InstallCommandOptions.VERBOSE_SHORT_ARG, "10",
+        VerbosityParser.VERBOSE_SHORT_ARG, "10",
         "wakizashi",
         InstallCommandOptions.ACTIVITY_SHORT_ARG, "com.facebook.katana.LoginActivity");
     assertTrue(options.shouldStartActivity());
@@ -76,7 +76,7 @@ public class InstallCommandOptionsTest {
   @Test
   public void testInstallCommandOptionsNone() throws CmdLineException {
     InstallCommandOptions options = getOptions(
-        InstallCommandOptions.VERBOSE_SHORT_ARG, "10",
+        VerbosityParser.VERBOSE_SHORT_ARG, "10",
         "katana");
     assertFalse(options.shouldStartActivity());
     assertNull(options.getActivityToStart());

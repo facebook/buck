@@ -18,9 +18,9 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

@@ -18,7 +18,7 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.Verbosity;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

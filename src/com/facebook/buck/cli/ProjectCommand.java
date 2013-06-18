@@ -102,7 +102,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
     } finally {
       // Either leave project.json around for debugging or delete it on exit.
-      if (options.getVerbosity().shouldPrintOutput()) {
+      if (console.getVerbosity().shouldPrintOutput()) {
         getStdErr().printf("project.json was written to %s", tempFile.getAbsolutePath());
       } else {
         tempFile.deleteOnExit();

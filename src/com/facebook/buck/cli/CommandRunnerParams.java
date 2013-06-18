@@ -22,6 +22,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 
 /**
@@ -67,6 +68,10 @@ class CommandRunnerParams {
 
   public Console getConsole() {
     return console;
+  }
+
+  public Verbosity getVerbosity() {
+    return console.getVerbosity();
   }
 
   public ArtifactCache getArtifactCache() {

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.util;
 
 /**
  * An indication of how verbose Buck should be. Enum values are in order from least to most verbose.

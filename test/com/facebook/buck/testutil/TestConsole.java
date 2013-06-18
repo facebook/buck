@@ -19,7 +19,11 @@ package com.facebook.buck.testutil;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+
+import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link Console} to use in unit tests. Avoids the side-effect of writing to
@@ -28,10 +32,27 @@ import com.google.common.base.Charsets;
  */
 public class TestConsole extends Console {
 
+  @Nullable
+  private Verbosity verbosityOverride;
+
   public TestConsole() {
-    super(/* stdOut */ new CapturingPrintStream(),
+    super(Verbosity.STANDARD_INFORMATION,
+          /* stdOut */ new CapturingPrintStream(),
           /* stdErr */ new CapturingPrintStream(),
           /* ansi */ Ansi.withoutTty());
+  }
+
+  public void setVerbosity(Verbosity verbosity) {
+    this.verbosityOverride = Preconditions.checkNotNull(verbosity);
+  }
+
+  @Override
+  public Verbosity getVerbosity() {
+    if (verbosityOverride == null) {
+      return super.getVerbosity();
+    } else {
+      return verbosityOverride;
+    }
   }
 
   public String getTextWrittenToStdOut() {
