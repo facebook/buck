@@ -21,8 +21,8 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
@@ -86,11 +86,11 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(#2493457): This rule uses the ndk-build script (part of the Android NDK), so the RuleKey
     // should incorporate which version of the NDK is used.
 
-    return super.ruleKeyBuilder()
+    return super.appendToRuleKey(builder)
         .set("makefileDirectory", makefileDirectory)
         .set("buildArtifactsDirectory", buildArtifactsDirectory)
         .set("sources", sources)

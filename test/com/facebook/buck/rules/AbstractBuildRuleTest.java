@@ -222,7 +222,7 @@ public class AbstractBuildRuleTest {
       }
 
       @Override
-      public RuleKey.Builder ruleKeyBuilder() {
+      protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
         throw new IllegalStateException("This method should not be called");
       }
     };

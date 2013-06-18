@@ -27,8 +27,8 @@ import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
@@ -313,8 +313,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
-    RuleKey.Builder builder = super.ruleKeyBuilder()
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .set("resources", resources)
         .set("proguard", proguardConfig)

@@ -21,8 +21,8 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -224,7 +224,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(#2493457): This rule uses the aapt binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aapt is used.
 
@@ -234,7 +234,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
     ImmutableSortedSet.Builder<String> assetsFiles = ImmutableSortedSet.naturalOrder();
     addAssetsContents(assetsFiles);
 
-    return super.ruleKeyBuilder()
+    return super.appendToRuleKey(builder)
         .set("res", resFiles.build())
         .set("assets", assetsFiles.build());
   }

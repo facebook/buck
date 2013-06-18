@@ -20,8 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -77,10 +77,10 @@ public class GenAidlRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aidl is used.
-    return super.ruleKeyBuilder()
+    return super.appendToRuleKey(builder)
         .set("aidlFilePath", aidlFilePath)
         .set("importPath", importPath);
   }

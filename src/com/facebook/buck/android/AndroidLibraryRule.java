@@ -22,8 +22,8 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
@@ -73,8 +73,8 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
-     return super.ruleKeyBuilder()
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+     return super.appendToRuleKey(builder)
          .set("manifest", manifestFile.orNull());
   }
 

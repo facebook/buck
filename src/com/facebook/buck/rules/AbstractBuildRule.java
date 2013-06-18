@@ -160,13 +160,23 @@ abstract class AbstractBuildRule implements BuildRule {
   }
 
   /**
-   * getRuleKey() calls the most derived implementation of this method to lazily construct a
-   * RuleKey. Every subclass that extends the rule state in a way that matters to idempotency must
-   * override ruleKeyBuilder() and append its state to the RuleKey.Builder returned by its
-   * superclass's ruleKeyBuilder() implementation.
+   * {@link #getRuleKey()} and {@link #createRuleKeyWithoutDeps()} uses this when constructing
+   * {@link RuleKey}s for this class. Every subclass that extends the rule state in a way that
+   * matters to idempotency must override
+   * {@link #appendToRuleKey(com.facebook.buck.rules.RuleKey.Builder)} and append its state to the
+   * {@link RuleKey.Builder} returned by its superclass's
+   * {@link #appendToRuleKey(com.facebook.buck.rules.RuleKey.Builder)} implementation. Example:
+   * <pre>
+   * @Override
+   * protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+   *   return super.appendToRuleKey(builder)
+   *       .set("srcs", srcs),
+   *       .set("resources", resources);
+   * }
+   * </pre>
    */
-  protected RuleKey.Builder ruleKeyBuilder() {
-    return RuleKey.builder(this);
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder;
   }
 
   /**
@@ -177,12 +187,24 @@ abstract class AbstractBuildRule implements BuildRule {
     if (this.ruleKey != null) {
       return this.ruleKey;
     } else {
-      RuleKey ruleKey = ruleKeyBuilder().build();
+      RuleKey.Builder builder = RuleKey.builder(this);
+      appendToRuleKey(builder);
+      RuleKey ruleKey = builder.build();
       // Although this.ruleKey could be null, the RuleKey returned by this method is guaranteed to
       // be non-null.
       this.ruleKey = RuleKey.filter(ruleKey);
       return ruleKey;
     }
+  }
+
+  /**
+   * Creates a new {@link RuleKey} for this {@link BuildRule} that does not take {@link #getDeps()}
+   * into account.
+   *
+   * @see AbiRule#getRuleKeyWithoutDeps()
+   */
+  protected RuleKey createRuleKeyWithoutDeps() {
+    return appendToRuleKey(RuleKey.builderWithoutDeps(this)).build();
   }
 
   /**

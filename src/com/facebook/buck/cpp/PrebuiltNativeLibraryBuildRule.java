@@ -21,8 +21,8 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -64,8 +64,8 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
-    return super.ruleKeyBuilder()
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return super.appendToRuleKey(builder)
         .set("nativeLibs", nativeLibs);
   }
 

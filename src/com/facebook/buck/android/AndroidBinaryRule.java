@@ -24,8 +24,8 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -182,8 +182,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
-    return super.ruleKeyBuilder()
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return super.appendToRuleKey(builder)
         .set("manifest", manifest)
         .set("target", target)
         .set("keystorePropertiesPath", keystorePropertiesPath)

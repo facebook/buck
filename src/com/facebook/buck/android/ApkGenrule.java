@@ -19,8 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -79,8 +79,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
-    return super.ruleKeyBuilder()
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return super.appendToRuleKey(builder)
         .set("apk", apk);
   }
 

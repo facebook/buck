@@ -227,8 +227,8 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
-    return super.ruleKeyBuilder()
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return super.appendToRuleKey(builder)
         .set("srcRule", srcRule)
         .set("srcSourceRoots", srcSourceRoots)
         .set("testRule", testRule)

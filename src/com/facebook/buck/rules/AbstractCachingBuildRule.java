@@ -134,12 +134,12 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // For a rule that lists its inputs via a "srcs" argument, this may seem redundant, but it is
     // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
     // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
-    return super.ruleKeyBuilder()
+    return super.appendToRuleKey(builder)
         .setInputs("buck.inputs", getInputs());
   }
 

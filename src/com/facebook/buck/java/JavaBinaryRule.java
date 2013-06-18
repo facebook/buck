@@ -22,8 +22,8 @@ import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -80,11 +80,11 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  protected RuleKey.Builder ruleKeyBuilder() {
+  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     ImmutableSortedSet.Builder<String> metaInfFiles = ImmutableSortedSet.naturalOrder();
     addMetaInfContents(metaInfFiles);
 
-    return super.ruleKeyBuilder()
+    return super.appendToRuleKey(builder)
         .set("mainClass", mainClass)
         .set("manifestFile", manifestFile)
         .set("metaInfDirectory", metaInfFiles.build());
