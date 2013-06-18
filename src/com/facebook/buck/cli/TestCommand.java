@@ -39,6 +39,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.Verbosity;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Escaper;
@@ -366,13 +367,13 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Unless `--verbose 0` is specified, print out test results as they become available.
     // Failures with the ListenableFuture should always be printed, as they indicate an error with
     // Buck, not the test being run.
-    final boolean printTestResultsAsTheyFinish =
-        options.getVerbosity().shouldPrintStandardInformation();
+    Verbosity verbosity = options.getVerbosity();
+    final boolean printTestResults = (verbosity != Verbosity.SILENT);
     FutureCallback<TestResults> onTestFinishedCallback = new FutureCallback<TestResults>() {
 
       @Override
       public void onSuccess(TestResults testResults) {
-        if (printTestResultsAsTheyFinish) {
+        if (printTestResults) {
           getStdErr().print(testResults.getSummaryWithFailureDetails(console.getAnsi()));
         }
       }
@@ -432,9 +433,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       if (!summary.isSuccess()) {
         isAllTestsPassed = false;
         numFailures += summary.getFailureCount();
-      }
-      if (!printTestResultsAsTheyFinish) {
-        getStdErr().print(summary.getSummaryWithFailureDetails(ansi));
       }
     }
 
