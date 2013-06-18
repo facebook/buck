@@ -44,6 +44,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -82,12 +83,17 @@ public class TargetsCommandTest {
   private CapturingPrintStream stdErrStream;
   private TargetsCommand targetsCommand;
 
+  private SortedMap<String, BuildRule> buildBuildTargets(String buildFile,
+                                                         String outputFile,
+                                                         String name) {
+     return buildBuildTargets(buildFile, outputFile, name, "//");
+  }
 
   private SortedMap<String, BuildRule> buildBuildTargets(String buildFile,
       String outputFile,
-      String name) {
+      String name,
+      String baseName) {
     SortedMap<String, BuildRule> buildRules = Maps.newTreeMap();
-    String baseName = "//";
     BuildTarget buildTarget = new BuildTarget(new File(buildFile), baseName, name);
     FakeBuildRule buildRule = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY,
         buildTarget,
@@ -121,7 +127,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testJsonOutputForBuildTarget() throws IOException {
-    final String testBuckFile1 = testDataPath("TargetsCommandTestBuckFile1.txt");
+    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
     final String outputFile = "buck-gen/test/outputFile";
     JsonFactory jsonFactory = new JsonFactory();
@@ -130,7 +136,8 @@ public class TargetsCommandTest {
     // run `buck targets` on the build file and parse the observed JSON.
     SortedMap<String, BuildRule> buildRules = buildBuildTargets(testBuckFile1,
         outputFile,
-        "test-library");
+        "test-library",
+        "//testdata/com/facebook/buck/cli");
 
     targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
     String observedOutput = stdOutStream.getContentsAsString(Charsets.UTF_8);
@@ -150,7 +157,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testNormalOutputForBuildTarget() throws IOException {
-    final String testBuckFile1 = testDataPath("TargetsCommandTestBuckFile1.txt");
+    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String outputFile = "buck-out/gen/test/outputFile";
 
     // run `buck targets` on the build file and parse the observed JSON.
@@ -171,7 +178,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testNormalOutputForBuildTargetWithOutput() throws IOException {
-    final String testBuckFile1 = testDataPath("TargetsCommandTestBuckFile1.txt");
+    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String outputFile = "buck-out/gen/test/outputFile";
 
     // run `buck targets` on the build file and parse the observed JSON.
@@ -192,7 +199,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testJsonOutputForMissingBuildTarget() throws IOException {
-    final String testBuckFile1 = testDataPath("TargetsCommandTestBuckFile1.txt");
+    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String outputFile = "buck-gen/test/outputFile";
 
     // nonexistent target should not exist.
@@ -210,10 +217,11 @@ public class TargetsCommandTest {
   public void testValidateBuildTargetForNonAliasTarget()
       throws IOException, NoSuchBuildTargetException {
     // Set up the test buck file, parser, config, options.
-    final String testBuckFile = testDataPath("TargetsCommandTestBuckFile1.txt");
+    final String testBuckFile = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.expect(parser.parse("//:test-library", ParseContext.fullyQualified()))
-        .andReturn(new BuildTarget(new File(testBuckFile), "//", "test-library"))
+        .andReturn(new BuildTarget(
+            new File(testBuckFile), "//testdata/com/facebook/buck/cli", "test-library"))
         .anyTimes();
     EasyMock.expect(parser.parse("//:", ParseContext.fullyQualified()))
         .andThrow(new BuildTargetParseException(
@@ -223,7 +231,8 @@ public class TargetsCommandTest {
         .andThrow(EasyMock.createMock(NoSuchBuildTargetException.class))
         .anyTimes();
     EasyMock.expect(parser.parse("//:test-libarry", ParseContext.fullyQualified()))
-        .andReturn(new BuildTarget(new File(testBuckFile), "//", "test-libarry"))
+        .andReturn(new BuildTarget(
+            new File(testBuckFile), "//testdata/com/facebook/buck/cli", "test-libarry"))
         .anyTimes();
     EasyMock.replay(parser);
     Reader reader = new StringReader("");
@@ -232,7 +241,7 @@ public class TargetsCommandTest {
 
     // Test a valid target.
     assertEquals(
-        "//:test-library",
+        "//testdata/com/facebook/buck/cli:test-library",
         targetsCommand.validateBuildTargetForFullyQualifiedTarget("//:test-library", options));
 
     // Targets that will be rejected by BuildTargetParser with an exception.

@@ -1,0 +1,8 @@
+java_library(
+  name = 'test-library',
+  srcs = [],
+  deps = [],
+  visibility = [
+    'PUBLIC',
+  ],
+)

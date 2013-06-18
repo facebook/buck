@@ -127,8 +127,9 @@ public class ParserTest {
 
     Parser parser = new Parser(new ProjectFilesystem(new File(".")), new KnownBuildRuleTypes());
 
+    parser.parseRawRulesInternal(ruleObjects, null);
     RawRulePredicate predicate = alwaysTrue();
-    List<BuildTarget> targets = parser.parseRawRulesInternal(ruleObjects, predicate, null);
+    List<BuildTarget> targets = parser.filterTargets(predicate);
     BuildTarget expectedBuildTarget = new BuildTarget(
         new File("./testdata/com/facebook/feed/model/" + BuckConstant.BUILD_RULES_FILE_NAME),
         "//testdata/com/facebook/feed/model",
