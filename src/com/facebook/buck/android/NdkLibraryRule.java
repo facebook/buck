@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -130,9 +130,9 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     private Builder() {}
 
     @Override
-    public NdkLibraryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+    public NdkLibraryRule build(BuildRuleResolver ruleResolver) {
       return new NdkLibraryRule(
-          createBuildRuleParams(buildRuleBuilderParams),
+          createBuildRuleParams(ruleResolver),
           sources,
           flags.build());
     }

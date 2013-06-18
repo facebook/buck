@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.Step;
@@ -149,8 +149,8 @@ public class ExportFileRule extends AbstractCachingBuildRule {
     }
 
     @Override
-    public ExportFileRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      BuildRuleParams params = createBuildRuleParams(buildRuleBuilderParams);
+    public ExportFileRule build(BuildRuleResolver ruleResolver) {
+      BuildRuleParams params = createBuildRuleParams(ruleResolver);
 
       return new ExportFileRule(params, src, out);
     }

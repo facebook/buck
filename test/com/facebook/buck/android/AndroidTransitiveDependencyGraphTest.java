@@ -22,7 +22,7 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.testutil.RuleMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,35 +37,35 @@ public class AndroidTransitiveDependencyGraphTest {
    */
   @Test
   public void testFindTransitiveDependencies() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Create an AndroidBinaryRule that transitively depends on two prebuilt JARs. One of the two
     // prebuilt JARs will be listed in the AndroidBinaryRule's no_dx list.
-    PrebuiltJarRule guavaRule = buildRuleBuilderParams.buildAndAddToIndex(
+    PrebuiltJarRule guavaRule = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar("third_party/guava/guava-10.0.1.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    PrebuiltJarRule jsr305Rule = buildRuleBuilderParams.buildAndAddToIndex(
+    PrebuiltJarRule jsr305Rule = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/jsr-305:jsr-305"))
         .setBinaryJar("third_party/jsr-305/jsr305.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    DefaultJavaLibraryRule libraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
         .addDep(guavaRule.getBuildTarget())
         .addDep(jsr305Rule.getBuildTarget()));
 
-    AndroidResourceRule manifestRule = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidResourceRule manifestRule = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
         .setManifestFile("java/src/com/facebook/module/AndroidManifest.xml")
         .setAssetsDirectory("assets/"));
 
-    AndroidBinaryRule binaryRule = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule binaryRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .addDep(libraryRule.getBuildTarget())
@@ -76,7 +76,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties"));
 
     // Verify that the correct transitive dependencies are found.
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
     AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies(graph);
     AndroidDexTransitiveDependencies dexTransitiveDeps =
     		binaryRule.findDexTransitiveDependencies(graph);

@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
@@ -108,9 +108,9 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
     protected String skeletonFile;
 
     @Override
-    public AndroidManifestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+    public AndroidManifestRule build(BuildRuleResolver ruleResolver) {
       return new AndroidManifestRule(
-          createBuildRuleParams(buildRuleBuilderParams),
+          createBuildRuleParams(ruleResolver),
           skeletonFile,
           manifestFile);
     }

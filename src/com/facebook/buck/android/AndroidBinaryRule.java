@@ -24,7 +24,7 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
@@ -847,17 +847,17 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     private Builder() {}
 
     @Override
-    public AndroidBinaryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+    public AndroidBinaryRule build(BuildRuleResolver ruleResolver) {
       boolean allowNonExistentRule =
         false;
 
       return new AndroidBinaryRule(
-          createBuildRuleParams(buildRuleBuilderParams),
+          createBuildRuleParams(ruleResolver),
           manifest,
           target,
           keystorePropertiesPath,
           packageType,
-          getBuildTargetsAsBuildRules(buildRuleBuilderParams,
+          getBuildTargetsAsBuildRules(ruleResolver,
               buildRulesToExcludeFromDex,
               allowNonExistentRule),
           dexSplitMode,

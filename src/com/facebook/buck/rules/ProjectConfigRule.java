@@ -172,11 +172,11 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     private Builder() {}
 
     @Override
-    public ProjectConfigRule build(final BuildRuleBuilderParams buildRuleBuilderParams) {
-      BuildRule srcRule = buildRuleBuilderParams.get(srcTargetId.orNull());
-      BuildRule testRule = buildRuleBuilderParams.get(testTargetId.orNull());
+    public ProjectConfigRule build(final BuildRuleResolver ruleResolver) {
+      BuildRule srcRule = ruleResolver.get(srcTargetId.orNull());
+      BuildRule testRule = ruleResolver.get(testTargetId.orNull());
 
-      return new ProjectConfigRule(createBuildRuleParams(buildRuleBuilderParams),
+      return new ProjectConfigRule(createBuildRuleParams(ruleResolver),
           srcRule,
           srcRoots,
           testRule,

@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -112,28 +112,28 @@ public class AndroidResourceRuleTest {
    */
   @Test
   public void testGetAndroidResourceDeps() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    AndroidResourceRule c = buildRuleBuilderParams.buildAndAddToIndex(
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    AndroidResourceRule c = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
-        .setRes("res_c")
-        .setRDotJavaPackage("com.facebook"));
+            .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
+            .setRes("res_c")
+            .setRDotJavaPackage("com.facebook"));
 
-    AndroidResourceRule b = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidResourceRule b = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
         .setRes("res_b")
         .setRDotJavaPackage("com.facebook")
         .addDep(BuildTargetFactory.newInstance("//:c")));
 
-    AndroidResourceRule d = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidResourceRule d = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
-        .setRes("res_d")
-        .setRDotJavaPackage("com.facebook")
-        .addDep(BuildTargetFactory.newInstance("//:c")));
+            .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
+            .setRes("res_d")
+            .setRDotJavaPackage("com.facebook")
+            .addDep(BuildTargetFactory.newInstance("//:c")));
 
-    AndroidResourceRule a = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidResourceRule a = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
         .setRes("res_a")
@@ -142,7 +142,7 @@ public class AndroidResourceRuleTest {
         .addDep(BuildTargetFactory.newInstance("//:c"))
         .addDep(BuildTargetFactory.newInstance("//:d")));
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
     ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a, graph);
 
     // Note that a topological sort for a DAG is not guaranteed to be unique. In this particular
@@ -158,7 +158,7 @@ public class AndroidResourceRuleTest {
     // Introduce an AndroidBinaryRule that depends on A and C and verify that the same topological
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
-    AndroidBinaryRule e = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule e = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
         .setManifest("AndroidManfiest.xml")
@@ -167,7 +167,7 @@ public class AndroidResourceRuleTest {
         .addDep(BuildTargetFactory.newInstance("//:a"))
         .addDep(BuildTargetFactory.newInstance("//:c")));
 
-    DependencyGraph graph2 = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
+    DependencyGraph graph2 = RuleMap.createGraphFromBuildRules(ruleResolver);
     ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e, graph2);
     assertTrue(
         String.format(

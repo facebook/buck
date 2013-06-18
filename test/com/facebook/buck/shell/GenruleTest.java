@@ -34,7 +34,7 @@ import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.shell.Genrule.Builder;
 import com.facebook.buck.step.ExecutionContext;
@@ -84,8 +84,8 @@ public class GenruleTest {
      * )
      */
 
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    createSampleJavaBinaryRule(buildRuleBuilderParams);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    createSampleJavaBinaryRule(ruleResolver);
 
     Map<String, ?> instance = ImmutableMap.of(
         "name", "katana_manifest",
@@ -112,7 +112,7 @@ public class GenruleTest {
     GenruleBuildRuleFactory factory = new GenruleBuildRuleFactory();
     Builder builder = factory.newInstance(params);
     builder.setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction);
-    Genrule genrule = buildRuleBuilderParams.buildAndAddToIndex(builder);
+    Genrule genrule = ruleResolver.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.
     assertEquals(BuildRuleType.GENRULE, genrule.getType());
@@ -210,14 +210,14 @@ public class GenruleTest {
 
   @Test
   public void testReplaceBinaryBuildRuleRefsInCmd() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(buildRuleBuilderParams);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     String originalCmd = "${//java/com/facebook/util:ManifestGenerator} $OUT";
     String contextBasePath = "java/com/facebook/util";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
-    Genrule rule = createGenrule(buildRuleBuilderParams, originalCmd, contextBasePath, deps);
+    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
 
     // Interpolate the build target in the genrule cmd string.
     String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
@@ -237,14 +237,14 @@ public class GenruleTest {
 
   @Test
   public void testReplaceRelativeBinaryBuildRuleRefsInCmd() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(buildRuleBuilderParams);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     String originalCmd = "${:ManifestGenerator} $OUT";
     String contextBasePath = "java/com/facebook/util";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
-    Genrule rule = createGenrule(buildRuleBuilderParams, originalCmd, contextBasePath, deps);
+    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
 
     // Interpolate the build target in the genrule cmd string.
     String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
@@ -264,15 +264,15 @@ public class GenruleTest {
 
   @Test
   public void testDepsGenrule() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(buildRuleBuilderParams);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     // Interpolate the build target in the genrule cmd string.
     String originalCmd = "${:ManifestGenerator} $OUT";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
     String contextBasePath = "java/com/facebook/util";
 
-    Genrule rule = createGenrule(buildRuleBuilderParams, originalCmd, contextBasePath, deps);
+    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
 
     String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
 
@@ -291,10 +291,10 @@ public class GenruleTest {
 
   @Test
   public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws IOException {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
-    Genrule rule = buildRuleBuilderParams.buildAndAddToIndex(
+    Genrule rule = ruleResolver.buildAndAddToIndex(
         Genrule.newGenruleBuilder()
         .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
@@ -325,16 +325,16 @@ public class GenruleTest {
     assertEquals(baseTmpPath + "other/place.txt", linkCmd.getTarget().getAbsolutePath());
   }
 
-  private JavaBinaryRule createSampleJavaBinaryRule(BuildRuleBuilderParams buildRuleBuilderParams) {
+  private JavaBinaryRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    JavaLibraryRule javaLibrary = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addSrc("java/com/facebook/util/ManifestGenerator.java"));
 
-    JavaBinaryRule javaBinary = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaBinaryRule javaBinary = ruleResolver.buildAndAddToIndex(
         JavaBinaryRule.newJavaBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"))
         .setMainClass("com.facebook.util.ManifestGenerator")
@@ -343,7 +343,7 @@ public class GenruleTest {
     return javaBinary;
   }
 
-  private Genrule createGenrule(BuildRuleBuilderParams buildRuleBuilderParams,
+  private Genrule createGenrule(BuildRuleResolver ruleResolver,
                                 String originalCmd,
                                 String contextBasePath,
                                 Set<? extends BuildRule> deps) {
@@ -360,6 +360,6 @@ public class GenruleTest {
       ruleBuilder.addDep(dep.getBuildTarget());
     }
 
-    return buildRuleBuilderParams.buildAndAddToIndex(ruleBuilder);
+    return ruleResolver.buildAndAddToIndex(ruleBuilder);
   }
 }

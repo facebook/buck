@@ -31,7 +31,7 @@ import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -69,16 +69,16 @@ public class ApkGenruleTest {
         }
       };
 
-  private void createSampleAndroidBinaryRule(BuildRuleBuilderParams buildRuleBuilderParams) {
+  private void createSampleAndroidBinaryRule(BuildRuleResolver ruleResolver) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libAndroidTarget)
         .addSrc("java/com/facebook/util/Facebook.java"));
 
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
@@ -91,8 +91,8 @@ public class ApkGenruleTest {
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    createSampleAndroidBinaryRule(buildRuleBuilderParams);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    createSampleAndroidBinaryRule(ruleResolver);
     Map<String, ?> instance = new ImmutableMap.Builder<String, Object>()
         .put("name", "fb4a_signed")
         .put("srcs", ImmutableList.<String>of("signer.py", "key.properties"))
@@ -120,7 +120,7 @@ public class ApkGenruleTest {
     ApkGenruleBuildRuleFactory factory = new ApkGenruleBuildRuleFactory();
     ApkGenrule.Builder builder = factory.newInstance(params);
     builder.setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction);
-    ApkGenrule apk_genrule = (ApkGenrule) buildRuleBuilderParams.buildAndAddToIndex(builder);
+    ApkGenrule apk_genrule = (ApkGenrule) ruleResolver.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";

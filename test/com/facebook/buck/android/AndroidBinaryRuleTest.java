@@ -30,7 +30,7 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -60,18 +60,18 @@ public class AndroidBinaryRuleTest {
 
   @Test
   public void testAndroidBinaryNoDx() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, neither with an assets directory.
     JavaLibraryRule libraryOne = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryOne",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
     JavaLibraryRule libraryTwo = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
@@ -79,7 +79,7 @@ public class AndroidBinaryRuleTest {
     // One android_binary rule that depends on the two android_library rules.
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base:apk");
-    AndroidBinaryRule androidBinary = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(binaryBuildTarget)
         .addDep(libraryOne.getBuildTarget())
@@ -91,7 +91,7 @@ public class AndroidBinaryRuleTest {
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
         .setPackageType("debug"));
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
     AndroidTransitiveDependencies transitiveDependencies =
         androidBinary.findTransitiveDependencies(graph);
     AndroidDexTransitiveDependencies dexTransitiveDependencies =
@@ -136,18 +136,18 @@ public class AndroidBinaryRuleTest {
    */
   @Test
   public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, neither with an assets directory.
     JavaLibraryRule libraryOne = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryOne",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
     JavaLibraryRule libraryTwo = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
@@ -155,7 +155,7 @@ public class AndroidBinaryRuleTest {
     // One android_binary rule that depends on the two android_library rules.
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base:apk");
-    AndroidBinaryRule androidBinary = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(binaryBuildTarget)
         .addDep(libraryOne.getBuildTarget())
@@ -192,29 +192,29 @@ public class AndroidBinaryRuleTest {
    */
   @Test
   public void testCreateAllAssetsDirectoryWithOneAssetsDirectory() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, one of which has an assets directory.
     JavaLibraryRule libraryOne = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryOne",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         null, /* assetDirectory */
         null /* nativeLibsDirectory */);
     JavaLibraryRule libraryTwo = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         "java/src/com/facebook/base/assets2",
         null /* nativeLibsDirectory */);
 
-    AndroidResourceRule resourceOne = (AndroidResourceRule) buildRuleBuilderParams
+    AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver
         .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
 
     // One android_binary rule that depends on the two android_library rules.
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base:apk");
-    AndroidBinaryRule androidBinary = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(binaryBuildTarget)
         .addDep(libraryOne.getBuildTarget())
@@ -264,18 +264,18 @@ public class AndroidBinaryRuleTest {
    */
   @Test
   public void testCreateAllAssetsDirectoryWithMultipleAssetsDirectories() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, each with an assets directory.
     JavaLibraryRule libraryOne = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryOne",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         "java/src/com/facebook/base/assets1",
         null /* nativeLibsDirectory */);
     JavaLibraryRule libraryTwo = createAndroidLibraryRule(
         "//java/src/com/facebook/base:libraryTwo",
-        buildRuleBuilderParams,
+        ruleResolver,
         null, /* resDirectory */
         "java/src/com/facebook/base/assets2",
         null /* nativeLibsDirectory */);
@@ -284,7 +284,7 @@ public class AndroidBinaryRuleTest {
     // One android_binary rule that depends on the two android_library rules.
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
         "//java/src/com/facebook/base:apk");
-    AndroidBinaryRule androidBinary = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(binaryBuildTarget)
         .addDep(libraryOne.getBuildTarget())
@@ -294,9 +294,9 @@ public class AndroidBinaryRuleTest {
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties")
         .setPackageType("debug"));
 
-    AndroidResourceRule resourceOne = (AndroidResourceRule) buildRuleBuilderParams.get(
+    AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver.get(
         BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryOne_resources"));
-    AndroidResourceRule resourceTwo = (AndroidResourceRule) buildRuleBuilderParams.get(
+    AndroidResourceRule resourceTwo = (AndroidResourceRule) ruleResolver.get(
         BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
@@ -350,7 +350,7 @@ public class AndroidBinaryRuleTest {
   }
 
   private JavaLibraryRule createAndroidLibraryRule(String buildTarget,
-      BuildRuleBuilderParams buildRuleBuilderParams,
+      BuildRuleResolver ruleResolver,
       String resDirectory,
       String assetDirectory,
       String nativeLibsDirectory) {
@@ -362,7 +362,7 @@ public class AndroidBinaryRuleTest {
 
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
-      AndroidResourceRule androidResourceRule = buildRuleBuilderParams.buildAndAddToIndex(
+      AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
           AndroidResourceRule.newAndroidResourceRuleBuilder()
           .setAssetsDirectory(assetDirectory)
           .setRes(resDirectory)
@@ -374,7 +374,7 @@ public class AndroidBinaryRuleTest {
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
-      AndroidResourceRule androidResourceRule = buildRuleBuilderParams.buildAndAddToIndex(
+      AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
           AndroidResourceRule.newAndroidResourceRuleBuilder()
           .setAssetsDirectory(assetDirectory)
           .setRes(resDirectory)
@@ -386,7 +386,7 @@ public class AndroidBinaryRuleTest {
     if (!Strings.isNullOrEmpty(nativeLibsDirectory)) {
       BuildTarget nativeLibOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_native_libs");
-      PrebuiltNativeLibraryBuildRule nativeLibsRule = buildRuleBuilderParams.buildAndAddToIndex(
+      PrebuiltNativeLibraryBuildRule nativeLibsRule = ruleResolver.buildAndAddToIndex(
           PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary()
           .setBuildTarget(nativeLibOnebuildTarget)
           .setNativeLibsDirectory(nativeLibsDirectory));
@@ -394,7 +394,7 @@ public class AndroidBinaryRuleTest {
       androidLibraryRuleBuilder.addDep(nativeLibsRule.getBuildTarget());
     }
 
-    JavaLibraryRule androidLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule androidLibraryRule = ruleResolver.buildAndAddToIndex(
         androidLibraryRuleBuilder);
 
     return androidLibraryRule;
@@ -402,7 +402,7 @@ public class AndroidBinaryRuleTest {
 
   @Test
   public void testGetInputsToCompareToOutput() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinaryRule.Builder androidBinaryRuleBuilder = AndroidBinaryRule
         .newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
@@ -418,7 +418,7 @@ public class AndroidBinaryRuleTest {
         ImmutableList.of(
             "java/src/com/facebook/AndroidManifest.xml",
             "java/src/com/facebook/base/keystore.properties"),
-            buildRuleBuilderParams.buildAndAddToIndex(androidBinaryRuleBuilder)
+            ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
                 .getInputsToCompareToOutput(context));
 
     androidBinaryRuleBuilder.setProguardConfig(Optional.of("java/src/com/facebook/proguard.cfg"));
@@ -428,7 +428,7 @@ public class AndroidBinaryRuleTest {
             "java/src/com/facebook/AndroidManifest.xml",
             "java/src/com/facebook/base/keystore.properties",
             "java/src/com/facebook/proguard.cfg"),
-            buildRuleBuilderParams.buildAndAddToIndex(androidBinaryRuleBuilder)
+            ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
                 .getInputsToCompareToOutput(context));
 
     verify(context);
@@ -436,9 +436,9 @@ public class AndroidBinaryRuleTest {
 
   @Test
   public void testGetUnsignedApkPath() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    AndroidBinaryRule ruleInRootDirectory = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule ruleInRootDirectory = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
@@ -446,7 +446,7 @@ public class AndroidBinaryRuleTest {
         .setTarget("Google Inc.:Google APIs:16"));
     assertEquals(GEN_DIR + "/fb4a.apk", ruleInRootDirectory.getApkPath());
 
-    AndroidBinaryRule ruleInNonRootDirectory = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule ruleInNonRootDirectory = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example:fb4a"))
         .setManifest("AndroidManifest.xml")
@@ -457,9 +457,9 @@ public class AndroidBinaryRuleTest {
 
   @Test
   public void testGetProguardOutputFromInputClasspath() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    AndroidBinaryRule rule = buildRuleBuilderParams.buildAndAddToIndex(
+    AndroidBinaryRule rule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
         .setManifest("AndroidManifest.xml")
@@ -488,8 +488,8 @@ public class AndroidBinaryRuleTest {
 
   @Test
   public void testDexingCommand() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    AndroidBinaryRule splitDexRule = buildRuleBuilderParams.buildAndAddToIndex(
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    AndroidBinaryRule splitDexRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
         .setManifest("AndroidManifest.xml")

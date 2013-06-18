@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -52,8 +52,8 @@ public class GenAidlRuleTest {
     String pathToAidl = "java/com/example/base/IWhateverService.aidl";
     String importPath = "java/com/example/base/";
 
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    GenAidlRule genAidlRule = buildRuleBuilderParams.buildAndAddToIndex(
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    GenAidlRule genAidlRule = ruleResolver.buildAndAddToIndex(
         GenAidlRule.newGenAidlRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService"))
         .setAidl(pathToAidl)

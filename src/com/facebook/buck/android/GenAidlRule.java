@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -119,8 +119,8 @@ public class GenAidlRule extends AbstractCachingBuildRule {
     private Builder() {}
 
     @Override
-    public GenAidlRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      return new GenAidlRule(createBuildRuleParams(buildRuleBuilderParams), aidl, importPath);
+    public GenAidlRule build(BuildRuleResolver ruleResolver) {
+      return new GenAidlRule(createBuildRuleParams(ruleResolver), aidl, importPath);
     }
 
     @Override

@@ -36,7 +36,7 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -259,7 +259,7 @@ public class TargetsCommandTest {
         "//:test-libarry", options));
   }
 
-  private PartialGraph createGraphFromBuildRules(BuildRuleBuilderParams buildRuleBuilderParams,
+  private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,
       List<String> targets) {
     List<BuildTarget> buildTargets = Lists.transform(targets, new Function<String, BuildTarget>() {
       @Override
@@ -268,25 +268,25 @@ public class TargetsCommandTest {
       }
     });
 
-    DependencyGraph dependencyGraph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
+    DependencyGraph dependencyGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
     return PartialGraphFactory.newInstance(dependencyGraph, buildTargets);
   }
 
   @Test
   public void testGetMachingBuildTargets() throws CmdLineException, IOException {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    buildRuleBuilderParams.buildAndAddToIndex(
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//empty:empty"))
         .setBinaryJar("")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//javasrc:java-library"))
         .addSrc("javasrc/JavaLibrary.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addDep(BuildTargetFactory.newInstance("//empty:empty")));
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         JavaTestRule.newJavaTestRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
         .addSrc("javatest/TestJavaLibrary.java")
@@ -297,7 +297,7 @@ public class TargetsCommandTest {
     targets.add("//javasrc:java-library");
     targets.add("//javatest:test-java-library");
 
-    PartialGraph graph = createGraphFromBuildRules(buildRuleBuilderParams, targets);
+    PartialGraph graph = createGraphFromBuildRules(ruleResolver, targets);
     ImmutableSet<BuildRuleType> buildRuleTypes = ImmutableSet.of();
 
     ImmutableSet<String> referencedFiles;

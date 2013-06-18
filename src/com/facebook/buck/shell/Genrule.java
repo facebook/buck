@@ -22,7 +22,7 @@ import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -368,8 +368,8 @@ public class Genrule extends AbstractCachingBuildRule {
         Functions.RELATIVE_TO_ABSOLUTE_PATH;
 
     @Override
-    public Genrule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      return new Genrule(createBuildRuleParams(buildRuleBuilderParams),
+    public Genrule build(BuildRuleResolver ruleResolver) {
+      return new Genrule(createBuildRuleParams(ruleResolver),
           srcs,
           cmd,
           out,

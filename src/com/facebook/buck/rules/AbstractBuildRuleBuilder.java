@@ -39,7 +39,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   protected Set<BuildTargetPattern> visibilityPatterns = Sets.newHashSet();
 
   @Override
-  public abstract T build(BuildRuleBuilderParams buildRuleBuilderParams);
+  public abstract T build(BuildRuleResolver ruleResolver);
 
   public AbstractBuildRuleBuilder<T> setBuildTarget(BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
@@ -63,13 +63,13 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   }
 
   protected ImmutableSortedSet<BuildRule> getDepsAsBuildRules(
-      final BuildRuleBuilderParams buildRuleBuilderParams) {
-    return getBuildTargetsAsBuildRules(buildRuleBuilderParams, getDeps(), false /* allowNonExistentRule */);
+      final BuildRuleResolver ruleResolver) {
+    return getBuildTargetsAsBuildRules(ruleResolver, getDeps(), false /* allowNonExistentRule */);
   }
 
   @VisibleForTesting
   protected ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(
-      BuildRuleBuilderParams buildRuleBuilderParams,
+      BuildRuleResolver ruleResolver,
       Iterable<BuildTarget> buildTargets,
       boolean allowNonExistentRule) {
     BuildTarget invokingBuildTarget = Preconditions.checkNotNull(getBuildTarget());
@@ -77,7 +77,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     ImmutableSortedSet.Builder<BuildRule> buildRules = ImmutableSortedSet.naturalOrder();
 
     for (BuildTarget target : buildTargets) {
-      BuildRule buildRule = buildRuleBuilderParams.get(target);
+      BuildRule buildRule = ruleResolver.get(target);
       if (buildRule != null) {
         buildRules.add(buildRule);
       } else if (!allowNonExistentRule) {
@@ -99,9 +99,9 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     return ImmutableSet.copyOf(visibilityPatterns);
   }
 
-  protected BuildRuleParams createBuildRuleParams(BuildRuleBuilderParams buildRuleBuilderParams) {
+  protected BuildRuleParams createBuildRuleParams(BuildRuleResolver ruleResolver) {
     return new BuildRuleParams(getBuildTarget(),
-        getDepsAsBuildRules(buildRuleBuilderParams),
+        getDepsAsBuildRules(ruleResolver),
         getVisibilityPatterns());
   }
 }

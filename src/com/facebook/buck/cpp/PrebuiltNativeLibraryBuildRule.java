@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -107,8 +107,8 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     private Builder() {}
 
     @Override
-    public PrebuiltNativeLibraryBuildRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(buildRuleBuilderParams),
+    public PrebuiltNativeLibraryBuildRule build(BuildRuleResolver ruleResolver) {
+      return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(ruleResolver),
           nativeLibs,
           new DefaultDirectoryTraverser());
     }

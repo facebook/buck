@@ -33,7 +33,7 @@ import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -67,16 +67,16 @@ public class ProjectCommandTest {
   @Test
   public void testBasicProjectCommand()
       throws IOException, NoSuchBuildTargetException, NoSuchMethodException {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget javaLibraryTargetName = BuildTargetFactory.newInstance("//javasrc:java-library");
-    DefaultJavaLibraryRule javaLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule javaLibraryRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(javaLibraryTargetName)
         .addSrc("javasrc/JavaLibrary.java"));
 
     String projectConfigTargetName = "//javasrc:project-config";
-    ProjectConfigRule ruleConfig = buildRuleBuilderParams.buildAndAddToIndex(
+    ProjectConfigRule ruleConfig = ruleResolver.buildAndAddToIndex(
         ProjectConfigRule.newProjectConfigRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(projectConfigTargetName))
         .setSrcTarget(Optional.of(javaLibraryTargetName)));

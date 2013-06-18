@@ -23,7 +23,7 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -172,8 +172,8 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     private Builder() {}
 
     @Override
-    public PrebuiltJarRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      return new PrebuiltJarRule(createBuildRuleParams(buildRuleBuilderParams),
+    public PrebuiltJarRule build(BuildRuleResolver ruleResolver) {
+      return new PrebuiltJarRule(createBuildRuleParams(ruleResolver),
           binaryJar,
           sourceJar,
           javadocUrl);

@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -203,7 +203,7 @@ public class Parser {
   DependencyGraph findAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes) {
-    final BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
@@ -241,7 +241,7 @@ public class Parser {
           @Override
           protected void onNodeExplored(BuildTarget buildTarget) {
             BuildRuleBuilder<?> builderForTarget = knownBuildTargets.get(buildTarget);
-            BuildRule buildRule = buildRuleBuilderParams.buildAndAddToIndex(builderForTarget);
+            BuildRule buildRule = ruleResolver.buildAndAddToIndex(builderForTarget);
 
             // Update the graph.
             if (buildRule.getDeps().isEmpty()) {

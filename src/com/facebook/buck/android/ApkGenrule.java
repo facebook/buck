@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -127,10 +127,10 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
     private BuildTarget apk;
 
     @Override
-    public ApkGenrule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+    public ApkGenrule build(BuildRuleResolver ruleResolver) {
       // Verify that the 'apk' field is set and corresponds to an installable rule.
 
-      BuildRule apkRule = buildRuleBuilderParams.get(apk);
+      BuildRule apkRule = ruleResolver.get(apk);
 
       Preconditions.checkState(apk != null && apkRule != null,
           "Buck should guarantee that apk was set and included in the deps of this rule, " +
@@ -144,7 +144,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
             apkRule.getFullyQualifiedName());
       }
 
-      return new ApkGenrule(createBuildRuleParams(buildRuleBuilderParams),
+      return new ApkGenrule(createBuildRuleParams(ruleResolver),
           srcs,
           cmd,
           relativeToAbsolutePathFunction,

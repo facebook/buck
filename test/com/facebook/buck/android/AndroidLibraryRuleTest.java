@@ -21,7 +21,7 @@ import static org.easymock.EasyMock.replay;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +32,7 @@ public class AndroidLibraryRuleTest {
 
   @Test
   public void testGetInputsToCompareToOuts() {
-    BuildRuleBuilderParams params = new BuildRuleBuilderParams();
+    BuildRuleResolver params = new BuildRuleResolver();
     AndroidLibraryRule androidLibraryRuleBuilderFoo = getAndroidLibraryRuleFoo(params);
     AndroidLibraryRule androidLibraryRuleBuilderBar = getAndroidLibraryRuleBar(params);
     BuildContext context = createMock(BuildContext.class);
@@ -52,7 +52,7 @@ public class AndroidLibraryRuleTest {
         androidLibraryRuleBuilderBar.getInputsToCompareToOutput(context));
   }
 
-  private AndroidLibraryRule getAndroidLibraryRuleFoo(BuildRuleBuilderParams params) {
+  private AndroidLibraryRule getAndroidLibraryRuleFoo(BuildRuleResolver params) {
     return (AndroidLibraryRule)params.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
@@ -60,7 +60,7 @@ public class AndroidLibraryRuleTest {
         .setManifestFile((Optional.of("java/src/com/foo/AndroidManifest.xml"))));
   }
 
-  private AndroidLibraryRule getAndroidLibraryRuleBar(BuildRuleBuilderParams params) {
+  private AndroidLibraryRule getAndroidLibraryRuleBar(BuildRuleResolver params) {
     return (AndroidLibraryRule)params.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/bar:bar"))

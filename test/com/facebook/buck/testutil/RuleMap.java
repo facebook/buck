@@ -18,7 +18,7 @@ package com.facebook.buck.testutil;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.google.common.collect.ImmutableList;
 
@@ -27,7 +27,7 @@ public class RuleMap {
   /** Utility class: do not instantiate. */
   private RuleMap() {}
 
-  public static DependencyGraph createGraphFromBuildRules(BuildRuleBuilderParams params) {
+  public static DependencyGraph createGraphFromBuildRules(BuildRuleResolver params) {
     Iterable<BuildRule> rules = params.getBuildRules();
     return createGraphFromBuildRules(rules);
   }

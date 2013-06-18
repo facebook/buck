@@ -32,6 +32,6 @@ public interface BuildRuleBuilder<T extends BuildRule> {
   /** @return a view of the visibility patterns of this rule */
   public Set<BuildTargetPattern> getVisibilityPatterns();
 
-  public T build(BuildRuleBuilderParams buildRuleBuilderParams);
+  public T build(BuildRuleResolver ruleResolver);
 
 }

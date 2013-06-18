@@ -31,7 +31,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -187,8 +187,8 @@ public class DefaultJavaLibraryRuleTest {
   public void testBuildInternalWithAndroidBootclasspath() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb");
     String src = "android/java/src/com/facebook/Main.java";
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    DefaultJavaLibraryRule javaLibrary = buildRuleBuilderParams.buildAndAddToIndex(
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder()
         .setBuildTarget(buildTarget)
         .addSrc(src));
@@ -329,10 +329,10 @@ public class DefaultJavaLibraryRuleTest {
 
   @Test
   public void testAndroidAnnotation() throws IOException {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(processorTarget)
         .addSrc("java/processor/processor.java"));
@@ -344,7 +344,7 @@ public class DefaultJavaLibraryRuleTest {
         .addAllProcessors(ImmutableList.of("MyProcessor"))
         .addProcessorBuildTarget(processorTarget);
 
-    AndroidLibraryRule rule = (AndroidLibraryRule) buildRuleBuilderParams.buildAndAddToIndex(builder);
+    AndroidLibraryRule rule = (AndroidLibraryRule) ruleResolver.buildAndAddToIndex(builder);
 
     AnnotationProcessingData processingData = rule.getAnnotationProcessingData();
     assertNotNull(processingData.getGeneratedSourceFolderName());
@@ -352,23 +352,23 @@ public class DefaultJavaLibraryRuleTest {
 
   @Test
   public void testGetClasspathEntriesMap() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    JavaLibraryRule libraryOne = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java"));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    JavaLibraryRule libraryTwo = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    JavaLibraryRule parent = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
@@ -418,16 +418,16 @@ public class DefaultJavaLibraryRuleTest {
 
   @Test
   public void testExportDeps() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    JavaLibraryRule libraryOne = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java"));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    JavaLibraryRule libraryTwo = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
@@ -435,7 +435,7 @@ public class DefaultJavaLibraryRuleTest {
         .setExportDeps(true));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    JavaLibraryRule parent = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
@@ -460,15 +460,15 @@ public class DefaultJavaLibraryRuleTest {
 
   @Test
   public void testEmptySuggestBuildFunction() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    DefaultJavaLibraryRule libraryOne = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/bar.java"));
 
-    BuildContext context = createSuggestContext(buildRuleBuilderParams,
+    BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.FIRST_ORDER_ONLY);
 
     ImmutableSetMultimap<BuildRule, String> classpathEntries =
@@ -486,24 +486,24 @@ public class DefaultJavaLibraryRuleTest {
 
   @Test
   public void testSuggsetDepsReverseTopoSortRespected() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    DefaultJavaLibraryRule libraryOne = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    DefaultJavaLibraryRule libraryTwo = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    DefaultJavaLibraryRule parent = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
@@ -511,13 +511,13 @@ public class DefaultJavaLibraryRuleTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget grandparentTarget = BuildTargetFactory.newInstance("//:grandparent");
-    DefaultJavaLibraryRule grandparent = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule grandparent = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(grandparentTarget)
         .addSrc("java/src/com/parent/OldManRiver.java")
         .addDep(BuildTargetFactory.newInstance("//:parent")));
 
-    BuildContext context = createSuggestContext(buildRuleBuilderParams,
+    BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.WARN_ON_TRANSITIVE);
 
     ImmutableSetMultimap<BuildRule, String> transitive =
@@ -584,9 +584,9 @@ public class DefaultJavaLibraryRuleTest {
     return javaPackageFinder;
   }
 
-  private BuildContext createSuggestContext(BuildRuleBuilderParams buildRuleBuilderParams,
+  private BuildContext createSuggestContext(BuildRuleResolver ruleResolver,
                                             BuildDependencies buildDependencies) {
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
 
     BuildContext context = EasyMock.createMock(BuildContext.class);
     EasyMock.expect(context.getDependencyGraph()).andReturn(graph);
@@ -678,14 +678,14 @@ public class DefaultJavaLibraryRuleTest {
   private class AnnotationProcessingScenario {
     private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
     private final Map<BuildTarget, BuildRule> buildRuleIndex;
-    private final BuildRuleBuilderParams buildRuleBuilderParams;
+    private final BuildRuleResolver ruleResolver;
     private ExecutionContext executionContext;
     private BuildContext buildContext;
 
     public AnnotationProcessingScenario() {
       annotationProcessingParamsBuilder = new AnnotationProcessingParams.Builder();
       buildRuleIndex = Maps.newHashMap();
-      buildRuleBuilderParams = new BuildRuleBuilderParams(buildRuleIndex);
+      ruleResolver = new BuildRuleResolver(buildRuleIndex);
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingParamsBuilder() {
@@ -726,7 +726,7 @@ public class DefaultJavaLibraryRuleTest {
 
       String src = "android/java/src/com/facebook/Main.java";
 
-      AnnotationProcessingParams params = annotationProcessingParamsBuilder.build(buildRuleBuilderParams);
+      AnnotationProcessingParams params = annotationProcessingParamsBuilder.build(ruleResolver);
       JavacOptions.Builder options = JavacOptions.builder().setAnnotationProcessingData(params);
 
       return new AndroidLibraryRule(

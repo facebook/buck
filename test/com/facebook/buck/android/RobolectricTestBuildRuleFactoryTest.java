@@ -26,7 +26,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -46,7 +46,7 @@ public class RobolectricTestBuildRuleFactoryTest {
   @Test
   public void testAmendBuilder() throws NoSuchBuildTargetException {
     Map<BuildTarget, BuildRule> buildRuleIndex = Maps.newHashMap();
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams(buildRuleIndex);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
     // Set up mocks.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
@@ -84,7 +84,7 @@ public class RobolectricTestBuildRuleFactoryTest {
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
     buildRuleIndex.put(BuildTargetFactory.newInstance("//java/com/facebook/base:base"), base);
-    RobolectricTestRule robolectricRule = (RobolectricTestRule) buildRuleBuilderParams
+    RobolectricTestRule robolectricRule = (RobolectricTestRule) ruleResolver
         .buildAndAddToIndex(builder);
 
     // Verify the build rule built from the builder.

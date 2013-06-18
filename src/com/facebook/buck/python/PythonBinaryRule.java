@@ -22,8 +22,8 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -128,8 +128,8 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
     private Builder() {}
 
     @Override
-    public PythonBinaryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      return new PythonBinaryRule(createBuildRuleParams(buildRuleBuilderParams), main);
+    public PythonBinaryRule build(BuildRuleResolver ruleResolver) {
+      return new PythonBinaryRule(createBuildRuleParams(ruleResolver), main);
     }
 
     public Builder setMain(String main) {

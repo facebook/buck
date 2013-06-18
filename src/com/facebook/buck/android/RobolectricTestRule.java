@@ -22,7 +22,7 @@ import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
@@ -75,17 +75,17 @@ public class RobolectricTestRule extends JavaTestRule {
 
 
     @Override
-    public RobolectricTestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+    public RobolectricTestRule build(BuildRuleResolver ruleResolver) {
       ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
-          buildRuleBuilderParams);
+          ruleResolver);
 
       ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();
       allVmArgs.addAll(vmArgs);
 
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleBuilderParams);
+      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new RobolectricTestRule(createBuildRuleParams(buildRuleBuilderParams),
+      return new RobolectricTestRule(createBuildRuleParams(ruleResolver),
           srcs,
           resources,
           labels,

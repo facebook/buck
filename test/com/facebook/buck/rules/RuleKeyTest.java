@@ -42,10 +42,10 @@ public class RuleKeyTest {
    */
   @Test
   public void testRuleKeyDependsOnDeps() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common")));
 
@@ -59,12 +59,12 @@ public class RuleKeyTest {
         // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that file
         // access can be mocked appropriately during a unit test.
         .addSrc("src/com/facebook/buck/cli/Main.java");
-    DefaultJavaLibraryRule libraryNoCommon = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryNoCommon = ruleResolver.buildAndAddToIndex(
         javaLibraryBuilder);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
     javaLibraryBuilder.addDep(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
-    DefaultJavaLibraryRule libraryWithCommon = buildRuleBuilderParams.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryWithCommon = ruleResolver.buildAndAddToIndex(
         javaLibraryBuilder);
 
     // Assert that the RuleKeys are distinct.

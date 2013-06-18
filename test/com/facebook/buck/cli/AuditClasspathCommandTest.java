@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -80,7 +80,7 @@ public class AuditClasspathCommandTest {
     return stream.getContentsAsString(Charsets.UTF_8);
   }
 
-  private PartialGraph createGraphFromBuildRules(BuildRuleBuilderParams buildRuleBuilderParams,
+  private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,
       List<String> targets) {
     List<BuildTarget> buildTargets = Lists.transform(targets, new Function<String, BuildTarget>() {
       @Override
@@ -89,33 +89,33 @@ public class AuditClasspathCommandTest {
       }
     });
 
-    DependencyGraph dependencyGraph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
+    DependencyGraph dependencyGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
     return PartialGraphFactory.newInstance(dependencyGraph, buildTargets);
   }
 
   @Test
   public void testClassPathOutput() {
     // Build a DependencyGraph of build rules manually.
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
     List<String> targets = Lists.newArrayList();
 
     // Test that no output is created.
-    PartialGraph partialGraph1 = createGraphFromBuildRules(buildRuleBuilderParams, targets);
+    PartialGraph partialGraph1 = createGraphFromBuildRules(ruleResolver, targets);
     auditClasspathCommand.printClasspath(partialGraph1);
     assertEquals("", getCapturedOutput(stdOutStream));
     assertEquals("", getCapturedOutput(stdErrStream));
 
     // Add build rules such that all implementations of HasClasspathEntries are tested.
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
         .addSrc("src/com/facebook/TestJavaLibrary.java"));
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
         .addSrc("src/com/facebook/TestAndroidLibrary.java")
         .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-binary"))
         .setManifest("AndroidManifest.xml")
@@ -123,13 +123,13 @@ public class AuditClasspathCommandTest {
         .setKeystorePropertiesPath("keystore.properties")
         .addDep(BuildTargetFactory.newInstance("//:test-android-library"))
         .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         JavaTestRule.newJavaTestRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//:project-tests"))
-        .addDep(BuildTargetFactory.newInstance("//:test-java-library"))
-        .setSourceUnderTest(ImmutableSet.of(BuildTargetFactory.newInstance("//:test-java-library")))
-        .addSrc("src/com/facebook/test/ProjectTests.java"));
-    PartialGraph partialGraph2 = createGraphFromBuildRules(buildRuleBuilderParams, targets);
+            .setBuildTarget(BuildTargetFactory.newInstance("//:project-tests"))
+            .addDep(BuildTargetFactory.newInstance("//:test-java-library"))
+            .setSourceUnderTest(ImmutableSet.of(BuildTargetFactory.newInstance("//:test-java-library")))
+            .addSrc("src/com/facebook/test/ProjectTests.java"));
+    PartialGraph partialGraph2 = createGraphFromBuildRules(ruleResolver, targets);
     auditClasspathCommand.printClasspath(partialGraph2);
 
     // Still empty.
@@ -141,7 +141,7 @@ public class AuditClasspathCommandTest {
     // - dependencies are walked
     // - independent targets in the same BUCK file are not included in the output
     targets.add("//:test-android-binary");
-    PartialGraph partialGraph3 = createGraphFromBuildRules(buildRuleBuilderParams, targets);
+    PartialGraph partialGraph3 = createGraphFromBuildRules(ruleResolver, targets);
     auditClasspathCommand.printClasspath(partialGraph3);
 
     SortedSet<String> expectedPaths = Sets.newTreeSet(
@@ -163,7 +163,7 @@ public class AuditClasspathCommandTest {
     targets.add("//:test-java-library");
     targets.add("//:test-android-library");
     targets.add("//:project-tests");
-    PartialGraph partialGraph4 = createGraphFromBuildRules(buildRuleBuilderParams, targets);
+    PartialGraph partialGraph4 = createGraphFromBuildRules(ruleResolver, targets);
     auditClasspathCommand.printClasspath(partialGraph4);
 
     expectedPaths.add(GEN_DIR + "/lib__project-tests__output/project-tests.jar");

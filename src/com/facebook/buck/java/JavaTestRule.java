@@ -20,7 +20,7 @@ import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
@@ -346,13 +346,13 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     protected Builder() {}
 
     @Override
-    public JavaTestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
+    public JavaTestRule build(BuildRuleResolver ruleResolver) {
       ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
-          buildRuleBuilderParams);
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleBuilderParams);
+          ruleResolver);
+      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new JavaTestRule(createBuildRuleParams(buildRuleBuilderParams),
+      return new JavaTestRule(createBuildRuleParams(ruleResolver),
           srcs,
           resources,
           labels,
@@ -400,11 +400,11 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      * Generates the set of build rules that contain the source that will be under test.
      */
     protected ImmutableSet<JavaLibraryRule> generateSourceUnderTest(
-        ImmutableSet<BuildTarget> sourceUnderTestNames, BuildRuleBuilderParams buildRuleBuilderParams) {
+        ImmutableSet<BuildTarget> sourceUnderTestNames, BuildRuleResolver ruleResolver) {
       ImmutableSet.Builder<JavaLibraryRule> sourceUnderTest = ImmutableSet.builder();
       for (BuildTarget sourceUnderTestName : sourceUnderTestNames) {
         // Generates the set by matching its path with the full path names that are passed in.
-        BuildRule rule = buildRuleBuilderParams.get(sourceUnderTestName);
+        BuildRule rule = ruleResolver.get(sourceUnderTestName);
         if (rule instanceof JavaLibraryRule) {
           sourceUnderTest.add((JavaLibraryRule) rule);
         } else {

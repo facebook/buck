@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 
 import org.junit.Test;
 
@@ -34,31 +34,31 @@ public class JavaBinaryRuleTest {
 
   @Test
   public void testGetExecutableCommand() {
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // prebuilt_jar //third_party/generator:generator
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // prebuilt_jar //third_party/guava:guava
-    buildRuleBuilderParams.buildAndAddToIndex(
+    ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // java_library //java/com/facebook/base:base
-    JavaLibraryRule javaLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaLibraryRule javaLibraryRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc("java/com/facebook/base/Base.java")
         .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava")));
 
     // java_binary //java/com/facebook/base:Main
-    JavaBinaryRule javaBinaryRule = buildRuleBuilderParams.buildAndAddToIndex(
+    JavaBinaryRule javaBinaryRule = ruleResolver.buildAndAddToIndex(
         JavaBinaryRule.newJavaBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
         .addDep(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))

@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -51,8 +51,8 @@ public class NdkLibraryRuleTest {
     BuildContext context = null;
 
     String basePath = "java/src/com/facebook/base";
-    BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
-    NdkLibraryRule ndkLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    NdkLibraryRule ndkLibraryRule = ruleResolver.buildAndAddToIndex(
         NdkLibraryRule.newNdkLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance(
             String.format("//%s:base", basePath)))

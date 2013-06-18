@@ -26,16 +26,20 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class BuildRuleBuilderParams {
+/**
+ * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
+ * represents. Once parsing is complete, instances of this class can be considered immutable.
+ */
+public class BuildRuleResolver {
 
   private final Map<BuildTarget, BuildRule> buildRuleIndex;
 
-  public BuildRuleBuilderParams() {
+  public BuildRuleResolver() {
     this(Maps.<BuildTarget, BuildRule>newConcurrentMap());
   }
 
   @VisibleForTesting
-  public BuildRuleBuilderParams(Map<BuildTarget, BuildRule> buildRuleIndex) {
+  public BuildRuleResolver(Map<BuildTarget, BuildRule> buildRuleIndex) {
     this.buildRuleIndex = Preconditions.checkNotNull(buildRuleIndex);
   }
 

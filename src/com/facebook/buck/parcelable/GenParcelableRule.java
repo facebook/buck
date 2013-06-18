@@ -19,7 +19,7 @@ package com.facebook.buck.parcelable;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -138,8 +138,8 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
     }
 
     @Override
-    public GenParcelableRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleBuilderParams);
+    public GenParcelableRule build(BuildRuleResolver ruleResolver) {
+      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
       return new GenParcelableRule(buildRuleParams, srcs.build());
     }
   }

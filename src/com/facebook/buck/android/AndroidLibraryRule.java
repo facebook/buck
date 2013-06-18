@@ -22,7 +22,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
@@ -98,10 +98,10 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     private Optional<String> manifestFile = Optional.absent();
 
     @Override
-    public AndroidLibraryRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(buildRuleBuilderParams);
+    public AndroidLibraryRule build(BuildRuleResolver ruleResolver) {
+      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
       AnnotationProcessingParams processingParams =
-          annotationProcessingBuilder.build(buildRuleBuilderParams);
+          annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       return new AndroidLibraryRule(

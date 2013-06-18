@@ -33,7 +33,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -453,7 +453,7 @@ public class ParserTest {
       }
 
       @Override
-      public BuildRule build(final BuildRuleBuilderParams buildRuleBuilderParams) {
+      public BuildRule build(final BuildRuleResolver ruleResolver) {
         return new FakeBuildRule(
             BuildRuleType.JAVA_LIBRARY,
             buildTarget,
@@ -461,7 +461,7 @@ public class ParserTest {
               .addAll(Iterables.transform(deps, new Function<BuildTarget, BuildRule>() {
                 @Override
                 public BuildRule apply(BuildTarget target) {
-                  return buildRuleBuilderParams.get(target);
+                  return ruleResolver.get(target);
                 }
               }))
               .build(),

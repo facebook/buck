@@ -20,7 +20,7 @@ import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
@@ -114,8 +114,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
     private BuildTarget apk = null;
 
     @Override
-    public AndroidInstrumentationApk build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      BuildRule apkRule = buildRuleBuilderParams.get(this.apk);
+    public AndroidInstrumentationApk build(BuildRuleResolver ruleResolver) {
+      BuildRule apkRule = ruleResolver.get(this.apk);
       if (apkRule == null) {
         throw new HumanReadableException("Must specify apk for " + getBuildTarget());
       } else if (!(apkRule instanceof InstallableBuildRule)) {
@@ -128,7 +128,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
 
       AndroidBinaryRule underlyingApk = getUnderlyingApk((InstallableBuildRule)apkRule);
 
-      return new AndroidInstrumentationApk(createBuildRuleParams(buildRuleBuilderParams),
+      return new AndroidInstrumentationApk(createBuildRuleParams(ruleResolver),
           manifest,
           underlyingApk);
     }
