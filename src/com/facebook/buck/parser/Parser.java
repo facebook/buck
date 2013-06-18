@@ -52,13 +52,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
 public class Parser {
-
-  private static final Logger logger = Logger.getLogger(Parser.class.getCanonicalName());
 
   private final BuildTargetParser buildTargetParser;
 
@@ -312,9 +309,12 @@ public class Parser {
     Preconditions.checkNotNull(buildFile);
     Preconditions.checkNotNull(defaultIncludes);
     if (!isCached(buildFile, defaultIncludes)) {
-      logger.info(String.format("Parsing %s file: %s",
-          BuckConstant.BUILD_RULES_FILE_NAME,
-          buildFile));
+      if (console.getVerbosity().shouldPrintCommand()) {
+        console.getStdErr().printf("Parsing %s file: %s\n",
+            BuckConstant.BUILD_RULES_FILE_NAME,
+            buildFile);
+      }
+
       parseRawRulesInternal(buildFileParser.getAllRules(
           absolutePathToProjectRoot, Optional.of(buildFile.getPath()), defaultIncludes),
           buildFile);
