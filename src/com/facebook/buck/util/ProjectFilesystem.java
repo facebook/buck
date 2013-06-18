@@ -81,12 +81,6 @@ public class ProjectFilesystem {
     return getFileForRelativePath(pathRelativeToProjectRoot).delete();
   }
 
-  public boolean isMatchingFileContents(Iterable<String> lines, String pathRelativeToProjectRoot)
-      throws IOException {
-    return MoreFiles.isMatchingFileContents(lines,
-        getFileForRelativePath(pathRelativeToProjectRoot));
-  }
-
   public Properties readPropertiesFile(String pathToPropertiesFileRelativeToProjectRoot)
       throws IOException {
     Properties properties = new Properties();

@@ -37,12 +37,8 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class MoreFiles {
-
-  private final static Logger logger = Logger.getLogger(MoreFiles.class.getName());
 
   private static final Function<Path, Path> IDENTITY_TRANSFORM = new Function<Path, Path>() {
     @Override
@@ -151,45 +147,6 @@ public final class MoreFiles {
     } finally {
       Closeables.close(writer, false /* swallowIOException */);
     }
-  }
-
-  /**
-   * Checks whether the lines in the specified file (encoded as UTF-8) match those in the specified
-   * Iterable.
-   */
-  @SuppressWarnings("resource") // Closeables.close(...)
-  public static boolean isMatchingFileContents(Iterable<String> lines, File file)
-      throws IOException {
-    boolean matching = true;
-    BufferedReader reader = null;
-    Iterator<String> iter = lines.iterator();
-    try {
-      reader = Files.newReader(file, Charsets.UTF_8);
-      while (iter.hasNext()) {
-        String line = reader.readLine();
-        if (!Objects.equal(iter.next(), line)) {
-          matching = false;
-          break;
-        }
-      }
-
-      if (matching) {
-        // At this point, the Iterator has been exhausted, and all lines read so far match what is in
-        // the Iterator. However, if the reader still contains more lines, then the two are not equal.
-        matching = reader.readLine() == null;
-      }
-    } finally {
-      Closeables.close(reader, false /* swallowIOException */);
-    }
-
-    if (!matching && logger.isLoggable(Level.INFO)) {
-      logger.info(String.format("DIFF %s", file.getPath()));
-      for (String diffLine : diffFileContents(lines, file)) {
-        logger.info(String.format("DIFF %s", diffLine));
-      }
-    }
-
-    return matching;
   }
 
   /**
