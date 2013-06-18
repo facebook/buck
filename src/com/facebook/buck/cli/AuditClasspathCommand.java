@@ -55,7 +55,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
         options.getArgumentsFormattedAsBuildTargets());
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      console.printFailure("Please specify at least one build target.");
+      console.printBuildFailure("Please specify at least one build target.");
       return 1;
     }
 
@@ -75,7 +75,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
           options.getDefaultIncludes(),
           getParser());
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 

@@ -35,7 +35,7 @@ public class AuditCommandRunner implements CommandRunner {
   @Override
   public int runCommand(BuckConfig buckConfig, String[] args) throws IOException {
     if (args.length == 0) {
-      console.printFailure("No audit command is given.");
+      console.printBuildFailure("No audit command is given.");
       printUsage();
       return 1;
     }
@@ -47,7 +47,7 @@ public class AuditCommandRunner implements CommandRunner {
       System.arraycopy(args, 1, newArgs, 0, newArgs.length);
       return cmd.runCommand(buckConfig, newArgs);
     } else {
-      console.printFailure("Unknown audit command: " + auditCmd);
+      console.printBuildFailure("Unknown audit command: " + auditCmd);
       printUsage();
       return 1;
     }

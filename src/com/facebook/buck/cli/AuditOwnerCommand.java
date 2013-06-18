@@ -83,7 +83,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
           options.getDefaultIncludes(),
           getParser());
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 

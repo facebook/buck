@@ -79,12 +79,12 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     try {
       buildTargets = getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
     if (buildTargets.isEmpty()) {
-      console.printFailure("Must specify at least one build target.");
+      console.printBuildFailure("Must specify at least one build target.");
       return 1;
     }
 
@@ -94,7 +94,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       dependencyGraph = getParser().parseBuildFilesForTargets(buildTargets,
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
@@ -129,10 +129,10 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       build.executeBuild(events).get();
       exitCode = 0;
     } catch (IOException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       exitCode = 1;
     } catch (StepFailedException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       exitCode = e.getExitCode();
     } catch (ExecutionException e) {
       // This is likely a checked exception that was caught while building a build rule.
@@ -143,15 +143,15 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         throw new HumanReadableException((ExceptionWithHumanReadableMessage)cause);
       } else {
         if (cause instanceof RuntimeException) {
-          console.printFailureWithStacktrace(e);
+          console.printBuildFailureWithStacktrace(e);
         } else {
-          console.printFailureWithoutStacktrace(e);
+          console.printBuildFailureWithoutStacktrace(e);
         }
         exitCode = 1;
       }
     } catch (InterruptedException e) {
       // This suggests an error in Buck rather than a user error.
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       exitCode = 1;
     } finally {
       buildTracer.stop(TRACER_THRESHOLD);

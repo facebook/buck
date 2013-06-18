@@ -73,7 +73,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       try {
         buildRuleTypesBuilder.add(getBuildRuleTypes().getBuildRuleType(name));
       } catch (IllegalArgumentException e) {
-        console.printFailure("Invalid build rule type: " + name);
+        console.printBuildFailure("Invalid build rule type: " + name);
         return 1;
       }
     }
@@ -84,7 +84,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       matchingBuildTargets = ImmutableSet.copyOf(
           getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
@@ -95,7 +95,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           options.getDefaultIncludes(),
           getParser());
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
@@ -183,7 +183,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       try {
         rules = getParser().parseBuildFile(buildFile, defaultIncludes);
       } catch (NoSuchBuildTargetException e) {
-        console.printFailure(
+        console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
         continue;
       }
@@ -199,7 +199,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
 
       if (targetRule == null) {
-        console.printFailure(
+        console.printBuildFailure(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
         continue;
       }

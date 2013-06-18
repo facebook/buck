@@ -61,7 +61,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   @VisibleForTesting
   List<IDevice> filterDevices(IDevice[] allDevices, AdbOptions options) {
     if (allDevices.length == 0) {
-      console.printFailure("No devices are found.");
+      console.printBuildFailure("No devices are found.");
       return null;
     }
 
@@ -105,12 +105,12 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
 
     // Filtered out all devices.
     if (onlineDevices == 0) {
-      console.printFailure("No devices are found.");
+      console.printBuildFailure("No devices are found.");
       return null;
     }
 
     if (devices.isEmpty()) {
-      console.printFailure(String.format(
+      console.printBuildFailure(String.format(
           "Found %d connected device(s), but none of them matches specified filter.", onlineDevices
       ));
       return null;
@@ -118,7 +118,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
 
     // Found multiple devices but multi-install mode is not enabled.
     if (!options.isMultiInstallModeEnabled() && devices.size() > 1) {
-      console.printFailure(
+      console.printBuildFailure(
           String.format("%d device(s) matches specified device filter (1 expected).\n" +
                         "Either disconnect other devices or enable multi-install mode (%s).",
                          devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
@@ -169,7 +169,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
       adb = AndroidDebugBridge.createBridge();
     }
     if (adb == null) {
-      console.printFailure("Failed to connect to adb. Make sure adb server is running.");
+      console.printBuildFailure("Failed to connect to adb. Make sure adb server is running.");
       return null;
     }
 
@@ -208,7 +208,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
     if (adb == null) {
-      console.printFailure("Failed to create adb connection.");
+      console.printBuildFailure("Failed to create adb connection.");
       return false;
     }
 
@@ -237,11 +237,11 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     try {
       results = Futures.allAsList(futures).get();
     } catch (ExecutionException ex) {
-      console.printFailure("Failed: " + adbCallable);
+      console.printBuildFailure("Failed: " + adbCallable);
       ex.printStackTrace(console.getStdErr());
       return false;
     } catch (InterruptedException ex) {
-      console.printFailure("Interrupted.");
+      console.printBuildFailure("Interrupted.");
       ex.printStackTrace(console.getStdErr());
       return false;
     }
@@ -260,7 +260,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
           String.format("Succesfully ran %s on %d device(s)", adbCallable, successCount));
     }
     if (failureCount > 0) {
-      console.printFailure(
+      console.printBuildFailure(
           String.format("Failed to %s on %d device(s).", adbCallable, failureCount));
     }
 

@@ -56,11 +56,6 @@ public class Console {
     stdErr.print('\n');
   }
 
-  public void printFailureWithStacktrace(Throwable t) {
-    t.printStackTrace(stdErr);
-    printFailure("Unexpected internal error (this is probably a buck bug).");
-  }
-
   /**
    * Prints an error message to stderr that will be highlighted in red if stderr is a tty.
    */
@@ -68,11 +63,28 @@ public class Console {
     stdErr.print(ansi.asErrorText(message));
   }
 
-  public void printFailureWithoutStacktrace(Throwable t) {
-    printFailure(Throwables.getRootCause(t).getMessage());
+  /**
+   * Prints the root cause of the {@link Throwable} with its stacktrace as a build failure.
+   * @see #printBuildFailure(String)
+   */
+  public void printBuildFailureWithStacktrace(Throwable t) {
+    t.printStackTrace(stdErr);
+    printBuildFailure("Unexpected internal error (this is probably a buck bug).");
   }
 
-  public void printFailure(String failureMessage) {
+  /**
+   * Prints the message of the root cause of the {@link Throwable} as a build failure.
+   * @see #printBuildFailure(String)
+   */
+  public void printBuildFailureWithoutStacktrace(Throwable t) {
+    printBuildFailure(Throwables.getRootCause(t).getMessage());
+  }
+
+  /**
+   * Prints an error message prefixed with {@code BUILD FAILED} to stderr that will be highlighted
+   * in red if stderr is a tty.
+   */
+  public void printBuildFailure(String failureMessage) {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
 }

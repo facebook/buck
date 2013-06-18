@@ -67,7 +67,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     DependencyGraph graph = build.getDependencyGraph();
     BuildRule buildRule = graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0));
     if (!(buildRule instanceof InstallableBuildRule)) {
-      console.printFailure(String.format(
+      console.printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType().getName()));
@@ -114,10 +114,10 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
 
       // Sanity check.
       if (launcherActivities.isEmpty()) {
-        console.printFailure("No launchable activities found.");
+        console.printBuildFailure("No launchable activities found.");
         return 1;
       } else if (launcherActivities.size() > 1) {
-        console.printFailure("Default activity is ambiguous.");
+        console.printBuildFailure("Default activity is ambiguous.");
         return 1;
       }
 
@@ -138,7 +138,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       public boolean call(IDevice device) throws Exception {
         String err = deviceStartActivity(device, activityToRun);
         if (err != null) {
-          console.printFailure(err);
+          console.printBuildFailure(err);
           return false;
         }
         else {
@@ -234,7 +234,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       long end = System.currentTimeMillis();
 
       if (reason != null) {
-        console.printFailure(String.format("Failed to install apk on %s: %s.", name, reason));
+        console.printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
         return false;
       }
 
@@ -243,7 +243,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       return true;
 
     } catch (InstallException ex) {
-      console.printFailure(String.format("Failed to install apk on %s.", name));
+      console.printBuildFailure(String.format("Failed to install apk on %s.", name));
       ex.printStackTrace(console.getStdErr());
       return false;
     }

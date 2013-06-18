@@ -65,14 +65,14 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
       dependencyGraph = parser.parseBuildFilesForTargets(ImmutableList.of(buildTarget),
           options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
     // Find the android_binary() rule from the parse.
     BuildRule buildRule = dependencyGraph.findBuildRuleByTarget(buildTarget);
     if (!(buildRule instanceof InstallableBuildRule)) {
-      console.printFailure(String.format(
+      console.printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType().getName()));

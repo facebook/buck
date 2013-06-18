@@ -231,7 +231,7 @@ public final class Main {
       return runMainWithExitCode(projectRoot, args);
     } catch (HumanReadableException e) {
       Console console = new Console(stdOut, stdErr, new Ansi());
-      console.printFailure(e.getHumanReadableErrorMessage());
+      console.printBuildFailure(e.getHumanReadableErrorMessage());
       return 1;
     }
   }

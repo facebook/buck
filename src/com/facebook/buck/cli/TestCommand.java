@@ -90,7 +90,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       try {
         return runAllTests(options);
       } catch (NoSuchBuildTargetException e) {
-        console.printFailureWithoutStacktrace(e);
+        console.printBuildFailureWithoutStacktrace(e);
         return 1;
       }
     }
@@ -342,7 +342,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                   rulesUnderTest,
                   buildContext.getProjectFilesystem()));
         } catch (StepFailedException e) {
-          console.printFailureWithoutStacktrace(e);
+          console.printBuildFailureWithoutStacktrace(e);
           return 1;
         }
       }
@@ -456,7 +456,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         stepRunner.runStep(
             getReportCommand(rulesUnderTest, defaultJavaPackageFinderOptional, getProjectFilesystem()));
       } catch (StepFailedException e) {
-        console.printFailureWithoutStacktrace(e);
+        console.printBuildFailureWithoutStacktrace(e);
         return 1;
       }
     }

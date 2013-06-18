@@ -91,7 +91,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       long end = System.currentTimeMillis();
 
       if (reason != null) {
-        console.printFailure(String.format("Failed to uninstall apk from %s: %s.", name, reason));
+        console.printBuildFailure(String.format("Failed to uninstall apk from %s: %s.", name, reason));
         return false;
       }
 
@@ -100,7 +100,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       return true;
 
     } catch (InstallException ex) {
-      console.printFailure(String.format("Failed to uninstall apk from %s.", name));
+      console.printBuildFailure(String.format("Failed to uninstall apk from %s.", name));
       ex.printStackTrace(console.getStdErr());
       return false;
     }

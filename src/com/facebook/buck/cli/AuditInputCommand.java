@@ -50,7 +50,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
         options.getArgumentsFormattedAsBuildTargets());
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      console.printFailure("Please specify at least one build target.");
+      console.printBuildFailure("Please specify at least one build target.");
       return 1;
     }
 
@@ -70,7 +70,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
           options.getDefaultIncludes(),
           getParser());
     } catch (NoSuchBuildTargetException e) {
-      console.printFailureWithoutStacktrace(e);
+      console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
