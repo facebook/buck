@@ -56,8 +56,8 @@ public class AndroidTransitiveDependencyGraphTest {
     DefaultJavaLibraryRule libraryRule = buildRuleBuilderParams.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
-        .addDep(guavaRule.getFullyQualifiedName())
-        .addDep(jsr305Rule.getFullyQualifiedName()));
+        .addDep(guavaRule.getBuildTarget())
+        .addDep(jsr305Rule.getBuildTarget()));
 
     AndroidResourceRule manifestRule = buildRuleBuilderParams.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
@@ -68,9 +68,9 @@ public class AndroidTransitiveDependencyGraphTest {
     AndroidBinaryRule binaryRule = buildRuleBuilderParams.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .addDep(libraryRule.getFullyQualifiedName())
-        .addDep(manifestRule.getFullyQualifiedName())
-        .addBuildRuleToExcludeFromDex("//third_party/guava:guava")
+        .addDep(libraryRule.getBuildTarget())
+        .addDep(manifestRule.getBuildTarget())
+        .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setManifest("java/src/com/facebook/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties"));

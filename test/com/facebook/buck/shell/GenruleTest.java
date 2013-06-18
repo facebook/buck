@@ -338,7 +338,7 @@ public class GenruleTest {
         JavaBinaryRule.newJavaBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"))
         .setMainClass("com.facebook.util.ManifestGenerator")
-        .addDep(javaLibrary.getFullyQualifiedName()));
+        .addDep(javaLibrary.getBuildTarget()));
 
     return javaBinary;
   }
@@ -357,7 +357,7 @@ public class GenruleTest {
         .setOut("example-file");
 
     for (BuildRule dep : deps) {
-      ruleBuilder.addDep(dep.getFullyQualifiedName());
+      ruleBuilder.addDep(dep.getBuildTarget());
     }
 
     return buildRuleBuilderParams.buildAndAddToIndex(ruleBuilder);

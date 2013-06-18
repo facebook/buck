@@ -163,9 +163,9 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
 
   public static class Builder extends AbstractBuildRuleBuilder<ProjectConfigRule> {
 
-    private Optional<String> srcTargetId = Optional.absent();
+    private Optional<BuildTarget> srcTargetId = Optional.absent();
     @Nullable private List<String> srcRoots = null;
-    private Optional<String> testTargetId = Optional.absent();
+    private Optional<BuildTarget> testTargetId = Optional.absent();
     @Nullable private List<String> testRoots = null;
     private boolean isIntelliJPlugin = false;
 
@@ -190,7 +190,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
       return this;
     }
 
-    public Builder setSrcTarget(Optional<String> srcTargetId) {
+    public Builder setSrcTarget(Optional<BuildTarget> srcTargetId) {
       this.srcTargetId = Preconditions.checkNotNull(srcTargetId);
       return this;
     }
@@ -200,7 +200,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
       return this;
     }
 
-    public Builder setTestTarget(Optional<String> testTargetId) {
+    public Builder setTestTarget(Optional<BuildTarget> testTargetId) {
       this.testTargetId = Preconditions.checkNotNull(testTargetId);
       return this;
     }
@@ -216,8 +216,8 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     }
 
     @Override
-    public Set<String> getDeps() {
-      ImmutableSet.Builder<String> depsBuilder = ImmutableSet.builder();
+    public Set<BuildTarget> getDeps() {
+      ImmutableSet.Builder<BuildTarget> depsBuilder = ImmutableSet.builder();
 
       Optionals.addIfPresent(srcTargetId, depsBuilder);
       Optionals.addIfPresent(testTargetId, depsBuilder);

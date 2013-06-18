@@ -216,9 +216,8 @@ public class Parser {
             BuildRuleBuilder<?> buildRuleBuilder = knownBuildTargets.get(buildTarget);
 
             Set<BuildTarget> deps = Sets.newHashSet();
-            for (String dep : buildRuleBuilder.getDeps()) {
+            for (BuildTarget buildTargetForDep : buildRuleBuilder.getDeps()) {
               try {
-                BuildTarget buildTargetForDep = buildTargetParser.parse(dep, parseContext);
                 if (!knownBuildTargets.containsKey(buildTargetForDep)) {
                   parseBuildFileContainingTarget(buildTargetForDep, defaultIncludes);
                 }

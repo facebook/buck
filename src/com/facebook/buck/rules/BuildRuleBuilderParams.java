@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -27,14 +28,14 @@ import javax.annotation.Nullable;
 
 public class BuildRuleBuilderParams {
 
-  private final Map<String, BuildRule> buildRuleIndex;
+  private final Map<BuildTarget, BuildRule> buildRuleIndex;
 
   public BuildRuleBuilderParams() {
-    this(Maps.<String, BuildRule>newConcurrentMap());
+    this(Maps.<BuildTarget, BuildRule>newConcurrentMap());
   }
 
   @VisibleForTesting
-  public BuildRuleBuilderParams(Map<String, BuildRule> buildRuleIndex) {
+  public BuildRuleBuilderParams(Map<BuildTarget, BuildRule> buildRuleIndex) {
     this.buildRuleIndex = Preconditions.checkNotNull(buildRuleIndex);
   }
 
@@ -50,13 +51,13 @@ public class BuildRuleBuilderParams {
    * @param fullyQualifiedName if {@code null}, this method will return {@code null}
    */
   @Nullable
-  public BuildRule get(@Nullable String fullyQualifiedName) {
+  public BuildRule get(@Nullable BuildTarget fullyQualifiedName) {
     return fullyQualifiedName == null ? null : buildRuleIndex.get(fullyQualifiedName);
   }
 
   public <T extends BuildRule> T buildAndAddToIndex(BuildRuleBuilder<T> builder) {
     T buildRule = builder.build(this);
-    buildRuleIndex.put(buildRule.getFullyQualifiedName(), buildRule);
+    buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
     return buildRule;
   }
 }

@@ -152,7 +152,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       Set<String> searchPathElements = Sets.newHashSet();
 
       for (BuildTarget target : targets) {
-        BuildRule rule = buildRuleBuilderParams.get(target.getFullyQualifiedName());
+        BuildRule rule = buildRuleBuilderParams.get(target);
         String type = rule.getType().getName();
 
         // We're using raw strings here to avoid circular dependencies.

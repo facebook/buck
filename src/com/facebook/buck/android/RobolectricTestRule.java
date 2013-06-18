@@ -76,7 +76,7 @@ public class RobolectricTestRule extends JavaTestRule {
 
     @Override
     public RobolectricTestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourceUnderTestNames,
+      ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
           buildRuleBuilderParams);
 
       ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();

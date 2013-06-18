@@ -124,23 +124,23 @@ public class AndroidResourceRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
         .setRes("res_b")
         .setRDotJavaPackage("com.facebook")
-        .addDep("//:c"));
+        .addDep(BuildTargetFactory.newInstance("//:c")));
 
     AndroidResourceRule d = buildRuleBuilderParams.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
         .setRes("res_d")
         .setRDotJavaPackage("com.facebook")
-        .addDep("//:c"));
+        .addDep(BuildTargetFactory.newInstance("//:c")));
 
     AndroidResourceRule a = buildRuleBuilderParams.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
         .setRes("res_a")
         .setRDotJavaPackage("com.facebook")
-        .addDep("//:b")
-        .addDep("//:c")
-        .addDep("//:d"));
+        .addDep(BuildTargetFactory.newInstance("//:b"))
+        .addDep(BuildTargetFactory.newInstance("//:c"))
+        .addDep(BuildTargetFactory.newInstance("//:d")));
 
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
     ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a, graph);
@@ -164,8 +164,8 @@ public class AndroidResourceRuleTest {
         .setManifest("AndroidManfiest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("debug.keystore")
-        .addDep("//:a")
-        .addDep("//:c"));
+        .addDep(BuildTargetFactory.newInstance("//:a"))
+        .addDep(BuildTargetFactory.newInstance("//:c")));
 
     DependencyGraph graph2 = RuleMap.createGraphFromBuildRules(buildRuleBuilderParams);
     ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e, graph2);

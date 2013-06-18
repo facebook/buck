@@ -383,7 +383,7 @@ public class Genrule extends AbstractCachingBuildRule {
     }
 
     @Override
-    public Builder addDep(String dep) {
+    public Builder addDep(BuildTarget dep) {
       deps.add(dep);
       return this;
     }

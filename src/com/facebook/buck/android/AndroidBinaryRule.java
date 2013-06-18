@@ -833,7 +833,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     private String target;
     private String keystorePropertiesPath;
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
-    private Set<String> buildRulesToExcludeFromDex = Sets.newHashSet();
+    private Set<BuildTarget> buildRulesToExcludeFromDex = Sets.newHashSet();
     private DexSplitMode dexSplitMode = new DexSplitMode(
             /* shouldSplitDex */ false,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -875,7 +875,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     }
 
     @Override
-    public Builder addDep(String dep) {
+    public Builder addDep(BuildTarget dep) {
       super.addDep(dep);
       return this;
     }
@@ -910,7 +910,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       return this;
     }
 
-    public Builder addBuildRuleToExcludeFromDex(String entry) {
+    public Builder addBuildRuleToExcludeFromDex(BuildTarget entry) {
       this.buildRulesToExcludeFromDex.add(entry);
       return this;
     }

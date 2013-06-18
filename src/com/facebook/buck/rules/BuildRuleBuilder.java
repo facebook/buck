@@ -27,7 +27,7 @@ public interface BuildRuleBuilder<T extends BuildRule> {
   public BuildTarget getBuildTarget();
 
   /** @return a view of the deps of this rule */
-  public Set<String> getDeps();
+  public Set<BuildTarget> getDeps();
 
   /** @return a view of the visibility patterns of this rule */
   public Set<BuildTargetPattern> getVisibilityPatterns();

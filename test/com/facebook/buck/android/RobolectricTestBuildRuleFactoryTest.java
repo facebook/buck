@@ -45,7 +45,7 @@ public class RobolectricTestBuildRuleFactoryTest {
 
   @Test
   public void testAmendBuilder() throws NoSuchBuildTargetException {
-    Map<String, BuildRule> buildRuleIndex = Maps.newHashMap();
+    Map<BuildTarget, BuildRule> buildRuleIndex = Maps.newHashMap();
     BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams(buildRuleIndex);
 
     // Set up mocks.
@@ -83,7 +83,7 @@ public class RobolectricTestBuildRuleFactoryTest {
         buildTarget,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
-    buildRuleIndex.put("//java/com/facebook/base:base", base);
+    buildRuleIndex.put(BuildTargetFactory.newInstance("//java/com/facebook/base:base"), base);
     RobolectricTestRule robolectricRule = (RobolectricTestRule) buildRuleBuilderParams
         .buildAndAddToIndex(builder);
 

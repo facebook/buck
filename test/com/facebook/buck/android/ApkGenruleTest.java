@@ -72,9 +72,10 @@ public class ApkGenruleTest {
   private void createSampleAndroidBinaryRule(BuildRuleBuilderParams buildRuleBuilderParams) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
+    BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");
     buildRuleBuilderParams.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance("//:lib-android"))
+        .setBuildTarget(libAndroidTarget)
         .addSrc("java/com/facebook/util/Facebook.java"));
 
     buildRuleBuilderParams.buildAndAddToIndex(
@@ -83,7 +84,7 @@ public class ApkGenruleTest {
         .setManifest("AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystorePropertiesPath("keystore.properties")
-        .addDep("//:lib-android")
+        .addDep(libAndroidTarget)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
   }
 

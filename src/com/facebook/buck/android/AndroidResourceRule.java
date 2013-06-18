@@ -281,7 +281,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
     }
 
     @Override
-    public Builder addDep(String dep) {
+    public Builder addDep(BuildTarget dep) {
       super.addDep(dep);
       return this;
     }

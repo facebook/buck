@@ -55,13 +55,13 @@ public class JavaBinaryRuleTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc("java/com/facebook/base/Base.java")
-        .addDep("//third_party/guava:guava"));
+        .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava")));
 
     // java_binary //java/com/facebook/base:Main
     JavaBinaryRule javaBinaryRule = buildRuleBuilderParams.buildAndAddToIndex(
         JavaBinaryRule.newJavaBinaryRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-        .addDep("//java/com/facebook/base:base")
+        .addDep(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .setMainClass("com.facebook.base.Main"));
 
     // Strip the trailing "." from the absolute path to the current directory.

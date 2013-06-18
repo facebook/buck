@@ -63,7 +63,7 @@ public class RuleKeyTest {
         javaLibraryBuilder);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
-    javaLibraryBuilder.addDep("//src/com/facebook/buck/cli:common");
+    javaLibraryBuilder.addDep(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
     DefaultJavaLibraryRule libraryWithCommon = buildRuleBuilderParams.buildAndAddToIndex(
         javaLibraryBuilder);
 

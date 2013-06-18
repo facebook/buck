@@ -24,7 +24,7 @@ import java.io.File;
 
 import javax.annotation.Nullable;
 
-public final class BuildTarget {
+public final class BuildTarget implements Comparable<BuildTarget> {
 
   @VisibleForTesting
   public static final String BUILD_TARGET_PREFIX = "//";
@@ -179,5 +179,14 @@ public final class BuildTarget {
   @Override
   public String toString() {
     return getFullyQualifiedName();
+  }
+
+  @Override
+  public int compareTo(BuildTarget o) {
+    if (o == null) {
+      return 1;
+    }
+
+    return getFullyQualifiedName().compareTo(o.getFullyQualifiedName());
   }
 }

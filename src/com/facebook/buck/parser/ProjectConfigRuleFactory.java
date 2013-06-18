@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -33,7 +34,7 @@ public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory<ProjectCo
   protected void amendBuilder(ProjectConfigRule.Builder builder,
       BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
-    Function<String, String> contextualBuildParser = createBuildTargetParseFunction(params);
+    Function<String, BuildTarget> contextualBuildParser = createBuildTargetParseFunction(params);
 
     // src_target
     Optional<String> srcTargetId = params.getOptionalStringAttribute("src_target");

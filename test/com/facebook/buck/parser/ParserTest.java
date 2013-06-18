@@ -423,11 +423,11 @@ public class ParserTest {
 
   private static BuildRuleBuilder<?> createBuildRuleBuilder(String name, String... qualifiedDeps) {
     final BuildTarget buildTarget = BuildTargetFactory.newInstance("//:" + name);
-    ImmutableSortedSet.Builder<String> depsBuilder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<BuildTarget> depsBuilder = ImmutableSortedSet.naturalOrder();
     for (String dep : qualifiedDeps) {
-      depsBuilder.add("//:" + dep);
+      depsBuilder.add(BuildTargetFactory.newInstance("//:" + dep));
     }
-    final ImmutableSortedSet<String> deps = depsBuilder.build();
+    final ImmutableSortedSet<BuildTarget> deps = depsBuilder.build();
 
     return new BuildRuleBuilder<BuildRule>() {
 
@@ -437,7 +437,7 @@ public class ParserTest {
       }
 
       @Override
-      public Set<String> getDeps() {
+      public Set<BuildTarget> getDeps() {
         return deps;
       }
 
@@ -452,9 +452,9 @@ public class ParserTest {
             BuildRuleType.JAVA_LIBRARY,
             buildTarget,
             ImmutableSortedSet.<BuildRule>naturalOrder()
-              .addAll(Iterables.transform(deps, new Function<String, BuildRule>() {
+              .addAll(Iterables.transform(deps, new Function<BuildTarget, BuildRule>() {
                 @Override
-                public BuildRule apply(String target) {
+                public BuildRule apply(BuildTarget target) {
                   return buildRuleBuilderParams.get(target);
                 }
               }))

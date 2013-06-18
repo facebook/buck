@@ -69,10 +69,10 @@ public class ProjectCommandTest {
       throws IOException, NoSuchBuildTargetException, NoSuchMethodException {
     BuildRuleBuilderParams buildRuleBuilderParams = new BuildRuleBuilderParams();
 
-    String javaLibraryTargetName = "//javasrc:java-library";
+    BuildTarget javaLibraryTargetName = BuildTargetFactory.newInstance("//javasrc:java-library");
     DefaultJavaLibraryRule javaLibraryRule = buildRuleBuilderParams.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
-        .setBuildTarget(BuildTargetFactory.newInstance(javaLibraryTargetName))
+        .setBuildTarget(javaLibraryTargetName)
         .addSrc("javasrc/JavaLibrary.java"));
 
     String projectConfigTargetName = "//javasrc:project-config";
@@ -101,7 +101,8 @@ public class ProjectCommandTest {
 
 
     BuildCommandOptions buildOptions = command.buildCommandOptions;
-    MoreAsserts.assertContainsOne(buildOptions.getArguments(), javaLibraryTargetName);
+    MoreAsserts.assertContainsOne(
+        buildOptions.getArguments(), javaLibraryTargetName.getFullyQualifiedName());
   }
 
 

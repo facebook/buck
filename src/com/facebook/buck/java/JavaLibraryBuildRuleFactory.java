@@ -81,7 +81,7 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
 
       for (String processor : params.getOptionalListAttribute("annotation_processor_deps")) {
         BuildTarget buildTarget = params.buildTargetParser.parse(processor, buildFileParseContext);
-        buildRuleBuilder.addDep(buildTarget.getFullyQualifiedName());
+        buildRuleBuilder.addDep(buildTarget);
         annotationProcessingBuilder.addProcessorBuildTarget(buildTarget);
       }
 

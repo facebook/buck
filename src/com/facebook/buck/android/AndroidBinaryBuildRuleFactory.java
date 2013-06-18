@@ -62,7 +62,7 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     ParseContext buildFileParseContext = ParseContext.forBaseName(params.target.getBaseName());
     for (String noDx : params.getOptionalListAttribute("no_dx")) {
       BuildTarget buildTarget = params.buildTargetParser.parse(noDx, buildFileParseContext);
-      builder.addBuildRuleToExcludeFromDex(buildTarget.getFullyQualifiedName());
+      builder.addBuildRuleToExcludeFromDex(buildTarget);
     }
 
     // use_split_dex

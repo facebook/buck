@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
@@ -123,11 +124,12 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   public static class Builder extends Genrule.Builder {
 
-    private String apk;
+    private BuildTarget apk;
 
     @Override
     public ApkGenrule build(BuildRuleBuilderParams buildRuleBuilderParams) {
       // Verify that the 'apk' field is set and corresponds to an installable rule.
+
       BuildRule apkRule = buildRuleBuilderParams.get(apk);
 
       Preconditions.checkState(apk != null && apkRule != null,
@@ -149,7 +151,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
           (InstallableBuildRule)apkRule);
     }
 
-    public Builder setApk(String apk) {
+    public Builder setApk(BuildTarget apk) {
       this.apk = apk;
       return this;
     }

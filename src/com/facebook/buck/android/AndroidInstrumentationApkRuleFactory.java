@@ -42,6 +42,6 @@ public class AndroidInstrumentationApkRuleFactory
     String apk = params.getRequiredStringAttribute("apk");
     ParseContext buildFileParseContext = ParseContext.forBaseName(params.target.getBaseName());
     BuildTarget buildTarget = params.buildTargetParser.parse(apk, buildFileParseContext);
-    builder.setApk(buildTarget.getFullyQualifiedName());
+    builder.setApk(buildTarget);
   }
 }

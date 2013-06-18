@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractTestRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -53,8 +54,8 @@ public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTestRu
     builder.setVmArgs(params.getOptionalListAttribute("vm_args"));
 
     // source_under_test
-    Function<String, String> contextualBuildParser = createBuildTargetParseFunction(params);
-    ImmutableSet<String> sourceUnderTest = ImmutableSet.copyOf(Iterables.transform(
+    Function<String, BuildTarget> contextualBuildParser = createBuildTargetParseFunction(params);
+    ImmutableSet<BuildTarget> sourceUnderTest = ImmutableSet.copyOf(Iterables.transform(
         params.getOptionalListAttribute("source_under_test"), contextualBuildParser));
     builder.setSourceUnderTest(sourceUnderTest);
   }

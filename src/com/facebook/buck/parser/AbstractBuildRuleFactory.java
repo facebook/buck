@@ -53,7 +53,7 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
     ParseContext buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
     for (String dep : params.getOptionalListAttribute("deps")) {
       BuildTarget buildTarget = params.buildTargetParser.parse(dep, buildFileParseContext);
-      builder.addDep(buildTarget.getFullyQualifiedName());
+      builder.addDep(buildTarget);
     }
 
     // visibility
@@ -100,16 +100,16 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
    *     {@link NoSuchBuildTargetException} if the function is passed a build target that it cannot
    *     parse or resolve.
    */
-  protected Function<String, String> createBuildTargetParseFunction(
+  protected Function<String, BuildTarget> createBuildTargetParseFunction(
       BuildRuleFactoryParams params) {
     final BuildTargetParser buildTargetParser = params.buildTargetParser;
     final ParseContext parseContext = ParseContext.forBaseName(params.target.getBaseName());
 
-    return new Function<String, String>() {
+    return new Function<String, BuildTarget>() {
       @Override
-      public String apply(String buildTargetName) {
+      public BuildTarget apply(String buildTargetName) {
         try {
-          return buildTargetParser.parse(buildTargetName, parseContext).getFullyQualifiedName();
+          return buildTargetParser.parse(buildTargetName, parseContext);
         } catch (NoSuchBuildTargetException e) {
           throw new HumanReadableException(e);
         }

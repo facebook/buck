@@ -340,14 +340,14 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       implements LabelsAttributeBuilder {
 
     @Nullable protected List<String> vmArgs = ImmutableList.of();
-    protected ImmutableSet<String> sourceUnderTestNames = ImmutableSet.of();
+    protected ImmutableSet<BuildTarget> sourcesUnderTest = ImmutableSet.of();
     protected ImmutableSet<String> labels = ImmutableSet.of();
 
     protected Builder() {}
 
     @Override
     public JavaTestRule build(BuildRuleBuilderParams buildRuleBuilderParams) {
-      ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourceUnderTestNames,
+      ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
           buildRuleBuilderParams);
       AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(buildRuleBuilderParams);
       javacOptions.setAnnotationProcessingData(processingParams);
@@ -369,7 +369,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
 
     @Override
-    public Builder addDep(String dep) {
+    public Builder addDep(BuildTarget dep) {
       super.addDep(dep);
       return this;
     }
@@ -385,8 +385,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       return this;
     }
 
-    public Builder setSourceUnderTest(ImmutableSet<String> sourceUnderTestNames) {
-      this.sourceUnderTestNames = sourceUnderTestNames;
+    public Builder setSourceUnderTest(ImmutableSet<BuildTarget> sourceUnderTestNames) {
+      this.sourcesUnderTest = sourceUnderTestNames;
       return this;
     }
 
@@ -400,9 +400,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      * Generates the set of build rules that contain the source that will be under test.
      */
     protected ImmutableSet<JavaLibraryRule> generateSourceUnderTest(
-        ImmutableSet<String> sourceUnderTestNames, BuildRuleBuilderParams buildRuleBuilderParams) {
+        ImmutableSet<BuildTarget> sourceUnderTestNames, BuildRuleBuilderParams buildRuleBuilderParams) {
       ImmutableSet.Builder<JavaLibraryRule> sourceUnderTest = ImmutableSet.builder();
-      for (String sourceUnderTestName : sourceUnderTestNames) {
+      for (BuildTarget sourceUnderTestName : sourceUnderTestNames) {
         // Generates the set by matching its path with the full path names that are passed in.
         BuildRule rule = buildRuleBuilderParams.get(sourceUnderTestName);
         if (rule instanceof JavaLibraryRule) {

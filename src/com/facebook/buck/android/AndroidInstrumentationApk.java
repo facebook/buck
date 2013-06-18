@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.Classpaths;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilderParams;
@@ -110,7 +111,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   public static class Builder extends AbstractBuildRuleBuilder<AndroidInstrumentationApk> {
 
     private String manifest = null;
-    private String apk = null;
+    private BuildTarget apk = null;
 
     @Override
     public AndroidInstrumentationApk build(BuildRuleBuilderParams buildRuleBuilderParams) {
@@ -137,7 +138,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       return this;
     }
 
-    public Builder setApk(String apk) {
+    public Builder setApk(BuildTarget apk) {
       this.apk = apk;
       return this;
     }

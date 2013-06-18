@@ -365,14 +365,14 @@ public class DefaultJavaLibraryRuleTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
-        .addDep("//:libone"));
+        .addDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     JavaLibraryRule parent = buildRuleBuilderParams.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
-        .addDep("//:libtwo"));
+        .addDep(BuildTargetFactory.newInstance("//:libtwo")));
 
     assertEquals(ImmutableSetMultimap.of(
         libraryOne, "buck-out/gen/lib__libone__output/libone.jar",
@@ -431,7 +431,7 @@ public class DefaultJavaLibraryRuleTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
-        .addDep("//:libone")
+        .addDep(BuildTargetFactory.newInstance("//:libone"))
         .setExportDeps(true));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
@@ -439,7 +439,7 @@ public class DefaultJavaLibraryRuleTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
-        .addDep("//:libtwo"));
+        .addDep(BuildTargetFactory.newInstance("//:libtwo")));
 
     assertEquals(ImmutableSet.of("buck-out/gen/lib__libone__output/libone.jar"),
         libraryOne.getOutputClasspathEntries());
@@ -500,14 +500,14 @@ public class DefaultJavaLibraryRuleTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
-        .addDep("//:libone"));
+        .addDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     DefaultJavaLibraryRule parent = buildRuleBuilderParams.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
-        .addDep("//:libtwo")
+        .addDep(BuildTargetFactory.newInstance("//:libtwo"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget grandparentTarget = BuildTargetFactory.newInstance("//:grandparent");
@@ -515,7 +515,7 @@ public class DefaultJavaLibraryRuleTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
         .setBuildTarget(grandparentTarget)
         .addSrc("java/src/com/parent/OldManRiver.java")
-        .addDep("//:parent"));
+        .addDep(BuildTargetFactory.newInstance("//:parent")));
 
     BuildContext context = createSuggestContext(buildRuleBuilderParams,
         BuildDependencies.WARN_ON_TRANSITIVE);
@@ -677,7 +677,7 @@ public class DefaultJavaLibraryRuleTest {
   // Captures all the common code between the different annotation processing test scenarios.
   private class AnnotationProcessingScenario {
     private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
-    private final Map<String, BuildRule> buildRuleIndex;
+    private final Map<BuildTarget, BuildRule> buildRuleIndex;
     private final BuildRuleBuilderParams buildRuleBuilderParams;
     private ExecutionContext executionContext;
     private BuildContext buildContext;
@@ -697,7 +697,7 @@ public class DefaultJavaLibraryRuleTest {
       BuildRule rule = processor.createRule(target);
 
       annotationProcessingParamsBuilder.addProcessorBuildTarget(target);
-      buildRuleIndex.put(target.getFullyQualifiedName(), rule);
+      buildRuleIndex.put(target, rule);
     }
 
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {

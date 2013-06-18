@@ -35,7 +35,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   protected AbstractBuildRuleBuilder() {}
 
   protected BuildTarget buildTarget;
-  protected Set<String> deps = Sets.newHashSet();
+  protected Set<BuildTarget> deps = Sets.newHashSet();
   protected Set<BuildTargetPattern> visibilityPatterns = Sets.newHashSet();
 
   @Override
@@ -51,14 +51,14 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     return buildTarget;
   }
 
-  public AbstractBuildRuleBuilder<T> addDep(String dep) {
+  public AbstractBuildRuleBuilder<T> addDep(BuildTarget dep) {
     deps.add(dep);
     return this;
   }
 
   /** @return a view of the deps of this rule */
   @Override
-  public Set<String> getDeps() {
+  public Set<BuildTarget> getDeps() {
     return Collections.unmodifiableSet(deps);
   }
 
@@ -70,13 +70,13 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   @VisibleForTesting
   protected ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(
       BuildRuleBuilderParams buildRuleBuilderParams,
-      Iterable<String> buildTargets,
+      Iterable<BuildTarget> buildTargets,
       boolean allowNonExistentRule) {
     BuildTarget invokingBuildTarget = Preconditions.checkNotNull(getBuildTarget());
 
     ImmutableSortedSet.Builder<BuildRule> buildRules = ImmutableSortedSet.naturalOrder();
 
-    for (String target : buildTargets) {
+    for (BuildTarget target : buildTargets) {
       BuildRule buildRule = buildRuleBuilderParams.get(target);
       if (buildRule != null) {
         buildRules.add(buildRule);

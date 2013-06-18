@@ -285,12 +285,12 @@ public class TargetsCommandTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//javasrc:java-library"))
         .addSrc("javasrc/JavaLibrary.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .addDep("//empty:empty"));
+        .addDep(BuildTargetFactory.newInstance("//empty:empty")));
     buildRuleBuilderParams.buildAndAddToIndex(
         JavaTestRule.newJavaTestRuleBuilder()
         .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
         .addSrc("javatest/TestJavaLibrary.java")
-        .addDep("//javasrc:java-library"));
+        .addDep(BuildTargetFactory.newInstance("//javasrc:java-library")));
 
     List<String> targets = Lists.newArrayList();
     targets.add("//empty:empty");

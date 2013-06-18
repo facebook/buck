@@ -186,7 +186,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     }
 
     @Override
-    public Builder addDep(String dep) {
+    public Builder addDep(BuildTarget dep) {
       super.addDep(dep);
       return this;
     }
