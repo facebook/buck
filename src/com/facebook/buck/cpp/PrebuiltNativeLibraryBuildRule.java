@@ -18,13 +18,12 @@ package com.facebook.buck.cpp;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.NativeLibraryRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -46,28 +45,27 @@ import javax.annotation.Nullable;
  * <pre>
  * prebuild_native_library(
  *   name = 'face_dot_com',
- *   native_libs = 'nativelibs',
+ *   native_libs = 'nativeLibs',
  * )
  * </pre>
  */
-public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
+public class PrebuiltNativeLibraryBuildRule extends NativeLibraryRule {
 
   private final DirectoryTraverser directoryTraverser;
 
-  private final String nativeLibs;
-
   protected PrebuiltNativeLibraryBuildRule(BuildRuleParams buildRuleParams,
       String nativeLibs,
+      boolean isAsset,
       DirectoryTraverser directoryTraverser) {
-    super(buildRuleParams);
+    super(buildRuleParams, isAsset, nativeLibs);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
-    this.nativeLibs = nativeLibs;
   }
 
   @Override
   protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
-        .set("nativeLibs", nativeLibs);
+        .set("nativeLibs", getLibraryPath())
+        .set("is_asset", isAsset());
   }
 
   @Override
@@ -75,7 +73,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes = ImmutableSortedSet
         .naturalOrder();
 
-    addInputsToSortedSet(nativeLibs, inputsToConsiderForCachingPurposes, directoryTraverser);
+    addInputsToSortedSet(getLibraryPath(), inputsToConsiderForCachingPurposes, directoryTraverser);
 
     return inputsToConsiderForCachingPurposes.build();
   }
@@ -87,10 +85,6 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     return ImmutableList.of();
   }
 
-  public String getNativeLibs() {
-    return nativeLibs;
-  }
-
   @Override
   public BuildRuleType getType() {
     return BuildRuleType.PREBUILT_NATIVE_LIBRARY;
@@ -100,8 +94,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     return new Builder(params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<PrebuiltNativeLibraryBuildRule> {
-
+  public static class Builder extends NativeLibraryRule.Builder<PrebuiltNativeLibraryBuildRule> {
     @Nullable
     private String nativeLibs = null;
 
@@ -112,7 +105,8 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
     @Override
     public PrebuiltNativeLibraryBuildRule build(BuildRuleResolver ruleResolver) {
       return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(ruleResolver),
-          nativeLibs,
+          this.nativeLibs,
+          this.isAsset,
           new DefaultDirectoryTraverser());
     }
 
@@ -138,5 +132,6 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
       this.nativeLibs = nativeLibs;
       return this;
     }
+
   }
 }

@@ -62,10 +62,14 @@ public class NdkLibraryRuleTest {
         .addSrc(basePath + "/Android.mk")
         .addFlag("flag1")
         .addFlag("flag2")
+        .setIsAsset(true)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     Assert.assertEquals(BuildRuleType.NDK_LIBRARY, ndkLibraryRule.getType());
     assertTrue(ndkLibraryRule.isAndroidRule());
+    assertTrue(ndkLibraryRule.isAsset());
+    Assert.assertEquals(BuckConstant.GEN_DIR + "/" + basePath + "/__libbase/libs",
+        ndkLibraryRule.getLibraryPath());
 
     MoreAsserts.assertListEquals(
         ImmutableList.of(

@@ -39,5 +39,6 @@ public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory<NdkLibr
     for (String flag : flags) {
       builder.addFlag(flag);
     }
+    builder.setIsAsset(params.getBooleanAttribute("is_asset"));
   }
 }

@@ -35,6 +35,8 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.shell.BashStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -517,5 +519,33 @@ public class AndroidBinaryRuleTest {
     List<Step> steps = commandsBuilder.build();
     assertCommandsInOrder(steps,
         ImmutableList.<Class<?>>of(SplitZipStep.class, SmartDexingStep.class));
+  }
+
+  @Test
+  public void testCopyNativeLibraryCommandWithoutCpuFilter() {
+    AndroidBinaryRule binaryRule = createBinaryRuleWithCpuFilter(null);
+    BashStep copyCommand = binaryRule.copyNativeLibrary("/path/to/src", "/path/to/dest/");
+    List<String> commands = copyCommand.getShellCommand(createMock(ExecutionContext.class));
+    assertEquals("cp -R /path/to/src/* /path/to/dest/", commands.get(2));
+  }
+
+  @Test
+  public void testCopyNativeLibraryCommand() {
+    AndroidBinaryRule binaryRule = createBinaryRuleWithCpuFilter("armv7");
+    BashStep copyCommand = binaryRule.copyNativeLibrary("/path/to/source", "/path/to/destination/");
+    List<String> commands = copyCommand.getShellCommand(createMock(ExecutionContext.class));
+    assertEquals("[ -d /path/to/source/armeabi-v7a ] && " +
+        "cp -R /path/to/source/armeabi-v7a /path/to/destination/ || exit 0", commands.get(2));
+  }
+
+  private AndroidBinaryRule createBinaryRuleWithCpuFilter(String cpuFilter) {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    return ruleResolver.buildAndAddToIndex(
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
+            .setManifest("AndroidManifest.xml")
+            .setKeystorePropertiesPath("keystore.properties")
+            .setTarget("Google Inc:Google APIs:16")
+            .setCpuFilter(cpuFilter));
   }
 }

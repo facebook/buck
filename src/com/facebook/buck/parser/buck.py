@@ -312,12 +312,14 @@ def android_resource(
 def prebuilt_native_library(
     name,
     native_libs=None,
+    is_asset=False,
     visibility=[],
     build_env=None):
   add_rule({
     'type' : 'prebuilt_native_library',
     'name' : name,
     'native_libs' : native_libs,
+    'is_asset' : is_asset,
     'visibility' : visibility,
   }, build_env)
 
@@ -387,6 +389,7 @@ def android_instrumentation_apk(
 def ndk_library(
     name,
     flags=None,
+    is_asset=False,
     deps=[],
     visibility=[],
     build_env=None):
@@ -398,6 +401,7 @@ def ndk_library(
     'name' : name,
     'srcs' : srcs,
     'flags' : flags,
+    'is_asset' : is_asset,
     'deps' : deps,
     'visibility' : visibility,
   }, build_env)

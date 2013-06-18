@@ -18,13 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.NativeLibraryRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
@@ -50,7 +49,7 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class NdkLibraryRule extends AbstractCachingBuildRule {
+public class NdkLibraryRule extends NativeLibraryRule {
 
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
   private final String makefileDirectory;
@@ -62,21 +61,31 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
   protected NdkLibraryRule(
       BuildRuleParams buildRuleParams,
       Set<String> sources,
-      List<String> flags) {
-    super(buildRuleParams);
+      List<String> flags,
+      boolean isAsset) {
+    super(buildRuleParams, isAsset, getLibsPath(buildRuleParams.getBuildTarget()));
+
     Preconditions.checkArgument(!sources.isEmpty(),
         "Must include at least one file (Android.mk?) in ndk_library rule");
     this.sources = ImmutableSortedSet.copyOf(sources);
-
-    String basePathWithSlash = buildRuleParams.getBuildTarget().getBasePathWithSlash();
-    Preconditions.checkArgument(basePathWithSlash.endsWith("/"));
-    this.makefileDirectory = basePathWithSlash;
-    this.buildArtifactsDirectory =
-        String.format("%s/%s__lib%s/",
-            BuckConstant.GEN_DIR,
-            basePathWithSlash,
-            getBuildTarget().getShortName());
+    this.makefileDirectory = getMakefileDirectory(buildRuleParams.getBuildTarget());
+    this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildRuleParams.getBuildTarget());
     this.flags = ImmutableList.copyOf(flags);
+  }
+
+  private static String getMakefileDirectory(BuildTarget target) {
+    return target.getBasePathWithSlash();
+  }
+
+  private static String getBuildArtifactsDirectory(BuildTarget target) {
+    return String.format("%s/%s__lib%s/",
+        BuckConstant.GEN_DIR,
+        getMakefileDirectory(target),
+        target.getShortName());
+  }
+
+  private static String getLibsPath(BuildTarget target) {
+    return getBuildArtifactsDirectory(target) + "libs";
   }
 
   @Override
@@ -98,15 +107,8 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
         .set("makefileDirectory", makefileDirectory)
         .set("buildArtifactsDirectory", buildArtifactsDirectory)
         .set("sources", sources)
-        .set("flags", flags);
-  }
-
-  /**
-   * The directory containing all shared objects built by this rule. This
-   * value does *not* include a trailing slash.
-   */
-  public String getLibraryPath() {
-    return this.buildArtifactsDirectory + "libs";
+        .set("flags", flags)
+        .set("is_asset", isAsset());
   }
 
   @Override
@@ -126,7 +128,7 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     return new Builder(params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<NdkLibraryRule>
+  public static class Builder extends NativeLibraryRule.Builder<NdkLibraryRule>
       implements SrcsAttributeBuilder {
     private Set<String> sources = Sets.newHashSet();
     private ImmutableList.Builder<String> flags = ImmutableList.builder();
@@ -140,7 +142,8 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
       return new NdkLibraryRule(
           createBuildRuleParams(ruleResolver),
           sources,
-          flags.build());
+          flags.build(),
+          this.isAsset);
     }
 
     @Override
@@ -165,5 +168,6 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
       this.flags.add(flag);
       return this;
     }
+
   }
 }

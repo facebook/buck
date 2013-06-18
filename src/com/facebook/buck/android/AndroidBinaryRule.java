@@ -66,8 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 /**
  * <pre>
  * android_binary(
@@ -245,27 +243,40 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
    * Native libraries compiled for different CPU architectures are placed in the
    * respective ABI subdirectories, such as 'armeabi', 'armeabi-v7a', 'x86' and 'mips'.
    * This looks at the cpu filter and returns the correct subdirectory. If cpu filter is
-   * not present, returns null;
+   * not present or not supported, returns Optional.absent();
    */
-  @Nullable
-  private String getAbiDirectory() {
+  private Optional<String> getAbiDirectoryComponent() {
     Optional<TargetCpuType> cpuFilter = getCpuFilter();
     if (!cpuFilter.isPresent()) {
-      return null;
+      return Optional.absent();
+    } else {
+      String component = null;
+      TargetCpuType filter = cpuFilter.get();
+      if (filter.equals(TargetCpuType.ARM)) {
+        component = SdkConstants.ABI_ARMEABI;
+      } else if (filter.equals(TargetCpuType.ARMV7)) {
+        component = SdkConstants.ABI_ARMEABI_V7A;
+      } else if (filter.equals(TargetCpuType.X86)) {
+        component = SdkConstants.ABI_INTEL_ATOM;
+      } else if (filter.equals(TargetCpuType.MIPS)) {
+        component = SdkConstants.ABI_MIPS;
+      }
+      return Optional.fromNullable(component);
     }
+  }
 
-    TargetCpuType filter = cpuFilter.get();
-    if (filter.equals(TargetCpuType.ARM)) {
-      return SdkConstants.ABI_ARMEABI;
-    } else if (filter.equals(TargetCpuType.ARMV7)) {
-      return SdkConstants.ABI_ARMEABI_V7A;
-    } else if (filter.equals(TargetCpuType.X86)) {
-      return SdkConstants.ABI_INTEL_ATOM;
-    } else if (filter.equals(TargetCpuType.MIPS)) {
-      return SdkConstants.ABI_MIPS;
+  @VisibleForTesting
+  BashStep copyNativeLibrary(String sourceDir, String destinationDir) {
+    String copyCommand;
+    Optional<String> abiDirectoryComponent = getAbiDirectoryComponent();
+    if (abiDirectoryComponent.isPresent()) {
+      sourceDir += "/" + abiDirectoryComponent.get();
+      copyCommand = String.format(
+          "[ -d %s ] && cp -R %s %s || exit 0", sourceDir, sourceDir, destinationDir);
+    } else {
+      copyCommand = String.format("cp -R %s/* %s", sourceDir, destinationDir);
     }
-
-    return null;
+    return new BashStep(copyCommand);
   }
 
   public DexSplitMode getDexSplitMode() {
@@ -412,21 +423,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         if (nativeLibDir.endsWith("/")) {
           nativeLibDir = nativeLibDir.substring(0, nativeLibDir.length() - 1);
         }
-
-        String copyCommand;
-        if (cpuFilter.isPresent() && getAbiDirectory() != null) {
-          nativeLibDir += "/" + getAbiDirectory();
-          // Only run cp if nativeLibDir exists, otherwise return 0 so that buck does not halt.
-          copyCommand = String.format(
-              "[ -d %s ] && cp -R %s %s || exit 0", nativeLibDir, nativeLibDir, libSubdirectory
-          );
-        } else {
-          // pack libraries for all architectures
-          copyCommand = String.format(
-              "cp -R %s/* %s", nativeLibDir, libSubdirectory);
-        }
-
-        commands.add(new BashStep(copyCommand));
+        commands.add(copyNativeLibrary(nativeLibDir, libSubdirectory));
       }
     }
 
@@ -435,10 +432,19 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     String unsignedApkPath = getUnsignedApkPath();
 
     Optional<String> assetsDirectory;
-    if (transitiveDependencies.assetsDirectories.isEmpty() && extraAssets.isEmpty()) {
+    if (transitiveDependencies.assetsDirectories.isEmpty() && extraAssets.isEmpty()
+        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
+    }
+
+    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+      String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
+      commands.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
+      for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
+        commands.add(copyNativeLibrary(nativeLibDir, nativeLibAssetsDir));
+      }
     }
 
     commands.add(new MkdirStep(outputGenDirectory));

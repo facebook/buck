@@ -16,12 +16,12 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.NativeLibraryRule;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -119,6 +119,10 @@ public class AndroidTransitiveDependencyGraph {
     // directories in the final APK.
     final ImmutableSet.Builder<String> nativeLibsDirectories = ImmutableSet.builder();
 
+    // Paths to native libs directories that are to be treated as assets and so should be included
+    // as raw files under /assets/lib/ directory in the APK.
+    final ImmutableSet.Builder<String> nativeLibAssetsDirectories = ImmutableSet.builder();
+
     // Path to the module's manifest file
     final ImmutableSet.Builder<String> manifestFiles = ImmutableSet.builder();
 
@@ -135,9 +139,13 @@ public class AndroidTransitiveDependencyGraph {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
-        if (rule instanceof NdkLibraryRule) {
-          NdkLibraryRule ndkRule = (NdkLibraryRule) rule;
-          nativeLibsDirectories.add(ndkRule.getLibraryPath());
+        if (rule instanceof NativeLibraryRule) {
+          NativeLibraryRule nativeLibraryRule = (NativeLibraryRule)rule;
+          if (nativeLibraryRule.isAsset()) {
+            nativeLibAssetsDirectories.add(nativeLibraryRule.getLibraryPath());
+          } else {
+            nativeLibsDirectories.add(nativeLibraryRule.getLibraryPath());
+          }
         } else if (rule instanceof AndroidResourceRule) {
           AndroidResourceRule androidRule = (AndroidResourceRule) rule;
           String assetsDirectory = androidRule.getAssets();
@@ -147,12 +155,6 @@ public class AndroidTransitiveDependencyGraph {
           String manifestFile = androidRule.getManifestFile();
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
-          }
-        } else if (rule instanceof PrebuiltNativeLibraryBuildRule) {
-          PrebuiltNativeLibraryBuildRule androidRule = (PrebuiltNativeLibraryBuildRule) rule;
-          String nativeLibsDirectory = androidRule.getNativeLibs();
-          if (nativeLibsDirectory != null) {
-            nativeLibsDirectories.add(nativeLibsDirectory);
           }
         } else if (rule instanceof DefaultJavaLibraryRule) {
           DefaultJavaLibraryRule defaultJavaLibraryRule = (DefaultJavaLibraryRule)rule;
@@ -171,6 +173,7 @@ public class AndroidTransitiveDependencyGraph {
 
     return new AndroidTransitiveDependencies(assetsDirectories.build(),
         nativeLibsDirectories.build(),
+        nativeLibAssetsDirectories.build(),
         manifestFiles.build(),
         details.resDirectories,
         details.rDotJavaPackages,

@@ -36,5 +36,6 @@ public class PrebuiltNativeLibraryBuildRuleFactory
     String nativeLibs = params.getRequiredStringAttribute("native_libs");
     String nativeLibsDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(nativeLibs);
     builder.setNativeLibsDirectory(nativeLibsDir);
+    builder.setIsAsset(params.getBooleanAttribute("is_asset"));
   }
 }

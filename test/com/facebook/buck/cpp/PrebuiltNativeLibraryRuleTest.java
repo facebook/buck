@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cpp;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -65,7 +68,11 @@ public class PrebuiltNativeLibraryRuleTest {
     PrebuiltNativeLibraryBuildRule nativeLibraryRule = new PrebuiltNativeLibraryBuildRule(
         buildRuleParams,
         "java/src/com/facebook/base/libs",
+        false,
         traverser);
+
+    assertEquals(nativeLibraryRule.getLibraryPath(), "java/src/com/facebook/base/libs");
+    assertFalse(nativeLibraryRule.isAsset());
 
     // Test getInputsToCompareToOutput().
     MoreAsserts.assertIterablesEquals(
