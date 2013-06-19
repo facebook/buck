@@ -69,7 +69,7 @@ public class Console {
    * Prints an error message to stderr that will be highlighted in red if stderr is a tty.
    */
   public void printErrorText(String message) {
-    stdErr.print(ansi.asErrorText(message));
+    stdErr.println(ansi.asErrorText(message));
   }
 
   /**

@@ -166,7 +166,7 @@ public final class BuildRuleFactoryParams {
           String.format(
           "\"%s\" in target \"%s\" crosses a buck package boundary. Find the nearest BUCK file " +
           "in the directory containing this file and refer to the rule referencing the " +
-          "desired file",
+          "desired file.",
           fullPath, target));
     }
   }

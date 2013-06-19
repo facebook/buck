@@ -149,7 +149,7 @@ public class BuildRuleFactoryParamsTest {
     } catch (HumanReadableException e) {
       assertEquals("\"src/com/facebook/demo/B.java\" in target \"//src/com/facebook:boundary\" " +
           "crosses a buck package boundary. Find the nearest BUCK file in the directory " +
-          "containing this file and refer to the rule referencing the desired file",
+          "containing this file and refer to the rule referencing the desired file.",
           e.getMessage());
     }
   }
