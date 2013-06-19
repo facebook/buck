@@ -11,7 +11,6 @@ java_library(
     '//lib:jsr305',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/command:command',
-    '//src/com/facebook/buck/debug:debug',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',

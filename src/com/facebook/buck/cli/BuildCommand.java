@@ -17,10 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
-import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildEvents;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.step.StepFailedException;
@@ -35,14 +35,12 @@ import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
-
-  // The minimum length of time for a Tracer event to take to be printed to the console.
-  private static final long TRACER_THRESHOLD = 50L;
 
   private Build build;
 
@@ -58,19 +56,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   }
 
   @Override
-  int runCommandWithOptions(BuildCommandOptions options) throws IOException {
-    Tracer tracer = Tracer.startTracer("buck");
-    try {
-      return runCommandWithOptionsWithTracerRunning(options);
-    } finally {
-      tracer.stop(TRACER_THRESHOLD);
-      if (console.getVerbosity().shouldPrintCommand()) {
-        Tracer.clearAndPrintCurrentTrace(getStdErr());
-      }
-    }
-  }
-
-  private synchronized int runCommandWithOptionsWithTracerRunning(BuildCommandOptions options)
+  public synchronized int runCommandWithOptions(BuildCommandOptions options)
       throws IOException {
     // Set the logger level based on the verbosity option.
     Verbosity verbosity = console.getVerbosity();
@@ -99,7 +85,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     // Create and execute the build.
-    this.build = options.createBuild(
+    build = options.createBuild(
         options.getBuckConfig(),
         dependencyGraph,
         getProjectFilesystem(),
@@ -112,7 +98,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return exitCode;
     }
 
-    Tracer.addComment("Build targets built");
     console.getAnsi().printlnHighlightedSuccessText(getStdErr(), "BUILD SUCCESSFUL");
     return 0;
   }
@@ -122,11 +107,12 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     EventBus events = new AsyncEventBus("buck-events", busExecutor);
     addEventListeners(events);
 
-    Tracer buildTracer = Tracer.startTracer("buck build");
+    Set<BuildRule> rulesToBuild = build.getDependencyGraph().getNodesWithNoIncomingEdges();
+    events.post(BuildEvents.buildStarted(rulesToBuild));
     int exitCode;
     try {
       // Get the Future representing the build and then block until everything is built.
-      build.executeBuild(events).get();
+      build.executeBuild(events, rulesToBuild).get();
       exitCode = 0;
     } catch (IOException e) {
       console.printBuildFailureWithoutStacktrace(e);
@@ -153,8 +139,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       // This suggests an error in Buck rather than a user error.
       console.printBuildFailureWithoutStacktrace(e);
       exitCode = 1;
-    } finally {
-      buildTracer.stop(TRACER_THRESHOLD);
     }
 
     events.post(BuildEvents.buildFinished(exitCode));

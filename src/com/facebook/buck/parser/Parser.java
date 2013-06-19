@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -175,6 +174,7 @@ public class Parser {
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes)
       throws IOException, NoSuchBuildTargetException {
+    // TODO(royw): Thread through the EventBus and log parseStart/parseEnd events.
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     if (!isCacheComplete(defaultIncludes)) {
@@ -189,7 +189,6 @@ public class Parser {
     }
 
     DependencyGraph graph = findAllTransitiveDependencies(buildTargets, defaultIncludes);
-    Tracer.addComment("All build files parsed and dependency graph constructed.");
     return graph;
   }
 

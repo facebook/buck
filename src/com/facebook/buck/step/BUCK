@@ -4,7 +4,6 @@ java_library(
   deps = [
     '//lib:guava',
     '//src/com/facebook/buck/android:exceptions',
-    '//src/com/facebook/buck/debug:debug',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

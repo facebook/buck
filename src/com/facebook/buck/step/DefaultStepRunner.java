@@ -16,7 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.MoreFutures;
 import com.google.common.base.Function;
@@ -34,8 +33,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 public final class DefaultStepRunner implements StepRunner {
-
-  private static final String TRACER_COMMENT_TYPE = "COMMAND";
 
   private final ExecutionContext context;
   private final ListeningExecutorService listeningExecutorService;
@@ -80,8 +77,7 @@ public final class DefaultStepRunner implements StepRunner {
     if (exitCode != 0) {
       throw StepFailedException.createForFailingStep(step, context, exitCode, buildTarget);
     }
-
-    Tracer.addComment(step.getShortName(context), TRACER_COMMENT_TYPE);
+    // TODO(royw): Thread through the EventBus and log stepStart/stepEnd events.
   }
 
   @Override

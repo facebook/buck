@@ -17,12 +17,10 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.android.HasAndroidPlatformTarget;
-import com.facebook.buck.debug.Tracer;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
-import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.Builder;
@@ -115,7 +113,7 @@ public class Build {
     return stepRunner;
   }
 
-  /** Returns null until {@link #executeBuild(EventBus)} is invoked. */
+  /** Returns null until {@link #executeBuild(EventBus, Set)} is invoked. */
   @Nullable
   public BuildContext getBuildContext() {
     return buildContext;
@@ -186,8 +184,6 @@ public class Build {
         } else {
           result = Optional.absent();
         }
-
-        Tracer.addComment("Android platform target determined.");
         return result;
       }
     };
@@ -195,11 +191,9 @@ public class Build {
     return traversal.getResult();
   }
 
-  public ListenableFuture<List<BuildRuleSuccess>> executeBuild(EventBus events)
+  public ListenableFuture<List<BuildRuleSuccess>> executeBuild(EventBus events,
+                                                               Set<BuildRule> rulesToBuild)
       throws IOException, StepFailedException {
-    Set<BuildRule> rulesToBuild = dependencyGraph.getNodesWithNoIncomingEdges();
-    events.post(BuildEvents.buildStarted(rulesToBuild));
-
     buildContext = BuildContext.builder()
         .setProjectRoot(executionContext.getProjectDirectoryRoot())
         .setDependencyGraph(dependencyGraph)
