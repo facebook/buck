@@ -116,8 +116,10 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(BuildRuleType.GENRULE, genrule.getType());
+    assertEquals(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml",
+        genrule.getPathToOutputFile());
     assertEquals("/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml",
-        genrule.getOutputFilePath());
+        genrule.getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
     ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
         "src/com/facebook/katana/convert_to_katana.py",
@@ -138,7 +140,7 @@ public class GenruleTest {
         ImmutableList.of(
             "rm",
             "-f",
-            "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
+            GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
         rmCommand.getShellCommand(executionContext));
 
     Step secondStep = steps.get(1);

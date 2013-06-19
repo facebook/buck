@@ -95,7 +95,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   @Override
   public String getApkPath() {
-    return getOutputFilePath();
+    return getAbsoluteOutputFilePath();
   }
 
   // Override so that test code and method are in same package; otherwise @VisibleForTesting has
@@ -108,7 +108,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   @Override
   public String getPathToOutputFile() {
-    return getApkPath();
+    return outAsProjectRelativePath;
   }
 
   public static Builder newApkGenruleBuilder() {

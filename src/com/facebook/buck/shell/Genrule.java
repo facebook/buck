@@ -115,6 +115,7 @@ public class Genrule extends AbstractCachingBuildRule {
   protected final Map<String, String> srcsToAbsolutePaths;
 
   protected final String outDirectory;
+  protected final String outAsProjectRelativePath;
   protected final String outAsAbsolutePath;
   protected final String tmpDirectory;
   private final String srcDirectory;
@@ -134,8 +135,8 @@ public class Genrule extends AbstractCachingBuildRule {
     this.outDirectory = String.format("%s/%s",
         BuckConstant.GEN_DIR,
         buildRuleParams.getBuildTarget().getBasePathWithSlash());
-    String outWithGenDirPrefix = String.format("%s%s", outDirectory, out);
-    this.outAsAbsolutePath = relativeToAbsolutePathFunction.apply(outWithGenDirPrefix);
+    this.outAsProjectRelativePath = String.format("%s%s", outDirectory, out);
+    this.outAsAbsolutePath = relativeToAbsolutePathFunction.apply(this.outAsProjectRelativePath);
 
     String temp = String.format("%s/%s/%s__tmp",
         BuckConstant.GEN_DIR,
@@ -160,7 +161,7 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   /** @return the absolute path to the output file */
-  public String getOutputFilePath() {
+  public String getAbsoluteOutputFilePath() {
     return outAsAbsolutePath;
   }
 
@@ -171,7 +172,7 @@ public class Genrule extends AbstractCachingBuildRule {
 
   @Override
   public String getPathToOutputFile() {
-    return getOutputFilePath();
+    return outAsProjectRelativePath;
   }
 
   @Override
@@ -184,7 +185,7 @@ public class Genrule extends AbstractCachingBuildRule {
   protected void addEnvironmentVariables(
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put("SRCS", Joiner.on(' ').join(srcsToAbsolutePaths.values()));
-    environmentVariablesBuilder.put("OUT", getOutputFilePath());
+    environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
 
     final Set<String> depFiles = Sets.newHashSet();
     final Set<BuildRule> processedBuildRules = Sets.newHashSet();
@@ -220,7 +221,7 @@ public class Genrule extends AbstractCachingBuildRule {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Delete the old output for this rule, if it exists.
-    commands.add(new RmStep(getOutputFilePath(), true /* shouldForceDeletion */));
+    commands.add(new RmStep(getPathToOutputFile(), true /* shouldForceDeletion */));
 
     // Make sure that the directory to contain the output file exists. Rules get output to a
     // directory named after the base path, so we don't want to nuke the entire directory.

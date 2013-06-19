@@ -120,13 +120,13 @@ public class ApkGenruleTest {
     ApkGenruleBuildRuleFactory factory = new ApkGenruleBuildRuleFactory();
     ApkGenrule.Builder builder = factory.newInstance(params);
     builder.setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction);
-    ApkGenrule apk_genrule = (ApkGenrule) ruleResolver.buildAndAddToIndex(builder);
+    ApkGenrule apkGenrule = (ApkGenrule) ruleResolver.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";
-    assertEquals(BuildRuleType.APK_GENRULE, apk_genrule.getType());
+    assertEquals(BuildRuleType.APK_GENRULE, apkGenrule.getType());
     assertEquals(expectedApkOutput,
-        apk_genrule.getOutputFilePath());
+        apkGenrule.getAbsoluteOutputFilePath());
     BuildContext buildContext = BuildContext.builder()
         .setProjectRoot(EasyMock.createNiceMock(File.class))
         .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
@@ -139,10 +139,10 @@ public class ApkGenruleTest {
         "src/com/facebook/key.properties",
         "src/com/facebook/signer.py");
     assertEquals(inputsToCompareToOutputs,
-        apk_genrule.getInputsToCompareToOutput(buildContext));
+        apkGenrule.getInputsToCompareToOutput(buildContext));
 
     // Verify that the shell commands that the genrule produces are correct.
-    List<Step> steps = apk_genrule.buildInternal(buildContext);
+    List<Step> steps = apkGenrule.buildInternal(buildContext);
     assertEquals(7, steps.size());
 
     Step firstStep = steps.get(0);
@@ -154,7 +154,7 @@ public class ApkGenruleTest {
         ImmutableList.of(
             "rm",
             "-f",
-            expectedApkOutput),
+            apkGenrule.getPathToOutputFile()),
         rmCommand.getShellCommand(executionContext));
 
     Step secondStep = steps.get(1);
