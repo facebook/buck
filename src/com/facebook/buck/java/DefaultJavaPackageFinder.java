@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.java;
 
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
@@ -27,7 +27,7 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Deque;
 
-class DefaultJavaPackageFinder implements JavaPackageFinder {
+public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
   /**
    * Each element in this set is a path prefix from the root of the repository.

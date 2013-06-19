@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
@@ -39,7 +40,7 @@ public class AbstractBuildRuleFactoryTest {
         createNonCheckingBuildRuleFactoryParams(
             config,
             null,
-            null);
+            BuildTargetFactory.newInstance("//example:target"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetPattern.MATCH_ALL,

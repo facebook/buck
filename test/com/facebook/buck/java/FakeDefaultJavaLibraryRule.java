@@ -16,8 +16,9 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Optional;
 
 import java.util.Set;
@@ -30,7 +31,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
 
   protected FakeDefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
                                        Set<String> srcs,
-                                       Set<String> resources,
+                                       Set<SourcePath> resources,
                                        Optional<String> proguardConfig,
                                        AnnotationProcessingParams annotationProcessingParams,
                                        boolean exportDeps,

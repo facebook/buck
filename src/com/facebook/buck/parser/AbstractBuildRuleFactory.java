@@ -18,6 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
@@ -71,9 +73,18 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
 
     // resources
     if (builder instanceof ResourcesAttributeBuilder) {
+      ResourcesAttributeBuilder attributeBuilder = (ResourcesAttributeBuilder) builder;
+
       for (String resource : params.getOptionalListAttribute("resources")) {
-        String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(resource);
-        ((ResourcesAttributeBuilder)builder).addResource(relativePath);
+        SourcePath path = params.asSourcePath(resource);
+        attributeBuilder.addResource(path);
+
+        // Remember to add the resource as a dependency. On the down side, this means that the file
+        // will appear on the classpath, but there's no elegant way (yet) to avoid this.
+        // TODO(simons): A smarter, more elegant way of adding additional deps not on the classpath.
+        if (path instanceof BuildTargetSourcePath) {
+          builder.addDep(((BuildTargetSourcePath) path).getTarget());
+        }
       }
     }
 

@@ -369,6 +369,16 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
+    public Builder setSourcePaths(String key, @Nullable ImmutableSortedSet<SourcePath> val) {
+      setKey(key);
+      if (val != null) {
+        for (SourcePath path : val) {
+          setVal(path.asReference());
+        }
+      }
+      return separate();
+    }
+
     public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val) {
       setKey(key);
       if (val != null) {

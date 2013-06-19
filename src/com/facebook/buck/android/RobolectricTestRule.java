@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -36,7 +37,7 @@ public class RobolectricTestRule extends JavaTestRule {
 
   protected RobolectricTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
-      Set<String> resources,
+      Set<SourcePath> resources,
       Set<String> labels,
       Optional<String> proguardConfig,
       JavacOptions javacOptions,

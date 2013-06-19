@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -71,7 +72,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   protected JavaTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
-      Set<String> resources,
+      Set<SourcePath> resources,
       Set<String> labels,
       Optional<String> proguardConfig,
       JavacOptions javacOptions,

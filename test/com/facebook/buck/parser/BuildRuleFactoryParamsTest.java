@@ -23,6 +23,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -170,4 +173,82 @@ public class BuildRuleFactoryParamsTest {
     String relativePath = params.resolveFilePathRelativeToBuildFileDirectory("nobuild/C.java");
     assertEquals("src/com/facebook/nobuild/C.java", relativePath);
   }
+
+  @Test
+  public void testShouldResolveFilesAsFileSourcePaths() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        null /* instance */,
+        new TestConsole(),
+        filesystem,
+        tree,
+        parser,
+        target);
+
+    SourcePath first = params.asSourcePath("A.java");
+
+    assertTrue(first instanceof FileSourcePath);
+    assertEquals("src/com/facebook/A.java", first.asReference());
+  }
+
+  @Test
+  public void testShouldResolveAFullyQualifiedTargetAsABuildTargetSourcePath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        null /* instance */,
+        new TestConsole(),
+        filesystem,
+        tree,
+        parser,
+        target);
+
+    SourcePath first = params.asSourcePath("//src/com/facebook:A");
+
+    assertTrue(first instanceof BuildTargetSourcePath);
+    assertEquals("//src/com/facebook:A", first.asReference());
+  }
+
+  @Test
+  public void testShouldThrowAnExceptionIfTheBuildTargetIsUnknown() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        null /* instance */,
+        new TestConsole(),
+        filesystem,
+        tree,
+        parser,
+        target);
+
+    try {
+      params.asSourcePath("//does/not:exist");
+      fail("Should not have succeeded");
+    } catch (HumanReadableException e) {
+      assertEquals(
+          "Unable to find build target '//does/not:exist' while parsing definition " +
+              "of //src/com/facebook:Main",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  public void testShouldResolveAShortTargetAsABuildTargetSourcePath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        null /* instance */,
+        new TestConsole(),
+        filesystem,
+        tree,
+        parser,
+        target);
+
+    SourcePath first = params.asSourcePath(":works");
+
+    assertTrue(first instanceof BuildTargetSourcePath);
+    assertEquals("//src/com/facebook:works", first.asReference());
+  }
+
 }

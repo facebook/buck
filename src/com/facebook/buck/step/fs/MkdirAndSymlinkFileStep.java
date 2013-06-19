@@ -22,6 +22,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Ensures the directory of the target path is created before a file is symlinked to it.
@@ -46,6 +47,10 @@ public final class MkdirAndSymlinkFileStep extends CompositeStep {
         ));
     this.source = source;
     this.target = target;
+  }
+
+  public MkdirAndSymlinkFileStep(Path source, Path target) {
+    this(source.toFile(), target.toFile());
   }
 
   @VisibleForTesting

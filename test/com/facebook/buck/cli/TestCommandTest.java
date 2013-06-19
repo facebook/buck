@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.model.BuildTargetFactory;

@@ -18,6 +18,9 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -47,6 +50,7 @@ public final class BuildRuleFactoryParams {
   public final BuildTargetParser buildTargetParser;
   public final BuildTargetPatternParser buildTargetPatternParser;
   public final BuildTarget target;
+  private final ParseContext sourcePathContext;
   private final ParseContext visibilityParseContext;
   private final boolean ignoreFileExistenceChecks;
 
@@ -83,8 +87,9 @@ public final class BuildRuleFactoryParams {
     this.buildFiles = buildFiles;
     this.buildTargetParser = buildTargetParser;
     this.buildTargetPatternParser = new BuildTargetPatternParser(filesystem);
-    this.target = target;
+    this.target = Preconditions.checkNotNull(target);
     this.visibilityParseContext = ParseContext.forVisibilityArgument();
+    this.sourcePathContext = ParseContext.forBaseName(target.getBaseName());
     this.ignoreFileExistenceChecks = ignoreFileExistenceChecks;
 
     this.resolveFilePathRelativeToBuildFileDirectoryTransform = new Function<String, String>() {
@@ -197,6 +202,22 @@ public final class BuildRuleFactoryParams {
       return path;
     } else {
       return String.format("%s/%s", target.getBasePath(), path);
+    }
+  }
+
+  public SourcePath asSourcePath(String resource) {
+    // TODO(simons): Don't hard code this check for built-target-ism
+    if (resource.startsWith(BuildTarget.BUILD_TARGET_PREFIX) || resource.charAt(0) == ':') {
+      try {
+        BuildTarget buildTarget = buildTargetParser.parse(resource, sourcePathContext);
+        return new BuildTargetSourcePath(buildTarget);
+      } catch (NoSuchBuildTargetException e) {
+        throw new HumanReadableException(
+            "Unable to find build target '%s' while parsing definition of %s", resource, target);
+      }
+    } else {
+      String relativePath = resolveFilePathRelativeToBuildFileDirectory(resource);
+      return new FileSourcePath(relativePath);
     }
   }
 

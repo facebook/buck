@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.java.InstrumentStep;
 import com.facebook.buck.java.JUnitStep;

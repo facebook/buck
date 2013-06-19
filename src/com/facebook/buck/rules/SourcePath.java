@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,11 +16,23 @@
 
 package com.facebook.buck.rules;
 
+import java.nio.file.Path;
 
-public interface ResourcesAttributeBuilder {
+/**
+ * Represents a source that is required to build a rule (typically a file).
+ */
+public interface SourcePath extends Comparable<SourcePath>  {
 
   /**
-   * @param relativePathToResource
+   * Converts this SourcePath to the {@link Path} it represents. Note, this method should only be
+   * called while a rule is executing.
+   *
+   * @return the Path which this instance represents.
    */
-  public AbstractBuildRuleBuilder<?> addResource(SourcePath relativePathToResource);
+  public Path resolve(BuildContext context);
+
+  /**
+   * @return a representation of path in a stable manner that does not involve calling {#resolve()}
+   */
+  public String asReference();
 }

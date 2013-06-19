@@ -21,6 +21,7 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -45,7 +46,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   @VisibleForTesting
   public AndroidLibraryRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
-      Set<String> resources,
+      Set<SourcePath> resources,
       Optional<String> proguardConfig,
       JavacOptions javacOptions,
       Optional<String> manifestFile) {

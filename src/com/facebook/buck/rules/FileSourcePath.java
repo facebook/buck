@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,11 +16,30 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Preconditions;
 
-public interface ResourcesAttributeBuilder {
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-  /**
-   * @param relativePathToResource
-   */
-  public AbstractBuildRuleBuilder<?> addResource(SourcePath relativePathToResource);
+public class FileSourcePath extends AbstractSourcePath {
+  private final String relativePath;
+
+  public FileSourcePath(String relativePath) {
+    this.relativePath = Preconditions.checkNotNull(relativePath);
+  }
+
+  @Override
+  public Path resolve(BuildContext context) {
+    return Paths.get(relativePath);
+  }
+
+  @Override
+  public String asReference() {
+    return relativePath;
+  }
+
+  @Override
+  public String toString() {
+    return relativePath;
+  }
 }

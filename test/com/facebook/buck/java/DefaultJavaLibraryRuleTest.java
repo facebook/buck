@@ -17,6 +17,8 @@
 package com.facebook.buck.java;
 
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -24,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -31,12 +34,16 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
@@ -56,8 +63,10 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.EventBus;
 
 import org.easymock.EasyMock;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -70,6 +79,27 @@ public class DefaultJavaLibraryRuleTest {
       "//android/java/src/com/facebook:fb";
   private static final String ANNOTATION_SCENARIO_GEN_PATH =
       BuckConstant.ANNOTATION_DIR + "/android/java/src/com/facebook/__fb_gen__";
+
+  private BuildContext stubContext;
+
+  @Before
+  public void stubOutBuildContext() {
+    File root = new File(".");
+    StepRunner stepRunner = createNiceMock(StepRunner.class);
+    JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
+    replay(packageFinder, stepRunner);
+
+    stubContext = BuildContext.builder()
+        .setArtifactCache(new NoopArtifactCache())
+        .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
+        .setEventBus(new EventBus())
+        .setJavaPackageFinder(packageFinder)
+        .setProjectRoot(root)
+        .setProjectFilesystem(new ProjectFilesystem(root))
+        .setCommandRunner(stepRunner)
+        .build();
+  }
+
 
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
@@ -85,8 +115,9 @@ public class DefaultJavaLibraryRuleTest {
         new BuildRuleParams(buildTarget, deps, visibilityPatterns),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
-            "android/java/src/com/facebook/base/data.json",
-            "android/java/src/com/facebook/common/util/data.json"),
+            new FileSourcePath("android/java/src/com/facebook/base/data.json"),
+            new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
+        ),
         /* proguardConfig */ Optional.<String>absent(),
         /* exportDeps */ false,
         JavacOptions.DEFAULTS
@@ -94,7 +125,7 @@ public class DefaultJavaLibraryRuleTest {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
-    javaRule.addResourceCommands(
+    javaRule.addResourceCommands(stubContext,
         commands, BIN_DIR + "/android/java/lib__resources__classes", javaPackageFinder);
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
@@ -104,7 +135,6 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/common/util/data.json",
             BIN_DIR + "/android/java/lib__resources__classes/com/facebook/common/util/data.json"));
     MoreAsserts.assertListEquals(expected, commands.build());
-    EasyMock.verify(javaPackageFinder);
   }
 
   @Test
@@ -120,9 +150,10 @@ public class DefaultJavaLibraryRuleTest {
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
         new BuildRuleParams(buildTarget, deps, visibilityPatterns),
         ImmutableSet.<String>of() /* srcs */,
-        ImmutableSet.of(
-            "android/java/src/com/facebook/base/data.json",
-            "android/java/src/com/facebook/common/util/data.json"),
+        ImmutableSet.<SourcePath>of(
+            new FileSourcePath("android/java/src/com/facebook/base/data.json"),
+            new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
+        ),
         /* proguargConfig */ Optional.<String>absent(),
         /* exportDeps */ false,
         JavacOptions.DEFAULTS
@@ -130,7 +161,7 @@ public class DefaultJavaLibraryRuleTest {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
-    javaRule.addResourceCommands(
+    javaRule.addResourceCommands(stubContext,
         commands, BIN_DIR + "/android/java/src/lib__resources__classes", javaPackageFinder);
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
@@ -139,8 +170,8 @@ public class DefaultJavaLibraryRuleTest {
         new MkdirAndSymlinkFileStep(
             "android/java/src/com/facebook/common/util/data.json",
             BIN_DIR + "/android/java/src/lib__resources__classes/com/facebook/common/util/data.json"));
+    assertEquals(expected, commands.build());
     MoreAsserts.assertListEquals(expected, commands.build());
-    EasyMock.verify(javaPackageFinder);
   }
 
   @Test
@@ -159,8 +190,9 @@ public class DefaultJavaLibraryRuleTest {
         new BuildRuleParams(buildTarget, deps, visibilityPatterns),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
-            "android/java/src/com/facebook/base/data.json",
-            "android/java/src/com/facebook/common/util/data.json"),
+            new FileSourcePath("android/java/src/com/facebook/base/data.json"),
+            new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
+        ),
         /* proguargConfig */ Optional.<String>absent(),
         /* exportDeps */ false,
         JavacOptions.DEFAULTS);
@@ -168,6 +200,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     javaRule.addResourceCommands(
+        stubContext,
         commands,
         BIN_DIR + "/android/java/src/com/facebook/lib__resources__classes",
         javaPackageFinder);
@@ -179,7 +212,6 @@ public class DefaultJavaLibraryRuleTest {
             "android/java/src/com/facebook/common/util/data.json",
             BIN_DIR + "/android/java/src/com/facebook/lib__resources__classes/com/facebook/common/util/data.json"));
     MoreAsserts.assertListEquals(expected, commands.build());
-    EasyMock.verify(javaPackageFinder);
   }
 
   /** Make sure that when isAndroidLibrary is true, that the Android bootclasspath is used. */
@@ -572,16 +604,7 @@ public class DefaultJavaLibraryRuleTest {
   }
 
   private JavaPackageFinder createJavaPackageFinder() {
-    JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
-    EasyMock.expect(javaPackageFinder.findJavaPackageFolderForPath(
-        "android/java/src/com/facebook/base/data.json"))
-        .andReturn("com/facebook/base/");
-    EasyMock.expect(javaPackageFinder.findJavaPackageFolderForPath(
-        "android/java/src/com/facebook/common/util/data.json"))
-        .andReturn("com/facebook/common/util/");
-
-    EasyMock.replay(javaPackageFinder);
-    return javaPackageFinder;
+    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableSet.<String>of("/android/java/src"));
   }
 
   private BuildContext createSuggestContext(BuildRuleResolver ruleResolver,
@@ -594,7 +617,7 @@ public class DefaultJavaLibraryRuleTest {
 
     EasyMock.expect(context.getBuildDependencies()).andReturn(buildDependencies).anyTimes();
 
-    EasyMock.replay(context);
+    replay(context);
 
     return context;
   }
@@ -614,7 +637,7 @@ public class DefaultJavaLibraryRuleTest {
     EasyMock.expect(context.getBuildDependencies()).andReturn(BuildDependencies.TRANSITIVE);
     EasyMock.expectLastCall().anyTimes();
 
-    EasyMock.replay(context);
+    replay(context);
 
     return context;
   }
@@ -647,7 +670,7 @@ public class DefaultJavaLibraryRuleTest {
         return new DefaultJavaLibraryRule(
             createBuildRuleParams(target),
             ImmutableSet.<String>of("MyClass.java"),
-            ImmutableSet.<String>of(),
+            ImmutableSet.<SourcePath>of(),
             Optional.of("MyProguardConfig"),
             /* exportDeps */ false,
             JavacOptions.DEFAULTS);
@@ -734,7 +757,7 @@ public class DefaultJavaLibraryRuleTest {
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
               /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of()),
           ImmutableSet.of(src),
-          /* resources */ ImmutableSet.<String>of(),
+          /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<String>absent(),
           options.build(),
           /* manifestFile */ Optional.<String>absent());

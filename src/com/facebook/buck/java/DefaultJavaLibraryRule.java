@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -85,7 +86,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final ImmutableSortedSet<String> srcs;
 
-  private final ImmutableSortedSet<String> resources;
+  private final ImmutableSortedSet<SourcePath> resources;
 
   private final Optional<String> outputJar;
 
@@ -147,7 +148,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
                                    Set<String> srcs,
-                                   Set<String> resources,
+                                   Set<? extends SourcePath> resources,
                                    Optional<String> proguardConfig,
                                    boolean exportDeps,
                                    JavacOptions javacOptions) {
@@ -167,10 +168,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     // Note that both srcs and resources are sorted so that the list order is consistent even if
     // the iteration order of the sets passed to the constructor changes. See
     // AbstractBuildRule.getInputsToCompareToOutput() for details.
-    inputsToConsiderForCachingPurposes = ImmutableList.<String>builder()
-        .addAll(this.srcs)
-        .addAll(this.resources)
-        .build();
+    ImmutableList.Builder<String> builder = ImmutableList.<String>builder().addAll(this.srcs);
+    for (SourcePath resource : resources) {
+      builder.add(resource.asReference());
+    }
+    inputsToConsiderForCachingPurposes = builder.build();
+
+
 
     outputClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
@@ -316,7 +320,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     super.appendToRuleKey(builder)
         .set("srcs", srcs)
-        .set("resources", resources)
+        .setSourcePaths("resources", resources)
         .set("proguard", proguardConfig)
         .set("exportDeps", exportDeps);
     javacOptions.appendToRuleKey(builder);
@@ -454,7 +458,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
 
     // If there are resources, then link them to the appropriate place in the classes directory.
-    addResourceCommands(commands, outputDirectory, context.getJavaPackageFinder());
+    addResourceCommands(context, commands, outputDirectory, context.getJavaPackageFinder());
 
     if (outputJar.isPresent()) {
       commands.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));
@@ -557,11 +561,16 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
 
   @VisibleForTesting
-  void addResourceCommands(ImmutableList.Builder<Step> commands,
+  void addResourceCommands(BuildContext context,
+                           ImmutableList.Builder<Step> commands,
                            String outputDirectory,
                            JavaPackageFinder javaPackageFinder) {
     if (!resources.isEmpty()) {
-      for (String resource : resources) {
+      String targetPackageDir = javaPackageFinder.findJavaPackageForPath(
+          getBuildTarget().getBasePathWithSlash())
+          .replace('.', File.separatorChar);
+
+      for (SourcePath rawResource : resources) {
         // If the path to the file defining this rule were:
         // "first-party/orca/lib-http/tests/com/facebook/orca/BUILD"
         //
@@ -575,9 +584,21 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         // "com/facebook/orca/protocol/base/batch_exception1.txt"
         //
         // Therefore, some path-wrangling is required to produce the correct string.
+
+        String resource = rawResource.resolve(context).toString();
         String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource);
         String relativeSymlinkPath;
-        if ("".equals(javaPackageAsPath)) {
+
+
+        if (resource.startsWith(BuckConstant.BUCK_OUTPUT_DIRECTORY) ||
+            resource.startsWith(BuckConstant.GEN_DIR) ||
+            resource.startsWith(BuckConstant.BIN_DIR) ||
+            resource.startsWith(BuckConstant.ANNOTATION_DIR)) {
+          // Handle the case where we depend on the output of another BuildRule. In that case, just
+          // grab the output and put in the same package as this target would be in.
+          relativeSymlinkPath = String.format(
+              "%s/%s", targetPackageDir, rawResource.resolve(context).getFileName());
+        } else if ("".equals(javaPackageAsPath)) {
           // In this case, the project root is acting as the default package, so the resource path
           // works fine.
           relativeSymlinkPath = resource;
@@ -591,7 +612,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
           relativeSymlinkPath = resource.substring(lastIndex);
         }
         String target = outputDirectory + '/' + relativeSymlinkPath;
-
         MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource, target);
         commands.add(link);
       }
@@ -611,7 +631,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
     protected Set<String> srcs = Sets.newHashSet();
-    protected Set<String> resources = Sets.newHashSet();
+    protected Set<SourcePath> resources = Sets.newHashSet();
     protected final AnnotationProcessingParams.Builder annotationProcessingBuilder =
         new AnnotationProcessingParams.Builder();
     protected boolean exportDeps = false;
@@ -660,7 +680,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     }
 
     @Override
-    public Builder addResource(String relativePathToResource) {
+    public Builder addResource(SourcePath relativePathToResource) {
       resources.add(relativePathToResource);
       return this;
     }
