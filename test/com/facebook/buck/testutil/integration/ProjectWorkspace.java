@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.Main;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
 import com.google.common.base.Charsets;
@@ -44,9 +43,8 @@ import javax.annotation.Nullable;
  * {@link ProjectWorkspace} is a directory that contains a Buck project, complete with build files.
  * <p>
  * When {@link #setUp()} is invoked, the project files are cloned from a directory of testdata into
- * a tmp directory according to the following rules:
+ * a tmp directory according to the following rule:
  * <ul>
- *   <li>Files named {@code BUCK.test} will be copied and renamed to {@code BUCK}.
  *   <li>Files with the {@code .expected} extension will not be copied.
  * </ul>
  * After {@link #setUp()} is invoked, the test should invoke Buck in that directory. As this is an
@@ -59,8 +57,6 @@ import javax.annotation.Nullable;
  */
 public class ProjectWorkspace {
 
-  private static final String TESTDATA_BUILD_RULES_FILE_NAME = "BUCK.test";
-
   private static final String EXPECTED_SUFFIX = ".expected";
 
   private static final Function<Path, Path> BUILD_FILE_RENAME = new Function<Path, Path>() {
@@ -68,10 +64,7 @@ public class ProjectWorkspace {
     @Nullable
     public Path apply(Path path) {
       String fileName = path.getFileName().toString();
-      if (TESTDATA_BUILD_RULES_FILE_NAME.equals(fileName)) {
-        File directory = path.getParent().toFile();
-        return new File(directory, BuckConstant.BUILD_RULES_FILE_NAME).toPath();
-      } else if (fileName.endsWith(EXPECTED_SUFFIX)) {
+      if (fileName.endsWith(EXPECTED_SUFFIX)) {
         return null;
       } else {
         return path;

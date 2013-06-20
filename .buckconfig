@@ -7,7 +7,11 @@
 [buildfile]
     includes = //DEFS
 [project]
-    ignore = .git, build
+    ignore = \
+      .git, \
+      build, \
+      test/com/facebook/buck/cli/testdata, \
+      test/com/facebook/buck/junit/testdata, \
 [test]
     # Maximum timeout of 1 minute per test.
     timeout = 60000
