@@ -16,8 +16,9 @@
 
 package com.facebook.buck.junit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -66,8 +67,9 @@ public class TimeoutIntegrationTest {
     assertEquals("Test should fail due to timeout",
         1,
         exceedsAnnotationTimeoutTestResult.getExitCode());
-    assertTrue(exceedsAnnotationTimeoutTestResult.getStderr().contains(
-        "FAILURE testShouldFailDueToExpiredTimeout: test timed out after 1000 milliseconds"));
+    assertThat(exceedsAnnotationTimeoutTestResult.getStderr(),
+        containsString(
+            "FAILURE testShouldFailDueToExpiredTimeout: test timed out after 1000 milliseconds"));
 
     // TimeoutChangesBehaviorTest should pass.
     ProcessResult timeoutTestWithoutTimeout = workspace.runBuckCommand(
@@ -80,9 +82,10 @@ public class TimeoutIntegrationTest {
     ProcessResult timeoutTestWithTimeoutOnAnnotation = workspace.runBuckCommand(
         "test", "//:TimeoutChangesBehaviorTest");
     assertEquals(1, timeoutTestWithTimeoutOnAnnotation.getExitCode());
-    assertTrue(timeoutTestWithTimeoutOnAnnotation.getStderr().contains(
-        "FAILURE testTimeoutDictatesTheSuccessOfThisTest: " +
-        "Database should have an open transaction due to setUp()."));
+    assertThat(timeoutTestWithTimeoutOnAnnotation.getStderr(),
+        containsString(
+            "FAILURE testTimeoutDictatesTheSuccessOfThisTest: " +
+            "Database should have an open transaction due to setUp()."));
 
     // TimeoutChangesBehaviorTest with @Rule(Timeout) should pass.
     modifyTimeoutInTestAnnotation(PATH_TO_TIMEOUT_BEHAVIOR_TEST, /* addTimeout */ false);

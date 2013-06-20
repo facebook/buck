@@ -7,6 +7,8 @@ java_test(
   ],
   deps = [
     '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
     '//lib:junit',
     '//src/com/facebook/buck/junit:junit',
     '//test/com/facebook/buck/testutil/integration:integration',
