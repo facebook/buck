@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,13 +33,16 @@ public class BuildRuleParams {
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
+  private final Function<String, String> pathRelativizer;
 
   public BuildRuleParams(BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
+      ImmutableSet<BuildTargetPattern> visibilityPatterns,
+      Function<String, String> pathRelativizer) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.deps = Preconditions.checkNotNull(deps);
     this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
+    this.pathRelativizer = Preconditions.checkNotNull(pathRelativizer);
   }
 
   public BuildTarget getBuildTarget() {
@@ -51,5 +55,9 @@ public class BuildRuleParams {
 
   public ImmutableSet<BuildTargetPattern> getVisibilityPatterns() {
     return visibilityPatterns;
+  }
+
+  public Function<String, String> getPathRelativizer() {
+    return pathRelativizer;
   }
 }

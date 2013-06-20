@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,7 +60,8 @@ public class PrebuiltNativeLibraryRuleTest {
     BuildRuleParams buildRuleParams = new BuildRuleParams(
         buildTarget,
         ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        /* pathRelativizer */ Functions.<String>identity());
     PrebuiltNativeLibraryBuildRule nativeLibraryRule = new PrebuiltNativeLibraryBuildRule(
         buildRuleParams,
         "java/src/com/facebook/base/libs",

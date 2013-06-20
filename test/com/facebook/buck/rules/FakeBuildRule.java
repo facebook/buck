@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +38,12 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    this(type, new BuildRuleParams(target, deps, visibilityPatterns));
+    this(type,
+        new BuildRuleParams(
+            target,
+            deps,
+            visibilityPatterns,
+            /* pathRelativizer */ Functions.<String>identity()));
   }
 
   public FakeBuildRule(BuildRuleType type, BuildRuleParams buildRuleParams) {

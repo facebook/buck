@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -38,7 +39,8 @@ public class PythonLibraryRuleTest {
     BuildRuleParams buildRuleParams = new BuildRuleParams(
         BuildTargetFactory.newInstance("//scripts/python:foo"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of());
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
+        /* pathRelativizer */ Functions.<String>identity());
     ImmutableSortedSet<String> srcs = ImmutableSortedSet.of("");
     PythonLibraryRule pythonLibraryRule = new PythonLibraryRule(
         buildRuleParams,

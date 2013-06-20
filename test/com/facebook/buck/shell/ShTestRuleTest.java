@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -62,6 +63,7 @@ public class ShTestRuleTest extends EasyMockSupport {
     return new BuildRuleParams(
         BuildTargetFactory.newInstance("//test/com/example:my_sh_test"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of());
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
+        /* pathRelativizer */ Functions.<String>identity());
   }
 }

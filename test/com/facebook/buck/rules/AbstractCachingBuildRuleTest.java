@@ -30,6 +30,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -196,7 +197,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   public void testAbiRuleCanAvoidRebuild() throws InterruptedException, ExecutionException {
     BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
         /* sortedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of());
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
+        /* pathRelativizer */ Functions.<String>identity());
     TestAbstractCachingBuildRule buildRule = new TestAbstractCachingBuildRule(buildRuleParams);
 
     BuildContext buildContext = createMock(BuildContext.class);
@@ -241,7 +243,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
         sortedDeps,
-        visibilityPatterns);
+        visibilityPatterns,
+        /* pathRelativizer */ Functions.<String>identity());
     return new AbstractCachingBuildRule(buildRuleParams) {
 
       private Iterable<InputRule> inputs = inputRules;

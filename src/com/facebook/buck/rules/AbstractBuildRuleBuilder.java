@@ -56,10 +56,6 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     return buildTarget;
   }
 
-  public Function<String, String> getPathRelativizer() {
-    return pathRelativizer;
-  }
-
   public AbstractBuildRuleBuilder<T> addDep(BuildTarget dep) {
     deps.add(dep);
     return this;
@@ -111,6 +107,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   protected BuildRuleParams createBuildRuleParams(BuildRuleResolver ruleResolver) {
     return new BuildRuleParams(getBuildTarget(),
         getDepsAsBuildRules(ruleResolver),
-        getVisibilityPatterns());
+        getVisibilityPatterns(),
+        pathRelativizer);
   }
 }

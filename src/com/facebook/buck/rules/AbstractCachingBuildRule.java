@@ -27,10 +27,12 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
@@ -82,6 +84,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    */
   private final SettableFuture<BuildRuleSuccess> buildRuleResult;
 
+  private final Function<String, String> pathRelativizer;
+
   /** @see #getInputsToCompareToOutput(BuildContext) */
   private Iterable<InputRule> inputsToCompareToOutputs;
 
@@ -89,6 +93,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       super(buildRuleParams);
     this.hasBuildStarted = new AtomicBoolean(false);
     this.buildRuleResult = SettableFuture.create();
+    this.pathRelativizer = buildRuleParams.getPathRelativizer();
   }
 
   /**
@@ -124,7 +129,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   @Override
   public Iterable<InputRule> getInputs() {
     if (inputsToCompareToOutputs == null) {
-      inputsToCompareToOutputs = InputRule.inputPathsAsInputRules(getInputsToCompareToOutput());
+      inputsToCompareToOutputs = InputRule.inputPathsAsInputRules(
+          Iterables.transform(getInputsToCompareToOutput(), pathRelativizer));
     }
     return inputsToCompareToOutputs;
   }

@@ -54,6 +54,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -112,8 +113,12 @@ public class DefaultJavaLibraryRuleTest {
         "//android/java", "resources", new File("android/java/BUILD"));
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
-    DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
+    DefaultJavaLibraryRule javaRule =new DefaultJavaLibraryRule(
+        new BuildRuleParams(
+            buildTarget,
+            deps,
+            visibilityPatterns,
+            /* pathRelativizer */ Functions.<String>identity()),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
@@ -149,7 +154,11 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
+        new BuildRuleParams(
+            buildTarget,
+            deps,
+            visibilityPatterns,
+            /* pathRelativizer */ Functions.<String>identity()),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.<SourcePath>of(
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
@@ -188,7 +197,11 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(buildTarget, deps, visibilityPatterns),
+        new BuildRuleParams(
+            buildTarget,
+            deps,
+            visibilityPatterns,
+            /* pathRelativizer */ Functions.<String>identity()),
         ImmutableSet.<String>of() /* srcs */,
         ImmutableSet.of(
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
@@ -606,7 +619,8 @@ public class DefaultJavaLibraryRuleTest {
   }
 
   private JavaPackageFinder createJavaPackageFinder() {
-    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableSet.<String>of("/android/java/src"));
+    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+        ImmutableSet.<String>of("/android/java/src"));
   }
 
   private BuildContext createSuggestContext(BuildRuleResolver ruleResolver,
@@ -689,7 +703,8 @@ public class DefaultJavaLibraryRuleTest {
       return new BuildRuleParams(
           target,
           ImmutableSortedSet.<BuildRule>of(),
-          ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+          ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+          /* pathRelativizer */ Functions.<String>identity());
     }
 
     public BuildTarget createTarget() {
@@ -757,7 +772,8 @@ public class DefaultJavaLibraryRuleTest {
           new BuildRuleParams(
               buildTarget,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
-              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of()),
+              /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
+              /* pathRelativizer */ Functions.<String>identity()),
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<String>absent(),

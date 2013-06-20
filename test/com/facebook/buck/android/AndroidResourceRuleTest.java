@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -69,7 +70,8 @@ public class AndroidResourceRuleTest {
     BuildRuleParams buildRuleParams = new BuildRuleParams(
         buildTarget,
         ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+        /* pathRelativizer */ Functions.<String>identity());
     AndroidResourceRule androidResourceRule = new AndroidResourceRule(
         buildRuleParams,
         "java/src/com/facebook/base/res",
