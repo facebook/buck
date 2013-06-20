@@ -272,7 +272,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
       }
 
       @Override
-      protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+      protected Iterable<String> getInputsToCompareToOutput() {
         throw new UnsupportedOperationException();
       }
     };
@@ -289,7 +289,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+    protected Iterable<String> getInputsToCompareToOutput() {
       throw new UnsupportedOperationException("method should not be called");
     }
 

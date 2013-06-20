@@ -71,7 +71,7 @@ public class NdkLibraryRuleTest {
             basePath + "/Android.mk",
             basePath + "/Application.mk",
             basePath + "/main.cpp"),
-        ImmutableList.copyOf(ndkLibraryRule.getInputsToCompareToOutput(context)));
+        ImmutableList.copyOf(ndkLibraryRule.getInputsToCompareToOutput()));
 
     List<Step> steps = ndkLibraryRule.buildInternal(context);
 

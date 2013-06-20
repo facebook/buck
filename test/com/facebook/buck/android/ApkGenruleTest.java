@@ -139,7 +139,7 @@ public class ApkGenruleTest {
         "src/com/facebook/key.properties",
         "src/com/facebook/signer.py");
     assertEquals(inputsToCompareToOutputs,
-        apkGenrule.getInputsToCompareToOutput(buildContext));
+        apkGenrule.getInputsToCompareToOutput());
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = apkGenrule.buildInternal(buildContext);

@@ -86,7 +86,7 @@ public class GenAidlRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected ImmutableList<String> getInputsToCompareToOutput(BuildContext context) {
+  protected ImmutableList<String> getInputsToCompareToOutput() {
     return ImmutableList.of(aidlFilePath);
   }
 

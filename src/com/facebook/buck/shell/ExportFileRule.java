@@ -109,7 +109,7 @@ public class ExportFileRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+  protected Iterable<String> getInputsToCompareToOutput() {
     return ImmutableSet.of(src);
   }
 

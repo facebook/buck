@@ -19,7 +19,6 @@ package com.facebook.buck.cpp;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -67,7 +66,6 @@ public class PrebuiltNativeLibraryRuleTest {
         traverser);
 
     // Test getInputsToCompareToOutput().
-    BuildContext context = null;
     MoreAsserts.assertIterablesEquals(
         "Each subgroup of input files should be sorted alphabetically so that the list order is " +
         "consistent even if the iteration order of the sets passed to the AndroidLibraryRule " +
@@ -76,6 +74,6 @@ public class PrebuiltNativeLibraryRuleTest {
           "java/src/com/facebook/base/libs/armeabi/bar.so",
           "java/src/com/facebook/base/libs/armeabi/foo.so",
           "java/src/com/facebook/base/libs/armeabi/libilbc-codec.so"),
-          nativeLibraryRule.getInputsToCompareToOutput(context));
+          nativeLibraryRule.getInputsToCompareToOutput());
   }
 }

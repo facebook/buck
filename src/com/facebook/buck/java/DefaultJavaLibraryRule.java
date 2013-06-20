@@ -363,7 +363,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   @Override
   @Nullable
-  protected List<String> getInputsToCompareToOutput(BuildContext context) {
+  protected List<String> getInputsToCompareToOutput() {
     return inputsToConsiderForCachingPurposes;
   }
 

@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -102,8 +101,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   // no effect.
   @VisibleForTesting
   @Override
-  protected ImmutableSortedSet<String> getInputsToCompareToOutput(BuildContext context) {
-    return super.getInputsToCompareToOutput(context);
+  protected ImmutableSortedSet<String> getInputsToCompareToOutput() {
+    return super.getInputsToCompareToOutput();
   }
 
   @Override

@@ -21,10 +21,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
@@ -79,7 +78,6 @@ public class AndroidResourceRuleTest {
         traverser);
 
     // Test getInputsToCompareToOutput().
-    BuildContext context = null;
     MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should return an alphabetically sorted list of all input " +
         "files that contribute to this android_resource() rule.",
@@ -91,7 +89,7 @@ public class AndroidResourceRuleTest {
             "java/src/com/facebook/base/res/drawable/A.xml",
             "java/src/com/facebook/base/res/drawable/C.xml",
             "java/src/com/facebook/base/res/drawable/E.xml"),
-        androidResourceRule.getInputsToCompareToOutput(context));
+        androidResourceRule.getInputsToCompareToOutput());
   }
 
   /**

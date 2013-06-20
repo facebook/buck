@@ -419,7 +419,7 @@ public class AndroidBinaryRuleTest {
             "java/src/com/facebook/AndroidManifest.xml",
             "java/src/com/facebook/base/keystore.properties"),
             ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
-                .getInputsToCompareToOutput(context));
+                .getInputsToCompareToOutput());
 
     androidBinaryRuleBuilder.setProguardConfig(Optional.of("java/src/com/facebook/proguard.cfg"));
     MoreAsserts.assertListEquals(
@@ -429,7 +429,7 @@ public class AndroidBinaryRuleTest {
             "java/src/com/facebook/base/keystore.properties",
             "java/src/com/facebook/proguard.cfg"),
             ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
-                .getInputsToCompareToOutput(context));
+                .getInputsToCompareToOutput());
 
     verify(context);
   }

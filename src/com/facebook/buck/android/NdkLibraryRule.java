@@ -106,7 +106,7 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+  protected Iterable<String> getInputsToCompareToOutput() {
     return this.sources;
   }
 

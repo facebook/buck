@@ -66,7 +66,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput(BuildContext context) {
+  protected List<String> getInputsToCompareToOutput() {
     ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
     inputsToConsiderForCachingPurposes.add(skeletonFile);
     inputsToConsiderForCachingPurposes.add(manifestFile);

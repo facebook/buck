@@ -96,7 +96,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+  protected Iterable<String> getInputsToCompareToOutput() {
     // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
     ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
 

@@ -70,7 +70,7 @@ public class PrebuiltNativeLibraryBuildRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+  protected Iterable<String> getInputsToCompareToOutput() {
     ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes = ImmutableSortedSet
         .naturalOrder();
 

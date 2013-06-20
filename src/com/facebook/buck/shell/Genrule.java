@@ -166,7 +166,7 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected ImmutableSortedSet<String> getInputsToCompareToOutput(BuildContext context) {
+  protected ImmutableSortedSet<String> getInputsToCompareToOutput() {
     return srcs;
   }
 

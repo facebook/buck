@@ -43,13 +43,13 @@ public class AndroidLibraryRuleTest {
         ImmutableList.of(
             "java/src/com/foo/Foo.java",
             "java/src/com/foo/AndroidManifest.xml"),
-        androidLibraryRuleBuilderFoo.getInputsToCompareToOutput(context));
+        androidLibraryRuleBuilderFoo.getInputsToCompareToOutput());
 
     MoreAsserts.assertListEquals(
         "getInputsToCompareToOutput() should include only src.",
         ImmutableList.of(
             "java/src/com/bar/Bar.java"),
-        androidLibraryRuleBuilderBar.getInputsToCompareToOutput(context));
+        androidLibraryRuleBuilderBar.getInputsToCompareToOutput());
   }
 
   private AndroidLibraryRule getAndroidLibraryRuleFoo(BuildRuleResolver params) {

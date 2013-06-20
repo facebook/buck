@@ -125,7 +125,7 @@ public class GenruleTest {
         "src/com/facebook/katana/convert_to_katana.py",
         "src/com/facebook/katana/AndroidManifest.xml");
     assertEquals(inputsToCompareToOutputs,
-        genrule.getInputsToCompareToOutput(buildContext));
+        genrule.getInputsToCompareToOutput());
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = genrule.buildInternal(buildContext);

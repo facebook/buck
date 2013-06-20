@@ -119,13 +119,13 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * the order of the inputs is not significant for the build rule, then the list should be
    * alphabetized so that lists with the same elements will be {@code .equals()} to one another.
    */
-  abstract protected Iterable<String> getInputsToCompareToOutput(BuildContext context);
+  abstract protected Iterable<String> getInputsToCompareToOutput();
 
   @Override
   public Iterable<InputRule> getInputs() {
     if (inputsToCompareToOutputs == null) {
       List<InputRule> inputs = Lists.newArrayList();
-      for (String inputPath : getInputsToCompareToOutput(null /* context */)) {
+      for (String inputPath : getInputsToCompareToOutput()) {
         inputs.add(new InputRule(inputPath));
       }
       inputsToCompareToOutputs = inputs;

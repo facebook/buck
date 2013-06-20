@@ -62,7 +62,7 @@ public class GenAidlRuleTest {
     assertEquals(BuildRuleType.GEN_AIDL, genAidlRule.getType());
     assertTrue(genAidlRule.isAndroidRule());
 
-    assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput(context));
+    assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput());
 
     List<Step> steps = genAidlRule.buildInternal(context);
 

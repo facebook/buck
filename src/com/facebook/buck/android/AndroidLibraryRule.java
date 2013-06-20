@@ -22,7 +22,6 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -80,14 +79,14 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput(BuildContext context) {
+  protected List<String> getInputsToCompareToOutput() {
     if (manifestFile.isPresent()) {
       return ImmutableList.<String>builder()
-          .addAll(super.getInputsToCompareToOutput(context))
+          .addAll(super.getInputsToCompareToOutput())
           .add(manifestFile.get())
           .build();
     } else {
-      return super.getInputsToCompareToOutput(context);
+      return super.getInputsToCompareToOutput();
     }
   }
 

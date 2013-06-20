@@ -96,7 +96,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+  protected Iterable<String> getInputsToCompareToOutput() {
     if (main != null) {
       return ImmutableList.of(main);
     } else {

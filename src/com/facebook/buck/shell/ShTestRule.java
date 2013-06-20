@@ -74,7 +74,7 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput(BuildContext context) {
+  public Iterable<String> getInputsToCompareToOutput() {
     return ImmutableSet.of(test);
   }
 

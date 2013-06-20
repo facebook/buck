@@ -21,11 +21,10 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -64,8 +63,8 @@ public class RobolectricTestRule extends JavaTestRule {
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput(BuildContext context) {
-    return super.getInputsToCompareToOutput(context);
+  protected List<String> getInputsToCompareToOutput() {
+    return super.getInputsToCompareToOutput();
   }
 
   public static Builder newRobolectricTestRuleBuilder() {
