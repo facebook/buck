@@ -27,9 +27,7 @@ import com.google.common.io.Files;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -132,20 +130,13 @@ public final class MoreFiles {
   /**
    * Writes the specified lines to the specified file, encoded as UTF-8.
    */
-  public static void writeLinesToFile(Iterable<String> lines, String pathToFile)
+  public static void writeLinesToFile(Iterable<String> lines, File file)
       throws IOException {
-    BufferedWriter writer = null;
-    try {
-      writer = new BufferedWriter(
-          new OutputStreamWriter(
-              new FileOutputStream(pathToFile),
-              Charsets.UTF_8));
+    try (BufferedWriter writer = Files.newWriter(file, Charsets.UTF_8)) {
       for (String line : lines) {
         writer.write(line);
         writer.newLine();
       }
-    } finally {
-      Closeables.close(writer, false /* swallowIOException */);
     }
   }
 

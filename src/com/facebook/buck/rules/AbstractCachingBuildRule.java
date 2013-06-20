@@ -375,7 +375,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    */
   private void writeSuccessFile(ProjectFilesystem projectFilesystem) throws IOException {
     String path = getPathToSuccessFile();
-    projectFilesystem.createParentDirs(new File(path));
+    projectFilesystem.createParentDirs(path);
     Iterable<String> lines = getSuccessFileStringsForBuildRules();
     projectFilesystem.writeLinesToPath(lines, path);
   }

@@ -159,7 +159,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(context.getProjectFilesystem()).andReturn(projectFilesystem).times(2);
     String pathToSuccessFile = cachingRule.getPathToSuccessFile();
-    projectFilesystem.createParentDirs(new File(pathToSuccessFile));
+    projectFilesystem.createParentDirs(pathToSuccessFile);
     Capture<Iterable<String>> linesCapture = new Capture<Iterable<String>>();
     projectFilesystem.writeLinesToPath(capture(linesCapture), eq(pathToSuccessFile));
     expect(projectFilesystem.getFileForRelativePath(output)).andReturn(outputFile).times(2);

@@ -130,13 +130,14 @@ public class ProjectFilesystem {
     MoreFiles.rmdir(path, processExecutor);
   }
 
-  public void createParentDirs(File file) throws IOException {
+  public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
+    File file = getFileForRelativePath(pathRelativeToProjectRoot);
     Files.createParentDirs(file);
   }
 
-  public void writeLinesToPath(Iterable<String> lines, String pathToFile)
+  public void writeLinesToPath(Iterable<String> lines, String pathRelativeToProjectRoot)
       throws IOException {
-    MoreFiles.writeLinesToFile(lines, pathToFile);
+    MoreFiles.writeLinesToFile(lines, getFileForRelativePath(pathRelativeToProjectRoot));
   }
 
   public Optional<File> getFileIfExists(String path) {
