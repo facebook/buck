@@ -124,11 +124,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   @Override
   public Iterable<InputRule> getInputs() {
     if (inputsToCompareToOutputs == null) {
-      List<InputRule> inputs = Lists.newArrayList();
-      for (String inputPath : getInputsToCompareToOutput()) {
-        inputs.add(new InputRule(inputPath));
-      }
-      inputsToCompareToOutputs = inputs;
+      inputsToCompareToOutputs = InputRule.inputPathsAsInputRules(getInputsToCompareToOutput());
     }
     return inputsToCompareToOutputs;
   }

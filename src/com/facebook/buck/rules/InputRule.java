@@ -27,7 +27,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
-import java.util.Comparator;
 
 import javax.annotation.Nullable;
 
@@ -48,16 +47,8 @@ public class InputRule implements BuildRule {
   /**
    * Convert a set of input file paths to InputRules.
    */
-  public static ImmutableSortedSet<InputRule> inputPathsAsInputRules(
-      ImmutableSortedSet<String> paths) {
-    Comparator<InputRule> comparator = new Comparator<InputRule>() {
-      @Override
-      public int compare(InputRule o1, InputRule o2) {
-        return o1.compareTo(o2);
-      }
-    };
-    ImmutableSortedSet.Builder<InputRule> builder
-        = new ImmutableSortedSet.Builder<InputRule>(comparator);
+  public static ImmutableSortedSet<InputRule> inputPathsAsInputRules(Iterable<String> paths) {
+    ImmutableSortedSet.Builder<InputRule> builder = ImmutableSortedSet.naturalOrder();
     for (String path : paths) {
       builder.add(new InputRule(path));
     }
