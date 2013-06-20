@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 
 public class AndroidInstrumentationApkRuleFactory
     extends AbstractBuildRuleFactory<AndroidInstrumentationApk.Builder> {
@@ -40,8 +39,7 @@ public class AndroidInstrumentationApkRuleFactory
 
     // apk
     String apk = params.getRequiredStringAttribute("apk");
-    ParseContext buildFileParseContext = ParseContext.forBaseName(params.target.getBaseName());
-    BuildTarget buildTarget = params.buildTargetParser.parse(apk, buildFileParseContext);
+    BuildTarget buildTarget = params.resolveBuildTarget(apk);
     builder.setApk(buildTarget);
   }
 }

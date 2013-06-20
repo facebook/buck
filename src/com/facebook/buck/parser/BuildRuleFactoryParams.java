@@ -50,7 +50,7 @@ public final class BuildRuleFactoryParams {
   public final BuildTargetParser buildTargetParser;
   public final BuildTargetPatternParser buildTargetPatternParser;
   public final BuildTarget target;
-  private final ParseContext sourcePathContext;
+  private final ParseContext buildFileParseContext;
   private final ParseContext visibilityParseContext;
   private final boolean ignoreFileExistenceChecks;
 
@@ -89,7 +89,7 @@ public final class BuildRuleFactoryParams {
     this.buildTargetPatternParser = new BuildTargetPatternParser(filesystem);
     this.target = Preconditions.checkNotNull(target);
     this.visibilityParseContext = ParseContext.forVisibilityArgument();
-    this.sourcePathContext = ParseContext.forBaseName(target.getBaseName());
+    this.buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
     this.ignoreFileExistenceChecks = ignoreFileExistenceChecks;
 
     this.resolveFilePathRelativeToBuildFileDirectoryTransform = new Function<String, String>() {
@@ -209,7 +209,7 @@ public final class BuildRuleFactoryParams {
     // TODO(simons): Don't hard code this check for built-target-ism
     if (resource.startsWith(BuildTarget.BUILD_TARGET_PREFIX) || resource.charAt(0) == ':') {
       try {
-        BuildTarget buildTarget = buildTargetParser.parse(resource, sourcePathContext);
+        BuildTarget buildTarget = resolveBuildTarget(resource);
         return new BuildTargetSourcePath(buildTarget);
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(
@@ -219,6 +219,10 @@ public final class BuildRuleFactoryParams {
       String relativePath = resolveFilePathRelativeToBuildFileDirectory(resource);
       return new FileSourcePath(relativePath);
     }
+  }
+
+  public BuildTarget resolveBuildTarget(String target) throws NoSuchBuildTargetException {
+    return buildTargetParser.parse(target, buildFileParseContext);
   }
 
   public String getRequiredStringAttribute(String attributeName) {

@@ -18,10 +18,10 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.Beta;
@@ -52,9 +52,8 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
     builder.setBuildTarget(target);
 
     // deps
-    ParseContext buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
     for (String dep : params.getOptionalListAttribute("deps")) {
-      BuildTarget buildTarget = params.buildTargetParser.parse(dep, buildFileParseContext);
+      BuildTarget buildTarget = params.resolveBuildTarget(dep);
       builder.addDep(buildTarget);
     }
 
@@ -112,15 +111,12 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
    *     parse or resolve.
    */
   protected Function<String, BuildTarget> createBuildTargetParseFunction(
-      BuildRuleFactoryParams params) {
-    final BuildTargetParser buildTargetParser = params.buildTargetParser;
-    final ParseContext parseContext = ParseContext.forBaseName(params.target.getBaseName());
-
+      final BuildRuleFactoryParams params) {
     return new Function<String, BuildTarget>() {
       @Override
       public BuildTarget apply(String buildTargetName) {
         try {
-          return buildTargetParser.parse(buildTargetName, parseContext);
+          return params.resolveBuildTarget(buildTargetName);
         } catch (NoSuchBuildTargetException e) {
           throw new HumanReadableException(e);
         }

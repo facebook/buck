@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 import com.google.common.base.Optional;
 
 import java.util.List;
@@ -76,11 +75,8 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
       // annotation_processor_deps
       //
       // These are the targets that implement one or more of the annotation_processors.
-      BuildTarget target = params.target;
-      ParseContext buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
-
       for (String processor : params.getOptionalListAttribute("annotation_processor_deps")) {
-        BuildTarget buildTarget = params.buildTargetParser.parse(processor, buildFileParseContext);
+        BuildTarget buildTarget = params.resolveBuildTarget(processor);
         buildRuleBuilder.addDep(buildTarget);
         annotationProcessingBuilder.addProcessorBuildTarget(buildTarget);
       }

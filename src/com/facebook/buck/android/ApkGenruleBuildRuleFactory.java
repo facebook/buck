@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.HumanReadableException;
 
 public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory<ApkGenrule.Builder> {
@@ -36,9 +35,8 @@ public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory<A
     builder.setCmd(cmd);
 
     String apk = params.getRequiredStringAttribute("apk");
-    ParseContext buildFileParseContext = ParseContext.forBaseName(params.target.getBaseName());
     try {
-      BuildTarget buildTarget = params.buildTargetParser.parse(apk, buildFileParseContext);
+      BuildTarget buildTarget = params.resolveBuildTarget(apk);
       builder.setApk(buildTarget);
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException("Couldn't resolve APK dependency %s for rule %s",

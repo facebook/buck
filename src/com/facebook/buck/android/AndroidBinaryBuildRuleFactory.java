@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -59,9 +58,8 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     builder.setPackageType(packageType);
 
     // no_dx
-    ParseContext buildFileParseContext = ParseContext.forBaseName(params.target.getBaseName());
     for (String noDx : params.getOptionalListAttribute("no_dx")) {
-      BuildTarget buildTarget = params.buildTargetParser.parse(noDx, buildFileParseContext);
+      BuildTarget buildTarget = params.resolveBuildTarget(noDx);
       builder.addBuildRuleToExcludeFromDex(buildTarget);
     }
 
