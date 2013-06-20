@@ -20,13 +20,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.util.HumanReadableException;
 
 public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory<ApkGenrule.Builder> {
 
   @Override
-  public ApkGenrule.Builder newBuilder() {
-    return ApkGenrule.newApkGenruleBuilder();
+  public ApkGenrule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return ApkGenrule.newApkGenruleBuilder(params);
   }
 
   @Override

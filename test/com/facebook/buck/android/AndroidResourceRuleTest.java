@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
@@ -112,27 +113,27 @@ public class AndroidResourceRuleTest {
   public void testGetAndroidResourceDeps() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidResourceRule c = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder()
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
             .setRes("res_c")
             .setRDotJavaPackage("com.facebook"));
 
     AndroidResourceRule b = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder()
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
         .setRes("res_b")
         .setRDotJavaPackage("com.facebook")
         .addDep(BuildTargetFactory.newInstance("//:c")));
 
     AndroidResourceRule d = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder()
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
             .setRes("res_d")
             .setRDotJavaPackage("com.facebook")
             .addDep(BuildTargetFactory.newInstance("//:c")));
 
     AndroidResourceRule a = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder()
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
         .setRes("res_a")
         .setRDotJavaPackage("com.facebook")
@@ -157,7 +158,7 @@ public class AndroidResourceRuleTest {
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
     AndroidBinaryRule e = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
         .setManifest("AndroidManfiest.xml")
         .setTarget("Google Inc.:Google APIs:16")

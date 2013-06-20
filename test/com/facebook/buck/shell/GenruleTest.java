@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.shell.Genrule.Builder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -297,7 +298,7 @@ public class GenruleTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     Genrule rule = ruleResolver.buildAndAddToIndex(
-        Genrule.newGenruleBuilder()
+        Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
         .setCmd("ignored")
@@ -331,13 +332,13 @@ public class GenruleTest {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     JavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addSrc("java/com/facebook/util/ManifestGenerator.java"));
 
     JavaBinaryRule javaBinary = ruleResolver.buildAndAddToIndex(
-        JavaBinaryRule.newJavaBinaryRuleBuilder()
+        JavaBinaryRule.newJavaBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"))
         .setMainClass("com.facebook.util.ManifestGenerator")
         .addDep(javaLibrary.getBuildTarget()));
@@ -352,7 +353,7 @@ public class GenruleTest {
     BuildTarget target = BuildTargetFactory.newInstance(
         String.format("//%s:genrule", contextBasePath));
 
-    Builder ruleBuilder = Genrule.newGenruleBuilder()
+    Builder ruleBuilder = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
         .setCmd(originalCmd)

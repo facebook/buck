@@ -20,13 +20,14 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
 public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory {
 
   @Override
-  public AndroidLibraryRule.Builder newBuilder() {
-    return AndroidLibraryRule.newAndroidLibraryRuleBuilder();
+  public AndroidLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return AndroidLibraryRule.newAndroidLibraryRuleBuilder(params);
   }
 
   @Override

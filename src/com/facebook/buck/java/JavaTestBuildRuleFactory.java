@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractTestRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -28,8 +29,8 @@ import com.google.common.collect.Iterables;
 public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTestRule.Builder> {
 
   @Override
-  public JavaTestRule.Builder newBuilder() {
-    return JavaTestRule.newJavaTestRuleBuilder();
+  public JavaTestRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return JavaTestRule.newJavaTestRuleBuilder(params);
   }
 
   @Override

@@ -17,10 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
@@ -88,8 +89,8 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
     return commands.build();
   }
 
-  public static Builder newManifestMergeRuleBuilder() {
-    return new Builder();
+  public static Builder newManifestMergeRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   /**
@@ -106,6 +107,10 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
 
     protected String manifestFile;
     protected String skeletonFile;
+
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public AndroidManifestRule build(BuildRuleResolver ruleResolver) {

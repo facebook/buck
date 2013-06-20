@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.testutil.RuleMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -42,31 +43,31 @@ public class AndroidTransitiveDependencyGraphTest {
     // Create an AndroidBinaryRule that transitively depends on two prebuilt JARs. One of the two
     // prebuilt JARs will be listed in the AndroidBinaryRule's no_dx list.
     PrebuiltJarRule guavaRule = ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar("third_party/guava/guava-10.0.1.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     PrebuiltJarRule jsr305Rule = ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/jsr-305:jsr-305"))
         .setBinaryJar("third_party/jsr-305/jsr305.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     DefaultJavaLibraryRule libraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
         .addDep(guavaRule.getBuildTarget())
         .addDep(jsr305Rule.getBuildTarget()));
 
     AndroidResourceRule manifestRule = ruleResolver.buildAndAddToIndex(
-        AndroidResourceRule.newAndroidResourceRuleBuilder()
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
         .setManifestFile("java/src/com/facebook/module/AndroidManifest.xml")
         .setAssetsDirectory("assets/"));
 
     AndroidBinaryRule binaryRule = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
         .addDep(libraryRule.getBuildTarget())
         .addDep(manifestRule.getBuildTarget())

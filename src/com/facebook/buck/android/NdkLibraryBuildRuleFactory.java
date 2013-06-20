@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 import java.util.List;
 
@@ -27,8 +28,8 @@ public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory<NdkLibr
   }
 
   @Override
-  public NdkLibraryRule.Builder newBuilder() {
-    return NdkLibraryRule.newNdkLibraryRuleBuilder();
+  public NdkLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return NdkLibraryRule.newNdkLibraryRuleBuilder(params);
   }
 
   @Override

@@ -39,12 +39,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -269,18 +270,18 @@ public class TargetsCommandTest {
   public void testGetMachingBuildTargets() throws CmdLineException, IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//empty:empty"))
         .setBinaryJar("")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javasrc:java-library"))
         .addSrc("javasrc/JavaLibrary.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addDep(BuildTargetFactory.newInstance("//empty:empty")));
     ruleResolver.buildAndAddToIndex(
-        JavaTestRule.newJavaTestRuleBuilder()
+        JavaTestRule.newJavaTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
         .addSrc("javatest/TestJavaLibrary.java")
         .addDep(BuildTargetFactory.newInstance("//javasrc:java-library")));

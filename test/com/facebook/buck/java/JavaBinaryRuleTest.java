@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 
 import org.junit.Test;
 
@@ -38,28 +39,28 @@ public class JavaBinaryRuleTest {
 
     // prebuilt_jar //third_party/generator:generator
     ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // prebuilt_jar //third_party/guava:guava
     ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder()
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // java_library //java/com/facebook/base:base
     JavaLibraryRule javaLibraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc("java/com/facebook/base/Base.java")
         .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava")));
 
     // java_binary //java/com/facebook/base:Main
     JavaBinaryRule javaBinaryRule = ruleResolver.buildAndAddToIndex(
-        JavaBinaryRule.newJavaBinaryRuleBuilder()
+        JavaBinaryRule.newJavaBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
         .addDep(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .setMainClass("com.facebook.base.Main"));

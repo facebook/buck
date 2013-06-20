@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -138,8 +139,8 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
     };
   }
 
-  public static Builder newShTestRuleBuilder() {
-    return new Builder();
+  public static Builder newShTestRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<ShTestRule> implements
@@ -147,6 +148,10 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
 
     private String test;
     private ImmutableSet<String> labels = ImmutableSet.of();
+
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public ShTestRule build(BuildRuleResolver ruleResolver) {

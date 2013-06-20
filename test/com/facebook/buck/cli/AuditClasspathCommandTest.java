@@ -29,6 +29,7 @@ import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
@@ -96,16 +97,16 @@ public class AuditClasspathCommandTest {
 
     // Add build rules such that all implementations of HasClasspathEntries are tested.
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
         .addSrc("src/com/facebook/TestJavaLibrary.java"));
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
         .addSrc("src/com/facebook/TestAndroidLibrary.java")
         .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
     ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-binary"))
         .setManifest("AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
@@ -113,7 +114,7 @@ public class AuditClasspathCommandTest {
         .addDep(BuildTargetFactory.newInstance("//:test-android-library"))
         .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
     ruleResolver.buildAndAddToIndex(
-        JavaTestRule.newJavaTestRuleBuilder()
+        JavaTestRule.newJavaTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:project-tests"))
             .addDep(BuildTargetFactory.newInstance("//:test-java-library"))
             .setSourceUnderTest(ImmutableSet.of(BuildTargetFactory.newInstance("//:test-java-library")))

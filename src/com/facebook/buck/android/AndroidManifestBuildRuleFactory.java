@@ -17,12 +17,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory<AndroidManifestRule.Builder> {
 
   @Override
-  public AndroidManifestRule.Builder newBuilder() {
-    return AndroidManifestRule.newManifestMergeRuleBuilder();
+  public AndroidManifestRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return AndroidManifestRule.newManifestMergeRuleBuilder(params);
   }
 
   @Override

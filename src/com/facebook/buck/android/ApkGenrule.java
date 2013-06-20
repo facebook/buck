@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -110,8 +111,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
     return outAsProjectRelativePath;
   }
 
-  public static Builder newApkGenruleBuilder() {
-    return new Builder();
+  public static Builder newApkGenruleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   @Override
@@ -124,6 +125,10 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   public static class Builder extends Genrule.Builder {
 
     private BuildTarget apk;
+
+    protected Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public ApkGenrule build(BuildRuleResolver ruleResolver) {

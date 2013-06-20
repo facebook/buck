@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -74,12 +75,12 @@ public class ApkGenruleTest {
     // java_binary rule with a classpath entry and a main class.
     BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libAndroidTarget)
         .addSrc("java/com/facebook/util/Facebook.java"));
 
     ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder()
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")

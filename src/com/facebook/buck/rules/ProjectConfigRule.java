@@ -157,8 +157,8 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     return ImmutableList.of();
   }
 
-  public static Builder newProjectConfigRuleBuilder() {
-    return new Builder();
+  public static Builder newProjectConfigRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<ProjectConfigRule> {
@@ -169,7 +169,9 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     @Nullable private List<String> testRoots = null;
     private boolean isIntelliJPlugin = false;
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public ProjectConfigRule build(final BuildRuleResolver ruleResolver) {

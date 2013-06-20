@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
 import java.util.List;
@@ -29,8 +30,8 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 
   @Override
-  public DefaultJavaLibraryRule.Builder newBuilder() {
-    return DefaultJavaLibraryRule.newJavaLibraryRuleBuilder();
+  public DefaultJavaLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(params);
   }
 
   @Override

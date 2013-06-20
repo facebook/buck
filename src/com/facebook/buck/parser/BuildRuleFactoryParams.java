@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -53,6 +54,7 @@ public final class BuildRuleFactoryParams {
   private final ParseContext buildFileParseContext;
   private final ParseContext visibilityParseContext;
   private final boolean ignoreFileExistenceChecks;
+  private final AbstractBuildRuleBuilderParams abstractBuildRuleFactoryParams;
 
   private final Function<String, String> resolveFilePathRelativeToBuildFileDirectoryTransform;
 
@@ -98,6 +100,19 @@ public final class BuildRuleFactoryParams {
         return resolveFilePathRelativeToBuildFileDirectory(input);
       }
     };
+
+    final Function<String, String> pathRelativizer = filesystem.getPathRelativizer();
+    this.abstractBuildRuleFactoryParams = new AbstractBuildRuleBuilderParams() {
+      @Override
+      public Function<String, String> getPathRelativizer() {
+        return pathRelativizer;
+      }
+    };
+  }
+
+  /** This is package-private so that only AbstractBuildRuleFactory can access it. */
+  AbstractBuildRuleBuilderParams getAbstractBuildRuleFactoryParams() {
+    return abstractBuildRuleFactoryParams;
   }
 
   public BuildTarget parseVisibilityTarget(String visibilityTarget)

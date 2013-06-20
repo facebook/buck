@@ -21,11 +21,12 @@ import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -90,12 +91,16 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     }
   }
 
-  public static Builder newAndroidLibraryRuleBuilder() {
-    return new Builder();
+  public static Builder newAndroidLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
     private Optional<String> manifestFile = Optional.absent();
+
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public AndroidLibraryRule build(BuildRuleResolver ruleResolver) {

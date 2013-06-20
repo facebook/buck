@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -106,8 +107,8 @@ public class GenAidlRule extends AbstractCachingBuildRule {
     return commands.build();
   }
 
-  public static Builder newGenAidlRuleBuilder() {
-    return new Builder();
+  public static Builder newGenAidlRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<GenAidlRule> {
@@ -116,7 +117,9 @@ public class GenAidlRule extends AbstractCachingBuildRule {
 
     private String importPath;
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public GenAidlRule build(BuildRuleResolver ruleResolver) {

@@ -18,14 +18,15 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
 
 public class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory<PrebuiltJarRule.Builder> {
 
   @Override
-  public PrebuiltJarRule.Builder newBuilder() {
-    return PrebuiltJarRule.newPrebuiltJarRuleBuilder();
+  public PrebuiltJarRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return PrebuiltJarRule.newPrebuiltJarRuleBuilder(params);
   }
 
   @Override

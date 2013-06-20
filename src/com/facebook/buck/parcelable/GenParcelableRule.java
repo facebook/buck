@@ -17,6 +17,7 @@
 package com.facebook.buck.parcelable;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -122,14 +123,18 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
         .set("outputDirectory", outputDirectory);
   }
 
-  public static Builder newGenParcelableRuleBuilder() {
-    return new Builder();
+  public static Builder newGenParcelableRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<GenParcelableRule> implements
       SrcsAttributeBuilder {
 
     private ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
+
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public Builder addSrc(String relativePathToSrc) {

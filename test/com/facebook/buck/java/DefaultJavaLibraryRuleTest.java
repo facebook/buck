@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -221,7 +222,7 @@ public class DefaultJavaLibraryRuleTest {
     String src = "android/java/src/com/facebook/Main.java";
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder()
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(buildTarget)
         .addSrc(src));
 
@@ -365,12 +366,13 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(processorTarget)
         .addSrc("java/processor/processor.java"));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
-    AndroidLibraryRule.Builder builder = new AndroidLibraryRule.Builder()
+    AndroidLibraryRule.Builder builder = AndroidLibraryRule.newAndroidLibraryRuleBuilder(
+        new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libTarget);
     builder.getAnnotationProcessingBuilder()
         .addAllProcessors(ImmutableList.of("MyProcessor"))
@@ -388,20 +390,20 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     JavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java"));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
     JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     JavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
         .addDep(BuildTargetFactory.newInstance("//:libtwo")));
@@ -454,13 +456,13 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     JavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java"));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
     JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep(BuildTargetFactory.newInstance("//:libone"))
@@ -468,7 +470,7 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     JavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
         .addDep(BuildTargetFactory.newInstance("//:libtwo")));
@@ -496,7 +498,7 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     DefaultJavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/bar.java"));
 
@@ -522,21 +524,21 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     DefaultJavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryOneTarget)
         .addSrc("java/src/com/libone/Bar.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
     DefaultJavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep(BuildTargetFactory.newInstance("//:libone")));
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
     DefaultJavaLibraryRule parent = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(parentTarget)
         .addSrc("java/src/com/parent/Meh.java")
         .addDep(BuildTargetFactory.newInstance("//:libtwo"))
@@ -544,7 +546,7 @@ public class DefaultJavaLibraryRuleTest {
 
     BuildTarget grandparentTarget = BuildTargetFactory.newInstance("//:grandparent");
     DefaultJavaLibraryRule grandparent = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(grandparentTarget)
         .addSrc("java/src/com/parent/OldManRiver.java")
         .addDep(BuildTargetFactory.newInstance("//:parent")));

@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -162,8 +163,8 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     return String.format("%s/%s.jar", getOutputDirectory(), getBuildTarget().getShortName());
   }
 
-  public static Builder newJavaBinaryRuleBuilder() {
-    return new Builder();
+  public static Builder newJavaBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   @Override
@@ -190,7 +191,9 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     private String manifestFile;
     private String metaInfDirectory;
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public JavaBinaryRule build(BuildRuleResolver ruleResolver) {

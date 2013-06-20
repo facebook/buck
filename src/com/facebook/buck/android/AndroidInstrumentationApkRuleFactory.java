@@ -20,13 +20,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 public class AndroidInstrumentationApkRuleFactory
     extends AbstractBuildRuleFactory<AndroidInstrumentationApk.Builder> {
 
   @Override
-  public AndroidInstrumentationApk.Builder newBuilder() {
-    return AndroidInstrumentationApk.newAndroidInstrumentationApkRuleBuilder();
+  public AndroidInstrumentationApk.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return AndroidInstrumentationApk.newAndroidInstrumentationApkRuleBuilder(params);
   }
 
   @Override

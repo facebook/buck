@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -67,12 +68,16 @@ public class RobolectricTestRule extends JavaTestRule {
     return super.getInputsToCompareToOutput();
   }
 
-  public static Builder newRobolectricTestRuleBuilder() {
-    return new Builder();
+  public static Builder newRobolectricTestRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends JavaTestRule.Builder {
 
+
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public RobolectricTestRule build(BuildRuleResolver ruleResolver) {

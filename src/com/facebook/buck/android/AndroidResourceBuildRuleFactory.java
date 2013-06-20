@@ -19,13 +19,14 @@ package com.facebook.buck.android;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
 public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<AndroidResourceRule.Builder> {
 
   @Override
-  public AndroidResourceRule.Builder newBuilder() {
-    return AndroidResourceRule.newAndroidResourceRuleBuilder();
+  public AndroidResourceRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return AndroidResourceRule.newAndroidResourceRuleBuilder(params);
   }
 
   @Override

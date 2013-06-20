@@ -22,6 +22,7 @@ import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -879,8 +880,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return Classpaths.getClasspathEntries(getDeps());
   }
 
-  public static Builder newAndroidBinaryRuleBuilder() {
-    return new Builder();
+  public static Builder newAndroidBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<AndroidBinaryRule> {
@@ -902,7 +903,9 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     private Optional<String> resourceFilter = Optional.absent();
     private Optional<TargetCpuType> cpuFilter = Optional.absent();
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public AndroidBinaryRule build(BuildRuleResolver ruleResolver) {

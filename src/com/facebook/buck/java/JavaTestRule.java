@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestCaseSummary;
 import com.facebook.buck.rules.TestResults;
 import com.facebook.buck.rules.TestRule;
@@ -334,8 +335,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
   }
 
-  public static Builder newJavaTestRuleBuilder() {
-    return new Builder();
+  public static Builder newJavaTestRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder
@@ -345,7 +346,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     protected ImmutableSet<BuildTarget> sourcesUnderTest = ImmutableSet.of();
     protected ImmutableSet<String> labels = ImmutableSet.of();
 
-    protected Builder() {}
+    protected Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public JavaTestRule build(BuildRuleResolver ruleResolver) {

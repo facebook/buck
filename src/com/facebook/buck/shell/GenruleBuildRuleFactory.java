@@ -18,12 +18,13 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 public final class GenruleBuildRuleFactory extends AbstractBuildRuleFactory<Genrule.Builder> {
 
   @Override
-  public Genrule.Builder newBuilder() {
-    return Genrule.newGenruleBuilder();
+  public Genrule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return Genrule.newGenruleBuilder(params);
   }
 
   @Override

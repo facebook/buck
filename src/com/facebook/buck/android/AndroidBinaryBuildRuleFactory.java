@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -29,8 +30,8 @@ import java.util.List;
 public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
 
   @Override
-  public AndroidBinaryRule.Builder newBuilder() {
-    return AndroidBinaryRule.newAndroidBinaryRuleBuilder();
+  public AndroidBinaryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return AndroidBinaryRule.newAndroidBinaryRuleBuilder(params);
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,11 +33,15 @@ import java.util.Set;
 @Beta
 public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements BuildRuleBuilder<T> {
 
-  protected AbstractBuildRuleBuilder() {}
-
   protected BuildTarget buildTarget;
   protected Set<BuildTarget> deps = Sets.newHashSet();
   protected Set<BuildTargetPattern> visibilityPatterns = Sets.newHashSet();
+
+  private final Function<String, String> pathRelativizer;
+
+  protected AbstractBuildRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    this.pathRelativizer = params.getPathRelativizer();
+  }
 
   @Override
   public abstract T build(BuildRuleResolver ruleResolver);
@@ -49,6 +54,10 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
+  }
+
+  public Function<String, String> getPathRelativizer() {
+    return pathRelativizer;
   }
 
   public AbstractBuildRuleBuilder<T> addDep(BuildTarget dep) {

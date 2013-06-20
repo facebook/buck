@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -111,15 +112,17 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
     return BuildRuleType.PYTHON_LIBRARY;
   }
 
-  public static Builder newPythonLibraryBuilder() {
-    return new Builder();
+  public static Builder newPythonLibraryBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<PythonLibraryRule>
       implements SrcsAttributeBuilder {
     protected ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public Builder addSrc(String src) {

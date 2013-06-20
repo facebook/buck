@@ -57,7 +57,7 @@ public class ProjectConfigRuleTest extends EasyMockSupport {
   private ProjectConfigRule createProjectConfig() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     JavaLibraryRule javaRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javatests:lib")));
 
     BuildRuleParams buildRuleParams = new BuildRuleParams(

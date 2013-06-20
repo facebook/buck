@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -239,8 +240,8 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
         .set("assets", assetsFiles.build());
   }
 
-  public static Builder newAndroidResourceRuleBuilder() {
-    return new Builder();
+  public static Builder newAndroidResourceRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<AndroidResourceRule> {
@@ -256,7 +257,9 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
     @Nullable
     private String manifestFile = null;
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public AndroidResourceRule build(BuildRuleResolver ruleResolver) {

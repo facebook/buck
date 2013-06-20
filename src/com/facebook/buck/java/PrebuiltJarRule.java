@@ -20,6 +20,7 @@ import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -159,8 +160,8 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
         .set("javadocUrl", javadocUrl);
   }
 
-  public static Builder newPrebuiltJarRuleBuilder() {
-    return new Builder();
+  public static Builder newPrebuiltJarRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<PrebuiltJarRule> {
@@ -169,7 +170,9 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     private Optional<String> sourceJar = Optional.absent();
     private Optional<String> javadocUrl = Optional.absent();
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public PrebuiltJarRule build(BuildRuleResolver ruleResolver) {

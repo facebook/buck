@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -26,8 +27,8 @@ import java.util.List;
 public class ProjectConfigRuleFactory extends AbstractBuildRuleFactory<ProjectConfigRule.Builder> {
 
   @Override
-  public ProjectConfigRule.Builder newBuilder() {
-    return ProjectConfigRule.newProjectConfigRuleBuilder();
+  public ProjectConfigRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return ProjectConfigRule.newProjectConfigRuleBuilder(params);
   }
 
   @Override

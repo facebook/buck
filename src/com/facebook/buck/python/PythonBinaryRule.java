@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -117,15 +118,17 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
     return true;
   }
 
-  public static Builder newPythonBinaryBuilder() {
-    return new Builder();
+  public static Builder newPythonBinaryBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<PythonBinaryRule> {
 
     private String main;
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public PythonBinaryRule build(BuildRuleResolver ruleResolver) {

@@ -46,12 +46,12 @@ public class RuleKeyTest {
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
     ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common")));
 
     // Create a java_library() rule with no deps.
     DefaultJavaLibraryRule.Builder javaLibraryBuilder = DefaultJavaLibraryRule
-        .newJavaLibraryRuleBuilder()
+        .newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"))
         // The source file must be an existing file or else RuleKey.Builder.setVal(File) will throw
         // an IOException, which is caught and then results in the rule being flagged as

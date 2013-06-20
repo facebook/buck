@@ -19,13 +19,14 @@ package com.facebook.buck.cpp;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 public class PrebuiltNativeLibraryBuildRuleFactory
     extends AbstractBuildRuleFactory<PrebuiltNativeLibraryBuildRule.Builder> {
 
   @Override
-  protected PrebuiltNativeLibraryBuildRule.Builder newBuilder() {
-    return PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary();
+  protected PrebuiltNativeLibraryBuildRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary(params);
   }
 
   @Override

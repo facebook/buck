@@ -23,6 +23,7 @@ import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
@@ -623,8 +624,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return outputJar.orNull();
   }
 
-  public static Builder newJavaLibraryRuleBuilder() {
-    return new Builder();
+  public static Builder newJavaLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibraryRule> implements
@@ -638,7 +639,9 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
     protected Optional<String> proguardConfig = Optional.absent();
 
-    protected Builder() {}
+    protected Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public DefaultJavaLibraryRule build(BuildRuleResolver ruleResolver) {

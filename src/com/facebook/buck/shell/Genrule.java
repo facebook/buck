@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -352,8 +353,8 @@ public class Genrule extends AbstractCachingBuildRule {
     return buffer.toString();
   }
 
-  public static Builder newGenruleBuilder() {
-    return new Builder();
+  public static Builder newGenruleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<Genrule>
@@ -367,6 +368,10 @@ public class Genrule extends AbstractCachingBuildRule {
 
     protected Function<String, String> relativeToAbsolutePathFunction =
         Functions.RELATIVE_TO_ABSOLUTE_PATH;
+
+    protected Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public Genrule build(BuildRuleResolver ruleResolver) {

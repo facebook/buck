@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -118,8 +119,8 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
         this.flags));
   }
 
-  public static Builder newNdkLibraryRuleBuilder() {
-    return new Builder();
+  public static Builder newNdkLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<NdkLibraryRule>
@@ -127,7 +128,9 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     private Set<String> sources = Sets.newHashSet();
     private ImmutableList.Builder<String> flags = ImmutableList.builder();
 
-    private Builder() {}
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     @Override
     public NdkLibraryRule build(BuildRuleResolver ruleResolver) {

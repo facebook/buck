@@ -19,12 +19,13 @@ package com.facebook.buck.parcelable;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 public class GenParcelableBuildRuleFactory extends AbstractBuildRuleFactory<GenParcelableRule.Builder> {
 
   @Override
-  public GenParcelableRule.Builder newBuilder() {
-    return GenParcelableRule.newGenParcelableRuleBuilder();
+  public GenParcelableRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return GenParcelableRule.newGenParcelableRuleBuilder(params);
   }
 
   @Override

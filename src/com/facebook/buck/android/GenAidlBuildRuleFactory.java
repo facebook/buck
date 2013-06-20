@@ -18,14 +18,15 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 import java.io.File;
 
 public class GenAidlBuildRuleFactory extends AbstractBuildRuleFactory<GenAidlRule.Builder> {
 
   @Override
-  public GenAidlRule.Builder newBuilder() {
-    return GenAidlRule.newGenAidlRuleBuilder();
+  public GenAidlRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return GenAidlRule.newGenAidlRuleBuilder(params);
   }
 
   @Override

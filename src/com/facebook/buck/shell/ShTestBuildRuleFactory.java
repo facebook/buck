@@ -19,12 +19,13 @@ package com.facebook.buck.shell;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 public class ShTestBuildRuleFactory extends AbstractBuildRuleFactory<ShTestRule.Builder> {
 
   @Override
-  public ShTestRule.Builder newBuilder() {
-    return ShTestRule.newShTestRuleBuilder();
+  public ShTestRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return ShTestRule.newShTestRuleBuilder(params);
   }
 
   @Override

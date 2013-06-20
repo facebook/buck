@@ -17,10 +17,11 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -130,13 +131,17 @@ public class ExportFileRule extends AbstractCachingBuildRule {
     return out.get();
   }
 
-  public static Builder newExportFileBuilder() {
-    return new Builder();
+  public static Builder newExportFileBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<ExportFileRule> {
     private Optional<String> src;
     private Optional<String> out;
+
+    private Builder(AbstractBuildRuleBuilderParams params) {
+      super(params);
+    }
 
     public Builder setSrc(Optional<String> src) {
       this.src = src;

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
@@ -70,13 +71,13 @@ public class ProjectCommandTest {
 
     BuildTarget javaLibraryTargetName = BuildTargetFactory.newInstance("//javasrc:java-library");
     DefaultJavaLibraryRule javaLibraryRule = ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(javaLibraryTargetName)
         .addSrc("javasrc/JavaLibrary.java"));
 
     String projectConfigTargetName = "//javasrc:project-config";
     ProjectConfigRule ruleConfig = ruleResolver.buildAndAddToIndex(
-        ProjectConfigRule.newProjectConfigRuleBuilder()
+        ProjectConfigRule.newProjectConfigRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance(projectConfigTargetName))
         .setSrcTarget(Optional.of(javaLibraryTargetName)));
 

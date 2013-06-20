@@ -28,8 +28,10 @@ import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,6 +52,7 @@ public class RobolectricTestBuildRuleFactoryTest {
 
     // Set up mocks.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.getPathRelativizer()).andReturn(Functions.<String>identity());
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
       @Override
       public BuildTarget parse(String buildTargetName, ParseContext parseContext)
@@ -61,6 +64,7 @@ public class RobolectricTestBuildRuleFactoryTest {
         "vm_args", ImmutableList.of("-Dbuck.robolectric_dir=javatests/com/facebook/base"),
         "source_under_test", ImmutableList.of("//java/com/facebook/base:base"));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//javatests/com/facebook/base:base");
+    EasyMock.replay(projectFilesystem);
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance,
         new TestConsole(),
@@ -68,11 +72,12 @@ public class RobolectricTestBuildRuleFactoryTest {
         /* buildFiles */ null,
         buildTargetParser,
         buildTarget);
-    EasyMock.replay(projectFilesystem);
 
     // Create a builder using the factory.
     RobolectricTestBuildRuleFactory factory = new RobolectricTestBuildRuleFactory();
-    RobolectricTestRule.Builder builder = factory.newBuilder().setBuildTarget(buildTarget);
+    RobolectricTestRule.Builder builder = factory
+        .newBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(buildTarget);
 
     // Invoke the method under test.
     factory.amendBuilder(builder, params);

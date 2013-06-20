@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -126,7 +127,7 @@ public class BuildFileTreeTest {
     for (String ruleName : ruleNames) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ruleName);
       ruleResolver.buildAndAddToIndex(
-          DefaultJavaLibraryRule.newJavaLibraryRuleBuilder()
+          DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
           .setBuildTarget(buildTarget));
       targets.add(buildTarget);
     }
