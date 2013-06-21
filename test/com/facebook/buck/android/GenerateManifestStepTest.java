@@ -61,8 +61,8 @@ public class GenerateManifestStepTest {
     ExecutionContext context = createMock(ExecutionContext.class);
     GenerateManifestStep manifestCommand = new GenerateManifestStep(
         skeletonPath,
-        manifestPath,
-        libraryManifestFiles.build());
+        libraryManifestFiles.build(),
+        manifestPath);
     manifestCommand.execute(context);
 
     String expected = Files.toString(new File(expectedOutputPath), Charsets.UTF_8);

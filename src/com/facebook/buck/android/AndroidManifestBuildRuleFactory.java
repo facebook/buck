@@ -28,12 +28,6 @@ public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFact
 
   @Override
   protected void amendBuilder(AndroidManifestRule.Builder builder, BuildRuleFactoryParams params) {
-    // manifest file
-    String manifestFile = params.getRequiredStringAttribute("manifest");
-    String manifestPath =
-        params.resolveAndCreateFilePathRelativeToBuildFileDirectory(manifestFile);
-    builder.setManifestFile(manifestPath);
-
     // skeleton file
     String skeletonFile = params.getRequiredStringAttribute("skeleton");
     String skeletonPath = params.resolveFilePathRelativeToBuildFileDirectory(skeletonFile);

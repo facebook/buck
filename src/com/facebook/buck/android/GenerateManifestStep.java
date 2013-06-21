@@ -25,6 +25,7 @@ import com.android.manifmerger.MergerLog;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -41,16 +42,16 @@ public class GenerateManifestStep implements Step {
   private static final int BASE_SDK_LEVEL = 1;
 
   private String skeletonManifestPath;
-  private String outManifestPath;
   private ImmutableSet<String> libraryManifestPaths;
+  private String outManifestPath;
 
   public GenerateManifestStep(
       String skeletonManifestPath,
-      String outManifestPath,
-      ImmutableSet<String> libraryManifestPaths) {
+      ImmutableSet<String> libraryManifestPaths,
+      String outManifestPath) {
     this.skeletonManifestPath = Preconditions.checkNotNull(skeletonManifestPath);
-    this.outManifestPath = Preconditions.checkNotNull(outManifestPath);
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
+    this.outManifestPath = Preconditions.checkNotNull(outManifestPath);
   }
 
   @Override
@@ -117,5 +118,25 @@ public class GenerateManifestStep implements Step {
 
   private void warnUser(ExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof GenerateManifestStep)) {
+      return false;
+    }
+
+    GenerateManifestStep that = (GenerateManifestStep)obj;
+    return Objects.equal(this.skeletonManifestPath, that.skeletonManifestPath)
+        && Objects.equal(this.libraryManifestPaths, that.libraryManifestPaths)
+        && Objects.equal(this.outManifestPath, that.outManifestPath);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        skeletonManifestPath,
+        libraryManifestPaths,
+        outManifestPath);
   }
 }

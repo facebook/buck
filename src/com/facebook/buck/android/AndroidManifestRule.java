@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
@@ -25,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -32,31 +34,38 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * The build rule generates the application's manifest file from the skeleton manifest and
- * the library manifests from its dependencies.
+ * {@link AndroidManifestRule} is a build rule that can generate an Android manifest from a skeleton
+ * manifest and the library manifests from its dependencies.
  * <pre>
  * android_manifest(
- *   name = 'sample_app',
+ *   name = 'my_manifest',
  *   skeleton = 'AndroidManifestSkeleton.xml',
- *   manifest = genfile('MergedAndroidManifest.xml')
  *   deps = [
  *     ':sample_manifest',
- *     # Additional dependent android_library rules would be listed here, as well.
+ *     # Additional dependent android_resource and android_library rules would be listed here,
+ *     # as well.
+ *   ],
+ * )
+ * </pre>
+ * This will produce a genfile that will be parameterized by the name of the
+ * {@code android_manifest} rule. This can be used as follows:
+ * <pre>
+ * android_binary(
+ *   name = 'my_app',
+ *   manifest = genfile('AndroidManifest__manifest__.xml'),
+ *   deps = [
+ *     ':my_manifest',
  *   ],
  * )
  * </pre>
  */
 public class AndroidManifestRule extends AbstractCachingBuildRule {
 
-  private final String manifestFile;
   private final String skeletonFile;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
-  protected AndroidManifestRule(BuildRuleParams buildRuleParams,
-                                String skeletonFile,
-                                String manifestFile) {
+  protected AndroidManifestRule(BuildRuleParams buildRuleParams, String skeletonFile) {
     super(buildRuleParams);
-    this.manifestFile = Preconditions.checkNotNull(manifestFile);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.transitiveDependencyGraph = new AndroidTransitiveDependencyGraph(this);
   }
@@ -76,36 +85,44 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
 
   @Override
   protected List<Step> buildInternal(BuildContext context) throws IOException {
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
+    ImmutableList<HasAndroidResourceDeps> depsWithAndroidResources = getAndroidResourceDeps(
+        context.getDependencyGraph());
     AndroidTransitiveDependencies transitiveDependencies =
-        transitiveDependencyGraph.findDependencies(getAndroidResourceDepsInternal(
-            context.getDependencyGraph()));
+        transitiveDependencyGraph.findDependencies(depsWithAndroidResources);
 
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new GenerateManifestStep(
         skeletonFile,
-        manifestFile,
-        transitiveDependencies.manifestFiles));
+        transitiveDependencies.manifestFiles,
+        getPathToOutputFile()));
 
     return commands.build();
   }
 
-  public static Builder newManifestMergeRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
+  @Override
+  public String getPathToOutputFile() {
+    BuildTarget target = getBuildTarget();
+    return String.format("%s/%sAndroidManifest__%s__.xml",
+        BuckConstant.GEN_DIR,
+        target.getBasePathWithSlash(),
+        target.getShortName());
   }
 
   /**
    * @return a list of {@link AndroidResourceRule}s that should be passed,
    * in order, to {@code aapt} when generating the {@code R.java} files for this APK.
    */
-  private ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal(
+  private ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(
       DependencyGraph graph) {
     return UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
   }
 
+  public static Builder newManifestMergeRuleBuilder(AbstractBuildRuleBuilderParams params) {
+    return new Builder(params);
+  }
 
   public static class Builder extends AbstractBuildRuleBuilder<AndroidManifestRule> {
 
-    protected String manifestFile;
     protected String skeletonFile;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
@@ -114,14 +131,12 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
 
     @Override
     public AndroidManifestRule build(BuildRuleResolver ruleResolver) {
-      return new AndroidManifestRule(
-          createBuildRuleParams(ruleResolver),
-          skeletonFile,
-          manifestFile);
+      return new AndroidManifestRule(createBuildRuleParams(ruleResolver), skeletonFile);
     }
 
-    public Builder setManifestFile(String manifestFile) {
-      this.manifestFile = manifestFile;
+    @Override
+    public Builder setBuildTarget(BuildTarget buildTarget) {
+      super.setBuildTarget(buildTarget);
       return this;
     }
 
@@ -129,6 +144,5 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
       this.skeletonFile = skeletonFile;
       return this;
     }
-
   }
 }
