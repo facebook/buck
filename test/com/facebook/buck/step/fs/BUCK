@@ -1,6 +1,9 @@
 java_test(
   name = 'fs',
   srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/step/fs:fs',
+  ],
   deps = [
     '//lib:easymock',
     '//lib:guava',
