@@ -68,8 +68,8 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   @Override
   protected List<String> getInputsToCompareToOutput() {
     ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
+    // manifestFile is an *output*, so it should be omitted here.
     inputsToConsiderForCachingPurposes.add(skeletonFile);
-    inputsToConsiderForCachingPurposes.add(manifestFile);
     return inputsToConsiderForCachingPurposes.build();
   }
 
