@@ -43,7 +43,14 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -135,7 +142,7 @@ public class GenruleTest {
     Step firstStep = steps.get(0);
     assertTrue(firstStep instanceof ShellStep);
     ShellStep rmCommand = (ShellStep) firstStep;
-    ExecutionContext executionContext = null;
+    ExecutionContext executionContext = newEmptyExecutionContext();
     assertEquals(
         "First command should delete the output file to be written by the genrule.",
         ImmutableList.of(
@@ -196,10 +203,17 @@ public class GenruleTest {
         .put("TMP", tempDirPath)
         .put("SRCDIR", srcDirPath)
         .build(),
-        genruleCommand.getEnvironmentVariables());
+        genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
         ImmutableList.of("/bin/bash", "-c", "python convert_to_katana.py AndroidManifest.xml > $OUT"),
         genruleCommand.getShellCommand(executionContext));
+  }
+
+  private ExecutionContext newEmptyExecutionContext() {
+    return ExecutionContext.builder()
+        .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
+        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+        .build();
   }
 
   @Test
@@ -364,5 +378,33 @@ public class GenruleTest {
     }
 
     return ruleResolver.buildAndAddToIndex(ruleBuilder);
+  }
+
+  @Test
+  public void testShouldIncludeDxInEnvironmentIfPresent() {
+    File fakeDx = new File(".");  // We do no checks on whether dx is executable, but it must exist
+    AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
+    EasyMock.expect(android.getDxExecutable()).andStubReturn(fakeDx);
+    EasyMock.replay(android);
+
+    Genrule rule = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
+        .setCmd("true")
+        .setOut("/dev/null")
+        .build(new BuildRuleResolver());
+
+    ExecutionContext context = ExecutionContext.builder()
+        .setConsole(new TestConsole())
+        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+        .setAndroidPlatformTarget(Optional.of(android))
+        .build();
+
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    rule.addEnvironmentVariables(context, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertEquals(fakeDx.getAbsolutePath(), env.get("DX"));
+
+    EasyMock.verify(android);
   }
 }

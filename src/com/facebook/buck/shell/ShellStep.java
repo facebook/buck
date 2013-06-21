@@ -125,9 +125,9 @@ public abstract class ShellStep implements Step {
     ProcessBuilder processBuilder = new ProcessBuilder(getShellCommand(context));
 
     // Add environment variables, if appropriate.
-    if (!getEnvironmentVariables().isEmpty()) {
+    if (!getEnvironmentVariables(context).isEmpty()) {
       Map<String, String> environment = processBuilder.environment();
-      environment.putAll(getEnvironmentVariables());
+      environment.putAll(getEnvironmentVariables(context));
     }
 
     if (workingDirectory != null) {
@@ -196,7 +196,7 @@ public abstract class ShellStep implements Step {
 
       // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
       // quoted as necessary.
-      Iterable<String> env = Iterables.transform(getEnvironmentVariables().entrySet(),
+      Iterable<String> env = Iterables.transform(getEnvironmentVariables(context).entrySet(),
           new Function<Entry<String, String>, String>() {
             @Override
             public String apply(Entry<String, String> e) {
@@ -234,7 +234,7 @@ public abstract class ShellStep implements Step {
   }
 
   /** By default, this method returns an empty map. */
-  public ImmutableMap<String, String> getEnvironmentVariables() {
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.of();
   }
 

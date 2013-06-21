@@ -43,6 +43,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -149,7 +150,7 @@ public class ApkGenruleTest {
     Step firstStep = steps.get(0);
     assertTrue(firstStep instanceof ShellStep);
     ShellStep rmCommand = (ShellStep) firstStep;
-    ExecutionContext executionContext = null;
+    ExecutionContext executionContext = newEmptyExecutionContext();
     assertEquals(
         "First command should delete the output file to be written by the genrule.",
         ImmutableList.of(
@@ -207,11 +208,18 @@ public class ApkGenruleTest {
         .put("TMP", tempDirPath)
         .put("SRCDIR", srcDirPath)
         .put("OUT", expectedApkOutput).build(),
-        genruleCommand.getEnvironmentVariables());
+        genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
         ImmutableList.of("/bin/bash", "-c", "python signer.py $APK key.properties > $OUT"),
         genruleCommand.getShellCommand(executionContext));
 
     EasyMock.verify(parser);
+  }
+
+  private ExecutionContext newEmptyExecutionContext() {
+    return ExecutionContext.builder()
+        .setConsole(new TestConsole())
+        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+        .build();
   }
 }

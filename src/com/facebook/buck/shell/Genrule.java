@@ -34,12 +34,14 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Functions;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -183,7 +185,7 @@ public class Genrule extends AbstractCachingBuildRule {
         .set("cmd", cmd);
    }
 
-  protected void addEnvironmentVariables(
+  protected void addEnvironmentVariables(ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put("SRCS", Joiner.on(' ').join(srcsToAbsolutePaths.values()));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
@@ -196,6 +198,13 @@ public class Genrule extends AbstractCachingBuildRule {
     environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
     environmentVariablesBuilder.put("SRCDIR", srcDirectory);
     environmentVariablesBuilder.put("TMP", tmpDirectory);
+
+    Optional<AndroidPlatformTarget> optionalAndroid = context.getAndroidPlatformTargetOptional();
+    if (optionalAndroid.isPresent()) {
+      AndroidPlatformTarget android = optionalAndroid.get();
+
+      environmentVariablesBuilder.put("DX", android.getDxExecutable().getAbsolutePath());
+    }
   }
 
   private void transformNames(Set<BuildRule> processedBuildRules,
@@ -239,11 +248,7 @@ public class Genrule extends AbstractCachingBuildRule {
     // Create a shell command that corresponds to this.cmd.
     final String cmd = replaceBinaryBuildRuleRefsInCmd();
     final ImmutableList<String> commandArgs = ImmutableList.of("/bin/bash", "-c", cmd);
-    ImmutableMap.Builder<String, String> environmentVariablesBuilder = ImmutableMap.builder();
 
-    addEnvironmentVariables(environmentVariablesBuilder);
-
-    final ImmutableMap<String, String> environmentVariables = environmentVariablesBuilder.build();
     commands.add(new ShellStep() {
       @Override
       public String getShortName(ExecutionContext context) {
@@ -256,8 +261,12 @@ public class Genrule extends AbstractCachingBuildRule {
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironmentVariables() {
-        return environmentVariables;
+      public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+        ImmutableMap.Builder<String, String> environmentVariablesBuilder = ImmutableMap.builder();
+
+        addEnvironmentVariables(context, environmentVariablesBuilder);
+
+        return environmentVariablesBuilder.build();
       }
 
       @Override

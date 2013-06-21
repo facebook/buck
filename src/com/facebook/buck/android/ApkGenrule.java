@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -117,8 +118,9 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   @Override
   protected void addEnvironmentVariables(
+      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(environmentVariablesBuilder);
+    super.addEnvironmentVariables(context, environmentVariablesBuilder);
     environmentVariablesBuilder.put("APK", apk.getApkPath());
   }
 

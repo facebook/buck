@@ -141,7 +141,7 @@ public class ShellStepTest extends EasyMockSupport {
       final boolean shouldRecordStdOut) {
     return new ShellStep(null, workingDirectory) {
       @Override
-      public ImmutableMap<String, String> getEnvironmentVariables() {
+      public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
         return env;
       }
       @Override
