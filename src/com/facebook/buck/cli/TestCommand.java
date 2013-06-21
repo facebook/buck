@@ -317,12 +317,25 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   @VisibleForTesting
   static Iterable<TestRule> filterTestRules(final TestCommandOptions options,
       Iterable<TestRule> testRules) {
+    ImmutableSortedSet.Builder<TestRule> builder = ImmutableSortedSet.naturalOrder();
+
+    // We always want to run the rules that are given on the command line. Always.
+    List<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
+    for (TestRule rule : testRules) {
+      if (allTargets.contains(rule.getFullyQualifiedName())) {
+        builder.add(rule);
+      }
+    }
+
     // Filter out all test rules that contain labels we've excluded.
-    return Iterables.filter(testRules, new Predicate<TestRule>() {
-      @Override public boolean apply(TestRule rule) {
+    builder.addAll(Iterables.filter(testRules, new Predicate<TestRule>() {
+      @Override
+      public boolean apply(TestRule rule) {
         return Sets.intersection(rule.getLabels(), options.getExcludedLabels()).isEmpty();
       }
-    });
+    }));
+
+    return builder.build();
   }
 
   private int runTests(

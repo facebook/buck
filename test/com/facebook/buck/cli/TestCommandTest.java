@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -42,8 +43,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
@@ -54,6 +57,7 @@ import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public class TestCommandTest {
 
@@ -361,5 +365,57 @@ public class TestCommandTest {
         executionContext));
 
     verify(executionContext, testRule);
+  }
+
+  @Test
+  public void testIfALabelIsIncludedItShouldNotBeExcluded() throws CmdLineException {
+    TestCommandOptions options = new TestCommandOptions(BuckConfig.emptyConfig());
+
+    new CmdLineParserAdditionalOptions(options).parseArgument(
+        "-e", "e2e", "-e", "other", "-i", "e2e");
+
+    ImmutableSet<String> excluded = options.getExcludedLabels();
+    assertEquals("other", Iterables.getOnlyElement(excluded));
+  }
+
+  @Test
+  public void testIfALabelIsIncludedItShouldNotBeExcludedEvenIfTheExcludeIsGlobal()
+      throws CmdLineException {
+    BuckConfig config = new BuckConfig(
+        ImmutableMap.<String, Map<String, String>>of(
+            "test",
+            ImmutableMap.of("excluded_labels", "e2e")),
+        null /* buildTargetParser */);
+    assertThat(config.getDefaultExcludedLabels(), contains("e2e"));
+    TestCommandOptions options = new TestCommandOptions(config);
+
+    new CmdLineParserAdditionalOptions(options).parseArgument("-i", "e2e");
+
+    ImmutableSet<String> included = options.getIncludedLabels();
+    assertEquals("e2e", Iterables.getOnlyElement(included));
+  }
+
+  @Test
+  public void testIncludingATestOnTheCommandLineMeansYouWouldLikeItRun() throws CmdLineException {
+    String excludedLabel = "exclude_me";
+    BuckConfig config = new BuckConfig(
+        ImmutableMap.<String, Map<String, String>>of(
+            "test",
+            ImmutableMap.of("excluded_labels", excludedLabel)),
+        null /* buildTargetParser */);
+    assertThat(config.getDefaultExcludedLabels(), contains(excludedLabel));
+    TestCommandOptions options = new TestCommandOptions(config);
+
+    new CmdLineParserAdditionalOptions(options).parseArgument("//example:test");
+
+    FakeTestRule rule = new FakeTestRule(
+        new BuildRuleType("java_test"),
+        /* labels */ ImmutableSet.of(excludedLabel),
+        BuildTargetFactory.newInstance("//example:test"),
+        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* visibility */ ImmutableSet.<BuildTargetPattern>of());
+    Iterable<TestRule> filtered = TestCommand.filterTestRules(options, ImmutableSet.<TestRule>of(rule));
+
+    assertEquals(rule, Iterables.getOnlyElement(filtered));
   }
 }

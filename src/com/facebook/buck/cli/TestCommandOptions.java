@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import org.kohsuke.args4j.Option;
 
@@ -81,7 +82,10 @@ public class TestCommandOptions extends BuildCommandOptions {
         public ImmutableSet<String> get() {
           ImmutableSet.Builder<String> result = validateLabels(excludedSet.get());
           result.addAll(getBuckConfig().getDefaultExcludedLabels());
-          return result.build();
+          ImmutableSet<String> allExcluded = result.build();
+
+          // If someone has included a test, then we should really run it.
+          return Sets.difference(allExcluded, getIncludedLabels()).immutableCopy();
         }
   });
 
