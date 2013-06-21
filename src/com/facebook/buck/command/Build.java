@@ -205,6 +205,7 @@ public class Build {
         .setAndroidBootclasspathForAndroidPlatformTarget(
             executionContext.getAndroidPlatformTargetOptional())
         .setBuildDependencies(buildDependencies)
+        .setConsole(executionContext.getConsole())
         .build();
 
     return Builder.getInstance().buildRules(rulesToBuild, buildContext);

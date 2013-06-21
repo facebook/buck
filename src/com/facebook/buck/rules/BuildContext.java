@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -45,6 +46,8 @@ public class BuildContext {
   private final Supplier<String> androidBootclasspathSupplier;
   private final BuildDependencies buildDependencies;
 
+  @Nullable private final Console console;
+
   private BuildContext(
       File projectRoot,
       DependencyGraph dependencyGraph,
@@ -54,7 +57,8 @@ public class BuildContext {
       JavaPackageFinder javaPackageFinder,
       EventBus events,
       Supplier<String> androidBootclasspathSupplier,
-      BuildDependencies buildDependencies) {
+      BuildDependencies buildDependencies,
+      Console console) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
@@ -64,6 +68,7 @@ public class BuildContext {
     this.events = Preconditions.checkNotNull(events);
     this.androidBootclasspathSupplier = Preconditions.checkNotNull(androidBootclasspathSupplier);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
+    this.console = console;
   }
 
   public StepRunner getCommandRunner() {
@@ -102,6 +107,12 @@ public class BuildContext {
     return buildDependencies;
   }
 
+  public void logBuildInfo(String format, Object... args) {
+    if (console != null && console.getVerbosity().shouldPrintCommand()) {
+      console.getStdErr().printf(format + '\n', args);
+    }
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -117,6 +128,7 @@ public class BuildContext {
     private EventBus events = new EventBus();
     private Supplier<String> androidBootclasspathSupplier = null;
     private BuildDependencies buildDependencies = BuildDependencies.getDefault();
+    private Console console = null;
 
     private Builder() {}
 
@@ -133,7 +145,8 @@ public class BuildContext {
           javaPackgeFinder,
           events,
           androidBootclasspathSupplier,
-          buildDependencies);
+          buildDependencies,
+          console);
     }
 
     public Builder setProjectRoot(File projectRoot) {
@@ -204,6 +217,11 @@ public class BuildContext {
           throw new NoAndroidSdkException();
         }
       };
+    }
+
+    public Builder setConsole(Console console) {
+      this.console = console;
+      return this;
     }
   }
 }

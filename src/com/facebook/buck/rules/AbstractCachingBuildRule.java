@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
@@ -68,9 +67,6 @@ import javax.annotation.Nullable;
  */
 @Beta
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
-
-  // TODO(mbolin): Make Console and Verbosity accessible through BuildContext and remove this.
-  private final static Logger logger = Logger.getLogger(AbstractCachingBuildRule.class.getName());
 
   /**
    * Lock used to ensure that the logic to kick off a build is performed at most once.
@@ -247,7 +243,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // If the RuleKeys match, then there is nothing to build.
     if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
-      logger.info(String.format("[UNCHANGED %s]", getFullyQualifiedName()));
+      context.logBuildInfo("[UNCHANGED %s]", getFullyQualifiedName());
       buildRuleResult.set(new BuildRuleSuccess(this, BuildRuleSuccess.Type.MATCHING_RULE_KEY));
       return;
     }
@@ -332,7 +328,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    */
   private void executeCommandsNowThatDepsAreBuilt(BuildContext context)
       throws IOException, StepFailedException {
-    logger.info(String.format("[BUILDING %s]", getFullyQualifiedName()));
+    context.logBuildInfo("[BUILDING %s]", getFullyQualifiedName());
 
     // Get and run all of the commands.
     List<Step> steps = buildInternal(context);

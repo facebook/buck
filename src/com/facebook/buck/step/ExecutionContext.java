@@ -87,6 +87,10 @@ public class ExecutionContext {
     return projectFilesystem.getProjectRoot();
   }
 
+  public Console getConsole() {
+    return console;
+  }
+
   public PrintStream getStdErr() {
     return console.getStdErr();
   }

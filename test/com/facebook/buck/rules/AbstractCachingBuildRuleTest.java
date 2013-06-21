@@ -155,6 +155,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     BuildContext context = createMock(BuildContext.class);
     expect(context.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
     expect(context.getEventBus()).andReturn(eventBus).times(2);
+    context.logBuildInfo("[BUILDING %s]", "//src/com/facebook/orca:orca");
     StepRunner stepRunner = createMock(StepRunner.class);
     expect(context.getCommandRunner()).andReturn(stepRunner);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
