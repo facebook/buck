@@ -175,7 +175,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
             @Override
             public void onFailure(Throwable failure) {
-              buildRuleResult.setException(failure);
+              recordBuildRuleFailure(failure);
             }
           },
           context.getExecutor());
@@ -183,7 +183,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       // This is a defensive catch block: if buildRuleResult is never satisfied, then Buck will
       // hang because a callback that is waiting for this rule's future to complete will never be
       // executed.
-      buildRuleResult.setException(throwable);
+      recordBuildRuleFailure(throwable);
     }
 
     return buildRuleResult;
@@ -230,8 +230,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         String abiKeyForDeps = abiRule.getAbiKeyForDeps();
         String cachedAbiKeyForDeps = abiRule.getAbiKeyForDepsOnDisk();
         if (abiKeyForDeps != null && abiKeyForDeps.equals(cachedAbiKeyForDeps)) {
-          buildRuleResult.set(new BuildRuleSuccess(this,
-              BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS));
+          recordBuildRuleSuccess(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS);
           return;
         }
       }
@@ -244,6 +243,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // If the RuleKeys match, then there is nothing to build.
     if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
       context.logBuildInfo("[UNCHANGED %s]", getFullyQualifiedName());
+      recordBuildRuleSuccess(BuildRuleSuccess.Type.MATCHING_RULE_KEY);
       buildRuleResult.set(new BuildRuleSuccess(this, BuildRuleSuccess.Type.MATCHING_RULE_KEY));
       return;
     }
@@ -270,7 +270,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       try {
         executeCommandsNowThatDepsAreBuilt(context);
       } catch (IOException|StepFailedException e) {
-        buildRuleResult.setException(e);
+        recordBuildRuleFailure(e);
         context.getEventBus().post(
             BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult));
         return;
@@ -284,7 +284,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       // If we failed to record the success, then we are in a potentially bad state where we have a
       // new output but an old RuleKey record.
       // TODO(mbolin): Make a final attempt to clear the invalid RuleKey record.
-      buildRuleResult.setException(e);
+      recordBuildRuleFailure(e);
       context.getEventBus().post(
           BuildEvents.buildRuleFinished(this, BuildRuleStatus.FAIL, cacheResult));
       return;
@@ -293,10 +293,18 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // We made it to the end of the method! Record our success.
     BuildRuleSuccess.Type successType = fromCache ? BuildRuleSuccess.Type.FETCHED_FROM_CACHE
                                                   : BuildRuleSuccess.Type.BUILT_LOCALLY;
-    buildRuleResult.set(new BuildRuleSuccess(this, successType));
+    recordBuildRuleSuccess(successType);
     context.getEventBus().post(
         BuildEvents.buildRuleFinished(this, BuildRuleStatus.SUCCESS, cacheResult));
     return;
+  }
+
+  private void recordBuildRuleSuccess(BuildRuleSuccess.Type type) {
+    buildRuleResult.set(new BuildRuleSuccess(this, type));
+  }
+
+  private void recordBuildRuleFailure(Throwable failure) {
+    buildRuleResult.setException(failure);
   }
 
   /**
