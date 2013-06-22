@@ -15,7 +15,9 @@
  */
 package com.facebook.buck.model;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -27,9 +29,37 @@ public class SingletonBuildTargetPatternTest {
     SingletonBuildTargetPattern pattern =
         new SingletonBuildTargetPattern("//src/com/facebook/buck:buck");
 
+    assertFalse(pattern.apply(null));
     assertTrue(pattern.apply(new BuildTarget("//src/com/facebook/buck", "buck")));
     assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/buck", "otherTarget")));
     assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/foo", "foo")));
     assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/buck/bar", "bar")));
+  }
+
+  @Test
+  public void testEquals() {
+    SingletonBuildTargetPattern singletonPattern1 = new SingletonBuildTargetPattern(
+        "//src/com/facebook/buck:buck");
+    SingletonBuildTargetPattern singletonPattern2 = new SingletonBuildTargetPattern(
+        "//src/com/facebook/buck:buck");
+    SingletonBuildTargetPattern singletonPattern3 = new SingletonBuildTargetPattern(
+        "//src/com/facebook/buck/cli:cli");
+
+    assertFalse(singletonPattern1.equals(null));
+    assertEquals(singletonPattern1, singletonPattern2);
+    assertFalse(singletonPattern2.equals(singletonPattern3));
+  }
+
+  @Test
+  public void testHashCode() {
+    SingletonBuildTargetPattern singletonPattern1 = new SingletonBuildTargetPattern(
+        "//src/com/facebook/buck:buck");
+    SingletonBuildTargetPattern singletonPattern2 = new SingletonBuildTargetPattern(
+        "//src/com/facebook/buck:buck");
+    SingletonBuildTargetPattern singletonPattern3 = new SingletonBuildTargetPattern(
+        "//src/com/facebook/buck/cli:cli");
+
+    assertEquals(singletonPattern1.hashCode(), singletonPattern2.hashCode());
+    assertNotSame(singletonPattern1.hashCode(), singletonPattern3.hashCode());
   }
 }

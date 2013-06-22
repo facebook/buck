@@ -15,7 +15,9 @@
  */
 package com.facebook.buck.model;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -27,8 +29,36 @@ public class ImmediateDirectoryBuildTargetPatternTest {
     ImmediateDirectoryBuildTargetPattern pattern =
         new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/");
 
+    assertFalse(pattern.apply(null));
     assertTrue(pattern.apply(new BuildTarget("//src/com/facebook/buck", "buck")));
     assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/foo/", "foo")));
     assertFalse(pattern.apply(new BuildTarget("//src/com/facebook/buck/bar", "bar")));
+  }
+
+  @Test
+  public void testEquals() {
+    ImmediateDirectoryBuildTargetPattern pattern =
+        new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/");
+    ImmediateDirectoryBuildTargetPattern samePattern =
+        new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/");
+    ImmediateDirectoryBuildTargetPattern cliPattern =
+        new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/cli/");
+
+    assertEquals(pattern, samePattern);
+    assertFalse(pattern.equals(null));
+    assertFalse(pattern.equals(cliPattern));
+  }
+
+  @Test
+  public void testHashCode() {
+    ImmediateDirectoryBuildTargetPattern pattern =
+        new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/");
+    ImmediateDirectoryBuildTargetPattern samePattern =
+        new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/");
+    ImmediateDirectoryBuildTargetPattern cliPattern =
+        new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/cli/");
+
+    assertEquals(pattern.hashCode(), samePattern.hashCode());
+    assertNotSame(pattern.hashCode(), cliPattern.hashCode());
   }
 }

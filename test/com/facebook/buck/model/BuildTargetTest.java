@@ -17,6 +17,7 @@
 package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 
@@ -44,5 +45,27 @@ public class BuildTargetTest {
     assertEquals("java/com/facebook/", rootTarget.getBasePathWithSlash());
     assertEquals("//java/com/facebook:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//java/com/facebook:fb4a", rootTarget.toString());
+  }
+
+  @Test
+  public void testEqualsNullReturnsFalse() {
+    BuildTarget utilTarget = new BuildTarget("//src/com/facebook/buck/util", "util");
+    assertFalse(utilTarget.equals(null));
+  }
+
+  @Test
+  public void testEqualsOtherBuildTarget() {
+    BuildTarget utilTarget1 = new BuildTarget("//src/com/facebook/buck/util", "util");
+    assertEquals(utilTarget1, utilTarget1);
+
+    BuildTarget utilTarget2 = new BuildTarget("//src/com/facebook/buck/util", "util");
+    assertEquals(utilTarget1, utilTarget2);
+  }
+
+  @Test
+  public void testNotEquals() {
+    BuildTarget utilTarget = new BuildTarget("//src/com/facebook/buck/util", "util");
+    BuildTarget ioTarget = new BuildTarget("//src/com/facebook/buck/util", "io");
+    assertFalse(utilTarget.equals(ioTarget));
   }
 }

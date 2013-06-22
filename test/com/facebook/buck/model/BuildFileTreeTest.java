@@ -30,7 +30,9 @@ import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +40,9 @@ import java.util.List;
 import java.util.Set;
 
 public class BuildFileTreeTest {
+
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
 
   private BuildFileTree buildFileTree;
 
@@ -63,8 +68,7 @@ public class BuildFileTreeTest {
 
   @Test @Ignore("Remove when test passes on OS X (the case preserving file system hurts us)")
   public void testCanConstructBuildFileTreeFromFilesystemOnOsX() throws IOException {
-    File tempDir = Files.createTempDir();
-    tempDir.deleteOnExit();
+    File tempDir = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
 
     File command = new File(tempDir, "src/com/facebook/buck/command");
@@ -91,8 +95,7 @@ public class BuildFileTreeTest {
 
   @Test
   public void testCanConstructBuildFileTreeFromFilesystem() throws IOException {
-    File tempDir = Files.createTempDir();
-    tempDir.deleteOnExit();
+    File tempDir = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
 
     File command = new File(tempDir, "src/com/example/build/command");

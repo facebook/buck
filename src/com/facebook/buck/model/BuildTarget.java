@@ -182,11 +182,8 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   }
 
   @Override
-  public int compareTo(BuildTarget o) {
-    if (o == null) {
-      return 1;
-    }
-
-    return getFullyQualifiedName().compareTo(o.getFullyQualifiedName());
+  public int compareTo(BuildTarget target) {
+    Preconditions.checkNotNull(target);
+    return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
   }
 }
