@@ -109,8 +109,7 @@ public class DependencyCheckingJavacStep extends JavacInMemoryStep {
     } else if (buildDependencies == BuildDependencies.WARN_ON_TRANSITIVE) {
       return tryBuildWithFirstOrderDeps(context);
     } else {
-      return buildWithClasspath(context,
-          ImmutableSet.copyOf(classpathEntries));
+      return buildWithClasspath(context, getClasspathEntries());
     }
   }
 
@@ -126,8 +125,7 @@ public class DependencyCheckingJavacStep extends JavacInMemoryStep {
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
     if (declaredDepsResult != 0) {
-      int transitiveResult = buildWithClasspath(context,
-          ImmutableSet.copyOf(classpathEntries));
+      int transitiveResult = buildWithClasspath(context, getClasspathEntries());
       if (transitiveResult == 0) {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
 

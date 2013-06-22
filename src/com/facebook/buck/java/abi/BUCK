@@ -5,6 +5,7 @@ java_library(
     '//lib:guava',
   ],
   visibility = [
+    '//src/com/facebook/buck/java:steps',
     '//test/com/facebook/buck/java/...'
   ],
 )

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.java.abi.AbiWriter;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
@@ -31,7 +32,9 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nullable;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -45,8 +48,17 @@ public class JavacInMemoryStep implements Step {
 
   private final Set<String> javaSourceFilePaths;
 
-  protected final ImmutableSet<String> classpathEntries;
+  private final ImmutableSet<String> classpathEntries;
+
   private final JavacOptions javacOptions;
+
+  @Nullable
+  private String abiKey;
+
+  /**
+   * Will be {@code true} once {@link #buildWithClasspath(ExecutionContext, Set)} has been invoked.
+   */
+  private AtomicBoolean isExecuted = new AtomicBoolean(false);
 
   public JavacInMemoryStep(
         String pathToOutputDirectory,
@@ -95,15 +107,18 @@ public class JavacInMemoryStep implements Step {
 
   @Override
   public final int execute(ExecutionContext context) {
-    return executeBuild(context);
+    try {
+      return executeBuild(context);
+    } finally {
+      isExecuted.set(true);
+    }
   }
 
   protected int executeBuild(ExecutionContext context) {
     return buildWithClasspath(context, ImmutableSet.copyOf(classpathEntries));
   }
 
-  protected int buildWithClasspath(ExecutionContext context,
-      Set<String> buildClasspathEntries) {
+  protected int buildWithClasspath(ExecutionContext context, Set<String> buildClasspathEntries) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     Preconditions.checkNotNull(compiler,
         "If using JRE instead of JDK, ToolProvider.getSystemJavaCompiler() may be null.");
@@ -124,9 +139,14 @@ public class JavacInMemoryStep implements Step {
         options,
         classNamesForAnnotationProcessing,
         compilationUnits);
+
+    AbiWriter abiWriter = new AbiWriter();
+    compilationTask.setProcessors(ImmutableList.of(abiWriter));
+
     // Invoke the compilation and inspect the result.
     boolean isSuccess = compilationTask.call();
     if (isSuccess) {
+      abiKey = abiWriter.computeAbiKey();
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {
@@ -157,5 +177,23 @@ public class JavacInMemoryStep implements Step {
 
   public Set<String> getSrcs() {
     return javaSourceFilePaths;
+  }
+
+  protected ImmutableSet<String> getClasspathEntries() {
+    return classpathEntries;
+  }
+
+  /**
+   * Returns a SHA-1 hash for the ABI of the Java code compiled by this step.
+   * <p>
+   * In order for this method to return a non-null value, it must be invoked after
+   * {@link #buildWithClasspath(ExecutionContext, Set)}, which must have completed successfully
+   * (i.e., returned with an exit code of 0).
+   */
+  @Nullable
+  public String getAbiKey() {
+    Preconditions.checkState(isExecuted.get(), "Must execute step before requesting AbiKey.");
+    // Note that if the rule fails, isExecuted should still be set, but abiKey will be null.
+    return abiKey;
   }
 }

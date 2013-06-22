@@ -18,8 +18,9 @@ package com.facebook.buck.java.abi;
 
 import static javax.lang.model.SourceVersion.RELEASE_7;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.util.Set;
 
@@ -33,6 +34,8 @@ import javax.lang.model.element.TypeElement;
 @SupportedSourceVersion(RELEASE_7)
 @SupportedAnnotationTypes("*")
 public class AbiWriter extends AbstractProcessor {
+
+  private static final String EMPTY_ABI_KEY = computeAbiKey(ImmutableSortedSet.<String>of());
 
   private ImmutableSortedSet.Builder<String> classes = ImmutableSortedSet.naturalOrder();
 
@@ -54,7 +57,27 @@ public class AbiWriter extends AbstractProcessor {
     return true;
   }
 
-  public ImmutableSet<String> getSummaries() {
+  public static String getAbiKeyForEmptySources() {
+    return EMPTY_ABI_KEY;
+  }
+
+  public ImmutableSortedSet<String> getSummaries() {
     return classes.build();
+  }
+
+  /**
+   * Creates a SHA-1 hash from the ABI information extracted by this {@link AbiWriter}.
+   */
+  public String computeAbiKey() {
+    ImmutableSortedSet<String> summaries = getSummaries();
+    return computeAbiKey(summaries);
+  }
+
+  private static String computeAbiKey(ImmutableSortedSet<String> summaries) {
+    Hasher hasher = Hashing.sha1().newHasher();
+    for (String summary : summaries) {
+      hasher.putString(summary);
+    }
+    return hasher.hash().toString();
   }
 }

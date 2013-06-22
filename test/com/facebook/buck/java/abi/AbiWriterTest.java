@@ -49,6 +49,14 @@ public class AbiWriterTest {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
+  public void abiKeyForEmptySourcesIsStable() {
+    assertEquals(
+        "The ABI key used when a java_library() has no srcs should be constant across platforms.",
+        "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        AbiWriter.getAbiKeyForEmptySources());
+  }
+
+  @Test
   public void willCaptureClassName() throws IOException {
     String summary = compile("A.java", Joiner.on("\n").join(
         "package com.facebook.buck.example;",
