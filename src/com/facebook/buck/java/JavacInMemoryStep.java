@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.java.abi.AbiWriter;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
@@ -140,13 +139,9 @@ public class JavacInMemoryStep implements Step {
         classNamesForAnnotationProcessing,
         compilationUnits);
 
-    AbiWriter abiWriter = new AbiWriter();
-    compilationTask.setProcessors(ImmutableList.of(abiWriter));
-
     // Invoke the compilation and inspect the result.
     boolean isSuccess = compilationTask.call();
     if (isSuccess) {
-      abiKey = abiWriter.computeAbiKey();
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {

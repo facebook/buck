@@ -62,7 +62,6 @@ public class JavacInMemoryStepTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);
     assertEquals("javac should exit with code 0.", exitCode, 0);
-    assertEquals("65386ff045e932d8ba6444043132c140f76a4613", javac.getAbiKey());
   }
 
   @Test
