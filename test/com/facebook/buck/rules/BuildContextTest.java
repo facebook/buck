@@ -41,7 +41,7 @@ public class BuildContextTest {
     // Set to non-null values.
     builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
+    builder.setStepRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
@@ -81,7 +81,7 @@ public class BuildContextTest {
     // Set to non-null values.
     builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
+    builder.setStepRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
@@ -101,7 +101,7 @@ public class BuildContextTest {
     // Set to non-null values.
     builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setCommandRunner(EasyMock.createMock(StepRunner.class));
+    builder.setStepRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));

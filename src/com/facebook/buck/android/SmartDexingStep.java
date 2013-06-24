@@ -161,12 +161,12 @@ public class SmartDexingStep implements Step {
 
   private void runDxCommands(ExecutionContext context, Multimap<File, File> outputToInputs)
       throws StepFailedException, IOException {
-    DefaultStepRunner commandRunner = new DefaultStepRunner(context, getDxExecutor());
+    DefaultStepRunner stepRunner = new DefaultStepRunner(context, getDxExecutor());
 
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
     List<Step> dxSteps = generateDxCommands(context, outputToInputs);
-    commandRunner.runCommandsInParallelAndWait(dxSteps);
+    stepRunner.runCommandsInParallelAndWait(dxSteps);
   }
 
   /**

@@ -109,7 +109,7 @@ public class Build {
     return executionContext;
   }
 
-  public StepRunner getCommandRunner() {
+  public StepRunner getStepRunner() {
     return stepRunner;
   }
 
@@ -197,7 +197,7 @@ public class Build {
     buildContext = BuildContext.builder()
         .setProjectRoot(executionContext.getProjectDirectoryRoot())
         .setDependencyGraph(dependencyGraph)
-        .setCommandRunner(stepRunner)
+        .setStepRunner(stepRunner)
         .setProjectFilesystem(executionContext.getProjectFilesystem())
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)

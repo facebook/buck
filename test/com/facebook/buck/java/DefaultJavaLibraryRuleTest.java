@@ -98,7 +98,7 @@ public class DefaultJavaLibraryRuleTest {
         .setJavaPackageFinder(packageFinder)
         .setProjectRoot(root)
         .setProjectFilesystem(new ProjectFilesystem(root))
-        .setCommandRunner(stepRunner)
+        .setStepRunner(stepRunner)
         .build();
   }
 

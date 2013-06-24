@@ -340,7 +340,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // Get and run all of the commands.
     List<Step> steps = buildInternal(context);
-    StepRunner stepRunner = context.getCommandRunner();
+    StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
     }

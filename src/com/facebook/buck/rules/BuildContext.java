@@ -71,7 +71,7 @@ public class BuildContext {
     this.console = console;
   }
 
-  public StepRunner getCommandRunner() {
+  public StepRunner getStepRunner() {
     return stepRunner;
   }
 
@@ -159,7 +159,7 @@ public class BuildContext {
       return this;
     }
 
-    public Builder setCommandRunner(StepRunner stepRunner) {
+    public Builder setStepRunner(StepRunner stepRunner) {
       this.stepRunner = stepRunner;
       return this;
     }

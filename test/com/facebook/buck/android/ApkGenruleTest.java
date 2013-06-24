@@ -132,7 +132,7 @@ public class ApkGenruleTest {
     BuildContext buildContext = BuildContext.builder()
         .setProjectRoot(EasyMock.createNiceMock(File.class))
         .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
-        .setCommandRunner(EasyMock.createNiceMock(StepRunner.class))
+        .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))

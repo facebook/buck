@@ -113,7 +113,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     BuildContext buildContext = build.getBuildContext();
     ExecutionContext executionContext = build.getExecutionContext();
-    StepRunner stepRunner = build.getCommandRunner();
+    StepRunner stepRunner = build.getStepRunner();
     return runTests(results, buildContext, executionContext, stepRunner, options);
   }
 
@@ -281,7 +281,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     return runTests(testRules,
         build.getBuildContext(),
         build.getExecutionContext(),
-        build.getCommandRunner(),
+        build.getStepRunner(),
         options);
   }
 

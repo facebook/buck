@@ -123,7 +123,7 @@ public class ExportFileRuleTest {
           }
         })
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
-        .setCommandRunner(new StepRunner() {
+        .setStepRunner(new StepRunner() {
           @Override
           public void runStep(Step step) throws StepFailedException {
             // Do nothing
