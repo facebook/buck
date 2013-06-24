@@ -19,9 +19,11 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -116,5 +118,33 @@ public class BuildContextTest {
     // If no AndroidPlatformTarget is passed to the builder, it should return a Supplier whose get()
     // method throws an exception.
     androidBootclasspathSupplier.get();
+  }
+
+  @Test
+  public void testLogBuildInfo() {
+    TestConsole console = new TestConsole();
+    BuildContext buildContext = BuildContext.builder()
+        .setProjectRoot(EasyMock.createMock(File.class))
+        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
+        .setStepRunner(EasyMock.createMock(StepRunner.class))
+        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
+        .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
+        .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
+        .setConsole(console)
+        .build();
+
+    console.setVerbosity(Verbosity.STANDARD_INFORMATION);
+    buildContext.logBuildInfo("My name is %s and I can count to %d.", "Michael", 10);
+    assertEquals(
+        "Nothing is written when Verbosity is its default value.",
+        "",
+        console.getTextWrittenToStdErr());
+
+    console.setVerbosity(Verbosity.COMMANDS_AND_OUTPUT);
+    buildContext.logBuildInfo("My name is %s and I can count to %d.", "Sarah", 20);
+    assertEquals(
+        "Information is only logged to the console when the verbosity is increased.",
+        "My name is Sarah and I can count to 20.\n",
+        console.getTextWrittenToStdErr());
   }
 }

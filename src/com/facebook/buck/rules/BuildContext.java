@@ -108,7 +108,7 @@ public class BuildContext {
   }
 
   public void logBuildInfo(String format, Object... args) {
-    if (console != null && console.getVerbosity().shouldPrintCommand()) {
+    if (console != null && console.getVerbosity().shouldPrintOutput()) {
       console.getStdErr().printf(format + '\n', args);
     }
   }
