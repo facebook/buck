@@ -17,8 +17,15 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
+
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +34,37 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MoreFilesTest {
+
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
+
+  @Test
+  public void testDeleteRecursively() throws IOException {
+    tmp.newFile(".dotfile");
+    tmp.newFile("somefile");
+    tmp.newFolder("foo");
+    tmp.newFile("foo/bar");
+    tmp.newFolder("foo/baz");
+    tmp.newFile("foo/baz/biz");
+    assertEquals("There should be files to delete.", 3, tmp.getRoot().listFiles().length);
+    MoreFiles.deleteRecursively(tmp.getRoot().toPath());
+    assertNull(tmp.getRoot().listFiles());
+  }
+
+  @Test
+  public void testWriteLinesToFile() throws IOException {
+    File outputFile = tmp.newFile("output.txt");
+    ImmutableList<String> lines = ImmutableList.of(
+        "The",
+        "quick brown fox",
+        "jumps over",
+        "the lazy dog.");
+    MoreFiles.writeLinesToFile(lines, outputFile);
+
+    List<String> observedLines = Files.readLines(outputFile, Charsets.UTF_8);
+    assertEquals(lines, observedLines);
+  }
+
   private String testDataPath(String fileName) {
     return "testdata/com/facebook/buck/util/" + fileName;
   }

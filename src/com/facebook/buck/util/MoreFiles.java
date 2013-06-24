@@ -19,9 +19,9 @@ package com.facebook.buck.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 
 import java.io.BufferedReader;
@@ -37,13 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public final class MoreFiles {
-
-  private static final Function<Path, Path> IDENTITY_TRANSFORM = new Function<Path, Path>() {
-    @Override
-    public Path apply(Path path) {
-      return path;
-    }
-  };
 
   /** Utility class: do not instantiate. */
   private MoreFiles() {}
@@ -62,7 +55,7 @@ public final class MoreFiles {
   public static void copyRecursively(
       final Path fromPath,
       final Path toPath) throws IOException {
-    copyRecursively(fromPath, toPath, IDENTITY_TRANSFORM);
+    copyRecursively(fromPath, toPath, Functions.<Path>identity());
   }
 
   /**
@@ -146,10 +139,8 @@ public final class MoreFiles {
   @VisibleForTesting
   static List<String> diffFileContents(Iterable<String> lines, File file) throws IOException {
     List<String> diffLines = Lists.newArrayList();
-    BufferedReader reader = null;
     Iterator<String> iter = lines.iterator();
-    try {
-      reader = Files.newReader(file, Charsets.UTF_8);
+    try (BufferedReader reader = Files.newReader(file, Charsets.UTF_8)) {
       while (iter.hasNext()) {
         String lineA = reader.readLine();
         String lineB = iter.next();
@@ -162,8 +153,6 @@ public final class MoreFiles {
       while ((lineA = reader.readLine()) != null) {
         diffLines.add(String.format("| %s |  |", lineA));
       }
-    } finally {
-      Closeables.close(reader, false /* swallowIOException */);
     }
     return diffLines;
   }
