@@ -34,14 +34,14 @@ import java.util.concurrent.TimeUnit;
 public class DefaultStepRunnerTest {
 
   @Test(expected=StepFailedException.class, timeout=5000)
-  public void testParallelCommandFailure() throws Exception {
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    commands.add(new SleepingStep(0, 0));
-    commands.add(new SleepingStep(10, 1));
-    // Add a command that will also fail, but taking longer than the test timeout to complete.
-    // This tests the fail-fast behaviour of runCommandsInParallelAndWait (that is, since the 10ms
-    // command will fail so quickly, the result of the 5000ms command will not be observed).
-    commands.add(new SleepingStep(5000, 1));
+  public void testParallelStepFailure() throws Exception {
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    steps.add(new SleepingStep(0, 0));
+    steps.add(new SleepingStep(10, 1));
+    // Add a step that will also fail, but taking longer than the test timeout to complete.
+    // This tests the fail-fast behaviour of runStepsInParallelAndWait (that is, since the 10ms
+    // step will fail so quickly, the result of the 5000ms step will not be observed).
+    steps.add(new SleepingStep(5000, 1));
 
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
@@ -54,7 +54,7 @@ public class DefaultStepRunnerTest {
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newFixedThreadPool(3, threadFactory));
     DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
-    runner.runCommandsInParallelAndWait(commands.build());
+    runner.runStepsInParallelAndWait(steps.build());
 
     // Success if the test timeout is not reached.
   }

@@ -38,7 +38,7 @@ public final class DefaultStepRunner implements StepRunner {
   private final ListeningExecutorService listeningExecutorService;
 
   /**
-   * This CommandRunner will run all commands on the same thread.
+   * This StepRunner will run all steps on the same thread.
    */
   public DefaultStepRunner(ExecutionContext context) {
     this(context, MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1)));
@@ -88,8 +88,8 @@ public final class DefaultStepRunner implements StepRunner {
 
       @Override
       public T call() throws Exception {
-        for (Step command : steps) {
-          runStepForBuildTarget(command, buildTarget);
+        for (Step step : steps) {
+          runStepForBuildTarget(step, buildTarget);
         }
 
         return interpretResults.call();
@@ -101,21 +101,21 @@ public final class DefaultStepRunner implements StepRunner {
   }
 
   /**
-   * Run multiple commands in parallel and block waiting for all of them to finish.  An
-   * exception is thrown (immediately) if any command fails.
+   * Run multiple steps in parallel and block waiting for all of them to finish.  An
+   * exception is thrown (immediately) if any step fails.
    *
-   * @param steps List of commands to execute.
+   * @param steps List of steps to execute.
    */
-  public void runCommandsInParallelAndWait(final List<Step> steps)
+  public void runStepsInParallelAndWait(final List<Step> steps)
       throws StepFailedException {
     List<Callable<Void>> callables = Lists.transform(steps,
         new Function<Step, Callable<Void>>() {
       @Override
-      public Callable<Void> apply(final Step command) {
+      public Callable<Void> apply(final Step step) {
         return new Callable<Void>() {
           @Override
           public Void call() throws Exception {
-            runStep(command);
+            runStep(step);
             return null;
           }
         };
