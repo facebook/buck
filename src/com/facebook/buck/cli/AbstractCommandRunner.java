@@ -99,8 +99,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   /**
-   * @return the exit code this process should exit with or
-   *     {@link #STATUS_NO_EXIT} if it should not shut down
+   * @return the exit code this process should exit with
    */
   abstract int runCommandWithOptions(T options) throws IOException;
 

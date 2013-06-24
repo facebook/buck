@@ -75,7 +75,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
    *   <li>Because the rule has no {@link RuleKey} on disk, the rule tries to build itself.
    *   <li>First, it checks the artifact cache, but there is a cache miss.
    *   <li>The rule generates its build steps and executes them.
-   *   <li>Upon executing its steps successfully, it should write its {@RuleKey} to disk.
+   *   <li>Upon executing its steps successfully, it should write its {@link RuleKey} to disk.
    *   <li>It should persist its output to the ArtifactCache.
    * </ol>
    */

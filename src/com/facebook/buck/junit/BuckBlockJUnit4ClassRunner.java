@@ -97,7 +97,7 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   }
 
   /**
-   * Override the default timeout behavior so that when no timeout is specified in the {@link @Test}
+   * Override the default timeout behavior so that when no timeout is specified in the {@link Test}
    * annotation, the timeout specified by the constructor will be used (if it has been set).
    * <p>
    * <strong>IMPORTANT</strong> In JUnit 4.11, this method is tagged as deprecated with the note:

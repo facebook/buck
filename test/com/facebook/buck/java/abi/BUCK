@@ -8,5 +8,6 @@ java_test(
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/java/abi:abi',
+    '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )

@@ -32,7 +32,7 @@ public interface AbiRule {
    * can be used to determine whether the definition or inputs of the rule changed independent of
    * changes to its [transitive] deps.
    *
-   * @return {@null} if there is an error when computing the {@link RuleKey}
+   * @return {@code null} if there is an error when computing the {@link RuleKey}
    */
   @Nullable
   public RuleKey getRuleKeyWithoutDeps();

@@ -220,13 +220,17 @@
              protected="true"
              classpathref="tests.classpath"
              windowtitle="Buck"
+             failonerror="true"
              >
       <fileset dir="${src.dir}" />
-      <fileset dir="${test.dir}" />
+      <fileset dir="${test.dir}">
+        <exclude name="**/testdata/**" />
+        <exclude name="**/BUCK" />
+      </fileset>
       <link href="http://docs.oracle.com/javase/7/docs/api/" />
       <link href="http://docs.guava-libraries.googlecode.com/git-history/v14.0/javadoc/" />
       <!-- The latest version of the javadocs is only for 4.10 -->
-      <link href="http://kentbeck.github.com/junit/javadoc/4.10/" />
+      <link href="http://junit-team.github.io/junit/javadoc/latest/" />
     </javadoc>
   </target>
 

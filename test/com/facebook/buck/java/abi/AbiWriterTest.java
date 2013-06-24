@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -514,12 +515,13 @@ public class AbiWriterTest {
 
   @Test
   public void generateSampleOutput() throws IOException {
+    File testDataDir = TestDataHelper.getTestDataScenario(this, "compute_abi");
     String source = Files.toString(
-        new File("test/com/facebook/buck/java/abi/generateSampleOutput.src"), UTF_8);
+        new File(testDataDir, "generateSampleOutput.src"), UTF_8);
     String original = compile("A.java", source);
 
     String expected = Files.toString(
-        new File("test/com/facebook/buck/java/abi/generateSampleOutput.expected"), UTF_8);
+        new File(testDataDir, "generateSampleOutput.expected"), UTF_8);
 
     assertEquals(expected, original);
   }

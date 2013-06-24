@@ -167,7 +167,7 @@ abstract class AbstractBuildRule implements BuildRule {
    * {@link RuleKey.Builder} returned by its superclass's
    * {@link #appendToRuleKey(com.facebook.buck.rules.RuleKey.Builder)} implementation. Example:
    * <pre>
-   * @Override
+   * &#x40;Override
    * protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
    *   return super.appendToRuleKey(builder)
    *       .set("srcs", srcs),
