@@ -233,7 +233,12 @@ public abstract class ShellStep implements Step {
     return context.getVerbosity().shouldPrintOutput();
   }
 
-  /** By default, this method returns an empty map. */
+  /**
+   * Returns the environment variables to include when running this {@link ShellStep}.
+   * <p>
+   * By default, this method returns an empty map.
+   * @param context that may be useful when determining environment variables to include.
+   */
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.of();
   }
