@@ -68,7 +68,7 @@ public final class Main {
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
           eventBus,
-          config.getIgnorePaths(),
+          config.getIgnorePaths(projectFilesystem),
           FileSystems.getDefault().newWatchService());
       eventBus.register(parser);
     }
@@ -173,8 +173,10 @@ public final class Main {
     // Create common command parameters. projectFilesystem initialization looks odd because it needs
     // ignorePaths from a BuckConfig instance, which in turn needs a ProjectFilesystem (i.e. this
     // solves a bootstrapping issue).
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot,
-        createBuckConfig(new ProjectFilesystem(projectRoot)).getIgnorePaths());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(
+        projectRoot,
+        createBuckConfig(new ProjectFilesystem(projectRoot))
+            .getIgnorePaths(new ProjectFilesystem(projectRoot)));
     BuckConfig config = createBuckConfig(projectFilesystem);
     Verbosity verbosity = VerbosityParser.parse(args);
     Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
@@ -199,7 +201,7 @@ public final class Main {
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
-          config.createArtifactCache(console),
+          config.createArtifactCache(projectFilesystem, console),
           parser));
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);

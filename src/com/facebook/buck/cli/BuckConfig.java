@@ -269,7 +269,7 @@ class BuckConfig {
    * A set of paths to subtrees that do not contain source files, build files or files that could
    * affect either (buck-out, .idea, .buckd, buck-cache, .git, etc.).
    */
-  public ImmutableSet<String> getIgnorePaths() {
+  public ImmutableSet<String> getIgnorePaths(ProjectFilesystem filesystem) {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
     final String IGNORE_KEY = "ignore";
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
@@ -279,7 +279,7 @@ class BuckConfig {
 
     // Take care not to ignore absolute paths.
     String buckdDir = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
-    String cacheDir = getCacheDir();
+    String cacheDir = getCacheDir(filesystem);
     for (String path : ImmutableList.of(buckdDir, cacheDir)) {
       if (!path.isEmpty() && path.charAt(0) != '/') {
         builder.add(path);
@@ -458,7 +458,7 @@ class BuckConfig {
     }
   }
 
-  public ArtifactCache createArtifactCache(Console console) {
+  public ArtifactCache createArtifactCache(ProjectFilesystem filesystem, Console console) {
     String cacheMode = getValue("cache", "mode").or("");
     if (cacheMode.isEmpty()) {
       return new NoopArtifactCache();
@@ -469,7 +469,7 @@ class BuckConfig {
       for (String mode : modes) {
         switch (ArtifactCacheNames.valueOf(mode)) {
         case dir:
-          builder.add(createDirArtifactCache());
+          builder.add(createDirArtifactCache(filesystem));
           break;
         case cassandra:
           ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(console);
@@ -492,12 +492,13 @@ class BuckConfig {
   }
 
   @VisibleForTesting
-  String getCacheDir() {
-    return getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+  String getCacheDir(ProjectFilesystem filesystem) {
+    String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+    return filesystem.getPathRelativizer().apply(cacheDir);
   }
 
-  private ArtifactCache createDirArtifactCache() {
-    String cacheDir = getCacheDir();
+  private ArtifactCache createDirArtifactCache(ProjectFilesystem filesystem) {
+    String cacheDir = getCacheDir(filesystem);
     File dir = new File(cacheDir);
     try {
       return new DirArtifactCache(dir);
