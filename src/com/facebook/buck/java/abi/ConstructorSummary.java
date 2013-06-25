@@ -18,8 +18,6 @@ package com.facebook.buck.java.abi;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 
-import com.google.common.base.Preconditions;
-
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
@@ -28,7 +26,9 @@ class ConstructorSummary implements Renderable {
   private final String summary;
 
   public ConstructorSummary(ExecutableElement element) {
-    Preconditions.checkArgument(element.getKind() == CONSTRUCTOR);
+    if (element.getKind() != CONSTRUCTOR) {
+      throw new IllegalArgumentException("Element is not a constructor: " + element);
+    }
 
     StringBuilder builder = new StringBuilder();
     builder.append(Annotations.printAnnotations(element.getAnnotationMirrors()));

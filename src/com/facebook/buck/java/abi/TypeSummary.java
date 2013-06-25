@@ -19,14 +19,12 @@ package com.facebook.buck.java.abi;
 import static javax.lang.model.element.ElementKind.CLASS;
 import static javax.lang.model.element.ElementKind.ENUM;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -36,14 +34,6 @@ import javax.lang.model.type.TypeMirror;
 
 class TypeSummary implements Renderable {
 
-  private final static Function<TypeMirror, String> MIRROR_TO_STRING =
-      new Function<TypeMirror, String>() {
-        @Override
-        public String apply(TypeMirror input) {
-          return input.toString();
-        }
-      };
-
   private String summary;
 
   public TypeSummary(RenderableTypes renderables, TypeElement element) {
@@ -51,10 +41,10 @@ class TypeSummary implements Renderable {
 
     appendTypeSignature(builder, element);
 
-    Set<String> nestedTypes = Sets.newTreeSet();
-    Set<String> contained = Sets.newTreeSet();
+    Set<String> nestedTypes = new TreeSet<>();
+    Set<String> contained = new TreeSet<>();
     // Ordering matters for enum constants.
-    Set<String> enumValues = Sets.newLinkedHashSet();
+    Set<String> enumValues = new LinkedHashSet<>();
 
     // Collect the enclosed elements, keeping enclosed types separately.
     for (Element enclosed : element.getEnclosedElements()) {
@@ -131,8 +121,10 @@ class TypeSummary implements Renderable {
     }
 
     // Sort the list alphabetically.
-    List<String> converted = Lists.newArrayList(
-        Lists.transform(element.getInterfaces(), MIRROR_TO_STRING));
+    List<String> converted = new ArrayList<>();
+    for (TypeMirror mirror : element.getInterfaces()) {
+      converted.add(mirror.toString());
+    }
     Collections.sort(converted);
 
     if (!converted.isEmpty()) {

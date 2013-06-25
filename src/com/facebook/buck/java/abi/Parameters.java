@@ -16,13 +16,10 @@
 
 package com.facebook.buck.java.abi;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -30,36 +27,6 @@ import javax.lang.model.type.TypeMirror;
 
 class Parameters implements Renderable {
 
-  public static final Function<VariableElement,String> TYPE_AND_NAME =
-      new Function<VariableElement, String>() {
-        @Override
-        public String apply(VariableElement input) {
-          if (isVarArg(input.asType())) {
-            return ((ArrayType) input.asType()).getComponentType() + "...";
-          }
-
-          return input.asType().toString();
-        }
-
-        private boolean isVarArg(TypeMirror type) {
-          if (!(type instanceof ArrayType)) {
-            return false;
-          }
-
-          try {
-            // This has only been tested on the Oracle JDK.
-            Method isVarargs = type.getClass().getMethod("isVarargs");
-            isVarargs.setAccessible(true);
-            Object value = isVarargs.invoke(type);
-            if (value == null) {
-              return false;
-            }
-            return (Boolean) value;
-          } catch (IllegalAccessException|InvocationTargetException|NoSuchMethodException e) {
-            throw Throwables.propagate(e);
-          }
-        }
-      };
   private final Iterable<? extends VariableElement> allParams;
 
   public Parameters(Iterable<? extends VariableElement> allParams) {
@@ -68,7 +35,39 @@ class Parameters implements Renderable {
 
   @Override
   public void appendTo(StringBuilder builder) {
-    Iterable<String> converted = Iterables.transform(allParams, TYPE_AND_NAME);
+    List<String> converted = new ArrayList<>();
+
+    for (VariableElement param : allParams) {
+      converted.add(getTypeAndName(param));
+    }
+
     Joiner.on(", ").appendTo(builder, converted);
+  }
+
+  private String getTypeAndName(VariableElement input) {
+    if (isVarArg(input.asType())) {
+      return ((ArrayType) input.asType()).getComponentType() + "...";
+    }
+
+    return input.asType().toString();
+  }
+
+  private boolean isVarArg(TypeMirror type) {
+    if (!(type instanceof ArrayType)) {
+      return false;
+    }
+
+    try {
+      // This has only been tested on the Oracle JDK.
+      Method isVarargs = type.getClass().getMethod("isVarargs");
+      isVarargs.setAccessible(true);
+      Object value = isVarargs.invoke(type);
+      if (value == null) {
+        return false;
+      }
+      return (Boolean) value;
+    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

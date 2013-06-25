@@ -16,11 +16,9 @@
 
 package com.facebook.buck.java.abi;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
-
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.lang.model.element.Modifier;
 
@@ -30,7 +28,7 @@ class Modifiers {
       return "";
     }
 
-    SortedSet<Modifier> sorted = Sets.newTreeSet(allModifiers);
+    SortedSet<Modifier> sorted = new TreeSet<>(allModifiers);
     return Joiner.on(" ").join(sorted) + " ";
   }
 }

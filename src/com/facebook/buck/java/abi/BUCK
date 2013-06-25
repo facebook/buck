@@ -2,7 +2,15 @@ java_library(
   name = 'abi',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:guava',
+    #  **************************************************************************************
+    #  *                                                                                    *
+    #  * A baleful and most grievous warning to the foolish mortal who chooses to mess with *
+    #  * these deps. If the blink tag worked, we'd use it here.                             *
+    #  *                                                                                    *
+    #  **************************************************************************************
+    #
+    # Note, we deliberately keep the list of dependencies empty in order to keep the code in
+    # the InMemoryJavacStep from becoming prone to classpath collisions. Please don't amend them.
   ],
   visibility = [
     '//src/com/facebook/buck/java:steps',

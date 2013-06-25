@@ -16,14 +16,10 @@
 
 package com.facebook.buck.java.abi;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -31,24 +27,12 @@ import javax.lang.model.element.ExecutableElement;
 
 class Annotations {
 
-  private static final Function<Map.Entry<? extends ExecutableElement, ? extends AnnotationValue>, String> ANNOTATION_VALUE_TO_STRING =
-      new Function<Map.Entry<? extends ExecutableElement, ? extends AnnotationValue>, String>() {
-        @Override
-        public String apply(Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> value) {
-          AnnotationValue rhs = value.getValue();
-          if (rhs != null) {
-            return value.getKey().getSimpleName() + "=" + rhs;
-          }
-          return value.getKey().getSimpleName().toString();
-        }
-      };
-
   public static String printAnnotations(Collection<? extends AnnotationMirror> allAnnotations) {
     if (allAnnotations.isEmpty()) {
       return "";
     }
 
-    SortedSet<String> converted = Sets.newTreeSet();
+    SortedSet<String> converted = new TreeSet<>();
     for (AnnotationMirror annotation : allAnnotations) {
       converted.add(convertAnnotation(annotation));
     }
@@ -64,8 +48,17 @@ class Annotations {
     if (!mirror.getElementValues().isEmpty()) {
       builder.append('(');
 
-      Iterable<String> annotationValues = Iterables.transform(mirror.getElementValues().entrySet(), ANNOTATION_VALUE_TO_STRING);
-      Joiner.on(", ").appendTo(builder, Sets.newTreeSet(annotationValues));
+      SortedSet<String> annotationValues = new TreeSet<>();
+      for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
+          mirror.getElementValues().entrySet()) {
+        AnnotationValue rhs = entry.getValue();
+        if (rhs != null) {
+          annotationValues.add(entry.getKey().getSimpleName() + "=" + rhs);
+          continue;
+        }
+        annotationValues.add(entry.getKey().getSimpleName().toString());
+      }
+      Joiner.on(", ").appendTo(builder, new TreeSet<>(annotationValues));
 
       builder.append(')');
     }

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.java.abi;
 
-import com.google.common.base.Joiner;
-
 import java.util.List;
 
 import javax.lang.model.element.ExecutableElement;
