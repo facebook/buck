@@ -169,6 +169,7 @@ public class Parser {
   /**
    * @param buildTargets the build targets to generate a dependency graph for.
    * @param defaultIncludes the files to include before executing build files.
+   * @param eventBus used to log events while parsing.
    * @return the dependency graph containing the build targets and their related targets.
    */
   public DependencyGraph parseBuildFilesForTargets(

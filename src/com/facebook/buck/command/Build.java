@@ -115,7 +115,7 @@ public class Build {
     return stepRunner;
   }
 
-  /** Returns null until {@link #executeBuild(EventBus, Set)} is invoked. */
+  /** Returns null until {@link #executeBuild(Set)} is invoked. */
   @Nullable
   public BuildContext getBuildContext() {
     return buildContext;
