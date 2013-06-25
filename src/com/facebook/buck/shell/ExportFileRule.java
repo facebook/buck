@@ -116,11 +116,10 @@ public class ExportFileRule extends AbstractCachingBuildRule {
 
   @Override
   protected List<Step> buildInternal(BuildContext context) throws IOException {
-    File inputFile = context.getProjectFilesystem().getFileForRelativePath(src);
     String pathToOutputFile = out.get();
 
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
-        .add(new MkdirAndSymlinkFileStep(inputFile, pathToOutputFile));
+        .add(new MkdirAndSymlinkFileStep(src, pathToOutputFile));
 
     return builder.build();
   }

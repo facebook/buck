@@ -98,9 +98,8 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
       commands.add(new MakeCleanDirectoryStep(getPathToPythonPathDirectory()));
       File pythonPathDirectory = new File(getPathToPythonPathDirectory());
       for (String src : srcs) {
-        File source = new File(src);
         File target = new File(pythonPathDirectory, new File(src).getName());
-        commands.add(new SymlinkFileStep(source, target));
+        commands.add(new SymlinkFileStep(src, target.getPath()));
       }
     }
 

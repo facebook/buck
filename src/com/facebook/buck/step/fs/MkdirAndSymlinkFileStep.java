@@ -19,47 +19,35 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.step.CompositeStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Ensures the directory of the target path is created before a file is symlinked to it.
  */
 public final class MkdirAndSymlinkFileStep extends CompositeStep {
 
-  private final File source;
-  private final File target;
+  private final String source;
+  private final String target;
 
   public MkdirAndSymlinkFileStep(String source, String target) {
-    this(new File(source), target);
-  }
-
-  public MkdirAndSymlinkFileStep(File source, String target) {
-    this(source, new File(target));
-  }
-
-  public MkdirAndSymlinkFileStep(File source, File target) {
     super(ImmutableList.of(
-        new MkdirStep(target.getParent()),
-        new SymlinkFileStep(source, target.getAbsolutePath())
-        ));
-    this.source = source;
-    this.target = target;
-  }
-
-  public MkdirAndSymlinkFileStep(Path source, Path target) {
-    this(source.toFile(), target.toFile());
+        new MkdirStep(Paths.get(target).getParent().toString()),
+        new SymlinkFileStep(source, target)
+    ));
+    this.source = Preconditions.checkNotNull(source);
+    this.target = Preconditions.checkNotNull(target);
   }
 
   @VisibleForTesting
-  public File getSource() {
+  public String getSource() {
     return source;
   }
 
   @VisibleForTesting
-  public File getTarget() {
+  public String getTarget() {
     return target;
   }
 

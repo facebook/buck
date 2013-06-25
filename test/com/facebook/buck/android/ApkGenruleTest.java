@@ -46,6 +46,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -171,30 +172,28 @@ public class ApkGenruleTest {
     Step thirdStep = steps.get(2);
     assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) thirdStep;
-    String tempDirPath = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a__tmp";
+    String relativePathToTmpDir = GEN_DIR + "/src/com/facebook/sign_fb4a__tmp";
     assertEquals(
         "Third command should make sure the temp directory exists.",
-        tempDirPath,
+        relativePathToTmpDir,
         secondMkdirCommand.getPath());
 
     Step fourthStep = steps.get(3);
     assertTrue(fourthStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) fourthStep;
-    String srcDirPath = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a__srcs";
+    String relativePathToSrcDir = GEN_DIR + "/src/com/facebook/sign_fb4a__srcs";
     assertEquals(
         "Fourth command should make sure the temp directory exists.",
-        srcDirPath,
+        relativePathToSrcDir,
         thirdMkdirCommand.getPath());
 
     MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
-    assertEquals("/opt/local/fbandroid/src/com/facebook/signer.py",
-        linkSource1.getSource().getAbsolutePath());
-    assertEquals(srcDirPath + "/signer.py", linkSource1.getTarget().getAbsolutePath());
+    assertEquals("src/com/facebook/signer.py", linkSource1.getSource());
+    assertEquals(relativePathToSrcDir + "/signer.py", linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
-    assertEquals("/opt/local/fbandroid/src/com/facebook/key.properties",
-        linkSource2.getSource().getAbsolutePath());
-    assertEquals(srcDirPath + "/key.properties", linkSource2.getTarget().getAbsolutePath());
+    assertEquals("src/com/facebook/key.properties", linkSource2.getSource());
+    assertEquals(relativePathToSrcDir + "/key.properties", linkSource2.getTarget());
 
     Step seventhStep = steps.get(6);
     assertTrue(seventhStep instanceof ShellStep);
@@ -206,8 +205,8 @@ public class ApkGenruleTest {
             "/opt/local/fbandroid/src/com/facebook/key.properties")
         .put("APK", GEN_DIR + "/fb4a.apk")
         .put("DEPS", "")
-        .put("TMP", tempDirPath)
-        .put("SRCDIR", srcDirPath)
+        .put("TMP", "/opt/local/fbandroid/" + relativePathToTmpDir)
+        .put("SRCDIR", "/opt/local/fbandroid/" + relativePathToSrcDir)
         .put("OUT", expectedApkOutput).build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
@@ -220,7 +219,12 @@ public class ApkGenruleTest {
   private ExecutionContext newEmptyExecutionContext() {
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
-        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+        .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
+          @Override
+          public Function<String, String> getPathRelativizer() {
+            return Functions.identity();
+          }
+        })
         .setEventBus(new EventBus())
         .build();
   }

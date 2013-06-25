@@ -548,7 +548,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
       commands.add(new MkdirAndSymlinkFileStep(
-          entry.getValue(),
+          entry.getValue().getPath(),
           destinationDirectory + "/" + entry.getKey()));
     }
 

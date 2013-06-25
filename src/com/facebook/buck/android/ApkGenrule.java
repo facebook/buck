@@ -109,7 +109,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   @Override
   public String getPathToOutputFile() {
-    return outAsProjectRelativePath;
+    return pathToOutFile;
   }
 
   public static Builder newApkGenruleBuilder(AbstractBuildRuleBuilderParams params) {

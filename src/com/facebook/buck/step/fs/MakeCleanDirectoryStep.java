@@ -33,18 +33,18 @@ import com.google.common.collect.ImmutableList;
  */
 public final class MakeCleanDirectoryStep extends CompositeStep {
 
-  private final String path;
+  private final String pathRelativeToProjectRoot;
 
-  public MakeCleanDirectoryStep(String path) {
+  public MakeCleanDirectoryStep(String pathRelativeToProjectRoot) {
     super(ImmutableList.of(
-        new RmStep(path, true /* shouldForceDeletion */, true /* shouldRecurse */),
-        new MkdirStep(path)));
-    this.path = path;
+        new RmStep(pathRelativeToProjectRoot, true /* shouldForceDeletion */, true /* shouldRecurse */),
+        new MkdirStep(pathRelativeToProjectRoot)));
+    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
   }
 
   @VisibleForTesting
   public String getPath() {
-    return path;
+    return pathRelativeToProjectRoot;
   }
 
   @Override
@@ -53,11 +53,11 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
       return false;
     }
     MakeCleanDirectoryStep that = (MakeCleanDirectoryStep)obj;
-    return Objects.equal(this.path, that.path);
+    return Objects.equal(this.pathRelativeToProjectRoot, that.pathRelativeToProjectRoot);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(path);
+    return Objects.hashCode(pathRelativeToProjectRoot);
   }
 }

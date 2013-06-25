@@ -33,6 +33,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -79,6 +82,14 @@ public class GenAidlRuleTest {
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
+    expect(executionContext.getProjectFilesystem()).andReturn(
+        new ProjectFilesystem(new File(".")) {
+          @Override
+          public Function<String, String> getPathRelativizer() {
+            return Functions.identity();
+          }
+        }
+    );
     replay(androidPlatformTarget,
         aidlExecutable,
         frameworkIdlFile,

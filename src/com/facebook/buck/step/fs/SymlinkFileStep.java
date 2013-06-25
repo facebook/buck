@@ -16,33 +16,23 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
-
 public class SymlinkFileStep extends ShellStep {
 
-  private final File source;
+  private final String source;
   private final String target;
 
   /**
    * Both {@code source} and {@code target} must refer to a file (as opposed to a directory).
    */
-  SymlinkFileStep(String source, String target) {
-    this(new File(Preconditions.checkNotNull(source)), target);
-  }
-
-  SymlinkFileStep(File source, String target) {
+  public SymlinkFileStep(String source, String target) {
     this.source = Preconditions.checkNotNull(source);
     this.target = Preconditions.checkNotNull(target);
-  }
-
-  public SymlinkFileStep(File source, File target) {
-    this.source = Preconditions.checkNotNull(source);
-    this.target = Preconditions.checkNotNull(target).getAbsolutePath();
   }
 
   @Override
@@ -52,8 +42,14 @@ public class SymlinkFileStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
     // Always symlink to an absolute path so the symlink is sure to be read correctly.
-    return ImmutableList.of("ln", "-f", "-s", source.getAbsolutePath(), target);
+    return ImmutableList.of(
+        "ln",
+        "-f",
+        "-s",
+        pathRelativizer.apply(source),
+        pathRelativizer.apply(target));
   }
 
 }

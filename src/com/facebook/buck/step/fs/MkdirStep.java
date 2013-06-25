@@ -16,31 +16,28 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import java.io.File;
 
 /**
  * Command that runs {@code mkdir -p} on the specified directory.
  */
 public class MkdirStep extends ShellStep {
 
-  private final String directory;
+  private final String pathRelativeToProjectRoot;
 
-  public MkdirStep(File directory) {
-    this(directory.getAbsolutePath());
-  }
-
-  public MkdirStep(String path) {
-    this.directory = Preconditions.checkNotNull(path);
+  public MkdirStep(String pathRelativeToProjectRoot) {
+    this.pathRelativeToProjectRoot = Preconditions.checkNotNull(pathRelativeToProjectRoot);
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.of("mkdir", "-p", directory);
+    return ImmutableList.of(
+        "mkdir",
+        "-p",
+        context.getProjectFilesystem().getPathRelativizer().apply(pathRelativeToProjectRoot));
   }
 
   @Override

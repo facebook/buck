@@ -77,7 +77,8 @@ public class ExportFileRuleTest {
     List<Step> steps = rule.buildInternal(context);
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
-        new File(root, "example.html"), new File(BuckConstant.GEN_DIR, "example.html"));
+        "example.html",
+        BuckConstant.GEN_DIR + "/example.html");
     assertEquals(ImmutableList.of(expected), steps);
   }
 
@@ -89,7 +90,8 @@ public class ExportFileRuleTest {
     List<Step> steps = rule.buildInternal(context);
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
-        new File(root, "example.html"), new File(BuckConstant.GEN_DIR, "fish"));
+        "example.html",
+        BuckConstant.GEN_DIR + "/fish");
     assertEquals(ImmutableList.of(expected), steps);
   }
 
@@ -100,7 +102,8 @@ public class ExportFileRuleTest {
     List<Step> steps = rule.buildInternal(context);
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
-        new File(root, "chips"), new File(BuckConstant.GEN_DIR, "fish"));
+        "chips",
+        BuckConstant.GEN_DIR + "/fish");
     assertEquals(ImmutableList.of(expected), steps);
   }
 

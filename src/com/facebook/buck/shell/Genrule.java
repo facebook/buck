@@ -117,11 +117,13 @@ public class Genrule extends AbstractCachingBuildRule {
 
   protected final Map<String, String> srcsToAbsolutePaths;
 
-  protected final String outDirectory;
-  protected final String outAsProjectRelativePath;
-  protected final String outAsAbsolutePath;
-  protected final String tmpDirectory;
-  private final String srcDirectory;
+  protected final String pathToOutDirectory;
+  protected final String pathToOutFile;
+  protected final String absolutePathToOutFile;
+  private final String pathToTmpDirectory;
+  private final String absolutePathToTmpDirectory;
+  private final String pathToSrcDirectory;
+  private final String absolutePathToSrcDirectory;
   protected final Function<String, String> relativeToAbsolutePathFunction;
 
   protected Genrule(BuildRuleParams buildRuleParams,
@@ -135,25 +137,24 @@ public class Genrule extends AbstractCachingBuildRule {
     this.srcsToAbsolutePaths = Maps.toMap(srcs, relativeToAbsolutePathFunction);
 
     Preconditions.checkNotNull(out);
-    this.outDirectory = String.format("%s/%s",
+    this.pathToOutDirectory = String.format("%s/%s",
         BuckConstant.GEN_DIR,
         buildRuleParams.getBuildTarget().getBasePathWithSlash());
-    this.outAsProjectRelativePath = String.format("%s%s", outDirectory, out);
-    this.outAsAbsolutePath = relativeToAbsolutePathFunction.apply(this.outAsProjectRelativePath);
+    this.pathToOutFile = String.format("%s%s", pathToOutDirectory, out);
+    this.absolutePathToOutFile = relativeToAbsolutePathFunction.apply(this.pathToOutFile);
 
-    String temp = String.format("%s/%s/%s__tmp",
+    this.pathToTmpDirectory = String.format("%s/%s%s__tmp",
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePath(),
-        getBuildTarget().getShortName()
-        );
-    this.tmpDirectory = relativeToAbsolutePathFunction.apply(temp);
+        buildRuleParams.getBuildTarget().getBasePathWithSlash(),
+        getBuildTarget().getShortName());
+    this.absolutePathToTmpDirectory = relativeToAbsolutePathFunction.apply(pathToTmpDirectory);
 
-    String srcdir = String.format("%s/%s/%s__srcs",
+    this.pathToSrcDirectory = String.format("%s/%s%s__srcs",
         BuckConstant.GEN_DIR,
-        buildRuleParams.getBuildTarget().getBasePath(),
+        buildRuleParams.getBuildTarget().getBasePathWithSlash(),
         getBuildTarget().getShortName()
     );
-    this.srcDirectory = relativeToAbsolutePathFunction.apply(srcdir);
+    this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 
     this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
   }
@@ -165,7 +166,7 @@ public class Genrule extends AbstractCachingBuildRule {
 
   /** @return the absolute path to the output file */
   public String getAbsoluteOutputFilePath() {
-    return outAsAbsolutePath;
+    return absolutePathToOutFile;
   }
 
   @Override
@@ -175,7 +176,7 @@ public class Genrule extends AbstractCachingBuildRule {
 
   @Override
   public String getPathToOutputFile() {
-    return outAsProjectRelativePath;
+    return pathToOutFile;
   }
 
   @Override
@@ -196,8 +197,8 @@ public class Genrule extends AbstractCachingBuildRule {
       transformNames(processedBuildRules, depFiles, dep);
     }
     environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
-    environmentVariablesBuilder.put("SRCDIR", srcDirectory);
-    environmentVariablesBuilder.put("TMP", tmpDirectory);
+    environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory);
+    environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory);
 
     Optional<AndroidPlatformTarget> optionalAndroid = context.getAndroidPlatformTargetOptional();
     if (optionalAndroid.isPresent()) {
@@ -235,13 +236,13 @@ public class Genrule extends AbstractCachingBuildRule {
 
     // Make sure that the directory to contain the output file exists. Rules get output to a
     // directory named after the base path, so we don't want to nuke the entire directory.
-    commands.add(new MkdirStep(outDirectory));
+    commands.add(new MkdirStep(pathToOutDirectory));
 
     // Delete the old temp directory
-    commands.add(new MakeCleanDirectoryStep(tmpDirectory));
+    commands.add(new MakeCleanDirectoryStep(pathToTmpDirectory));
     // Create a directory to hold all the source files.
     // TODO(simons): Actually execute the command from here.
-    commands.add(new MakeCleanDirectoryStep(srcDirectory));
+    commands.add(new MakeCleanDirectoryStep(pathToSrcDirectory));
 
     addSymlinkCommands(commands);
 
@@ -306,8 +307,8 @@ public class Genrule extends AbstractCachingBuildRule {
         }
       }
 
-      File destination = new File(srcDirectory, localPath);
-      commands.add(new MkdirAndSymlinkFileStep(entry.getValue(), destination.getAbsolutePath()));
+      String destination = pathToSrcDirectory + "/" + localPath;
+      commands.add(new MkdirAndSymlinkFileStep(entry.getKey(), destination));
     }
   }
 
