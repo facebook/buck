@@ -8,6 +8,8 @@
   <property name="build.dir" value="${basedir}/build" />
   <property name="testrunner.src.dir" value="${src.dir}/com/facebook/buck/junit/" />
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
+  <property name="abi_processor.src.dir" value="${src.dir}/com/facebook/buck/java/abi/" />
+  <property name="abi_processor.classes.dir" value="${build.dir}/abi_processor/classes" />
   <property name="buck.path_to_buck_py" value="${basedir}/src/com/facebook/buck/parser/buck.py" />
   <property name="buck.path_to_emma_jar"
             value="${basedir}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar"
@@ -91,7 +93,22 @@
     </javac>
   </target>
 
-  <target name="compile" depends="compile-testrunner" description="compile Java source code">
+  <target name="compile-abi-processor" depends="checkversion">
+    <mkdir dir="${abi_processor.classes.dir}" />
+    <javac srcdir="${abi_processor.src.dir}"
+           destdir="${abi_processor.classes.dir}"
+           debug="on"
+           includeAntRuntime="no"
+           >
+      <compilerarg value="-Xlint:rawtypes" />
+      <compilerarg value="-Xlint:unchecked" />
+      <compilerarg value="-Werror" />
+    </javac>
+  </target>
+
+  <target name="compile"
+          depends="compile-testrunner, compile-abi-processor"
+          description="compile Java source code">
     <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="core.package" />
     <mkdir dir="${classes.dir}" />
     <javac destdir="${classes.dir}"
@@ -103,6 +120,7 @@
       <src path="${src.dir}" />
       <src path="${aosp.src.dir}" />
       <exclude name="com/facebook/buck/junit/**" />
+      <exclude name="com/facebook/buck/java/abi/**" />
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
       <compilerarg value="-Werror" />
@@ -140,6 +158,7 @@
     </fileset>
     <pathelement location="${testclasses.dir}" />
     <pathelement location="${test.dir}" />
+    <pathelement location="${abi_processor.classes.dir}" />
     <pathelement location="${testrunner.classes.dir}" />
   </path>
 

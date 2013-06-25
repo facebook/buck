@@ -19,11 +19,13 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
@@ -45,8 +47,18 @@ public class JavacInMemoryStepTest {
     JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
+    String pathToAbiFile = new File(tmp.getRoot(), "abi").getAbsolutePath();
     assertEquals(
-        String.format("javac -target 6 -source 6 -g -d %s Example.java", pathToOutputDir),
+        String.format("javac -target 6 -source 6 -g " +
+            "-processorpath %s " +
+            "-processor %s " +
+            "-A%s=%s " +
+        		"-d %s Example.java",
+        		AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
+        		AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
+        		AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,
+        		pathToAbiFile,
+        		pathToOutputDir),
         javac.getDescription(executionContext));
   }
 
@@ -63,6 +75,7 @@ public class JavacInMemoryStepTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);
     assertEquals("javac should exit with code 0.", exitCode, 0);
+    assertEquals("ad852c71014e283bf0722a7076e0354e41a24d3c", javac.getAbiKey());
   }
 
   @Test
@@ -98,11 +111,13 @@ public class JavacInMemoryStepTest {
 
     String pathToOutputDirectory = "out";
     tmp.newFolder(pathToOutputDirectory);
+    String pathToOutputAbiFile = "abi";
     return new JavacInMemoryStep(
         pathToOutputDirectory,
         /* javaSourceFilePaths */ ImmutableSet.of("Example.java"),
         /* classpathEntries */ ImmutableSet.<String>of(),
-        JavacOptions.builder().build());
+        JavacOptions.builder().build(),
+        Optional.of(pathToOutputAbiFile));
   }
 
   private ExecutionContext createExecutionContext() {

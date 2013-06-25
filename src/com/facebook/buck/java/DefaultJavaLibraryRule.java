@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -62,7 +63,6 @@ import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
 
 import javax.annotation.Nullable;
 
@@ -244,40 +244,54 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   /**
    * @param outputDirectory Directory to write class files to
-   * @param javaSourceFilePaths .java files to compile: may be empty
    * @param transitiveClasspathEntries Classpaths of all transitive dependencies.
    * @param declaredClasspathEntries Classpaths of all declared dependencies.
    * @param javacOptions options to use when compiling code.
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
    * @return commands to compile the specified inputs
    */
-  private static ImmutableList<Step> createCommandsForJavac(
+  private ImmutableList<Step> createCommandsForJavac(
       String outputDirectory,
-      final SortedSet<String> javaSourceFilePaths,
       ImmutableSet<String> transitiveClasspathEntries,
       ImmutableSet<String> declaredClasspathEntries,
       JavacOptions javacOptions,
-      Optional<String> invokingRule,
       BuildDependencies buildDependencies,
       Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Only run javac if there are .java files to compile.
-    if (!javaSourceFilePaths.isEmpty()) {
+    if (!getJavaSrcs().isEmpty()) {
+      Step mkdir = new MkdirStep(getPathToAbiOutputDir());
+
       Step javac = new DependencyCheckingJavacStep(
           outputDirectory,
-          javaSourceFilePaths,
+          getJavaSrcs(),
           transitiveClasspathEntries,
           declaredClasspathEntries,
           javacOptions,
-          invokingRule,
+          Optional.of(getPathToAbiOutputFile()),
+          Optional.of(getFullyQualifiedName()),
           buildDependencies,
           suggestBuildRules);
 
-      commands.add(javac);
+      commands.add(mkdir, javac);
     }
 
     return commands.build();
+  }
+
+  private String getPathToAbiOutputDir() {
+    BuildTarget target = getBuildTarget();
+    return String.format(
+        "%s/%slib__%s__abi",
+        BuckConstant.GEN_DIR,
+        target.getBasePathWithSlash(),
+        target.getShortName());
+
+  }
+
+  private String getPathToAbiOutputFile() {
+    return String.format("%s/abi", getPathToAbiOutputDir());
   }
 
   private static String getOutputJarDirPath(BuildTarget target) {
@@ -448,11 +462,9 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     // This adds the javac command, along with any supporting commands.
     List<Step> javac = createCommandsForJavac(
         outputDirectory,
-        srcs,
         ImmutableSet.copyOf(transitiveClasspathEntries.values()),
         ImmutableSet.copyOf(declaredClasspathEntries.values()),
         javacOptions,
-        Optional.of(getFullyQualifiedName()),
         context.getBuildDependencies(),
         suggestBuildRule);
     commands.addAll(javac);

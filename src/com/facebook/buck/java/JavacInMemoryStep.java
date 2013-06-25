@@ -18,15 +18,20 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
@@ -51,6 +56,11 @@ public class JavacInMemoryStep implements Step {
 
   private final JavacOptions javacOptions;
 
+  private final Optional<String> pathToOutputAbiFile;
+
+  @Nullable
+  private File abiKeyFile;
+
   @Nullable
   private String abiKey;
 
@@ -63,12 +73,14 @@ public class JavacInMemoryStep implements Step {
         String pathToOutputDirectory,
         Set<String> javaSourceFilePaths,
         Set<String> classpathEntries,
-        JavacOptions javacOptions) {
+        JavacOptions javacOptions,
+        Optional<String> pathToOutputAbiFile) {
     Preconditions.checkNotNull(pathToOutputDirectory);
     this.pathToOutputDirectory = pathToOutputDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.pathToOutputAbiFile = Preconditions.checkNotNull(pathToOutputAbiFile);
   }
 
   /**
@@ -83,7 +95,17 @@ public class JavacInMemoryStep implements Step {
       Set<String> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    javacOptions.appendOptionsToList(builder, context.getProjectFilesystem().getPathRelativizer());
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    AnnotationProcessingDataDecorator decorator;
+    if (pathToOutputAbiFile.isPresent()) {
+      abiKeyFile = filesystem.getFileForRelativePath(pathToOutputAbiFile.get());
+      decorator = new AbiWritingAnnotationProcessingDataDecorator(abiKeyFile);
+    } else {
+      decorator = AnnotationProcessingDataDecorators.identity();
+    }
+    javacOptions.appendOptionsToList(builder,
+        context.getProjectFilesystem().getPathRelativizer(),
+        decorator);
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
@@ -91,7 +113,7 @@ public class JavacInMemoryStep implements Step {
     }
 
     // Specify the output directory.
-    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    Function<String, String> pathRelativizer = filesystem.getPathRelativizer();
     builder.add("-d").add(pathRelativizer.apply(pathToOutputDirectory));
 
     // Build up and set the classpath.
@@ -142,6 +164,14 @@ public class JavacInMemoryStep implements Step {
     // Invoke the compilation and inspect the result.
     boolean isSuccess = compilationTask.call();
     if (isSuccess) {
+      if (abiKeyFile != null) {
+        try {
+          abiKey = Files.readFirstLine(abiKeyFile, Charsets.UTF_8);
+        } catch (IOException e) {
+          e.printStackTrace(context.getStdErr());
+          return 1;
+        }
+      }
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {

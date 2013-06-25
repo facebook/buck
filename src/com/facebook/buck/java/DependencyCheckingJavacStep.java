@@ -89,10 +89,15 @@ public class DependencyCheckingJavacStep extends JavacInMemoryStep {
       Set<String> transitiveClasspathEntries,
       Set<String> declaredClasspathEntries,
       JavacOptions javacOptions,
+      Optional<String> pathToOutputAbiFile,
       Optional<String> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules) {
-    super(outputDirectory, javaSourceFilePaths, transitiveClasspathEntries, javacOptions);
+    super(outputDirectory,
+        javaSourceFilePaths,
+        transitiveClasspathEntries,
+        javacOptions,
+        pathToOutputAbiFile);
 
     this.declaredClasspathEntries = ImmutableSet.copyOf(declaredClasspathEntries);
     this.invokingRule = Preconditions.checkNotNull(invokingRule);

@@ -20,13 +20,13 @@ import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -57,6 +57,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,6 +76,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DefaultJavaLibraryRuleTest {
   private static final String ANNOTATION_SCENARIO_TARGET =
@@ -261,24 +263,6 @@ public class DefaultJavaLibraryRuleTest {
   }
 
   /**
-   * Verify that no annotation options are there if we do not add an
-   * annotation processor.
-   */
-  @Test
-  public void testNoAnnotationProcessor() throws IOException {
-    AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
-
-    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
-
-    for (String parameter : parameters) {
-      assertNotEquals("Expected no -processorpath parameters", parameter, "-processorpath");
-      assertNotEquals("Expected no -processor parameters", parameter, "-processor");
-      assertNotEquals("Expected no -s parameters", parameter, "-s");
-      assertFalse("Expected no annotation options", parameter.startsWith("-A"));
-    }
-  }
-
-  /**
    * Verify adding an annotation processor java binary.
    */
   @Test
@@ -293,21 +277,22 @@ public class DefaultJavaLibraryRuleTest {
 
     MoreAsserts.assertContainsOne(parameters, "-processorpath");
     MoreAsserts.assertContainsOne(parameters, "-processor");
-    MoreAsserts.assertContainsOne(parameters, "MyProcessor");
+    assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
 
     assertEquals(
         "Expected '-processor MyProcessor' parameters",
         parameters.indexOf("-processor") + 1,
-        parameters.indexOf("MyProcessor"));
+        parameters.indexOf("MyProcessor," + AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME));
     assertEquals(
         "Expected '-s " + ANNOTATION_SCENARIO_GEN_PATH + "' parameters",
         parameters.indexOf("-s") + 1,
         parameters.indexOf(ANNOTATION_SCENARIO_GEN_PATH));
 
     for (String parameter : parameters) {
-      assertFalse("Expected no annotation options", parameter.startsWith("-A"));
+      assertTrue("Expected no custom annotation options.", !parameter.startsWith("-A") ||
+          parameter.startsWith("-A" + AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE));
     }
   }
 
@@ -326,7 +311,7 @@ public class DefaultJavaLibraryRuleTest {
 
     MoreAsserts.assertContainsOne(parameters, "-processorpath");
     MoreAsserts.assertContainsOne(parameters, "-processor");
-    MoreAsserts.assertContainsOne(parameters, "MyProcessor");
+    assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
   }
@@ -346,7 +331,7 @@ public class DefaultJavaLibraryRuleTest {
 
     MoreAsserts.assertContainsOne(parameters, "-processorpath");
     MoreAsserts.assertContainsOne(parameters, "-processor");
-    MoreAsserts.assertContainsOne(parameters, "MyProcessor");
+    assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
   }
@@ -368,7 +353,7 @@ public class DefaultJavaLibraryRuleTest {
 
     MoreAsserts.assertContainsOne(parameters, "-processorpath");
     MoreAsserts.assertContainsOne(parameters, "-processor");
-    MoreAsserts.assertContainsOne(parameters, "MyProcessor");
+    assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
   }
@@ -445,7 +430,7 @@ public class DefaultJavaLibraryRuleTest {
 
     MoreAsserts.assertContainsOne(parameters, "-processorpath");
     MoreAsserts.assertContainsOne(parameters, "-processor");
-    MoreAsserts.assertContainsOne(parameters, "MyProcessor");
+    assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, ANNOTATION_SCENARIO_GEN_PATH);
     MoreAsserts.assertContainsOne(parameters, "-proc:only");
@@ -453,7 +438,7 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals(
         "Expected '-processor MyProcessor' parameters",
         parameters.indexOf("-processor") + 1,
-        parameters.indexOf("MyProcessor"));
+        parameters.indexOf("MyProcessor," + AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME));
     assertEquals(
         "Expected '-s " + ANNOTATION_SCENARIO_GEN_PATH + "' parameters",
         parameters.indexOf("-s") + 1,
@@ -461,6 +446,18 @@ public class DefaultJavaLibraryRuleTest {
 
     MoreAsserts.assertContainsOne(parameters, "-AMyParameter");
     MoreAsserts.assertContainsOne(parameters, "-AMyKey=MyValue");
+  }
+
+  private void assertHasProcessor(List<String> params, String processor) {
+    int index = params.indexOf("-processor");
+    if (index >= params.size()) {
+      fail(String.format("No processor argument found in %s.", params));
+    }
+
+    Set<String> processors = ImmutableSet.copyOf(Splitter.on(',').split(params.get(index + 1)));
+    if (!processors.contains(processor)) {
+      fail(String.format("Annotation processor %s not found in %s.", processor, params));
+    }
   }
 
   @Test
@@ -742,7 +739,7 @@ public class DefaultJavaLibraryRuleTest {
 
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
       DefaultJavaLibraryRule javaLibrary = createJavaLibraryRule();
-      buildContext = createBuildContext(javaLibrary, "");
+      buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
       List<Step> steps = javaLibrary.buildInternal(buildContext);
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 

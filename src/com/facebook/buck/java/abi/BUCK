@@ -1,6 +1,10 @@
+PROTOCOL_SRCS = [
+  'AbiWriterProtocol.java',
+]
+
 java_library(
   name = 'abi',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = PROTOCOL_SRCS),
   deps = [
     #  **************************************************************************************
     #  *                                                                                    *
@@ -10,10 +14,20 @@ java_library(
     #  **************************************************************************************
     #
     # Note, we deliberately keep the list of dependencies empty in order to keep the code in
-    # the InMemoryJavacStep from becoming prone to classpath collisions. Please don't amend them.
+    # the JavacInMemoryStep from becoming prone to classpath collisions. Please don't amend them.
+    ':protocol',
   ],
   visibility = [
-    '//src/com/facebook/buck/java:steps',
-    '//test/com/facebook/buck/java/...'
+    # This build target is run is a standalone annotation processor, so it should be visible only to
+    # its tests.
+    '//test/com/facebook/buck/java/abi:abi'
+  ],
+)
+
+java_library(
+  name = 'protocol',
+  srcs = PROTOCOL_SRCS,
+  visibility = [
+    'PUBLIC',
   ],
 )

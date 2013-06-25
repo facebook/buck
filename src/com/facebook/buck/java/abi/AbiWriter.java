@@ -35,12 +35,14 @@ import java.util.TreeSet;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 @SupportedSourceVersion(RELEASE_7)
 @SupportedAnnotationTypes("*")
+@SupportedOptions({AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE})
 public class AbiWriter extends AbstractProcessor {
 
   private static final String EMPTY_ABI_KEY = computeAbiKey(new TreeSet<String>());
@@ -61,8 +63,7 @@ public class AbiWriter extends AbstractProcessor {
         throw new RuntimeException("Unknown type: " + element.getKind());
       }
     }
-
-    String destFile = processingEnv.getOptions().get("buck.abi.file");
+    String destFile = processingEnv.getOptions().get(AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE);
     if (destFile != null) {
       writeAbi(new File(destFile));
     }
@@ -81,7 +82,7 @@ public class AbiWriter extends AbstractProcessor {
     }
 
     String key = computeAbiKey();
-    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(key))) {
+    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
       out.write(key.getBytes());
       out.flush();
     } catch (IOException e) {

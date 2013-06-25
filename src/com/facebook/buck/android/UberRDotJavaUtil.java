@@ -30,6 +30,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -277,6 +278,7 @@ public class UberRDotJavaUtil {
         outputDirectory,
         javaSourceFilePaths,
         classpathEntries,
-        JavacOptions.DEFAULTS);
+        JavacOptions.DEFAULTS,
+        /* pathToOutputAbiFile */ Optional.<String>absent());
   }
 }

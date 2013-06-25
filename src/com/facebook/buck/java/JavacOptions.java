@@ -61,6 +61,14 @@ public class JavacOptions {
 
   public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
       Function<String, String> pathRelativizer) {
+    appendOptionsToList(optionsBuilder,
+        pathRelativizer,
+        AnnotationProcessingDataDecorators.identity());
+  }
+
+  public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
+      final Function<String, String> pathRelativizer,
+      AnnotationProcessingDataDecorator decorator) {
     Preconditions.checkNotNull(optionsBuilder);
 
     // Add some standard options.
@@ -81,6 +89,7 @@ public class JavacOptions {
     }
 
     // Add annotation processors.
+    AnnotationProcessingData annotationProcessingData = decorator.decorate(this.annotationProcessingData);
     if (!annotationProcessingData.isEmpty()) {
 
       // Specify where to generate sources so IntelliJ can pick them up.
@@ -89,11 +98,27 @@ public class JavacOptions {
         optionsBuilder.add("-s").add(generateTo);
       }
 
+      // Create a path relativizer that relativizes all processor paths, except for
+      // AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH, which will already be
+      // an absolute path.
+      Function<String, String> pathRelativizerThatOmitsAbiProcessor =
+          new Function<String, String>() {
+        @Override
+        public String apply(String searchPathElement) {
+          if (AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH.equals(
+              searchPathElement)) {
+            return searchPathElement;
+          } else {
+            return pathRelativizer.apply(searchPathElement);
+          }
+        }
+      };
+
       // Specify processorpath to search for processors.
       optionsBuilder.add("-processorpath",
           Joiner.on(':').join(
               Iterables.transform(annotationProcessingData.getSearchPathElements(),
-                  pathRelativizer)));
+                  pathRelativizerThatOmitsAbiProcessor)));
 
       // Specify names of processors.
       if (!annotationProcessingData.getNames().isEmpty()) {
