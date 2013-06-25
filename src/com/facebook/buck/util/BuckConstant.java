@@ -20,27 +20,20 @@ package com.facebook.buck.util;
 public class BuckConstant {
 
   /**
-   * The directory where Buck will generate its files.
-   * <p>
-   * Ultimately, the fields {@link #GEN_DIR}, {@link #BIN_DIR},
-   * {@link #ANNOTATION_DIR} will be hardcoded subdirectories of this directory.
+   * The relative path to the directory where Buck will generate its files.
    */
-  public static final String BUCK_OUTPUT_DIRECTORY =
-      System.getProperty("buck.buck_output_dir", "buck-out");
+  public static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
 
   // TODO(mbolin): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
   // com.facebook.buck.shell package, but these values should be injected into shell commands rather
   // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
 
-  public static final String GEN_DIR =
-      System.getProperty("buck.buck_gen_dir", BUCK_OUTPUT_DIRECTORY + "/gen");
+  public static final String GEN_DIR = BUCK_OUTPUT_DIRECTORY + "/gen";
 
-  public static final String BIN_DIR =
-      System.getProperty("buck.buck_bin_dir", BUCK_OUTPUT_DIRECTORY + "/bin");
+  public static final String BIN_DIR = BUCK_OUTPUT_DIRECTORY + "/bin";
 
-  public static final String ANNOTATION_DIR =
-      System.getProperty("buck.buck_annotation_dir", BUCK_OUTPUT_DIRECTORY + "/annotation");
+  public static final String ANNOTATION_DIR = BUCK_OUTPUT_DIRECTORY + "/annotation";
 
   /**
    * This variable is package-private because conceptually, only parsing logic should be concerned

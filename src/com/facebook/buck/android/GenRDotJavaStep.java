@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -71,7 +71,7 @@ public class GenRDotJavaStep extends ShellStep {
     tmpDir.deleteOnExit();
 
     // TODO(mbolin): This command is run fairly frequently, often for the same value of
-    // libraryPackage, so consider generating these under buck-android, parameterized by
+    // libraryPackage, so consider generating these under buck-out/android, parameterized by
     // libraryPackage, so that AndroidManifest.xml is only written once per package. However, one
     // must be careful when doing this when --num-threads is greater than 1.
     // Another option is to require clients to provide an AndroidManifest.xml for each

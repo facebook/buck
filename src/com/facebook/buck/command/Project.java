@@ -17,6 +17,7 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.android.AndroidBinaryRule;
+import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
 import com.facebook.buck.android.GenAidlRule;
@@ -28,7 +29,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
-import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
@@ -93,8 +93,13 @@ public class Project {
    * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
    * users to target
    */
-  public static final String ANDROID_GEN_DIR =
-      System.getProperty("buck.buck_android_dir", BuckConstant.BUCK_OUTPUT_DIRECTORY + "/android");
+  public static final String ANDROID_GEN_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/android";
+
+  /**
+   * Prefix for build targets whose output will be in {@link #ANDROID_GEN_DIR}.
+   */
+  private static final String ANDROID_GEN_BUILD_TARGET_PREFIX =
+      String.format("//%s/", ANDROID_GEN_DIR);
 
   /**
    * Path to the intellij.py script that is used to transform the JSON written by this file.
@@ -762,7 +767,7 @@ public class Project {
         } else if (dep instanceof NdkLibraryRule) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
-        } else if (dep.getFullyQualifiedName().startsWith("//buck-android/")) {
+        } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
           return shouldVisitDeps;
         } else if (dep instanceof JavaLibraryRule) {
           String moduleName = getIntellijNameForRule(dep);

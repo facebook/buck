@@ -82,11 +82,11 @@ public class ProjectTest {
       @Nullable JavaPackageFinder javaPackageFinder) throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    // java_library //buck-android/com/facebook:R
+    // java_library //buck-out/android/com/facebook:R
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//buck-android/com/facebook:R"))
-        .addSrc("buck-android/com/facebook/R.java")
+        .setBuildTarget(BuildTargetFactory.newInstance("//buck-out/android/com/facebook:R"))
+        .addSrc("buck-out/android/com/facebook/R.java")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // prebuilt_jar //third_party/guava:guava
@@ -144,7 +144,7 @@ public class ProjectTest {
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
         .addSrc("Base.java")
-        .addDep(BuildTargetFactory.newInstance("//buck-android/com/facebook:R"))
+        .addDep(BuildTargetFactory.newInstance("//buck-out/android/com/facebook:R"))
         .addDep(BuildTargetFactory.newInstance("//java/src/com/facebook/exportlib:exportlib"))
         .addDep(BuildTargetFactory.newInstance("//java/src/com/facebook/child:child"))
         .addDep(BuildTargetFactory.newInstance("//android_res/base:res"))

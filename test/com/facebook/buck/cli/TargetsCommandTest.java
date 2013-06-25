@@ -123,7 +123,7 @@ public class TargetsCommandTest {
   public void testJsonOutputForBuildTarget() throws IOException {
     final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
-    final String outputFile = "buck-gen/test/outputFile";
+    final String outputFile = "buck-out/gen/test/outputFile";
     JsonFactory jsonFactory = new JsonFactory();
     ObjectMapper mapper = new ObjectMapper();
 
@@ -194,7 +194,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForMissingBuildTarget() throws IOException {
     final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
-    final String outputFile = "buck-gen/test/outputFile";
+    final String outputFile = "buck-out/gen/test/outputFile";
 
     // nonexistent target should not exist.
     SortedMap<String, BuildRule> buildRules = buildBuildTargets(testBuckFile1,

@@ -48,7 +48,7 @@ public class JUnitStepTest {
     String vmArg2 = "-Dname1=value2";
     List<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
 
-    String directoryForTestResults = "buck-gen/theresults/";
+    String directoryForTestResults = "buck-out/gen/theresults/";
     boolean isCodeCoverageEnabled = false;
     boolean isDebugEnabled = false;
     String testRunnerClassesDirectory = "build/classes/junit";
@@ -100,7 +100,7 @@ public class JUnitStepTest {
     String vmArg2 = "-Dname1=value2";
     List<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
 
-    String directoryForTestResults = "buck-gen/theresults/";
+    String directoryForTestResults = "buck-out/gen/theresults/";
     boolean isCodeCoverageEnabled = false;
     boolean isDebugEnabled = true;
     String testRunnerClassesDirectory = "build/classes/junit";

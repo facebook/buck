@@ -36,7 +36,7 @@ public class GenerateCodeCoverageReportStepTest {
   public void testGetShellCommandInternal() {
     Set<String> sourceDirectories = ImmutableSet.of(
         "parentDirectory1/src", "root/parentDirectory/src");
-    String outputDirectory = "buck-gen/output";
+    String outputDirectory = "buck-out/gen/output";
 
     ExecutionContext context = createMock(ExecutionContext.class);
     replay(context);

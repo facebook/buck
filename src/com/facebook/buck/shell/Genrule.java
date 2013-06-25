@@ -97,7 +97,7 @@ import java.util.regex.Pattern;
  * {@code src/com/facebook/wakizashi} directory, then the command that would be executed would be:
  * <pre>
  * python convert_to_katana.py src/com/facebook/wakizashi/AndroidManifest.xml > \
- *     buck-gen/src/com/facebook/wakizashi/AndroidManifest.xml
+ *     buck-out/gen/src/com/facebook/wakizashi/AndroidManifest.xml
  * </pre>
  * Note that {@code cmd} could be run on either Mac or Linux, so it should contain logic that works
  * on either platform. If this becomes an issue in the future (or we want to support building on

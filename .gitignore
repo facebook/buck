@@ -2,8 +2,13 @@
 build/
 
 # Buck
-/buck-out/
+# buck-out may also be generated under an integration test directory
+# when someone runs Buck locally out of that directory to reproduce
+# a failure, so we exclude all directories named buck-out, not just
+# the one in the root directory.
+buck-out
 local.properties
+.buckd
 
 # Compiled Python
 *.pyc
@@ -27,6 +32,3 @@ local.properties
 # OS X
 .DS_Store
 
-
-# Buck daemon.
-.buckd
