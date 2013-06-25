@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
@@ -154,7 +155,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context = createMock(BuildContext.class);
     expect(context.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
-    expect(context.getEventBus()).andReturn(eventBus).times(2);
+    expect(context.getEventBus()).andReturn(eventBus).times(1);
     context.logBuildInfo("[BUILDING %s]", "//src/com/facebook/orca:orca");
     StepRunner stepRunner = createMock(StepRunner.class);
     expect(context.getStepRunner()).andReturn(stepRunner);
@@ -202,8 +203,16 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         /* pathRelativizer */ Functions.<String>identity());
     TestAbstractCachingBuildRule buildRule = new TestAbstractCachingBuildRule(buildRuleParams);
 
+    // The EventBus should be updated with events indicating how the rule was built.
+    EventBus eventBus = createMock(EventBus.class);
+    eventBus.post(BuildEvents.buildRuleStarted(buildRule));
+    eventBus.post(BuildEvents.buildRuleFinished(buildRule,
+        BuildRuleStatus.SUCCESS,
+        CacheResult.HIT));
+
     BuildContext buildContext = createMock(BuildContext.class);
     expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
+    expect(buildContext.getEventBus()).andReturn(eventBus).anyTimes();
 
     replayAll();
 

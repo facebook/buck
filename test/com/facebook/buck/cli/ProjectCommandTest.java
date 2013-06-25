@@ -48,6 +48,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.eventbus.EventBus;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -165,7 +166,8 @@ public class ProjectCommandTest {
           new TestConsole(),
           new ProjectFilesystem(new File(".")),
           new KnownBuildRuleTypes(),
-          artifactCache));
+          artifactCache,
+          new EventBus()));
     }
 
     @Override

@@ -63,7 +63,8 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
     try {
       buildTarget = buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified());
       dependencyGraph = parser.parseBuildFilesForTargets(ImmutableList.of(buildTarget),
-          options.getDefaultIncludes());
+          options.getDefaultIncludes(),
+          getEventBus());
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

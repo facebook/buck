@@ -81,7 +81,8 @@ public class Build {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
-      BuildDependencies buildDependencies) {
+      BuildDependencies buildDependencies,
+      EventBus eventBus) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -94,6 +95,7 @@ public class Build {
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setDebugEnabled(isDebugEnabled)
+        .setEventBus(eventBus)
         .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.stepRunner = new DefaultStepRunner(executionContext, listeningExecutorService);
@@ -191,8 +193,7 @@ public class Build {
     return traversal.getResult();
   }
 
-  public ListenableFuture<List<BuildRuleSuccess>> executeBuild(EventBus events,
-                                                               Set<BuildRule> rulesToBuild)
+  public ListenableFuture<List<BuildRuleSuccess>> executeBuild(Set<BuildRule> rulesToBuild)
       throws IOException, StepFailedException {
     buildContext = BuildContext.builder()
         .setProjectRoot(executionContext.getProjectDirectoryRoot())
@@ -201,7 +202,7 @@ public class Build {
         .setProjectFilesystem(executionContext.getProjectFilesystem())
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
-        .setEventBus(events)
+        .setEventBus(executionContext.getEventBus())
         .setAndroidBootclasspathForAndroidPlatformTarget(
             executionContext.getAndroidPlatformTargetOptional())
         .setBuildDependencies(buildDependencies)

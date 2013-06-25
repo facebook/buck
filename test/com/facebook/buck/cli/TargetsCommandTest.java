@@ -58,6 +58,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
@@ -111,12 +112,14 @@ public class TargetsCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
+    EventBus eventBus = new EventBus();
     targetsCommand =
         new TargetsCommand(new CommandRunnerParams(
             console,
             projectFilesystem,
             buildRuleTypes,
-            artifactCache));
+            artifactCache,
+            eventBus));
   }
 
   @Test

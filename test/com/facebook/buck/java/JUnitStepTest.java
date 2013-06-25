@@ -27,6 +27,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.eventbus.EventBus;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -121,6 +122,7 @@ public class JUnitStepTest {
         .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
         .setConsole(console)
         .setDebugEnabled(true)
+        .setEventBus(new EventBus())
         .build();
 
     List<String> observedArgs = junit.getShellCommand(executionContext);

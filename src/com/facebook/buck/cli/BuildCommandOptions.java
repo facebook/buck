@@ -28,6 +28,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -127,7 +128,8 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       DependencyGraph graph,
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
-      Console console) {
+      Console console,
+      EventBus eventBus) {
     return new Build(graph,
         findAndroidSdkDir(),
         findAndroidNdkDir(),
@@ -139,6 +141,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled(),
-        getBuildDependencies());
+        getBuildDependencies(),
+        eventBus);
   }
 }

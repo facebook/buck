@@ -252,7 +252,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     PartialGraph partialGraph = PartialGraph.createPartialGraph(predicate,
         getProjectFilesystem(),
         options.getDefaultIncludes(),
-        getParser());
+        getParser(),
+        getEventBus());
 
     final DependencyGraph graph = partialGraph.getDependencyGraph();
 
@@ -271,7 +272,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         graph,
         getProjectFilesystem(),
         getArtifactCache(),
-        console);
+        console,
+        getEventBus());
     int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
     if (exitCode != 0) {
       return exitCode;

@@ -750,6 +750,7 @@ public class DefaultJavaLibraryRuleTest {
           .setProjectFilesystem(new ProjectFilesystem(new File(".")))
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
+          .setEventBus(new EventBus())
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,

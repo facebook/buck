@@ -142,7 +142,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         rulePredicate,
         getProjectFilesystem(),
         options.getDefaultIncludes(),
-        getParser());
+        getParser(),
+        getEventBus());
   }
 
   @Override

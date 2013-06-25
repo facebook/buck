@@ -25,6 +25,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.EventBus;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -40,6 +41,7 @@ public class ExecutionContext {
   private final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
   private final ProcessExecutor processExecutor;
+  private final EventBus eventBus;
 
   private ExecutionContext(
       ProjectFilesystem projectFilesystem,
@@ -48,7 +50,8 @@ public class ExecutionContext {
       Optional<File> ndkRoot,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
-      boolean isDebugEnabled) {
+      boolean isDebugEnabled,
+      EventBus eventBus) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
@@ -58,6 +61,7 @@ public class ExecutionContext {
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.processExecutor = new ProcessExecutor(console);
+    this.eventBus = Preconditions.checkNotNull(eventBus);
   }
 
   /**
@@ -72,7 +76,8 @@ public class ExecutionContext {
         getNdkRoot(),
         getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
-        isDebugEnabled);
+        isDebugEnabled,
+        eventBus);
   }
 
   public Verbosity getVerbosity() {
@@ -101,6 +106,10 @@ public class ExecutionContext {
 
   public Ansi getAnsi() {
     return console.getAnsi();
+  }
+
+  public EventBus getEventBus() {
+    return eventBus;
   }
 
   /**
@@ -167,6 +176,7 @@ public class ExecutionContext {
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
     private boolean isDebugEnabled = false;
+    private EventBus eventBus = null;
 
     private Builder() {}
 
@@ -178,7 +188,8 @@ public class ExecutionContext {
           ndkRoot,
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
-          isDebugEnabled);
+          isDebugEnabled,
+          eventBus);
     }
 
     public Builder setProjectFilesystem(ProjectFilesystem projectFilesystem) {
@@ -216,6 +227,11 @@ public class ExecutionContext {
 
     public Builder setDebugEnabled(boolean isDebugEnabled) {
       this.isDebugEnabled = isDebugEnabled;
+      return this;
+    }
+
+    public Builder setEventBus(EventBus eventBus) {
+      this.eventBus = Preconditions.checkNotNull(eventBus);
       return this;
     }
   }

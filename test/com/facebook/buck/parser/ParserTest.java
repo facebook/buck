@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 
 import org.junit.Before;
@@ -221,7 +222,9 @@ public class ParserTest {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
-    DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
+    DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets,
+        defaultIncludes,
+        new EventBus());
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = graph.findBuildRuleByTarget(barTarget);
@@ -241,7 +244,7 @@ public class ParserTest {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new EventBus());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target //java/com/facebook:raz in build file " +
@@ -275,7 +278,7 @@ public class ParserTest {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes);
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new EventBus());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target " +
@@ -395,7 +398,9 @@ public class ParserTest {
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
     BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo", testBuildFile);
-    parser.parseBuildFilesForTargets(ImmutableList.of(foo), Lists.<String>newArrayList());
+    parser.parseBuildFilesForTargets(ImmutableList.of(foo),
+        Lists.<String>newArrayList(),
+        new EventBus());
 
     assertEquals("Should have cached build rules.", 1, buildFileParser.calls);
   }
@@ -407,7 +412,9 @@ public class ParserTest {
     Parser parser = createParser(emptyBuildTargets(), buildFileParser);
 
     BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo", testBuildFile);
-    parser.parseBuildFilesForTargets(ImmutableList.of(foo), Lists.<String>newArrayList());
+    parser.parseBuildFilesForTargets(ImmutableList.of(foo),
+        Lists.<String>newArrayList(),
+        new EventBus());
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     assertEquals("Should have replaced build rules", 2, buildFileParser.calls);

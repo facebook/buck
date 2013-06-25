@@ -29,6 +29,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.EventBus;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -45,6 +46,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ArtifactCache artifactCache;
   private final Parser parser;
+  private final EventBus eventBus;
 
   protected AbstractCommandRunner(CommandRunnerParams params) {
     this.commandRunnerParams = Preconditions.checkNotNull(params);
@@ -53,6 +55,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.buildRuleTypes = Preconditions.checkNotNull(params.getBuildRuleTypes());
     this.artifactCache = Preconditions.checkNotNull(params.getArtifactCache());
     this.parser = Preconditions.checkNotNull(params.getParser());
+    this.eventBus = Preconditions.checkNotNull(params.getEventBus());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -154,6 +157,10 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return console.getStdErr();
   }
 
+  protected EventBus getEventBus() {
+    return eventBus;
+  }
+
   /**
    * @return Returns a potentially cached Parser for this command.
    */
@@ -180,6 +187,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
         .setAndroidPlatformTarget(
             options.findAndroidPlatformTarget(dependencyGraph, getStdErr()))
         .setNdkRoot(options.findAndroidNdkDir())
+        .setEventBus(eventBus)
         .build();
   }
 

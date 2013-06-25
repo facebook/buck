@@ -25,6 +25,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -108,6 +109,7 @@ public class JavacInMemoryStepTest {
     return ExecutionContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
         .setConsole(new TestConsole())
+        .setEventBus(new EventBus())
         .build();
   }
 }

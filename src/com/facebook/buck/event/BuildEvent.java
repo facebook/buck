@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.event;
 
 /**
  * Base class for all build events. Using this makes it easy to add a wildcard listener

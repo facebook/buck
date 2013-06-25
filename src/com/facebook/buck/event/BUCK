@@ -1,0 +1,9 @@
+java_library(
+  name = 'event',
+  srcs = glob(['*.java']),
+  deps = [
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

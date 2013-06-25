@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -29,6 +30,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 
 import java.io.Closeable;
@@ -36,6 +38,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileSystems;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -192,17 +197,29 @@ public final class Main {
       parser = new Parser(projectFilesystem, knownBuildRuleTypes, console);
     }
 
+    ExecutorService busExecutor = Executors.newCachedThreadPool();
+    EventBus buildEvents = new AsyncEventBus("buck-build-events", busExecutor);
+    addEventListeners(buildEvents);
+
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
-      return command.get().execute(remainingArgs, config, new CommandRunnerParams(
+      int exitCode = command.get().execute(remainingArgs, config, new CommandRunnerParams(
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
           config.createArtifactCache(projectFilesystem, console),
+          buildEvents,
           parser));
+      busExecutor.shutdown();
+      try {
+        busExecutor.awaitTermination(15, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        e.printStackTrace(stdErr);
+      }
+      return exitCode;
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
@@ -212,6 +229,12 @@ public final class Main {
       }
     }
   }
+
+  private static void addEventListeners(EventBus events) {
+    events.register(new JavaUtilsLoggingBuildListener());
+    JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+  }
+
 
   /**
    * @param projectFilesystem The directory that is the root of the project being built.

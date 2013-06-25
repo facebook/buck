@@ -39,6 +39,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
@@ -238,11 +239,13 @@ public class AuditOwnerCommandTest {
     Console console = new TestConsole();
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
+    EventBus eventBus = new EventBus();
     return new AuditOwnerCommand(new CommandRunnerParams(
         console,
         filesystem,
         buildRuleTypes,
-        artifactCache));
+        artifactCache,
+        eventBus));
   }
 
   @Test

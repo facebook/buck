@@ -40,6 +40,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
@@ -172,9 +173,9 @@ public class Parser {
    */
   public DependencyGraph parseBuildFilesForTargets(
       Iterable<BuildTarget> buildTargets,
-      Iterable<String> defaultIncludes)
+      Iterable<String> defaultIncludes,
+      EventBus eventBus)
       throws IOException, NoSuchBuildTargetException {
-    // TODO(royw): Thread through the EventBus and log parseStart/parseEnd events.
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     if (!isCacheComplete(defaultIncludes)) {

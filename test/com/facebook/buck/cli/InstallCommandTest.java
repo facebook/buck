@@ -32,6 +32,7 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.eventbus.EventBus;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -86,11 +87,13 @@ public class InstallCommandTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
+    EventBus eventBus = new EventBus();
     return new InstallCommand(new CommandRunnerParams(
         console,
         filesystem,
         buildRuleTypes,
-        artifactCache));
+        artifactCache,
+        eventBus));
   }
 
   /**

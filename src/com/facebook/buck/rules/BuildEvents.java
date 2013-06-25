@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuildEvent;
+
 import java.util.Set;
 
 public class BuildEvents {

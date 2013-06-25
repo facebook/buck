@@ -40,6 +40,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.EventBus;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -62,12 +63,14 @@ public class AuditClasspathCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
+    EventBus eventBus = new EventBus();
 
     auditClasspathCommand = new AuditClasspathCommand(new CommandRunnerParams(
         console,
         projectFilesystem,
         buildRuleTypes,
-        artifactCache));
+        artifactCache,
+        eventBus));
   }
 
   private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,

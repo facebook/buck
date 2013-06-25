@@ -22,7 +22,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildEvents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
@@ -31,15 +30,10 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   private Build build;
@@ -78,7 +72,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     DependencyGraph dependencyGraph;
     try {
       dependencyGraph = getParser().parseBuildFilesForTargets(buildTargets,
-          options.getDefaultIncludes());
+          options.getDefaultIncludes(),
+          getEventBus());
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
@@ -90,7 +85,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         dependencyGraph,
         getProjectFilesystem(),
         getArtifactCache(),
-        console);
+        console,
+        getEventBus());
     getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
 
@@ -103,16 +99,12 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   }
 
   static int executeBuildAndPrintAnyFailuresToConsole(Build build, Console console) {
-    ExecutorService busExecutor = Executors.newCachedThreadPool();
-    EventBus events = new AsyncEventBus("buck-events", busExecutor);
-    addEventListeners(events);
-
     Set<BuildRule> rulesToBuild = build.getDependencyGraph().getNodesWithNoIncomingEdges();
-    events.post(BuildEvents.buildStarted(rulesToBuild));
+    build.getExecutionContext().getEventBus().post(BuildEvents.buildStarted(rulesToBuild));
     int exitCode;
     try {
       // Get the Future representing the build and then block until everything is built.
-      build.executeBuild(events, rulesToBuild).get();
+      build.executeBuild(rulesToBuild).get();
       exitCode = 0;
     } catch (IOException e) {
       console.printBuildFailureWithoutStacktrace(e);
@@ -141,13 +133,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       exitCode = 1;
     }
 
-    events.post(BuildEvents.buildFinished(exitCode));
+    build.getExecutionContext().getEventBus().post(BuildEvents.buildFinished(exitCode));
     return exitCode;
-  }
-
-  private static void addEventListeners(EventBus events) {
-    events.register(new JavaUtilsLoggingBuildListener());
-    JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
   }
 
   Build getBuild() {

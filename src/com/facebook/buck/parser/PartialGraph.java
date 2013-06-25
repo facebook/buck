@@ -23,6 +23,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,18 +53,21 @@ public class PartialGraph {
   public static PartialGraph createFullGraph(
       ProjectFilesystem projectFilesystem,
       Iterable<String> includes,
-      Parser parser) throws NoSuchBuildTargetException, IOException {
+      Parser parser,
+      EventBus eventBus) throws NoSuchBuildTargetException, IOException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectFilesystem,
         includes,
-        parser);
+        parser,
+        eventBus);
   }
 
   public static PartialGraph createPartialGraph(
       RawRulePredicate predicate,
       ProjectFilesystem filesystem,
       Iterable<String> includes,
-      Parser parser) throws NoSuchBuildTargetException, IOException {
+      Parser parser,
+      EventBus eventBus) throws NoSuchBuildTargetException, IOException {
 
     Preconditions.checkNotNull(parser);
 
@@ -71,7 +75,7 @@ public class PartialGraph {
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a
     // DependencyGraph of only the targets we want to build.
-    DependencyGraph graph = parser.parseBuildFilesForTargets(targets, includes);
+    DependencyGraph graph = parser.parseBuildFilesForTargets(targets, includes, eventBus);
 
     return new PartialGraph(graph, targets);
   }

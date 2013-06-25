@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.eventbus.EventBus;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -213,6 +214,7 @@ public class GenruleTest {
     return ExecutionContext.builder()
         .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+        .setEventBus(new EventBus())
         .build();
   }
 
@@ -397,6 +399,7 @@ public class GenruleTest {
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
         .setAndroidPlatformTarget(Optional.of(android))
+        .setEventBus(new EventBus())
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

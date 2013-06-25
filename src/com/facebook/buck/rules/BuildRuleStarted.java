@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuildEvent;
 import com.google.common.base.Objects;
 
 public class BuildRuleStarted extends BuildEvent {

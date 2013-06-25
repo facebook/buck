@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuildEvent;
+
 public class BuildFinished extends BuildEvent {
   private final int exitCode;
 

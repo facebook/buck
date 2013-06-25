@@ -93,7 +93,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     try {
       graph = PartialGraph.createFullGraph(getProjectFilesystem(),
           options.getDefaultIncludes(),
-          getParser());
+          getParser(),
+          getEventBus());
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
