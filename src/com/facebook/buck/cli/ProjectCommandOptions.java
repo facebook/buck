@@ -30,6 +30,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   @Option(name = "--target", usage = "Only supported value is 'intellij'")
   private String target;
 
+
   ProjectCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
   }
@@ -37,6 +38,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   public String getTarget() {
     return target;
   }
+
 
   public ImmutableMap<String, String> getBasePathToAliasMap() {
     return getBuckConfig().getBasePathToAliasMap();
