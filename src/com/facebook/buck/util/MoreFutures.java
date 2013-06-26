@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -62,7 +63,7 @@ public class MoreFutures {
    * @return true if the specified future has been resolved without throwing an exception or being
    *     cancelled.
    */
-  public static <T> boolean isSuccess(ListenableFuture<T> future) {
+  public static boolean isSuccess(ListenableFuture<?> future) {
     if (future.isDone()) {
       try {
         future.get();
@@ -78,6 +79,23 @@ public class MoreFutures {
       }
     } else {
       return false;
+    }
+  }
+
+  /**
+   * Returns the failure for a {@link ListenableFuture}.
+   * @param future Must have completed unsuccessfully.
+   */
+  public static Throwable getFailure(ListenableFuture<?> future) {
+    Preconditions.checkArgument(future.isDone());
+    Preconditions.checkArgument(!isSuccess(future));
+    try {
+      future.get();
+      throw new IllegalStateException("get() should have thrown an exception");
+    } catch (ExecutionException e) {
+      return e.getCause();
+    } catch (CancellationException | InterruptedException e) {
+      throw new IllegalStateException(e);
     }
   }
 }

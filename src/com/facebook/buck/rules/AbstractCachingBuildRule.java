@@ -30,6 +30,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -60,6 +61,7 @@ import javax.annotation.Nullable;
  *   <li>getInputsToCompareToOutput()
  *   <li>buildInternal()
  *   <li>appendToRuleKey()
+ *   <li>recordOutputFileDetailsAfterFetchFromArtifactCache()
  * </ul>
  * Ultimately, we plan to define a BuildRuleDescriptor, from which we will at least be able to
  * provide the implementation of getInputsToCompareToOutput() and appendToRuleKey() automatically.
@@ -279,6 +281,17 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
             projectFilesystem.getFileForRelativePath(pathToOutputFile));
     CacheResult cacheResult = fromCache ? CacheResult.HIT : CacheResult.MISS;
 
+    // Give the rule a chance to record metadata about the artifact.
+    if (fromCache) {
+      try {
+        recordOutputFileDetailsAfterFetchFromArtifactCache(context.getArtifactCache(),
+            projectFilesystem);
+      } catch (IOException e) {
+        recordBuildRuleFailure(e, BuildRuleStatus.FAIL, cacheResult, eventBus);
+        return;
+      }
+    }
+
     // Run the steps to build this rule since it was not found in the cache.
     if (!fromCache) {
       try {
@@ -347,6 +360,19 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   /**
+   * This method is invoked if the output file is successfully fetched from the
+   * {@link ArtifactCache}. This is where a rule has the opportunity to record any relevant metadata
+   * about the artifact.
+   * <p>
+   * The default implementation of this method is empty.
+   * @param cache The {@link ArtifactCache} that was used to fetch the output file.
+   * @param projectFilesystem to use to determine where a metadata file should be written.
+   */
+  protected void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
+      ProjectFilesystem projectFilesystem) throws IOException {
+  }
+
+  /**
    * Execute the commands for this build rule. Requires all dependent rules are already built
    * successfully.
    */
@@ -407,14 +433,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   private Iterable<String> getSuccessFileStringsForBuildRules() {
-    List<String> lines = Lists.newArrayList();
-
-    // The first line should always be the RuleKey.
-    lines.add(getRuleKey().toString());
-
-    // In the future, rules such as AbiRule will be able to add more lines to this list.
-
-    return lines;
+    // For now, the one and only line written to the .success file is the RuleKey hash.
+    return ImmutableList.of(getRuleKey().toString());
   }
 
   @VisibleForTesting

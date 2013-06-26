@@ -119,6 +119,13 @@ public class ProjectWorkspace {
         stderr.getContentsAsString(Charsets.UTF_8));
   }
 
+  /**
+   * @return the {@link File} that corresponds to the {@code pathRelativeToProjectRoot}.
+   */
+  public File getFile(String pathRelativeToProjectRoot) {
+    return new File(destDir, pathRelativeToProjectRoot);
+  }
+
   /** The result of running {@code buck} from the command line. */
   public static class ProcessResult {
     private final int exitCode;

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -52,8 +53,8 @@ public class AbiWriterTest {
   public void abiKeyForEmptySourcesIsStable() {
     assertEquals(
         "The ABI key used when a java_library() has no srcs should be constant across platforms.",
-        "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-        AbiWriter.getAbiKeyForEmptySources());
+        AbiWriterProtocol.EMPTY_ABI_KEY,
+        AbiWriter.computeAbiKey(ImmutableSortedSet.<String>of()));
   }
 
   @Test

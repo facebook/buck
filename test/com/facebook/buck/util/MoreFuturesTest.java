@@ -16,9 +16,12 @@
 
 package com.facebook.buck.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.Test;
@@ -44,5 +47,35 @@ public class MoreFuturesTest {
     SettableFuture<Object> resolvedFuture = SettableFuture.create();
     resolvedFuture.set(new Object());
     assertTrue(MoreFutures.isSuccess(resolvedFuture));
+  }
+
+  @Test
+  public void testGetFailure() {
+    Throwable failure = new Throwable();
+    ListenableFuture<Object> failedFuture = Futures.immediateFailedFuture(failure);
+    assertEquals(failure, MoreFutures.getFailure(failedFuture));
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testGetFailureRejectsNullFuture() {
+    MoreFutures.getFailure(null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetFailureRequiresSatisfiedFuture() {
+    MoreFutures.getFailure(SettableFuture.create());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetFailureRequiresUnsuccessfulFuture() {
+    ListenableFuture<Object> success = Futures.immediateFuture(new Object());
+    MoreFutures.getFailure(success);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetFailureRequiresNonCancelledFuture() {
+    ListenableFuture<?> canceledFuture = SettableFuture.create();
+    canceledFuture.cancel(/* mayInterruptIfRunning */ true);
+    MoreFutures.getFailure(canceledFuture);
   }
 }

@@ -19,12 +19,14 @@ package com.facebook.buck.java;
 import com.facebook.buck.android.HasAndroidResourceDeps;
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
@@ -36,12 +38,15 @@ import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -54,6 +59,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.reflect.ClassPath;
 
 import java.io.File;
@@ -76,6 +82,7 @@ import javax.annotation.Nullable;
  *   ],
  *   deps = [
  *     '//src/com/facebook/feed/model:model',
+ *     '//third-party/java/guava:guava',
  *   ],
  * )
  * </pre>
@@ -109,12 +116,23 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   protected final JavacOptions javacOptions;
 
   /**
+   * This returns the ABI key for this rule. This will be set <em>EITHER</em> as part of
+   * {@link #recordOutputFileDetailsAfterFetchedFromArtifactCache(ArtifactCache, ProjectFilesystem)}
+   * or while the build steps (in particular, the javac step) for this rule are created. In the case
+   * of the latter, the {@link Supplier} is guaranteed to be able to return (a possibly null) value
+   * after the build steps have been executed.
+   * <p>
+   * This field should be set exclusively through {@link #setAbiKey(Supplier)}
+   */
+  @Nullable
+  private Supplier<String> abiKeySupplier;
+
+  /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
    * jar.
    */
   @VisibleForTesting
-  static interface JarResolver extends
-      Function<String, ImmutableSet<String>> {}
+  static interface JarResolver extends Function<String, ImmutableSet<String>> {}
 
   private final JarResolver JAR_RESOLVER =
       new JarResolver() {
@@ -174,8 +192,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       builder.add(resource.asReference());
     }
     inputsToConsiderForCachingPurposes = builder.build();
-
-
 
     outputClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
@@ -261,9 +277,9 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
-      Step mkdir = new MkdirStep(getPathToAbiOutputDir());
+      Step mkdir = new MakeCleanDirectoryStep(getPathToAbiOutputDir());
 
-      Step javac = new DependencyCheckingJavacStep(
+      final JavacInMemoryStep javac = new DependencyCheckingJavacStep(
           outputDirectory,
           getJavaSrcs(),
           transitiveClasspathEntries,
@@ -273,8 +289,18 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
           Optional.of(getFullyQualifiedName()),
           buildDependencies,
           suggestBuildRules);
-
       commands.add(mkdir, javac);
+
+      // Create a supplier that extracts the ABI key from javac after it executes.
+      setAbiKey(Suppliers.memoize(new Supplier<String>() {
+        @Override
+        public String get() {
+          return javac.getAbiKey();
+        }
+      }));
+    } else {
+      // When there are no .java files to compile, the ABI key should be a constant.
+      setAbiKey(Suppliers.ofInstance(AbiWriterProtocol.EMPTY_ABI_KEY));
     }
 
     return commands.build();
@@ -482,6 +508,40 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
           /* manifestFile */ null));
     }
 
+    Preconditions.checkNotNull(abiKeySupplier,
+        "abiKeySupplier must be set so that getAbiKey() will " +
+        "return a non-null value if this rule builds successfully.");
+
+    // Add a step that writes the ABI key if it is non-null.
+    final ArtifactCache artifactCache = context.getArtifactCache();
+    Step recordAbiKey = new AbstractExecutionStep("record ABI key") {
+      @Override
+      public int execute(ExecutionContext context) {
+        String abiKey = abiKeySupplier.get();
+        if (abiKey == null) {
+          return 0;
+        }
+
+        // First, attempt to write the ABI key locally.
+        File abiKeyFile;
+        try {
+          String pathToAbiKeyFile = getPathToAbiOutputFile();
+          context.getProjectFilesystem().createParentDirs(pathToAbiKeyFile);
+          abiKeyFile = context.getProjectFilesystem().getFileForRelativePath(pathToAbiKeyFile);
+          Files.write(abiKey + '\n', abiKeyFile, Charsets.UTF_8);
+        } catch (IOException e) {
+          e.printStackTrace(context.getStdErr());
+          return 1;
+        }
+
+        // Next, attempt to write it to the ArtifactCache.
+        RuleKey ruleKey = createRuleKeyForAbiKeyProjection();
+        artifactCache.store(ruleKey, abiKeyFile);
+        return 0;
+      }
+    };
+    commands.add(recordAbiKey);
+
     return commands.build();
   }
 
@@ -570,6 +630,48 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       }
     };
     return Optional.of(suggestBuildRuleFn);
+  }
+
+  @Override
+  protected void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
+      ProjectFilesystem projectFilesystem) throws IOException {
+    RuleKey ruleKey = createRuleKeyForAbiKeyProjection();
+    File abiKeyFile = projectFilesystem.getFileForRelativePath(getPathToAbiOutputFile());
+    boolean isSuccess = cache.fetch(ruleKey, abiKeyFile);
+    if (isSuccess) {
+      String abiKey = Files.readFirstLine(abiKeyFile, Charsets.UTF_8);
+      setAbiKey(Suppliers.ofInstance(abiKey));
+    } else {
+      // It is possible that, for whatever reason, the code that uploaded the artifact failed to
+      // upload the corresponding ABI key. When this happens, getAbiKey() should return null.
+      setAbiKey(Suppliers.ofInstance((String)null));
+    }
+  }
+
+  /**
+   * This returns a RuleKey that is a hash of this rule's ordinary RuleKey and a known value. (The
+   * known value is {@code "namespace.abi_key"}, which includes a period to distinguish it from
+   * an ordinary property name.) This new RuleKey is associated with the ABI for this rule in the
+   * {@link ArtifactCache}. This enables us to query an {@link ArtifactCache} for an ABI for a build
+   * rule when we know its RuleKey, because we can reproduce the RuleKey returned by this method
+   * using the rule's RuleKey and the value {@code "namespace.abi_key"}.
+   */
+  private RuleKey createRuleKeyForAbiKeyProjection() {
+    RuleKey.Builder builder = RuleKey.builder(this);
+    appendToRuleKey(builder);
+    builder.set("namespace.abi_key", (String)null);
+    return builder.build();
+  }
+
+  public String getAbiKey() {
+    Preconditions.checkState(isRuleBuilt(),
+        "Rule must be built before its ABI key can be returned.");
+    return abiKeySupplier.get();
+  }
+
+  private void setAbiKey(Supplier<String> abiKeySupplier) {
+    Preconditions.checkState(this.abiKeySupplier == null, "abiKeySupplier should be set only once");
+    this.abiKeySupplier = abiKeySupplier;
   }
 
 

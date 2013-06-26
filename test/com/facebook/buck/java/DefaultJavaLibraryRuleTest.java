@@ -48,6 +48,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
@@ -58,7 +59,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -77,6 +77,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryRuleTest {
   private static final String ANNOTATION_SCENARIO_TARGET =
@@ -258,8 +260,6 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals("Should compile Main.java rather than generated R.java.",
         ImmutableSet.of(src),
         javac.getSrcs());
-
-    EasyMock.verify(context);
   }
 
   /**
@@ -635,24 +635,29 @@ public class DefaultJavaLibraryRuleTest {
     return context;
   }
 
+  // TODO(mbolin): Eliminate the bootclasspath parameter, as it is completely misused in this test.
   private BuildContext createBuildContext(DefaultJavaLibraryRule javaLibrary,
-                                          String bootclasspath) {
-    DependencyGraph graph = RuleMap.createGraphFromSingleRule(javaLibrary);
+                                          @Nullable String bootclasspath) {
+    AndroidPlatformTarget platformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
+    ImmutableList<File> bootclasspathEntries = (bootclasspath == null)
+        ? ImmutableList.<File>of(new File("I am not used"))
+        : ImmutableList.of(new File(bootclasspath));
+    EasyMock.expect(platformTarget.getBootclasspathEntries()).andReturn(bootclasspathEntries)
+        .anyTimes();
+    replay(platformTarget);
 
-    BuildContext context = EasyMock.createMock(BuildContext.class);
-    EasyMock.expect(context.getDependencyGraph()).andReturn(graph);
-    EasyMock.expectLastCall().anyTimes();
-
-    EasyMock.expect(context.getAndroidBootclasspathSupplier()).andReturn(Suppliers.ofInstance(
-        bootclasspath));
-    EasyMock.expect(context.getJavaPackageFinder()).andReturn(
-        EasyMock.createMock(JavaPackageFinder.class));
-    EasyMock.expect(context.getBuildDependencies()).andReturn(BuildDependencies.TRANSITIVE);
-    EasyMock.expectLastCall().anyTimes();
-
-    replay(context);
-
-    return context;
+    // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
+    // Also, remove setProjectRoot() and get it from ProjectFilesystem.getRoot().
+    return BuildContext.builder()
+        .setProjectRoot(EasyMock.createMock(File.class))
+        .setDependencyGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
+        .setStepRunner(EasyMock.createMock(StepRunner.class))
+        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
+        .setArtifactCache(new NoopArtifactCache())
+        .setBuildDependencies(BuildDependencies.TRANSITIVE)
+        .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
+        .setAndroidBootclasspathForAndroidPlatformTarget(Optional.of(platformTarget))
+        .build();
   }
 
   private enum AnnotationProcessorTarget {

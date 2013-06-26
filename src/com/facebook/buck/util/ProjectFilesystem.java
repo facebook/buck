@@ -127,7 +127,7 @@ public class ProjectFilesystem {
   public void rmdir(String path, ProcessExecutor processExecutor) throws IOException {
     // TODO(mbolin): Reimplement this so it no longer requires a processExecutor using the
     // SimpleFileVisitor introduced in Java 7.
-    MoreFiles.rmdir(path, processExecutor);
+    MoreFiles.rmdir(pathRelativizer.apply(path), processExecutor);
   }
 
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {

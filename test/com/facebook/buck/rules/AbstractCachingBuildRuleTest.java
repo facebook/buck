@@ -25,9 +25,12 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Functions;
@@ -52,8 +55,6 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import javax.annotation.Nullable;
 
 /**
  * Ensuring that build rule caching works correctly in Buck is imperative for both its performance
@@ -86,26 +87,21 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     BuildRule dep = createMock(BuildRule.class);
     expect(dep.isVisibleTo(buildTarget)).andReturn(true);
 
-    // Verify that there are no calls made to the visibility patterns.
-    @SuppressWarnings("unchecked")
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = createMock(ImmutableSet.class);
-
     // Create an ArtifactCache whose expectations will be set later.
     ArtifactCache artifactCache = createMock(ArtifactCache.class);
 
     // Replay the mocks to instantiate the AbstractCachingBuildRule.
     replayAll();
-    String output = "some_file";
-    File outputFile = new File(output);
+    String pathToOutputFile = "some_file";
+    File outputFile = new File(pathToOutputFile);
     List<Step> buildSteps = Lists.newArrayList();
     AbstractCachingBuildRule cachingRule = createRule(
         ImmutableSet.of(dep),
-        visibilityPatterns,
         ImmutableList.<InputRule>of(FakeInputRule.createWithRuleKey("/dev/null",
             new RuleKey("ae8c0f860a0ecad94ecede79b69460434eddbfbc"))),
         buildSteps,
         /* ruleKeyOnDisk */ Optional.<RuleKey>absent(),
-        output);
+        pathToOutputFile);
     verifyAll();
     resetAll();
 
@@ -160,7 +156,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     projectFilesystem.createParentDirs(pathToSuccessFile);
     Capture<Iterable<String>> linesCapture = new Capture<Iterable<String>>();
     projectFilesystem.writeLinesToPath(capture(linesCapture), eq(pathToSuccessFile));
-    expect(projectFilesystem.getFileForRelativePath(output)).andReturn(outputFile).times(2);
+    expect(projectFilesystem.getFileForRelativePath(pathToOutputFile)).andReturn(outputFile).times(2);
 
     // There will initially be a cache miss, later followed by a cache store.
     RuleKey expectedRuleKey = new RuleKey(expectedRuleKeyHash);
@@ -222,6 +218,117 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     verifyAll();
   }
 
+  @Test
+  public void testArtifactFetchedFromCache()
+      throws InterruptedException, ExecutionException, IOException {
+    ArtifactFetchedFromCacheScenario scenario = createArtifactFetchedFromCacheScenario(
+        /* isSuccessScenario */ true);
+    BuildableAbstractCachingBuildRule cachingRule = scenario.cachingRule;
+
+    ListenableFuture<BuildRuleSuccess> result = cachingRule.build(scenario.buildContext);
+    assertEquals(
+        "recordOutputFileDetailsAfterFetchedFromArtifactCache() should be invoked once.",
+        1,
+        cachingRule.numCallsToRecordOutputFileDetailsAfterFetchedFromArtifactCache);
+    ImmutableList<String> linesWrittenToSuccessFile = ImmutableList.copyOf(
+        scenario.lines.getValue());
+    assertEquals(
+        "The RuleKey should have been written to the .success file.",
+        ImmutableList.of(cachingRule.getRuleKey().toString()),
+        linesWrittenToSuccessFile);
+
+    assertTrue("We expect build() to be synchronous in this case, " +
+        "so the future should already be resolved.",
+        MoreFutures.isSuccess(result));
+    BuildRuleSuccess success = result.get();
+    assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, success.getType());
+
+    verifyAll();
+  }
+
+  @Test
+  public void testArtifactFetchedFromCacheFailsToRecordOutputFileDetails() throws IOException {
+    ArtifactFetchedFromCacheScenario scenario = createArtifactFetchedFromCacheScenario(
+        /* isSuccessScenario */ false);
+    BuildableAbstractCachingBuildRule cachingRule = scenario.cachingRule;
+    cachingRule.setRecordOutputFileDetailsAfterFetchedFromArtifactCacheShouldThrowIOException(
+        /* shouldThrow */ true);
+
+    ListenableFuture<BuildRuleSuccess> result = cachingRule.build(scenario.buildContext);
+    assertEquals(
+        "recordOutputFileDetailsAfterFetchedFromArtifactCache() should be invoked once.",
+        1,
+        cachingRule.numCallsToRecordOutputFileDetailsAfterFetchedFromArtifactCache);
+
+    Throwable failure = MoreFutures.getFailure(result);
+    assertTrue(failure instanceof IOException);
+    assertEquals("Failed to record output file details!", failure.getMessage());
+
+    verifyAll();
+  }
+
+  private ArtifactFetchedFromCacheScenario createArtifactFetchedFromCacheScenario(
+      boolean isSuccessScenario)
+      throws IOException {
+    Step step = new AbstractExecutionStep("exploding step") {
+      @Override
+      public int execute(ExecutionContext context) {
+        throw new UnsupportedOperationException("build step should not be executed");
+      }
+    };
+    String pathToOutputFile = "foo/bar/baz";
+    BuildableAbstractCachingBuildRule cachingRule = createRule(
+        /* deps */ ImmutableSet.<BuildRule>of(),
+        ImmutableList.<InputRule>of(),
+        ImmutableList.of(step),
+        /* ruleKeyOnDisk */ Optional.<RuleKey>absent(),
+        pathToOutputFile);
+
+    StepRunner stepRunner = createMock(StepRunner.class);
+    expect(stepRunner.getListeningExecutorService()).andReturn(MoreExecutors.sameThreadExecutor());
+
+    // Mock out all of the disk I/O.
+    File initialOutputFile = createMock(File.class);
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(projectFilesystem.getFileForRelativePath(pathToOutputFile)).andReturn(initialOutputFile);
+    Capture<Iterable<String>> lines;
+    if (isSuccessScenario) {
+      String pathToSuccessFile = cachingRule.getPathToSuccessFile();
+      projectFilesystem.createParentDirs(pathToSuccessFile);
+      lines = new Capture<Iterable<String>>();
+      projectFilesystem.writeLinesToPath(capture(lines), eq(pathToSuccessFile));
+    } else {
+      lines = null;
+    }
+
+    // Simulate successfully fetching the output file from the ArtifactCache.
+    ArtifactCache artifactCache = createMock(ArtifactCache.class);
+    expect(artifactCache.fetch(cachingRule.getRuleKey(), initialOutputFile)).andReturn(true);
+
+    BuildContext buildContext = BuildContext.builder()
+        .setProjectRoot(createMock(File.class))
+        .setDependencyGraph(RuleMap.createGraphFromSingleRule(cachingRule))
+        .setStepRunner(stepRunner)
+        .setProjectFilesystem(projectFilesystem)
+        .setArtifactCache(artifactCache)
+        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
+        .build();
+
+    replayAll();
+
+    ArtifactFetchedFromCacheScenario scenario = new ArtifactFetchedFromCacheScenario();
+    scenario.cachingRule = cachingRule;
+    scenario.buildContext = buildContext;
+    scenario.lines = lines;
+    return scenario;
+  }
+
+  private static class ArtifactFetchedFromCacheScenario {
+    BuildableAbstractCachingBuildRule cachingRule;
+    BuildContext buildContext;
+    Capture<Iterable<String>> lines;
+  }
+
 
   // TODO(mbolin): Test that when the success files match, nothing is built and nothing is written
   // back to the cache.
@@ -229,61 +336,96 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   // TODO(mbolin): Test that when the value in the success file does not agree with the current
   // value, the rule is rebuilt and the result is written back to the cache.
 
-  // TODO(mbolin): Test that if there is a cache hit, nothing is built and nothing is written back
-  // to the cache.
-
   // TODO(mbolin): Test that a failure when executing the build steps is propagated appropriately.
 
   // TODO(mbolin): Test what happens when the cache's methods throw an exception.
 
-  private static AbstractCachingBuildRule createRule(
+  private static BuildableAbstractCachingBuildRule createRule(
       ImmutableSet<BuildRule> deps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns,
-      final Iterable<InputRule> inputRules,
-      final List<Step> buildSteps,
-      final Optional<RuleKey> ruleKeyOnDisk,
-      @Nullable final String output) {
+      Iterable<InputRule> inputRules,
+      List<Step> buildSteps,
+      Optional<RuleKey> ruleKeyOnDisk,
+      String pathToOutputFile) {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
     BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
         sortedDeps,
-        visibilityPatterns,
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
         /* pathRelativizer */ Functions.<String>identity());
-    return new AbstractCachingBuildRule(buildRuleParams) {
+    return new BuildableAbstractCachingBuildRule(buildRuleParams,
+        inputRules,
+        pathToOutputFile,
+        ruleKeyOnDisk,
+        buildSteps);
+  }
 
-      private Iterable<InputRule> inputs = inputRules;
+  private static class BuildableAbstractCachingBuildRule extends AbstractCachingBuildRule {
 
-      @Override
-      public BuildRuleType getType() {
-        return BuildRuleType.JAVA_LIBRARY;
+    private final Iterable<InputRule> inputRules;
+    private final String pathToOutputFile;
+    private final Optional<RuleKey> ruleKeyOnDisk;
+    private final List<Step> buildSteps;
+    private int numCallsToRecordOutputFileDetailsAfterFetchedFromArtifactCache;
+    private boolean recordOutputFileDetailsAfterFetchedFromArtifactCacheShouldThrowIOException;
+
+    private BuildableAbstractCachingBuildRule(BuildRuleParams params,
+        Iterable<InputRule> inputRules,
+        String pathToOutputFile,
+        Optional<RuleKey> ruleKeyOnDisk,
+        List<Step> buildSteps) {
+      super(params);
+      this.inputRules = inputRules;
+      this.pathToOutputFile = pathToOutputFile;
+      this.ruleKeyOnDisk = ruleKeyOnDisk;
+      this.buildSteps = buildSteps;
+      this.numCallsToRecordOutputFileDetailsAfterFetchedFromArtifactCache = 0;
+      this.recordOutputFileDetailsAfterFetchedFromArtifactCacheShouldThrowIOException = false;
+    }
+
+    @Override
+    public BuildRuleType getType() {
+      return BuildRuleType.JAVA_LIBRARY;
+    }
+
+    @Override
+    public Iterable<InputRule> getInputs() {
+      return inputRules;
+    }
+
+    @Override
+    public String getPathToOutputFile() {
+      return pathToOutputFile;
+    }
+
+    @Override
+    Optional<RuleKey> getRuleKeyOnDisk(ProjectFilesystem projectFilesystem) {
+      return ruleKeyOnDisk;
+    }
+
+    @Override
+    protected List<Step> buildInternal(BuildContext context) throws IOException {
+      return buildSteps;
+    }
+
+    @Override
+    protected Iterable<String> getInputsToCompareToOutput() {
+      throw new UnsupportedOperationException();
+    }
+
+    void setRecordOutputFileDetailsAfterFetchedFromArtifactCacheShouldThrowIOException(
+        boolean shouldThrow) {
+      recordOutputFileDetailsAfterFetchedFromArtifactCacheShouldThrowIOException = shouldThrow;
+    }
+
+    @Override
+    protected void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
+        ProjectFilesystem projectFilesystem) throws IOException {
+      numCallsToRecordOutputFileDetailsAfterFetchedFromArtifactCache++;
+      if (recordOutputFileDetailsAfterFetchedFromArtifactCacheShouldThrowIOException) {
+        throw new IOException("Failed to record output file details!");
       }
-
-      @Override
-      public Iterable<InputRule> getInputs() {
-        return inputs;
-      }
-
-      @Override
-      public String getPathToOutputFile() {
-        return output;
-      }
-
-      @Override
-      Optional<RuleKey> getRuleKeyOnDisk(ProjectFilesystem projectFilesystem) {
-        return ruleKeyOnDisk;
-      }
-
-      @Override
-      protected List<Step> buildInternal(BuildContext context) throws IOException {
-        return buildSteps;
-      }
-
-      @Override
-      protected Iterable<String> getInputsToCompareToOutput() {
-        throw new UnsupportedOperationException();
-      }
-    };
+    }
   }
 
   /**

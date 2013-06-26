@@ -1,0 +1,3 @@
+[cache]
+  mode = dir
+  dir = cache_dir

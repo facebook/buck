@@ -45,8 +45,6 @@ import javax.lang.model.element.TypeElement;
 @SupportedOptions({AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE})
 public class AbiWriter extends AbstractProcessor {
 
-  private static final String EMPTY_ABI_KEY = computeAbiKey(new TreeSet<String>());
-
   private SortedSet<String> classes = new TreeSet<>();
 
   @Override
@@ -90,10 +88,6 @@ public class AbiWriter extends AbstractProcessor {
     }
   }
 
-  public static String getAbiKeyForEmptySources() {
-    return EMPTY_ABI_KEY;
-  }
-
   public SortedSet<String> getSummaries() {
     return Collections.unmodifiableSortedSet(classes);
   }
@@ -106,7 +100,7 @@ public class AbiWriter extends AbstractProcessor {
     return computeAbiKey(summaries);
   }
 
-  private static String computeAbiKey(SortedSet<String> summaries) {
+  static String computeAbiKey(SortedSet<String> summaries) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-1");
 
