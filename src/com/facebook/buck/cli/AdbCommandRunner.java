@@ -244,6 +244,8 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
       console.printBuildFailure("Interrupted.");
       ex.printStackTrace(console.getStdErr());
       return false;
+    } finally {
+      executorService.shutdownNow();
     }
 
     int successCount = 0;

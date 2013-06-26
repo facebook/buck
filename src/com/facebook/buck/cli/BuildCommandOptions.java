@@ -118,10 +118,14 @@ public class BuildCommandOptions extends AbstractCommandOptions {
 
   public ListeningExecutorService getListeningExecutorService() {
     if (listeningExecutorService == null) {
-      ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
-      listeningExecutorService = MoreExecutors.listeningDecorator(executorService);
+      listeningExecutorService = createListeningExecutorService();
     }
     return listeningExecutorService;
+  }
+
+  public ListeningExecutorService createListeningExecutorService() {
+    ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+    return MoreExecutors.listeningDecorator(executorService);
   }
 
   Build createBuild(BuckConfig buckConfig,

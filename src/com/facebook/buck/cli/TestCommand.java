@@ -36,6 +36,7 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.TestCaseSummary;
 import com.facebook.buck.rules.TestResults;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
@@ -113,8 +114,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     BuildContext buildContext = build.getBuildContext();
     ExecutionContext executionContext = build.getExecutionContext();
-    StepRunner stepRunner = build.getStepRunner();
-    return runTests(results, buildContext, executionContext, stepRunner, options);
+    return runTestsAndShutdownExecutor(results,
+        buildContext,
+        executionContext,
+        options);
   }
 
   /**
@@ -280,10 +283,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
 
     // Once all of the rules are built, then run the tests.
-    return runTests(testRules,
+    return runTestsAndShutdownExecutor(testRules,
         build.getBuildContext(),
         build.getExecutionContext(),
-        build.getStepRunner(),
         options);
   }
 
@@ -338,6 +340,20 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }));
 
     return builder.build();
+  }
+
+  private int runTestsAndShutdownExecutor(
+      Iterable<TestRule> tests,
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      TestCommandOptions options) throws IOException {
+    StepRunner stepRunner = new DefaultStepRunner(executionContext,
+        options.createListeningExecutorService());
+    try {
+      return runTests(tests, buildContext, executionContext, stepRunner, options);
+    } finally {
+      stepRunner.getListeningExecutorService().shutdownNow();
+    }
   }
 
   private int runTests(

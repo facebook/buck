@@ -166,7 +166,11 @@ public class SmartDexingStep implements Step {
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
     List<Step> dxSteps = generateDxCommands(context, outputToInputs);
-    stepRunner.runStepsInParallelAndWait(dxSteps);
+    try {
+      stepRunner.runStepsInParallelAndWait(dxSteps);
+    } finally {
+      stepRunner.getListeningExecutorService().shutdownNow();
+    }
   }
 
   /**

@@ -88,7 +88,13 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         console,
         getEventBus());
     getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
-    int exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
+    int exitCode = 0;
+    try {
+      exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
+    } finally {
+      // Shutdown the Executor Service once the build completes.
+      build.getStepRunner().getListeningExecutorService().shutdownNow();
+    }
 
     if (exitCode != 0) {
       return exitCode;
