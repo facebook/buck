@@ -341,7 +341,8 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java"
     };
     ImmutableSortedSet<InputRule> inputs
-        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args));
+        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args),
+            filesystem.getPathRelativizer());
 
     // Create options
     AuditOwnerOptions options = getOptions(args);
@@ -378,7 +379,8 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java"
     };
     ImmutableSortedSet<InputRule> inputs
-        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args));
+        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args),
+            filesystem.getPathRelativizer());
 
     // Build rule that owns all inputs
     BuildTarget target = BuildTargetFactory.newInstance("//base/name", "name");
@@ -428,11 +430,12 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java"
     };
     ImmutableSortedSet<InputRule> inputs
-        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args));
+        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args),
+            filesystem.getPathRelativizer());
 
     // Build rule that owns all inputs
-    BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1", "name1");
-    BuildTarget target2 = BuildTargetFactory.newInstance("//base/name2", "name2");
+    BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1:name1");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//base/name2:name2");
     BuildRule owner1Rule = new StubBuildRule(target1, inputs);
     BuildRule owner2Rule = new StubBuildRule(target2, inputs);
 

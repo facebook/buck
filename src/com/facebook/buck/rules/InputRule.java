@@ -19,10 +19,13 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -39,37 +42,47 @@ public class InputRule implements BuildRule {
   private static final BuildRuleSuccess.Type SUCCESS_TYPE = BuildRuleSuccess.Type.BY_DEFINITION;
 
   private final File inputFile;
+  private final String relativePath;
   private final BuildTarget buildTarget;
+  private final ListenableFuture<BuildRuleSuccess> buildOutput;
   @Nullable private OutputKey outputKey;
   @Nullable private RuleKey ruleKey;
-  private final ListenableFuture<BuildRuleSuccess> buildOutput;
+
+  /**
+   * It is imperative that {@code inputFile} be properly relativized, so use
+   * {@link #inputPathAsInputRule(String, Function)} to create an {@link InputRule}. The only reason
+   * this method is {@code protected} rather than {@code private} is so that fakes can be created
+   * for testing.
+   */
+  @VisibleForTesting
+  protected InputRule(File inputFile, String relativePath) {
+    this.inputFile = Preconditions.checkNotNull(inputFile);
+    this.relativePath = Preconditions.checkNotNull(relativePath);
+    this.buildTarget = BuildTarget.createBuildTargetForInputFile(inputFile, relativePath);
+    this.buildOutput = Futures.immediateFuture(new BuildRuleSuccess(this, SUCCESS_TYPE));
+  }
+
+  public static InputRule inputPathAsInputRule(String relativePath,
+      Function<String, String> pathRelativizer) {
+    return Iterables.getOnlyElement(
+        inputPathsAsInputRules(ImmutableList.of(relativePath), pathRelativizer));
+  }
 
   /**
    * Convert a set of input file paths to InputRules.
    */
-  public static ImmutableSortedSet<InputRule> inputPathsAsInputRules(Iterable<String> paths) {
+  public static ImmutableSortedSet<InputRule> inputPathsAsInputRules(Iterable<String> paths,
+      Function<String, String> pathRelativizer) {
     ImmutableSortedSet.Builder<InputRule> builder = ImmutableSortedSet.naturalOrder();
     for (String path : paths) {
-      builder.add(new InputRule(path));
+      builder.add(new InputRule(new File(pathRelativizer.apply(path)), path));
     }
     return builder.build();
-  }
-
-  public InputRule(File input) {
-    inputFile = Preconditions.checkNotNull(input);
-    buildTarget = new BuildTarget(input);
-
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, SUCCESS_TYPE);
-    this.buildOutput = Futures.immediateFuture(buildRuleSuccess);
   }
 
   @Override
   public BuildRuleSuccess.Type getBuildResultType() {
     return SUCCESS_TYPE;
-  }
-
-  public InputRule(String input) {
-    this(new File(input));
   }
 
   @Override
@@ -104,7 +117,7 @@ public class InputRule implements BuildRule {
 
   @Override
   public Iterable<InputRule> getInputs() {
-    return Lists.newArrayList();
+    return ImmutableList.of();
   }
 
   @Override
@@ -134,7 +147,7 @@ public class InputRule implements BuildRule {
 
   @Override
   public String getPathToOutputFile() {
-    return inputFile.getPath();
+    return relativePath;
   }
 
   @Override

@@ -48,7 +48,7 @@ public class DirArtifactCacheTest {
     DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir);
 
     Files.write("x", fileX, Charsets.UTF_8);
-    InputRule inputRuleX = new InputRule(fileX);
+    InputRule inputRuleX = new InputRuleForTest(fileX);
     RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
 
     assertFalse(dirArtifactCache.fetch(ruleKeyX, fileX));
@@ -62,19 +62,19 @@ public class DirArtifactCacheTest {
     DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir);
 
     Files.write("x", fileX, Charsets.UTF_8);
-    InputRule inputRuleX = new InputRule(fileX);
+    InputRule inputRuleX = new InputRuleForTest(fileX);
     RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
 
     dirArtifactCache.store(ruleKeyX, fileX);
 
     // Test that artifact overwrite works.
     assertTrue(dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(inputRuleX, new InputRule(fileX));
+    assertEquals(inputRuleX, new InputRuleForTest(fileX));
 
     // Test that artifact creation works.
     assertTrue(fileX.delete());
     assertTrue(dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(inputRuleX, new InputRule(fileX));
+    assertEquals(inputRuleX, new InputRuleForTest(fileX));
   }
 
   @Test
@@ -85,14 +85,14 @@ public class DirArtifactCacheTest {
     DirArtifactCache dirArtifactCache = new DirArtifactCache(cacheDir);
 
     Files.write("x", fileX, Charsets.UTF_8);
-    InputRule inputRuleX = new InputRule(fileX);
+    InputRule inputRuleX = new InputRuleForTest(fileX);
     RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
 
     assertTrue(dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(inputRuleX, new InputRule(fileX));
+    assertEquals(inputRuleX, new InputRuleForTest(fileX));
   }
 
   @Test
@@ -108,9 +108,9 @@ public class DirArtifactCacheTest {
     Files.write("y", fileY, Charsets.UTF_8);
     Files.write("z", fileZ, Charsets.UTF_8);
 
-    InputRule inputRuleX = new InputRule(fileX);
-    InputRule inputRuleY = new InputRule(fileY);
-    InputRule inputRuleZ = new InputRule(fileZ);
+    InputRule inputRuleX = new InputRuleForTest(fileX);
+    InputRule inputRuleY = new InputRuleForTest(fileY);
+    InputRule inputRuleZ = new InputRuleForTest(fileZ);
     assertFalse(inputRuleX.equals(inputRuleY));
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
@@ -135,8 +135,14 @@ public class DirArtifactCacheTest {
     assertTrue(dirArtifactCache.fetch(ruleKeyY, fileY));
     assertTrue(dirArtifactCache.fetch(ruleKeyZ, fileZ));
 
-    assertEquals(inputRuleX, new InputRule(fileX));
-    assertEquals(inputRuleY, new InputRule(fileY));
-    assertEquals(inputRuleZ, new InputRule(fileZ));
+    assertEquals(inputRuleX, new InputRuleForTest(fileX));
+    assertEquals(inputRuleY, new InputRuleForTest(fileY));
+    assertEquals(inputRuleZ, new InputRuleForTest(fileZ));
+  }
+
+  private static class InputRuleForTest extends InputRule {
+    private InputRuleForTest(File file) {
+      super(file, file.getPath());
+    }
   }
 }

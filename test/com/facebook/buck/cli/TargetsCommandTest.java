@@ -53,6 +53,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,6 +76,7 @@ import java.util.SortedMap;
 
 public class TargetsCommandTest {
 
+  private static final Function<String, String> PATH_RELATIVIZER = Functions.identity();
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
   private TestConsole console;
@@ -305,7 +307,7 @@ public class TargetsCommandTest {
     SortedMap<String, BuildRule> matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
     assertTrue(matchingBuildRules.isEmpty());
 
     // Only test-android-library target depends on the referenced file.
@@ -313,7 +315,7 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
@@ -324,7 +326,7 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -335,7 +337,7 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
@@ -346,6 +348,7 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(graph,
+                PATH_RELATIVIZER,
                 buildRuleTypes,
                 ImmutableSet.<String>of(),
                 targetBuildRules));
@@ -362,6 +365,7 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
+                PATH_RELATIVIZER,
                 ImmutableSet.of(BuildRuleType.JAVA_TEST, BuildRuleType.JAVA_LIBRARY),
                 ImmutableSet.<String>of(),
                 targetBuildRules));
@@ -378,6 +382,7 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
+                PATH_RELATIVIZER,
                 ImmutableSet.of(BuildRuleType.JAVA_TEST, BuildRuleType.JAVA_LIBRARY),
                 ImmutableSet.<String>of(),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));
@@ -390,6 +395,7 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
+                PATH_RELATIVIZER,
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.<String>of(),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));
@@ -403,6 +409,7 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
+                PATH_RELATIVIZER,
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.of("javatest/TestJavaLibrary.java"),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));

@@ -29,7 +29,8 @@ import java.io.File;
 import javax.annotation.Nullable;
 
 public class MultiArtifactCacheTest {
-  private static final RuleKey dummyRuleKey = RuleKey.builder(new InputRule(new File(""))).build();
+  private static final RuleKey dummyRuleKey =
+      new RuleKey("76b1c1beae69428db2d1befb31cf743ac8ce90df");
   private static final File dummyFile = new File("dummy");
 
   class DummyArtifactCache implements ArtifactCache {

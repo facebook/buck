@@ -101,12 +101,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     AbstractCachingBuildRule cachingRule = createRule(
         ImmutableSet.of(dep),
         visibilityPatterns,
-        ImmutableList.<InputRule>of(new InputRule("/dev/null") {
-          @Override
-          public RuleKey getRuleKey() {
-            return new RuleKey("ae8c0f860a0ecad94ecede79b69460434eddbfbc");
-          }
-        }),
+        ImmutableList.<InputRule>of(FakeInputRule.createWithRuleKey("/dev/null",
+            new RuleKey("ae8c0f860a0ecad94ecede79b69460434eddbfbc"))),
         buildSteps,
         /* ruleKeyOnDisk */ Optional.<RuleKey>absent(),
         output);

@@ -32,7 +32,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
@@ -127,7 +126,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   public Iterable<InputRule> getInputs() {
     if (inputsToCompareToOutputs == null) {
       inputsToCompareToOutputs = InputRule.inputPathsAsInputRules(
-          Iterables.transform(getInputsToCompareToOutput(), pathRelativizer));
+          getInputsToCompareToOutput(), pathRelativizer);
     }
     return inputsToCompareToOutputs;
   }

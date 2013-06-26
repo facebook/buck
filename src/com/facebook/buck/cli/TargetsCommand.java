@@ -28,10 +28,10 @@ import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -104,6 +104,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         graph.getDependencyGraph(),
         new TargetsCommandPredicate(
             graph,
+            getProjectFilesystem().getPathRelativizer(),
             buildRuleTypesBuilder.build(),
             options.getReferencedFiles(getProjectFilesystem().getProjectRoot()),
             matchingBuildTargets));
@@ -304,6 +305,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     public TargetsCommandPredicate(
         PartialGraph partialGraph,
+        Function<String, String> pathRelativizer,
         ImmutableSet<BuildRuleType> buildRuleTypes,
         ImmutableSet<String> referencedFiles,
         ImmutableSet<BuildTarget> matchingBuildRules) {
@@ -313,8 +315,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
       Preconditions.checkNotNull(referencedFiles);
       if (!referencedFiles.isEmpty()) {
-        this.referencedInputs = InputRule.inputPathsAsInputRules(
-            ImmutableSortedSet.copyOf(referencedFiles));
+        this.referencedInputs = InputRule.inputPathsAsInputRules(referencedFiles, pathRelativizer);
         BuildFileTree tree = new BuildFileTree(partialGraph.getTargets());
         basePathOfTargets = Sets.newHashSet();
         dependentTargets = Sets.newHashSet();

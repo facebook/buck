@@ -24,7 +24,9 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -96,23 +98,25 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   @VisibleForTesting
   OwnersReport generateOwnersReport(DependencyGraph graph, AuditOwnerOptions options) {
 
-    // Process arguments assuming they are all relative file paths
+    // Process arguments assuming they are all relative file paths.
     Set<InputRule> inputs = Sets.newHashSet();
     Set<String> nonExistentInputs = Sets.newHashSet();
     Set<String> nonFileInputs = Sets.newHashSet();
 
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
     for (String filePath : options.getArguments()) {
-      File file = getProjectFilesystem().getFileForRelativePath(filePath);
+      File file = projectFilesystem.getFileForRelativePath(filePath);
       if (!file.exists()) {
         nonExistentInputs.add(filePath);
       } else if (!file.isFile()) {
         nonFileInputs.add(filePath);
       } else {
-        inputs.add(new InputRule(filePath));
+        inputs.add(InputRule.inputPathAsInputRule(filePath, pathRelativizer));
       }
     }
 
-    // Try to find owners for each valid and existing file
+    // Try to find owners for each valid and existing file.
     Set<InputRule> inputsWithNoOwners = Sets.newHashSet(inputs);
     SetMultimap<BuildRule, InputRule> owners = createOwnersMap();
     for (BuildRule rule : graph.getNodes()) {
@@ -124,7 +128,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       }
     }
 
-    // Try to guess owners for nonexistent files
+    // Try to guess owners for nonexistent files.
     if (options.isGuessForDeletedEnabled()) {
       guessOwnersForNonExistentFiles(graph, owners, nonExistentInputs);
     }
@@ -140,8 +144,10 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   private void guessOwnersForNonExistentFiles(DependencyGraph graph,
       SetMultimap<BuildRule, InputRule> owners, Set<String> nonExistentFiles) {
 
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
     for (String nonExistentFile : nonExistentFiles) {
-      File file = getProjectFilesystem().getFileForRelativePath(nonExistentFile);
+      File file = projectFilesystem.getFileForRelativePath(nonExistentFile);
       File buck = findBuckFileFor(file);
       for (BuildRule rule : graph.getNodes()) {
         if (rule.getType() == BuildRuleType.PROJECT_CONFIG) {
@@ -150,7 +156,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
         File ruleBuck = rule.getBuildTarget().getBuildFile();
         try {
           if (buck.getCanonicalFile().equals(ruleBuck.getCanonicalFile())) {
-            owners.put(rule, new InputRule(nonExistentFile));
+            owners.put(rule, InputRule.inputPathAsInputRule(nonExistentFile, pathRelativizer));
           }
         } catch (IOException ex) {
           throw Throwables.propagate(ex);

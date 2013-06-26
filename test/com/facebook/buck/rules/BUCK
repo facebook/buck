@@ -3,6 +3,7 @@ java_library(
   srcs = [
     'FakeAbstractBuildRuleBuilderParams.java',
     'FakeBuildRule.java',
+    'FakeInputRule.java',
     'FakeTestRule.java',
     'RetainOrderComparator.java',
   ],
