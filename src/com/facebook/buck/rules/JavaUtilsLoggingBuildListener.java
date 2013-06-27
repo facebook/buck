@@ -63,28 +63,28 @@ public class JavaUtilsLoggingBuildListener {
   }
 
   @Subscribe
-  public void buildStarted(BuildStarted started) {
+  public void buildStarted(BuildEvent.Started started) {
     LogRecord record = new LogRecord(LEVEL, "Build started");
     record.setMillis(started.getTimestamp());
     LOG.log(record);
   }
 
   @Subscribe
-  public void buildFinished(BuildFinished finished) {
+  public void buildFinished(BuildEvent.Finished finished) {
     LogRecord record = new LogRecord(LEVEL, "Build finished");
     record.setMillis(finished.getTimestamp());
     LOG.log(record);
   }
 
   @Subscribe
-  public void ruleStarted(BuildRuleStarted started) {
+  public void ruleStarted(BuildRuleEvent.Started started) {
     LogRecord record = new LogRecord(LEVEL, started.toString());
     record.setMillis(started.getTimestamp());
     LOG.log(record);
   }
 
   @Subscribe
-  public void ruleFinished(BuildRuleFinished finished) {
+  public void ruleFinished(BuildRuleEvent.Finished finished) {
     LogRecord record = new LogRecord(LEVEL, finished.toLogMessage());
     record.setMillis(finished.getTimestamp());
     LOG.log(record);

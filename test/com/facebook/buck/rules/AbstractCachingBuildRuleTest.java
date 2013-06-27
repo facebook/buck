@@ -140,8 +140,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // The EventBus should be updated with events indicating how the rule was built.
     EventBus eventBus = createMock(EventBus.class);
-    eventBus.post(BuildEvents.buildRuleStarted(cachingRule));
-    eventBus.post(BuildEvents.buildRuleFinished(cachingRule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
+    eventBus.post(BuildRuleEvent.started(cachingRule));
+    eventBus.post(BuildRuleEvent.finished(cachingRule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context = createMock(BuildContext.class);
@@ -196,8 +196,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // The EventBus should be updated with events indicating how the rule was built.
     EventBus eventBus = createMock(EventBus.class);
-    eventBus.post(BuildEvents.buildRuleStarted(buildRule));
-    eventBus.post(BuildEvents.buildRuleFinished(buildRule,
+    eventBus.post(BuildRuleEvent.started(buildRule));
+    eventBus.post(BuildRuleEvent.finished(buildRule,
         BuildRuleStatus.SUCCESS,
         CacheResult.HIT));
 

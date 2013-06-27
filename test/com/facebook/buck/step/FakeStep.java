@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,18 +14,31 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.step;
 
-import com.facebook.buck.event.BuildEvent;
-
-public class BuildFinished extends BuildEvent {
+public class FakeStep implements Step {
+  private final String shortName;
+  private final String description;
   private final int exitCode;
 
-  public BuildFinished(int exitCode) {
+  public FakeStep(String shortName, String description, int exitCode) {
+    this.shortName = shortName;
+    this.description = description;
     this.exitCode = exitCode;
   }
 
-  public int getExitCode() {
+  @Override
+  public int execute(ExecutionContext context) {
     return exitCode;
+  }
+
+  @Override
+  public String getShortName(ExecutionContext context) {
+    return shortName;
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return description;
   }
 }

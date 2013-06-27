@@ -1,0 +1,15 @@
+TEST_SRCS = [
+  'BuckEventListener.java',
+]
+
+java_library(
+  name = 'testutil',
+  srcs = TEST_SRCS,
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/event:event',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)

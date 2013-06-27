@@ -211,8 +211,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     EventBus eventBus = context.getEventBus();
 
     // Record the start of the build.
-    eventBus.post(BuildEvents.buildRuleStarted(
-        AbstractCachingBuildRule.this));
+    eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
 
     // Deciding whether we need to rebuild is tricky business. We want to rebuild as little as
     // possible while always being sound.
@@ -324,7 +323,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
       EventBus eventBus) {
-    eventBus.post(BuildEvents.buildRuleFinished(this, buildRuleStatus, cacheResult));
+    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
     buildRuleResult.set(new BuildRuleSuccess(this, type));
   }
 
@@ -332,7 +331,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
       EventBus eventBus) {
-    eventBus.post(BuildEvents.buildRuleFinished(this, buildRuleStatus, cacheResult));
+    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
     buildRuleResult.setException(failure);
   }
 

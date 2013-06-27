@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,21 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.event;
 
-import com.facebook.buck.event.BuildEvent;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.eventbus.Subscribe;
 
-import java.util.Set;
+import java.util.List;
 
-public class BuildStarted extends BuildEvent {
-  private final ImmutableSet<BuildRule> rulesToBuild;
+public class BuckEventListener {
+  private final List<BuckEvent> events = Lists.newLinkedList();
 
-  public BuildStarted(Set<BuildRule> rulesToBuild) {
-    this.rulesToBuild = ImmutableSet.copyOf(rulesToBuild);
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void eventFired(BuckEvent event) {
+    events.add(event);
   }
 
-  public ImmutableSet<BuildRule> getRulesToBuild() {
-    return rulesToBuild;
+  public List<BuckEvent> getEvents() {
+    return events;
   }
 }

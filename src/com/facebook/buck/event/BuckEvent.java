@@ -20,11 +20,11 @@ package com.facebook.buck.event;
  * Base class for all build events. Using this makes it easy to add a wildcard listener
  * to the event bus.
  */
-public abstract class BuildEvent {
+public abstract class BuckEvent {
 
   private final long timestamp;
 
-  public BuildEvent() {
+  public BuckEvent() {
     timestamp = System.currentTimeMillis();
   }
 
@@ -35,4 +35,13 @@ public abstract class BuildEvent {
   public String toLogMessage() {
     return toString();
   }
+
+  @Override
+  public String toString() {
+    return String.format("%s(%s)", getEventName(), getValueString());
+  }
+
+  abstract protected String getEventName();
+
+  abstract protected String getValueString();
 }

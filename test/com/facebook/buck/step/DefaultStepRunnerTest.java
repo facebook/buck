@@ -16,16 +16,21 @@
 
 package com.facebook.buck.step;
 
+import static org.easymock.EasyMock.createMock;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.util.concurrent.Executors;
@@ -33,6 +38,47 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class DefaultStepRunnerTest {
+
+  @Test
+  public void testEventsFired() throws StepFailedException {
+    Step passingStep = new FakeStep("step1", "fake step 1", 0);
+    Step failingStep = new FakeStep("step1", "fake step 1", 1);
+
+    // The EventBus should be updated with events indicating how the steps were run.
+    EventBus eventBus = new EventBus();
+    BuckEventListener listener = new BuckEventListener();
+    eventBus.register(listener);
+
+    ExecutionContext context = ExecutionContext.builder()
+        .setProjectFilesystem(createMock(ProjectFilesystem.class))
+        .setConsole(new TestConsole())
+        .setEventBus(eventBus)
+        .build();
+
+    ThreadFactory threadFactory = new ThreadFactoryBuilder()
+        .setDaemon(true)
+        .setNameFormat(getClass().getSimpleName() + "-%d")
+        .build();
+    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
+        Executors.newFixedThreadPool(3, threadFactory));
+    DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
+    runner.runStep(passingStep);
+    try {
+      runner.runStep(failingStep);
+      fail("Failing step should have thrown an exception");
+    } catch (StepFailedException e) {
+      assertEquals(e.getStep(), failingStep);
+    }
+
+    ImmutableList<StepEvent> expected = ImmutableList.of(
+        StepEvent.started(passingStep, "step1", "fake step 1"),
+        StepEvent.finished(passingStep, "step1", "fake step 1", 0),
+        StepEvent.started(failingStep, "step1", "fake step 1"),
+        StepEvent.finished(failingStep, "step1", "fake step 1", 1));
+
+    Iterable<StepEvent> events = Iterables.filter(listener.getEvents(), StepEvent.class);
+    assertEquals(expected, ImmutableList.copyOf(events));
+  }
 
   @Test(expected=StepFailedException.class, timeout=5000)
   public void testParallelStepFailure() throws Exception {
@@ -45,7 +91,7 @@ public class DefaultStepRunnerTest {
     steps.add(new SleepingStep(5000, 1));
 
     ExecutionContext context = ExecutionContext.builder()
-        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
+        .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setConsole(new TestConsole())
         .setEventBus(new EventBus())
         .build();

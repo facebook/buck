@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildEvents;
+import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.StepFailedException;
@@ -106,7 +106,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   static int executeBuildAndPrintAnyFailuresToConsole(Build build, Console console) {
     Set<BuildRule> rulesToBuild = build.getDependencyGraph().getNodesWithNoIncomingEdges();
-    build.getExecutionContext().getEventBus().post(BuildEvents.buildStarted(rulesToBuild));
+    build.getExecutionContext().getEventBus().post(BuildEvent.started(rulesToBuild));
     int exitCode;
     try {
       // Get the Future representing the build and then block until everything is built.
@@ -139,7 +139,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       exitCode = 1;
     }
 
-    build.getExecutionContext().getEventBus().post(BuildEvents.buildFinished(exitCode));
+    build.getExecutionContext().getEventBus().post(BuildEvent.finished(rulesToBuild, exitCode));
     return exitCode;
   }
 
