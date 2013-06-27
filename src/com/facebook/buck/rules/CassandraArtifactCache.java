@@ -35,6 +35,7 @@ import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 public class CassandraArtifactCache implements ArtifactCache {
@@ -165,7 +166,7 @@ public class CassandraArtifactCache implements ArtifactCache {
           .setDefaultTtl(ttl)
           .putColumn(artifactColumnName, Files.toByteArray(output));
       m.execute();
-    } catch (Exception e) {
+    } catch (IOException | ConnectionException | OutOfMemoryError e) {
       logger.warning(String.format("Artifact store(%s, %s) error: %s",
           ruleKey,
           output.getPath(),
