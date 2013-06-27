@@ -18,9 +18,12 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import javax.annotation.Nullable;
 
 public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
   /**
@@ -47,4 +50,19 @@ public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
   public ImmutableSortedSet<String> getJavaSrcs();
 
   public AnnotationProcessingData getAnnotationProcessingData();
+
+  /**
+   * Returns a SHA-1 hash that represents the ABI for the Java files returned by
+   * {@link #getJavaSrcs()}. If {@link #getJavaSrcs()} returns an empty collection, then this will
+   * return a non-null value. The only requirement on the hash is that equal hashes imply equal
+   * ABIs.
+   * <p>
+   * Because the ABI is computed as part of the build process, this rule cannot be invoked until
+   * after this rule is built.
+   * <p>
+   * Returns {@code null} if the rule did not build successfully, or if the ABI could not be
+   * extracted for any reason.
+   */
+  @Nullable
+  public Sha1HashCode getAbiKey();
 }

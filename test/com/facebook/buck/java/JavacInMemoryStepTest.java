@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -75,7 +76,7 @@ public class JavacInMemoryStepTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);
     assertEquals("javac should exit with code 0.", exitCode, 0);
-    assertEquals("ad852c71014e283bf0722a7076e0354e41a24d3c", javac.getAbiKey());
+    assertEquals(new Sha1HashCode("ad852c71014e283bf0722a7076e0354e41a24d3c"), javac.getAbiKey());
   }
 
   @Test

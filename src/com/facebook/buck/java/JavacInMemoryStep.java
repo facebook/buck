@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -62,7 +63,7 @@ public class JavacInMemoryStep implements Step {
   private File abiKeyFile;
 
   @Nullable
-  private String abiKey;
+  private Sha1HashCode abiKey;
 
   /**
    * Will be {@code true} once {@link #buildWithClasspath(ExecutionContext, Set)} has been invoked.
@@ -166,7 +167,10 @@ public class JavacInMemoryStep implements Step {
     if (isSuccess) {
       if (abiKeyFile != null) {
         try {
-          abiKey = Files.readFirstLine(abiKeyFile, Charsets.UTF_8);
+          String firstLine = Files.readFirstLine(abiKeyFile, Charsets.UTF_8);
+          if (firstLine != null) {
+            abiKey = new Sha1HashCode(firstLine);
+          }
         } catch (IOException e) {
           e.printStackTrace(context.getStdErr());
           return 1;
@@ -216,7 +220,7 @@ public class JavacInMemoryStep implements Step {
    * (i.e., returned with an exit code of 0).
    */
   @Nullable
-  public String getAbiKey() {
+  public Sha1HashCode getAbiKey() {
     Preconditions.checkState(isExecuted.get(), "Must execute step before requesting AbiKey.");
     // Note that if the rule fails, isExecuted should still be set, but abiKey will be null.
     return abiKey;

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -109,6 +110,11 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   @Override
   protected Iterable<String> getInputsToCompareToOutput() {
     return ImmutableList.of(getBinaryJar());
+  }
+
+  @Override
+  public Sha1HashCode getAbiKey() {
+    return new Sha1HashCode(getRuleKey().toString());
   }
 
   @Override

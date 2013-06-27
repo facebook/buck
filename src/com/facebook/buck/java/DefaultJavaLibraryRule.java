@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -125,7 +126,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * This field should be set exclusively through {@link #setAbiKey(Supplier)}
    */
   @Nullable
-  private Supplier<String> abiKeySupplier;
+  private Supplier<Sha1HashCode> abiKeySupplier;
 
   /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
@@ -292,15 +293,15 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       commands.add(mkdir, javac);
 
       // Create a supplier that extracts the ABI key from javac after it executes.
-      setAbiKey(Suppliers.memoize(new Supplier<String>() {
+      setAbiKey(Suppliers.memoize(new Supplier<Sha1HashCode>() {
         @Override
-        public String get() {
+        public Sha1HashCode get() {
           return javac.getAbiKey();
         }
       }));
     } else {
       // When there are no .java files to compile, the ABI key should be a constant.
-      setAbiKey(Suppliers.ofInstance(AbiWriterProtocol.EMPTY_ABI_KEY));
+      setAbiKey(Suppliers.ofInstance(new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY)));
     }
 
     return commands.build();
@@ -517,7 +518,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     Step recordAbiKey = new AbstractExecutionStep("record ABI key") {
       @Override
       public int execute(ExecutionContext context) {
-        String abiKey = abiKeySupplier.get();
+        Sha1HashCode abiKey = abiKeySupplier.get();
         if (abiKey == null) {
           return 0;
         }
@@ -528,7 +529,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
           String pathToAbiKeyFile = getPathToAbiOutputFile();
           context.getProjectFilesystem().createParentDirs(pathToAbiKeyFile);
           abiKeyFile = context.getProjectFilesystem().getFileForRelativePath(pathToAbiKeyFile);
-          Files.write(abiKey + '\n', abiKeyFile, Charsets.UTF_8);
+          Files.write(abiKey.getHash() + '\n', abiKeyFile, Charsets.UTF_8);
         } catch (IOException e) {
           e.printStackTrace(context.getStdErr());
           return 1;
@@ -640,11 +641,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     boolean isSuccess = cache.fetch(ruleKey, abiKeyFile);
     if (isSuccess) {
       String abiKey = Files.readFirstLine(abiKeyFile, Charsets.UTF_8);
-      setAbiKey(Suppliers.ofInstance(abiKey));
+      Sha1HashCode hash = abiKey != null ? new Sha1HashCode(abiKey) : null;
+      setAbiKey(Suppliers.ofInstance(hash));
     } else {
       // It is possible that, for whatever reason, the code that uploaded the artifact failed to
       // upload the corresponding ABI key. When this happens, getAbiKey() should return null.
-      setAbiKey(Suppliers.ofInstance((String)null));
+      setAbiKey(Suppliers.ofInstance((Sha1HashCode)null));
     }
   }
 
@@ -663,13 +665,15 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     return builder.build();
   }
 
-  public String getAbiKey() {
+  @Override
+  @Nullable
+  public Sha1HashCode getAbiKey() {
     Preconditions.checkState(isRuleBuilt(),
         "Rule must be built before its ABI key can be returned.");
     return abiKeySupplier.get();
   }
 
-  private void setAbiKey(Supplier<String> abiKeySupplier) {
+  private void setAbiKey(Supplier<Sha1HashCode> abiKeySupplier) {
     Preconditions.checkState(this.abiKeySupplier == null, "abiKeySupplier should be set only once");
     this.abiKeySupplier = abiKeySupplier;
   }
