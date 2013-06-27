@@ -16,24 +16,36 @@
 
 package com.facebook.buck.event;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Base class for all build events. Using this makes it easy to add a wildcard listener
  * to the event bus.
  */
 public abstract class BuckEvent {
 
-  private final long timestamp;
+  private final long nanoTime;
+  private final long threadId;
 
   public BuckEvent() {
-    timestamp = System.currentTimeMillis();
+    nanoTime = System.nanoTime();
+    threadId = Thread.currentThread().getId();
   }
 
   public long getTimestamp() {
-    return timestamp;
+    return TimeUnit.NANOSECONDS.toMillis(nanoTime);
+  }
+
+  public long getNanoTime() {
+    return nanoTime;
   }
 
   public String toLogMessage() {
     return toString();
+  }
+
+  public long getThreadId() {
+    return threadId;
   }
 
   @Override

@@ -2,6 +2,9 @@ java_library(
   name = 'event',
   srcs = glob(['*.java']),
   deps = [
+    '//lib:guava',
+    '//lib:jackson',
+    '//lib:jsr305',
   ],
   visibility = [
     'PUBLIC',

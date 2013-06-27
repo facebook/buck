@@ -69,6 +69,19 @@ prebuilt_jar(
   ],
 )
 
+java_library(
+    name = 'jackson',
+    deps = [
+      ':jackson-annotations',
+      ':jackson-core',
+      ':jackson-databind',
+    ],
+    export_deps = True,
+    visibility = [
+      '//src/com/facebook/buck/event:event',
+    ],
+)
+
 prebuilt_jar(
   name = 'jackson-annotations',
   binary_jar = 'jackson-annotations-2.0.5.jar',
@@ -92,6 +105,7 @@ prebuilt_jar(
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',
     '//test/...',

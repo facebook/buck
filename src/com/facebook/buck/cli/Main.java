@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
@@ -199,7 +200,7 @@ public final class Main {
 
     ExecutorService busExecutor = Executors.newCachedThreadPool();
     EventBus buildEvents = new AsyncEventBus("buck-build-events", busExecutor);
-    addEventListeners(buildEvents);
+    addEventListeners(buildEvents, projectFilesystem);
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);
@@ -230,8 +231,9 @@ public final class Main {
     }
   }
 
-  private static void addEventListeners(EventBus events) {
+  private static void addEventListeners(EventBus events, ProjectFilesystem projectFilesystem) {
     events.register(new JavaUtilsLoggingBuildListener());
+    events.register(new ChromeTraceBuildListener(projectFilesystem));
     JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
   }
 
