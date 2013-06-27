@@ -17,6 +17,7 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -39,7 +40,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -112,7 +112,7 @@ public class ExportFileRuleTest {
         .setProjectRoot(root)
         .setProjectFilesystem(new ProjectFilesystem(root))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
-        .setEventBus(new EventBus())
+        .setEventBus(new BuckEventBus())
         .setAndroidBootclasspathForAndroidPlatformTarget(Optional.<AndroidPlatformTarget>absent())
         .setJavaPackageFinder(new JavaPackageFinder() {
           @Override

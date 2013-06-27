@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -24,7 +25,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.EventBus;
 
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to create a
@@ -37,14 +37,14 @@ class CommandRunnerParams {
   private final KnownBuildRuleTypes buildRuleTypes;
   private final Console console;
   private final Parser parser;
-  private final EventBus eventBus;
+  private final BuckEventBus eventBus;
 
   public CommandRunnerParams(
       Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache,
-      EventBus eventBus) {
+      BuckEventBus eventBus) {
     this(console,
         projectFilesystem,
         buildRuleTypes,
@@ -58,7 +58,7 @@ class CommandRunnerParams {
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache,
-      EventBus eventBus,
+      BuckEventBus eventBus,
       Parser parser) {
     this.console = Preconditions.checkNotNull(console);
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
@@ -96,7 +96,7 @@ class CommandRunnerParams {
     return parser;
   }
 
-  public EventBus getEventBus() {
+  public BuckEventBus getEventBus() {
     return eventBus;
   }
 }

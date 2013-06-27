@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
@@ -27,7 +28,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -124,7 +124,7 @@ public class JavacInMemoryStepTest {
     return ExecutionContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
         .setConsole(new TestConsole())
-        .setEventBus(new EventBus())
+        .setEventBus(new BuckEventBus())
         .build();
   }
 }

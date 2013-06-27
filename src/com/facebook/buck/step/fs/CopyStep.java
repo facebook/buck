@@ -16,8 +16,8 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
@@ -53,7 +54,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 
 import org.junit.Before;
@@ -224,9 +224,9 @@ public class ParserTest {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     // The EventBus should be updated with events indicating how parsing ran.
-    EventBus eventBus = new EventBus();
+    BuckEventBus eventBus = new BuckEventBus();
     BuckEventListener listener = new BuckEventListener();
-    eventBus.register(listener);
+    eventBus.getEventBus().register(listener);
 
     DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets,
         defaultIncludes,
@@ -257,7 +257,7 @@ public class ParserTest {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new EventBus());
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new BuckEventBus());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target //java/com/facebook:raz in build file " +
@@ -291,7 +291,7 @@ public class ParserTest {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new EventBus());
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new BuckEventBus());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target " +
@@ -413,7 +413,7 @@ public class ParserTest {
     BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo", testBuildFile);
     parser.parseBuildFilesForTargets(ImmutableList.of(foo),
         Lists.<String>newArrayList(),
-        new EventBus());
+        new BuckEventBus());
 
     assertEquals("Should have cached build rules.", 1, buildFileParser.calls);
   }
@@ -427,7 +427,7 @@ public class ParserTest {
     BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo", testBuildFile);
     parser.parseBuildFilesForTargets(ImmutableList.of(foo),
         Lists.<String>newArrayList(),
-        new EventBus());
+        new BuckEventBus());
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     assertEquals("Should have replaced build rules", 2, buildFileParser.calls);

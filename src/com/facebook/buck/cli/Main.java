@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
@@ -61,7 +62,7 @@ public final class Main {
   private final class Daemon implements Closeable {
 
     private final Parser parser;
-    private final EventBus eventBus;
+    private final EventBus fileEventBus;
     private final ProjectFilesystemWatcher filesystemWatcher;
     private final BuckConfig config;
 
@@ -70,13 +71,13 @@ public final class Main {
         Console console) throws IOException {
       this.config = config;
       this.parser = new Parser(projectFilesystem, new KnownBuildRuleTypes(), console);
-      this.eventBus = new EventBus("file-change-events");
+      this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
-          eventBus,
+          fileEventBus,
           config.getIgnorePaths(projectFilesystem),
           FileSystems.getDefault().newWatchService());
-      eventBus.register(parser);
+      fileEventBus.register(parser);
     }
 
     private Parser getParser() {
@@ -199,7 +200,8 @@ public final class Main {
     }
 
     ExecutorService busExecutor = Executors.newCachedThreadPool();
-    EventBus buildEvents = new AsyncEventBus("buck-build-events", busExecutor);
+    BuckEventBus buildEvents = new BuckEventBus(
+        new AsyncEventBus("buck-build-events", busExecutor));
     addEventListeners(buildEvents, projectFilesystem);
 
     // Find and execute command.
@@ -231,7 +233,9 @@ public final class Main {
     }
   }
 
-  private static void addEventListeners(EventBus events, ProjectFilesystem projectFilesystem) {
+  private static void addEventListeners(BuckEventBus buckEvents,
+                                        ProjectFilesystem projectFilesystem) {
+    EventBus events = buckEvents.getEventBus();
     events.register(new JavaUtilsLoggingBuildListener());
     events.register(new ChromeTraceBuildListener(projectFilesystem));
     JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;

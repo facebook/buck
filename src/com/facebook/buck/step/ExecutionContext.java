@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.android.NoAndroidSdkException;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -25,7 +26,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.EventBus;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -41,7 +41,7 @@ public class ExecutionContext {
   private final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
   private final ProcessExecutor processExecutor;
-  private final EventBus eventBus;
+  private final BuckEventBus eventBus;
 
   private ExecutionContext(
       ProjectFilesystem projectFilesystem,
@@ -51,7 +51,7 @@ public class ExecutionContext {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
-      EventBus eventBus) {
+      BuckEventBus eventBus) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
@@ -108,7 +108,7 @@ public class ExecutionContext {
     return console.getAnsi();
   }
 
-  public EventBus getEventBus() {
+  public BuckEventBus getBuckEventBus() {
     return eventBus;
   }
 
@@ -176,7 +176,7 @@ public class ExecutionContext {
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
     private boolean isDebugEnabled = false;
-    private EventBus eventBus = null;
+    private BuckEventBus eventBus = null;
 
     private Builder() {}
 
@@ -230,7 +230,7 @@ public class ExecutionContext {
       return this;
     }
 
-    public Builder setEventBus(EventBus eventBus) {
+    public Builder setEventBus(BuckEventBus eventBus) {
       this.eventBus = Preconditions.checkNotNull(eventBus);
       return this;
     }

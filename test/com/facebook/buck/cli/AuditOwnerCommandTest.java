@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -39,7 +40,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
@@ -239,7 +239,7 @@ public class AuditOwnerCommandTest {
     Console console = new TestConsole();
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    EventBus eventBus = new EventBus();
+    BuckEventBus eventBus = new BuckEventBus();
     return new AuditOwnerCommand(new CommandRunnerParams(
         console,
         filesystem,

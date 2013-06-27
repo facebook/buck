@@ -16,14 +16,13 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.DependencyGraph;
-
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.List;
@@ -54,7 +53,7 @@ public class PartialGraph {
       ProjectFilesystem projectFilesystem,
       Iterable<String> includes,
       Parser parser,
-      EventBus eventBus) throws NoSuchBuildTargetException, IOException {
+      BuckEventBus eventBus) throws NoSuchBuildTargetException, IOException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectFilesystem,
         includes,
@@ -67,7 +66,7 @@ public class PartialGraph {
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
-      EventBus eventBus) throws NoSuchBuildTargetException, IOException {
+      BuckEventBus eventBus) throws NoSuchBuildTargetException, IOException {
 
     Preconditions.checkNotNull(parser);
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -208,10 +208,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * {@link #buildRuleResult} to be resolved.
    */
   private void buildOnceDepsAreBuilt(final BuildContext context) {
-    EventBus eventBus = context.getEventBus();
+    BuckEventBus eventBus = context.getEventBus();
 
     // Record the start of the build.
-    eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
+    eventBus.getEventBus().post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
 
     // Deciding whether we need to rebuild is tricky business. We want to rebuild as little as
     // possible while always being sound.
@@ -322,16 +322,16 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   private void recordBuildRuleSuccess(BuildRuleSuccess.Type type,
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
-      EventBus eventBus) {
-    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
+      BuckEventBus eventBus) {
+    eventBus.getEventBus().post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
     buildRuleResult.set(new BuildRuleSuccess(this, type));
   }
 
   private void recordBuildRuleFailure(Throwable failure,
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
-      EventBus eventBus) {
-    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
+      BuckEventBus eventBus) {
+    eventBus.getEventBus().post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
     buildRuleResult.setException(failure);
   }
 

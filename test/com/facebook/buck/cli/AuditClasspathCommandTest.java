@@ -20,6 +20,7 @@ import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryRule;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.model.BuildTarget;
@@ -40,7 +41,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.eventbus.EventBus;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class AuditClasspathCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    EventBus eventBus = new EventBus();
+    BuckEventBus eventBus = new BuckEventBus();
 
     auditClasspathCommand = new AuditClasspathCommand(new CommandRunnerParams(
         console,

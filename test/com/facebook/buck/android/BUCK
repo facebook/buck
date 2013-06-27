@@ -10,6 +10,7 @@ java_test(
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/cpp:rules',
+    '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',

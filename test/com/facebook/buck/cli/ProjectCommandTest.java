@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.command.Project;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
@@ -48,7 +49,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -167,7 +167,7 @@ public class ProjectCommandTest {
           new ProjectFilesystem(new File(".")),
           new KnownBuildRuleTypes(),
           artifactCache,
-          new EventBus()));
+          new BuckEventBus()));
     }
 
     @Override

@@ -22,8 +22,8 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;

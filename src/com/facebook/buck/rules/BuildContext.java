@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.android.NoAndroidSdkException;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
@@ -26,7 +27,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.File;
@@ -42,7 +42,7 @@ public class BuildContext {
   private final ProjectFilesystem projectFilesystem;
   private final ArtifactCache artifactCache;
   private final JavaPackageFinder javaPackageFinder;
-  private final EventBus events;
+  private final BuckEventBus events;
   private final Supplier<String> androidBootclasspathSupplier;
   private final BuildDependencies buildDependencies;
 
@@ -55,7 +55,7 @@ public class BuildContext {
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
       JavaPackageFinder javaPackageFinder,
-      EventBus events,
+      BuckEventBus events,
       Supplier<String> androidBootclasspathSupplier,
       BuildDependencies buildDependencies,
       Console console) {
@@ -95,7 +95,7 @@ public class BuildContext {
     return artifactCache;
   }
 
-  public EventBus getEventBus() {
+  public BuckEventBus getEventBus() {
     return events;
   }
 
@@ -125,7 +125,7 @@ public class BuildContext {
     private ProjectFilesystem projectFilesystem = null;
     private ArtifactCache artifactCache = null;
     private JavaPackageFinder javaPackgeFinder = null;
-    private EventBus events = new EventBus();
+    private BuckEventBus events = null;
     private Supplier<String> androidBootclasspathSupplier = null;
     private BuildDependencies buildDependencies = BuildDependencies.getDefault();
     private Console console = null;
@@ -179,7 +179,7 @@ public class BuildContext {
       return this;
     }
 
-    public Builder setEventBus(EventBus events) {
+    public Builder setEventBus(BuckEventBus events) {
       this.events = events;
       return this;
     }

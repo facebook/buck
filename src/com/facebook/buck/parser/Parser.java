@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -40,7 +41,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
@@ -175,11 +175,11 @@ public class Parser {
   public DependencyGraph parseBuildFilesForTargets(
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
-      EventBus eventBus)
+      BuckEventBus eventBus)
       throws IOException, NoSuchBuildTargetException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
-    eventBus.post(ParseEvent.started(buildTargets));
+    eventBus.getEventBus().post(ParseEvent.started(buildTargets));
     if (!isCacheComplete(defaultIncludes)) {
       Set<File> buildTargetFiles = Sets.newHashSet();
       for (BuildTarget buildTarget : buildTargets) {
@@ -192,7 +192,7 @@ public class Parser {
     }
 
     DependencyGraph graph = findAllTransitiveDependencies(buildTargets, defaultIncludes);
-    eventBus.post(ParseEvent.finished(buildTargets));
+    eventBus.getEventBus().post(ParseEvent.finished(buildTargets));
     return graph;
   }
 

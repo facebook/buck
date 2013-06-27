@@ -17,6 +17,7 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.android.HasAndroidPlatformTarget;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -35,7 +36,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -61,7 +61,7 @@ public class Build {
 
   private final BuildDependencies buildDependencies;
 
-  /** Not set until {@link #executeBuild(EventBus)} is invoked. */
+  /** Not set until {@link #executeBuild(Set)} is invoked. */
   @Nullable
   private BuildContext buildContext;
 
@@ -82,7 +82,7 @@ public class Build {
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
       BuildDependencies buildDependencies,
-      EventBus eventBus) {
+      BuckEventBus eventBus) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -202,7 +202,7 @@ public class Build {
         .setProjectFilesystem(executionContext.getProjectFilesystem())
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
-        .setEventBus(executionContext.getEventBus())
+        .setEventBus(executionContext.getBuckEventBus())
         .setAndroidBootclasspathForAndroidPlatformTarget(
             executionContext.getAndroidPlatformTargetOptional())
         .setBuildDependencies(buildDependencies)

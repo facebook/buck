@@ -73,11 +73,11 @@ public final class DefaultStepRunner implements StepRunner {
       context.getStdErr().println(step.getDescription(context));
     }
 
-    context.getEventBus().post(StepEvent.started(step,
+    context.getBuckEventBus().getEventBus().post(StepEvent.started(step,
         step.getShortName(context),
         step.getDescription(context)));
     int exitCode = step.execute(context);
-    context.getEventBus().post(StepEvent.finished(step,
+    context.getBuckEventBus().getEventBus().post(StepEvent.finished(step,
         step.getShortName(context),
         step.getDescription(context),
         exitCode));

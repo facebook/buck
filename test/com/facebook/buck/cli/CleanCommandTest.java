@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.command.Project;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -28,7 +29,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.eventbus.EventBus;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
@@ -100,7 +100,7 @@ public class CleanCommandTest extends EasyMockSupport {
         createMock(ProjectFilesystem.class),
         createMock(KnownBuildRuleTypes.class),
         createMock(ArtifactCache.class),
-        createMock(EventBus.class),
+        createMock(BuckEventBus.class),
         createMock(Parser.class));
     return new CleanCommand(params);
   }

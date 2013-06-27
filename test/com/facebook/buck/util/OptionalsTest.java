@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Unit test for {@link Optionals}.

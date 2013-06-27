@@ -106,7 +106,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   static int executeBuildAndPrintAnyFailuresToConsole(Build build, Console console) {
     Set<BuildRule> rulesToBuild = build.getDependencyGraph().getNodesWithNoIncomingEdges();
-    build.getExecutionContext().getEventBus().post(BuildEvent.started(rulesToBuild));
+    build.getExecutionContext().getBuckEventBus().getEventBus().post(
+        BuildEvent.started(rulesToBuild));
     int exitCode;
     try {
       // Get the Future representing the build and then block until everything is built.
@@ -139,7 +140,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       exitCode = 1;
     }
 
-    build.getExecutionContext().getEventBus().post(BuildEvent.finished(rulesToBuild, exitCode));
+    build.getExecutionContext().getBuckEventBus().getEventBus().post(
+        BuildEvent.finished(rulesToBuild, exitCode));
     return exitCode;
   }
 

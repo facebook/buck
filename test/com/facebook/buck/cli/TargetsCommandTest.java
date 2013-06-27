@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.TargetsCommand.TargetsCommandPredicate;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.PrebuiltJarRule;
@@ -59,7 +60,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
@@ -114,7 +114,7 @@ public class TargetsCommandTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    EventBus eventBus = new EventBus();
+    BuckEventBus eventBus = new BuckEventBus();
     targetsCommand =
         new TargetsCommand(new CommandRunnerParams(
             console,

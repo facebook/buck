@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryRule;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.AnnotationProcessingData;
@@ -66,7 +67,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.eventbus.EventBus;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
@@ -98,7 +98,7 @@ public class DefaultJavaLibraryRuleTest {
     stubContext = BuildContext.builder()
         .setArtifactCache(new NoopArtifactCache())
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
-        .setEventBus(new EventBus())
+        .setEventBus(new BuckEventBus())
         .setJavaPackageFinder(packageFinder)
         .setProjectRoot(root)
         .setProjectFilesystem(new ProjectFilesystem(root))
@@ -657,6 +657,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildDependencies(BuildDependencies.TRANSITIVE)
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
         .setAndroidBootclasspathForAndroidPlatformTarget(Optional.of(platformTarget))
+        .setEventBus(new BuckEventBus())
         .build();
   }
 
@@ -752,7 +753,7 @@ public class DefaultJavaLibraryRuleTest {
           .setProjectFilesystem(new ProjectFilesystem(new File(".")))
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
-          .setEventBus(new EventBus())
+          .setEventBus(new BuckEventBus())
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,

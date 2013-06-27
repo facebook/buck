@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -143,10 +144,12 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     eventBus.post(BuildRuleEvent.started(cachingRule));
     eventBus.post(BuildRuleEvent.finished(cachingRule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
 
+    BuckEventBus buckEventBus = new BuckEventBus(eventBus);
+
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context = createMock(BuildContext.class);
     expect(context.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
-    expect(context.getEventBus()).andReturn(eventBus).times(1);
+    expect(context.getEventBus()).andReturn(buckEventBus).times(1);
     context.logBuildInfo("[BUILDING %s]", "//src/com/facebook/orca:orca");
     StepRunner stepRunner = createMock(StepRunner.class);
     expect(context.getStepRunner()).andReturn(stepRunner);
@@ -201,9 +204,11 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         BuildRuleStatus.SUCCESS,
         CacheResult.HIT));
 
+    BuckEventBus buckEventBus = new BuckEventBus(eventBus);
+
     BuildContext buildContext = createMock(BuildContext.class);
     expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
-    expect(buildContext.getEventBus()).andReturn(eventBus).anyTimes();
+    expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
 
     replayAll();
 
@@ -312,6 +317,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .setProjectFilesystem(projectFilesystem)
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
+        .setEventBus(new BuckEventBus())
         .build();
 
     replayAll();

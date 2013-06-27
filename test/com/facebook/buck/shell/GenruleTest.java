@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaBinaryRule;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -56,7 +57,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.eventbus.EventBus;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -216,7 +216,7 @@ public class GenruleTest {
             return Functions.identity();
           }
         })
-        .setEventBus(new EventBus())
+        .setEventBus(new BuckEventBus())
         .build();
   }
 
@@ -400,7 +400,7 @@ public class GenruleTest {
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
         .setAndroidPlatformTarget(Optional.of(android))
-        .setEventBus(new EventBus())
+        .setEventBus(new BuckEventBus())
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

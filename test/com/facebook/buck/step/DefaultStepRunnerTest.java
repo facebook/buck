@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -49,10 +50,12 @@ public class DefaultStepRunnerTest {
     BuckEventListener listener = new BuckEventListener();
     eventBus.register(listener);
 
+    BuckEventBus buckEventBus = new BuckEventBus(eventBus);
+
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setConsole(new TestConsole())
-        .setEventBus(eventBus)
+        .setEventBus(buckEventBus)
         .build();
 
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -93,7 +96,7 @@ public class DefaultStepRunnerTest {
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setConsole(new TestConsole())
-        .setEventBus(new EventBus())
+        .setEventBus(new BuckEventBus())
         .build();
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
         .setDaemon(true)

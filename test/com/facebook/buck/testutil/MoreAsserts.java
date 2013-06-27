@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
 
 import java.util.Iterator;

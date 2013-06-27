@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.DependencyGraph;
@@ -28,7 +29,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -133,7 +133,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
       Console console,
-      EventBus eventBus) {
+      BuckEventBus eventBus) {
     return new Build(graph,
         findAndroidSdkDir(),
         findAndroidNdkDir(),

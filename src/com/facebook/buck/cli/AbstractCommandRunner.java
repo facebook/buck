@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -29,7 +30,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.eventbus.EventBus;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -46,7 +46,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ArtifactCache artifactCache;
   private final Parser parser;
-  private final EventBus eventBus;
+  private final BuckEventBus eventBus;
 
   protected AbstractCommandRunner(CommandRunnerParams params) {
     this.commandRunnerParams = Preconditions.checkNotNull(params);
@@ -157,7 +157,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return console.getStdErr();
   }
 
-  protected EventBus getEventBus() {
+  protected BuckEventBus getEventBus() {
     return eventBus;
   }
 

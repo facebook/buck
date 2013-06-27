@@ -16,8 +16,8 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.CompositeStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
