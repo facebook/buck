@@ -90,15 +90,17 @@ public class NdkLibraryRuleTest {
         ImmutableList.of(
             String.format(
               "/ndk-r8b/ndk-build -j %d -C %s/ flag1 flag2 " +
-              "APP_PROJECT_PATH=/foo/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
-              "NDK_OUT=/foo/%s/%s/",
+              "APP_PROJECT_PATH=/foo/%s/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
+              "NDK_OUT=/foo/%s/%s/%s/",
               Runtime.getRuntime().availableProcessors(),
               basePath,
               BuckConstant.GEN_DIR,
               basePath,
+              "__libbase",
               basePath,
               BuckConstant.GEN_DIR,
-              basePath)
+              basePath,
+              "__libbase")
         ),
         steps,
         executionContext);

@@ -72,7 +72,10 @@ public class NdkLibraryRule extends AbstractCachingBuildRule {
     Preconditions.checkArgument(basePathWithSlash.endsWith("/"));
     this.makefileDirectory = basePathWithSlash;
     this.buildArtifactsDirectory =
-        String.format("%s/%s", BuckConstant.GEN_DIR, basePathWithSlash);
+        String.format("%s/%s__lib%s/",
+            BuckConstant.GEN_DIR,
+            basePathWithSlash,
+            getBuildTarget().getShortName());
     this.flags = ImmutableList.copyOf(flags);
   }
 
