@@ -74,7 +74,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
           getProjectFilesystem(),
           options.getDefaultIncludes(),
           getParser(),
-          getEventBus());
+          getBuckEventBus());
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

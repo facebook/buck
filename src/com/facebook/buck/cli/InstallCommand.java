@@ -83,8 +83,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    File apk = new File(installableBuildRule.getApkPath());
-    if (!installApk(apk, options, build.getExecutionContext())) {
+    if (!installApk(installableBuildRule, options, build.getExecutionContext())) {
       return 1;
     }
 
@@ -133,7 +132,10 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     PrintStream stdOut = console.getStdOut();
     stdOut.println(String.format("Starting activity %s...", activityToRun));
 
-    return adbCall(options.adbOptions(), context, new AdbCallable() {
+    getBuckEventBus().getEventBus().post(StartActivityEvent.started(
+        androidBinaryRule.getBuildTarget(),
+        activityToRun));
+    boolean success = adbCall(options.adbOptions(), context, new AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
         String err = deviceStartActivity(device, activityToRun);
@@ -150,7 +152,13 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       public String toString() {
         return "start activity";
       }
-    }) ? 0 : 1;
+    });
+    getBuckEventBus().getEventBus().post(StartActivityEvent.finished(
+        androidBinaryRule.getBuildTarget(),
+        activityToRun,
+        success));
+
+    return success ? 0 : 1;
 
   }
 
@@ -194,8 +202,13 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
    *  devices will be used to install the apk if needed.
    */
   @VisibleForTesting
-  boolean installApk(final File apk, InstallCommandOptions options, ExecutionContext context) {
-    return adbCall(options.adbOptions(), context, new AdbCallable() {
+  boolean installApk(InstallableBuildRule buildRule,
+      InstallCommandOptions options,
+      ExecutionContext context) {
+    getBuckEventBus().getEventBus().post(InstallEvent.started(buildRule.getBuildTarget()));
+
+    final File apk = new File(buildRule.getApkPath());
+    boolean success = adbCall(options.adbOptions(), context, new AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
         return installApkOnDevice(device, apk);
@@ -206,6 +219,10 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
         return "install apk";
       }
     });
+    getBuckEventBus().getEventBus().post(
+        InstallEvent.finished(buildRule.getBuildTarget(), success));
+
+    return success;
   }
 
 

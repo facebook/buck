@@ -68,12 +68,15 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
+    getBuckEventBus().getEventBus().post(
+        BuildEvent.started(buildTargets));
+
     // Parse the build files to create a DependencyGraph.
     DependencyGraph dependencyGraph;
     try {
       dependencyGraph = getParser().parseBuildFilesForTargets(buildTargets,
           options.getDefaultIncludes(),
-          getEventBus());
+          getBuckEventBus());
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
@@ -86,7 +89,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         getProjectFilesystem(),
         getArtifactCache(),
         console,
-        getEventBus());
+        getBuckEventBus());
     getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = 0;
     try {
@@ -95,6 +98,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       // Shutdown the Executor Service once the build completes.
       build.getStepRunner().getListeningExecutorService().shutdownNow();
     }
+
+    getBuckEventBus().getEventBus().post(
+        BuildEvent.finished(buildTargets, exitCode));
 
     if (exitCode != 0) {
       return exitCode;
@@ -106,8 +112,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   static int executeBuildAndPrintAnyFailuresToConsole(Build build, Console console) {
     Set<BuildRule> rulesToBuild = build.getDependencyGraph().getNodesWithNoIncomingEdges();
-    build.getExecutionContext().getBuckEventBus().getEventBus().post(
-        BuildEvent.started(rulesToBuild));
+
     int exitCode;
     try {
       // Get the Future representing the build and then block until everything is built.
@@ -140,8 +145,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       exitCode = 1;
     }
 
-    build.getExecutionContext().getBuckEventBus().getEventBus().post(
-        BuildEvent.finished(rulesToBuild, exitCode));
     return exitCode;
   }
 

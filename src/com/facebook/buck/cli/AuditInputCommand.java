@@ -69,7 +69,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
           getProjectFilesystem(),
           options.getDefaultIncludes(),
           getParser(),
-          getEventBus());
+          getBuckEventBus());
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

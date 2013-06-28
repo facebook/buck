@@ -55,7 +55,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.buildRuleTypes = Preconditions.checkNotNull(params.getBuildRuleTypes());
     this.artifactCache = Preconditions.checkNotNull(params.getArtifactCache());
     this.parser = Preconditions.checkNotNull(params.getParser());
-    this.eventBus = Preconditions.checkNotNull(params.getEventBus());
+    this.eventBus = Preconditions.checkNotNull(params.getBuckEventBus());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -157,7 +157,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return console.getStdErr();
   }
 
-  protected BuckEventBus getEventBus() {
+  protected BuckEventBus getBuckEventBus() {
     return eventBus;
   }
 

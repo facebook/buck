@@ -17,37 +17,41 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * Base class for events about building.
  */
 public abstract class BuildEvent extends BuckEvent {
-  private final ImmutableSet<BuildRule> buildRules;
+  private final ImmutableList<BuildTarget> buildTargets;
 
-  protected BuildEvent(Set<BuildRule> buildRules) {
-    this.buildRules = ImmutableSet.copyOf(buildRules);
+  /**
+   * @param buildTargets The list of {@link BuildTarget}s being built.
+   */
+  protected BuildEvent(List<BuildTarget> buildTargets) {
+    this.buildTargets = ImmutableList.copyOf(buildTargets);
   }
 
-  public ImmutableSet<BuildRule> getBuildRules() {
-    return buildRules;
+  public ImmutableList<BuildTarget> getBuildTargets() {
+    return buildTargets;
   }
 
-  public static Started started(Set<BuildRule> rulesToBuild) {
-    return new Started(rulesToBuild);
+  public static Started started(List<BuildTarget> buildTargets) {
+    return new Started(buildTargets);
   }
 
-  public static Finished finished(Set<BuildRule> buildRules, int exitCode) {
+  public static Finished finished(List<BuildTarget> buildRules, int exitCode) {
     return new Finished(buildRules, exitCode);
   }
 
   @Override
   protected String getValueString() {
-    return Joiner.on(", ").join(buildRules);
+    return Joiner.on(", ").join(buildTargets);
   }
 
   @Override
@@ -59,17 +63,17 @@ public abstract class BuildEvent extends BuckEvent {
     BuildEvent that = (BuildEvent)o;
 
     return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getBuildRules(), that.getBuildRules());
+        Objects.equal(getBuildTargets(), that.getBuildTargets());
   }
 
   @Override
   public int hashCode() {
-    return buildRules.hashCode();
+    return buildTargets.hashCode();
   }
 
   public static class Started extends BuildEvent {
-    protected Started(Set<BuildRule> buildRules) {
-      super(buildRules);
+    protected Started(List<BuildTarget> buildTargets) {
+      super(buildTargets);
     }
 
     @Override
@@ -81,7 +85,7 @@ public abstract class BuildEvent extends BuckEvent {
   public static class Finished extends BuildEvent {
     private final int exitCode;
 
-    protected Finished(Set<BuildRule> buildRules, int exitCode) {
+    protected Finished(List<BuildTarget> buildRules, int exitCode) {
       super(buildRules);
       this.exitCode = exitCode;
     }
@@ -107,7 +111,7 @@ public abstract class BuildEvent extends BuckEvent {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getBuildRules(), getExitCode());
+      return Objects.hashCode(getBuildTargets(), getExitCode());
     }
   }
 }

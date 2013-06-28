@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +47,7 @@ public class DefaultStepRunnerTest {
 
     // The EventBus should be updated with events indicating how the steps were run.
     EventBus eventBus = new EventBus();
-    BuckEventListener listener = new BuckEventListener();
+    FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
     BuckEventBus buckEventBus = new BuckEventBus(eventBus);

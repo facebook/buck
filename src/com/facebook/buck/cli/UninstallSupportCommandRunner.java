@@ -46,12 +46,13 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
 
   /**
    * Uninstall apk from all matching devices.
-   * @see InstallCommand#installApk(java.io.File, InstallCommandOptions, ExecutionContext)
+   * @see InstallCommand#installApk(InstallableBuildRule, InstallCommandOptions, ExecutionContext)
    */
   @VisibleForTesting
   protected boolean uninstallApk(final String packageName, final AdbOptions adbOptions,
       final UninstallOptions uninstallOptions, ExecutionContext context) {
-    return adbCall(adbOptions, context, new AdbCallable() {
+    getBuckEventBus().getEventBus().post(UninstallEvent.started(packageName));
+    boolean success = adbCall(adbOptions, context, new AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
         return uninstallApkFromDevice(device, packageName, uninstallOptions.shouldKeepUserData());
@@ -62,6 +63,8 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
         return "uninstall apk";
       }
     });
+    getBuckEventBus().getEventBus().post(UninstallEvent.finished(packageName, success));
+    return  success;
   }
 
   /**

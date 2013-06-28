@@ -16,7 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.cli.InstallEvent;
+import com.facebook.buck.cli.StartActivityEvent;
+import com.facebook.buck.cli.UninstallEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.step.StepEvent;
@@ -40,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing).
  */
-public class ChromeTraceBuildListener {
+public class ChromeTraceBuildListener extends BuckEventListener {
   private final ProjectFilesystem projectFilesystem;
   private ConcurrentLinkedQueue<ChromeTraceEvent> eventList =
       new ConcurrentLinkedQueue<ChromeTraceEvent>();
@@ -49,23 +53,8 @@ public class ChromeTraceBuildListener {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
   }
 
-  @Subscribe
-  public void buildStarted(BuildEvent.Started started) {
-    writeChromeTraceEvent("buck",
-        "build",
-        ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
-        started);
-  }
-
-  @Subscribe
-  public synchronized void buildFinished(BuildEvent.Finished finished) {
-    writeChromeTraceEvent("buck",
-        "build",
-        ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(),
-        finished);
-
+  @Override
+  public void outputTrace() {
     try {
       String tracePath = String.format("%s/%s", BuckConstant.BIN_DIR, "build.trace");
       File traceOutput = projectFilesystem.getFileForRelativePath(tracePath);
@@ -85,6 +74,24 @@ public class ChromeTraceBuildListener {
     } catch (IOException e) {
       throw new HumanReadableException("Unable to write trace file.");
     }
+  }
+
+  @Subscribe
+  public void buildStarted(BuildEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "build",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public synchronized void buildFinished(BuildEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "build",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(),
+        finished);
   }
 
   @Subscribe
@@ -139,6 +146,67 @@ public class ChromeTraceBuildListener {
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of("targets",
             Joiner.on(",").join(finished.getBuildTargets())),
+        finished);
+  }
+
+  @Subscribe
+  public void installStarted(InstallEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "install",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void installFinished(InstallEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "install",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(
+            "target", finished.getBuildTarget().getFullyQualifiedName(),
+            "success", Boolean.toString(finished.isSuccess())),
+        finished);
+  }
+
+  @Subscribe
+  public void startActivityStarted(StartActivityEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "start_activity",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void startActivityFinished(StartActivityEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "start_activity",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(
+            "target", finished.getBuildTarget().getFullyQualifiedName(),
+            "activity_name", finished.getActivityName(),
+            "success", Boolean.toString(finished.isSuccess())),
+        finished);
+  }
+
+  @Subscribe
+  public void uninstallStarted(UninstallEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "uninstall",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void uninstallFinished(UninstallEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "uninstall",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(
+            "package_name", finished.getPackageName(),
+            "success", Boolean.toString(finished.isSuccess())),
         finished);
   }
 

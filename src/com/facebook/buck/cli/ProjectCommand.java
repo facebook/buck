@@ -143,7 +143,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         getProjectFilesystem(),
         options.getDefaultIncludes(),
         getParser(),
-        getEventBus());
+        getBuckEventBus());
   }
 
   @Override

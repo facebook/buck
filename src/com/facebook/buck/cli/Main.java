@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
@@ -202,7 +203,8 @@ public final class Main {
     ExecutorService busExecutor = Executors.newCachedThreadPool();
     BuckEventBus buildEvents = new BuckEventBus(
         new AsyncEventBus("buck-build-events", busExecutor));
-    addEventListeners(buildEvents, projectFilesystem);
+    ImmutableList<BuckEventListener> eventListeners =
+        addEventListeners(buildEvents, projectFilesystem);
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);
@@ -222,6 +224,9 @@ public final class Main {
       } catch (InterruptedException e) {
         e.printStackTrace(stdErr);
       }
+      for (BuckEventListener eventListener : eventListeners) {
+        eventListener.outputTrace();
+      }
       return exitCode;
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
@@ -233,12 +238,19 @@ public final class Main {
     }
   }
 
-  private static void addEventListeners(BuckEventBus buckEvents,
-                                        ProjectFilesystem projectFilesystem) {
+  private ImmutableList<BuckEventListener> addEventListeners(BuckEventBus buckEvents,
+                                 ProjectFilesystem projectFilesystem) {
+    ImmutableList<BuckEventListener> eventListeners = ImmutableList.of(
+      new JavaUtilsLoggingBuildListener(),
+      new ChromeTraceBuildListener(projectFilesystem));
+
     EventBus events = buckEvents.getEventBus();
-    events.register(new JavaUtilsLoggingBuildListener());
-    events.register(new ChromeTraceBuildListener(projectFilesystem));
+    for (BuckEventListener eventListener : eventListeners) {
+      events.register(eventListener);
+    }
+
     JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+    return eventListeners;
   }
 
 

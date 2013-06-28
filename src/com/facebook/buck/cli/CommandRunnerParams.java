@@ -96,7 +96,7 @@ class CommandRunnerParams {
     return parser;
   }
 
-  public BuckEventBus getEventBus() {
+  public BuckEventBus getBuckEventBus() {
     return eventBus;
   }
 }

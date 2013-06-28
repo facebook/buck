@@ -84,7 +84,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
           getProjectFilesystem(),
           options.getDefaultIncludes(),
           getParser(),
-          getEventBus());
+          getBuckEventBus());
     } catch (NoSuchBuildTargetException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

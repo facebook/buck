@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Throwables;
@@ -35,7 +36,7 @@ import java.util.logging.Logger;
 /**
  * Logs build events to java.util.logging.
  */
-public class JavaUtilsLoggingBuildListener {
+public class JavaUtilsLoggingBuildListener extends BuckEventListener {
 
   private final static Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
   private final static Level LEVEL = Level.INFO;

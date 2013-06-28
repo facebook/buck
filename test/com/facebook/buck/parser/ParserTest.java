@@ -27,7 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -225,7 +225,7 @@ public class ParserTest {
 
     // The EventBus should be updated with events indicating how parsing ran.
     BuckEventBus eventBus = new BuckEventBus();
-    BuckEventListener listener = new BuckEventListener();
+    FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.getEventBus().register(listener);
 
     DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets,

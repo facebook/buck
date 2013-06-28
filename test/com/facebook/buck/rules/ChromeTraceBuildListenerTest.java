@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.ChromeTraceEvent;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.ExecutionContext;
@@ -31,6 +32,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -51,9 +53,11 @@ public class ChromeTraceBuildListenerTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem);
 
+    BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
+
     BuildRule rule = new FakeBuildRule(
         new BuildRuleType("fakeRule"),
-        BuildTargetFactory.newInstance("//fake:rule"),
+        target,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
     FakeStep step = new FakeStep("fakeStep", "I'm a Fake Step!", 0);
@@ -61,14 +65,15 @@ public class ChromeTraceBuildListenerTest {
     ExecutionContext context = createMock(ExecutionContext.class);
     replay(context);
 
-    ImmutableSet<BuildRule> buildRules = ImmutableSet.of(rule);
+    ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
 
-    listener.buildStarted(BuildEvent.started(buildRules));
+    listener.buildStarted(BuildEvent.started(buildTargets));
     listener.ruleStarted(BuildRuleEvent.started(rule));
     listener.stepStarted(StepEvent.started(step, "fakeStep", "I'm a Fake Step!"));
     listener.stepFinished(StepEvent.finished(step, "fakeStep", "I'm a Fake Step!", 0));
     listener.ruleFinished(BuildRuleEvent.finished(rule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
-    listener.buildFinished(BuildEvent.finished(buildRules, 0));
+    listener.buildFinished(BuildEvent.finished(buildTargets, 0));
+    listener.outputTrace();
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BIN_DIR + "/build.trace");
 

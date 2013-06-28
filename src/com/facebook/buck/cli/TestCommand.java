@@ -256,7 +256,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getProjectFilesystem(),
         options.getDefaultIncludes(),
         getParser(),
-        getEventBus());
+        getBuckEventBus());
 
     final DependencyGraph graph = partialGraph.getDependencyGraph();
 
@@ -276,7 +276,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getProjectFilesystem(),
         getArtifactCache(),
         console,
-        getEventBus());
+        getBuckEventBus());
     int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
     if (exitCode != 0) {
       return exitCode;

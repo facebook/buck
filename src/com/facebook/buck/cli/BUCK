@@ -1,7 +1,26 @@
+EVENTS_SRCS = [
+  'InstallEvent.java',
+  'UninstallEvent.java',
+  'StartActivityEvent.java',
+]
+java_library(
+  name = 'events',
+  srcs = EVENTS_SRCS,
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/model:model',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_library(
   name = 'cli',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = EVENTS_SRCS),
   deps = [
+    ':events',
     '//lib:args4j',
     '//lib:ddmlib',
     '//lib:guava',

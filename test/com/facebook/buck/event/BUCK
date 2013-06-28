@@ -1,5 +1,5 @@
 TEST_SRCS = [
-  'BuckEventListener.java',
+  'FakeBuckEventListener.java',
 ]
 
 java_library(

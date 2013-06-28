@@ -16,21 +16,12 @@
 
 package com.facebook.buck.event;
 
-import com.google.common.collect.Lists;
-import com.google.common.eventbus.Subscribe;
-
-import java.util.List;
-
 public class BuckEventListener {
-  private final List<BuckEvent> events = Lists.newLinkedList();
 
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void eventFired(BuckEvent event) {
-    events.add(event);
-  }
-
-  public List<BuckEvent> getEvents() {
-    return events;
-  }
+  /**
+   * Output any trace data collected to the backing store.
+   */
+  public void outputTrace() {
+    // By default, do nothing.
+  };
 }
