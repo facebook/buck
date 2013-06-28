@@ -51,6 +51,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
 
   private ListeningExecutorService listeningExecutorService;
 
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -106,6 +107,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   public boolean isDebugEnabled() {
     return false;
   }
+
 
   @VisibleForTesting
   int getNumThreads() {

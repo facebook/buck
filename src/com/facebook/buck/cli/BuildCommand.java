@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
@@ -82,12 +83,14 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
+    ArtifactCache artifactCache = getArtifactCache();
+
     // Create and execute the build.
     build = options.createBuild(
         options.getBuckConfig(),
         dependencyGraph,
         getProjectFilesystem(),
-        getArtifactCache(),
+        artifactCache,
         console,
         getBuckEventBus());
     getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
