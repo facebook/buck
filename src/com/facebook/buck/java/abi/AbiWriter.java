@@ -109,7 +109,12 @@ public class AbiWriter extends AbstractProcessor {
       }
       byte[] sha1Bytes = digest.digest();
 
-      return new BigInteger(1, sha1Bytes).toString(16);
+      // This isn't a particularly fast operation. A quick test indicates that it's approximately
+      // 3-4 times slower than "new BigInteger(1, sha1Bytes).toString(16)". It does, however, ensure
+      // that the resulting string is always 40 characters long and padded with 0 if necessary.
+      // To give an indication of speed, on my i7 mbp, 100k string generations takes ~450ms compared
+      // to ~150ms. In short, the speed hit isn't going to be the end of the world for our use case.
+      return String.format("%040x", new BigInteger(1, sha1Bytes));
     } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
       // Note: if we get either of these that we're on a broken JRE and we're not having fun.
       throw new RuntimeException(e);

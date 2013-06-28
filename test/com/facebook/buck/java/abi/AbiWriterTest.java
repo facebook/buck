@@ -587,6 +587,14 @@ public class AbiWriterTest {
     return Iterables.getOnlyElement(processor.getSummaries());
   }
 
+  @Test
+  public void generatedHashMustBeZeroPaddedToFortyCharacters() {
+    String hex = AbiWriter.computeAbiKey(ImmutableSortedSet.of("abcde"));
+
+    assertEquals('0', hex.charAt(0));
+    assertEquals(40, hex.length());
+  }
+
   private static class FileAndSource {
     public File file;
     public String source;
