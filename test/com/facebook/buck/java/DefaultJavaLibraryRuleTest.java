@@ -32,17 +32,20 @@ import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -70,6 +73,7 @@ import com.google.common.collect.Maps;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -260,6 +264,29 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals("Should compile Main.java rather than generated R.java.",
         ImmutableSet.of(src),
         javac.getSrcs());
+  }
+
+  @Test
+  @Ignore("TODO(simons): In the spirit of TDD, make this test work!")
+  public void testGetInputsToCompareToOutputWhenAResourceAsSourcePathExists() {
+    AbstractBuildRuleBuilderParams params = new FakeAbstractBuildRuleBuilderParams();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
+    Genrule.newGenruleBuilder(params)
+        .setBuildTarget(genruleBuildTarget)
+        .setCmd("echo 'aha' > $OUT")
+        .setOut("stuff.txt")
+        .build(ruleResolver);
+
+    DefaultJavaLibraryRule javaRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(params)
+        .setBuildTarget(BuildTargetFactory.newInstance("//library:code"))
+        .addResource(new BuildTargetSourcePath(genruleBuildTarget))
+        .build(ruleResolver);
+
+    assertEquals(
+        ImmutableList.of(BuckConstant.GEN_DIR + "/generated/stuff.txt"),
+        javaRule.getInputsToCompareToOutput());
   }
 
   /**

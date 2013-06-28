@@ -41,6 +41,7 @@ java_test(
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
