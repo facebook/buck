@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -150,7 +151,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       Set<BuildRule> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
       boolean useAndroidProguardConfigWithOptimizations,
-      Optional<String> proguardConfig,
+      Optional<SourcePath> proguardConfig,
       boolean compressResources,
       Set<String> primaryDexSubstrings,
       Optional<String> resourceFilter,
@@ -163,7 +164,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
-    this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
+    this.proguardConfig = Preconditions.checkNotNull(proguardConfig)
+        .transform(SourcePath.TO_REFERENCE);
     this.compressResources = compressResources;
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
     this.outputGenDirectory = String.format("%s/%s",
@@ -897,7 +899,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
             DexStore.JAR);
     private boolean useAndroidProguardConfigWithOptimizations = false;
-    private Optional<String> proguardConfig = Optional.absent();
+    private Optional<SourcePath> proguardConfig = Optional.absent();
     private boolean compressResources = false;
     private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
     private Optional<String> resourceFilter = Optional.absent();
@@ -988,7 +990,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       return this;
     }
 
-    public Builder setProguardConfig(Optional<String> proguardConfig) {
+    public Builder setProguardConfig(Optional<SourcePath> proguardConfig) {
       this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
       return this;
     }

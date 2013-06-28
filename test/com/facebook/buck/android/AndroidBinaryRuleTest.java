@@ -33,6 +33,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -423,7 +425,8 @@ public class AndroidBinaryRuleTest {
             ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
                 .getInputsToCompareToOutput());
 
-    androidBinaryRuleBuilder.setProguardConfig(Optional.of("java/src/com/facebook/proguard.cfg"));
+    SourcePath proguardConfig = new FileSourcePath("java/src/com/facebook/proguard.cfg");
+    androidBinaryRuleBuilder.setProguardConfig(Optional.of(proguardConfig));
     MoreAsserts.assertListEquals(
         "getInputsToCompareToOutput() should include Proguard config, if present.",
         ImmutableList.of(

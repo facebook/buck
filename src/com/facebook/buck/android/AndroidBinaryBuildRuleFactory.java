@@ -21,6 +21,7 @@ import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -88,9 +89,8 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     builder.setUseAndroidProguardConfigWithOptimizations(useAndroidProguardConfigWithOptimizations);
 
     // proguard_config
-    Optional<String> proguardConfig = params.getOptionalStringAttribute("proguard_config");
-    builder.setProguardConfig(
-        proguardConfig.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
+    Optional<SourcePath> proguardConfig = params.getOptionalSourcePath("proguard_config");
+    builder.setProguardConfig(proguardConfig);
 
     // compress_resources
     boolean compressResources = params.getBooleanAttribute("compress_resources");

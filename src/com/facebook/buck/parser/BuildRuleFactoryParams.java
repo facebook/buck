@@ -236,6 +236,16 @@ public final class BuildRuleFactoryParams {
     }
   }
 
+  public Optional<SourcePath> getOptionalSourcePath(String identifier) {
+    Optional<String> option = getOptionalStringAttribute(identifier);
+    if (option.isPresent()) {
+      SourcePath sourcePath = asSourcePath(option.get());
+      return Optional.of(sourcePath);
+    } else {
+      return Optional.absent();
+    }
+  }
+
   public BuildTarget resolveBuildTarget(String target) throws NoSuchBuildTargetException {
     return buildTargetParser.parse(target, buildFileParseContext);
   }
