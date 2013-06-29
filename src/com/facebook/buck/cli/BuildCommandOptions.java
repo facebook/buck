@@ -24,6 +24,7 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -136,6 +137,9 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       ArtifactCache artifactCache,
       Console console,
       BuckEventBus eventBus) {
+    if (console.getVerbosity() == Verbosity.ALL) {
+      console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
+    }
     return new Build(graph,
         findAndroidSdkDir(),
         findAndroidNdkDir(),

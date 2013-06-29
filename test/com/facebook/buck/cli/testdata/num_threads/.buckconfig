@@ -1,0 +1,7 @@
+[build]
+  # (Runtime.getRuntime().availableProcessors() * 1.25) can never be 7,
+  # so if "Creating a build with 7 threads." is printed to stderr, then
+  # we know that Buck must have read the value from this file.
+  threads = 7
+[project]
+  initial_targets = //:noop
