@@ -38,6 +38,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
 @SupportedSourceVersion(RELEASE_7)
@@ -57,6 +58,9 @@ public class AbiWriter extends AbstractProcessor {
         StringBuilder builder = new StringBuilder();
         renderable.appendTo(builder);
         classes.add(builder.toString());
+      } else if (element instanceof PackageElement) {
+        // Only found in package-info classes and therefore do not contribute to the ABI.
+        continue;
       } else {
         throw new RuntimeException("Unknown type: " + element.getKind());
       }
