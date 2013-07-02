@@ -16,12 +16,9 @@
 
 package com.facebook.buck.event;
 
-public class BuckEventListener {
-
+public interface BuckEventListener {
   /**
    * Output any trace data collected to the backing store.
    */
-  public void outputTrace() {
-    // By default, do nothing.
-  };
+  public void outputTrace();
 }

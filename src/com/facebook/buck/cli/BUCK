@@ -1,4 +1,5 @@
 EVENTS_SRCS = [
+  'CommandEvent.java',
   'InstallEvent.java',
   'UninstallEvent.java',
   'StartActivityEvent.java',

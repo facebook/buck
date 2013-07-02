@@ -203,21 +203,30 @@ public final class Main {
     ExecutorService busExecutor = Executors.newCachedThreadPool();
     BuckEventBus buildEvents = new BuckEventBus(
         new AsyncEventBus("buck-build-events", busExecutor));
-    ImmutableList<BuckEventListener> eventListeners =
-        addEventListeners(buildEvents, projectFilesystem);
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
+      ImmutableList<BuckEventListener> eventListeners =
+          addEventListeners(buildEvents, projectFilesystem);
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
-      int exitCode = command.get().execute(remainingArgs, config, new CommandRunnerParams(
+
+      Command executingCommand = command.get();
+      String commandName = executingCommand.name().toLowerCase();
+
+      buildEvents.getEventBus().post(CommandEvent.started(commandName, isDaemon()));
+
+      int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
           config.createArtifactCache(projectFilesystem, console),
           buildEvents,
           parser));
+
+      buildEvents.getEventBus().post(CommandEvent.finished(commandName, isDaemon(), exitCode));
+
       busExecutor.shutdown();
       try {
         busExecutor.awaitTermination(15, TimeUnit.SECONDS);
@@ -239,7 +248,7 @@ public final class Main {
   }
 
   private ImmutableList<BuckEventListener> addEventListeners(BuckEventBus buckEvents,
-                                 ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem) {
     ImmutableList<BuckEventListener> eventListeners = ImmutableList.of(
       new JavaUtilsLoggingBuildListener(),
       new ChromeTraceBuildListener(projectFilesystem));

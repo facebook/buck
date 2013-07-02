@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing).
  */
-public class ChromeTraceBuildListener extends BuckEventListener {
+public class ChromeTraceBuildListener implements BuckEventListener {
   private final ProjectFilesystem projectFilesystem;
   private ConcurrentLinkedQueue<ChromeTraceEvent> eventList =
       new ConcurrentLinkedQueue<ChromeTraceEvent>();

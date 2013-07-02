@@ -47,7 +47,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-public class JavacInMemoryStep implements Step {
+public class  JavacInMemoryStep implements Step {
 
   private final String pathToOutputDirectory;
 

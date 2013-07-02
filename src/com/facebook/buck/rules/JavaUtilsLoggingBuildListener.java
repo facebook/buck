@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 /**
  * Logs build events to java.util.logging.
  */
-public class JavaUtilsLoggingBuildListener extends BuckEventListener {
+public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
   private final static Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
   private final static Level LEVEL = Level.INFO;
@@ -90,6 +90,9 @@ public class JavaUtilsLoggingBuildListener extends BuckEventListener {
     record.setMillis(finished.getTimestamp());
     LOG.log(record);
   }
+
+  @Override
+  public void outputTrace() {}
 
   private static class BuildEventFormatter extends Formatter {
 
