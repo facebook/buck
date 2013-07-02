@@ -372,6 +372,41 @@ public class ParserTest {
     assertEquals("Should have invalidated cache.", 2, buildFileParser.calls);
   }
 
+  public void testGeneratedDeps() throws IOException, NoSuchBuildTargetException {
+    // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
+    tempDir.newFolder("java", "com", "facebook", "generateddeps");
+
+    File testGeneratedDepsBuckFile = tempDir.newFile(
+        "java/com/facebook/generateddeps/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'foo')\n" +
+            "java_library(name = 'bar')\n" +
+            "add_deps(name = 'foo', deps = [':bar'])\n",
+        testGeneratedDepsBuckFile,
+        Charsets.UTF_8);
+
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//java/com/facebook/generateddeps",
+        "foo",
+        testGeneratedDepsBuckFile);
+
+    BuildTarget barTarget = BuildTargetFactory.newInstance("//java/com/facebook/generateddeps",
+        "bar",
+        testGeneratedDepsBuckFile);
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
+    Iterable<String> defaultIncludes = ImmutableList.of();
+
+    DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets,
+        defaultIncludes,
+        new BuckEventBus());
+
+    BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
+    assertNotNull(fooRule);
+    BuildRule barRule = graph.findBuildRuleByTarget(barTarget);
+    assertNotNull(barRule);
+
+    assertEquals(ImmutableSet.of(barRule), fooRule.getDeps());
+  }
+
   @Test
   @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
   public void whenNotifiedOfSourcePathEventThenCacheRulesAreNotInvalidated()

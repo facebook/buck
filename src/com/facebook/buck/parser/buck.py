@@ -30,21 +30,21 @@ def relpath(path, start=posixpath.curdir):
   return posixpath.join(*rel_list)
 
 
-# When BUILD files are executed, the functions in this file tagged with
-# @provide_for_build will be provided in the BUILD file's local symbol table.
+# When build files are executed, the functions in this file tagged with
+# @provide_for_build will be provided in the build file's local symbol table.
 #
-# When these functions are called from a BUILD file, they will be passed
+# When these functions are called from a build file, they will be passed
 # a keyword parameter, build_env, which is a dictionary with information about
-# the environment of the BUILD file which is currently being processed.
+# the environment of the build file which is currently being processed.
 # It contains the following keys:
 #
-# "BUILD_FILE_DIRECTORY" - The directory containing the BUILD file.
+# "BUILD_FILE_DIRECTORY" - The directory containing the build file.
 #
-# "BASE" - The base path of the BUILD file.
+# "BASE" - The base path of the build file.
 #
 # "PROJECT_ROOT" - An absolute path to the project root.
 #
-# "BUILD_FILE_SYMBOL_TABLE" - The global symbol table of the BUILD file.
+# "BUILD_FILE_SYMBOL_TABLE" - The global symbol table of the build file.
 
 BUILD_FUNCTIONS = []
 BUILD_RULES_FILE_NAME = 'BUCK'
@@ -68,8 +68,14 @@ def make_build_file_symbol_table(build_env):
 def add_rule(rule, build_env):
   # Include the base path of the BUILD file so the reader consuming this JSON will know which BUILD
   # file the rule came from.
+  if 'name' not in rule:
+    raise ValueError('rules must contain the field \'name\'.  Found %s.' % rule)
+  rule_name = rule['name']
+  if rule_name in build_env['RULES']:
+    raise ValueError('Duplicate rule definition found.  Found %s and %s' %
+        (rule, build_env['RULES'][rule_name]))
   rule['buck_base_path'] = build_env['BASE']
-  print json.dumps(rule)
+  build_env['RULES'][rule_name] = rule
 
 
 def glob_pattern_to_regex_string(pattern):
@@ -589,6 +595,17 @@ def get_base_path(build_env=None):
   return build_env['BASE']
 
 
+@provide_for_build
+def add_deps(name, deps=[], build_env=None):
+  if name not in build_env['RULES']:
+    raise ValueError('Invoked \'add_deps\' on non-existent rule %s.' % name)
+
+  rule = build_env['RULES'][name]
+  if 'deps' not in rule:
+    raise ValueError('Invoked \'add_deps\' on rule %s that has no \'deps\' field' % name)
+  rule['deps'] = rule['deps'] + deps
+
+
 # Inexplicably, this script appears to run faster when the arguments passed into it are absolute
 # paths. However, we want the "buck_base_path" property of each rule to be printed out to be the
 # base path of the build target that identifies the rule. That means that when parsing a BUILD file,
@@ -639,6 +656,7 @@ def main():
     build_env['BASE'] = relative_path_to_build_file[:len_suffix]
     build_env['BUILD_FILE_DIRECTORY'] = os.path.dirname(build_file)
     build_env['PROJECT_ROOT'] = project_root
+    build_env['RULES'] = {}
     build_env['BUILD_FILE_SYMBOL_TABLE'] = make_build_file_symbol_table(build_env)
 
     # If there are any default includes, evaluate those first to populate the build_env.
@@ -646,6 +664,8 @@ def main():
     for include in includes:
       include_defs(include, build_env)
     execfile(os.path.join(project_root, build_file), build_env['BUILD_FILE_SYMBOL_TABLE'])
+    for _, value in build_env['RULES'].items():
+      print json.dumps(value)
 
 
 if __name__ == '__main__':
