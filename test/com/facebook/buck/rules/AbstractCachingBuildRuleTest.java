@@ -190,7 +190,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   }
 
   @Test
-  public void testAbiRuleCanAvoidRebuild() throws InterruptedException, ExecutionException {
+  public void testAbiRuleCanAvoidRebuild()
+      throws InterruptedException, ExecutionException, IOException {
     BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
         /* sortedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
@@ -209,6 +210,16 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     BuildContext buildContext = createMock(BuildContext.class);
     expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+
+    String pathToSuccessFile = buildRule.getPathToSuccessFile();
+    projectFilesystem.createParentDirs(pathToSuccessFile);
+    projectFilesystem.writeLinesToPath(
+        ImmutableList.of("bfcd53a794e7c732019e04e08b30b32e26e19d50"),
+        pathToSuccessFile);
+    expect(buildContext.getProjectFilesystem())
+        .andReturn(projectFilesystem)
+        .anyTimes();
 
     replayAll();
 
@@ -219,6 +230,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, success.getType());
+    assertTrue(buildRule.isAbiLoadedFromDisk());
 
     verifyAll();
   }
@@ -440,6 +452,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   private static class TestAbstractCachingBuildRule extends AbstractCachingBuildRule
       implements AbiRule {
 
+    private boolean isAbiLoadedFromDisk = false;
+
     TestAbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
       super(buildRuleParams);
     }
@@ -461,23 +475,38 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public RuleKey getRuleKeyWithoutDeps() {
-      return new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9");
+    public RuleKey getRuleKey() {
+      return new RuleKey("bfcd53a794e7c732019e04e08b30b32e26e19d50");
     }
 
     @Override
-    public RuleKey getRuleKeyWithoutDepsOnDisk() {
-      return new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9");
+    public Optional<RuleKey> getRuleKeyWithoutDeps() {
+      return Optional.of(new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9"));
     }
 
     @Override
-    public String getAbiKeyForDeps() {
-      return "92d6de0a59080284055bcde5d2923f144b216a59";
+    public Optional<RuleKey> getRuleKeyWithoutDepsOnDisk(ProjectFilesystem projectFilesystem) {
+      return Optional.of(new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9"));
     }
 
     @Override
-    public String getAbiKeyForDepsOnDisk() {
-      return "92d6de0a59080284055bcde5d2923f144b216a59";
+    public boolean loadAbiFromDisk(ProjectFilesystem projectFilesystem) {
+      isAbiLoadedFromDisk = true;
+      return true;
+    }
+
+    public boolean isAbiLoadedFromDisk() {
+      return isAbiLoadedFromDisk;
+    }
+
+    @Override
+    public Optional<Sha1HashCode> getAbiKeyForDeps() {
+      return Optional.of(new Sha1HashCode("92d6de0a59080284055bcde5d2923f144b216a59"));
+    }
+
+    @Override
+    public Optional<Sha1HashCode> getAbiKeyForDepsOnDisk(ProjectFilesystem projectFilesystem) {
+      return Optional.of(new Sha1HashCode("92d6de0a59080284055bcde5d2923f144b216a59"));
     }
   }
 }

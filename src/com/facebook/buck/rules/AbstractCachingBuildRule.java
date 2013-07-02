@@ -209,6 +209,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    */
   private void buildOnceDepsAreBuilt(final BuildContext context) {
     BuckEventBus eventBus = context.getEventBus();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Record the start of the build.
     eventBus.getEventBus().post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
@@ -235,14 +236,24 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     if (this instanceof AbiRule) {
       AbiRule abiRule = (AbiRule)this;
 
-      RuleKey ruleKeyNoDeps = abiRule.getRuleKeyWithoutDeps();
-      RuleKey cachedRuleKeyNoDeps = abiRule.getRuleKeyWithoutDepsOnDisk();
-      if (ruleKeyNoDeps != null && ruleKeyNoDeps.equals(cachedRuleKeyNoDeps)) {
+      Optional<RuleKey> ruleKeyNoDeps = abiRule.getRuleKeyWithoutDeps();
+      Optional<RuleKey> cachedRuleKeyNoDeps = abiRule.getRuleKeyWithoutDepsOnDisk(projectFilesystem);
+      if (ruleKeyNoDeps.isPresent() && ruleKeyNoDeps.equals(cachedRuleKeyNoDeps)) {
         // The RuleKey for the definition of this build rule and its input files has not changed.
         // Therefore, if the ABI of its deps has not changed, there is nothing to rebuild.
-        String abiKeyForDeps = abiRule.getAbiKeyForDeps();
-        String cachedAbiKeyForDeps = abiRule.getAbiKeyForDepsOnDisk();
-        if (abiKeyForDeps != null && abiKeyForDeps.equals(cachedAbiKeyForDeps)) {
+        Optional<Sha1HashCode> abiKeyForDeps = abiRule.getAbiKeyForDeps();
+        Optional<Sha1HashCode> cachedAbiKeyForDeps = abiRule.getAbiKeyForDepsOnDisk(projectFilesystem);
+        if (abiKeyForDeps.isPresent()
+            && abiKeyForDeps.equals(cachedAbiKeyForDeps)
+            && abiRule.loadAbiFromDisk(projectFilesystem)) {
+          // Although no rebuild is required, we still need to write the updated RuleKey.
+          try {
+            writeSuccessFile(projectFilesystem);
+          } catch (IOException e) {
+            recordBuildRuleFailure(e, BuildRuleStatus.FAIL, CacheResult.HIT, eventBus);
+            return;
+          }
+
           recordBuildRuleSuccess(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
               BuildRuleStatus.SUCCESS,
               CacheResult.HIT,
@@ -258,6 +269,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // If the RuleKeys match, then there is nothing to build.
     if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
+      // TODO(mbolin): Although there is nothing to build, there may be internal data structures
+      // that need to be populated that would normally be populated via executing the build steps.
+      // This is what things like AbiRule.loadAbiFromDisk() and
+      // recordOutputFileDetailsAfterFetchFromArtifactCache() are normally used for.
       context.logBuildInfo("[UNCHANGED %s]", getFullyQualifiedName());
       recordBuildRuleSuccess(BuildRuleSuccess.Type.MATCHING_RULE_KEY,
           BuildRuleStatus.SUCCESS,
@@ -272,7 +287,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // should organize our output directories so we can solve this for all rules at once.
 
     // Before deciding to build, check the ArtifactCache.
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     String pathToOutputFile = getPathToOutputFile();
     boolean fromCache = pathToOutputFile != null
         && context.getArtifactCache().fetch(
@@ -438,9 +452,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
   @VisibleForTesting
   String getPathToSuccessFile() {
-    return String.format("%s/%s/.success/%s",
+    return String.format("%s/%s.success/%s",
         BuckConstant.BIN_DIR,
-        getBuildTarget().getBasePath(),
+        getBuildTarget().getBasePathWithSlash(),
         getBuildTarget().getShortName());
   }
 

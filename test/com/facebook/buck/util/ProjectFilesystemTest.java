@@ -16,23 +16,73 @@
 
 package com.facebook.buck.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.io.Files;
+
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
 
 /** Unit test for {@link ProjectFilesystem}. */
 public class ProjectFilesystemTest {
 
-  @Test
-  public void testIsFile() {
-    ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
-    assertTrue(filesystem.isFile("testdata/com/facebook/buck/util/ProjectFilesystemFile.txt"));
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    filesystem = new ProjectFilesystem(tmp.getRoot());
+  }
+
+  @Test
+  public void testIsFile() throws IOException {
+    tmp.newFolder("foo");
+    tmp.newFile("foo/bar.txt");
+
+    assertTrue(filesystem.isFile("foo/bar.txt"));
     assertFalse(filesystem.isFile("i_do_not_exist"));
-    assertFalse("testdata/ is a directory, but not an ordinary file",
-        filesystem.isFile("testdata"));
+    assertFalse("foo/ is a directory, but not an ordinary file", filesystem.isFile("foo"));
+  }
+
+  @Test
+  public void testMkdirsCanCreateNestedFolders() {
+    boolean isSuccess = filesystem.mkdirs("foo/bar/baz");
+    assertTrue("Should be able to create nested folders.", isSuccess);
+    assertTrue(new File(tmp.getRoot(), "foo/bar/baz").isDirectory());
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testReadFirstLineRejectsNullPath() {
+    filesystem.readFirstLine(/* pathRelativeToProjectRoot */ null);
+  }
+
+  @Test
+  public void testReadFirstLineToleratesNonExistentFile() {
+    assertEquals(Optional.absent(), filesystem.readFirstLine("foo.txt"));
+  }
+
+  @Test
+  public void testReadFirstLineWithEmptyFile() throws IOException {
+    File emptyFile = tmp.newFile("foo.txt");
+    Files.write(new byte[0], emptyFile);
+    assertTrue(emptyFile.isFile());
+    assertEquals(Optional.absent(), filesystem.readFirstLine("foo.txt"));
+  }
+
+  @Test
+  public void testReadFirstLineFromMultiLineFile() throws IOException {
+    File multiLineFile = tmp.newFile("foo.txt");
+    Files.write("foo\nbar\nbaz\n", multiLineFile, Charsets.UTF_8);
+    assertEquals(Optional.of("foo"), filesystem.readFirstLine("foo.txt"));
   }
 }

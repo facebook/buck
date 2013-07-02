@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.util.regex.Pattern;
@@ -25,6 +27,19 @@ import java.util.regex.Pattern;
  * A typesafe representation of a SHA-1 hash. It is safer to pass this around than a {@link String}.
  */
 public final class Sha1HashCode {
+
+  /**
+   * Takes a string and uses it to construct a {@link Sha1HashCode}.
+   * <p>
+   * Is likely particularly useful with {@link Optional#transform(Function)}.
+   */
+  public static final Function<String, Sha1HashCode> TO_SHA1 =
+      new Function<String, Sha1HashCode>() {
+        @Override
+        public Sha1HashCode apply(String hash) {
+          return new Sha1HashCode(hash);
+        }
+  };
 
   private static final Pattern SHA1_PATTERN = Pattern.compile("[a-f0-9]{40}");
 

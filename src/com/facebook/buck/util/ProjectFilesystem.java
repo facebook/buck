@@ -104,7 +104,7 @@ public class ProjectFilesystem {
    * Checks whether there is a normal file at the specified path.
    */
   public boolean isFile(String pathRelativeToProjectRoot) {
-    return new File(pathRelativeToProjectRoot).isFile();
+    return getFileForRelativePath(pathRelativeToProjectRoot).isFile();
   }
 
   /**
@@ -137,6 +137,13 @@ public class ProjectFilesystem {
     MoreFiles.rmdir(pathRelativizer.apply(path), processExecutor);
   }
 
+  /**
+   * Resolves the relative path against the project root and then calls {@link File#mkdirs()}.
+   */
+  public boolean mkdirs(String pathRelativeToProjectRoot) {
+    return getFileForRelativePath(pathRelativeToProjectRoot).mkdirs();
+  }
+
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
     Files.createParentDirs(file);
@@ -145,6 +152,23 @@ public class ProjectFilesystem {
   public void writeLinesToPath(Iterable<String> lines, String pathRelativeToProjectRoot)
       throws IOException {
     MoreFiles.writeLinesToFile(lines, getFileForRelativePath(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Attempts to read the first line of the file specified by the relative path. If the file does
+   * not exist, is empty, or encounters an error while being read, {@link Optional#absent()} is
+   * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
+   */
+  public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
+    Preconditions.checkNotNull(pathRelativeToProjectRoot);
+    File file = getFileForRelativePath(pathRelativeToProjectRoot);
+    try {
+      String firstLine = Files.readFirstLine(file, Charsets.UTF_8);
+      return Optional.fromNullable(firstLine);
+    } catch (IOException e) {
+      // Because pathRelativeToProjectRoot is not even guaranteed to exist, swallow the IOException.
+      return Optional.absent();
+    }
   }
 
   public Optional<File> getFileIfExists(String path) {

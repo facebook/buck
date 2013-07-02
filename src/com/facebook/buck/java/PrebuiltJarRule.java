@@ -113,8 +113,8 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public Sha1HashCode getAbiKey() {
-    return new Sha1HashCode(getRuleKey().toString());
+  public Optional<Sha1HashCode> getAbiKey() {
+    return Optional.of(new Sha1HashCode(getRuleKey().toString()));
   }
 
   @Override

@@ -20,17 +20,22 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.io.Files;
 
-import java.io.File;
 import java.io.IOException;
 
 public class WriteFileStep implements Step {
 
-  private final String content;
+  private final Supplier<String> content;
   private final String outputPath;
 
   public WriteFileStep(String content, String outputPath) {
+    this(Suppliers.ofInstance(content), outputPath);
+  }
+
+  public WriteFileStep(Supplier<String> content, String outputPath) {
     this.content = Preconditions.checkNotNull(content);
     this.outputPath = Preconditions.checkNotNull(outputPath);
   }
@@ -39,7 +44,9 @@ public class WriteFileStep implements Step {
   public int execute(ExecutionContext context) {
     try {
       // echo by default writes a trailing new line and so should we.
-      Files.write(content + "\n", new File(outputPath), Charsets.UTF_8);
+      Files.write(content.get() + "\n",
+          context.getProjectFilesystem().getFileForRelativePath(outputPath),
+          Charsets.UTF_8);
       return 0;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
@@ -54,7 +61,7 @@ public class WriteFileStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("echo %s > %s", content, outputPath);
+    return String.format("echo %s > %s", content.get(), outputPath);
   }
 
 }

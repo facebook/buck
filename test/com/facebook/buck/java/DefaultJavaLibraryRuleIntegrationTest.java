@@ -16,7 +16,11 @@
 
 package com.facebook.buck.java;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -24,6 +28,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -41,9 +46,11 @@ public class DefaultJavaLibraryRuleIntegrationTest {
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
+  private ProjectWorkspace workspace;
+
   @Test
   public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "abi", tmp);
     workspace.setUp();
 
@@ -85,5 +92,80 @@ public class DefaultJavaLibraryRuleIntegrationTest {
         "The content of the output file will be 'Hello World!' if it is read from the build cache.",
         "Hello world!\n",
         Files.toString(outputFile, Charsets.UTF_8));
+  }
+
+  @Test
+  public void testFileChangeThatDoesNotModifyAbiAvoidsRebuild() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "rulekey_changed_while_abi_stable", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:biz");
+    assertEquals("Successful build should exit with 0.", 0, buildResult.getExitCode());
+
+    String utilRuleKey = getContents("buck-out/bin/.success/util");
+    String utilRuleKeyNoDeps = getContents("buck-out/gen/lib__util__abi/rule_key_no_deps");
+    String utilAbi = getContents("buck-out/gen/lib__util__abi/abi");
+    String utilAbiForDeps = getContents("buck-out/gen/lib__util__abi/abi_deps");
+
+    String bizRuleKey = getContents("buck-out/bin/.success/biz");
+    String bizRuleKeyNoDeps = getContents("buck-out/gen/lib__biz__abi/rule_key_no_deps");
+    String bizAbi = getContents("buck-out/gen/lib__biz__abi/abi");
+    String bizAbiForDeps = getContents("buck-out/gen/lib__biz__abi/abi_deps");
+
+    long utilJarSize = workspace.getFile("buck-out/gen/lib__util__output/util.jar").length();
+    long bizJarLastModified = workspace.getFile("buck-out/gen/lib__biz__output/biz.jar").lastModified();
+
+    // TODO(mbolin): Run uber-biz.jar and verify it prints "Hello World!\n".
+
+    // Edit Util.java in a way that does not affect its ABI.
+    String originalUtilJava = getContents("Util.java");
+    String replacementContents = originalUtilJava.replace("Hello World", "Hola Mundo");
+    Files.write(replacementContents, workspace.getFile("Util.java"), Charsets.UTF_8);
+
+    // Run `buck build` again.
+    ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:biz");
+    assertEquals("Successful build should exit with 0.", 0, buildResult2.getExitCode());
+
+    assertThat(utilRuleKey, not(equalTo(getContents("buck-out/bin/.success/util"))));
+    assertThat(utilRuleKeyNoDeps, not(equalTo(getContents("buck-out/gen/lib__util__abi/rule_key_no_deps"))));
+    assertEquals(utilAbi, getContents("buck-out/gen/lib__util__abi/abi"));
+    assertEquals(utilAbiForDeps, getContents("buck-out/gen/lib__util__abi/abi_deps"));
+
+    assertThat(bizRuleKey, not(equalTo(getContents("buck-out/bin/.success/biz"))));
+    assertEquals(bizRuleKeyNoDeps, getContents("buck-out/gen/lib__biz__abi/rule_key_no_deps"));
+    assertEquals(bizAbi, getContents("buck-out/gen/lib__biz__abi/abi"));
+    assertEquals(bizAbiForDeps, getContents("buck-out/gen/lib__biz__abi/abi_deps"));
+
+    assertThat(
+        "util.jar should have been rewritten, so its file size should have changed.",
+        utilJarSize,
+        not(equalTo(workspace.getFile("buck-out/gen/lib__util__output/util.jar").length())));
+    assertEquals(
+        "biz.jar should not have been rewritten, so its last-modified time should be the same.",
+        bizJarLastModified,
+        workspace.getFile("buck-out/gen/lib__biz__output/biz.jar").lastModified());
+
+    // TODO(mbolin): Run uber-biz.jar and verify it prints "Hola Mundo!\n".
+
+    // TODO(mbolin): This last scenario that is being tested would be better as a unit test.
+    // Run `buck build` one last time. This ensures that a dependency java_library() rule (:util)
+    // that is built via BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS does not
+    // explode when its dependent rule (:biz) invokes the dependency's getAbiKey() method as part of
+    // its own getAbiKeyForDeps().
+    ProcessResult buildResult3 = workspace.runBuckCommand("build", "//:biz");
+    assertEquals("Successful build should exit with 0.", 0, buildResult3.getExitCode());
+  }
+
+  /**
+   * Asserts that the specified file exists and returns its contents.
+   */
+  private String getContents(String relativePathToFile) throws IOException {
+    File file = workspace.getFile(relativePathToFile);
+    assertTrue(relativePathToFile + " should exist and be an ordinary file.", file.exists());
+    String content = Strings.nullToEmpty(Files.toString(file, Charsets.UTF_8)).trim();
+    assertFalse(relativePathToFile + " should not be empty.", content.isEmpty());
+    return content;
   }
 }

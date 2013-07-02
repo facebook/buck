@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,7 +72,7 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
 
   @Override
   @Nullable
-  public Sha1HashCode getAbiKey() {
-    return null;
+  public Optional<Sha1HashCode> getAbiKey() {
+    return Optional.absent();
   }
 }

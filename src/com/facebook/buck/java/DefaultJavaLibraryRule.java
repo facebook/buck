@@ -23,6 +23,7 @@ import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
@@ -44,6 +45,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -60,6 +62,8 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.google.common.reflect.ClassPath;
 
@@ -91,7 +95,7 @@ import javax.annotation.Nullable;
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
 public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
-    implements JavaLibraryRule, HasJavaSrcs, HasClasspathEntries {
+    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries {
 
   private final ImmutableSortedSet<String> srcs;
 
@@ -265,21 +269,22 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * @param declaredClasspathEntries Classpaths of all declared dependencies.
    * @param javacOptions options to use when compiling code.
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
-   * @return commands to compile the specified inputs
+   * @param commands List of steps to add to.
    */
-  private ImmutableList<Step> createCommandsForJavac(
+  private void createCommandsForJavac(
       String outputDirectory,
       ImmutableSet<String> transitiveClasspathEntries,
       ImmutableSet<String> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildDependencies buildDependencies,
-      Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules) {
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
+      Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules,
+      ImmutableList.Builder<Step> commands) {
+    // Make sure that this directory exists because ABI information will be written here.
+    Step mkdir = new MakeCleanDirectoryStep(getPathToAbiOutputDir());
+    commands.add(mkdir);
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
-      Step mkdir = new MakeCleanDirectoryStep(getPathToAbiOutputDir());
-
       final JavacInMemoryStep javac = new DependencyCheckingJavacStep(
           outputDirectory,
           getJavaSrcs(),
@@ -290,7 +295,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
           Optional.of(getFullyQualifiedName()),
           buildDependencies,
           suggestBuildRules);
-      commands.add(mkdir, javac);
+      commands.add(javac);
 
       // Create a supplier that extracts the ABI key from javac after it executes.
       setAbiKey(Suppliers.memoize(new Supplier<Sha1HashCode>() {
@@ -303,8 +308,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       // When there are no .java files to compile, the ABI key should be a constant.
       setAbiKey(Suppliers.ofInstance(new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY)));
     }
-
-    return commands.build();
   }
 
   private String getPathToAbiOutputDir() {
@@ -319,6 +322,14 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private String getPathToAbiOutputFile() {
     return String.format("%s/abi", getPathToAbiOutputDir());
+  }
+
+  private String getPathToAbiKeyForDepsFile() {
+    return String.format("%s/abi_deps", getPathToAbiOutputDir());
+  }
+
+  private String getPathToRuleKeyNoDepsFile() {
+    return String.format("%s/rule_key_no_deps", getPathToAbiOutputDir());
   }
 
   private static String getOutputJarDirPath(BuildTarget target) {
@@ -356,6 +367,48 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   @Override
   public boolean isLibrary() {
     return true;
+  }
+
+  @Override
+  public Optional<RuleKey> getRuleKeyWithoutDeps() {
+    return Optional.of(createRuleKeyWithoutDeps());
+  }
+
+  @Override
+  public Optional<RuleKey> getRuleKeyWithoutDepsOnDisk(ProjectFilesystem projectFilesystem) {
+    return projectFilesystem.readFirstLine(getPathToRuleKeyNoDepsFile())
+        .transform(RuleKey.TO_RULE_KEY);
+  }
+
+  /**
+   * Finds all deps that implement JavaLibraryRule and hash their ABI keys together. If any dep
+   * lacks an ABI key, then returns null.
+   */
+  @Override
+  public Optional<Sha1HashCode> getAbiKeyForDeps() {
+    Hasher hasher = Hashing.sha1().newHasher();
+    // Make sure to consider declared classpath entries and not just immediate deps because there
+    // may be deps that use export_deps=True.
+    for (BuildRule dep : getDeclaredClasspathEntries().keys()) {
+      if (dep == this) {
+        continue;
+      }
+      if (dep instanceof JavaLibraryRule) {
+        JavaLibraryRule javaRule = (JavaLibraryRule)dep;
+        Optional<Sha1HashCode> abiKey = javaRule.getAbiKey();
+        if (!abiKey.isPresent()) {
+          return Optional.absent();
+        }
+        hasher.putString(abiKey.get().getHash());
+      }
+    }
+    return Optional.of(new Sha1HashCode(hasher.hash().toString()));
+  }
+
+  @Override
+  public Optional<Sha1HashCode> getAbiKeyForDepsOnDisk(ProjectFilesystem projectFilesystem) {
+    return projectFilesystem.readFirstLine(getPathToAbiKeyForDepsFile())
+        .transform(Sha1HashCode.TO_SHA1);
   }
 
   @Override
@@ -487,14 +540,14 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
             JAR_RESOLVER);
 
     // This adds the javac command, along with any supporting commands.
-    List<Step> javac = createCommandsForJavac(
+    createCommandsForJavac(
         outputDirectory,
         ImmutableSet.copyOf(transitiveClasspathEntries.values()),
         ImmutableSet.copyOf(declaredClasspathEntries.values()),
         javacOptions,
         context.getBuildDependencies(),
-        suggestBuildRule);
-    commands.addAll(javac);
+        suggestBuildRule,
+        commands);
 
 
     // If there are resources, then link them to the appropriate place in the classes directory.
@@ -513,30 +566,16 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         "abiKeySupplier must be set so that getAbiKey() will " +
         "return a non-null value if this rule builds successfully.");
 
-    // Add a step that writes the ABI key if it is non-null.
+    addStepsToRecordAbiToDisk(commands);
+
+    // Add a step that writes the ABI key to the ArtifactCache.
     final ArtifactCache artifactCache = context.getArtifactCache();
     Step recordAbiKey = new AbstractExecutionStep("record ABI key") {
       @Override
       public int execute(ExecutionContext context) {
-        Sha1HashCode abiKey = abiKeySupplier.get();
-        if (abiKey == null) {
-          return 0;
-        }
-
-        // First, attempt to write the ABI key locally.
-        File abiKeyFile;
-        try {
-          String pathToAbiKeyFile = getPathToAbiOutputFile();
-          context.getProjectFilesystem().createParentDirs(pathToAbiKeyFile);
-          abiKeyFile = context.getProjectFilesystem().getFileForRelativePath(pathToAbiKeyFile);
-          Files.write(abiKey.getHash() + '\n', abiKeyFile, Charsets.UTF_8);
-        } catch (IOException e) {
-          e.printStackTrace(context.getStdErr());
-          return 1;
-        }
-
-        // Next, attempt to write it to the ArtifactCache.
         RuleKey ruleKey = createRuleKeyForAbiKeyProjection();
+        ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+        File abiKeyFile = projectFilesystem.getFileForRelativePath(getPathToAbiOutputFile());
         artifactCache.store(ruleKey, abiKeyFile);
         return 0;
       }
@@ -544,6 +583,33 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     commands.add(recordAbiKey);
 
     return commands.build();
+  }
+
+  /**
+   * Assuming the build has completed successfully, the ABI should have been computed, and it should
+   * be stored for subsequent builds.
+   */
+  private void addStepsToRecordAbiToDisk(ImmutableList.Builder<Step> commands) {
+    // Note that the parent directories for all of the files written by these steps should already
+    // have been created by a previous step. Therefore, there is no reason to add a MkdrStep here.
+
+    Supplier<String> abiKeyHash = Suppliers.compose(new Function<Sha1HashCode, String>() {
+      @Override
+      public String apply(Sha1HashCode abiKey) {
+        return abiKey.getHash();
+      }
+    }, abiKeySupplier);
+    commands.add(new WriteFileStep(abiKeyHash, getPathToAbiOutputFile()));
+
+    Optional<Sha1HashCode> abiKeyForDeps = getAbiKeyForDeps();
+    if (abiKeyForDeps.isPresent()) {
+      commands.add(new WriteFileStep(abiKeyForDeps.get().getHash(), getPathToAbiKeyForDepsFile()));
+    }
+
+    Optional<RuleKey> ruleKeyNoDeps = getRuleKeyWithoutDeps();
+    if (ruleKeyNoDeps.isPresent()) {
+      commands.add(new WriteFileStep(ruleKeyNoDeps.get().toString(), getPathToRuleKeyNoDepsFile()));
+    }
   }
 
   /**
@@ -666,11 +732,22 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  @Nullable
-  public Sha1HashCode getAbiKey() {
+  public boolean loadAbiFromDisk(ProjectFilesystem projectFilesystem) {
+    Optional<String> abiKeyHash = projectFilesystem.readFirstLine(getPathToAbiOutputFile());
+    if (abiKeyHash.isPresent()) {
+      String hash = abiKeyHash.get();
+      setAbiKey(Suppliers.ofInstance(new Sha1HashCode(hash)));
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  @Override
+  public Optional<Sha1HashCode> getAbiKey() {
     Preconditions.checkState(isRuleBuilt(),
-        "Rule must be built before its ABI key can be returned.");
-    return abiKeySupplier.get();
+        "%s must be built before its ABI key can be returned.", this);
+    return Optional.fromNullable(abiKeySupplier.get());
   }
 
   private void setAbiKey(Supplier<Sha1HashCode> abiKeySupplier) {

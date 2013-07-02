@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +55,19 @@ import javax.annotation.Nullable;
  * handle null values to accommodate this regime.
  */
 public class RuleKey implements Comparable<RuleKey> {
+
+  /**
+   * Takes a string and uses it to construct a {@link RuleKey}.
+   * <p>
+   * Is likely particularly useful with {@link Optional#transform(Function)}.
+   */
+  public static final Function<String, RuleKey> TO_RULE_KEY =
+      new Function<String, RuleKey>() {
+        @Override
+        public RuleKey apply(String hash) {
+          return new RuleKey(hash);
+        }
+  };
 
   // TODO(mbolin): Do not let this be @Nullable anymore.
   @Nullable private final HashCode hashCode;

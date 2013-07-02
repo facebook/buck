@@ -31,6 +31,7 @@ java_test(
     ':fakes',
     '//lib:easymock',
     '//lib:guava',
+    '//lib:hamcrest-core',
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/android:rules',

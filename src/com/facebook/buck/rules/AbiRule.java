@@ -16,13 +16,12 @@
 
 package com.facebook.buck.rules;
 
-import javax.annotation.Nullable;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
 
 /**
  * {@link BuildRule} that can avoid rebuilding itself when the ABI of its deps has not changed and
  * all properties of the rule other than its deps have not changed.
- * <p>
- * Therefore, all deps of an {@link AbiRule} must also be {@link AbiRule}s themselves.
  */
 public interface AbiRule {
 
@@ -32,10 +31,9 @@ public interface AbiRule {
    * can be used to determine whether the definition or inputs of the rule changed independent of
    * changes to its [transitive] deps.
    *
-   * @return {@code null} if there is an error when computing the {@link RuleKey}
+   * @return {@link Optional#absent()} if there is an error when computing the {@link RuleKey}
    */
-  @Nullable
-  public RuleKey getRuleKeyWithoutDeps();
+  public Optional<RuleKey> getRuleKeyWithoutDeps();
 
   /**
    * This is the same as {@link #getRuleKeyWithoutDeps()}, but is the {@link RuleKey} for the output
@@ -44,20 +42,17 @@ public interface AbiRule {
    * {@link #getRuleKeyWithoutDeps()} as a heuristic for whether this rule needs to be rebuilt if
    * its deps [or the ABI of its deps] have not changed.
    *
-   * @return {@code null} if this {@link BuildRule} has not been built locally before, in which case
-   *     there is no {@link RuleKey} from a previous run.
+   * @return {@link Optional#absent()} if this {@link BuildRule} has not been built locally before,
+   *     in which case there is no {@link RuleKey} from a previous run.
    */
-  @Nullable
-  public RuleKey getRuleKeyWithoutDepsOnDisk();
+  public Optional<RuleKey> getRuleKeyWithoutDepsOnDisk(ProjectFilesystem projectFilesystem);
 
   /**
-   * If all of the deps of this rule are {@link AbiRule}s, then this will return an SHA-1 hash that
-   * represents the union of their ABIs.
+   * Returns a {@link Sha1HashCode} that represents the ABI of this rule's deps.
    *
-   * @return {@code null} if not all deps are {@link AbiRule}s.
+   * @return {@link Optional#absent()} if not all deps that should have an ABI key have one.
    */
-  @Nullable
-  public String getAbiKeyForDeps();
+  public Optional<Sha1HashCode> getAbiKeyForDeps();
 
   /**
    * This is the same as {@link #getAbiKeyForDeps()}, but is the ABI key of this rule's deps that
@@ -65,9 +60,15 @@ public interface AbiRule {
    * designed to be compared with the result of {@link #getAbiKeyForDeps()} as a heuristic for
    * whether this rule needs to be rebuilt.
    *
-   * @return {@code null} if the deps of this {@link BuildRule} have not been built locally before,
-   *     in which case there is no data from a previous run.
+   * @return {@link Optional#absent()} if the deps of this {@link BuildRule} have not been built
+   *     locally before, in which case there is no data from a previous run.
    */
-  @Nullable
-  public String getAbiKeyForDepsOnDisk();
+  public Optional<Sha1HashCode> getAbiKeyForDepsOnDisk(ProjectFilesystem projectFilesystem);
+
+  /**
+   * Instructs this rule to report the ABI it has on disk as its current ABI.
+   *
+   * @return whether the ABI was read from disk and loaded into memory successfully.
+   */
+  public boolean loadAbiFromDisk(ProjectFilesystem projectFilesystem);
 }

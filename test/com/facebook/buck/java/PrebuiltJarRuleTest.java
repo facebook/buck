@@ -52,7 +52,9 @@ public class PrebuiltJarRuleTest {
 
   @Test
   public void testAbiKeyIsSameAsRuleKey() {
-    assertEquals(junitJarRule.getRuleKey().toString(), junitJarRule.getAbiKey().getHash());
+    assertEquals(
+        junitJarRule.getRuleKey().toString(),
+        junitJarRule.getAbiKey().get().getHash());
   }
 
   @Test
