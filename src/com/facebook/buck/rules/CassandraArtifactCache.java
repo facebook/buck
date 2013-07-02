@@ -165,7 +165,7 @@ public class CassandraArtifactCache implements ArtifactCache {
       m.withRow(CF_ARTIFACT, ruleKey.toString())
           .setDefaultTtl(ttl)
           .putColumn(artifactColumnName, Files.toByteArray(output));
-      m.execute();
+      m.executeAsync();
     } catch (IOException | ConnectionException | OutOfMemoryError e) {
       logger.warning(String.format("Artifact store(%s, %s) error: %s",
           ruleKey,
