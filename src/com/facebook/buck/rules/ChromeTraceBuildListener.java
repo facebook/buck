@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.cli.StartActivityEvent;
 import com.facebook.buck.cli.UninstallEvent;
@@ -74,6 +75,25 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     } catch (IOException e) {
       throw new HumanReadableException("Unable to write trace file.");
     }
+  }
+
+  @Subscribe
+  public void commandStarted(CommandEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        started.getCommandName(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void commandFinished(CommandEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        finished.getCommandName(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(
+            "daemon", Boolean.toString(finished.isDaemon())),
+        finished);
   }
 
   @Subscribe
@@ -211,10 +231,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   private void writeChromeTraceEvent(String category,
-                                     String name,
-                                     ChromeTraceEvent.Phase phase,
-                                     ImmutableMap<String, String> arguments,
-                                     BuckEvent event) {
+      String name,
+      ChromeTraceEvent.Phase phase,
+      ImmutableMap<String, String> arguments,
+      BuckEvent event) {
     eventList.add(new ChromeTraceEvent(category,
         name,
         phase,

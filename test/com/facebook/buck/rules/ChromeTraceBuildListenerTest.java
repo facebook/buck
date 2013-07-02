@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -67,12 +68,14 @@ public class ChromeTraceBuildListenerTest {
 
     ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
 
+    listener.commandStarted(CommandEvent.started("party", true));
     listener.buildStarted(BuildEvent.started(buildTargets));
     listener.ruleStarted(BuildRuleEvent.started(rule));
     listener.stepStarted(StepEvent.started(step, "fakeStep", "I'm a Fake Step!"));
     listener.stepFinished(StepEvent.finished(step, "fakeStep", "I'm a Fake Step!", 0));
     listener.ruleFinished(BuildRuleEvent.finished(rule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
     listener.buildFinished(BuildEvent.finished(buildTargets, 0));
+    listener.commandFinished(CommandEvent.finished("party", true, 0));
     listener.outputTrace();
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BIN_DIR + "/build.trace");
@@ -83,19 +86,23 @@ public class ChromeTraceBuildListenerTest {
         resultFile,
         new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertEquals(6, resultMap.size());
-    assertEquals("build", resultMap.get(0).getName());
+    assertEquals(8, resultMap.size());
+    assertEquals("party", resultMap.get(0).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(0).getPhase());
-    assertEquals("//fake:rule", resultMap.get(1).getName());
+    assertEquals("build", resultMap.get(1).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(1).getPhase());
-    assertEquals("fakeStep", resultMap.get(2).getName());
+    assertEquals("//fake:rule", resultMap.get(2).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(2).getPhase());
     assertEquals("fakeStep", resultMap.get(3).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(3).getPhase());
-    assertEquals("//fake:rule", resultMap.get(4).getName());
+    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(3).getPhase());
+    assertEquals("fakeStep", resultMap.get(4).getName());
     assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(4).getPhase());
-    assertEquals("build", resultMap.get(5).getName());
+    assertEquals("//fake:rule", resultMap.get(5).getName());
     assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(5).getPhase());
+    assertEquals("build", resultMap.get(6).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(6).getPhase());
+    assertEquals("party", resultMap.get(7).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(7).getPhase());
 
     verify(context);
   }
