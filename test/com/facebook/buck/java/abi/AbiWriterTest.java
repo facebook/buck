@@ -30,6 +30,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -538,7 +540,7 @@ public class AbiWriterTest {
 
   @Test
   public void generatedHashMustBeZeroPaddedToFortyCharacters() {
-    String hex = AbiWriter.computeAbiKey(ImmutableSortedSet.of("abcde"));
+    String hex = AbiWriter.computeAbiKey(ImmutableSortedSet.of("abcdefghi"));
 
     assertEquals('0', hex.charAt(0));
     assertEquals(40, hex.length());
@@ -587,6 +589,30 @@ public class AbiWriterTest {
     String computed = AbiWriter.computeAbiKey(summaries);
 
     assertEquals(AbiWriterProtocol.EMPTY_ABI_KEY, computed);
+  }
+
+  @Test
+  public void ensureHashMatchesGuavaEquivalent() {
+    String key = AbiWriter.computeAbiKey(ImmutableSortedSet.<String>of());
+    String guava = hashWithGuava(ImmutableSortedSet.<String>of());
+    assertEquals(guava, key);
+
+    String javaCode = Joiner.on('\n').join(
+        "public class Example",
+        "public void cheese(java.lang.String)");
+
+    SortedSet<String> summaries = ImmutableSortedSet.of(javaCode);
+    key = AbiWriter.computeAbiKey(summaries);
+    guava = hashWithGuava(summaries);
+    assertEquals(guava, key);
+  }
+
+  private String hashWithGuava(SortedSet<String> summaries) {
+    Hasher hasher = Hashing.sha1().newHasher();
+    for (String summary : summaries) {
+      hasher.putString(summary);
+    }
+    return hasher.hash().toString();
   }
 
   /**

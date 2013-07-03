@@ -23,8 +23,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -106,10 +107,16 @@ public class AbiWriter extends AbstractProcessor {
 
   static String computeAbiKey(SortedSet<String> summaries) {
     try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-1");
+      MessageDigest digest = MessageDigest.getInstance("sha-1");
 
       for (String summary : summaries) {
-        digest.update(summary.getBytes("utf-8"));
+        // "2" is the number of bytes in a java character
+        ByteBuffer buffer = ByteBuffer.allocate(summary.length() * 2).order(ByteOrder.LITTLE_ENDIAN);
+
+        for (int i = 0; i < summary.length(); i++) {
+          buffer.putChar(summary.charAt(i));
+        }
+        digest.update(buffer.array());
       }
       byte[] sha1Bytes = digest.digest();
 
@@ -119,8 +126,8 @@ public class AbiWriter extends AbstractProcessor {
       // To give an indication of speed, on my i7 mbp, 100k string generations takes ~450ms compared
       // to ~150ms. In short, the speed hit isn't going to be the end of the world for our use case.
       return String.format("%040x", new BigInteger(1, sha1Bytes));
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-      // Note: if we get either of these that we're on a broken JRE and we're not having fun.
+    } catch (NoSuchAlgorithmException e) {
+      // Note: if we get this we're on a broken JRE and we're not having fun.
       throw new RuntimeException(e);
     }
   }

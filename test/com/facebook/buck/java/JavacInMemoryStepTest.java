@@ -76,7 +76,7 @@ public class JavacInMemoryStepTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.execute(executionContext);
     assertEquals("javac should exit with code 0.", exitCode, 0);
-    assertEquals(new Sha1HashCode("ad852c71014e283bf0722a7076e0354e41a24d3c"), javac.getAbiKey());
+    assertEquals(new Sha1HashCode("65386ff045e932d8ba6444043132c140f76a4613"), javac.getAbiKey());
   }
 
   @Test
