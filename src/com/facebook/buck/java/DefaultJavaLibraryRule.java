@@ -74,6 +74,7 @@ import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 import javax.annotation.Nullable;
 
@@ -383,26 +384,33 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   /**
    * Finds all deps that implement JavaLibraryRule and hash their ABI keys together. If any dep
-   * lacks an ABI key, then returns null.
+   * lacks an ABI key, then returns {@link Optional#absent()}.
    */
   @Override
   public Optional<Sha1HashCode> getAbiKeyForDeps() {
-    Hasher hasher = Hashing.sha1().newHasher();
     // Make sure to consider declared classpath entries and not just immediate deps because there
     // may be deps that use export_deps=True.
-    for (BuildRule dep : getDeclaredClasspathEntries().keys()) {
-      if (dep == this) {
-        continue;
-      }
+    SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
+    for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {
         JavaLibraryRule javaRule = (JavaLibraryRule)dep;
-        Optional<Sha1HashCode> abiKey = javaRule.getAbiKey();
-        if (!abiKey.isPresent()) {
-          return Optional.absent();
-        }
-        hasher.putString(abiKey.get().getHash());
+        rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
       }
     }
+
+    Hasher hasher = Hashing.sha1().newHasher();
+    for (JavaLibraryRule ruleWithAbiToConsider : rulesWithAbiToConsider) {
+      if (ruleWithAbiToConsider == this) {
+        continue;
+      }
+
+      Optional<Sha1HashCode> abiKey = ruleWithAbiToConsider.getAbiKey();
+      if (!abiKey.isPresent()) {
+        return Optional.absent();
+      }
+      hasher.putString(abiKey.get().getHash());
+    }
+
     return Optional.of(new Sha1HashCode(hasher.hash().toString()));
   }
 
