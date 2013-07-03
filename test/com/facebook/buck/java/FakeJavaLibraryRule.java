@@ -41,17 +41,17 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries() {
     return ImmutableSetMultimap.of();
   }
 
   @Override
-  public ImmutableSet<String> getOutputClasspathEntries() {
-    return ImmutableSet.of();
+  public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
+    return ImmutableSetMultimap.of();
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     return ImmutableSetMultimap.of();
   }
 

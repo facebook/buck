@@ -20,7 +20,6 @@ import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -31,20 +30,20 @@ public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
    *     dependencies of these rules.
    */
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries();
+  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     compile the {@code srcs} associated with this rule.  This set only contains the classpath
    *     entries for those rules that are declared as direct dependencies of this rule.
    */
-  public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries();
+  public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     compile rules that depend on this rule.
    */
-  public ImmutableSet<String> getOutputClasspathEntries();
+  public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries();
 
   public ImmutableSortedSet<String> getJavaSrcs();
 

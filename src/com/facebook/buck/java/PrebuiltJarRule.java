@@ -23,7 +23,6 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -35,7 +34,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -51,10 +49,10 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   private final String binaryJar;
   private final Optional<String> sourceJar;
   private final Optional<String> javadocUrl;
-  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       transitiveClasspathEntriesSupplier;
 
-  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
 
   PrebuiltJarRule(BuildRuleParams buildRuleParams,
@@ -67,10 +65,10 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
     this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
 
     transitiveClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
-          public ImmutableSetMultimap<BuildRule, String> get() {
-            ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+            ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
             classpathEntries.put(PrebuiltJarRule.this, getBinaryJar());
             classpathEntries.putAll(Classpaths.getClasspathEntries(getDeps()));
@@ -79,10 +77,10 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
         });
 
     declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
-          public ImmutableSetMultimap<BuildRule, String> get() {
-            ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+            ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
             classpathEntries.put(PrebuiltJarRule.this, getBinaryJar());
             return classpathEntries.build();
@@ -118,18 +116,18 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSet<String> getOutputClasspathEntries() {
-    return ImmutableSet.of(getBinaryJar());
+  public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
+    return ImmutableSetMultimap.<JavaLibraryRule, String>builder().put(this, getBinaryJar()).build();
   }
 
   @Override

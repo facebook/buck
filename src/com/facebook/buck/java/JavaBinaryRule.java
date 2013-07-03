@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -146,7 +145,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     return Classpaths.getClasspathEntries(getDeps());
   }
 

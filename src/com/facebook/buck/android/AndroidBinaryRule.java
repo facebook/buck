@@ -20,6 +20,7 @@ import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
+import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
@@ -695,12 +696,15 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       Set<String> depsProguardConfigs,
       ImmutableList.Builder<Step> commands,
       Set<String> resDirectories) {
-    final ImmutableSetMultimap<BuildRule, String> classpathEntriesMap =
+    final ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesMap =
         getTransitiveClasspathEntries();
     ImmutableSet.Builder<String> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (BuildRule buildRule : buildRulesToExcludeFromDex) {
-      additionalLibraryJarsForProguardBuilder.addAll(classpathEntriesMap.get(buildRule));
+      if (buildRule instanceof JavaLibraryRule) {
+        additionalLibraryJarsForProguardBuilder.addAll(
+            classpathEntriesMap.get((JavaLibraryRule)buildRule));
+      }
     }
 
     Set<String> classpathEntries = dexDeps.classpathEntriesToDex;
@@ -885,7 +889,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
     return Classpaths.getClasspathEntries(getDeps());
   }

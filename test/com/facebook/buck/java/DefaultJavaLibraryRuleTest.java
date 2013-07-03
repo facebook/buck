@@ -512,12 +512,18 @@ public class DefaultJavaLibraryRuleTest {
         .addSrc("java/src/com/parent/Meh.java")
         .addDep(BuildTargetFactory.newInstance("//:libtwo")));
 
-    assertEquals(ImmutableSet.of("buck-out/gen/lib__libone__output/libone.jar"),
+    assertEquals(
+        ImmutableSetMultimap.builder()
+            .put(libraryOne, "buck-out/gen/lib__libone__output/libone.jar")
+            .build(),
         libraryOne.getOutputClasspathEntries());
 
     assertEquals(
-        ImmutableSet.of("buck-out/gen/lib__libone__output/libone.jar",
-            "buck-out/gen/lib__libtwo__output/libtwo.jar"),
+        ImmutableSetMultimap.builder()
+            .put(libraryOne, "buck-out/gen/lib__libone__output/libone.jar")
+            .put(libraryTwo, "buck-out/gen/lib__libone__output/libone.jar")
+            .put(libraryTwo, "buck-out/gen/lib__libtwo__output/libtwo.jar")
+            .build(),
         libraryTwo.getOutputClasspathEntries());
 
     ImmutableSetMultimap.Builder<BuildRule, String> expected = ImmutableSetMultimap.builder();
@@ -542,7 +548,7 @@ public class DefaultJavaLibraryRuleTest {
     BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.FIRST_ORDER_ONLY);
 
-    ImmutableSetMultimap<BuildRule, String> classpathEntries =
+    ImmutableSetMultimap<JavaLibraryRule, String> classpathEntries =
         libraryOne.getTransitiveClasspathEntries();
 
     assertEquals(
@@ -591,7 +597,7 @@ public class DefaultJavaLibraryRuleTest {
     BuildContext context = createSuggestContext(ruleResolver,
         BuildDependencies.WARN_ON_TRANSITIVE);
 
-    ImmutableSetMultimap<BuildRule, String> transitive =
+    ImmutableSetMultimap<JavaLibraryRule, String> transitive =
         parent.getTransitiveClasspathEntries();
 
     ImmutableMap<String, String> classToSymbols = ImmutableMap.of(
@@ -602,7 +608,7 @@ public class DefaultJavaLibraryRuleTest {
     Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestFn =
         grandparent.createSuggestBuildFunction(context,
             transitive,
-            /* declaredClasspathEntries */ ImmutableSetMultimap.<BuildRule, String>of(),
+            /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibraryRule, String>of(),
             createJarResolver(classToSymbols));
 
     assertTrue(suggestFn.isPresent());

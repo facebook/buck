@@ -5,6 +5,7 @@ SUPPORT_SRCS = [
   'AnnotationProcessingParams.java',
   'DefaultJavaPackageFinder.java',
   'HasClasspathEntries.java',
+  'JavaLibraryRule.java',
   'JavacOptions.java',
 ]
 java_library(
@@ -28,7 +29,6 @@ RULES_SRCS = [
   'HasJavaSrcs.java',
   'JavaBinaryRule.java',
   'JavaBinaryBuildRuleFactory.java',
-  'JavaLibraryRule.java',
   'JavaLibraryBuildRuleFactory.java',
   'JavaTestRule.java',
   'JavaTestBuildRuleFactory.java',

@@ -110,12 +110,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   private final boolean exportDeps;
 
-  private final Supplier<ImmutableSet<String>> outputClasspathEntriesSupplier;
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>> outputClasspathEntriesSupplier;
 
-  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       transitiveClasspathEntriesSupplier;
 
-  private final Supplier<ImmutableSetMultimap<BuildRule, String>>
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
 
   protected final JavacOptions javacOptions;
@@ -199,20 +199,21 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     inputsToConsiderForCachingPurposes = builder.build();
 
     outputClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
-          public ImmutableSet<String> get() {
-            ImmutableSet<String> outputClasspathEntries;
+          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+            ImmutableSetMultimap<JavaLibraryRule, String> outputClasspathEntries;
 
             // If this java_library exports its dependencies then just return the transitive
             // dependencies.
             if (DefaultJavaLibraryRule.this.exportDeps) {
-              outputClasspathEntries = ImmutableSet.copyOf(
-                  getTransitiveClasspathEntries().values());
+              outputClasspathEntries = getTransitiveClasspathEntries();
             } else if (outputJar.isPresent()) {
-              outputClasspathEntries = ImmutableSet.of(getPathToOutputFile());
+              outputClasspathEntries = ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+                  .put(DefaultJavaLibraryRule.this, getPathToOutputFile())
+                  .build();
             } else {
-              outputClasspathEntries = ImmutableSet.of();
+              outputClasspathEntries = ImmutableSetMultimap.of();
             }
 
             return outputClasspathEntries;
@@ -220,12 +221,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         });
 
     transitiveClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
-          public ImmutableSetMultimap<BuildRule, String> get() {
-            final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+            final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
-            ImmutableSetMultimap<BuildRule, String> classpathEntriesForDeps =
+            ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForDeps =
                 Classpaths.getClasspathEntries(getDeps());
 
             classpathEntries.putAll(classpathEntriesForDeps);
@@ -245,10 +246,10 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         });
 
     declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<BuildRule, String>>() {
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
-          public ImmutableSetMultimap<BuildRule, String> get() {
-            final ImmutableSetMultimap.Builder<BuildRule, String> classpathEntries =
+          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+            final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                ImmutableSetMultimap.builder();
 
             Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(
@@ -256,7 +257,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
                 JavaLibraryRule.class);
 
             for (JavaLibraryRule rule : javaLibraryDeps) {
-              classpathEntries.putAll(rule, rule.getOutputClasspathEntries());
+              classpathEntries.putAll(rule, rule.getOutputClasspathEntries().values());
             }
             return classpathEntries.build();
           }
@@ -433,17 +434,17 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSetMultimap<BuildRule, String> getDeclaredClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
 
   @Override
-  public ImmutableSet<String> getOutputClasspathEntries() {
+  public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
     return outputClasspathEntriesSupplier.get();
   }
 
@@ -493,19 +494,19 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, commands);
     }
 
-    ImmutableSetMultimap<BuildRule, String> transitiveClasspathEntries =
+    ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries =
         getTransitiveClasspathEntries();
-    ImmutableSetMultimap<BuildRule, String> declaredClasspathEntries =
+    ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries =
         getDeclaredClasspathEntries();
 
     // If this rule depends on AndroidResourceRules, then we need to include the compiled R.java
     // files on the classpath when compiling this rule.
     if (dependsOnAndroidResourceRules) {
-      ImmutableSetMultimap.Builder<BuildRule, String> transitiveClasspathEntriesWithRDotJava =
+      ImmutableSetMultimap.Builder<JavaLibraryRule, String> transitiveClasspathEntriesWithRDotJava =
           ImmutableSetMultimap.builder();
       transitiveClasspathEntriesWithRDotJava.putAll(transitiveClasspathEntries);
 
-      ImmutableSetMultimap.Builder<BuildRule, String> declaredClasspathEntriesWithRDotJava =
+      ImmutableSetMultimap.Builder<JavaLibraryRule, String> declaredClasspathEntriesWithRDotJava =
           ImmutableSetMultimap.builder();
       declaredClasspathEntriesWithRDotJava.putAll(declaredClasspathEntries);
 
@@ -623,7 +624,12 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   private boolean isMissingBuildRule(BuildRule transitiveNotDeclaredDep,
       Set<String> failedImports,
       JarResolver jarResolver) {
-    ImmutableSet<String> classPaths = getTransitiveClasspathEntries().get(transitiveNotDeclaredDep);
+    if (!(transitiveNotDeclaredDep instanceof JavaLibraryRule)) {
+      return false;
+    }
+
+    ImmutableSet<String> classPaths = getTransitiveClasspathEntries()
+        .get((JavaLibraryRule)transitiveNotDeclaredDep);
     boolean containsMissingBuildRule = false;
     // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
     // the exception of rules that export their dependencies, this will result in a single
@@ -654,13 +660,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   @VisibleForTesting
   Optional<DependencyCheckingJavacStep.SuggestBuildRules> createSuggestBuildFunction(
       BuildContext context,
-      ImmutableSetMultimap<BuildRule, String> transitiveClasspathEntries,
-      ImmutableSetMultimap<BuildRule, String> declaredClasspathEntries,
+      ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries,
+      ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries,
       final JarResolver jarResolver) {
     if (context.getBuildDependencies() != BuildDependencies.WARN_ON_TRANSITIVE) {
       return Optional.absent();
     }
-    final Set<BuildRule> transitiveNotDeclaredDeps = Sets.difference(
+    final Set<JavaLibraryRule> transitiveNotDeclaredDeps = Sets.difference(
         transitiveClasspathEntries.keySet(),
         declaredClasspathEntries.keySet());
 

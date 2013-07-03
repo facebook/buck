@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
@@ -57,9 +58,9 @@ public class AndroidTransitiveDependencyGraph {
         createAndroidResourceDetails(androidResourceDeps);
 
     // Update pathsToDex.
-    ImmutableSet<Map.Entry<BuildRule, String>> classpath =
+    ImmutableSet<Map.Entry<JavaLibraryRule, String>> classpath =
         Classpaths.getClasspathEntries(buildRule.getDeps()).entries();
-    for (Map.Entry<BuildRule, String> entry : classpath) {
+    for (Map.Entry<JavaLibraryRule, String> entry : classpath) {
       if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
         pathsToDexBuilder.add(entry.getValue());
       } else {

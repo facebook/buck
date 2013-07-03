@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSetMultimap;
 
 /**
@@ -28,5 +27,5 @@ public interface HasClasspathEntries {
   /**
    * @return A map of rule names to classpath entries for this rule and its dependencies.
    */
-  public ImmutableSetMultimap<BuildRule, String> getTransitiveClasspathEntries();
+  public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries();
 }
