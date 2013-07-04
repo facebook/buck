@@ -44,6 +44,10 @@ public class InstallCommandOptionsTest {
     return getOptions(args).adbOptions();
   }
 
+  private TargetDeviceOptions getTargetDeviceOptions(String... args) throws CmdLineException {
+    return getOptions(args).targetDeviceOptions();
+  }
+
   @Test
   public void testInstallCommandOptionsRun() throws CmdLineException {
     InstallCommandOptions options = getOptions(
@@ -85,30 +89,30 @@ public class InstallCommandOptionsTest {
   @Test
   public void testInstallCommandOptionsEmulatorMode() throws CmdLineException {
     // Short form.
-    AdbOptions options = getAdbOptions(AdbOptions.EMULATOR_MODE_SHORT_ARG);
+    TargetDeviceOptions options = getTargetDeviceOptions(TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
     assertTrue(options.isEmulatorsOnlyModeEnabled());
 
     // Long form.
-    options = getAdbOptions(AdbOptions.EMULATOR_MODE_LONG_ARG);
+    options = getTargetDeviceOptions(TargetDeviceOptions.EMULATOR_MODE_LONG_ARG);
     assertTrue(options.isEmulatorsOnlyModeEnabled());
 
     // Is off by default.
-    options = getAdbOptions();
+    options = getTargetDeviceOptions();
     assertFalse(options.isEmulatorsOnlyModeEnabled());
   }
 
   @Test
   public void testInstallCommandOptionsDeviceMode() throws CmdLineException {
     // Short form.
-    AdbOptions options = getAdbOptions(AdbOptions.DEVICE_MODE_SHORT_ARG);
+    TargetDeviceOptions options = getTargetDeviceOptions(TargetDeviceOptions.DEVICE_MODE_SHORT_ARG);
     assertTrue(options.isRealDevicesOnlyModeEnabled());
 
     // Long form.
-    options = getAdbOptions(AdbOptions.DEVICE_MODE_LONG_ARG);
+    options = getTargetDeviceOptions(TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
     assertTrue(options.isRealDevicesOnlyModeEnabled());
 
     // Is off by default.
-    options = getAdbOptions();
+    options = getTargetDeviceOptions();
     assertFalse(options.isRealDevicesOnlyModeEnabled());
   }
 
@@ -116,17 +120,18 @@ public class InstallCommandOptionsTest {
   public void testInstallCommandOptionsSerial() throws CmdLineException {
     String serial = "some-random-serial-number";
     // Short form.
-    AdbOptions options = getAdbOptions(AdbOptions.SERIAL_NUMBER_SHORT_ARG, serial);
+    TargetDeviceOptions options = getTargetDeviceOptions(
+        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, serial);
     assertTrue(options.hasSerialNumber());
     assertEquals(serial, options.getSerialNumber());
 
     // Long form.
-    options = getAdbOptions(AdbOptions.SERIAL_NUMBER_LONG_ARG, serial);
+    options = getTargetDeviceOptions(TargetDeviceOptions.SERIAL_NUMBER_LONG_ARG, serial);
     assertTrue(options.hasSerialNumber());
     assertEquals(serial, options.getSerialNumber());
 
     // Is off by default.
-    options = getAdbOptions();
+    options = getTargetDeviceOptions();
     assertFalse(options.hasSerialNumber());
     assertEquals(null, options.getSerialNumber());
   }

@@ -372,7 +372,7 @@ public class TestCommandTest {
     TestCommandOptions options = new TestCommandOptions(BuckConfig.emptyConfig());
 
     new CmdLineParserAdditionalOptions(options).parseArgument(
-        "-e", "e2e", "-e", "other", "-i", "e2e");
+        "-e", "e2e", "--exclude", "other", "--include", "e2e");
 
     ImmutableSet<String> excluded = options.getExcludedLabels();
     assertEquals("other", Iterables.getOnlyElement(excluded));
@@ -389,7 +389,7 @@ public class TestCommandTest {
     assertThat(config.getDefaultExcludedLabels(), contains("e2e"));
     TestCommandOptions options = new TestCommandOptions(config);
 
-    new CmdLineParserAdditionalOptions(options).parseArgument("-i", "e2e");
+    new CmdLineParserAdditionalOptions(options).parseArgument("--include", "e2e");
 
     ImmutableSet<String> included = options.getIncludedLabels();
     assertEquals("e2e", Iterables.getOnlyElement(included));

@@ -46,6 +46,9 @@ public class UninstallCommandOptions extends AbstractCommandOptions {
   @AdditionalOptions
   private AdbOptions adbOptions;
 
+  @AdditionalOptions
+  private TargetDeviceOptions deviceOptions;
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -55,6 +58,10 @@ public class UninstallCommandOptions extends AbstractCommandOptions {
 
   public AdbOptions adbOptions() {
     return adbOptions;
+  }
+
+  public TargetDeviceOptions targetDeviceOptions() {
+    return deviceOptions;
   }
 
   public UninstallCommandOptions(BuckConfig buckConfig) {

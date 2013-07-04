@@ -52,7 +52,6 @@ Builds and runs the tests for one or more specified targets:
 
 {call buck.param}
   {param name: 'include' /}
-  {param alias: 'i'/}
   {param desc}
   Test labels to run with this test.  Labels are a way to group together tests
   of a particular type and run them together.  For example, a developer could
@@ -68,7 +67,6 @@ Builds and runs the tests for one or more specified targets:
 
 {call buck.param}
   {param name: 'exclude' /}
-  {param alias: 'e'/}
   {param desc}
   The inverse of <code>include</code>.  Labels specified with the exclude option
   won't be run.  For example, if we wanted to run all tests except slow ones, we

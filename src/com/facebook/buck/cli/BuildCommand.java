@@ -24,11 +24,13 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -92,7 +94,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         getProjectFilesystem(),
         artifactCache,
         console,
-        getBuckEventBus());
+        getBuckEventBus(),
+        Optional.<TargetDevice>absent());
     getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = 0;
     try {

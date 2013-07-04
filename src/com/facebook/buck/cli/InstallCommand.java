@@ -78,7 +78,10 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     // Uninstall the app first, if requested.
     if (options.shouldUninstallFirst()) {
       String packageName = tryToExtractPackageNameFromManifest(installableBuildRule);
-      uninstallApk(packageName, options.adbOptions(), options.uninstallOptions(),
+      uninstallApk(packageName,
+          options.adbOptions(),
+          options.targetDeviceOptions(),
+          options.uninstallOptions(),
           build.getExecutionContext());
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
@@ -135,24 +138,26 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     getBuckEventBus().getEventBus().post(StartActivityEvent.started(
         androidBinaryRule.getBuildTarget(),
         activityToRun));
-    boolean success = adbCall(options.adbOptions(), context, new AdbCallable() {
-      @Override
-      public boolean call(IDevice device) throws Exception {
-        String err = deviceStartActivity(device, activityToRun);
-        if (err != null) {
-          console.printBuildFailure(err);
-          return false;
-        }
-        else {
-          return true;
-        }
-      }
+    boolean success = adbCall(options.adbOptions(),
+        options.targetDeviceOptions(),
+        context,
+        new AdbCallable() {
+          @Override
+          public boolean call(IDevice device) throws Exception {
+            String err = deviceStartActivity(device, activityToRun);
+            if (err != null) {
+              console.printBuildFailure(err);
+              return false;
+            } else {
+              return true;
+            }
+          }
 
-      @Override
-      public String toString() {
-        return "start activity";
-      }
-    });
+          @Override
+          public String toString() {
+            return "start activity";
+          }
+        });
     getBuckEventBus().getEventBus().post(StartActivityEvent.finished(
         androidBinaryRule.getBuildTarget(),
         activityToRun,
@@ -208,17 +213,20 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     getBuckEventBus().getEventBus().post(InstallEvent.started(buildRule.getBuildTarget()));
 
     final File apk = new File(buildRule.getApkPath());
-    boolean success = adbCall(options.adbOptions(), context, new AdbCallable() {
-      @Override
-      public boolean call(IDevice device) throws Exception {
-        return installApkOnDevice(device, apk);
-      }
+    boolean success = adbCall(options.adbOptions(),
+        options.targetDeviceOptions(),
+        context,
+        new AdbCallable() {
+          @Override
+          public boolean call(IDevice device) throws Exception {
+            return installApkOnDevice(device, apk);
+          }
 
-      @Override
-      public String toString() {
-        return "install apk";
-      }
-    });
+          @Override
+          public String toString() {
+            return "install apk";
+          }
+        });
     getBuckEventBus().getEventBus().post(
         InstallEvent.finished(buildRule.getBuildTarget(), success));
 

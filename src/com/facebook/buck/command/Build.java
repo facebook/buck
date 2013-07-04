@@ -31,6 +31,7 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -73,6 +74,7 @@ public class Build {
       DependencyGraph dependencyGraph,
       Optional<File> androidSdkDir,
       Optional<File> ndkRoot,
+      Optional<TargetDevice> targetDevice,
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
       ListeningExecutorService listeningExecutorService,
@@ -92,6 +94,7 @@ public class Build {
         .setConsole(console)
         .setAndroidPlatformTarget(androidPlatformTarget)
         .setNdkRoot(ndkRoot)
+        .setTargetDevice(targetDevice)
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setDebugEnabled(isDebugEnabled)

@@ -276,7 +276,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getProjectFilesystem(),
         getArtifactCache(),
         console,
-        getBuckEventBus());
+        getBuckEventBus(),
+        options.getTargetDeviceOptional());
     int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
     if (exitCode != 0) {
       return exitCode;

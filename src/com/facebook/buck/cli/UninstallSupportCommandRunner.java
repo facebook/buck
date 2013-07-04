@@ -46,13 +46,17 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
 
   /**
    * Uninstall apk from all matching devices.
+   *
    * @see InstallCommand#installApk(InstallableBuildRule, InstallCommandOptions, ExecutionContext)
    */
   @VisibleForTesting
-  protected boolean uninstallApk(final String packageName, final AdbOptions adbOptions,
-      final UninstallOptions uninstallOptions, ExecutionContext context) {
+  protected boolean uninstallApk(final String packageName,
+      final AdbOptions adbOptions,
+      final TargetDeviceOptions deviceOptions,
+      final UninstallOptions uninstallOptions,
+      ExecutionContext context) {
     getBuckEventBus().getEventBus().post(UninstallEvent.started(packageName));
-    boolean success = adbCall(adbOptions, context, new AdbCallable() {
+    boolean success = adbCall(adbOptions, deviceOptions, context, new AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
         return uninstallApkFromDevice(device, packageName, uninstallOptions.shouldKeepUserData());
@@ -64,7 +68,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       }
     });
     getBuckEventBus().getEventBus().post(UninstallEvent.finished(packageName, success));
-    return  success;
+    return success;
   }
 
   /**
@@ -111,34 +115,36 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
 
   /**
    * Modified version of <a href="http://fburl.com/8840769">Device.uninstallPackage()</a>.
+   *
    * @param device an {@link IDevice}
    * @param packageName application package name
-   * @param keepData true if user data is to be kept
+   * @param keepData  true if user data is to be kept
    * @return error message or null if successful
    * @throws InstallException
    */
-  private String deviceUninstallPackage(IDevice device, String packageName,
+  private String deviceUninstallPackage(IDevice device,
+      String packageName,
       boolean keepData) throws InstallException {
     try {
-        ErrorParsingReceiver receiver = new ErrorParsingReceiver() {
-          @Override
-          protected String matchForError(String line) {
-            return line.toLowerCase().contains("failure") ? line : null;
-          }
-        };
-        device.executeShellCommand(
-            "pm uninstall " + (keepData? "-k ":"") + packageName,
-            receiver,
-            INSTALL_TIMEOUT);
-        return receiver.getErrorMessage();
+      ErrorParsingReceiver receiver = new ErrorParsingReceiver() {
+        @Override
+        protected String matchForError(String line) {
+          return line.toLowerCase().contains("failure") ? line : null;
+        }
+      };
+      device.executeShellCommand(
+          "pm uninstall " + (keepData ? "-k " : "") + packageName,
+          receiver,
+          INSTALL_TIMEOUT);
+      return receiver.getErrorMessage();
     } catch (TimeoutException e) {
-        throw new InstallException(e);
+      throw new InstallException(e);
     } catch (AdbCommandRejectedException e) {
-        throw new InstallException(e);
+      throw new InstallException(e);
     } catch (ShellCommandUnresponsiveException e) {
-        throw new InstallException(e);
+      throw new InstallException(e);
     } catch (IOException e) {
-        throw new InstallException(e);
+      throw new InstallException(e);
     }
   }
 

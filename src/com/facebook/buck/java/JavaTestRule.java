@@ -33,6 +33,7 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.XmlTestResultParser;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -169,13 +170,34 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     Step junit = new JUnitStep(
         classpathEntries,
         testClassNames,
-        vmArgs,
+        amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
         pathToTestOutput,
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled());
     steps.add(junit);
 
     return steps.build();
+  }
+
+  @VisibleForTesting
+  List<String> amendVmArgs(List<String> existingVmArgs, Optional<TargetDevice> targetDevice) {
+    if (!targetDevice.isPresent()) {
+      return existingVmArgs;
+    }
+
+    ImmutableList.Builder<String> args = ImmutableList.<String>builder().addAll(existingVmArgs);
+    if (targetDevice.isPresent()) {
+      TargetDevice device = targetDevice.get();
+      if (device.isEmulator()) {
+        args.add("-Dbuck.device=emulator");
+      } else {
+        args.add("-Dbuck.device=device");
+      }
+      if (device.hasIdentifier()) {
+        args.add("-Dbuck.device.id=" + device.getIdentifier());
+      }
+    }
+    return args.build();
   }
 
   @Override

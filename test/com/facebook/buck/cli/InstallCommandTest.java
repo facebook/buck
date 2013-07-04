@@ -104,7 +104,8 @@ public class InstallCommandTest {
     InstallCommandOptions options = getOptions();
     IDevice[] devices = new IDevice[] { };
 
-    assertNull(installCommand.filterDevices(devices, options.adbOptions()));
+    assertNull(installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions()));
   }
 
   /**
@@ -122,7 +123,8 @@ public class InstallCommandTest {
         createRealDevice("6", IDevice.DeviceState.RECOVERY),
     };
 
-    assertNull(installCommand.filterDevices(devices, options.adbOptions()));
+    assertNull(installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions()));
   }
 
   /**
@@ -141,10 +143,12 @@ public class InstallCommandTest {
     };
 
     InstallCommandOptions options = getOptions();
-    assertNull(installCommand.filterDevices(devices, options.adbOptions()));
+    assertNull(installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions()));
 
     options = getOptions(AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG);
-    List<IDevice> filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+    List<IDevice> filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNotNull(filteredDevices);
     assertEquals(devices.length, filteredDevices.size());
   }
@@ -154,14 +158,15 @@ public class InstallCommandTest {
    */
   @Test
   public void testDeviceFilterEmulator() throws CmdLineException {
-    InstallCommandOptions options = getOptions(AdbOptions.EMULATOR_MODE_SHORT_ARG);
+    InstallCommandOptions options = getOptions(TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
 
     IDevice[] devices = new IDevice[] {
         createEmulator("1", IDevice.DeviceState.ONLINE),
         createRealDevice("2", IDevice.DeviceState.ONLINE),
     };
 
-    List<IDevice> filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+    List<IDevice> filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNotNull(filteredDevices);
     assertEquals(1, filteredDevices.size());
     assertSame(devices[0], filteredDevices.get(0));
@@ -172,14 +177,15 @@ public class InstallCommandTest {
    */
   @Test
   public void testDeviceFilterRealDevices() throws CmdLineException {
-    InstallCommandOptions options = getOptions(AdbOptions.DEVICE_MODE_LONG_ARG);
+    InstallCommandOptions options = getOptions(TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
 
     IDevice[] devices = new IDevice[] {
         createRealDevice("1", IDevice.DeviceState.ONLINE),
         createEmulator("2", IDevice.DeviceState.ONLINE)
     };
 
-    List<IDevice> filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+    List<IDevice> filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNotNull(filteredDevices);
     assertEquals(1, filteredDevices.size());
     assertSame(devices[0], filteredDevices.get(0));
@@ -199,8 +205,9 @@ public class InstallCommandTest {
 
     for (int i = 0; i < devices.length; i++) {
       InstallCommandOptions options = getOptions(
-          AdbOptions.SERIAL_NUMBER_SHORT_ARG,devices[i].getSerialNumber());
-      List<IDevice> filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+          TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG,devices[i].getSerialNumber());
+      List<IDevice> filteredDevices = installCommand.filterDevices(
+          devices, options.adbOptions(), options.targetDeviceOptions());
       assertNotNull(filteredDevices);
       assertEquals(1, filteredDevices.size());
       assertSame(devices[i], filteredDevices.get(0));
@@ -220,8 +227,9 @@ public class InstallCommandTest {
     };
 
     InstallCommandOptions options = getOptions(
-          AdbOptions.SERIAL_NUMBER_SHORT_ARG, "invalid-serial");
-    List<IDevice> filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+          TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, "invalid-serial");
+    List<IDevice> filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNull(filteredDevices);
   }
 
@@ -243,42 +251,47 @@ public class InstallCommandTest {
 
     // Filter by serial in "real device" mode with serial number for real device.
     InstallCommandOptions options = getOptions(
-        AdbOptions.SERIAL_NUMBER_SHORT_ARG, realDevice1.getSerialNumber(),
-        AdbOptions.DEVICE_MODE_LONG_ARG);
-    List<IDevice> filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, realDevice1.getSerialNumber(),
+        TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
+    List<IDevice> filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNotNull(filteredDevices);
     assertEquals(1, filteredDevices.size());
     assertSame(realDevice1, filteredDevices.get(0));
 
     // Filter by serial in "real device" mode with serial number for emulator.
     options = getOptions(
-        AdbOptions.SERIAL_NUMBER_SHORT_ARG, emulator1.getSerialNumber(),
-        AdbOptions.DEVICE_MODE_LONG_ARG);
-    filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, emulator1.getSerialNumber(),
+        TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
+    filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNull(filteredDevices);
 
     // Filter by serial in "emulator" mode with serial number for real device.
     options = getOptions(
-        AdbOptions.SERIAL_NUMBER_SHORT_ARG, realDevice1.getSerialNumber(),
-        AdbOptions.EMULATOR_MODE_SHORT_ARG);
-    filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, realDevice1.getSerialNumber(),
+        TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
+    filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNull(filteredDevices);
 
     // Filter by serial in "real device" mode with serial number for emulator.
     options = getOptions(
-        AdbOptions.SERIAL_NUMBER_SHORT_ARG, emulator1.getSerialNumber(),
-        AdbOptions.EMULATOR_MODE_SHORT_ARG);
-    filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, emulator1.getSerialNumber(),
+        TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
+    filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNotNull(filteredDevices);
     assertEquals(1, filteredDevices.size());
     assertSame(emulator1, filteredDevices.get(0));
 
     // Filter in both "real device" mode and "emulator mode".
     options = getOptions(
-        AdbOptions.DEVICE_MODE_LONG_ARG,
-        AdbOptions.EMULATOR_MODE_SHORT_ARG,
+        TargetDeviceOptions.DEVICE_MODE_LONG_ARG,
+        TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG,
         AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG);
-    filteredDevices = installCommand.filterDevices(devices, options.adbOptions());
+    filteredDevices = installCommand.filterDevices(
+        devices, options.adbOptions(), options.targetDeviceOptions());
     assertNotNull(filteredDevices);
     assertEquals(devices.length, filteredDevices.size());
     for (IDevice device : devices) {
@@ -292,7 +305,7 @@ public class InstallCommandTest {
   @Test
   public void testSuccessfulDeviceInstall() {
     File apk = new File("/some/file.apk");
-    final AtomicReference<String> apkPath = new AtomicReference<String>();
+    final AtomicReference<String> apkPath = new AtomicReference<>();
 
     TestDevice device = new TestDevice() {
       @Override

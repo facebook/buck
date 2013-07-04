@@ -37,6 +37,7 @@ public class ExecutionContext {
   private final Console console;
   private final Optional<AndroidPlatformTarget> androidPlatformTarget;
   private final Optional<File> ndkRoot;
+  private final Optional<TargetDevice> targetDevice;
   private final long defaultTestTimeoutMillis;
   private final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
@@ -48,6 +49,7 @@ public class ExecutionContext {
       Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<File> ndkRoot,
+      Optional<TargetDevice> targetDevice,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
@@ -57,6 +59,7 @@ public class ExecutionContext {
     this.console = Preconditions.checkNotNull(console);
     this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
     this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
+    this.targetDevice = Preconditions.checkNotNull(targetDevice);
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
@@ -74,6 +77,7 @@ public class ExecutionContext {
         new Console(console.getVerbosity(), newStdout, newStderr, console.getAnsi()),
         getAndroidPlatformTargetOptional(),
         getNdkRoot(),
+        getTargetDeviceOptional(),
         getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled,
@@ -143,6 +147,10 @@ public class ExecutionContext {
     return ndkRoot;
   }
 
+  public Optional<TargetDevice> getTargetDeviceOptional() {
+    return targetDevice;
+  }
+
   public long getDefaultTestTimeoutMillis() {
     return defaultTestTimeoutMillis;
   }
@@ -173,6 +181,7 @@ public class ExecutionContext {
     private Console console = null;
     private Optional<AndroidPlatformTarget> androidPlatformTarget = Optional.absent();
     private Optional<File> ndkRoot = Optional.absent();
+    private Optional<TargetDevice> targetDevice = Optional.absent();
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
     private boolean isDebugEnabled = false;
@@ -186,6 +195,7 @@ public class ExecutionContext {
           console,
           androidPlatformTarget,
           ndkRoot,
+          targetDevice,
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
           isDebugEnabled,
@@ -209,6 +219,11 @@ public class ExecutionContext {
 
     public Builder setNdkRoot(Optional<File> ndkRoot) {
       this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
+      return this;
+    }
+
+    public Builder setTargetDevice(Optional<TargetDevice> targetDevice) {
+      this.targetDevice = Preconditions.checkNotNull(targetDevice);
       return this;
     }
 

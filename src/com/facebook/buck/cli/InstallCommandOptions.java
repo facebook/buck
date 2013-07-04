@@ -45,6 +45,9 @@ public class InstallCommandOptions extends BuildCommandOptions {
   @AdditionalOptions
   private AdbOptions adbOptions;
 
+  @AdditionalOptions
+  private TargetDeviceOptions deviceOptions;
+
   @Option(
       name = RUN_LONG_ARG,
       aliases = { RUN_SHORT_ARG },
@@ -60,6 +63,10 @@ public class InstallCommandOptions extends BuildCommandOptions {
 
   public AdbOptions adbOptions() {
     return adbOptions;
+  }
+
+  public TargetDeviceOptions targetDeviceOptions() {
+    return deviceOptions;
   }
 
   public UninstallOptions uninstallOptions() {

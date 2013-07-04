@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.java.DefaultJavaPackageFinder;
+import com.facebook.buck.step.TargetDevice;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -47,16 +48,17 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Option(
       name = "--include",
       usage = "Labels to include when running tests, --include L1 L2 ... LN --other_option.",
-      aliases = "-i",
       handler = StringSetOptionHandler.class)
   private Supplier<ImmutableSet<String>> includedSet;
 
   @Option(
       name = "--exclude",
       usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN --other_option.",
-      aliases = "-e",
       handler = StringSetOptionHandler.class)
   private Supplier<ImmutableSet<String>> excludedSet;
+
+  @AdditionalOptions
+  private TargetDeviceOptions targetDeviceOptions;
 
   private static ImmutableSet.Builder<String> validateLabels(Set<String> labelSet) {
     ImmutableSet.Builder<String> result = ImmutableSet.builder();
@@ -122,5 +124,9 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   public ImmutableSet<String> getExcludedLabels() {
     return excludedLabelsSupplier.get();
+  }
+
+  public Optional<TargetDevice> getTargetDeviceOptional() {
+    return targetDeviceOptions.getTargetDeviceOptional();
   }
 }

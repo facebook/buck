@@ -21,11 +21,13 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -136,13 +138,15 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       ProjectFilesystem projectFilesystem,
       ArtifactCache artifactCache,
       Console console,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      Optional<TargetDevice> targetDevice) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
     return new Build(graph,
         findAndroidSdkDir(),
         findAndroidNdkDir(),
+        targetDevice,
         projectFilesystem,
         artifactCache,
         getListeningExecutorService(),

@@ -59,7 +59,9 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    */
   @Nullable
   @VisibleForTesting
-  List<IDevice> filterDevices(IDevice[] allDevices, AdbOptions options) {
+  List<IDevice> filterDevices(IDevice[] allDevices,
+                              AdbOptions adbOptions,
+                              TargetDeviceOptions deviceOptions) {
     if (allDevices.length == 0) {
       console.printBuildFailure("No devices are found.");
       return null;
@@ -67,11 +69,11 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
 
     List<IDevice> devices = Lists.newArrayList();
     TriState emulatorsOnly = TriState.UNSPECIFIED;
-    if (options.isEmulatorsOnlyModeEnabled() && options.isMultiInstallModeEnabled()) {
+    if (deviceOptions.isEmulatorsOnlyModeEnabled() && adbOptions.isMultiInstallModeEnabled()) {
       emulatorsOnly = TriState.UNSPECIFIED;
-    } else if (options.isEmulatorsOnlyModeEnabled()) {
+    } else if (deviceOptions.isEmulatorsOnlyModeEnabled()) {
       emulatorsOnly = TriState.TRUE;
-    } else if (options.isRealDevicesOnlyModeEnabled()) {
+    } else if (deviceOptions.isRealDevicesOnlyModeEnabled()) {
       emulatorsOnly = TriState.FALSE;
     }
 
@@ -82,8 +84,8 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
         onlineDevices++;
 
         boolean serialMatches = true;
-        if (options.hasSerialNumber()) {
-          serialMatches = device.getSerialNumber().equals(options.getSerialNumber());
+        if (deviceOptions.hasSerialNumber()) {
+          serialMatches = device.getSerialNumber().equals(deviceOptions.getSerialNumber());
         }
 
         boolean deviceTypeMatches;
@@ -117,7 +119,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     }
 
     // Found multiple devices but multi-install mode is not enabled.
-    if (!options.isMultiInstallModeEnabled() && devices.size() > 1) {
+    if (!adbOptions.isMultiInstallModeEnabled() && devices.size() > 1) {
       console.printBuildFailure(
           String.format("%d device(s) matches specified device filter (1 expected).\n" +
                         "Either disconnect other devices or enable multi-install mode (%s).",
@@ -203,7 +205,10 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    *  devices will be used to install the apk if needed.
    */
   @VisibleForTesting
-  protected boolean adbCall(AdbOptions options, ExecutionContext context, AdbCallable adbCallable) {
+  protected boolean adbCall(AdbOptions options,
+                            TargetDeviceOptions deviceOptions,
+                            ExecutionContext context,
+                            AdbCallable adbCallable) {
 
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
@@ -213,7 +218,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     }
 
     // Build list of matching devices.
-    List<IDevice> devices = filterDevices(adb.getDevices(), options);
+    List<IDevice> devices = filterDevices(adb.getDevices(), options, deviceOptions);
     if (devices == null) {
       return false;
     }
