@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.parser.RawRulePredicates.alwaysFalse;
 import static com.facebook.buck.parser.RawRulePredicates.alwaysTrue;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -47,6 +48,8 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -75,7 +78,6 @@ public class ParserTest {
   private File testBuildFile;
   private Parser testParser;
   private KnownBuildRuleTypes buildRuleTypes;
-  private ProjectBuildFileParser buildFileParser;
   private ProjectFilesystem filesystem;
 
   @Rule
@@ -99,18 +101,29 @@ public class ParserTest {
     filesystem = new ProjectFilesystem(root);
 
     buildRuleTypes = new KnownBuildRuleTypes();
-    buildFileParser = new ProjectBuildFileParser(filesystem.getIgnorePaths());
-    testParser = createParser(emptyBuildTargets(), buildFileParser);
+    testParser = createParser(emptyBuildTargets(),
+        new ProjectBuildFileParser(filesystem.getIgnorePaths()));
   }
 
   private Parser createParser(Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
-      ProjectBuildFileParser buildFileParser) {
+                              ProjectBuildFileParser buildFileParser) {
+    return createParser(
+        Suppliers.ofInstance(new BuildFileTree(ImmutableSet.<String>of())),
+        knownBuildTargets,
+        buildFileParser,
+        new BuildTargetParser(filesystem));
+  }
+
+  private Parser createParser(Supplier<BuildFileTree> buildFileTreeSupplier,
+    Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
+    ProjectBuildFileParser buildFileParser,
+    BuildTargetParser buildTargetParser) {
     return new Parser(
         filesystem,
         buildRuleTypes,
         new TestConsole(),
-        new BuildFileTree(ImmutableSet.<BuildTarget>of()),
-        new BuildTargetParser(filesystem),
+        buildFileTreeSupplier,
+        buildTargetParser,
         knownBuildTargets,
         buildFileParser);
   }
@@ -173,8 +186,6 @@ public class ParserTest {
   public void testCircularDependencyDetection() throws IOException, NoSuchBuildTargetException {
     // Mock out objects that are not critical to parsing.
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.getProjectRoot()).andReturn(new File("."));
-
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
       @Override
       public BuildTarget parse(String buildTargetName, ParseContext parseContext)
@@ -182,19 +193,14 @@ public class ParserTest {
         return BuildTargetFactory.newInstance(buildTargetName);
       }
     };
-
-    BuildFileTree buildFiles = createMock(BuildFileTree.class);
+    final BuildFileTree buildFiles = createMock(BuildFileTree.class);
     replay(projectFilesystem, buildFiles);
 
-    // Create the set of known build targets so the Parser does not have to exercise its parsing
-    // logic, only its graph traversal algorithms.
-    Parser parser = new Parser(projectFilesystem,
-        buildRuleTypes,
-        new TestConsole(),
-        buildFiles,
-        buildTargetParser,
+    Parser parser = createParser(
+        Suppliers.ofInstance(buildFiles),
         circularBuildTargets(),
-        buildFileParser);
+        new ProjectBuildFileParser(ImmutableSet.<String>of()),
+        buildTargetParser);
 
     BuildTarget rootNode = BuildTargetFactory.newInstance("//:A");
     Iterable<BuildTarget> buildTargets = ImmutableSet.of(rootNode);
@@ -363,7 +369,7 @@ public class ParserTest {
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
     WatchEvent<Path> event = createMock(WatchEvent.class);
     expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File("./BUCK").toPath());
+    expect(event.context()).andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath());
     replay(event);
     parser.onFileSystemChange(event);
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
@@ -372,6 +378,123 @@ public class ParserTest {
     assertEquals("Should have invalidated cache.", 2, buildFileParser.calls);
   }
 
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
+  public void whenNotifiedOfSourcePathEventThenCacheRulesAreNotInvalidated()
+      throws IOException, NoSuchBuildTargetException {
+    TestProjectBuildFileParser buildFileParser = new TestProjectBuildFileParser();
+    Parser parser = createParser(emptyBuildTargets(), buildFileParser);
+
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
+    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+
+    verify(event);
+    assertEquals("Should have cached build rules.", 1, buildFileParser.calls);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
+  public void whenNotifiedOfNewSourceFileBuildTreeIsNotReconstructed()
+      throws IOException, NoSuchBuildTargetException {
+
+    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
+    expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
+    replay(buildFileTreeSupplier);
+
+    Parser parser = createParser(buildFileTreeSupplier,
+        emptyBuildTargets(),
+        new ProjectBuildFileParser(ImmutableSet.<String>of()),
+        new BuildTargetParser(filesystem));
+
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
+    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+
+    // Check that event was processed and BuildFileTree was supplied once.
+    verify(event, buildFileTreeSupplier);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
+  public void whenNotifiedOfNewBuildFileBuildTreeIsReconstructed()
+      throws IOException, NoSuchBuildTargetException {
+
+    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
+    expect(buildFileTreeSupplier.get())
+        .andReturn(new BuildFileTree(ImmutableSet.<String>of())).times(2);
+    replay(buildFileTreeSupplier);
+
+    Parser parser = createParser(buildFileTreeSupplier,
+        emptyBuildTargets(),
+        new ProjectBuildFileParser(ImmutableSet.<String>of()),
+        new BuildTargetParser(filesystem));
+
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
+    expect(event.context()).andReturn(new File("./BUCK").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+
+    // Check that event was processed and BuildFileTree was supplied twice.
+    verify(event, buildFileTreeSupplier);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
+  public void whenNotifiedOfBuildFileChangeBuildTreeIsNotReconstructed()
+      throws IOException, NoSuchBuildTargetException {
+
+    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
+    expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
+    replay(buildFileTreeSupplier);
+
+    Parser parser = createParser(buildFileTreeSupplier,
+        emptyBuildTargets(),
+        new ProjectBuildFileParser(ImmutableSet.<String>of()),
+        new BuildTargetParser(filesystem));
+
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
+    expect(event.context()).andReturn(new File("./BUCK").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+
+    // Check that event was processed and BuildFileTree was supplied once.
+    verify(event, buildFileTreeSupplier);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
+  public void whenNotifiedOfSourceFileChangeBuildTreeIsNotReconstructed()
+      throws IOException, NoSuchBuildTargetException {
+
+    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
+    expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
+    replay(buildFileTreeSupplier);
+
+    Parser parser = createParser(buildFileTreeSupplier,
+        emptyBuildTargets(),
+        new ProjectBuildFileParser(ImmutableSet.<String>of()),
+        new BuildTargetParser(filesystem));
+
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
+    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+
+    // Check that event was processed and BuildFileTree was supplied once.
+    verify(event, buildFileTreeSupplier);
+  }
+
+  @Test
   public void testGeneratedDeps() throws IOException, NoSuchBuildTargetException {
     // Execute parseBuildFilesForTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "generateddeps");
@@ -405,25 +528,6 @@ public class ParserTest {
     assertNotNull(barRule);
 
     assertEquals(ImmutableSet.of(barRule), fooRule.getDeps());
-  }
-
-  @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
-  public void whenNotifiedOfSourcePathEventThenCacheRulesAreNotInvalidated()
-      throws IOException, NoSuchBuildTargetException {
-    TestProjectBuildFileParser buildFileParser = new TestProjectBuildFileParser();
-    Parser parser = createParser(emptyBuildTargets(), buildFileParser);
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
-    replay(event);
-    parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-
-    verify(event);
-    assertEquals("Should have cached build rules.", 1, buildFileParser.calls);
   }
 
   @Test

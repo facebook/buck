@@ -35,6 +35,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -45,7 +46,6 @@ import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Iterator;
@@ -87,32 +87,43 @@ public class Parser {
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ProjectBuildFileParser buildFileParser;
   private final Console console;
+  private final Supplier<BuildFileTree> buildFileTreeSupplier;
   private BuildFileTree buildFiles;
 
-  public Parser(ProjectFilesystem projectFilesystem,
+  public Parser(final ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       Console console) {
     this(projectFilesystem,
         buildRuleTypes,
         console,
-        BuildFileTree.constructBuildFileTree(projectFilesystem),
+        /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
+        new Supplier<BuildFileTree>() {
+          @Override
+          public BuildFileTree get() {
+            return BuildFileTree.constructBuildFileTree(projectFilesystem);
+          }
+        },
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
         new ProjectBuildFileParser(projectFilesystem.getIgnorePaths()));
   }
 
+  /**
+   * @param buildFileTreeSupplier each call to get() must reconstruct the build file tree from disk.
+   */
   @VisibleForTesting
   Parser(ProjectFilesystem projectFilesystem,
          KnownBuildRuleTypes buildRuleTypes,
          Console console,
-         BuildFileTree buildFiles,
+         Supplier<BuildFileTree> buildFileTreeSupplier,
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
          ProjectBuildFileParser buildFileParser) {
+    this.buildFileTreeSupplier = Preconditions.checkNotNull(buildFileTreeSupplier);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.console = Preconditions.checkNotNull(console);
-    this.buildFiles = Preconditions.checkNotNull(buildFiles);
+    this.buildFiles = buildFileTreeSupplier.get();
     this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.buildFileParser = Preconditions.checkNotNull(buildFileParser);
@@ -160,7 +171,6 @@ public class Parser {
   }
 
   private void invalidateCache() {
-    buildFiles = BuildFileTree.constructBuildFileTree(projectFilesystem);
     parsedBuildFiles.clear();
     knownBuildTargets.clear();
     allBuildFilesParsed = false;
@@ -448,17 +458,33 @@ public class Parser {
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) {
+
+    boolean reconstructBuildFileTree = false;
     if (projectFilesystem.isPathChangeEvent(event)) {
-      // TODO(user): Track the files imported by build files
-      // Currently we just assume changed ".java" can't affect build rules.
-      // Adding or deleting "*.java" files requires build files to be reevaluated due to globing.
-      final String SRC_EXTENSION = ".java";
-      Path path = (Path) event.context();
-      if (path.toString().endsWith(SRC_EXTENSION)
-          && event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-        return;
+      String path = event.context().toString();
+      if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+        if (path.endsWith(".java")) {
+          // TODO(user): Track the files imported by build files
+          // Currently we just assume changed ".java" can't affect build rules.
+          // Adding or deleting ".java" files requires build files to be reevaluated due to globing.
+          return;
+        }
+      } else {
+        if (path.endsWith(BuckConstant.BUILD_RULES_FILE_NAME)) {
+          // A BUCK file was added or deleted, so reconstruct the build file tree.
+          reconstructBuildFileTree = true;
+        }
       }
+    } else {
+      // A non-path-change event happened: we have no idea what's going on,
+      // so reconstruct the build file tree to be safe.
+      reconstructBuildFileTree = true;
     }
+
+    if (reconstructBuildFileTree) {
+      buildFiles = buildFileTreeSupplier.get();
+    }
+
     // TODO(user): invalidate affected build files, rather than nuking all rules completely.
     invalidateCache();
   }
