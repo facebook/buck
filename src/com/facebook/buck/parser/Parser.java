@@ -32,6 +32,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -46,6 +47,7 @@ import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Iterator;
@@ -171,6 +173,9 @@ public class Parser {
   }
 
   private void invalidateCache() {
+    if (console.getVerbosity() == Verbosity.ALL) {
+      console.getStdErr().println("Parser invalidating cache");
+    }
     parsedBuildFiles.clear();
     knownBuildTargets.clear();
     allBuildFilesParsed = false;
@@ -453,11 +458,28 @@ public class Parser {
   }
 
   /**
+   * @param event the event to format.
+   * @return the formatted event context string.
+   */
+  private String createContextString(WatchEvent<?> event) {
+    if (projectFilesystem.isPathChangeEvent(event)) {
+      Path path = (Path) event.context();
+      return path.toAbsolutePath().toString();
+    }
+    return event.context().toString();
+  }
+
+  /**
    * Called when file change events are posted to the file change EventBus to invalidate cached
    * build rules if required.
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) {
+
+    if (console.getVerbosity() == Verbosity.ALL) {
+      console.getStdErr().printf("Parser watched event %s %s\n", event.kind(),
+          createContextString(event));
+    }
 
     boolean reconstructBuildFileTree = false;
     if (projectFilesystem.isPathChangeEvent(event)) {

@@ -531,6 +531,63 @@ public class ParserTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
+  public void whenSourceFileAddedThenCacheRulesAreInvalidated()
+      throws IOException, NoSuchBuildTargetException {
+    TestProjectBuildFileParser buildFileParser = new TestProjectBuildFileParser();
+    Parser parser = createParser(emptyBuildTargets(), buildFileParser);
+
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
+    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+
+    verify(event);
+    assertEquals("Should not have cached build rules.", 2, buildFileParser.calls);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
+  public void whenSourceFileModifiedThenCacheRulesAreNotInvalidated()
+      throws IOException, NoSuchBuildTargetException {
+    TestProjectBuildFileParser buildFileParser = new TestProjectBuildFileParser();
+    Parser parser = createParser(emptyBuildTargets(), buildFileParser);
+
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
+    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+
+    verify(event);
+    assertEquals("Should have cached build rules.", 1, buildFileParser.calls);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
+  public void whenSourceFileDeletedThenCacheRulesAreInvalidated()
+      throws IOException, NoSuchBuildTargetException {
+    TestProjectBuildFileParser buildFileParser = new TestProjectBuildFileParser();
+    Parser parser = createParser(emptyBuildTargets(), buildFileParser);
+
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_DELETE).anyTimes();
+    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
+    replay(event);
+    parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+
+    verify(event);
+    assertEquals("Should not have cached build rules.", 2, buildFileParser.calls);
+  }
+
+  @Test
   public void whenAllRulesAreRequestedWithDifferingIncludesThenRulesAreParsedTwice()
       throws IOException, NoSuchBuildTargetException {
     TestProjectBuildFileParser buildFileParser = new TestProjectBuildFileParser();

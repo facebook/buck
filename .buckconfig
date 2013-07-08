@@ -9,6 +9,7 @@
 [project]
     ignore = \
       .git, \
+      .buckd, \
       build, \
       test/com/facebook/buck/cli/testdata, \
       test/com/facebook/buck/junit/testdata, \

@@ -197,6 +197,6 @@ public class ProjectFilesystem {
   public boolean isPathChangeEvent(WatchEvent<?> event) {
     return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
         event.kind() == StandardWatchEventKinds.ENTRY_MODIFY ||
-        event.kind() == StandardWatchEventKinds.ENTRY_CREATE;
+        event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
   }
 }
