@@ -547,61 +547,47 @@ public class DefaultJavaLibraryRuleTest {
   @Test
   public void testGetAbiKeyForDepsInThePresenceOfExportDeps() {
     // Create a java_library named //:tinylib with a hardcoded ABI key.
-    BuildTarget tinyLibraryTarget = BuildTargetFactory.newInstance("//:tinylib");
-    final String tinyLibAbiKeyHash = Strings.repeat("a", 40);
-    BuildRuleParams params = new BuildRuleParams(tinyLibraryTarget,
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        /* pathRelativizer */ Functions.<String>identity());
-    JavaLibraryRule tinyLibrary = new DefaultJavaLibraryRule(params,
+    String tinyLibAbiKeyHash = Strings.repeat("a", 40);
+    JavaLibraryRule tinyLibrary = createDefaultJavaLibaryRuleWithAbiKey(
+        tinyLibAbiKeyHash,
+        BuildTargetFactory.newInstance("//:tinylib"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
         /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* resources */ ImmutableSet.<SourcePath>of(),
-        /* proguardConfig */ Optional.<String>absent(),
-        /* exportDeps */ false,
-        JavacOptions.builder().build()) {
-      @Override
-      public Optional<Sha1HashCode> getAbiKey() {
-        return Optional.of(new Sha1HashCode(tinyLibAbiKeyHash));
-      }
-    };
+        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* exportDeps */ false);
 
-    // Create two rules, each of which depends on //:tinylib, but only one of which exports its deps.
-    Map<BuildTarget, BuildRule> buildRuleIndex = Maps.newHashMap();
-    buildRuleIndex.put(tinyLibraryTarget, tinyLibrary);
-    BuildRuleResolver oneTimeRuleResolver = new BuildRuleResolver(buildRuleIndex);
-    DefaultJavaLibraryRule.Builder commonLibBuilder = DefaultJavaLibraryRule
-        .newJavaLibraryRuleBuilder(
-        new FakeAbstractBuildRuleBuilderParams())
-        .addDep(tinyLibraryTarget);
-    // We go through a bit of effort to be able to override getAbiKey() in //:common_with_export so
-    // that we can compute it without building the rule.
-    BuildTarget commonWithExportTarget = BuildTargetFactory.newInstance("//:common_with_export");
-    DefaultJavaLibraryRule realCommonWithExport = commonLibBuilder
-        .setBuildTarget(commonWithExportTarget)
-        .setExportDeps(true)
-        .build(oneTimeRuleResolver);
-    final String commonWithExportAbiKeyHash = Strings.repeat("b", 40);
-    JavaLibraryDelegate commonWithExport = new JavaLibraryDelegate(realCommonWithExport) {
-      @Override
-      public Optional<Sha1HashCode> getAbiKey() {
-        return Optional.of(new Sha1HashCode(commonWithExportAbiKeyHash));
-      }
-    };
-    buildRuleIndex.put(commonWithExportTarget, commonWithExport);
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
-    DefaultJavaLibraryRule commonNoExport = ruleResolver.buildAndAddToIndex(commonLibBuilder
-        .setBuildTarget(BuildTargetFactory.newInstance("//:common_no_export"))
-        .setExportDeps(false));
+    // Create two java_library rules, each of which depends on //:tinylib, but only one of which
+    // exports its deps.
+    String commonWithExportAbiKeyHash = Strings.repeat("b", 40);
+    DefaultJavaLibraryRule commonWithExport = createDefaultJavaLibaryRuleWithAbiKey(
+        commonWithExportAbiKeyHash,
+        BuildTargetFactory.newInstance("//:common_with_export"),
+        /* srcs */ ImmutableSet.<String>of(),
+        /* deps */ ImmutableSet.<BuildRule>of(tinyLibrary),
+        /* exportDeps */ true);
+    DefaultJavaLibraryRule commonNoExport = createDefaultJavaLibaryRuleWithAbiKey(
+        /* abiHash */ null,
+        BuildTargetFactory.newInstance("//:common_no_export"),
+        /* srcs */ ImmutableSet.<String>of(),
+        /* deps */ ImmutableSet.<BuildRule>of(tinyLibrary),
+        /* exportDeps */ false);
 
-    // Verify the ABI keys of the two rules.
+    // Verify getAbiKeyForDeps() for the two //:common_XXX rules.
     assertEquals(
         "getAbiKeyForDeps() should be the same for both rules because they have the same deps.",
         commonNoExport.getAbiKeyForDeps(),
         commonWithExport.getAbiKeyForDeps());
-    String expectedAbiKeyNoDepsHash = Hashing.sha1().newHasher().putString(tinyLibAbiKeyHash)
+    String expectedAbiKeyForDepsHash = Hashing.sha1().newHasher().putString(tinyLibAbiKeyHash)
         .hash().toString();
-    String observedAbiKeyNoDepsHash = commonNoExport.getAbiKeyForDeps().get().getHash();
-    assertEquals(expectedAbiKeyNoDepsHash, observedAbiKeyNoDepsHash);
+    String observedAbiKeyForDepsHash = commonNoExport.getAbiKeyForDeps().get().getHash();
+    assertEquals(expectedAbiKeyForDepsHash, observedAbiKeyForDepsHash);
+
+    // Create a BuildRuleResolver populated with the three build rules we created thus far.
+    Map<BuildTarget, BuildRule> buildRuleIndex = Maps.newHashMap();
+    buildRuleIndex.put(tinyLibrary.getBuildTarget(), tinyLibrary);
+    buildRuleIndex.put(commonWithExport.getBuildTarget(), commonWithExport);
+    buildRuleIndex.put(commonNoExport.getBuildTarget(), commonNoExport);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
     // Create two rules, each of which depends on one of the //:common_XXX rules.
     DefaultJavaLibraryRule consumerNoExport = ruleResolver.buildAndAddToIndex(
@@ -613,7 +599,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildTarget(BuildTargetFactory.newInstance("//:consumer_with_export"))
         .addDep(BuildTargetFactory.newInstance("//:common_with_export")));
 
-    // Verify the ABI keys of the two rules.
+    // Verify getAbiKeyForDeps() for the two //:consumer_XXX rules.
     assertEquals(
         "The ABI of the deps of //:consumer_no_export should be the empty ABI.",
         consumerNoExport.getAbiKeyForDeps(),
@@ -634,6 +620,35 @@ public class DefaultJavaLibraryRuleTest {
         "By hardcoding the ABI keys for the deps, we made getAbiKeyForDeps() a predictable value.",
         expectedAbiKeyNoDepsHashForConsumerWithExport,
         observedAbiKeyNoDepsHashForConsumerWithExport);
+  }
+
+  private static DefaultJavaLibraryRule createDefaultJavaLibaryRuleWithAbiKey(
+      @Nullable final String abiHash,
+      BuildTarget buildTarget,
+      ImmutableSet<String> srcs,
+      ImmutableSet<BuildRule> deps,
+      boolean exportDeps) {
+    return new DefaultJavaLibraryRule(
+        new BuildRuleParams(buildTarget,
+            /* deps */ ImmutableSortedSet.copyOf(deps),
+            /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
+            /* pathRelativizer */ Functions.<String>identity()
+        ),
+        srcs,
+        /* resources */ ImmutableSet.<SourcePath>of(),
+        /* proguardConfig */ Optional.<String>absent(),
+        exportDeps,
+        JavacOptions.builder().build()
+        ) {
+      @Override
+      public Optional<Sha1HashCode> getAbiKey() {
+        if (abiHash == null) {
+          return super.getAbiKey();
+        } else {
+          return Optional.of(new Sha1HashCode(abiHash));
+        }
+      }
+    };
   }
 
   @Test
