@@ -80,9 +80,6 @@ class BuckConfig {
    */
   private static final Pattern ALIAS_PATTERN = Pattern.compile("[a-zA-Z_-][a-zA-Z0-9_-]*");
 
-  private static final BuckConfig EMPTY_INSTANCE = new BuckConfig(
-      ImmutableMap.<String, Map<String, String>>of(), null /* buildTargetParser */);
-
   @VisibleForTesting
   static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
@@ -93,7 +90,8 @@ class BuckConfig {
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
 
-  @Nullable
+  private final ProjectFilesystem projectFilesystem;
+
   private final BuildTargetParser buildTargetParser;
 
   private enum ArtifactCacheNames {
@@ -103,9 +101,12 @@ class BuckConfig {
 
   @VisibleForTesting
   BuckConfig(Map<String, Map<String, String>> sectionsToEntries,
+      ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser) {
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
+
     Preconditions.checkNotNull(sectionsToEntries);
-    this.buildTargetParser = buildTargetParser;
     ImmutableMap.Builder<String, ImmutableMap<String, String>> sectionsToEntriesBuilder =
         ImmutableMap.builder();
     for (Map.Entry<String, Map<String, String>> entry : sectionsToEntries.entrySet()) {
@@ -120,10 +121,6 @@ class BuckConfig {
         buildTargetParser);
   }
 
-  public static BuckConfig emptyConfig() {
-    return EMPTY_INSTANCE;
-  }
-
   /**
    * Takes a sequence of {@code .buckconfig} files and loads them, in order, to create a
    * {@code BuckConfig} object. Each successive file that is loaded has the ability to override
@@ -136,19 +133,21 @@ class BuckConfig {
       throws IOException {
     Preconditions.checkNotNull(projectFilesystem);
     Preconditions.checkNotNull(files);
+    BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem);
 
     if (Iterables.isEmpty(files)) {
-      return BuckConfig.emptyConfig();
+      return new BuckConfig(
+          ImmutableMap.<String, Map<String, String>>of(),
+          projectFilesystem,
+          buildTargetParser);
     }
-
-    BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem);
 
     // Convert the Files to Readers.
     ImmutableList.Builder<Reader> readers = ImmutableList.builder();
     for (File file : files) {
       readers.add(Files.newReader(file, Charsets.UTF_8));
     }
-    return createFromReaders(readers.build(), buildTargetParser);
+    return createFromReaders(readers.build(), projectFilesystem, buildTargetParser);
   }
 
   /**
@@ -184,9 +183,12 @@ class BuckConfig {
   }
 
   @VisibleForTesting
-  static BuckConfig createFromReader(Reader reader, BuildTargetParser buildTargetParser)
+  static BuckConfig createFromReader(
+      Reader reader,
+      ProjectFilesystem projectFilesystem,
+      BuildTargetParser buildTargetParser)
       throws IOException {
-    return createFromReaders(ImmutableList.of(reader), buildTargetParser);
+    return createFromReaders(ImmutableList.of(reader), projectFilesystem, buildTargetParser);
   }
 
   @VisibleForTesting
@@ -239,10 +241,12 @@ class BuckConfig {
   }
 
   @VisibleForTesting
-  static BuckConfig createFromReaders(Iterable<Reader> readers, BuildTargetParser buildTargetParser)
+  static BuckConfig createFromReaders(Iterable<Reader> readers,
+      ProjectFilesystem projectFilesystem,
+      BuildTargetParser buildTargetParser)
       throws IOException {
     Map<String, Map<String, String>> sectionsToEntries = createFromReaders(readers);
-    return new BuckConfig(sectionsToEntries, buildTargetParser);
+    return new BuckConfig(sectionsToEntries, projectFilesystem, buildTargetParser);
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
@@ -269,7 +273,7 @@ class BuckConfig {
    * A set of paths to subtrees that do not contain source files, build files or files that could
    * affect either (buck-out, .idea, .buckd, buck-cache, .git, etc.).
    */
-  public ImmutableSet<String> getIgnorePaths(ProjectFilesystem filesystem) {
+  public ImmutableSet<String> getIgnorePaths() {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
     final String IGNORE_KEY = "ignore";
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
@@ -279,7 +283,7 @@ class BuckConfig {
 
     // Take care not to ignore absolute paths.
     String buckdDir = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
-    String cacheDir = getCacheDir(filesystem);
+    String cacheDir = getCacheDir();
     for (String path : ImmutableList.of(buckdDir, cacheDir)) {
       if (!path.isEmpty() && path.charAt(0) != '/') {
         builder.add(path);
@@ -364,8 +368,6 @@ class BuckConfig {
     if (aliases == null) {
       return ImmutableMap.of();
     }
-    Preconditions.checkNotNull(buildTargetParser,
-        "buildTargetParser should be set for all instances of BuckConfig except EMPTY_INSTANCE");
 
     // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
     // already contains the key before inserting.
@@ -458,7 +460,7 @@ class BuckConfig {
     }
   }
 
-  public ArtifactCache createArtifactCache(ProjectFilesystem filesystem, Console console) {
+  public ArtifactCache createArtifactCache(Console console) {
     String cacheMode = getValue("cache", "mode").or("");
     if (cacheMode.isEmpty()) {
       return new NoopArtifactCache();
@@ -469,7 +471,7 @@ class BuckConfig {
       for (String mode : modes) {
         switch (ArtifactCacheNames.valueOf(mode)) {
         case dir:
-          builder.add(createDirArtifactCache(filesystem));
+          builder.add(createDirArtifactCache());
           break;
         case cassandra:
           ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(console);
@@ -492,13 +494,13 @@ class BuckConfig {
   }
 
   @VisibleForTesting
-  String getCacheDir(ProjectFilesystem filesystem) {
+  String getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
-    return filesystem.getPathRelativizer().apply(cacheDir);
+    return projectFilesystem.getPathRelativizer().apply(cacheDir);
   }
 
-  private ArtifactCache createDirArtifactCache(ProjectFilesystem filesystem) {
-    String cacheDir = getCacheDir(filesystem);
+  private ArtifactCache createDirArtifactCache() {
+    String cacheDir = getCacheDir();
     File dir = new File(cacheDir);
     try {
       return new DirArtifactCache(dir);

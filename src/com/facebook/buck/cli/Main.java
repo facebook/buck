@@ -76,7 +76,7 @@ public final class Main {
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
           fileEventBus,
-          config.getIgnorePaths(projectFilesystem),
+          config.getIgnorePaths(),
           FileSystems.getDefault().newWatchService());
       fileEventBus.register(parser);
     }
@@ -183,8 +183,7 @@ public final class Main {
     // solves a bootstrapping issue).
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(
         projectRoot,
-        createBuckConfig(new ProjectFilesystem(projectRoot))
-            .getIgnorePaths(new ProjectFilesystem(projectRoot)));
+        createBuckConfig(new ProjectFilesystem(projectRoot)).getIgnorePaths());
     BuckConfig config = createBuckConfig(projectFilesystem);
     Verbosity verbosity = VerbosityParser.parse(args);
     Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
@@ -221,7 +220,7 @@ public final class Main {
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
-          config.createArtifactCache(projectFilesystem, console),
+          config.createArtifactCache(console),
           buildEvents,
           parser));
 

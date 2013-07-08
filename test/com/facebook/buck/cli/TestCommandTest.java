@@ -246,7 +246,7 @@ public class TestCommandTest {
   }
 
   private TestCommandOptions getOptions(String...args) throws CmdLineException {
-    TestCommandOptions options = new TestCommandOptions(BuckConfig.emptyConfig());
+    TestCommandOptions options = new TestCommandOptions(new FakeBuckConfig());
     new CmdLineParserAdditionalOptions(options).parseArgument(args);
     return options;
   }
@@ -369,7 +369,7 @@ public class TestCommandTest {
 
   @Test
   public void testIfALabelIsIncludedItShouldNotBeExcluded() throws CmdLineException {
-    TestCommandOptions options = new TestCommandOptions(BuckConfig.emptyConfig());
+    TestCommandOptions options = new TestCommandOptions(new FakeBuckConfig());
 
     new CmdLineParserAdditionalOptions(options).parseArgument(
         "-e", "e2e", "--exclude", "other", "--include", "e2e");
@@ -381,11 +381,10 @@ public class TestCommandTest {
   @Test
   public void testIfALabelIsIncludedItShouldNotBeExcludedEvenIfTheExcludeIsGlobal()
       throws CmdLineException {
-    BuckConfig config = new BuckConfig(
+    BuckConfig config = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
             "test",
-            ImmutableMap.of("excluded_labels", "e2e")),
-        null /* buildTargetParser */);
+            ImmutableMap.of("excluded_labels", "e2e")));
     assertThat(config.getDefaultExcludedLabels(), contains("e2e"));
     TestCommandOptions options = new TestCommandOptions(config);
 
@@ -398,11 +397,10 @@ public class TestCommandTest {
   @Test
   public void testIncludingATestOnTheCommandLineMeansYouWouldLikeItRun() throws CmdLineException {
     String excludedLabel = "exclude_me";
-    BuckConfig config = new BuckConfig(
+    BuckConfig config = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
             "test",
-            ImmutableMap.of("excluded_labels", excludedLabel)),
-        null /* buildTargetParser */);
+            ImmutableMap.of("excluded_labels", excludedLabel)));
     assertThat(config.getDefaultExcludedLabels(), contains(excludedLabel));
     TestCommandOptions options = new TestCommandOptions(config);
 

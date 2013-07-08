@@ -226,7 +226,7 @@ public class AuditOwnerCommandTest {
 
   @Before
   public void setUp() {
-    buckConfig = BuckConfig.emptyConfig();
+    buckConfig = new FakeBuckConfig();
   }
 
   private AuditOwnerOptions getOptions(String... args) throws CmdLineException {

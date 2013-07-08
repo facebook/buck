@@ -235,7 +235,8 @@ public class TargetsCommandTest {
         .anyTimes();
     EasyMock.replay(parser);
     Reader reader = new StringReader("");
-    BuckConfig config = BuckConfig.createFromReader(reader, parser);
+    BuckConfig config = BuckConfig.createFromReader(
+        reader, new ProjectFilesystem(new File(".")), parser);
     TargetsCommandOptions options = new TargetsCommandOptions(config);
 
     // Test a valid target.

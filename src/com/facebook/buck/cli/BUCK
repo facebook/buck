@@ -67,7 +67,7 @@ java_library(
     '//third-party/java/astyanax:slf4j-log4j12',
   ],
   visibility = [
-    '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/cli:',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )

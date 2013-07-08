@@ -113,6 +113,7 @@ public class ProjectCommandTest {
     EasyMock.replay(dummyProjectFilesystem);
     return BuckConfig.createFromReader(
         new StringReader(contents),
+        dummyProjectFilesystem,
         new BuildTargetParser(dummyProjectFilesystem));
   }
 

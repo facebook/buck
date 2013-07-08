@@ -31,7 +31,7 @@ public class InstallCommandOptionsTest {
 
   @Before
   public void setUp() {
-    buckConfig = BuckConfig.emptyConfig();
+    buckConfig = new FakeBuckConfig();
   }
 
   private InstallCommandOptions getOptions(String...args) throws CmdLineException {

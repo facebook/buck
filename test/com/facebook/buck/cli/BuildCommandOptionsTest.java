@@ -32,11 +32,10 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testCreateJavaPackageFinder() {
-    BuckConfig buckConfig = new BuckConfig(
+    BuckConfig buckConfig = new FakeBuckConfig(
         ImmutableMap.<String, Map<String, String>>of(
             "java",
-            ImmutableMap.of("src_roots", "src, test")),
-        null /* buildTargetParser */);
+            ImmutableMap.of("src_roots", "src, test")));
     DefaultJavaPackageFinder javaPackageFinder = buckConfig.createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.of(), javaPackageFinder.getPathsFromRoot());
     assertEquals(ImmutableSet.of("src", "test"), javaPackageFinder.getPathElements());
@@ -44,9 +43,7 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testCreateJavaPackageFinderFromEmptyBuckConfig() {
-    BuckConfig buckConfig = new BuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(),
-        null /* buildTargetParser */);
+    BuckConfig buckConfig = new FakeBuckConfig();
     DefaultJavaPackageFinder javaPackageFinder = buckConfig.createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.<String>of(), javaPackageFinder.getPathsFromRoot());
     assertEquals(ImmutableSet.of(), javaPackageFinder.getPathsFromRoot());
@@ -54,10 +51,9 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testShouldSetNumberOfThreadsFromBuckConfig() throws CmdLineException {
-    BuckConfig buckConfig = new BuckConfig(ImmutableMap.<String, Map<String, String>>of(
+    BuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>of(
         "build",
-        ImmutableMap.of("threads", "3")),
-        null /* buildTargetParser */);
+        ImmutableMap.of("threads", "3")));
     BuildCommandOptions options = new BuildCommandOptions(buckConfig);
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
     parser.parseArgument();
@@ -70,9 +66,7 @@ public class BuildCommandOptionsTest {
   @Test
   public void testDefaultsNumberOfBuildThreadsToOneAndAQuarterTheNumberOfAvailableProcessors()
       throws CmdLineException {
-    BuckConfig buckConfig = new BuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(),
-        null /* buildTargetParser */);
+    BuckConfig buckConfig = new FakeBuckConfig();
     BuildCommandOptions options = new BuildCommandOptions(buckConfig);
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
     parser.parseArgument();
@@ -84,9 +78,7 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testCommandLineOptionOverridesOtherBuildThreadSettings() throws CmdLineException {
-    BuckConfig buckConfig = new BuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(),
-        null /* buildTargetParser */);
+    BuckConfig buckConfig = new FakeBuckConfig();
     BuildCommandOptions options = new BuildCommandOptions(buckConfig);
 
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);

@@ -49,7 +49,7 @@ public class InstallCommandTest {
 
   @Before
   public void setUp() {
-    buckConfig = BuckConfig.emptyConfig();
+    buckConfig = new FakeBuckConfig();
     installCommand = createInstallCommand();
   }
 

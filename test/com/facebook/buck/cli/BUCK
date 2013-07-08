@@ -1,11 +1,30 @@
+FAKE_BUCK_CONFIG_SRCS = [
+  'FakeBuckConfig.java',
+]
+
 STANDARD_TEST_SRCS = [
   '**/*Test.java',
 ]
 
 java_library(
-  name = 'testutil',
-  srcs = glob(['**/*.java'], excludes = STANDARD_TEST_SRCS),
+  name = 'FakeBuckConfig',
+  srcs = FAKE_BUCK_CONFIG_SRCS,
   deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:io',
+  ],
+)
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['**/*.java'], excludes = FAKE_BUCK_CONFIG_SRCS + STANDARD_TEST_SRCS),
+  deps = [
+    ':FakeBuckConfig',
     '//lib:guava',
     '//lib:ddmlib',
     '//lib:jyson',
@@ -24,6 +43,8 @@ java_test(
     '//src/com/facebook/buck/cli:cli',
   ],
   deps = [
+    ':FakeBuckConfig',
+    ':testutil',
     '//lib:args4j',
     '//lib:ddmlib',
     '//lib:easymock',
@@ -33,6 +54,7 @@ java_test(
     '//lib:ini4j',
     '//lib:jackson-core',
     '//lib:jackson-databind',
+    '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/cli:cli',
@@ -58,6 +80,5 @@ java_test(
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
-    ':testutil',
   ],
 )

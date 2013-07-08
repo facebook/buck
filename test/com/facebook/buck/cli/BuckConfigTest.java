@@ -44,11 +44,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class BuckConfigTest {
 
@@ -102,7 +105,7 @@ public class BuckConfigTest {
         "[alias]",
         "fb4a   =   //java/com/example:fbandroid",
         "katana =   //java/com/example:fbandroid"));
-    BuckConfig config1 = BuckConfig.createFromReader(reader1, parser);
+    BuckConfig config1 = createWithDefaultFilesystem(reader1, parser);
     assertEquals(ImmutableMap.of("java/com/example", "fb4a"), config1.getBasePathToAliasMap());
     assertEquals(
         ImmutableMap.of(
@@ -114,7 +117,7 @@ public class BuckConfigTest {
         "[alias]",
         "katana =   //java/com/example:fbandroid",
         "fb4a   =   //java/com/example:fbandroid"));
-    BuckConfig config2 = BuckConfig.createFromReader(reader2, parser);
+    BuckConfig config2 = createWithDefaultFilesystem(reader2, parser);
     assertEquals(ImmutableMap.of("java/com/example", "katana"), config2.getBasePathToAliasMap());
     assertEquals(
         ImmutableMap.of(
@@ -123,7 +126,7 @@ public class BuckConfigTest {
         config2.getEntriesForSection("alias"));
 
     Reader noAliasesReader = new StringReader("");
-    BuckConfig noAliasesConfig = BuckConfig.createFromReader(noAliasesReader, parser);
+    BuckConfig noAliasesConfig = createWithDefaultFilesystem(noAliasesReader, parser);
     assertEquals(ImmutableMap.of(), noAliasesConfig.getBasePathToAliasMap());
     assertEquals(ImmutableMap.of(), noAliasesConfig.getEntriesForSection("alias"));
 
@@ -140,7 +143,7 @@ public class BuckConfigTest {
 
     try {
       BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
-      BuckConfig.createFromReader(reader, parser);
+      createWithDefaultFilesystem(reader, parser);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(":fb4a must start with //", e.getHumanReadableErrorMessage());
@@ -160,7 +163,7 @@ public class BuckConfigTest {
 
     try {
       BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
-      BuckConfig.createFromReader(reader, parser);
+      createWithDefaultFilesystem(reader, parser);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -185,7 +188,7 @@ public class BuckConfigTest {
         "[alias]",
         "foo = //java/com/example:foo",
         "bar = //java/com/example:bar"));
-    BuckConfig config = BuckConfig.createFromReader(reader, parser);
+    BuckConfig config = createWithDefaultFilesystem(reader, parser);
     assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("foo"));
     assertEquals("//java/com/example:bar", config.getBuildTargetForAlias("bar"));
     assertNull(
@@ -194,7 +197,7 @@ public class BuckConfigTest {
     assertNull(config.getBuildTargetForAlias("baz"));
 
     Reader noAliasesReader = new StringReader("");
-    BuckConfig noAliasesConfig = BuckConfig.createFromReader(noAliasesReader, parser);
+    BuckConfig noAliasesConfig = createWithDefaultFilesystem(noAliasesReader, parser);
     assertNull(noAliasesConfig.getBuildTargetForAlias("foo"));
     assertNull(noAliasesConfig.getBuildTargetForAlias("bar"));
     assertNull(noAliasesConfig.getBuildTargetForAlias("baz"));
@@ -207,7 +210,7 @@ public class BuckConfigTest {
    */
   @Test
   public void testEmptyConfig() {
-    BuckConfig emptyConfig = BuckConfig.emptyConfig();
+    BuckConfig emptyConfig = new FakeBuckConfig();
     assertEquals(ImmutableMap.of(), emptyConfig.getEntriesForSection("alias"));
     assertNull(emptyConfig.getBuildTargetForAlias("fb4a"));
     assertEquals(ImmutableMap.of(), emptyConfig.getBasePathToAliasMap());
@@ -263,7 +266,7 @@ public class BuckConfigTest {
         "# Do not delete these: automation builds require these aliases to exist!",
         "automation_foo = foo_codename",
         "automation_bar = bar"));
-    BuckConfig config = BuckConfig.createFromReader(reader, parser);
+    BuckConfig config = createWithDefaultFilesystem(reader, parser);
     assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("foo"));
     assertEquals("//java/com/example:bar", config.getBuildTargetForAlias("bar"));
     assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("foo_codename"));
@@ -286,7 +289,7 @@ public class BuckConfigTest {
         "foo = //java/com/example:foo",
         "bar = food"));
     try {
-      BuckConfig.createFromReader(reader, parser);
+      createWithDefaultFilesystem(reader, parser);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals("No alias for: food.", e.getHumanReadableErrorMessage());
@@ -305,7 +308,7 @@ public class BuckConfigTest {
         "foo = //java/com/example:foo",
         "foo = //java/com/example:foo"));
     try {
-      BuckConfig.createFromReader(reader, parser);
+      createWithDefaultFilesystem(reader, parser);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -323,29 +326,30 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[test]",
         "excluded_labels = windows, linux"));
-    BuckConfig config = BuckConfig.createFromReader(reader, null);
+    BuckConfig config = createWithDefaultFilesystem(reader, null);
 
     assertEquals(ImmutableSet.of("windows", "linux"), config.getDefaultExcludedLabels());
   }
 
   @Test
   public void testIgnorePaths() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[project]",
-        "ignore = .git, foo, bar/, baz//, a/b/c"));
-    BuckConfig config = BuckConfig.createFromReader(reader, null);
-
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(filesystem.getPathRelativizer()).andReturn(Functions.<String>identity())
         .times(2);
-    EasyMock.replay(filesystem);
+    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
+    EasyMock.replay(filesystem, parser);
 
-    ImmutableSet<String> ignorePaths = config.getIgnorePaths(filesystem);
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[project]",
+        "ignore = .git, foo, bar/, baz//, a/b/c"));
+    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser);
+
+    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
     assertEquals("Should ignore paths, sans trailing slashes", ignorePaths, ImmutableSet.of(
         BuckConstant.BUCK_OUTPUT_DIRECTORY,
         ".idea",
         System.getProperty(BuckConfig.BUCK_BUCKD_DIR_KEY, ".buckd"),
-        config.getCacheDir(filesystem),
+        config.getCacheDir(),
         ".git",
         "foo",
         "bar",
@@ -353,43 +357,45 @@ public class BuckConfigTest {
         "a/b/c"
     ));
 
-    EasyMock.verify(filesystem);
+    EasyMock.verify(filesystem, parser);
   }
 
   @Test
   public void testIgnorePathsWithRelativeCacheDir() throws IOException {
+    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(filesystem.getPathRelativizer()).andReturn(Functions.<String>identity());
+    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
+    EasyMock.replay(filesystem, parser);
+
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[cache]",
         "dir = cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(reader, null);
+    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser);
 
-    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getPathRelativizer()).andReturn(Functions.<String>identity());
-    EasyMock.replay(filesystem);
-
-    ImmutableSet<String> ignorePaths = config.getIgnorePaths(filesystem);
+    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
     assertTrue("Relative cache directory should be in set of ignored paths",
         ignorePaths.contains("cache_dir"));
 
-    EasyMock.verify(filesystem);
+    EasyMock.verify(filesystem, parser);
   }
 
   @Test
   public void testIgnorePathsWithAbsoluteCacheDir() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[cache]",
-        "dir = /cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(reader, null);
 
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(filesystem.getPathRelativizer()).andReturn(Functions.<String>identity());
-    EasyMock.replay(filesystem);
+    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
+    EasyMock.replay(filesystem, parser);
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[cache]",
+        "dir = /cache_dir"));
+    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser);
 
-    ImmutableSet<String> ignorePaths = config.getIgnorePaths(filesystem);
+    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
     assertFalse("Absolute cache directory should not be in set of ignored paths",
         ignorePaths.contains("/cache_dir"));
 
-    EasyMock.verify(filesystem);
+    EasyMock.verify(filesystem, parser);
   }
 
   @Test
@@ -404,12 +410,12 @@ public class BuckConfigTest {
 
   @Test
   public void testGetDefaultTestTimeoutMillis() throws IOException {
-    assertEquals(0L, BuckConfig.emptyConfig().getDefaultTestTimeoutMillis());
+    assertEquals(0L, new FakeBuckConfig().getDefaultTestTimeoutMillis());
 
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[test]",
         "timeout = 54321"));
-    BuckConfig config = BuckConfig.createFromReader(reader, null);
+    BuckConfig config = createWithDefaultFilesystem(reader, null);
     assertEquals(54321L, config.getDefaultTestTimeoutMillis());
   }
 
@@ -423,5 +429,14 @@ public class BuckConfigTest {
         "    mode ="));
     // Verify that no exception is thrown when a definition is overridden.
     BuckConfig.createFromReaders(ImmutableList.of(readerA, readerB));
+  }
+
+  private BuckConfig createWithDefaultFilesystem(Reader reader, @Nullable BuildTargetParser parser)
+      throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
+    if (parser == null) {
+      parser = new BuildTargetParser(projectFilesystem);
+    }
+    return BuckConfig.createFromReader(reader, projectFilesystem, parser);
   }
 }
