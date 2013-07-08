@@ -63,8 +63,10 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   private final Keyspace keyspace;
   private final int ttl;
+  private final boolean doStore;
 
-  public CassandraArtifactCache(String hosts, int port) throws ConnectionException {
+  public CassandraArtifactCache(String hosts, int port, boolean doStore)
+      throws ConnectionException {
     AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(clusterName)
         .forKeyspace(keyspaceName)
@@ -84,6 +86,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     this.keyspace = context.getClient();
     verifyMagic();
     this.ttl = getTtl();
+    this.doStore = doStore;
   }
 
   private void verifyMagic() throws ConnectionException {
@@ -156,7 +159,7 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   @Override
   public void store(RuleKey ruleKey, File output) {
-    if (!ruleKey.isIdempotent()) {
+    if (!doStore || !ruleKey.isIdempotent()) {
       return;
     }
     MutationBatch m = keyspace.prepareMutationBatch();

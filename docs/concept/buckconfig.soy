@@ -91,6 +91,10 @@ Cassandra-related settings are ignored.
     # Port on which to connect to Cassandra cache nodes. The default port is
     # 9160.
     port = 9160
+
+    # Treat the Cassandra cache as readonly or readwrite.  The default mode is
+    # readwrite.
+    cassandra_mode = readwrite
 </pre>{/literal}
 
 Initial Cassandra setup is generally straightforward, and warrants no special

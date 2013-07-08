@@ -85,6 +85,7 @@ class BuckConfig {
 
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
+  private static final String DEFAULT_CASSANDRA_MODE = CassandraMode.readwrite.name();
 
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
@@ -97,6 +98,18 @@ class BuckConfig {
   private enum ArtifactCacheNames {
     dir,
     cassandra
+  }
+
+  private enum CassandraMode {
+    readonly(false),
+    readwrite(true),
+    ;
+
+    private final boolean doStore;
+
+    private CassandraMode(boolean doStore) {
+      this.doStore = doStore;
+    }
   }
 
   @VisibleForTesting
@@ -511,13 +524,21 @@ class BuckConfig {
 
   @Nullable
   private ArtifactCache createCassandraArtifactCache(Console console) {
+    // cache.cassandra_mode
+    String cacheCassandraMode = getValue("cache", "cassandra_mode").or(DEFAULT_CASSANDRA_MODE);
+    final boolean doStore;
+    try {
+      doStore = CassandraMode.valueOf(cacheCassandraMode).doStore;
+    } catch (IllegalArgumentException e) {
+      throw new HumanReadableException("Unusable cache.cassandra_mode: '%s'", cacheCassandraMode);
+    }
     // cache.hosts
     String cacheHosts = getValue("cache", "hosts").or("");
     // cache.port
     int port = Integer.parseInt(getValue("cache", "port").or(DEFAULT_CASSANDRA_PORT));
 
     try {
-      return new CassandraArtifactCache(cacheHosts, port);
+      return new CassandraArtifactCache(cacheHosts, port, doStore);
     } catch (ConnectionException e) {
       console.getStdErr().println(String.format("Cassandra cache connection failure: %s",
           e.getMessage()));
