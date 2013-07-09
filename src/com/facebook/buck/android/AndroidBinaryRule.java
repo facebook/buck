@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -50,7 +51,6 @@ import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.annotations.VisibleForTesting;
@@ -127,7 +127,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
   private final boolean useAndroidProguardConfigWithOptimizations;
-  private final Optional<String> proguardConfig;
+  private final Optional<SourcePath> proguardConfig;
   private final boolean compressResources;
   private final ImmutableSet<String> primaryDexSubstrings;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
@@ -164,8 +164,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
-    this.proguardConfig = Preconditions.checkNotNull(proguardConfig)
-        .transform(SourcePath.TO_REFERENCE);
+    this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.compressResources = compressResources;
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
     this.outputGenDirectory = String.format("%s/%s",
@@ -206,7 +205,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         .set("packageType", packageType.toString())
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
-        .set("proguardConfig", proguardConfig)
+        .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
         .set("compressResources", compressResources)
         .set("primaryDexSubstrings", primaryDexSubstrings)
         .set("outputGenDirectory", outputGenDirectory)
@@ -221,7 +220,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return transitiveDependencyGraph;
   }
 
-  public Optional<String> getProguardConfig() {
+  public Optional<SourcePath> getProguardConfig() {
     return proguardConfig;
   }
 
@@ -301,7 +300,13 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     inputs.add(manifest);
     inputs.add(keystorePropertiesPath);
-    Optionals.addIfPresent(proguardConfig, inputs);
+    if (proguardConfig.isPresent()) {
+      SourcePath sourcePath = proguardConfig.get();
+      // Alternatively, if it is a BuildTargetSourcePath, then it should not be included.
+      if (sourcePath instanceof FileSourcePath) {
+        inputs.add(sourcePath.asReference());
+      }
+    }
 
     return inputs.build();
   }
@@ -357,6 +362,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // Execute proguard if desired (transforms input classpaths).
     if (packageType.isBuildWithObfuscation()) {
       addProguardCommands(
+          context,
           dexTransitiveDependencies,
           transitiveDependencies.proguardConfigs,
           commands,
@@ -692,6 +698,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
   @VisibleForTesting
   void addProguardCommands(
+      BuildContext context,
       AndroidDexTransitiveDependencies dexDeps,
       Set<String> depsProguardConfigs,
       ImmutableList.Builder<Step> commands,
@@ -724,7 +731,9 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // Create list of proguard Configs for the app project and its dependencies
     ImmutableSet.Builder<String> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
-    Optionals.addIfPresent(proguardConfig, proguardConfigsBuilder);
+    if (proguardConfig.isPresent()) {
+      proguardConfigsBuilder.add(proguardConfig.get().resolve(context).toString());
+    }
 
     // Transform our input classpath to a set of output locations for each input classpath.
     // TODO(devjasta): the output path we choose is the result of a slicing function against

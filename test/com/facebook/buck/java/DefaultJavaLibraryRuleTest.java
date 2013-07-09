@@ -273,7 +273,7 @@ public class DefaultJavaLibraryRuleTest {
   }
 
   @Test
-  @Ignore("TODO(simons): In the spirit of TDD, make this test work!")
+  @Ignore("t2588089 is filed to enable this.")
   public void testGetInputsToCompareToOutputWhenAResourceAsSourcePathExists() {
     AbstractBuildRuleBuilderParams params = new FakeAbstractBuildRuleBuilderParams();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
@@ -288,10 +288,13 @@ public class DefaultJavaLibraryRuleTest {
     DefaultJavaLibraryRule javaRule = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(params)
         .setBuildTarget(BuildTargetFactory.newInstance("//library:code"))
         .addResource(new BuildTargetSourcePath(genruleBuildTarget))
+        .addResource(new FileSourcePath("library/data.txt"))
         .build(ruleResolver);
 
     assertEquals(
-        ImmutableList.of(BuckConstant.GEN_DIR + "/generated/stuff.txt"),
+        "Generated files should not be included in getInputsToCompareToOutput() because they " +
+        "should not be part of the RuleKey computation.",
+        ImmutableList.of("library/data.txt"),
         javaRule.getInputsToCompareToOutput());
   }
 

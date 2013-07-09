@@ -25,13 +25,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ZipSplitter;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -71,12 +68,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
             DexStore.JAR),
         apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
-        apkUnderTest.getProguardConfig().transform(new Function<String, SourcePath>() {
-          @Override
-          public SourcePath apply(String pathRelativeToProjectRoot) {
-            return new FileSourcePath(pathRelativeToProjectRoot);
-          }
-        }),
+        apkUnderTest.getProguardConfig(),
         apkUnderTest.isCompressResources(),
         apkUnderTest.getPrimaryDexSubstrings(),
         apkUnderTest.getResourceFilter(),

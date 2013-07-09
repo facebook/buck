@@ -103,11 +103,15 @@ public class AndroidBinaryRuleTest {
         androidBinary.findDexTransitiveDependencies(graph);
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
+    BuildContext context = createMock(BuildContext.class);
+    replay(context);
     androidBinary.addProguardCommands(
+        context,
         dexTransitiveDependencies,
         transitiveDependencies.proguardConfigs,
         commands,
         ImmutableSet.<String>of());
+    verify(context);
 
     MakeCleanDirectoryStep expectedClean =
         new MakeCleanDirectoryStep("buck-out/gen/java/src/com/facebook/base/.proguard/apk");
