@@ -89,7 +89,7 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     builder.setUseAndroidProguardConfigWithOptimizations(useAndroidProguardConfigWithOptimizations);
 
     // proguard_config
-    Optional<SourcePath> proguardConfig = params.getOptionalSourcePath("proguard_config");
+    Optional<SourcePath> proguardConfig = params.getOptionalSourcePath("proguard_config", builder);
     builder.setProguardConfig(proguardConfig);
 
     // compress_resources

@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FileSourcePath;
@@ -220,26 +221,43 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  public SourcePath asSourcePath(String resource) {
+  /**
+   * @param resource that identifies either a file path or a build target.
+   * @param builder If {@code resource} corresponds to a {@link BuildTarget}, that build target will
+   *     be added to the {@code deps} of this builder.
+   * @return a source path that corresponds to the specified {@code resource}.
+   */
+  public SourcePath asSourcePath(String resource, AbstractBuildRuleBuilder<?> builder) {
     // TODO(simons): Don't hard code this check for built-target-ism
     if (resource.startsWith(BuildTarget.BUILD_TARGET_PREFIX) || resource.charAt(0) == ':') {
+      BuildTarget buildTarget;
       try {
-        BuildTarget buildTarget = resolveBuildTarget(resource);
-        return new BuildTargetSourcePath(buildTarget);
+        buildTarget = resolveBuildTarget(resource);
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(
             "Unable to find build target '%s' while parsing definition of %s", resource, target);
       }
+      builder.addDep(buildTarget);
+      return new BuildTargetSourcePath(buildTarget);
     } else {
       String relativePath = resolveFilePathRelativeToBuildFileDirectory(resource);
       return new FileSourcePath(relativePath);
     }
   }
 
-  public Optional<SourcePath> getOptionalSourcePath(String identifier) {
+  /**
+   * If there is a string value associated with the specified {@code identifier}, this returns a
+   * {@link SourcePath} that corresponds to that value.
+   * @param identifier for the argument in this params.
+   * @param builder If {@code resource} corresponds to a {@link BuildTarget}, that build target will
+   *     be added to the {@code deps} of this builder.
+   * @return a source path that corresponds to the specified {@code identifier}.
+   */
+  public Optional<SourcePath> getOptionalSourcePath(String identifier,
+      AbstractBuildRuleBuilder<?> builder) {
     Optional<String> option = getOptionalStringAttribute(identifier);
     if (option.isPresent()) {
-      SourcePath sourcePath = asSourcePath(option.get());
+      SourcePath sourcePath = asSourcePath(option.get(), builder);
       return Optional.of(sourcePath);
     } else {
       return Optional.absent();
