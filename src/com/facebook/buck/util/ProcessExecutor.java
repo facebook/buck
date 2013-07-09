@@ -99,7 +99,10 @@ public class ProcessExecutor {
       stdOutConsumer.join();
       stdErrConsumer.join();
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      // Buck was killed while waiting for the consumers to finish.  This means either the user
+      // killed the process or a step failed causing us to kill all other running steps.  Neither of
+      // these is an exceptional situation.
+      return new Result(1, "");
     }
 
     // If stdout was captured, then wait until its InputStreamConsumer has finished and get the

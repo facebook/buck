@@ -28,6 +28,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.concurrent.MoreBuckExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -42,7 +43,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileSystems;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -173,6 +174,7 @@ public final class Main {
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public int runMainWithExitCode(File projectRoot, String... args) throws IOException {
     if (args.length == 0) {
       return usage();
@@ -199,7 +201,8 @@ public final class Main {
       parser = new Parser(projectFilesystem, knownBuildRuleTypes, console);
     }
 
-    ExecutorService busExecutor = Executors.newCachedThreadPool();
+    ExecutorService busExecutor = MoreBuckExecutors.newCachedThreadPool(
+        new ThreadPoolExecutor.DiscardPolicy());
     BuckEventBus buildEvents = new BuckEventBus(
         new AsyncEventBus("buck-build-events", busExecutor));
 
@@ -230,7 +233,8 @@ public final class Main {
       try {
         busExecutor.awaitTermination(15, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        e.printStackTrace(stdErr);
+        // Give the eventBus 15 seconds to finish dispatching all events, but if they should fail
+        // to finish in that amount of time just eat it, the end user doesn't care.
       }
       for (BuckEventListener eventListener : eventListeners) {
         eventListener.outputTrace();
