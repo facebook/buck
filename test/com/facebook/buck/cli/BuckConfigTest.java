@@ -383,7 +383,6 @@ public class BuckConfigTest {
   public void testIgnorePathsWithAbsoluteCacheDir() throws IOException {
 
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getPathRelativizer()).andReturn(Functions.<String>identity());
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.replay(filesystem, parser);
     Reader reader = new StringReader(Joiner.on('\n').join(

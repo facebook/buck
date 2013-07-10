@@ -509,6 +509,9 @@ class BuckConfig {
   @VisibleForTesting
   String getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+    if (!cacheDir.isEmpty() && cacheDir.charAt(0) == '/') {
+      return cacheDir;
+    }
     return projectFilesystem.getPathRelativizer().apply(cacheDir);
   }
 
