@@ -490,7 +490,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public boolean loadAbiFromDisk(ProjectFilesystem projectFilesystem) {
+    public boolean initializeFromDisk(ProjectFilesystem projectFilesystem) {
       isAbiLoadedFromDisk = true;
       return true;
     }

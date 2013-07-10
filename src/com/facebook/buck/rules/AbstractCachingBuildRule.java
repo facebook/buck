@@ -245,7 +245,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         Optional<Sha1HashCode> cachedAbiKeyForDeps = abiRule.getAbiKeyForDepsOnDisk(projectFilesystem);
         if (abiKeyForDeps.isPresent()
             && abiKeyForDeps.equals(cachedAbiKeyForDeps)
-            && abiRule.loadAbiFromDisk(projectFilesystem)) {
+            && abiRule.initializeFromDisk(projectFilesystem)) {
           // Although no rebuild is required, we still need to write the updated RuleKey.
           try {
             writeSuccessFile(projectFilesystem);
@@ -269,10 +269,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // If the RuleKeys match, then there is nothing to build.
     if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
-      // TODO(mbolin): Although there is nothing to build, there may be internal data structures
-      // that need to be populated that would normally be populated via executing the build steps.
-      // This is what things like AbiRule.loadAbiFromDisk() and
-      // recordOutputFileDetailsAfterFetchFromArtifactCache() are normally used for.
+      initializeFromDisk(projectFilesystem);
       context.logBuildInfo("[UNCHANGED %s]", getFullyQualifiedName());
       recordBuildRuleSuccess(BuildRuleSuccess.Type.MATCHING_RULE_KEY,
           BuildRuleStatus.SUCCESS,
@@ -405,6 +402,22 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * When this method is invoked, all of its dependencies will have been built.
    */
   abstract protected List<Step> buildInternal(BuildContext context) throws IOException;
+
+  /**
+   * For a rule that is read from the build cache, it may have fields that would normally be
+   * populated by executing the steps returned by {@link #buildInternal(BuildContext)}. Because
+   * {@link #buildInternal(BuildContext)} is not invoked for cached rules, a rule may need to
+   * implement this method to populate those fields in some other way. For a cached rule, this
+   * method will be invoked just before the future returned by {@link #build(BuildContext)} is
+   * resolved.
+   * <p>
+   * By default, this method does nothing except return {@code true}.
+   * @param projectFilesystem can be used to load
+   * @return whether the internal data structures were populated successfully.
+   */
+  protected boolean initializeFromDisk(ProjectFilesystem projectFilesystem) {
+    return true;
+  }
 
   /**
    * Record that the outputs for the build rule have been written. They may have been written by

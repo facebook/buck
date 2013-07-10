@@ -70,5 +70,5 @@ public interface AbiRule {
    *
    * @return whether the ABI was read from disk and loaded into memory successfully.
    */
-  public boolean loadAbiFromDisk(ProjectFilesystem projectFilesystem);
+  public boolean initializeFromDisk(ProjectFilesystem projectFilesystem);
 }

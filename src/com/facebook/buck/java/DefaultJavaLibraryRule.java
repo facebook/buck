@@ -746,7 +746,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public boolean loadAbiFromDisk(ProjectFilesystem projectFilesystem) {
+  public boolean initializeFromDisk(ProjectFilesystem projectFilesystem) {
     Optional<String> abiKeyHash = projectFilesystem.readFirstLine(getPathToAbiOutputFile());
     if (abiKeyHash.isPresent()) {
       String hash = abiKeyHash.get();
