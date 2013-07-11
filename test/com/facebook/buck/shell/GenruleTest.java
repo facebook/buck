@@ -59,6 +59,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -78,6 +80,19 @@ public class GenruleTest {
         }
       };
 
+  private ProjectFilesystem fakeFilesystem;
+
+  @Before
+  public void newFakeFilesystem() {
+    fakeFilesystem = EasyMock.createNiceMock(ProjectFilesystem.class);
+    EasyMock.replay(fakeFilesystem);
+  }
+
+  @After
+  public void verifyFakeFilesystem() {
+    EasyMock.verify(fakeFilesystem);
+  }
+
   @Test
   public void testCreateAndRunGenrule() throws IOException, NoSuchBuildTargetException {
     /*
@@ -89,7 +104,7 @@ public class GenruleTest {
      *     'convert_to_katana.py',
      *     'AndroidManifest.xml',
      *   ],
-     *   cmd = 'python $SRC_0 $SRC_1 > $OUT',
+     *   cmd = 'python $SRCDIR/* > $OUT',
      *   out = 'AndroidManifest.xml',
      * )
      */
@@ -221,8 +236,8 @@ public class GenruleTest {
   }
 
   @Test
-  public void testBuildTargetPattern() {
-    Pattern buildTargetPattern = Genrule.BUILD_TARGET_PATTERN;
+  public void testLegacyBuildTargetPattern() {
+    Pattern buildTargetPattern = Genrule.LEGACY_BUILD_TARGET_PATTERN;
     assertTrue(buildTargetPattern.matcher("${//first-party/orca/orcaapp:manifest}").matches());
     assertFalse(buildTargetPattern.matcher("\\${//first-party/orca/orcaapp:manifest}").matches());
     assertFalse(buildTargetPattern.matcher("${first-party/orca/orcaapp:manifest}").matches());
@@ -230,7 +245,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testReplaceBinaryBuildRuleRefsInCmd() {
+  public void testLegacyReplaceBinaryBuildRuleRefsInCmd() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
@@ -241,7 +256,87 @@ public class GenruleTest {
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
 
     // Interpolate the build target in the genrule cmd string.
-    String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
+    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
+
+    // This creates an absolute path that ends with "/.", so drop the ".".
+    String basePathWithTrailingDot = new File(".").getAbsolutePath();
+    String basePath = basePathWithTrailingDot.substring(0, basePathWithTrailingDot.length() - 1);
+
+    // Verify that the correct cmd was created.
+    String expectedClasspath =
+        basePath + GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar";
+    String expectedCmd = String.format(
+        "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
+        expectedClasspath);
+    assertEquals(expectedCmd, transformedString);
+  }
+
+  @Test
+  public void testLegacyReplaceRelativeBinaryBuildRuleRefsInCmd() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+
+    String originalCmd = "${:ManifestGenerator} $OUT";
+    String contextBasePath = "java/com/facebook/util";
+    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
+
+    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
+
+    // Interpolate the build target in the genrule cmd string.
+    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
+
+    // This creates an absolute path that ends with "/.", so drop the ".".
+    String basePathWithTrailingDot = new File(".").getAbsolutePath();
+    String basePath = basePathWithTrailingDot.substring(0, basePathWithTrailingDot.length() - 1);
+
+    // Verify that the correct cmd was created.
+    String expectedClasspath =
+        basePath + GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar";
+    String expectedCmd = String.format(
+        "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
+        expectedClasspath);
+    assertEquals(expectedCmd, transformedString);
+  }
+
+  @Test
+  public void testBuildTargetPattern() {
+    Pattern buildTargetPattern = Genrule.BUILD_TARGET_PATTERN;
+    assertTrue(buildTargetPattern.matcher("$(exe //first-party/orca/orcaapp:manifest)").find());
+    assertFalse(buildTargetPattern.matcher("\\$(exe //first-party/orca/orcaapp:manifest)").find());
+    assertFalse(buildTargetPattern.matcher("$(exe first-party/orca/orcaapp:manifest)").find());
+    assertTrue(buildTargetPattern.matcher("$(exe :manifest)").find());
+    assertTrue(buildTargetPattern.matcher("$(exe //:manifest)").find());
+    assertTrue(buildTargetPattern.matcher(
+        "$(exe :some_manifest) inhouse $SRCDIR/AndroidManifest.xml $OUT").find());
+  }
+
+  @Test
+  public void testLocationBuildTargetPattern() {
+    Pattern buildTargetPattern = Genrule.BUILD_TARGET_PATTERN;
+    assertTrue(buildTargetPattern.matcher("$(location //first-party/orca/orcaapp:manifest)").find());
+    assertFalse(buildTargetPattern.matcher("\\$(location //first-party/orca/orcaapp:manifest)").find());
+    assertFalse(buildTargetPattern.matcher("$(location first-party/orca/orcaapp:manifest)").find());
+    assertTrue(buildTargetPattern.matcher("$(location :manifest)").find());
+    assertTrue(buildTargetPattern.matcher("$(location   :manifest)").find());
+    assertTrue(buildTargetPattern.matcher("$(location\t:manifest)").find());
+    assertTrue(buildTargetPattern.matcher("$(location //:manifest)").find());
+    assertTrue(buildTargetPattern.matcher(
+        "$(location :some_manifest) inhouse $SRCDIR/AndroidManifest.xml $OUT").find());
+  }
+
+  @Test
+  public void testReplaceBinaryBuildRuleRefsInCmd() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+
+    String originalCmd = "$(exe //java/com/facebook/util:ManifestGenerator) $OUT";
+    String contextBasePath = "java/com/facebook/util";
+    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
+
+    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
+
+    // Interpolate the build target in the genrule cmd string.
+    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
 
     // This creates an absolute path that ends with "/.", so drop the ".".
     String basePathWithTrailingDot = new File(".").getAbsolutePath();
@@ -261,14 +356,14 @@ public class GenruleTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
-    String originalCmd = "${:ManifestGenerator} $OUT";
+    String originalCmd = "$(exe :ManifestGenerator) $OUT";
     String contextBasePath = "java/com/facebook/util";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
 
     // Interpolate the build target in the genrule cmd string.
-    String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
+    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
 
     // This creates an absolute path that ends with "/.", so drop the ".".
     String basePathWithTrailingDot = new File(".").getAbsolutePath();
@@ -284,18 +379,51 @@ public class GenruleTest {
   }
 
   @Test
+  public void replaceLocationOfFullyQualifiedBuildTarget() {
+    ProjectFilesystem filesystem = EasyMock.createNiceMock(ProjectFilesystem.class);
+    EasyMock.expect(filesystem.getPathRelativizer()).andStubReturn(relativeToAbsolutePathFunction);
+    EasyMock.replay(filesystem);
+
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+
+    String originalCmd = String.format("$(location :%s) $(location %s) $OUT",
+        javaBinary.getBuildTarget().getShortName(),
+        javaBinary.getBuildTarget().getFullyQualifiedName());
+
+    String contextBasePath = javaBinary.getBuildTarget().getBasePath();
+    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
+
+    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
+
+    // Interpolate the build target in the genrule cmd string.
+    String transformedString = rule.replaceMatches(filesystem, originalCmd);
+
+    // Verify that the correct cmd was created.
+    String pathToOutput = String.format(
+        "/opt/local/fbandroid/%s/java/com/facebook/util/ManifestGenerator.jar " +
+        "/opt/local/fbandroid/%s/java/com/facebook/util/ManifestGenerator.jar",
+        GEN_DIR,
+        GEN_DIR);
+    String expectedCmd = String.format("%s $OUT", pathToOutput);
+    assertEquals(expectedCmd, transformedString);
+    EasyMock.verify(filesystem);
+  }
+
+
+  @Test
   public void testDepsGenrule() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
 
     // Interpolate the build target in the genrule cmd string.
-    String originalCmd = "${:ManifestGenerator} $OUT";
+    String originalCmd = "$(exe :ManifestGenerator) $OUT";
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
     String contextBasePath = "java/com/facebook/util";
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
 
-    String transformedString = rule.replaceBinaryBuildRuleRefsInCmd();
+    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
 
     // This creates an absolute path that ends with "/.", so drop the ".".
     String basePathWithTrailingDot = new File(".").getAbsolutePath();

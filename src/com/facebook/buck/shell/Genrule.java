@@ -38,6 +38,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Functions;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -247,18 +248,20 @@ public class Genrule extends AbstractCachingBuildRule {
     addSymlinkCommands(commands);
 
     // Create a shell command that corresponds to this.cmd.
-    final String cmd = replaceBinaryBuildRuleRefsInCmd();
-    final ImmutableList<String> commandArgs = ImmutableList.of("/bin/bash", "-c", cmd);
 
     commands.add(new ShellStep() {
+      private String command;
+
       @Override
       public String getShortName(ExecutionContext context) {
-        return String.format("genrule: %s", cmd);
+        buildCmd(context.getProjectFilesystem(), cmd);
+        return String.format("genrule: %s", command);
       }
 
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        return commandArgs;
+        buildCmd(context.getProjectFilesystem(), cmd);
+        return ImmutableList.of("/bin/bash", "-c", command);
       }
 
       @Override
@@ -273,6 +276,13 @@ public class Genrule extends AbstractCachingBuildRule {
       @Override
       protected boolean shouldPrintStdErr(ExecutionContext context) {
         return true;
+      }
+
+      private void buildCmd(ProjectFilesystem filesystem, String cmd) {
+        if (command != null) {
+          return;
+        }
+        command = replaceMatches(filesystem, cmd);
       }
     });
 
@@ -312,20 +322,96 @@ public class Genrule extends AbstractCachingBuildRule {
     }
   }
 
-  /**
-   * Matches either a relative or fully-qualified build target wrapped in <tt>${}</tt>, unless the
-   * <code>$</code> is preceded by a backslash.
-   */
   @VisibleForTesting
-  static final Pattern BUILD_TARGET_PATTERN = Pattern.compile(
+  static final Pattern LEGACY_BUILD_TARGET_PATTERN = Pattern.compile(
       "([^\\\\]?)(\\$\\{((\\/\\/|:)[^\\}]+)\\})");
 
   /**
-   * @return the cmd with binary build targets interpolated as executable commands
+   * Matches either a relative or fully-qualified build target wrapped in <tt>${}</tt>, unless the
+   * <code>$</code> is preceded by a backslash.
+   *
+   * Given the input: $(exe //foo:bar), capturing groups are
+   * 1: $(exe //foo:bar)
+   * 2: exe
+   * 3: //foo:bar
+   * 4: //foo
+   * 5: :bar
+   * If we match against $(location :bar), the capturing groups are:
+   * 1: $(location :bar)
+   * 2: location
+   * 3: :bar
+   * 4: null
+   * 5: :bar
    */
   @VisibleForTesting
-  String replaceBinaryBuildRuleRefsInCmd() {
-    Matcher matcher = BUILD_TARGET_PATTERN.matcher(cmd);
+  static final Pattern BUILD_TARGET_PATTERN = Pattern.compile(
+      // We want a negative lookbehind to ensure we don't have a '\$', which is why this starts off
+      // in such an interesting way.
+      "(?<!\\\\)(\\$\\((exe|location)\\s+((\\/\\/[^:]*)?(:[^\\)]+))\\))"
+  );
+
+  /**
+   * @return the cmd with binary and location build targets interpolated as either commands or the
+   * location of the outputs of those targets.
+   */
+  @VisibleForTesting
+  String replaceMatches(ProjectFilesystem filesystem, String command) {
+    command = legacyReplaceBinaryBuildRuleRefsInCmd();
+    return newReplaceMatches(filesystem, command);
+  }
+
+  String newReplaceMatches(ProjectFilesystem filesystem, String command) {
+    Matcher matcher = BUILD_TARGET_PATTERN.matcher(command);
+    StringBuffer buffer = new StringBuffer();
+    Map<String, BuildRule> fullyQualifiedNameToBuildRule = null;
+    while (matcher.find()) {
+      if (fullyQualifiedNameToBuildRule == null) {
+        fullyQualifiedNameToBuildRule = Maps.newHashMap();
+        for (BuildRule dep : getDeps()) {
+          fullyQualifiedNameToBuildRule.put(dep.getFullyQualifiedName(), dep);
+        }
+      }
+
+      String buildTarget = matcher.group(3);
+      String base = matcher.group(4);
+      if (base == null) {
+        // This is a relative build target, so make it fully qualified.
+        buildTarget = String.format("//%s%s", this.getBuildTarget().getBasePath(), buildTarget);
+      }
+      BuildRule matchingRule = fullyQualifiedNameToBuildRule.get(buildTarget);
+      if (matchingRule == null) {
+        throw new HumanReadableException("No dep named %s for %s %s, cmd was %s",
+            buildTarget, getType().getName(), getFullyQualifiedName(), cmd);
+      }
+
+      String replacement;
+      switch (matcher.group(2)) {
+        case "exe":
+          replacement = getExecutableReplacementFrom(filesystem, command, matchingRule);
+          break;
+
+        case "location":
+          replacement = getLocationReplacementFrom(filesystem, matchingRule);
+          break;
+
+        default:
+          throw new HumanReadableException("Unable to determine replacement for '%s' in target %s",
+              matcher.group(2), getFullyQualifiedName());
+      }
+
+      matcher.appendReplacement(buffer, replacement);
+    }
+    matcher.appendTail(buffer);
+    return buffer.toString();
+  }
+
+  private String getLocationReplacementFrom(ProjectFilesystem filesystem, BuildRule matchingRule) {
+    return filesystem.getPathRelativizer().apply(matchingRule.getPathToOutputFile());
+  }
+
+  @VisibleForTesting
+  String legacyReplaceBinaryBuildRuleRefsInCmd() {
+    Matcher matcher = LEGACY_BUILD_TARGET_PATTERN.matcher(cmd);
     StringBuffer buffer = new StringBuffer();
     Map<String, BuildRule> fullyQualifiedNameToBuildRule = null;
     while (matcher.find()) {
@@ -361,6 +447,36 @@ public class Genrule extends AbstractCachingBuildRule {
     }
     matcher.appendTail(buffer);
     return buffer.toString();
+  }
+
+  /**
+   * A build rule can be executable in one of two ways: either by being a file with the executable
+   * bit set, or by the rule being a {@link BinaryBuildRule}.
+   *
+   * @param filesystem The project file system to resolve files with.
+   * @param cmd The command being executed.
+   * @param matchingRule The BuildRule which may or may not be an executable.
+   * @return A string which can be inserted to cause matchingRule to be executed.
+   */
+  private String getExecutableReplacementFrom(
+      ProjectFilesystem filesystem,
+      String cmd,
+      BuildRule matchingRule) {
+    if (matchingRule instanceof BinaryBuildRule) {
+      return ((BinaryBuildRule) matchingRule).getExecutableCommand();
+    }
+
+    File output = filesystem.getFileForRelativePath(matchingRule.getPathToOutputFile());
+    if (output != null && output.exists() && output.canExecute()) {
+      return output.getAbsolutePath();
+    }
+
+    throw new HumanReadableException(
+        "%s must correspond to a binary rule or file in %s for %s %s",
+        matchingRule.getFullyQualifiedName(),
+        cmd,
+        getType().getName(),
+        getFullyQualifiedName());
   }
 
   public static Builder newGenruleBuilder(AbstractBuildRuleBuilderParams params) {
