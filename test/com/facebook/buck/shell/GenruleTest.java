@@ -236,69 +236,6 @@ public class GenruleTest {
   }
 
   @Test
-  public void testLegacyBuildTargetPattern() {
-    Pattern buildTargetPattern = Genrule.LEGACY_BUILD_TARGET_PATTERN;
-    assertTrue(buildTargetPattern.matcher("${//first-party/orca/orcaapp:manifest}").matches());
-    assertFalse(buildTargetPattern.matcher("\\${//first-party/orca/orcaapp:manifest}").matches());
-    assertFalse(buildTargetPattern.matcher("${first-party/orca/orcaapp:manifest}").matches());
-    assertTrue(buildTargetPattern.matcher("${:manifest}").matches());
-  }
-
-  @Test
-  public void testLegacyReplaceBinaryBuildRuleRefsInCmd() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
-
-    String originalCmd = "${//java/com/facebook/util:ManifestGenerator} $OUT";
-    String contextBasePath = "java/com/facebook/util";
-    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
-
-    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
-
-    // Interpolate the build target in the genrule cmd string.
-    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
-
-    // This creates an absolute path that ends with "/.", so drop the ".".
-    String basePathWithTrailingDot = new File(".").getAbsolutePath();
-    String basePath = basePathWithTrailingDot.substring(0, basePathWithTrailingDot.length() - 1);
-
-    // Verify that the correct cmd was created.
-    String expectedClasspath =
-        basePath + GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar";
-    String expectedCmd = String.format(
-        "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
-        expectedClasspath);
-    assertEquals(expectedCmd, transformedString);
-  }
-
-  @Test
-  public void testLegacyReplaceRelativeBinaryBuildRuleRefsInCmd() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    JavaBinaryRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
-
-    String originalCmd = "${:ManifestGenerator} $OUT";
-    String contextBasePath = "java/com/facebook/util";
-    Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
-
-    Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
-
-    // Interpolate the build target in the genrule cmd string.
-    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
-
-    // This creates an absolute path that ends with "/.", so drop the ".".
-    String basePathWithTrailingDot = new File(".").getAbsolutePath();
-    String basePath = basePathWithTrailingDot.substring(0, basePathWithTrailingDot.length() - 1);
-
-    // Verify that the correct cmd was created.
-    String expectedClasspath =
-        basePath + GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar";
-    String expectedCmd = String.format(
-        "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
-        expectedClasspath);
-    assertEquals(expectedCmd, transformedString);
-  }
-
-  @Test
   public void testBuildTargetPattern() {
     Pattern buildTargetPattern = Genrule.BUILD_TARGET_PATTERN;
     assertTrue(buildTargetPattern.matcher("$(exe //first-party/orca/orcaapp:manifest)").find());
