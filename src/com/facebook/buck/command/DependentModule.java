@@ -124,7 +124,7 @@ class DependentModule {
 
   static DependentModule newStandardJdk() {
     DependentModule dependentModule = new DependentModule("jdk", null);
-    dependentModule.jdkName = "1.6";
+    dependentModule.jdkName = "1.7";
     dependentModule.jdkType = "JavaSDK";
     return dependentModule;
   }
