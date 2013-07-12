@@ -108,7 +108,6 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     super.appendToRuleKey(builder)
         .set("vmArgs", vmArgs)
         .set("sourceUnderTest", srcUnderTest);
-    javacOptions.appendToRuleKey(builder);
     return builder;
   }
 

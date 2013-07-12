@@ -119,7 +119,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
 
-  protected final JavacOptions javacOptions;
+  private final JavacOptions javacOptions;
 
   /**
    * This returns the ABI key for this rule. This will be set <em>EITHER</em> as part of
