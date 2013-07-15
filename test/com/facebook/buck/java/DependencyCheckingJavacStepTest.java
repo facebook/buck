@@ -18,13 +18,24 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
-public class DependencyCheckingJavacStepTest {
+import java.io.File;
+
+public class DependencyCheckingJavacStepTest extends EasyMockSupport {
 
   @Test
   public void testFindFailedImports() throws Exception {
@@ -41,5 +52,42 @@ public class DependencyCheckingJavacStepTest {
     assertEquals(
         ImmutableSet.of("javax.annotation.concurrent", "com.facebook.Raz", "ImmutableSet"),
         missingImports);
+  }
+
+  @Test
+  public void testJavacCommand() {
+    ExecutionContext context = ExecutionContext.builder()
+        .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
+          @Override
+          public Function<String, String> getPathRelativizer() {
+            return Functions.identity();
+          }
+        })
+        .setConsole(new TestConsole())
+        .setEventBus(new BuckEventBus()).build();
+
+    DependencyCheckingJavacStep firstOrder = createTestStep(BuildDependencies.FIRST_ORDER_ONLY);
+    DependencyCheckingJavacStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);
+    DependencyCheckingJavacStep transitive = createTestStep(BuildDependencies.TRANSITIVE);
+
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar foobar.java",
+        firstOrder.getDescription(context));
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar foobar.java",
+        warn.getDescription(context));
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath bar.jar:foo.jar foobar.java",
+        transitive.getDescription(context));
+  }
+
+  private DependencyCheckingJavacStep createTestStep(BuildDependencies buildDependencies) {
+    return new DependencyCheckingJavacStep(
+          /* outputDirectory */ ".",
+          /* javaSourceFilePaths */ ImmutableSet.of("foobar.java"),
+          /* transitiveClasspathEntries */ ImmutableSet.of("bar.jar", "foo.jar"),
+          /* declaredClasspathEntries */ ImmutableSet.of("foo.jar"),
+          /* JavacOptions */ JavacOptions.DEFAULTS,
+          /* pathToOutputAbiFile */ Optional.<String>absent(),
+          /* invokingRule */ Optional.<String>absent(),
+          /* buildDependencies */ buildDependencies,
+          /* suggestBuildRules */ Optional.<DependencyCheckingJavacStep.SuggestBuildRules>absent());
   }
 }

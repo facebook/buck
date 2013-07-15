@@ -170,4 +170,13 @@ public class DependencyCheckingJavacStep extends JavacInMemoryStep {
     }
     return failedImports.build();
   }
+
+  @Override
+  protected ImmutableSet<String> getClasspathEntries() {
+    if (buildDependencies == BuildDependencies.TRANSITIVE) {
+      return super.getClasspathEntries();
+    } else {
+      return declaredClasspathEntries;
+    }
+  }
 }

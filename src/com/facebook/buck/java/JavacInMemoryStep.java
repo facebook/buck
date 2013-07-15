@@ -137,7 +137,7 @@ public class  JavacInMemoryStep implements Step {
   }
 
   protected int executeBuild(ExecutionContext context) {
-    return buildWithClasspath(context, ImmutableSet.copyOf(classpathEntries));
+    return buildWithClasspath(context, getClasspathEntries());
   }
 
   protected int buildWithClasspath(ExecutionContext context, Set<String> buildClasspathEntries) {
@@ -189,10 +189,8 @@ public class  JavacInMemoryStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    Set<String> buildClassPathEntries = classpathEntries;
-
     StringBuilder builder = new StringBuilder("javac ");
-    Joiner.on(" ").appendTo(builder, getOptions(context, buildClassPathEntries));
+    Joiner.on(" ").appendTo(builder, getOptions(context, getClasspathEntries()));
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, javaSourceFilePaths);
 
@@ -208,6 +206,9 @@ public class  JavacInMemoryStep implements Step {
     return javaSourceFilePaths;
   }
 
+  /**
+   * @return The classpath entries used to invoke javac.
+   */
   protected ImmutableSet<String> getClasspathEntries() {
     return classpathEntries;
   }
