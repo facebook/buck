@@ -184,7 +184,8 @@
           description="runs the Java tests"
           >
     <junit failureproperty="hasFailingTests"
-           showoutput="true">
+           showoutput="true"
+           forkmode="perBatch">
       <sysproperty key="buck.path_to_emma_jar" value="${buck.path_to_emma_jar}" />
       <sysproperty key="buck.path_to_buck_py" value="${buck.path_to_buck_py}" />
 
