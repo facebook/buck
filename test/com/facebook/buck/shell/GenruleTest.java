@@ -136,7 +136,7 @@ public class GenruleTest {
             buildTarget);
     GenruleBuildRuleFactory factory = new GenruleBuildRuleFactory();
     Builder builder = factory.newInstance(params);
-    builder.setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction);
+    builder.setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction);
     Genrule genrule = ruleResolver.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.
@@ -382,7 +382,7 @@ public class GenruleTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     Genrule rule = ruleResolver.buildAndAddToIndex(
         Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
+        .setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
         .setCmd("ignored")
         .addSrc("in-dir.txt")
@@ -436,7 +436,7 @@ public class GenruleTest {
         String.format("//%s:genrule", contextBasePath));
 
     Builder ruleBuilder = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction)
+        .setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
         .setCmd(originalCmd)
         .setOut("example-file");

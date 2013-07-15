@@ -123,7 +123,7 @@ public class ApkGenruleTest {
 
     ApkGenruleBuildRuleFactory factory = new ApkGenruleBuildRuleFactory();
     ApkGenrule.Builder builder = factory.newInstance(params);
-    builder.setRelativeToAbsolutePathFunction(relativeToAbsolutePathFunction);
+    builder.setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction);
     ApkGenrule apkGenrule = (ApkGenrule) ruleResolver.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.

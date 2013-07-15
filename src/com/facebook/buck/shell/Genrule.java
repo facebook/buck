@@ -36,7 +36,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Functions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -443,8 +442,7 @@ public class Genrule extends AbstractCachingBuildRule {
 
     protected String out;
 
-    protected Function<String, String> relativeToAbsolutePathFunction =
-        Functions.RELATIVE_TO_ABSOLUTE_PATH;
+    private Function<String, String> relativeToAbsolutePathFunctionForTesting = null;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -452,11 +450,18 @@ public class Genrule extends AbstractCachingBuildRule {
 
     @Override
     public Genrule build(BuildRuleResolver ruleResolver) {
-      return new Genrule(createBuildRuleParams(ruleResolver),
+      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
+      return new Genrule(buildRuleParams,
           srcs,
           cmd,
           out,
-          relativeToAbsolutePathFunction);
+          getRelativeToAbsolutePathFunction(buildRuleParams));
+    }
+
+    protected Function<String, String> getRelativeToAbsolutePathFunction(BuildRuleParams params) {
+      return (relativeToAbsolutePathFunctionForTesting == null)
+          ? params.getPathRelativizer()
+          : relativeToAbsolutePathFunctionForTesting;
     }
 
     @Override
@@ -488,9 +493,9 @@ public class Genrule extends AbstractCachingBuildRule {
     }
 
     @VisibleForTesting
-    public Builder setRelativeToAbsolutePathFunction(
+    public Builder setRelativeToAbsolutePathFunctionForTesting(
         Function<String, String> relativeToAbsolutePathFunction) {
-      this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
+      this.relativeToAbsolutePathFunctionForTesting = relativeToAbsolutePathFunction;
       return this;
     }
   }

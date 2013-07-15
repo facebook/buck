@@ -150,10 +150,11 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
             apkRule.getFullyQualifiedName());
       }
 
+      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
       return new ApkGenrule(createBuildRuleParams(ruleResolver),
           srcs,
           cmd,
-          relativeToAbsolutePathFunction,
+          getRelativeToAbsolutePathFunction(buildRuleParams),
           (InstallableBuildRule)apkRule);
     }
 
