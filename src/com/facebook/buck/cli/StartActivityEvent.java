@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 /**
  * Events for timing the starting of android events.
  */
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class StartActivityEvent extends BuckEvent {
   private final BuildTarget buildTarget;
   private final String activityName;
@@ -47,15 +48,14 @@ public abstract class StartActivityEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof StartActivityEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof StartActivityEvent)) {
       return false;
     }
 
-    StartActivityEvent that = (StartActivityEvent)o;
+    StartActivityEvent that = (StartActivityEvent)event;
 
-    return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getBuildTarget(), that.getBuildTarget()) &&
+    return Objects.equal(getBuildTarget(), that.getBuildTarget()) &&
         Objects.equal(getActivityName(), that.getActivityName());
   }
 

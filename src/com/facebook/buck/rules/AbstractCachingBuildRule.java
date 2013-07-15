@@ -212,7 +212,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Record the start of the build.
-    eventBus.getEventBus().post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
+    eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
 
     // Deciding whether we need to rebuild is tricky business. We want to rebuild as little as
     // possible while always being sound.
@@ -334,7 +334,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
       BuckEventBus eventBus) {
-    eventBus.getEventBus().post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
+    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
     buildRuleResult.set(new BuildRuleSuccess(this, type));
   }
 
@@ -342,7 +342,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
       BuckEventBus eventBus) {
-    eventBus.getEventBus().post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
+    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
     buildRuleResult.setException(failure);
   }
 

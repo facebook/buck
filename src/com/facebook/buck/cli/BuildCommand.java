@@ -71,8 +71,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
-    getBuckEventBus().getEventBus().post(
-        BuildEvent.started(buildTargets));
+    getBuckEventBus().post(BuildEvent.started(buildTargets));
 
     // Parse the build files to create a DependencyGraph.
     DependencyGraph dependencyGraph;
@@ -105,8 +104,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       build.getStepRunner().getListeningExecutorService().shutdownNow();
     }
 
-    getBuckEventBus().getEventBus().post(
-        BuildEvent.finished(buildTargets, exitCode));
+    getBuckEventBus().post(BuildEvent.finished(buildTargets,exitCode));
 
     if (exitCode != 0) {
       return exitCode;

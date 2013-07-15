@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 /**
  * Base class for events about build rules.
  */
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class BuildRuleEvent extends BuckEvent {
   private final BuildRule rule;
 
@@ -40,13 +41,12 @@ public abstract class BuildRuleEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof BuildRuleEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof BuildRuleEvent)) {
       return false;
     }
 
-    return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getBuildRule(), ((BuildRuleEvent) o).getBuildRule());
+    return Objects.equal(getBuildRule(), ((BuildRuleEvent) event).getBuildRule());
   }
 
   @Override

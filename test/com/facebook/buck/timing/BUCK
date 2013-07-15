@@ -1,0 +1,15 @@
+UTIL_SRCS = [
+  'FakeClock.java',
+  'IncrementingFakeClock.java',
+]
+
+java_library(
+  name = 'testutil',
+  srcs = UTIL_SRCS,
+  deps = [
+    '//src/com/facebook/buck/timing:timing',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)

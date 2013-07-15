@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class InstallEvent extends BuckEvent {
   private final BuildTarget buildTarget;
 
@@ -38,15 +39,14 @@ public abstract class InstallEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof InstallEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof InstallEvent)) {
       return false;
     }
 
-    InstallEvent that = (InstallEvent)o;
+    InstallEvent that = (InstallEvent)event;
 
-    return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getBuildTarget(), that.getBuildTarget());
+    return Objects.equal(getBuildTarget(), that.getBuildTarget());
   }
 
   @Override

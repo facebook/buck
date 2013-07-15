@@ -1,0 +1,9 @@
+
+java_library(
+  name = 'timing',
+  srcs = glob(['*.java']),
+  deps = [],
+  visibility = [
+    'PUBLIC',
+  ],
+)

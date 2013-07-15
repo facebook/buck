@@ -22,6 +22,7 @@ import com.google.common.base.Objects;
 /**
  * Events tracking the start and stop of a buck command.
  */
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class CommandEvent extends BuckEvent {
   private final String commandName;
   private final boolean isDaemon;
@@ -45,15 +46,14 @@ public abstract class CommandEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof CommandEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof CommandEvent)) {
       return false;
     }
 
-    CommandEvent that = (CommandEvent)o;
+    CommandEvent that = (CommandEvent)event;
 
-    return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getCommandName(), that.getCommandName()) &&
+    return Objects.equal(getCommandName(), that.getCommandName()) &&
         Objects.equal(isDaemon(), that.isDaemon());
   }
 
@@ -69,6 +69,7 @@ public abstract class CommandEvent extends BuckEvent {
   public static Finished finished(String commandName, boolean isDaemon, int exitCode) {
     return new Finished(commandName, isDaemon, exitCode);
   }
+
   public static class Started extends CommandEvent {
     protected Started(String commandName, boolean isDaemon) {
       super(commandName, isDaemon);

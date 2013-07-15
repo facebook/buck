@@ -29,6 +29,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -232,7 +233,7 @@ public class ParserTest {
     // The EventBus should be updated with events indicating how parsing ran.
     BuckEventBus eventBus = new BuckEventBus();
     FakeBuckEventListener listener = new FakeBuckEventListener();
-    eventBus.getEventBus().register(listener);
+    eventBus.register(listener);
 
     DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets,
         defaultIncludes,
@@ -243,8 +244,8 @@ public class ParserTest {
     assertNotNull(barRule);
 
     ImmutableList<ParseEvent> expected = ImmutableList.of(
-        ParseEvent.started(buildTargets),
-        ParseEvent.finished(buildTargets));
+        TestEventConfigerator.configureTestEvent(ParseEvent.started(buildTargets), eventBus),
+        TestEventConfigerator.configureTestEvent(ParseEvent.finished(buildTargets), eventBus));
 
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
     assertEquals(expected, ImmutableList.copyOf(events));

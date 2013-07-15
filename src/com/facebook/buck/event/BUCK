@@ -5,6 +5,7 @@ java_library(
     '//lib:guava',
     '//lib:jackson',
     '//lib:jsr305',
+    '//src/com/facebook/buck/timing:timing',
   ],
   visibility = [
     'PUBLIC',

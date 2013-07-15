@@ -27,6 +27,7 @@ import java.util.List;
 /**
  * Base class for events about building.
  */
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class BuildEvent extends BuckEvent {
   private final ImmutableList<BuildTarget> buildTargets;
 
@@ -45,8 +46,8 @@ public abstract class BuildEvent extends BuckEvent {
     return new Started(buildTargets);
   }
 
-  public static Finished finished(List<BuildTarget> buildRules, int exitCode) {
-    return new Finished(buildRules, exitCode);
+  public static Finished finished(List<BuildTarget> buildTargets, int exitCode) {
+    return new Finished(buildTargets, exitCode);
   }
 
   @Override
@@ -55,14 +56,14 @@ public abstract class BuildEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof BuildEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof BuildEvent)) {
       return false;
     }
 
-    BuildEvent that = (BuildEvent)o;
+    BuildEvent that = (BuildEvent)event;
 
-    return Objects.equal(getClass(), o.getClass()) &&
+    return Objects.equal(getClass(), event.getClass()) &&
         Objects.equal(getBuildTargets(), that.getBuildTargets());
   }
 

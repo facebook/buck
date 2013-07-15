@@ -194,7 +194,7 @@ public class Parser {
       throws IOException, NoSuchBuildTargetException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
-    eventBus.getEventBus().post(ParseEvent.started(buildTargets));
+    eventBus.post(ParseEvent.started(buildTargets));
     if (!isCacheComplete(defaultIncludes)) {
       Set<File> buildTargetFiles = Sets.newHashSet();
       for (BuildTarget buildTarget : buildTargets) {
@@ -207,7 +207,7 @@ public class Parser {
     }
 
     DependencyGraph graph = findAllTransitiveDependencies(buildTargets, defaultIncludes);
-    eventBus.getEventBus().post(ParseEvent.finished(buildTargets));
+    eventBus.post(ParseEvent.finished(buildTargets));
     return graph;
   }
 

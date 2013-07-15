@@ -22,7 +22,10 @@ import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -41,7 +44,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -140,11 +142,10 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .toString();
 
     // The EventBus should be updated with events indicating how the rule was built.
-    EventBus eventBus = createMock(EventBus.class);
-    eventBus.post(BuildRuleEvent.started(cachingRule));
-    eventBus.post(BuildRuleEvent.finished(cachingRule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
+    BuckEventBus buckEventBus = new BuckEventBus();
 
-    BuckEventBus buckEventBus = new BuckEventBus(eventBus);
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    buckEventBus.register(listener);
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context = createMock(BuildContext.class);
@@ -187,6 +188,14 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     String firstLineInSuccessFile = Iterables.getFirst(linesCapture.getValue(),
         /* defaultValue */ null);
     assertEquals(expectedRuleKeyHash, firstLineInSuccessFile);
+
+    List<BuckEvent> events = listener.getEvents();
+    assertEquals(events.get(0),
+        TestEventConfigerator.configureTestEvent(BuildRuleEvent.started(cachingRule), buckEventBus));
+    assertEquals(events.get(1),
+        TestEventConfigerator.configureTestEvent(BuildRuleEvent.finished(cachingRule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.MISS), buckEventBus));
   }
 
   @Test
@@ -199,13 +208,10 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     TestAbstractCachingBuildRule buildRule = new TestAbstractCachingBuildRule(buildRuleParams);
 
     // The EventBus should be updated with events indicating how the rule was built.
-    EventBus eventBus = createMock(EventBus.class);
-    eventBus.post(BuildRuleEvent.started(buildRule));
-    eventBus.post(BuildRuleEvent.finished(buildRule,
-        BuildRuleStatus.SUCCESS,
-        CacheResult.HIT));
+    BuckEventBus buckEventBus = new BuckEventBus();
 
-    BuckEventBus buckEventBus = new BuckEventBus(eventBus);
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    buckEventBus.register(listener);
 
     BuildContext buildContext = createMock(BuildContext.class);
     expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
@@ -231,6 +237,14 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, success.getType());
     assertTrue(buildRule.isAbiLoadedFromDisk());
+
+    List<BuckEvent> events = listener.getEvents();
+    assertEquals(events.get(0),
+        TestEventConfigerator.configureTestEvent(BuildRuleEvent.started(buildRule), buckEventBus));
+    assertEquals(events.get(1),
+        TestEventConfigerator.configureTestEvent(BuildRuleEvent.finished(buildRule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.HIT), buckEventBus));
 
     verifyAll();
   }

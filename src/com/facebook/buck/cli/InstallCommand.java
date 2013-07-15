@@ -135,8 +135,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     PrintStream stdOut = console.getStdOut();
     stdOut.println(String.format("Starting activity %s...", activityToRun));
 
-    getBuckEventBus().getEventBus().post(StartActivityEvent.started(
-        androidBinaryRule.getBuildTarget(),
+    getBuckEventBus().post(StartActivityEvent.started(androidBinaryRule.getBuildTarget(),
         activityToRun));
     boolean success = adbCall(options.adbOptions(),
         options.targetDeviceOptions(),
@@ -158,8 +157,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
             return "start activity";
           }
         });
-    getBuckEventBus().getEventBus().post(StartActivityEvent.finished(
-        androidBinaryRule.getBuildTarget(),
+    getBuckEventBus().post(StartActivityEvent.finished(androidBinaryRule.getBuildTarget(),
         activityToRun,
         success));
 
@@ -210,7 +208,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
   boolean installApk(InstallableBuildRule buildRule,
       InstallCommandOptions options,
       ExecutionContext context) {
-    getBuckEventBus().getEventBus().post(InstallEvent.started(buildRule.getBuildTarget()));
+    getBuckEventBus().post(InstallEvent.started(buildRule.getBuildTarget()));
 
     final File apk = new File(buildRule.getApkPath());
     boolean success = adbCall(options.adbOptions(),
@@ -227,8 +225,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
             return "install apk";
           }
         });
-    getBuckEventBus().getEventBus().post(
-        InstallEvent.finished(buildRule.getBuildTarget(), success));
+    getBuckEventBus().post(InstallEvent.finished(buildRule.getBuildTarget(), success));
 
     return success;
   }

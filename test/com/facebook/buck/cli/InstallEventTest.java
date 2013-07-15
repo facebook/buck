@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -26,14 +27,16 @@ import org.junit.Test;
 public class InstallEventTest {
   @Test
   public void testEquals() throws Exception {
-    InstallEvent started = InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar"));
-    InstallEvent startedTwo = InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar"));
-    InstallEvent finished =
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), true);
-    InstallEvent finishedDifferentEvent =
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:raz"), true);
-    InstallEvent finishedFail =
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), false);
+    InstallEvent started = configureTestEvent(
+        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
+    InstallEvent startedTwo = configureTestEvent(
+        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
+    InstallEvent finished = configureTestEvent(
+        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), true));
+    InstallEvent finishedDifferentEvent = configureTestEvent(
+        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:raz"), true));
+    InstallEvent finishedFail = configureTestEvent(
+        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), false));
 
     assertEquals(started, startedTwo);
     assertNotEquals(finished, finishedDifferentEvent);

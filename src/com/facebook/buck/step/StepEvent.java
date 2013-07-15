@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 /**
  * Base class for events about steps.
  */
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class StepEvent extends BuckEvent {
   private final Step step;
   private final String shortName;
@@ -52,15 +53,14 @@ public abstract class StepEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof StepEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof StepEvent)) {
       return false;
     }
 
-    StepEvent that = (StepEvent)o;
+    StepEvent that = (StepEvent)event;
 
-    return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getStep(), that.getStep());
+    return Objects.equal(getStep(), that.getStep());
   }
 
   @Override

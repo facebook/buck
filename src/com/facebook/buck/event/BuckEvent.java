@@ -16,27 +16,47 @@
 
 package com.facebook.buck.event;
 
-import java.util.concurrent.TimeUnit;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+
+import java.util.Objects;
 
 /**
  * Base class for all build events. Using this makes it easy to add a wildcard listener
  * to the event bus.
  */
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class BuckEvent {
 
-  private final long nanoTime;
-  private final long threadId;
+  private boolean isConfigured;
+  private long timestamp;
+  private long nanoTime;
+  private long threadId;
 
-  public BuckEvent() {
-    nanoTime = System.nanoTime();
-    threadId = Thread.currentThread().getId();
+  protected BuckEvent() {
+    isConfigured = false;
+  }
+
+  /**
+   * Method to configure an event before posting it to the {@link BuckEventBus}.  This method should
+   * only be invoked once per event, and only by the {@link BuckEventBus} in production code.
+   */
+  @VisibleForTesting
+  public void configure(long timestamp, long nanoTime, long threadId) {
+    Preconditions.checkState(!isConfigured, "Events can only be configured once.");
+    this.timestamp = timestamp;
+    this.nanoTime = nanoTime;
+    this.threadId = threadId;
+    isConfigured = true;
   }
 
   public long getTimestamp() {
-    return TimeUnit.NANOSECONDS.toMillis(nanoTime);
+    Preconditions.checkState(isConfigured, "Event was not configured yet.");
+    return timestamp;
   }
 
   public long getNanoTime() {
+    Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return nanoTime;
   }
 
@@ -45,6 +65,7 @@ public abstract class BuckEvent {
   }
 
   public long getThreadId() {
+    Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return threadId;
   }
 
@@ -53,7 +74,40 @@ public abstract class BuckEvent {
     return String.format("%s(%s)", getEventName(), getValueString());
   }
 
+  /**
+   * @return Whether or not this event is a pair of another event.  Events that are pairs if they
+   * pertain to the same event, for example if they are measuring the start and stop of some phase.
+   * For example,
+   * <pre>
+   *   <code>
+   *    (CommandEvent.started("build")).eventsArePair(CommandEvent.finished("build")) == true
+   *    (CommandEvent.started("build")).eventsArePair(CommandEvent.started("build")) == true
+   *    (CommandEvent.started("build")).eventsArePair(CommandEvent.finished("install")) == false
+   *   </code>
+   * </pre>
+   * This should be used to pair start events to finished events.
+   */
+  abstract public boolean eventsArePair(BuckEvent event);
+
   abstract protected String getEventName();
 
   abstract protected String getValueString();
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof BuckEvent)) {
+      return false;
+    }
+
+    BuckEvent that = (BuckEvent)o;
+
+    return eventsArePair(that) &&
+        getThreadId() == that.getThreadId() &&
+        Objects.equals(getClass(), that.getClass());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(threadId);
+  }
 }

@@ -1,5 +1,6 @@
 TEST_SRCS = [
   'FakeBuckEventListener.java',
+  'TestEventConfigerator.java',
 ]
 
 java_library(
@@ -8,6 +9,7 @@ java_library(
   deps = [
     '//lib:guava',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/timing:timing',
   ],
   visibility = [
     '//test/...',

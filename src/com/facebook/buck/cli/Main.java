@@ -22,6 +22,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -204,7 +205,9 @@ public final class Main {
     ExecutorService busExecutor = MoreBuckExecutors.newCachedThreadPool(
         new ThreadPoolExecutor.DiscardPolicy());
     BuckEventBus buildEvents = new BuckEventBus(
-        new AsyncEventBus("buck-build-events", busExecutor));
+        new AsyncEventBus("buck-build-events", busExecutor),
+        new DefaultClock(),
+        BuckEventBus.getDefaultThreadIdSupplier());
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);
@@ -217,7 +220,7 @@ public final class Main {
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
-      buildEvents.getEventBus().post(CommandEvent.started(commandName, isDaemon()));
+      buildEvents.post(CommandEvent.started(commandName, isDaemon()));
 
       int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
           console,
@@ -227,7 +230,7 @@ public final class Main {
           buildEvents,
           parser));
 
-      buildEvents.getEventBus().post(CommandEvent.finished(commandName, isDaemon(), exitCode));
+      buildEvents.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
 
       busExecutor.shutdown();
       try {
@@ -256,9 +259,8 @@ public final class Main {
       new JavaUtilsLoggingBuildListener(),
       new ChromeTraceBuildListener(projectFilesystem));
 
-    EventBus events = buckEvents.getEventBus();
     for (BuckEventListener eventListener : eventListeners) {
-      events.register(eventListener);
+      buckEvents.register(eventListener);
     }
 
     JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();

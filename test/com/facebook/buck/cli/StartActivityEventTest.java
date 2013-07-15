@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -27,23 +28,23 @@ public class StartActivityEventTest {
   @Test
   public void testEquals() throws Exception {
     StartActivityEvent started =
-        StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
-                                   "com.foo.bar");
+        configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
+            "com.foo.bar"));
     StartActivityEvent startedTwo =
-        StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar");
+        configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
+            "com.foo.bar"));
     StartActivityEvent finished =
-        StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
+        configureTestEvent(StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
             "com.foo.bar",
-            false);
+            false));
     StartActivityEvent finishedTwo =
-        StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
+        configureTestEvent(StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
             "com.foo.bar",
-            false);
+            false));
     StartActivityEvent finishedSucceed =
-        StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
+        configureTestEvent(StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
             "com.foo.bar",
-            true);
+            true));
 
     assertEquals(started, started);
     assertNotEquals(started, finished);

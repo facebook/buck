@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class UninstallEvent extends BuckEvent {
   private final String packageName;
 
@@ -37,15 +38,14 @@ public abstract class UninstallEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof UninstallEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof UninstallEvent)) {
       return false;
     }
 
-    UninstallEvent that = (UninstallEvent)o;
+    UninstallEvent that = (UninstallEvent)event;
 
-    return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getPackageName(), that.getPackageName());
+    return Objects.equal(getPackageName(), that.getPackageName());
   }
 
   @Override
@@ -79,7 +79,6 @@ public abstract class UninstallEvent extends BuckEvent {
       super(packageName);
 
       this.success = success;
-
     }
 
     public boolean isSuccess() {

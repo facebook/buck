@@ -22,11 +22,11 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -46,16 +46,14 @@ public class DefaultStepRunnerTest {
     Step failingStep = new FakeStep("step1", "fake step 1", 1);
 
     // The EventBus should be updated with events indicating how the steps were run.
-    EventBus eventBus = new EventBus();
+    BuckEventBus eventBus = new BuckEventBus();
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
-
-    BuckEventBus buckEventBus = new BuckEventBus(eventBus);
 
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setConsole(new TestConsole())
-        .setEventBus(buckEventBus)
+        .setEventBus(eventBus)
         .build();
 
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -74,10 +72,14 @@ public class DefaultStepRunnerTest {
     }
 
     ImmutableList<StepEvent> expected = ImmutableList.of(
-        StepEvent.started(passingStep, "step1", "fake step 1"),
-        StepEvent.finished(passingStep, "step1", "fake step 1", 0),
-        StepEvent.started(failingStep, "step1", "fake step 1"),
-        StepEvent.finished(failingStep, "step1", "fake step 1", 1));
+        TestEventConfigerator.configureTestEvent(
+            StepEvent.started(passingStep, "step1", "fake step 1"), eventBus),
+        TestEventConfigerator.configureTestEvent(
+            StepEvent.finished(passingStep, "step1", "fake step 1", 0), eventBus),
+        TestEventConfigerator.configureTestEvent(
+            StepEvent.started(failingStep, "step1", "fake step 1"), eventBus),
+        TestEventConfigerator.configureTestEvent(
+            StepEvent.finished(failingStep, "step1", "fake step 1", 1), eventBus));
 
     Iterable<StepEvent> events = Iterables.filter(listener.getEvents(), StepEvent.class);
     assertEquals(expected, ImmutableList.copyOf(events));

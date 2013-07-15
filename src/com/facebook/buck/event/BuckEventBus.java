@@ -15,23 +15,55 @@
  */
 package com.facebook.buck.event;
 
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.DefaultClock;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 
 /**
  * Thin wrapper around guava event bus.
  */
 public class BuckEventBus {
+  private static Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER = new Supplier<Long>() {
+    @Override
+    public Long get() {
+      return Thread.currentThread().getId();
+    }
+  };
+
+  public static Supplier<Long> getDefaultThreadIdSupplier() {
+    return DEFAULT_THREAD_ID_SUPPLIER;
+  }
+
   private final EventBus eventBus;
+  private final Clock clock;
+  private final Supplier<Long> threadIdSupplier;
 
   public BuckEventBus() {
-    this(new EventBus());
+    this(new EventBus(), new DefaultClock(), getDefaultThreadIdSupplier());
   }
 
-  public BuckEventBus(EventBus eventBus) {
-    this.eventBus = eventBus;
+  public BuckEventBus(EventBus eventBus, Clock clock, Supplier<Long> threadIdSupplier) {
+    this.eventBus = Preconditions.checkNotNull(eventBus);
+    this.clock = Preconditions.checkNotNull(clock);
+    this.threadIdSupplier = Preconditions.checkNotNull(threadIdSupplier);
   }
 
-  public EventBus getEventBus() {
-    return eventBus;
+  public void post(BuckEvent event) {
+    event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get());
+    eventBus.post(event);
+  }
+
+  public void register(Object object) {
+    eventBus.register(object);
+  }
+
+  public Clock getClock() {
+    return clock;
+  }
+
+  public Supplier<Long> getThreadIdSupplier() {
+    return threadIdSupplier;
   }
 }

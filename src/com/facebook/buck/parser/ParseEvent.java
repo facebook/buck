@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Base class for events about parsing build files..
  */
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ParseEvent extends BuckEvent {
   private final ImmutableList<BuildTarget> buildTargets;
 
@@ -43,15 +44,14 @@ public abstract class ParseEvent extends BuckEvent {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof ParseEvent)) {
+  public boolean eventsArePair(BuckEvent event) {
+    if (!(event instanceof ParseEvent)) {
       return false;
     }
 
-    ParseEvent that = (ParseEvent)o;
+    ParseEvent that = (ParseEvent)event;
 
-    return Objects.equal(getClass(), o.getClass()) &&
-        Objects.equal(getBuildTargets(), that.getBuildTargets());
+    return Objects.equal(getBuildTargets(), that.getBuildTargets());
   }
 
   @Override

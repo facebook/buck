@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.MoreFutures;
 import com.google.common.base.Function;
@@ -73,11 +74,13 @@ public final class DefaultStepRunner implements StepRunner {
       context.getStdErr().println(step.getDescription(context));
     }
 
-    context.getBuckEventBus().getEventBus().post(StepEvent.started(step,
+    BuckEventBus buckEventBus = context.getBuckEventBus();
+
+    buckEventBus.post(StepEvent.started(step,
         step.getShortName(context),
         step.getDescription(context)));
     int exitCode = step.execute(context);
-    context.getBuckEventBus().getEventBus().post(StepEvent.finished(step,
+    buckEventBus.post(StepEvent.finished(step,
         step.getShortName(context),
         step.getDescription(context),
         exitCode));

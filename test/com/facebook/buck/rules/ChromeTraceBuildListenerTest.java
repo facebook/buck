@@ -22,6 +22,8 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -29,13 +31,17 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.eventbus.EventBus;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,6 +50,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ChromeTraceBuildListenerTest {
   @Rule
@@ -67,15 +74,37 @@ public class ChromeTraceBuildListenerTest {
     replay(context);
 
     ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
+    EventBus internalEventBus = new EventBus();
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
+    Supplier<Long> threadIdSupplier = BuckEventBus.getDefaultThreadIdSupplier();
+    BuckEventBus eventBus = new BuckEventBus(internalEventBus, fakeClock, threadIdSupplier);
+    eventBus.register(listener);
 
-    listener.commandStarted(CommandEvent.started("party", true));
-    listener.buildStarted(BuildEvent.started(buildTargets));
-    listener.ruleStarted(BuildRuleEvent.started(rule));
-    listener.stepStarted(StepEvent.started(step, "fakeStep", "I'm a Fake Step!"));
-    listener.stepFinished(StepEvent.finished(step, "fakeStep", "I'm a Fake Step!", 0));
-    listener.ruleFinished(BuildRuleEvent.finished(rule, BuildRuleStatus.SUCCESS, CacheResult.MISS));
-    listener.buildFinished(BuildEvent.finished(buildTargets, 0));
-    listener.commandFinished(CommandEvent.finished("party", true, 0));
+    eventBus.post(CommandEvent.started("party", true));
+    eventBus.post(BuildEvent.started(buildTargets));
+    eventBus.post(BuildRuleEvent.started(rule));
+    eventBus.post(StepEvent.started(step, "fakeStep", "I'm a Fake Step!"));
+
+    // Intentionally fire events out of order to verify sorting happens.
+    BuckEvent stepFinished = StepEvent.finished(step, "fakeStep", "I'm a Fake Step!", 0);
+    stepFinished.configure(fakeClock.currentTimeMillis(),
+        fakeClock.nanoTime(),
+        threadIdSupplier.get());
+
+
+    BuckEvent ruleFinished = BuildRuleEvent.finished(
+        rule,
+        BuildRuleStatus.SUCCESS,
+        CacheResult.MISS);
+    ruleFinished.configure(fakeClock.currentTimeMillis(),
+        fakeClock.nanoTime(),
+        threadIdSupplier.get());
+
+    internalEventBus.post(ruleFinished);
+    internalEventBus.post(stepFinished);
+
+    eventBus.post(BuildEvent.finished(buildTargets, 0));
+    eventBus.post(CommandEvent.finished("party", true, 0));
     listener.outputTrace();
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BIN_DIR + "/build.trace");

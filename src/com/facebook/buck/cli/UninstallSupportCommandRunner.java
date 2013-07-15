@@ -55,7 +55,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       final TargetDeviceOptions deviceOptions,
       final UninstallOptions uninstallOptions,
       ExecutionContext context) {
-    getBuckEventBus().getEventBus().post(UninstallEvent.started(packageName));
+    getBuckEventBus().post(UninstallEvent.started(packageName));
     boolean success = adbCall(adbOptions, deviceOptions, context, new AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
@@ -67,7 +67,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
         return "uninstall apk";
       }
     });
-    getBuckEventBus().getEventBus().post(UninstallEvent.finished(packageName, success));
+    getBuckEventBus().post(UninstallEvent.finished(packageName, success));
     return success;
   }
 
