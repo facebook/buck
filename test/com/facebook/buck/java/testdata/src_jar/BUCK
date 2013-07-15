@@ -1,0 +1,20 @@
+# This is a canonical example of a genrule() that generates Java source code
+# paired with a java_library() that compiles the output of the genrule() along
+# with some hard-coded Java source code into a single library.
+
+genrule(
+  name = 'generate_java_sources',
+  srcs = [
+    'create_java.sh',
+  ],
+  cmd = '$SRCDIR/create_java.sh $OUT',
+  out = 'output.src.jar',
+)
+
+java_library(
+  name = 'lib',
+  srcs = glob(['*.java']) + [genfile('output.src.jar')],
+  deps = [
+    '//:generate_java_sources',
+  ],
+)

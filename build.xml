@@ -167,6 +167,7 @@
           >
     <mkdir dir="${testclasses.dir}" />
     <javac srcdir="${test.dir}"
+           excludes="**/testdata/**"
            destdir="${testclasses.dir}"
            classpathref="tests.classpath"
            debug="on"

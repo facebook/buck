@@ -23,6 +23,7 @@ java_library(
 java_test(
   name = 'java',
   srcs = glob(['*.java'], excludes = FAKES_SRCS),
+  resources = glob(['testdata/**/*']),
   source_under_test = [
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',
