@@ -298,10 +298,18 @@ public final class Main {
     }
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     Main main = new Main(System.out, System.err);
     File projectRoot = new File(".");
-    int exitCode = main.tryRunMainWithExitCode(projectRoot, args);
-    System.exit(exitCode);
+    int exitCode = 1;
+    try {
+      exitCode = main.tryRunMainWithExitCode(projectRoot, args);
+    } catch (Throwable t) {
+      t.printStackTrace();
+    } finally {
+      // Exit explicitly so that non-daemon threads (of which we use many) don't
+      // keep the VM alive.
+      System.exit(exitCode);
+    }
   }
 }
