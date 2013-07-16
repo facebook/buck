@@ -45,8 +45,7 @@ public class ReadKeystorePropertiesAndSignApkStepTest {
     ReadKeystorePropertiesAndSignApkStep signApk = new ReadKeystorePropertiesAndSignApkStep(
         "src/com/facebook/orca/keystore.properties",
         BIN_DIR + "/src/com/facebook/orca/orca_unsigned.apk",
-        BIN_DIR + "/src/com/facebook/orca/orca_signed.apk",
-        projectFilesystem);
+        BIN_DIR + "/src/com/facebook/orca/orca_signed.apk");
 
     assertEquals("getDescription() should be able to be called before execute()",
         "sign " + BIN_DIR + "/src/com/facebook/orca/orca_unsigned.apk using the values in " +
@@ -68,6 +67,7 @@ public class ReadKeystorePropertiesAndSignApkStepTest {
     expect(projectFilesystem.readPropertiesFile(pathToPropertiesFile)).andReturn(properties);
 
     ExecutionContext context = createMock(ExecutionContext.class);
+    expect(context.getProjectFilesystem()).andReturn(projectFilesystem);
     replay(context, projectFilesystem);
 
     String outputPath = BIN_DIR + "/src/com/facebook/orca/orca_signed.apk";
@@ -76,8 +76,7 @@ public class ReadKeystorePropertiesAndSignApkStepTest {
         new ReadKeystorePropertiesAndSignApkStep(
           pathToPropertiesFile,
           unsignedApkPath,
-          outputPath,
-            projectFilesystem);
+          outputPath);
     readKeystorePropertiesAndSignCommand.setup(context);
     SignApkStep signApkCommand = readKeystorePropertiesAndSignCommand.getSignApkCommand();
 
@@ -116,14 +115,14 @@ public class ReadKeystorePropertiesAndSignApkStepTest {
     expect(projectFilesystem.readPropertiesFile(pathToPropertiesFile)).andReturn(properties);
 
     ExecutionContext context = createMock(ExecutionContext.class);
+    expect(context.getProjectFilesystem()).andReturn(projectFilesystem);
     replay(context, projectFilesystem);
 
     ReadKeystorePropertiesAndSignApkStep readKeystorePropertiesAndSignCommand =
         new ReadKeystorePropertiesAndSignApkStep(
           pathToPropertiesFile,
           BIN_DIR + "/src/com/facebook/orca/orca_unsigned.apk",
-          BIN_DIR + "/src/com/facebook/orca/orca_signed.apk",
-            projectFilesystem);
+          BIN_DIR + "/src/com/facebook/orca/orca_signed.apk");
     try {
       readKeystorePropertiesAndSignCommand.setup(context);
       fail("setup() should throw IOException");
@@ -144,8 +143,7 @@ public class ReadKeystorePropertiesAndSignApkStepTest {
         new ReadKeystorePropertiesAndSignApkStep(
             "src/com/facebook/orca/keystore.properties",
             BIN_DIR + "/src/com/facebook/orca/orca_unsigned.apk",
-            BIN_DIR + "/src/com/facebook/orca/orca_signed.apk",
-            projectFilesystem);
+            BIN_DIR + "/src/com/facebook/orca/orca_signed.apk");
     ExecutionContext context = createMock(ExecutionContext.class);
 
     replay(context, projectFilesystem);

@@ -198,6 +198,16 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   /**
+   * Uses the deprecated {@link BuildContext#getProjectFilesystem()} method to get a
+   * {@link ProjectFilesystem}. This is abstracted into its own method to reduce the reach of the
+   * {@link SuppressWarnings} annotation.
+   */
+  @SuppressWarnings("deprecation")
+  private ProjectFilesystem getProjectFilesystemFromBuildContext(BuildContext context) {
+    return context.getProjectFilesystem();
+  }
+
+  /**
    * This method is invoked once all of this rule's dependencies are built.
    * <p>
    * This method should be executed on a fresh Runnable in BuildContext's ListeningExecutorService,
@@ -209,7 +219,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    */
   private void buildOnceDepsAreBuilt(final BuildContext context) {
     BuckEventBus eventBus = context.getEventBus();
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    ProjectFilesystem projectFilesystem = getProjectFilesystemFromBuildContext(context);
 
     // Record the start of the build.
     eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
@@ -265,7 +275,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
     // Compute the current RuleKey and compare it to the one stored on disk.
     RuleKey ruleKey = getRuleKey();
-    Optional<RuleKey> cachedRuleKey = getRuleKeyOnDisk(context.getProjectFilesystem());
+    Optional<RuleKey> cachedRuleKey = getRuleKeyOnDisk(projectFilesystem);
 
     // If the RuleKeys match, then there is nothing to build.
     if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {

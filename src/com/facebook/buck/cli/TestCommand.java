@@ -374,7 +374,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           stepRunner.runStep(
               getInstrumentCommand(
                   rulesUnderTest,
-                  buildContext.getProjectFilesystem()));
+                  executionContext.getProjectFilesystem()));
         } catch (StepFailedException e) {
           console.printBuildFailureWithoutStacktrace(e);
           return 1;

@@ -84,6 +84,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
    * </ol>
    */
   @Test
+  @SuppressWarnings("deprecation")
   public void testBuildRuleWithoutSuccessFileOrCachedArtifact()
       throws IOException, InterruptedException, ExecutionException, StepFailedException {
     // Create a dep for the build rule.
@@ -155,7 +156,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     StepRunner stepRunner = createMock(StepRunner.class);
     expect(context.getStepRunner()).andReturn(stepRunner);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(context.getProjectFilesystem()).andReturn(projectFilesystem).times(2);
+    expect(context.getProjectFilesystem()).andReturn(projectFilesystem);
     String pathToSuccessFile = cachingRule.getPathToSuccessFile();
     projectFilesystem.createParentDirs(pathToSuccessFile);
     Capture<Iterable<String>> linesCapture = new Capture<Iterable<String>>();
@@ -199,6 +200,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   }
 
   @Test
+  @SuppressWarnings("deprecation")
   public void testAbiRuleCanAvoidRebuild()
       throws InterruptedException, ExecutionException, IOException {
     BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,

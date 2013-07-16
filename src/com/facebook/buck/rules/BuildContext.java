@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
@@ -87,6 +88,13 @@ public class BuildContext {
     return javaPackageFinder;
   }
 
+  /**
+   * TODO(mbolin): Try to eliminate this method.
+   * @deprecated {@link AbstractCachingBuildRule#buildInternal(BuildContext)} should be producing
+   *     relative paths that should be resolved by a {@link ProjectFilesystem} from an
+   *     {@link ExecutionContext} rather than from a {@link BuildContext}.
+   */
+  @Deprecated
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
   }

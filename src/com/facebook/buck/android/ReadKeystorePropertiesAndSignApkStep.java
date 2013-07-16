@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.KeystoreProperties;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +30,6 @@ public class ReadKeystorePropertiesAndSignApkStep extends ShellStep {
   private final String pathToKeystorePropertiesFile;
   private final String unsignedApk;
   private final String outputPath;
-  private final ProjectFilesystem projectFilesystem;
 
   /** This will be initialized during {@link #setup(com.facebook.buck.step.ExecutionContext)}. */
   private SignApkStep signApkCommand;
@@ -39,21 +37,19 @@ public class ReadKeystorePropertiesAndSignApkStep extends ShellStep {
   public ReadKeystorePropertiesAndSignApkStep(
       String pathToKeystorePropertiesFile,
       String unsignedApk,
-      String outputPath,
-      ProjectFilesystem projectFilesystem) {
+      String outputPath) {
     super(String.format("sign %s using the values in %s",
         unsignedApk,
         pathToKeystorePropertiesFile));
     this.pathToKeystorePropertiesFile = Preconditions.checkNotNull(pathToKeystorePropertiesFile);
     this.unsignedApk = Preconditions.checkNotNull(unsignedApk);
     this.outputPath = Preconditions.checkNotNull(outputPath);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
   }
 
   @Override
   public void setup(ExecutionContext context) throws IOException {
     KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
-        pathToKeystorePropertiesFile, projectFilesystem);
+        pathToKeystorePropertiesFile, context.getProjectFilesystem());
     this.signApkCommand = new SignApkStep(outputPath,
         unsignedApk,
         keystoreProperties.getKeystore(),

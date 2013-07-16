@@ -496,7 +496,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     // Sign the APK.
     String signedApkPath = getSignedApkPath();
     ReadKeystorePropertiesAndSignApkStep signApk = new ReadKeystorePropertiesAndSignApkStep(
-        keystorePropertiesPath, unsignedApkPath, signedApkPath, context.getProjectFilesystem());
+        keystorePropertiesPath, unsignedApkPath, signedApkPath);
     commands.add(signApk);
 
     String apkToAlign;
