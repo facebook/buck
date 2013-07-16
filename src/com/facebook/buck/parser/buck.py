@@ -346,7 +346,7 @@ def android_binary(
       compress_resources=False,
       primary_dex_substrings=None,
       resource_filter=None,
-      cpu_filter=None,
+      cpu_filters=[],
       deps=[],
       visibility=[],
       build_env=None):
@@ -367,7 +367,7 @@ def android_binary(
     'compress_resources' : compress_resources,
     'primary_dex_substrings' : primary_dex_substrings,
     'resource_filter' : resource_filter,
-    'cpu_filter' : cpu_filter,
+    'cpu_filters' : cpu_filters,
     'deps' : deps,
     'visibility' : visibility,
   }, build_env)

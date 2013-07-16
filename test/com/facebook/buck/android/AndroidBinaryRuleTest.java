@@ -527,29 +527,63 @@ public class AndroidBinaryRuleTest {
 
   @Test
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
-    AndroidBinaryRule binaryRule = createBinaryRuleWithCpuFilter(null);
-    BashStep copyCommand = binaryRule.copyNativeLibrary("/path/to/src", "/path/to/dest/");
-    List<String> commands = copyCommand.getShellCommand(createMock(ExecutionContext.class));
-    assertEquals("cp -R /path/to/src/* /path/to/dest/", commands.get(2));
+    createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
+        ImmutableSet.<String>of() /* cpuFilters */,
+        "/path/to/source",
+        "/path/to/destination/",
+        ImmutableSet.of("cp -R /path/to/source/* /path/to/destination/"));
   }
 
   @Test
   public void testCopyNativeLibraryCommand() {
-    AndroidBinaryRule binaryRule = createBinaryRuleWithCpuFilter("armv7");
-    BashStep copyCommand = binaryRule.copyNativeLibrary("/path/to/source", "/path/to/destination/");
-    List<String> commands = copyCommand.getShellCommand(createMock(ExecutionContext.class));
-    assertEquals("[ -d /path/to/source/armeabi-v7a ] && " +
-        "cp -R /path/to/source/armeabi-v7a /path/to/destination/ || exit 0", commands.get(2));
+    createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
+        ImmutableSet.of("armv7"),
+        "/path/to/source",
+        "/path/to/destination/",
+        ImmutableSet.of(
+            "[ -d /path/to/source/armeabi-v7a ] && " +
+                "cp -R /path/to/source/armeabi-v7a /path/to/destination/ || exit 0"));
   }
 
-  private AndroidBinaryRule createBinaryRuleWithCpuFilter(String cpuFilter) {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    return ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-            .setManifest("AndroidManifest.xml")
-            .setKeystorePropertiesPath("keystore.properties")
-            .setTarget("Google Inc:Google APIs:16")
-            .setCpuFilter(cpuFilter));
+  @Test
+  public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
+    createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
+        ImmutableSet.of("arm", "x86"),
+        "/path/to/source",
+        "/path/to/destination/",
+        ImmutableSet.of(
+            "[ -d /path/to/source/armeabi ] && " +
+                "cp -R /path/to/source/armeabi /path/to/destination/ || exit 0",
+            "[ -d /path/to/source/x86 ] && " +
+                "cp -R /path/to/source/x86 /path/to/destination/ || exit 0"));
+  }
+
+  private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
+      ImmutableSet<String> cpuFilters,
+      String sourceDir,
+      String destinationDir,
+      ImmutableSet<String> expectedBashCommands) {
+    AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
+        new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
+        .setManifest("AndroidManifest.xml")
+        .setKeystorePropertiesPath("keystore.properties")
+        .setTarget("Google Inc:Google APIs:16");
+
+    for (String filter: cpuFilters) {
+      builder.addCpuFilter(filter);
+    }
+
+    ImmutableList.Builder<Step> commands = ImmutableList.builder();
+    AndroidBinaryRule buildRule = new BuildRuleResolver().buildAndAddToIndex(builder);
+    buildRule.copyNativeLibrary(sourceDir, destinationDir, commands);
+
+    ImmutableList<Step> steps = commands.build();
+    assertEquals(steps.size(), expectedBashCommands.size());
+
+    for (Step command: commands.build()) {
+      assertTrue(expectedBashCommands.contains(
+          ((BashStep)command).getShellCommand(createMock(ExecutionContext.class)).get(2)));
+    }
   }
 }

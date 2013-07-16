@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 
 import java.util.List;
 
@@ -105,9 +104,9 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     builder.setResourceFilter(new FilterResourcesStep.ResourceFilter(resourceFilter));
 
     // CPU ABI
-    Optional<String> cpuFilter = params.getOptionalStringAttribute("cpu_filter");
-    if (cpuFilter.isPresent()) {
-      builder.setCpuFilter(Strings.emptyToNull(cpuFilter.get().trim()));
+    List<String> cpuFilters = params.getOptionalListAttribute("cpu_filters");
+    for (String filter: cpuFilters) {
+      builder.addCpuFilter(filter);
     }
   }
 

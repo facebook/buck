@@ -131,7 +131,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   private final boolean compressResources;
   private final ImmutableSet<String> primaryDexSubstrings;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
-  private final Optional<TargetCpuType> cpuFilter;
+  private final ImmutableSet<TargetCpuType> cpuFilters;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
   /** This path is guaranteed to end with a slash. */
@@ -155,7 +155,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       boolean compressResources,
       Set<String> primaryDexSubstrings,
       FilterResourcesStep.ResourceFilter resourceFilter,
-      Optional<TargetCpuType> cpuFilter) {
+      Set<TargetCpuType> cpuFilters) {
     super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
@@ -171,7 +171,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         BuckConstant.GEN_DIR,
         getBuildTarget().getBasePathWithSlash());
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
-    this.cpuFilter = Preconditions.checkNotNull(cpuFilter);
+    this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.transitiveDependencyGraph =
         new AndroidTransitiveDependencyGraph(this);
   }
@@ -236,8 +236,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return this.resourceFilter;
   }
 
-  public Optional<TargetCpuType> getCpuFilter() {
-    return this.cpuFilter;
+  public ImmutableSet<TargetCpuType> getCpuFilters() {
+    return this.cpuFilters;
   }
 
   /**
@@ -246,38 +246,38 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
    * This looks at the cpu filter and returns the correct subdirectory. If cpu filter is
    * not present or not supported, returns Optional.absent();
    */
-  private Optional<String> getAbiDirectoryComponent() {
-    Optional<TargetCpuType> cpuFilter = getCpuFilter();
-    if (!cpuFilter.isPresent()) {
-      return Optional.absent();
-    } else {
-      String component = null;
-      TargetCpuType filter = cpuFilter.get();
-      if (filter.equals(TargetCpuType.ARM)) {
-        component = SdkConstants.ABI_ARMEABI;
-      } else if (filter.equals(TargetCpuType.ARMV7)) {
-        component = SdkConstants.ABI_ARMEABI_V7A;
-      } else if (filter.equals(TargetCpuType.X86)) {
-        component = SdkConstants.ABI_INTEL_ATOM;
-      } else if (filter.equals(TargetCpuType.MIPS)) {
-        component = SdkConstants.ABI_MIPS;
-      }
-      return Optional.fromNullable(component);
+  private static Optional<String> getAbiDirectoryComponent(TargetCpuType cpuType) {
+    String component = null;
+    if (cpuType.equals(TargetCpuType.ARM)) {
+      component = SdkConstants.ABI_ARMEABI;
+    } else if (cpuType.equals(TargetCpuType.ARMV7)) {
+      component = SdkConstants.ABI_ARMEABI_V7A;
+    } else if (cpuType.equals(TargetCpuType.X86)) {
+      component = SdkConstants.ABI_INTEL_ATOM;
+    } else if (cpuType.equals(TargetCpuType.MIPS)) {
+      component = SdkConstants.ABI_MIPS;
     }
+    return Optional.fromNullable(component);
+
   }
 
   @VisibleForTesting
-  BashStep copyNativeLibrary(String sourceDir, String destinationDir) {
-    String copyCommand;
-    Optional<String> abiDirectoryComponent = getAbiDirectoryComponent();
-    if (abiDirectoryComponent.isPresent()) {
-      sourceDir += "/" + abiDirectoryComponent.get();
-      copyCommand = String.format(
-          "[ -d %s ] && cp -R %s %s || exit 0", sourceDir, sourceDir, destinationDir);
+  void copyNativeLibrary(
+      String sourceDir,
+      String destinationDir,
+      ImmutableList.Builder<Step> commands) {
+
+    if (getCpuFilters().isEmpty()) {
+      commands.add(new BashStep(String.format("cp -R %s/* %s", sourceDir, destinationDir)));
     } else {
-      copyCommand = String.format("cp -R %s/* %s", sourceDir, destinationDir);
+      for (TargetCpuType cpuType: getCpuFilters()) {
+        Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
+        Preconditions.checkState(abiDirectoryComponent.isPresent());
+        String libsDirectory = sourceDir + "/" + abiDirectoryComponent.get();
+        commands.add(new BashStep(String.format(
+            "[ -d %s ] && cp -R %s %s || exit 0", libsDirectory, libsDirectory, destinationDir)));
+      }
     }
-    return new BashStep(copyCommand);
   }
 
   public DexSplitMode getDexSplitMode() {
@@ -432,7 +432,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
         if (nativeLibDir.endsWith("/")) {
           nativeLibDir = nativeLibDir.substring(0, nativeLibDir.length() - 1);
         }
-        commands.add(copyNativeLibrary(nativeLibDir, libSubdirectory));
+        copyNativeLibrary(nativeLibDir, libSubdirectory, commands);
       }
     }
 
@@ -452,7 +452,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
       commands.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
       for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
-        commands.add(copyNativeLibrary(nativeLibDir, nativeLibAssetsDir));
+        copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, commands);
       }
     }
 
@@ -925,7 +925,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
     private FilterResourcesStep.ResourceFilter resourceFilter =
         new FilterResourcesStep.ResourceFilter(ImmutableList.<String>of());
-    private Optional<TargetCpuType> cpuFilter = Optional.absent();
+    private ImmutableSet.Builder<TargetCpuType> cpuFilters = ImmutableSet.builder();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -951,7 +951,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
           compressResources,
           primaryDexSubstrings.build(),
           resourceFilter,
-          cpuFilter);
+          cpuFilters.build());
     }
 
     @Override
@@ -1032,13 +1032,13 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       return this;
     }
 
-    public Builder setCpuFilter(String cpuFilter) {
+    public Builder addCpuFilter(String cpuFilter) {
       if (cpuFilter != null) {
         try {
-          this.cpuFilter = Optional.of(TargetCpuType.valueOf(cpuFilter.toUpperCase()));
+          this.cpuFilters.add(TargetCpuType.valueOf(cpuFilter.toUpperCase()));
         } catch (IllegalArgumentException e) {
           throw new HumanReadableException(
-              "android_binary() was passed an invalid cpu filter" + cpuFilter);
+              "android_binary() was passed an invalid cpu filter: " + cpuFilter);
         }
       }
       return this;

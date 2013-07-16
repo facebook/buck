@@ -72,7 +72,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         apkUnderTest.isCompressResources(),
         apkUnderTest.getPrimaryDexSubstrings(),
         apkUnderTest.getResourceFilter(),
-        apkUnderTest.getCpuFilter());
+        apkUnderTest.getCpuFilters());
     this.apkUnderTest = apkUnderTest;
   }
 
