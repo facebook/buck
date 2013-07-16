@@ -29,15 +29,19 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 import javax.tools.Diagnostic;
@@ -47,7 +51,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-public class  JavacInMemoryStep implements Step {
+public class JavacInMemoryStep implements Step {
 
   private final String pathToOutputDirectory;
 
@@ -145,14 +149,18 @@ public class  JavacInMemoryStep implements Step {
     Preconditions.checkNotNull(compiler,
         "If using JRE instead of JDK, ToolProvider.getSystemJavaCompiler() may be null.");
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+    Iterable<? extends JavaFileObject> compilationUnits;
+    try {
+      compilationUnits = createCompilationUnits(
+          fileManager, context.getProjectFilesystem().getPathRelativizer());
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
     List<String> options = getOptions(context, buildClasspathEntries);
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
-    Iterable<? extends JavaFileObject> compilationUnits =
-        fileManager.getJavaFileObjectsFromStrings(
-            Iterables.transform(javaSourceFilePaths,
-                                context.getProjectFilesystem().getPathRelativizer()));
-
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
     JavaCompiler.CompilationTask compilationTask = compiler.getTask(
         compilerOutputWriter,
@@ -185,6 +193,34 @@ public class  JavacInMemoryStep implements Step {
       }
       return 1;
     }
+  }
+
+  private Iterable<? extends JavaFileObject> createCompilationUnits(
+      StandardJavaFileManager fileManager,
+      Function<String, String> pathRelativizer) throws IOException {
+    List<JavaFileObject> compilationUnits = Lists.newArrayList();
+    for (String path : javaSourceFilePaths) {
+      if (path.endsWith(".java")) {
+        // For an ordinary .java file, create a corresponding JavaFileObject.
+        Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
+            pathRelativizer.apply(path));
+        compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
+      } else if (path.endsWith(".src.zip")) {
+        // For a Zip of .java files, create a JavaFileObject for each .java entry.
+        ZipFile zipFile = new ZipFile(pathRelativizer.apply(path));
+        for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            entries.hasMoreElements();
+            ) {
+          ZipEntry entry = entries.nextElement();
+          if (!entry.getName().endsWith(".java")) {
+            continue;
+          }
+
+          compilationUnits.add(new ZipEntryJavaFileObject(zipFile, entry));
+        }
+      }
+    }
+    return compilationUnits;
   }
 
   @Override

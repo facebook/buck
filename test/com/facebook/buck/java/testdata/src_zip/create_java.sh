@@ -33,4 +33,4 @@ public class Main {
 }
 " > Main.java
 
-jar cf "$1" Yang.java Main.java
+zip "$1" Yang.java Main.java

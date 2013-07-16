@@ -22,23 +22,21 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 
-public class CompileSrcJarIntegrationTest {
+public class CompileSrcZipIntegrationTest {
 
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  @Ignore("TODO(mbolin): Update JavacInMemoryStep to make this test pass.")
-  public void testJavaLibraryRuleAcceptsJarFileOfJavaSourceCodeAsInput() throws IOException {
+  public void testJavaLibraryRuleAcceptsZipFileOfJavaSourceCodeAsInput() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "src_jar", tmp);
+        this, "src_zip", tmp);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:lib");

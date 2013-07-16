@@ -8,12 +8,12 @@ genrule(
     'create_java.sh',
   ],
   cmd = '$SRCDIR/create_java.sh $OUT',
-  out = 'output.src.jar',
+  out = 'output.src.zip',
 )
 
 java_library(
   name = 'lib',
-  srcs = glob(['*.java']) + [genfile('output.src.jar')],
+  srcs = glob(['*.java']) + [genfile('output.src.zip')],
   deps = [
     '//:generate_java_sources',
   ],

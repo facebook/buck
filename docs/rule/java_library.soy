@@ -29,6 +29,11 @@ of the compiled class files and resources.
   {param default : '[]' /}
   {param desc}
   The set of <code>.java</code> files to compile for this rule.
+  If any of the files in this list end in <code>.src.zip</code>,
+  then the entries in the ZIP file that end in <code>.java</code> will be
+  included as ordinary inputs to compilation. This is common when using
+  a {call buck.genrule /} to auto-generate some Java source code that
+  needs to be compiled with some hand-written Java code.
   {/param}
 {/call}
 
