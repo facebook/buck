@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
@@ -58,8 +59,11 @@ public abstract class BuildRuleEvent extends BuckEvent {
     return new Started(rule);
   }
 
-  public static Finished finished(BuildRule rule, BuildRuleStatus status, CacheResult cacheResult) {
-    return new Finished(rule, status, cacheResult);
+  public static Finished finished(BuildRule rule,
+      BuildRuleStatus status,
+      CacheResult cacheResult,
+      Optional<BuildRuleSuccess.Type> successType) {
+    return new Finished(rule, status, cacheResult, successType);
   }
 
   public static class Started extends BuildRuleEvent {
@@ -76,11 +80,16 @@ public abstract class BuildRuleEvent extends BuckEvent {
   public static class Finished extends BuildRuleEvent {
     private final BuildRuleStatus status;
     private final CacheResult cacheResult;
+    private final Optional<BuildRuleSuccess.Type> successType;
 
-    protected Finished(BuildRule rule, BuildRuleStatus status, CacheResult cacheResult) {
+    protected Finished(BuildRule rule,
+        BuildRuleStatus status,
+        CacheResult cacheResult,
+        Optional<BuildRuleSuccess.Type> successType) {
       super(rule);
       this.status = Preconditions.checkNotNull(status);
       this.cacheResult = Preconditions.checkNotNull(cacheResult);
+      this.successType = Preconditions.checkNotNull(successType);
     }
 
     public BuildRuleStatus getStatus() {
@@ -89,6 +98,10 @@ public abstract class BuildRuleEvent extends BuckEvent {
 
     public CacheResult getCacheResult() {
       return cacheResult;
+    }
+
+    public Optional<BuildRuleSuccess.Type> getSuccessType() {
+      return successType;
     }
 
     @Override
@@ -107,14 +120,16 @@ public abstract class BuildRuleEvent extends BuckEvent {
 
       Finished that = (Finished)o;
       return Objects.equal(getStatus(), that.getStatus()) &&
-          Objects.equal(getCacheResult(), that.getCacheResult());
+          Objects.equal(getCacheResult(), that.getCacheResult()) &&
+          Objects.equal(getSuccessType(), that.getSuccessType());
     }
 
     @Override
     public int hashCode() {
       return Objects.hashCode(getBuildRule(),
           getStatus(),
-          getCacheResult());
+          getCacheResult(),
+          getSuccessType());
     }
 
     @Override

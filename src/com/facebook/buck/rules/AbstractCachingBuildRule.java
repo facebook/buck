@@ -344,7 +344,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
       BuckEventBus eventBus) {
-    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
+    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult, Optional.of(type)));
     buildRuleResult.set(new BuildRuleSuccess(this, type));
   }
 
@@ -352,7 +352,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       BuildRuleStatus buildRuleStatus,
       CacheResult cacheResult,
       BuckEventBus eventBus) {
-    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult));
+    eventBus.post(BuildRuleEvent.finished(this,
+        buildRuleStatus,
+        cacheResult,
+        Optional.<BuildRuleSuccess.Type>absent()));
     buildRuleResult.setException(failure);
   }
 

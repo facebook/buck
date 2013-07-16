@@ -37,6 +37,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -95,7 +96,8 @@ public class ChromeTraceBuildListenerTest {
     BuckEvent ruleFinished = BuildRuleEvent.finished(
         rule,
         BuildRuleStatus.SUCCESS,
-        CacheResult.MISS);
+        CacheResult.MISS,
+        Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY));
     ruleFinished.configure(fakeClock.currentTimeMillis(),
         fakeClock.nanoTime(),
         threadIdSupplier.get());

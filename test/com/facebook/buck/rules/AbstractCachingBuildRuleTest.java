@@ -196,7 +196,9 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     assertEquals(events.get(1),
         TestEventConfigerator.configureTestEvent(BuildRuleEvent.finished(cachingRule,
             BuildRuleStatus.SUCCESS,
-            CacheResult.MISS), buckEventBus));
+            CacheResult.MISS,
+            Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+            buckEventBus));
   }
 
   @Test
@@ -246,7 +248,9 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     assertEquals(events.get(1),
         TestEventConfigerator.configureTestEvent(BuildRuleEvent.finished(buildRule,
             BuildRuleStatus.SUCCESS,
-            CacheResult.HIT), buckEventBus));
+            CacheResult.HIT,
+            Optional.of(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS)),
+        buckEventBus));
 
     verifyAll();
   }
