@@ -19,7 +19,9 @@ package com.facebook.buck.parser;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -34,7 +36,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -57,6 +58,11 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+/**
+ * High-level build file parsing machinery.  Primarily responsible for producing a
+ * {@link DependencyGraph} based on a set of targets.  Also exposes some low-level facilities to
+ * parse individual build files.
+ */
 public class Parser {
 
   private final BuildTargetParser buildTargetParser;
@@ -83,11 +89,9 @@ public class Parser {
    */
   private final Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets;
 
-  private final String absolutePathToProjectRoot;
-
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
-  private final ProjectBuildFileParser buildFileParser;
+  private final ProjectBuildFileParserFactory buildFileParserFactory;
   private final Console console;
   private final Supplier<BuildFileTree> buildFileTreeSupplier;
   private BuildFileTree buildFiles;
@@ -107,7 +111,7 @@ public class Parser {
         },
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
-        new ProjectBuildFileParser(projectFilesystem.getIgnorePaths()));
+        new DefaultProjectBuildFileParserFactory(projectFilesystem));
   }
 
   /**
@@ -120,7 +124,7 @@ public class Parser {
          Supplier<BuildFileTree> buildFileTreeSupplier,
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
-         ProjectBuildFileParser buildFileParser) {
+         ProjectBuildFileParserFactory buildFileParserFactory) {
     this.buildFileTreeSupplier = Preconditions.checkNotNull(buildFileTreeSupplier);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
@@ -128,9 +132,25 @@ public class Parser {
     this.buildFiles = buildFileTreeSupplier.get();
     this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
-    this.buildFileParser = Preconditions.checkNotNull(buildFileParser);
+    this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
     this.parsedBuildFiles = ArrayListMultimap.create();
-    this.absolutePathToProjectRoot = projectFilesystem.getProjectRoot().getAbsolutePath();
+  }
+
+  /**
+   * Create a new build file parser on demand.
+   *
+   * @param includes Common includes bundled with each parsed build file.
+   * @return New parser instance.
+   *
+   * @deprecated This is currently public due to leaky abstractions present in this class.
+   *     For new code, please avoid calling this and instead consider refactoring the
+   *     {@link Parser} interface so that all of its parsing methods are self-contained and do
+   *     not need to expose the caller to the stateful nature of the underlying
+   *     {@link ProjectBuildFileParser}.
+   */
+  @Deprecated
+  public ProjectBuildFileParser createBuildFileParser(Iterable<String> includes) {
+    return buildFileParserFactory.createParser(includes);
   }
 
   public BuildTargetParser getBuildTargetParser() {
@@ -195,20 +215,23 @@ public class Parser {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     eventBus.post(ParseEvent.started(buildTargets));
-    if (!isCacheComplete(defaultIncludes)) {
-      Set<File> buildTargetFiles = Sets.newHashSet();
-      for (BuildTarget buildTarget : buildTargets) {
-        File buildFile = buildTarget.getBuildFile();
-        boolean isNewElement = buildTargetFiles.add(buildFile);
-        if (isNewElement) {
-          parseBuildFile(buildFile, defaultIncludes);
+    try (ProjectBuildFileParser buildFileParser = buildFileParserFactory.createParser(
+        defaultIncludes)) {
+      if (!isCacheComplete(defaultIncludes)) {
+        Set<File> buildTargetFiles = Sets.newHashSet();
+        for (BuildTarget buildTarget : buildTargets) {
+          File buildFile = buildTarget.getBuildFile();
+          boolean isNewElement = buildTargetFiles.add(buildFile);
+          if (isNewElement) {
+            parseBuildFile(buildFile, defaultIncludes, buildFileParser);
+          }
         }
       }
-    }
 
-    DependencyGraph graph = findAllTransitiveDependencies(buildTargets, defaultIncludes);
-    eventBus.post(ParseEvent.finished(buildTargets));
-    return graph;
+      return findAllTransitiveDependencies(buildTargets, defaultIncludes, buildFileParser);
+    } finally {
+      eventBus.post(ParseEvent.finished(buildTargets));
+    }
   }
 
   /**
@@ -217,7 +240,8 @@ public class Parser {
   @VisibleForTesting
   DependencyGraph findAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
-      final Iterable<String> defaultIncludes) {
+      final Iterable<String> defaultIncludes,
+      final ProjectBuildFileParser buildFileParser) {
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
 
@@ -240,7 +264,9 @@ public class Parser {
             for (BuildTarget buildTargetForDep : buildRuleBuilder.getDeps()) {
               try {
                 if (!knownBuildTargets.containsKey(buildTargetForDep)) {
-                  parseBuildFileContainingTarget(buildTargetForDep, defaultIncludes);
+                  parseBuildFileContainingTarget(buildTargetForDep,
+                      defaultIncludes,
+                      buildFileParser);
                 }
                 deps.add(buildTargetForDep);
               } catch (NoSuchBuildTargetException e) {
@@ -290,8 +316,10 @@ public class Parser {
    * {@link #filterAllTargetsInProject}, then this method should not be called.
    */
   private void parseBuildFileContainingTarget(
-      BuildTarget buildTarget, Iterable<String> defaultIncludes)
-      throws IOException, NoSuchBuildTargetException {
+      BuildTarget buildTarget,
+      Iterable<String> defaultIncludes,
+      ProjectBuildFileParser buildFileParser)
+          throws IOException, NoSuchBuildTargetException {
     if (isCacheComplete(defaultIncludes)) {
       // In this case, all of the build rules should have been loaded into the knownBuildTargets
       // Map before this method was invoked. Therefore, there should not be any more build files to
@@ -314,7 +342,7 @@ public class Parser {
           buildFile);
     }
 
-    parseBuildFile(buildFile, defaultIncludes);
+    parseBuildFile(buildFile, defaultIncludes, buildFileParser);
   }
 
   /**
@@ -322,10 +350,14 @@ public class Parser {
    * @param defaultIncludes the files to include before executing the build file.
    * @return a list of raw build rules generated by executing the build file.
    */
-  public List<Map<String,Object>> parseBuildFile(File buildFile, Iterable<String> defaultIncludes)
-      throws IOException, NoSuchBuildTargetException {
+  public List<Map<String,Object>> parseBuildFile(
+      File buildFile,
+      Iterable<String> defaultIncludes,
+      ProjectBuildFileParser buildFileParser)
+          throws IOException, NoSuchBuildTargetException {
     Preconditions.checkNotNull(buildFile);
     Preconditions.checkNotNull(defaultIncludes);
+    Preconditions.checkNotNull(buildFileParser);
     if (!isCached(buildFile, defaultIncludes)) {
       if (console.getVerbosity().shouldPrintCommand()) {
         console.getStdErr().printf("Parsing %s file: %s\n",
@@ -333,8 +365,7 @@ public class Parser {
             buildFile);
       }
 
-      parseRawRulesInternal(buildFileParser.getAllRules(
-          absolutePathToProjectRoot, Optional.of(buildFile.getPath()), defaultIncludes),
+      parseRawRulesInternal(buildFileParser.getAllRules(buildFile.getPath()),
           buildFile);
     }
     return parsedBuildFiles.get(buildFile);
@@ -450,7 +481,7 @@ public class Parser {
       knownBuildTargets.clear();
       parsedBuildFiles.clear();
       parseRawRulesInternal(
-          buildFileParser.getAllRulesInProject(filesystem.getProjectRoot(), includes),
+          ProjectBuildFileParser.getAllRulesInProject(buildFileParserFactory, includes),
           null /* source */);
       allBuildFilesParsed = true;
     }

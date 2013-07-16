@@ -17,8 +17,11 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,17 +42,18 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 /**
- * A ProjectBuildFileParser finds all build files within a project root and executes
- * those build files to generate the build rules they define.
+ * Delegates to buck.py for parsing of buck build files.  Constructed on demand for the
+ * parsing phase and must be closed afterward to free up resources.
  */
-public class ProjectBuildFileParser {
+public class ProjectBuildFileParser implements AutoCloseable {
 
   /** Path to the buck.py script that is used to evaluate a build file. */
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
 
-  private static final ExecutorService executor = Executors.newSingleThreadExecutor();
-  private static final ScriptEngine engine = new ScriptEngineManager().getEngineByName("python");
+  private ExecutorService executor;
+  private ScriptEngine engine;
+
   private static final String python = Joiner.on(System.getProperty("line.separator")).join(
       "import sys",
       "import os.path",
@@ -58,10 +62,37 @@ public class ProjectBuildFileParser {
       "sys.argv=[\"%s\"]",
       "buck.main()");
 
+  private final File projectRoot;
   private final ImmutableSet<String> ignorePaths;
+  private final ImmutableList<String> commonIncludes;
 
-  public ProjectBuildFileParser(ImmutableSet<String> ignorePaths) {
-    this.ignorePaths = ignorePaths;
+  private boolean isInitialized;
+  private boolean isClosed;
+
+  public ProjectBuildFileParser(
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<String> commonIncludes) {
+    this.projectRoot = projectFilesystem.getProjectRoot();
+    this.ignorePaths = projectFilesystem.getIgnorePaths();
+    this.commonIncludes = Preconditions.checkNotNull(commonIncludes);
+  }
+
+  private void ensureNotClosed() {
+    Preconditions.checkState(!isClosed);
+  }
+
+  /**
+   * Initialization on demand moves around the performance impact of creating the Jython
+   * interpreter to when parsing actually begins.  This makes it easier to attribute this time
+   * to the actual parse phase.
+   */
+  private void initIfNeeded() {
+    ensureNotClosed();
+    if (!isInitialized) {
+      executor = Executors.newSingleThreadExecutor();
+      engine = new ScriptEngineManager().getEngineByName("python");
+      isInitialized = true;
+    }
   }
 
   private class BuildFileRunner implements Runnable {
@@ -138,28 +169,38 @@ public class ProjectBuildFileParser {
   }
 
   /**
-   * @param rootPath Absolute path to the root of the project. buck.py uses this to determine the
-   *     base path of the targets in the build file that it is parsing.
+   * Create, parse and destroy the parser in one step for an entire project.  This should
+   * only be used when the tree must be parsed without a specific target to be built or
+   * otherwise operated upon.
    */
-  public List<Map<String, Object>> getAllRulesInProject(
-      File rootPath, Iterable<String> includes)
+  public static List<Map<String, Object>> getAllRulesInProject(
+      ProjectBuildFileParserFactory factory,
+      Iterable<String> includes)
       throws IOException {
-    return getAllRules(rootPath.getAbsolutePath(), Optional.<String>absent(), includes);
+    try (ProjectBuildFileParser buildFileParser = factory.createParser(includes)) {
+      return buildFileParser.getAllRulesInternal(Optional.<String>absent());
+    }
   }
 
   /**
-   * @param rootPath Absolute path to the root of the project. buck.py uses this to determine the
-   *     base path of the targets in the build file that it is parsing.
+   * Collect all rules from a particular build file.
+   *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
-   *     If absent, all build files under rootPath will be parsed.
    */
-  public List<Map<String, Object>> getAllRules(
-      String rootPath,
-      Optional<String> buildFile,
-      Iterable<String> includes) throws IOException {
+  public List<Map<String, Object>> getAllRules(String buildFile) throws IOException {
+    return getAllRulesInternal(Optional.of(buildFile));
+  }
+
+  @VisibleForTesting
+  protected List<Map<String, Object>> getAllRulesInternal(Optional<String> buildFile)
+      throws IOException {
+    ensureNotClosed();
+    initIfNeeded();
 
     // Run the build file in a background thread.
-    final ImmutableList<String> args = buildArgs(rootPath, buildFile, includes);
+    final ImmutableList<String> args = buildArgs(projectRoot.getAbsolutePath(),
+        buildFile,
+        commonIncludes);
     final PipedReader outputReader = new PipedReader();
     BuildFileRunner runner = new BuildFileRunner(args, outputReader);
     executor.execute(runner);
@@ -173,5 +214,23 @@ public class ProjectBuildFileParser {
     }
 
     return rules;
+  }
+
+  @Override
+  public void close() {
+    if (isClosed) {
+      return;
+    }
+
+    // Explicitly shut down the thread pool but allow the engine to finalize normally.  This
+    // is unlikely to actually free resources at this time but in a subsequent diff we can enforce
+    // that by design by forking a separate jython process for the entire parse phase.
+    try {
+      if (isInitialized) {
+        executor.shutdown();
+      }
+    } finally {
+      isClosed = true;
+    }
   }
 }

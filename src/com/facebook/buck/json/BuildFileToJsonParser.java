@@ -31,11 +31,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This is a special JSON parser that is customized to consume the JSON output of buck.py. In
- * particular, it expects one JSON object per line. Object values may be one of: null, a string, or
- * an array of strings. This means that no sort of nested arrays or objects are allowed in the
- * output as Parser is implemented today. This simplification makes it easier to leverage Jackson's
- * streaming JSON API.
+ * This is a special JSON parser that is customized to consume the JSON output of buck.py.
+ * Object values may be one of: null, a string, or an array of strings. This means that no
+ * sort of nested arrays or objects are allowed in the output as Parser is implemented
+ * today. This simplification makes it easier to leverage Jackson's streaming JSON API.
  */
 public class BuildFileToJsonParser {
 
