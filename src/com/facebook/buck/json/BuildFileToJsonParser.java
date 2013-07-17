@@ -40,22 +40,43 @@ public class BuildFileToJsonParser {
 
   private final JsonParser parser;
 
-  public BuildFileToJsonParser(String json) throws JsonParseException, IOException {
+  public BuildFileToJsonParser(String json) throws IOException {
     JsonFactory jsonFactory = new JsonFactory();
     this.parser = jsonFactory.createJsonParser(json);
   }
 
-  public BuildFileToJsonParser(InputStream json) throws JsonParseException, IOException {
+  public BuildFileToJsonParser(InputStream json) throws IOException {
     JsonFactory jsonFactory = new JsonFactory();
     this.parser = jsonFactory.createJsonParser(json);
   }
 
-  public BuildFileToJsonParser(Reader json) throws JsonParseException, IOException {
+  public BuildFileToJsonParser(Reader json) throws IOException {
     JsonFactory jsonFactory = new JsonFactory();
     this.parser = jsonFactory.createJsonParser(json);
   }
 
-  public Map<String, Object> next() throws JsonParseException, IOException {
+  /**
+   * Access the next set of rules from the build file processor.  Note that for non-server
+   * invocations, this will collect all of the rules into one enormous list.
+   *
+   * @return List of rules expressed as a <em>very</em> simple mapping of JSON field names
+   *     to Java primitives.
+   */
+  public List<Map<String, Object>> nextRules() throws IOException {
+    // The parser below uses these objects for stateful purposes with the ultimate goal
+    // of populating the parsed rules into `currentObjects`.
+    //
+    // The parser is expecting two different styles of output:
+    //   1. Server mode: [{"key": "value"}, {"key": "value"}, ...]
+    //   2. Regular mode: {"key": "value"}, {"key": "value"}, ...
+    //
+    // Server mode output is a necessary short-term step to keep logic in the main Parser
+    // consistent (expecting to be able to correlate a set of rules with the specific BUCK file
+    // that generated them).  This requirement creates an unnecessary performance weakness
+    // in this design where we cannot parallelize buck.py's parsing of BUCK files with buck's
+    // processing of the result into a DAG.  Once this can be addressed, server mode should be
+    // eliminated.
+    List<Map<String, Object>> currentObjects = null;
     String currentFieldName = null;
     List<String> currentArray = null;
     Map<String, Object> currentObject = null;
@@ -63,28 +84,47 @@ public class BuildFileToJsonParser {
     while (true) {
       JsonToken token = parser.nextToken();
       if (token == null) {
-        return null;
+        return currentObjects;
       }
 
       switch (token) {
       case START_OBJECT:
+        // The syntax differs very slightly between server mode and not.  If we encounter
+        // an object not inside of an array, we aren't in server mode and so we can just read
+        // all the objects until exhaustion.
+        if (currentObjects == null) {
+          currentObjects = Lists.newArrayList();
+        }
         currentObject = Maps.newHashMap();
         break;
 
       case END_OBJECT:
-        Map<String, Object> out = currentObject;
+        currentObjects.add(currentObject);
         currentObject = null;
-        return out;
+        break;
 
       case START_ARRAY:
-        currentArray = Lists.newArrayList();
+        // Heuristic to detect whether we are in the above server mode or regular mode.  If we
+        // encounter START_ARRAY before START_OBJECT, it must be server mode so we should build
+        // `currentObjects` now.  Otherwise, this is the start of a new sub-array within
+        // an object.
+        if (currentObjects == null) {
+          currentObjects = Lists.newArrayList();
+        } else {
+          currentArray = Lists.newArrayList();
+        }
         break;
 
       case END_ARRAY:
-        currentObject.put(currentFieldName, currentArray);
-        currentArray = null;
-        currentFieldName = null;
-        break;
+        if (currentArray != null) {
+          currentObject.put(currentFieldName, currentArray);
+          currentArray = null;
+          currentFieldName = null;
+          break;
+        } else {
+          // Must be in server mode and we finished parsing a single BUCK file.
+          return currentObjects;
+        }
 
       case FIELD_NAME:
         currentFieldName = parser.getText();

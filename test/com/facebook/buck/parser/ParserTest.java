@@ -109,7 +109,8 @@ public class ParserTest extends EasyMockSupport {
     testParser = createParser(emptyBuildTargets(), testBuildFileParserFactory);
   }
 
-  private ProjectBuildFileParserFactory createDoNothingBuildFileParserFactory() {
+  private ProjectBuildFileParserFactory createDoNothingBuildFileParserFactory()
+      throws IOException {
     final ProjectBuildFileParser mockBuildFileParser = createMock(ProjectBuildFileParser.class);
     mockBuildFileParser.close();
     expectLastCall().anyTimes();

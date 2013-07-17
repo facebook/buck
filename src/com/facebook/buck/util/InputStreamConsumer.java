@@ -23,10 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
 
 public final class InputStreamConsumer implements Runnable {
 
-  private final InputStream inputStream;
+  private final BufferedReader inputReader;
   private final PrintStream printStream;
   private final boolean shouldRedirectInputStreamToPrintStream;
   private final Ansi ansi;
@@ -36,7 +37,17 @@ public final class InputStreamConsumer implements Runnable {
       PrintStream printStream,
       boolean shouldRedirectInputStreamToPrintStream,
       Ansi ansi) {
-    this.inputStream = Preconditions.checkNotNull(inputStream);
+    this(new InputStreamReader(inputStream),
+        printStream,
+        shouldRedirectInputStreamToPrintStream,
+        ansi);
+  }
+
+  public InputStreamConsumer(Reader reader,
+      PrintStream printStream,
+      boolean shouldRedirectInputStreamToPrintStream,
+      Ansi ansi) {
+    this.inputReader = new BufferedReader(reader);
     this.printStream = Preconditions.checkNotNull(printStream);
     this.shouldRedirectInputStreamToPrintStream = shouldRedirectInputStreamToPrintStream;
     this.ansi = Preconditions.checkNotNull(ansi);
@@ -44,10 +55,9 @@ public final class InputStreamConsumer implements Runnable {
 
   @Override
   public void run() {
-    BufferedReader streamReader = new BufferedReader(new InputStreamReader(inputStream));
-    String line = null;
+    String line;
     try {
-      while ((line = streamReader.readLine()) != null) {
+      while ((line = inputReader.readLine()) != null) {
         if (shouldRedirectInputStreamToPrintStream) {
           if (!hasWrittenOutputToPrintStream) {
             hasWrittenOutputToPrintStream = true;

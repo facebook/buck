@@ -16,7 +16,9 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -25,9 +27,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PipedReader;
@@ -51,9 +53,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
 
-  private ExecutorService executor;
-  private ScriptEngine engine;
-
   private static final String python = Joiner.on(System.getProperty("line.separator")).join(
       "import sys",
       "import os.path",
@@ -62,9 +61,17 @@ public class ProjectBuildFileParser implements AutoCloseable {
       "sys.argv=[\"%s\"]",
       "buck.main()");
 
+  private ExecutorService executor;
+  private ScriptEngine engine;
+
+  private BuildFileToJsonParser buckPyStdoutParser;
+  private BufferedWriter buckPyStdinWriter;
+
   private final File projectRoot;
   private final ImmutableSet<String> ignorePaths;
   private final ImmutableList<String> commonIncludes;
+
+  private boolean isServerMode;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -75,10 +82,33 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.projectRoot = projectFilesystem.getProjectRoot();
     this.ignorePaths = projectFilesystem.getIgnorePaths();
     this.commonIncludes = Preconditions.checkNotNull(commonIncludes);
+
+    // Default to server mode unless explicitly unset internally.
+    setServerMode(true);
+  }
+
+  /**
+   * Sets whether buck.py will use --server mode.  Server mode communicates via
+   * stdin/stdout to accept new BUCK files to parse in a long running fashion.  It
+   * also changes the stdout format so that output has an extra layer of structure
+   * sufficient to communicate state and coordinate on individual BUCK files
+   * submitted.
+   * <p>
+   * Note that you must not invoke this method after initialization.
+   */
+  private void setServerMode(boolean isServerMode) {
+    ensureNotClosed();
+    ensureNotInitialized();
+
+    this.isServerMode = isServerMode;
   }
 
   private void ensureNotClosed() {
     Preconditions.checkState(!isClosed);
+  }
+
+  private void ensureNotInitialized() {
+    Preconditions.checkState(!isInitialized);
   }
 
   /**
@@ -86,35 +116,77 @@ public class ProjectBuildFileParser implements AutoCloseable {
    * interpreter to when parsing actually begins.  This makes it easier to attribute this time
    * to the actual parse phase.
    */
-  private void initIfNeeded() {
+  private void initIfNeeded() throws IOException {
     ensureNotClosed();
     if (!isInitialized) {
-      executor = Executors.newSingleThreadExecutor();
-      engine = new ScriptEngineManager().getEngineByName("python");
+      init();
       isInitialized = true;
     }
+  }
+
+  /**
+   * Initialize the parser.  This starts buck.py, waiting on stdin for directives.
+   * <p>
+   * It is safe to invoke this method multiple times (subsequent invocations will be
+   * ignored).
+   */
+  private void init() throws IOException {
+    executor = Executors.newFixedThreadPool(2);
+    engine = new ScriptEngineManager().getEngineByName("python");
+
+    // Run buck.py in a dedicated thread.
+    final ImmutableList<String> args = buildArgs();
+
+    final PipedWriter inputWriter = new PipedWriter();
+    final PipedReader outputReader = new PipedReader();
+    final PipedReader stderrReader = new PipedReader();
+    BuildFileRunner runner = new BuildFileRunner(args, inputWriter, outputReader,
+        stderrReader);
+    executor.execute(runner);
+    executor.execute(new InputStreamConsumer(stderrReader,
+        System.err,
+        true /* shouldRedirect */,
+        new Ansi()));
+
+    buckPyStdinWriter = new BufferedWriter(inputWriter);
+    buckPyStdoutParser = new BuildFileToJsonParser(outputReader);
   }
 
   private class BuildFileRunner implements Runnable {
 
     private final ImmutableList<String> args;
+    private PipedReader inputReader;
     private PipedWriter outputWriter;
+    private PipedWriter stderrWriter;
 
-    public BuildFileRunner(ImmutableList<String> args, PipedReader outputReader) throws IOException {
+    public BuildFileRunner(
+        ImmutableList<String> args,
+        PipedWriter inputWriter,
+        PipedReader outputReader,
+        PipedReader stderrReader)
+        throws IOException {
       this.args = args;
+      this.inputReader = new PipedReader();
+      inputReader.connect(inputWriter);
       this.outputWriter = new PipedWriter();
       outputWriter.connect(outputReader);
+      this.stderrWriter = new PipedWriter();
+      stderrWriter.connect(stderrReader);
     }
 
     @Override
     public void run() {
       Closer closer = Closer.create();
       try {
+        closer.register(inputReader);
         closer.register(outputWriter);
+        closer.register(stderrWriter);
 
         // TODO(user): call buck.py directly rather than emulating the old command line interface?
         // TODO(user): escape args? (they are currently file names, which shouldn't contain quotes)
+        engine.getContext().setReader(inputReader);
         engine.getContext().setWriter(outputWriter);
+        engine.getContext().setErrorWriter(stderrWriter);
         engine.eval(String.format(python, PATH_TO_BUCK_PY, Joiner.on("\",\"").join(args)));
       } catch (ScriptException e) {
         // Print human readable python trace if available, default to normal exception if not.
@@ -137,27 +209,22 @@ public class ProjectBuildFileParser implements AutoCloseable {
     }
   }
 
-  /**
-   * @param rootPath The project root used to find all build files.
-   * @param buildFile The build file to parse, defaults to all build files in project.
-   * @param includes The files to import before running the build file(s).
-   * @return Arguments to pass to buck.py
-   */
-  private ImmutableList<String> buildArgs(
-      String rootPath, Optional<String> buildFile, Iterable<String> includes) {
-    // Create a process to run buck.py and read its stdout.
+  private ImmutableList<String> buildArgs() {
+    // Invoking buck.py and read JSON-formatted build rules from its stdout.
     ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
-    argBuilder.add("buck.py", "--project_root", rootPath);
+    argBuilder.add("buck.py");
 
-    // Add the --include flags.
-    for (String include : includes) {
-      argBuilder.add("--include");
-      argBuilder.add(include);
+    if (isServerMode) {
+      // Provide BUCK files to parse via buck.py's stdin.
+      argBuilder.add("--server");
     }
 
-    // Specify the build file, if present.
-    if (buildFile.isPresent()) {
-      argBuilder.add(buildFile.get());
+    argBuilder.add("--project_root", projectRoot.getAbsolutePath());
+
+    // Add the --include flags.
+    for (String include : commonIncludes) {
+      argBuilder.add("--include");
+      argBuilder.add(include);
     }
 
     for (String path : ignorePaths) {
@@ -178,6 +245,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Iterable<String> includes)
       throws IOException {
     try (ProjectBuildFileParser buildFileParser = factory.createParser(includes)) {
+      buildFileParser.setServerMode(false);
       return buildFileParser.getAllRulesInternal(Optional.<String>absent());
     }
   }
@@ -197,27 +265,21 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ensureNotClosed();
     initIfNeeded();
 
-    // Run the build file in a background thread.
-    final ImmutableList<String> args = buildArgs(projectRoot.getAbsolutePath(),
-        buildFile,
-        commonIncludes);
-    final PipedReader outputReader = new PipedReader();
-    BuildFileRunner runner = new BuildFileRunner(args, outputReader);
-    executor.execute(runner);
+    // When in server mode, we require a build file.  When not in server mode, we
+    // cannot accept a build file.  Pretty stupid, actually.  Consider fixing this.
+    Preconditions.checkState(buildFile.isPresent() == isServerMode);
 
-    // Stream build rules from python.
-    BuildFileToJsonParser parser = new BuildFileToJsonParser(outputReader);
-    List<Map<String, Object>> rules = Lists.newArrayList();
-    Map<String, Object> value;
-    while ((value = parser.next()) != null) {
-      rules.add(value);
+    if (buildFile.isPresent()) {
+      buckPyStdinWriter.write(buildFile.get());
+      buckPyStdinWriter.newLine();
+      buckPyStdinWriter.flush();
     }
 
-    return rules;
+    return buckPyStdoutParser.nextRules();
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     if (isClosed) {
       return;
     }
@@ -228,6 +290,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
     try {
       if (isInitialized) {
         executor.shutdown();
+
+        // Allow buck.py to terminate gracefully...
+        if (isServerMode) {
+          buckPyStdinWriter.close();
+        }
       }
     } finally {
       isClosed = true;

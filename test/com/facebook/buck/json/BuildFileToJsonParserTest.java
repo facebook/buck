@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,12 +40,34 @@ public class BuildFileToJsonParserTest {
           "\"srcs\": [\"src/com/facebook/buck/Bar.java\", \"src/com/facebook/buck/Foo.java\"]" +
     		"}";
     BuildFileToJsonParser parser = new BuildFileToJsonParser(json);
-    Map<String, Object> token = parser.next();
+    List<Map<String, Object>> tokens = parser.nextRules();
     assertEquals(
-        ImmutableMap.of("srcs",
-            ImmutableList.of(
-                "src/com/facebook/buck/Bar.java",
-                "src/com/facebook/buck/Foo.java")),
-        token);
+        ImmutableList.of(
+            ImmutableMap.of("srcs",
+                ImmutableList.of(
+                    "src/com/facebook/buck/Bar.java",
+                    "src/com/facebook/buck/Foo.java"))),
+        tokens);
+  }
+
+  @Test
+  public void testServerModeParse() throws JsonParseException, IOException {
+    String json =
+        "[{\"foo\": \"a:1\"}, {\"foo\": \"a:2\"}]\n" +
+        "[{\"bar\": \"b:1\"}]";
+    BuildFileToJsonParser parser = new BuildFileToJsonParser(json);
+
+    List<Map<String, Object>> a = parser.nextRules();
+    assertEquals(
+        ImmutableList.of(
+            ImmutableMap.of("foo", "a:1"),
+            ImmutableMap.of("foo", "a:2")),
+        a);
+
+    List<Map<String, Object>> b = parser.nextRules();
+    assertEquals(
+        ImmutableList.of(
+            ImmutableMap.of("bar", "b:1")),
+        b);
   }
 }

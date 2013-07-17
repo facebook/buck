@@ -6,6 +6,7 @@ import re
 import os
 import os.path
 import posixpath
+import sys
 
 try:
   from com.xhaus.jyson import JysonCodec as json # jython embedded in buck
@@ -605,6 +606,37 @@ def add_deps(name, deps=[], build_env=None):
     raise ValueError('Invoked \'add_deps\' on rule %s that has no \'deps\' field' % name)
   rule['deps'] = rule['deps'] + deps
 
+class BuildFileProcessor:
+  def __init__(self, project_root, includes, server):
+    self.project_root = project_root
+    self.includes = includes
+    self.server = server
+    self.len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
+
+  """Process an individual build file and output a JSON object representative
+  of what was parsed."""
+  def process(self, build_file):
+    # Reset build_env for each build file so that the variables declared in the build file
+    # or the files in includes through include_defs() don't pollute the namespace for
+    # subsequent build files.
+    build_env = {}
+    relative_path_to_build_file = relpath(build_file, self.project_root)
+    build_env['BASE'] = relative_path_to_build_file[:self.len_suffix]
+    build_env['BUILD_FILE_DIRECTORY'] = os.path.dirname(build_file)
+    build_env['PROJECT_ROOT'] = self.project_root
+    build_env['RULES'] = {}
+    build_env['BUILD_FILE_SYMBOL_TABLE'] = make_build_file_symbol_table(build_env)
+
+    # If there are any default includes, evaluate those first to populate the build_env.
+    for include in self.includes:
+      include_defs(include, build_env)
+    execfile(os.path.join(self.project_root, build_file), build_env['BUILD_FILE_SYMBOL_TABLE'])
+    values = build_env['RULES'].values()
+    if self.server:
+      print json.dumps(values)
+    else:
+      for value in values:
+        print json.dumps(value)
 
 # Inexplicably, this script appears to run faster when the arguments passed into it are absolute
 # paths. However, we want the "buck_base_path" property of each rule to be printed out to be the
@@ -624,16 +656,17 @@ def main():
   parser.add_option('--project_root', action='store', type='string', dest='project_root')
   parser.add_option('--include', action='append', dest='include')
   parser.add_option('--ignore_path', action='append', dest='ignore_paths')
+  parser.add_option('--server', action='store_true', dest='server',
+      help='Invoke as a server to parse individual BUCK files on demand.')
   (options, args) = parser.parse_args()
 
   project_root = options.project_root
-  len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
 
-  build_files = None
+  build_files = []
   if args:
     # The user has specified which build files to parse.
     build_files = args
-  else:
+  elif not options.server:
     # Find all of the build files in the project root. Symlinks will not be traversed.
     # Search must be done top-down so that directory filtering works as desired.
     ignore_paths = [posixpath.join(project_root, d) for d in options.ignore_paths or []]
@@ -647,25 +680,17 @@ def main():
         build_file = os.path.join(dirpath, BUILD_RULES_FILE_NAME)
         build_files.append(build_file)
 
-  for build_file in build_files:
-    # Reset build_env for each build file so that the variables declared in the build file
-    # or the files in includes through include_defs() don't pollute the namespace for
-    # subsequent build files.
-    build_env = {}
-    relative_path_to_build_file = relpath(build_file, project_root)
-    build_env['BASE'] = relative_path_to_build_file[:len_suffix]
-    build_env['BUILD_FILE_DIRECTORY'] = os.path.dirname(build_file)
-    build_env['PROJECT_ROOT'] = project_root
-    build_env['RULES'] = {}
-    build_env['BUILD_FILE_SYMBOL_TABLE'] = make_build_file_symbol_table(build_env)
+  buildFileProcessor = BuildFileProcessor(project_root, options.include or [], options.server)
 
-    # If there are any default includes, evaluate those first to populate the build_env.
-    includes = options.include or []
-    for include in includes:
-      include_defs(include, build_env)
-    execfile(os.path.join(project_root, build_file), build_env['BUILD_FILE_SYMBOL_TABLE'])
-    for _, value in build_env['RULES'].items():
-      print json.dumps(value)
+  for build_file in build_files:
+    buildFileProcessor.process(build_file)
+
+  if options.server:
+    # Apparently for ... in sys.stdin doesn't work with Jython when a custom stdin is 
+    # provided by the caller in Java-land.  Claims that sys.stdin is a filereader which doesn't
+    # offer an iterator.
+    for build_file in iter(sys.stdin.readline, ''):
+      buildFileProcessor.process(build_file.rstrip())
 
 
 if __name__ == '__main__':
