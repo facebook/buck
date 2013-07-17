@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.event;
 
+import java.util.concurrent.TimeUnit;
+
 public class TestEventConfigerator {
   private TestEventConfigerator() {}
 
@@ -33,6 +35,16 @@ public class TestEventConfigerator {
       long nanotime,
       long threadid) {
     event.configure(timestamp, nanotime, threadid);
+    return event;
+  }
+
+  public static <T extends BuckEvent> T configureTestEventAtTime(T event,
+      long time,
+      TimeUnit timeUnit,
+      long threadid) {
+    event.configure(timeUnit.toMillis(time),
+        timeUnit.toNanos(time),
+        threadid);
     return event;
   }
 }

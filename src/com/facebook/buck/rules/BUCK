@@ -60,6 +60,7 @@ java_library(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:network',
+    '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:util',
     '//third-party/java/astyanax:astyanax-cassandra',
     '//third-party/java/astyanax:astyanax-core',

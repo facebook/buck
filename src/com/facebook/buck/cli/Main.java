@@ -22,6 +22,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -204,16 +205,19 @@ public final class Main {
 
     ExecutorService busExecutor = MoreBuckExecutors.newCachedThreadPool(
         new ThreadPoolExecutor.DiscardPolicy());
+
+    Clock clock = new DefaultClock();
     BuckEventBus buildEvents = new BuckEventBus(
         new AsyncEventBus("buck-build-events", busExecutor),
-        new DefaultClock(),
+        clock,
         BuckEventBus.getDefaultThreadIdSupplier());
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
       ImmutableList<BuckEventListener> eventListeners =
-          addEventListeners(buildEvents, projectFilesystem);
+          addEventListeners(buildEvents,
+              projectFilesystem);
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
