@@ -1,0 +1,11 @@
+
+java_library(
+  name = 'environment',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
