@@ -34,6 +34,7 @@ public final class BuildRuleType {
   public static BuildRuleType JAVA_BINARY = new BuildRuleType("java_binary");
   public static BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
   public static BuildRuleType JAVA_TEST = new BuildRuleType("java_test");
+  public static BuildRuleType KEYSTORE = new BuildRuleType("keystore");
   public static BuildRuleType NDK_LIBRARY = new BuildRuleType("ndk_library");
   public static BuildRuleType PREBUILT_JAR = new BuildRuleType("prebuilt_jar");
   public static BuildRuleType PREBUILT_NATIVE_LIBRARY = new BuildRuleType("prebuilt_native_library");

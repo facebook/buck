@@ -122,6 +122,16 @@ public final class BuildRuleFactoryParams {
   }
 
   /**
+   * Convenience method that combines the result of
+   * {@link #getRequiredStringAttribute(String)} with
+   * {@link #resolveFilePathRelativeToBuildFileDirectory(String)}.
+   */
+  public String getRequiredFileAsPathRelativeToProjectRoot(String attributeName) {
+    String localPath = getRequiredStringAttribute(attributeName);
+    return resolveFilePathRelativeToBuildFileDirectory(localPath);
+  }
+
+  /**
    * For the specified string, return a corresponding file path that is relative to the project
    * root. It is expected that {@code path} is a path relative to the directory containing the build
    * file in which it was declared. This method will also assert that the file exists.
@@ -261,6 +271,18 @@ public final class BuildRuleFactoryParams {
       return Optional.of(sourcePath);
     } else {
       return Optional.absent();
+    }
+  }
+
+  public BuildTarget getRequiredBuildTarget(String attributeName) {
+    String buildTarget = getRequiredStringAttribute(attributeName);
+    try {
+      return resolveBuildTarget(buildTarget);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException("Couldn't resolve build target for %s=%s in %s.",
+          attributeName,
+          buildTarget,
+          this.target.getFullyQualifiedName());
     }
   }
 

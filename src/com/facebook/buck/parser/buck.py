@@ -445,6 +445,7 @@ def python_binary(
     'visibility' : visibility,
   }, build_env)
 
+
 @provide_for_build
 def android_manifest(
     name,
@@ -459,6 +460,25 @@ def android_manifest(
     'deps' : deps,
     'visibility' : visibility,
   }, build_env)
+
+
+@provide_for_build
+def keystore(
+    name,
+    store,
+    properties,
+    deps=[],
+    visibility=[],
+    build_env=None):
+  add_rule({
+    'type' : 'keystore',
+    'name' : name,
+    'store' : store,
+    'properties' : properties,
+    'deps' : deps,
+    'visibility' : visibility,
+  }, build_env)
+
 
 @provide_for_build
 def gen_aidl(name, aidl, import_path, deps=[], visibility=[], build_env=None):
