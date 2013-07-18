@@ -19,9 +19,11 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
@@ -207,7 +209,7 @@ public final class Main {
         new ThreadPoolExecutor.DiscardPolicy());
 
     Clock clock = new DefaultClock();
-    BuckEventBus buildEvents = new BuckEventBus(
+    BuckEventBus buildEventBus = new BuckEventBus(
         new AsyncEventBus("buck-build-events", busExecutor),
         clock,
         BuckEventBus.getDefaultThreadIdSupplier());
@@ -216,7 +218,7 @@ public final class Main {
     Optional<Command> command = Command.getCommandForName(args[0]);
     if (command.isPresent()) {
       ImmutableList<BuckEventListener> eventListeners =
-          addEventListeners(buildEvents,
+          addEventListeners(buildEventBus,
               projectFilesystem);
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
@@ -224,17 +226,20 @@ public final class Main {
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
-      buildEvents.post(CommandEvent.started(commandName, isDaemon()));
+      buildEventBus.post(CommandEvent.started(commandName, isDaemon()));
+
+      ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
+          .decorate(config.createArtifactCache(console));
 
       int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
-          config.createArtifactCache(console),
-          buildEvents,
+          artifactCache,
+          buildEventBus,
           parser));
 
-      buildEvents.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
+      buildEventBus.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
 
       busExecutor.shutdown();
       try {

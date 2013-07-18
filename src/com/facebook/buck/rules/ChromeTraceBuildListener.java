@@ -29,6 +29,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -128,7 +129,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         finished.getBuildRule().getFullyQualifiedName(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.<String, String>of(
+            "cache_result", finished.getCacheResult().toString().toLowerCase(),
+            "success_type",
+                finished.getSuccessType().transform(Functions.toStringFunction()).or("failed")
+        ),
         finished);
   }
 
@@ -226,6 +231,25 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of(
             "package_name", finished.getPackageName(),
+            "success", Boolean.toString(finished.isSuccess())),
+        finished);
+  }
+
+  @Subscribe
+  public void artifactFetchStarted(ArtifactCacheEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "artifact-" + started.getOperation().toString().toLowerCase(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void artifactFetchFinished(ArtifactCacheEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "artifact-" + finished.getOperation().toString().toLowerCase(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(
             "success", Boolean.toString(finished.isSuccess())),
         finished);
   }
