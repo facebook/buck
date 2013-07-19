@@ -19,8 +19,6 @@
 	<classpathentry kind="lib" path="lib/junit-4.11.jar" sourcepath="lib/junit-4.11-sources.jar"/>
 	<classpathentry kind="lib" path="lib/objenesis-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/sdklib.jar"/>
-	<classpathentry kind="lib" path="lib/jyson-1.0.2.jar"/>
-	<classpathentry kind="lib" path="lib/jython-standalone-2.5.3.jar"/>
 	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-cassandra-1.56.38.jar"/>
 	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-core-1.56.38.jar"/>
 	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-thrift-1.56.38.jar"/>

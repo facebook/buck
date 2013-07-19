@@ -135,25 +135,6 @@ prebuilt_jar(
   ],
 )
 
-JYTHON_VISIBILITY = [
-  '//src/com/facebook/buck/shell:shell',
-  '//test/com/facebook/buck/cli:testutil',
-  '//test/com/facebook/buck/parser:parser',
-  '//test/com/facebook/buck/testutil/integration:integration',
-]
-
-prebuilt_jar(
-  name = 'jython',
-  binary_jar = 'jython-standalone-2.5.3.jar',
-  visibility = JYTHON_VISIBILITY,
-)
-
-prebuilt_jar(
-  name = 'jyson',
-  binary_jar = 'jyson-1.0.2.jar',
-    visibility = JYTHON_VISIBILITY,
-)
-
 prebuilt_jar(
   name = 'objenesis',
   binary_jar = 'objenesis-1.2.jar',

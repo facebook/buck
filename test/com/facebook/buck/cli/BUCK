@@ -27,8 +27,6 @@ java_library(
     ':FakeBuckConfig',
     '//lib:guava',
     '//lib:ddmlib',
-    '//lib:jyson',
-    '//lib:jython',
   ],
   visibility = [
     'PUBLIC',

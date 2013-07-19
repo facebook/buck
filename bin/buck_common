@@ -133,6 +133,15 @@ fi
 popd > /dev/null
 popd > /dev/null
 
+# Determine which python interpreter to use for buck.  Currently python
+# is elected as the very-nearly-hardcoded default for temporary
+# performance relief.  To override for debug/testing purposes, use:
+#   DEBUG_BUCK_PYTHON=path/to/buck/bin/jython buck build //apps/myapp:app
+# TODO: This should be fixed with proper global configuration and
+# autodetection.
+DEFAULT_PYTHON_INTERP=python
+PYTHON_INTERP=${DEBUG_BUCK_PYTHON-$DEFAULT_PYTHON_INTERP}
+
 # Note that if $RELATIVE_PATH_TO_BUCK_PY changes, then the default value of
 # com.facebook.buck.json.BuildFileToJsonParser#PATH_TO_BUCK_PY 
 # needs to be updated.
@@ -153,8 +162,6 @@ ${BUCK_DIRECTORY}/lib/jackson-databind-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jsr305.jar:\
 ${BUCK_DIRECTORY}/lib/sdklib.jar:\
 ${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
-${BUCK_DIRECTORY}/lib/jython-standalone-2.5.3.jar:\
-${BUCK_DIRECTORY}/lib/jyson-1.0.2.jar:\
 ${BUCK_DIRECTORY}/lib/sdklib.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-cassandra-1.56.38.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-core-1.56.38.jar:\
@@ -179,6 +186,7 @@ BUCK_JAVA_ARGS="-XX:MaxPermSize=256m \
 -Dbuck.abi_processor_classes=${BUCK_DIRECTORY}/build/abi_processor/classes \
 -Dbuck.path_to_emma_jar=${BUCK_DIRECTORY}/third-party/java/emma-2.0.5312/out/emma-2.0.5312.jar \
 -Dbuck.test_util_no_tests_dir=true \
+-Dbuck.path_to_python_interp=${PYTHON_INTERP} \
 -Dbuck.path_to_buck_py=${PATH_TO_BUCK_PY} \
 -Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \

@@ -8,11 +8,6 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//lib:junit',
-
-    # Although this library does not use Jython directly, it must be on the classpath so that
-    # new ScriptEngineManager().getEngineByName("python") will not return null.
-    '//lib:jyson',
-    '//lib:jython',
   ],
   visibility = [
     'PUBLIC',

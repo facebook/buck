@@ -21,27 +21,20 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closer;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.PipedReader;
-import java.io.PipedWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 /**
  * Delegates to buck.py for parsing of buck build files.  Constructed on demand for the
@@ -49,20 +42,31 @@ import javax.script.ScriptException;
  */
 public class ProjectBuildFileParser implements AutoCloseable {
 
+  /**
+   * Path to the Python interpreter to use.  Hardcoding the default of python for
+   * now which causes all integration tests of buck itself to fallback (which do not
+   * invoke via {@code bin/buck_common} and therefore do not have this property set).
+   * This should be addressed by offering a proper strategy for selecting the correct
+   * interpreter for the system involving auto-detection and/or global buck configuration.
+   * Additionally, there must be a strategy by which this value can be adjusted for integration
+   * tests so that they can verify both the python and jython environments remain
+   * functional.
+   * <p>
+   * Note there is a serious gotcha by using bin/jython here for buck integration tests today.
+   * This is because Jython's startup time is incredibly slow (2-3s), multiplied n times
+   * for each test.  The fix may well involve reviving Jython integrated directly into
+   * buck but this has to be done very cafefully as to not add performance regressions for
+   * users who do not take the jython code path.
+   * <p>
+   */
+  private static final String PATH_TO_PYTHON_INTERP =
+      System.getProperty("buck.path_to_python_interp", "python");
+
   /** Path to the buck.py script that is used to evaluate a build file. */
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
 
-  private static final String python = Joiner.on(System.getProperty("line.separator")).join(
-      "import sys",
-      "import os.path",
-      "sys.path.append(os.path.dirname(\"%s\"))",
-      "import buck",
-      "sys.argv=[\"%s\"]",
-      "buck.main()");
-
-  private ExecutorService executor;
-  private ScriptEngine engine;
+  private Process buckPyProcess;
 
   private BuildFileToJsonParser buckPyStdoutParser;
   private BufferedWriter buckPyStdinWriter;
@@ -125,94 +129,35 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   /**
-   * Initialize the parser.  This starts buck.py, waiting on stdin for directives.
-   * <p>
-   * It is safe to invoke this method multiple times (subsequent invocations will be
-   * ignored).
+   * Initialize the parser, starting buck.py.
    */
   private void init() throws IOException {
-    executor = Executors.newFixedThreadPool(2);
-    engine = new ScriptEngineManager().getEngineByName("python");
+    ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
+    buckPyProcess = processBuilder.start();
 
-    // Run buck.py in a dedicated thread.
-    final ImmutableList<String> args = buildArgs();
+    OutputStream stdin = buckPyProcess.getOutputStream();
+    InputStream stderr = buckPyProcess.getErrorStream();
 
-    final PipedWriter inputWriter = new PipedWriter();
-    final PipedReader outputReader = new PipedReader();
-    final PipedReader stderrReader = new PipedReader();
-    BuildFileRunner runner = new BuildFileRunner(args, inputWriter, outputReader,
-        stderrReader);
-    executor.execute(runner);
-    executor.execute(new InputStreamConsumer(stderrReader,
+    Thread stderrConsumer = new Thread(new InputStreamConsumer(stderr,
         System.err,
         true /* shouldRedirect */,
         new Ansi()));
+    stderrConsumer.start();
 
-    buckPyStdinWriter = new BufferedWriter(inputWriter);
-    buckPyStdoutParser = new BuildFileToJsonParser(outputReader);
-  }
-
-  private class BuildFileRunner implements Runnable {
-
-    private final ImmutableList<String> args;
-    private PipedReader inputReader;
-    private PipedWriter outputWriter;
-    private PipedWriter stderrWriter;
-
-    public BuildFileRunner(
-        ImmutableList<String> args,
-        PipedWriter inputWriter,
-        PipedReader outputReader,
-        PipedReader stderrReader)
-        throws IOException {
-      this.args = args;
-      this.inputReader = new PipedReader();
-      inputReader.connect(inputWriter);
-      this.outputWriter = new PipedWriter();
-      outputWriter.connect(outputReader);
-      this.stderrWriter = new PipedWriter();
-      stderrWriter.connect(stderrReader);
-    }
-
-    @Override
-    public void run() {
-      Closer closer = Closer.create();
-      try {
-        closer.register(inputReader);
-        closer.register(outputWriter);
-        closer.register(stderrWriter);
-
-        // TODO(user): call buck.py directly rather than emulating the old command line interface?
-        // TODO(user): escape args? (they are currently file names, which shouldn't contain quotes)
-        engine.getContext().setReader(inputReader);
-        engine.getContext().setWriter(outputWriter);
-        engine.getContext().setErrorWriter(stderrWriter);
-        engine.eval(String.format(python, PATH_TO_BUCK_PY, Joiner.on("\",\"").join(args)));
-      } catch (ScriptException e) {
-        // Print human readable python trace if available, default to normal exception if not.
-        // Path to build file is included in python stack trace.
-        final Throwable cause = e.getCause();
-        if (cause != null) {
-          throw new HumanReadableException("Unable to parse build file: %s%s,",
-              System.getProperty("line.separator"),
-              cause);
-        } else {
-          throw Throwables.propagate(e);
-        }
-      } finally {
-        try {
-          closer.close();
-        } catch (IOException e) {
-          throw Throwables.propagate(e);
-        }
-      }
-    }
+    buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
   }
 
   private ImmutableList<String> buildArgs() {
     // Invoking buck.py and read JSON-formatted build rules from its stdout.
     ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
-    argBuilder.add("buck.py");
+
+    argBuilder.add(PATH_TO_PYTHON_INTERP);
+
+    // Ask python to unbuffer stdout so that we can coordinate based on the output as it is
+    // produced.
+    argBuilder.add("-u");
+
+    argBuilder.add(PATH_TO_BUCK_PY);
 
     if (isServerMode) {
       // Provide BUCK files to parse via buck.py's stdin.
@@ -275,6 +220,22 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPyStdinWriter.flush();
     }
 
+    // Construct the parser lazily because Jackson expects that when the parser is made it is
+    // safe to immediately begin reading from the underlying stream to detect the encoding.
+    // For our server use case, the server will produce no output until directed to by a
+    // request for a particular build file.
+    //
+    // TODO: Jackson has a severe bug which assumes that it is safe to require at least 4 bytes
+    // of input due to JSON's BOM concept (see detectEncoding).  buck.py, and many other
+    // facilities, do not write a BOM header and therefore may end up producing insufficient
+    // bytes to unwedge the parser's construction.  For example, if the first BUCK file
+    // submitted outputted no rules (that is, "[]"), then this line would hang waiting for
+    // more input!
+    if (buckPyStdoutParser == null) {
+      buckPyStdoutParser = new BuildFileToJsonParser(buckPyProcess.getInputStream());
+    }
+
+    // TODO(devjasta): verify that parse/script errors are handled properly here.
     return buckPyStdoutParser.nextRules();
   }
 
@@ -284,16 +245,21 @@ public class ProjectBuildFileParser implements AutoCloseable {
       return;
     }
 
-    // Explicitly shut down the thread pool but allow the engine to finalize normally.  This
-    // is unlikely to actually free resources at this time but in a subsequent diff we can enforce
-    // that by design by forking a separate jython process for the entire parse phase.
     try {
       if (isInitialized) {
-        executor.shutdown();
-
-        // Allow buck.py to terminate gracefully...
         if (isServerMode) {
+          // Allow buck.py to terminate gracefully...
           buckPyStdinWriter.close();
+        }
+
+        try {
+          int exitCode = buckPyProcess.waitFor();
+          if (exitCode != 0) {
+            throw new HumanReadableException("Parser did not exit cleanly (exit code: %d)",
+                exitCode);
+          }
+        } catch (InterruptedException e) {
+          throw Throwables.propagate(e);
         }
       }
     } finally {
