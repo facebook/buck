@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
@@ -73,5 +75,18 @@ public class RuleKeyTest {
     assertThat("Rule keys should be distinct because the deps of the rules are different.",
         r1,
         not(equalTo(r2)));
+  }
+
+  @Test
+  public void testNonIdempotentRuleKeyCanBeRehydrated() {
+    RuleKey original = RuleKey.builder().nonIdempotent().set("key", "value").build();
+    assertFalse(original.isIdempotent());
+
+    String asWrittenToDisk = original.toString();
+
+    RuleKey rehydrated = RuleKey.TO_RULE_KEY.apply(asWrittenToDisk);
+
+    assertNotNull(rehydrated);
+    assertFalse(rehydrated.isIdempotent());
   }
 }

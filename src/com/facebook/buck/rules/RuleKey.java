@@ -56,6 +56,8 @@ import javax.annotation.Nullable;
  */
 public class RuleKey implements Comparable<RuleKey> {
 
+  private static final String nonIdempotentRuleString = builder().nonIdempotent().build().toString();
+
   /**
    * Takes a string and uses it to construct a {@link RuleKey}.
    * <p>
@@ -65,6 +67,9 @@ public class RuleKey implements Comparable<RuleKey> {
       new Function<String, RuleKey>() {
         @Override
         public RuleKey apply(String hash) {
+          if (nonIdempotentRuleString.equals(hash)) {
+            return builder().nonIdempotent().build();
+          }
           return new RuleKey(hash);
         }
   };
