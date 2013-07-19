@@ -43,6 +43,21 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
       return 1;
     }
 
+    // Ideally, we would like the implementation of this method to be as simple as:
+    //
+    // getProjectFilesystem().rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY);
+    //
+    // However, we want to avoid blowing away directories that IntelliJ indexes, because that tends
+    // to make it angry. Currently, those directories are:
+    //
+    // Project.ANDROID_GEN_DIR
+    // BuckConstant.ANNOTATION_DIR
+    //
+    // However, Buck itself also uses BuckConstant.ANNOTATION_DIR. We need to fix things so that
+    // IntelliJ does its default thing to generate code from annotations, and manages/indexes those
+    // directories itself so we can blow away BuckConstant.ANNOTATION_DIR as part of `buck clean`.
+    // This will also reduce how long `buck project` takes.
+    //
     ProcessExecutor processExecutor = new ProcessExecutor(console);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
@@ -53,7 +68,8 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
       projectFilesystem.rmdir(Project.ANDROID_GEN_DIR, processExecutor);
       projectFilesystem.rmdir(BuckConstant.ANNOTATION_DIR, processExecutor);
     } else {
-      projectFilesystem.rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY, processExecutor);
+      projectFilesystem.rmdir(BuckConstant.BIN_DIR, processExecutor);
+      projectFilesystem.rmdir(BuckConstant.GEN_DIR, processExecutor);
     }
 
     return 0;

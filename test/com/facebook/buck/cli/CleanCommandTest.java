@@ -51,8 +51,10 @@ public class CleanCommandTest extends EasyMockSupport {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
     ProjectFilesystem projectFilesystem = cleanCommand.getProjectFilesystem();
-    Capture<String> buckOutDir = new Capture<>();
-    projectFilesystem.rmdir(capture(buckOutDir), anyObject(ProcessExecutor.class));
+    Capture<String> binDir = new Capture<>();
+    projectFilesystem.rmdir(capture(binDir), anyObject(ProcessExecutor.class));
+    Capture<String> genDir = new Capture<>();
+    projectFilesystem.rmdir(capture(genDir), anyObject(ProcessExecutor.class));
 
     replayAll();
 
@@ -60,7 +62,8 @@ public class CleanCommandTest extends EasyMockSupport {
     CleanCommandOptions options = createOptionsFromArgs();
     int exitCode = cleanCommand.runCommandWithOptions(options);
     assertEquals(0, exitCode);
-    assertEquals(BuckConstant.BUCK_OUTPUT_DIRECTORY, buckOutDir.getValue());
+    assertEquals(BuckConstant.BIN_DIR, binDir.getValue());
+    assertEquals(BuckConstant.GEN_DIR, genDir.getValue());
 
     verifyAll();
   }
