@@ -26,4 +26,14 @@ public interface ExecutionEnvironment {
    * @return The current username or 'unknown'
    */
   public String getUsername();
+
+  /**
+   * @return The number of cores on this machine.
+   */
+  public int getAvailableCores();
+
+  /**
+   * @return The amount of system memory on this machine.
+   */
+  public long getTotalMemoryInMb();
 }

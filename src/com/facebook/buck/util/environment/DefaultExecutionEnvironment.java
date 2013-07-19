@@ -16,11 +16,15 @@
 package com.facebook.buck.util.environment;
 
 import com.google.common.base.Optional;
+import com.sun.management.OperatingSystemMXBean;
 
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
+  private static final long  MEGABYTE = 1024L * 1024L;
+
   @Override
   public String getHostname() {
     String localHostname;
@@ -35,5 +39,17 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   @Override
   public String getUsername() {
     return Optional.fromNullable(System.getenv("USER")).or("unknown");
+  }
+
+  @Override
+  public int getAvailableCores() {
+    return Runtime.getRuntime().availableProcessors();
+  }
+
+  @Override
+  public long getTotalMemoryInMb() {
+    OperatingSystemMXBean osBean =
+        (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    return osBean.getTotalPhysicalMemorySize() / MEGABYTE;
   }
 }

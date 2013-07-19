@@ -85,9 +85,11 @@ fi
 # Get current buck version.
 BUCK_REPOSITORY_DIRTY=0
 BUCK_CURRENT_VERSION="N/A"
+BUCK_VERSION_TIMESTAMP=-1
 if [ -d ".git" ]; then
   # Make sure buck gets passed the right version.
   BUCK_CURRENT_VERSION=`git rev-parse HEAD`
+  BUCK_VERSION_TIMESTAMP=`git log --pretty=format:%ct -1 HEAD`
 
   # if the output of "git status -s" is non-empty.
   if [ -n "`git status -s`" ]; then
@@ -180,6 +182,7 @@ BUCK_JAVA_ARGS="-XX:MaxPermSize=256m \
 -Dbuck.path_to_buck_py=${PATH_TO_BUCK_PY} \
 -Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
+-Dbuck.git_commit_timestamp=${BUCK_VERSION_TIMESTAMP} \
 -Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
 -Dbuck.version_uid=${BUCK_VERSION_UID} \
 -Dbuck.buckd_dir=${BUCKD_DIR} \
