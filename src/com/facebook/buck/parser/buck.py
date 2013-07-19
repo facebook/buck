@@ -336,7 +336,7 @@ def android_binary(
       name,
       manifest,
       target,
-      keystore_properties,
+      keystore,
       package_type='debug',
       no_dx=[],
       use_split_dex=False,
@@ -351,12 +351,14 @@ def android_binary(
       deps=[],
       visibility=[],
       build_env=None):
+  # Always include the keystore as a dep, as it should be built before this rule.
+  deps = deps + [keystore]
   add_rule({
     'type' : 'android_binary',
     'name' : name,
     'manifest' : manifest,
     'target' : target,
-    'keystore_properties' : keystore_properties,
+    'keystore' : keystore,
     'package_type' : package_type,
     'no_dx' : no_dx,
     'use_split_dex': use_split_dex,

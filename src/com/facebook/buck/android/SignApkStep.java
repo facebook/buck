@@ -18,30 +18,40 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.util.KeystoreProperties;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
 
 class SignApkStep extends ShellStep {
 
+  private final String pathToKeystore;
+  private final String pathToPropertiesFile;
   private final String outputPath;
   private final String unsignedApk;
-  private final String keystore;
-  private final String storepass;
-  private final String keypass;
-  private final String alias;
 
-  public SignApkStep(String outputPath, String unsignedApk, String keystore,
-                     String storepass, String keypass, String alias) {
-    this.outputPath = outputPath;
-    this.unsignedApk = unsignedApk;
-    this.keystore = keystore;
-    this.storepass = storepass;
-    this.keypass = keypass;
-    this.alias = alias;
+  public SignApkStep(String pathToKeystore,
+      String pathToPropertiesFile,
+      String unsignedApk,
+      String outputPath) {
+    this.pathToKeystore = Preconditions.checkNotNull(pathToKeystore);
+    this.pathToPropertiesFile = Preconditions.checkNotNull(pathToPropertiesFile);
+    this.outputPath = Preconditions.checkNotNull(outputPath);
+    this.unsignedApk = Preconditions.checkNotNull(unsignedApk);
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    // Read the values out of the properties file to pass to jarsigner.
+    KeystoreProperties properties;
+    try {
+      properties = KeystoreProperties.createFromPropertiesFile(
+          pathToKeystore, pathToPropertiesFile, context.getProjectFilesystem());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("jarsigner");
 
@@ -49,12 +59,12 @@ class SignApkStep extends ShellStep {
     args.add("-sigalg").add("MD5withRSA");
     args.add("-digestalg").add("SHA1");
 
-    args.add("-keystore").add(keystore);
-    args.add("-storepass").add(storepass);
-    args.add("-keypass").add(keypass);
+    args.add("-keystore").add(pathToKeystore);
+    args.add("-storepass").add(properties.getStorepass());
+    args.add("-keypass").add(properties.getKeypass());
     args.add("-signedjar").add(outputPath);
     args.add(unsignedApk);
-    args.add(alias);
+    args.add(properties.getAlias());
 
     return args.build();
   }
@@ -62,36 +72,6 @@ class SignApkStep extends ShellStep {
   @Override
   public String getShortName(ExecutionContext context) {
     return "jarsigner";
-  }
-
-  @VisibleForTesting
-  String getOutputPath() {
-    return outputPath;
-  }
-
-  @VisibleForTesting
-  String getUnsignedApk() {
-    return unsignedApk;
-  }
-
-  @VisibleForTesting
-  String getKeystore() {
-    return keystore;
-  }
-
-  @VisibleForTesting
-  String getStorepass() {
-    return storepass;
-  }
-
-  @VisibleForTesting
-  String getKeypass() {
-    return keypass;
-  }
-
-  @VisibleForTesting
-  String getAlias() {
-    return alias;
   }
 
 }

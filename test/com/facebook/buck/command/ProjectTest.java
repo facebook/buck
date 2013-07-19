@@ -29,6 +29,7 @@ import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.java.KeystoreRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -167,6 +168,14 @@ public class ProjectTest {
             "//java/src/com/facebook/exportlib:exportlib")))
         .setSrcRoots(ImmutableList.of("src")));
 
+    // keystore //keystore:debug
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
+    ruleResolver.buildAndAddToIndex(
+        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(keystoreTarget)
+        .setStore("keystore/debug.keystore")
+        .setProperties("keystore/debug.keystore.properties"));
+
     // android_binary //foo:app
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
@@ -174,7 +183,7 @@ public class ProjectTest {
         .addDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
         .setManifest("foo/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystorePropertiesPath("foo/../keystore.properties")
+        .setKeystore(keystoreTarget)
         .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava")));
 
     // project_config //foo:project_config
@@ -190,7 +199,7 @@ public class ProjectTest {
         .addDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
             .setManifest("foo/AndroidManifest.xml")
             .setTarget("Google Inc.:Google APIs:16")
-            .setKeystorePropertiesPath("bar/../keystore.properties"));
+            .setKeystore(keystoreTarget));
 
     // project_config //bar:project_config
     ProjectConfigRule projectConfigRule = ruleResolver.buildAndAddToIndex(
@@ -320,7 +329,7 @@ public class ProjectTest {
     assertEquals(Boolean.FALSE, androidBinaryModuleNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleNoDx.proguardConfigPath);
     assertEquals(null, androidBinaryModuleNoDx.resFolder);
-    assertEquals("../debug.keystore", androidBinaryModuleNoDx.keystorePath);
+    assertEquals("../keystore/debug.keystore", androidBinaryModuleNoDx.keystorePath);
 
     // Check the dependencies.
     DependentModule grandchildAsProvidedDep = DependentModule.newModule(
@@ -353,7 +362,7 @@ public class ProjectTest {
     assertEquals(Boolean.FALSE, androidBinaryModuleEmptyNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleEmptyNoDx.proguardConfigPath);
     assertEquals(null, androidBinaryModuleEmptyNoDx.resFolder);
-    assertEquals("../debug.keystore", androidBinaryModuleEmptyNoDx.keystorePath);
+    assertEquals("../keystore/debug.keystore", androidBinaryModuleEmptyNoDx.keystorePath);
 
     // Check the dependencies.
     DependentModule guavaAsCompiledDep = DependentModule.newLibrary(
@@ -698,15 +707,11 @@ public class ProjectTest {
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
 
     Properties keystoreProperties = new Properties();
-    keystoreProperties.put("key.store", "debug.keystore");
     keystoreProperties.put("key.alias", "androiddebugkey");
     keystoreProperties.put("key.store.password", "android");
     keystoreProperties.put("key.alias.password", "android");
     EasyMock.expect(projectFilesystem.readPropertiesFile(
-        "foo/../keystore.properties"))
-        .andReturn(keystoreProperties).anyTimes();
-    EasyMock.expect(projectFilesystem.readPropertiesFile(
-        "bar/../keystore.properties"))
+        "keystore/debug.keystore.properties"))
         .andReturn(keystoreProperties).anyTimes();
 
     ImmutableMap<String, String> basePathToAliasMap = ImmutableMap.of();

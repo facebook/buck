@@ -21,6 +21,7 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.KeystoreRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
@@ -122,7 +123,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
   private final String manifest;
   private final String target;
-  private final String keystorePropertiesPath;
+  private final KeystoreRule keystore;
   private final PackageType packageType;
   private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
@@ -146,7 +147,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       BuildRuleParams buildRuleParams,
       String manifest,
       String target,
-      String keystorePropertiesPath,
+      KeystoreRule keystore,
       PackageType packageType,
       Set<BuildRule> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
@@ -159,7 +160,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
-    this.keystorePropertiesPath = Preconditions.checkNotNull(keystorePropertiesPath);
+    this.keystore = Preconditions.checkNotNull(keystore);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
@@ -201,7 +202,6 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return super.appendToRuleKey(builder)
         .set("manifest", manifest)
         .set("target", target)
-        .set("keystorePropertiesPath", keystorePropertiesPath)
         .set("packageType", packageType.toString())
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
@@ -299,7 +299,6 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   protected List<String> getInputsToCompareToOutput() {
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     inputs.add(manifest);
-    inputs.add(keystorePropertiesPath);
     if (proguardConfig.isPresent()) {
       SourcePath sourcePath = proguardConfig.get();
       // Alternatively, if it is a BuildTargetSourcePath, then it should not be included.
@@ -495,9 +494,9 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Sign the APK.
     String signedApkPath = getSignedApkPath();
-    ReadKeystorePropertiesAndSignApkStep signApk = new ReadKeystorePropertiesAndSignApkStep(
-        keystorePropertiesPath, unsignedApkPath, signedApkPath);
-    commands.add(signApk);
+    SignApkStep signApkStep = new SignApkStep(
+        keystore.getPathToStore(), keystore.getPathToPropertiesFile(), unsignedApkPath, signedApkPath);
+    commands.add(signApkStep);
 
     String apkToAlign;
 
@@ -632,8 +631,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return getBinPath("__native_libs_%s__");
   }
 
-  public String getPathToKeystoreProperties() {
-    return keystorePropertiesPath;
+  public KeystoreRule getKeystore() {
+    return keystore;
   }
 
   public String getResourceApkPath() {
@@ -881,10 +880,6 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return target;
   }
 
-  String getKeystorePropertiesPath() {
-    return keystorePropertiesPath;
-  }
-
   boolean shouldSplitDex() {
     return dexSplitMode.isShouldSplitDex();
   }
@@ -912,7 +907,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     private String manifest;
     private String target;
-    private String keystorePropertiesPath;
+    private BuildTarget keystoreTarget;
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
     private Set<BuildTarget> buildRulesToExcludeFromDex = Sets.newHashSet();
     private DexSplitMode dexSplitMode = new DexSplitMode(
@@ -933,14 +928,23 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     @Override
     public AndroidBinaryRule build(BuildRuleResolver ruleResolver) {
-      boolean allowNonExistentRule =
-        false;
+      // Make sure the "keystore" argument refers to a KeystoreRule.
+      BuildRule keystoreRule = ruleResolver.get(keystoreTarget);
+      if (!(keystoreRule instanceof KeystoreRule)) {
+        throw new HumanReadableException(
+            "In %s, keystore='%s' must be a keystore() but was %s().",
+            getBuildTarget(),
+            keystoreRule.getFullyQualifiedName(),
+            keystoreRule.getType().getName());
+      }
 
+      boolean allowNonExistentRule =
+          false;
       return new AndroidBinaryRule(
           createBuildRuleParams(ruleResolver),
           manifest,
           target,
-          keystorePropertiesPath,
+          (KeystoreRule)keystoreRule,
           packageType,
           getBuildTargetsAsBuildRules(ruleResolver,
               buildRulesToExcludeFromDex,
@@ -982,8 +986,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       return this;
     }
 
-    public Builder setKeystorePropertiesPath(String keystorePropertiesPath) {
-      this.keystorePropertiesPath = keystorePropertiesPath;
+    public Builder setKeystore(BuildTarget keystoreTarget) {
+      this.keystoreTarget = keystoreTarget;
       return this;
     }
 

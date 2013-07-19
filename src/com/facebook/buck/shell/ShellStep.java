@@ -114,13 +114,6 @@ public abstract class ShellStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    try {
-      setup(context);
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    }
-
     // Kick off a Process in which this ShellCommand will be run.
     ProcessBuilder processBuilder = new ProcessBuilder(getShellCommand(context));
 
@@ -255,16 +248,5 @@ public abstract class ShellStep implements Step {
   @VisibleForTesting
   final void setStdOut(String stdOut) {
     this.stdOut = stdOut;
-  }
-
-  /**
-   * This method will be invoked exactly once at the start of {@link #execute(ExecutionContext)}.
-   * Most shell commands will not need to override this method, as all the information that is
-   * needed to return a value for {@link #getShellCommand(ExecutionContext)} should be passed into
-   * the constructor. In rare cases, some information to produce the shell command arguments will
-   * not be available until runtime. In such rare cases, such logic should be added here.
-   */
-  protected void setup(@SuppressWarnings("unused") ExecutionContext context) throws IOException {
-
   }
 }

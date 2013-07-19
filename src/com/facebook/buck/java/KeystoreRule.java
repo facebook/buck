@@ -25,10 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.KeystoreProperties;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -39,7 +36,6 @@ public class KeystoreRule extends AbstractCachingBuildRule {
 
   private final String pathToStore;
   private final String pathToProperties;
-  private KeystoreProperties keystoreProperties;
 
   protected KeystoreRule(BuildRuleParams buildRuleParams,
       String store,
@@ -74,41 +70,10 @@ public class KeystoreRule extends AbstractCachingBuildRule {
     return pathToProperties;
   }
 
-  /**
-   * Returns the {@link KeystoreProperties} represented by this rule.
-   * <p>
-   * Can be invoked only after this rule has been built.
-   */
-  public KeystoreProperties getKeystoreProperties() {
-    Preconditions.checkState(isRuleBuilt());
-    return keystoreProperties;
-  }
-
   @Override
   protected List<Step> buildInternal(BuildContext context) throws IOException {
-    Step readPropertiesStep = new AbstractExecutionStep("read " + pathToProperties) {
-
-      @Override
-      public int execute(ExecutionContext executionContext) {
-          // TODO(mbolin): Enable this in a follow-up diff where KeystoreRule
-          // will be a required argument to android_binary().
-//        KeystoreProperties keystoreProperties;
-//        try {
-//          keystoreProperties = KeystoreProperties.createFromPropertiesFile(
-//              pathToStore,
-//              pathToProperties,
-//              executionContext.getProjectFilesystem());
-//        } catch (IOException e) {
-//          e.printStackTrace(executionContext.getStdErr());
-//          return 1;
-//        }
-//
-//        KeystoreRule.this.keystoreProperties = keystoreProperties;
-        return 0;
-      }
-
-    };
-    return ImmutableList.of(readPropertiesStep);
+    // Nothing to build: this is like a glorified export_deps() rule.
+    return ImmutableList.of();
   }
 
   public static Builder newKeystoreBuilder(AbstractBuildRuleBuilderParams params) {

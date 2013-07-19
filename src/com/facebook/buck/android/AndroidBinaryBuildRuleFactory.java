@@ -46,11 +46,9 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     String target = params.getRequiredStringAttribute("target");
     builder.setTarget(target);
 
-    // keystore_properties
-    String keystoreProperties = params.getRequiredStringAttribute("keystore_properties");
-    String keystorePropertiesPath = params.resolveFilePathRelativeToBuildFileDirectory(
-        keystoreProperties);
-    builder.setKeystorePropertiesPath(keystorePropertiesPath);
+    // keystore
+    BuildTarget keystore = params.getRequiredBuildTarget("keystore");
+    builder.setKeystore(keystore);
 
     // package_type
     // Note that it is not required for the user to supply this attribute, but buck.py should

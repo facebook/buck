@@ -20,7 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.KeystoreRule;
 import com.facebook.buck.java.PrebuiltJarRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -84,6 +86,13 @@ public class AndroidTransitiveDependencyGraphTest {
         .setManifestFile("java/src/com/facebook/module/AndroidManifest.xml")
         .setAssetsDirectory("assets/"));
 
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
+    ruleResolver.buildAndAddToIndex(
+        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(keystoreTarget)
+        .setStore("keystore/debug.keystore")
+        .setProperties("keystore/debug.keystore.properties"));
+
     AndroidBinaryRule binaryRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
@@ -92,7 +101,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setManifest("java/src/com/facebook/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystorePropertiesPath("java/src/com/facebook/base/keystore.properties"));
+        .setKeystore(keystoreTarget));
 
     // Verify that the correct transitive dependencies are found.
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);

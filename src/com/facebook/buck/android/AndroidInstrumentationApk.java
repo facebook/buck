@@ -55,7 +55,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
     super(buildRuleParams,
         manifest,
         apkUnderTest.getTarget(),
-        apkUnderTest.getKeystorePropertiesPath(),
+        apkUnderTest.getKeystore(),
         PackageType.INSTRUMENTED,
         // Do not include the classes that will already be in the classes.dex of the APK under test.
         ImmutableSet.<BuildRule>builder()

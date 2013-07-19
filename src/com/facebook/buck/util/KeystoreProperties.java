@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -30,7 +29,7 @@ public class KeystoreProperties {
   private final String keypass;
   private final String alias;
 
-  private KeystoreProperties(String keystore, String storepass, String keypass, String alias) {
+  public KeystoreProperties(String keystore, String storepass, String keypass, String alias) {
     this.keystore = Preconditions.checkNotNull(keystore);
     this.storepass = Preconditions.checkNotNull(storepass);
     this.keypass = Preconditions.checkNotNull(keypass);
@@ -53,25 +52,19 @@ public class KeystoreProperties {
     return alias;
   }
 
-  public static KeystoreProperties createFromPropertiesFile(String pathToKeystorePropertiesFile,
+  public static KeystoreProperties createFromPropertiesFile(
+      String pathToStore,
+      String pathToKeystorePropertiesFile,
       ProjectFilesystem projectFilesystem) throws IOException {
     Properties properties = projectFilesystem.readPropertiesFile(pathToKeystorePropertiesFile);
 
-    String keystore = getOrThrowException(
-        properties, "key.store", pathToKeystorePropertiesFile);
     String keystorePassword = getOrThrowException(
         properties, "key.store.password", pathToKeystorePropertiesFile);
     String alias = getOrThrowException(properties, "key.alias", pathToKeystorePropertiesFile);
     String aliasPassword = getOrThrowException(
         properties, "key.alias.password", pathToKeystorePropertiesFile);
 
-    // keystore is a path relative to the properties file, so resolve it before passing it to the
-    // SignApkCommand.
-    File keystorePropertiesFile = new File(pathToKeystorePropertiesFile);
-    File keystoreDirectory = keystorePropertiesFile.getParentFile();
-    File keystoreFile = new File(keystoreDirectory, keystore);
-
-    return new KeystoreProperties(keystoreFile.getPath(), keystorePassword, aliasPassword, alias);
+    return new KeystoreProperties(pathToStore, keystorePassword, aliasPassword, alias);
   }
 
   /**

@@ -431,15 +431,14 @@ public class Project {
         module.resFolder = null;
         module.isAndroidLibraryProject = false;
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
-            androidBinaryRule.getPathToKeystoreProperties(),
+            androidBinaryRule.getKeystore().getPathToStore(),
+            androidBinaryRule.getKeystore().getPathToPropertiesFile(),
             projectFilesystem);
 
         // getKeystore() returns a path relative to the project root, but an IntelliJ module
-        // expects the path to the keystore to be relative to the module root, so we strip off the
-        // module path.
-        String keystorePathRelativeToProjectRoot = keystoreProperties.getKeystore();
-        String keystorePath = keystorePathRelativeToProjectRoot.substring(relativePath.length());
-        module.keystorePath = keystorePath;
+        // expects the path to the keystore to be relative to the module root.
+        module.keystorePath = Paths.computeRelativePath(relativePath,
+            keystoreProperties.getKeystore());
       } else {
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;

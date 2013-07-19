@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.KeystoreRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -82,12 +83,19 @@ public class ApkGenruleTest {
         .setBuildTarget(libAndroidTarget)
         .addSrc("java/com/facebook/util/Facebook.java"));
 
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
+    ruleResolver.buildAndAddToIndex(
+        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(keystoreTarget)
+        .setStore("keystore/debug.keystore")
+        .setProperties("keystore/debug.keystore.properties"));
+
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
-        .setKeystorePropertiesPath("keystore.properties")
+        .setKeystore(keystoreTarget)
         .addDep(libAndroidTarget)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
   }
