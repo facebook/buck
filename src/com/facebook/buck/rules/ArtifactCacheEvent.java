@@ -26,6 +26,7 @@ import com.google.common.base.Objects;
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ArtifactCacheEvent extends BuckEvent {
   public static enum Operation {
+    CONNECT,
     FETCH,
     STORE,
   }

@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -228,8 +229,11 @@ public final class Main {
 
       buildEventBus.post(CommandEvent.started(commandName, isDaemon()));
 
+      buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
       ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
           .decorate(config.createArtifactCache(console));
+      buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT,
+          /* success */ true));
 
       int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
           console,
