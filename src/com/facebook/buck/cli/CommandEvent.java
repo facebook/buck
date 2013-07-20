@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
 
@@ -23,7 +24,7 @@ import com.google.common.base.Objects;
  * Events tracking the start and stop of a buck command.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class CommandEvent extends BuckEvent {
+public abstract class CommandEvent extends AbstractBuckEvent {
   private final String commandName;
   private final boolean isDaemon;
 

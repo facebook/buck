@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,62 +17,18 @@
 package com.facebook.buck.event;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 
-import java.util.Objects;
-
-/**
- * Base class for all build events. Using this makes it easy to add a wildcard listener
- * to the event bus.
- */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class BuckEvent {
-
-  private boolean isConfigured;
-  private long timestamp;
-  private long nanoTime;
-  private long threadId;
-
-  protected BuckEvent() {
-    isConfigured = false;
-  }
-
-  /**
-   * Method to configure an event before posting it to the {@link BuckEventBus}.  This method should
-   * only be invoked once per event, and only by the {@link BuckEventBus} in production code.
-   */
+public interface BuckEvent {
   @VisibleForTesting
-  public void configure(long timestamp, long nanoTime, long threadId) {
-    Preconditions.checkState(!isConfigured, "Events can only be configured once.");
-    this.timestamp = timestamp;
-    this.nanoTime = nanoTime;
-    this.threadId = threadId;
-    isConfigured = true;
-  }
+  void configure(long timestamp, long nanoTime, long threadId);
 
-  public long getTimestamp() {
-    Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return timestamp;
-  }
+  long getTimestamp();
 
-  public long getNanoTime() {
-    Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return nanoTime;
-  }
+  long getNanoTime();
 
-  public String toLogMessage() {
-    return toString();
-  }
+  String toLogMessage();
 
-  public long getThreadId() {
-    Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return threadId;
-  }
-
-  @Override
-  public String toString() {
-    return String.format("%s(%s)", getEventName(), getValueString());
-  }
+  long getThreadId();
 
   /**
    * @return Whether or not this event is a pair of another event.  Events that are pairs if they
@@ -87,27 +43,5 @@ public abstract class BuckEvent {
    * </pre>
    * This should be used to pair start events to finished events.
    */
-  abstract public boolean eventsArePair(BuckEvent event);
-
-  abstract protected String getEventName();
-
-  abstract protected String getValueString();
-
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof BuckEvent)) {
-      return false;
-    }
-
-    BuckEvent that = (BuckEvent)o;
-
-    return eventsArePair(that) &&
-        getThreadId() == that.getThreadId() &&
-        Objects.equals(getClass(), that.getClass());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(threadId);
-  }
+  boolean eventsArePair(BuckEvent event);
 }

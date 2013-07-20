@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
@@ -24,7 +25,7 @@ import com.google.common.base.Objects;
  * Base class for events about build rules.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class ArtifactCacheEvent extends BuckEvent {
+public abstract class ArtifactCacheEvent extends AbstractBuckEvent {
   public static enum Operation {
     CONNECT,
     FETCH,

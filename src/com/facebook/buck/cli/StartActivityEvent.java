@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
@@ -25,7 +26,7 @@ import com.google.common.base.Preconditions;
  * Events for timing the starting of android events.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class StartActivityEvent extends BuckEvent {
+public abstract class StartActivityEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
   private final String activityName;
 

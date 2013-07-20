@@ -20,17 +20,17 @@ import java.util.concurrent.TimeUnit;
 public class TestEventConfigerator {
   private TestEventConfigerator() {}
 
-  public static <T extends BuckEvent> T configureTestEvent(T event) {
+  public static <T extends AbstractBuckEvent> T configureTestEvent(T event) {
     return configureTestEvent(event, 0L, 1L, 2L);
   }
 
-  public static <T extends BuckEvent> T configureTestEvent(T event, BuckEventBus eventBus) {
+  public static <T extends AbstractBuckEvent> T configureTestEvent(T event, BuckEventBus eventBus) {
     return configureTestEvent(event, eventBus.getClock().currentTimeMillis(),
         eventBus.getClock().nanoTime(),
         eventBus.getThreadIdSupplier().get());
   }
 
-  public static <T extends BuckEvent> T configureTestEvent(T event,
+  public static <T extends AbstractBuckEvent> T configureTestEvent(T event,
       long timestamp,
       long nanotime,
       long threadid) {
@@ -38,7 +38,7 @@ public class TestEventConfigerator {
     return event;
   }
 
-  public static <T extends BuckEvent> T configureTestEventAtTime(T event,
+  public static <T extends AbstractBuckEvent> T configureTestEventAtTime(T event,
       long time,
       TimeUnit timeUnit,
       long threadid) {

@@ -16,13 +16,14 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class InstallEvent extends BuckEvent {
+public abstract class InstallEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
 
   protected InstallEvent(BuildTarget buildTarget) {

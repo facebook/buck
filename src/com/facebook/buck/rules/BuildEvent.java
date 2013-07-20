@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Joiner;
@@ -28,7 +29,7 @@ import java.util.List;
  * Base class for events about building.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class BuildEvent extends BuckEvent {
+public abstract class BuildEvent extends AbstractBuckEvent {
   private final ImmutableList<BuildTarget> buildTargets;
 
   /**

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -25,7 +26,7 @@ import com.google.common.base.Preconditions;
  * Base class for events about build rules.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class BuildRuleEvent extends BuckEvent {
+public abstract class BuildRuleEvent extends AbstractBuckEvent {
   private final BuildRule rule;
 
   protected BuildRuleEvent(BuildRule rule) {

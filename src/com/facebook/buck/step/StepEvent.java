@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -24,7 +25,7 @@ import com.google.common.base.Preconditions;
  * Base class for events about steps.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class StepEvent extends BuckEvent {
+public abstract class StepEvent extends AbstractBuckEvent {
   private final Step step;
   private final String shortName;
   private final String description;

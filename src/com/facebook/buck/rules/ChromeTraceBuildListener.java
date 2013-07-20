@@ -238,7 +238,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void artifactFetchStarted(ArtifactCacheEvent.Started started) {
     writeChromeTraceEvent("buck",
-        "artifact-" + started.getOperation().toString().toLowerCase(),
+        "artifact_" + started.getValueString(),
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.<String, String>of(),
         started);
@@ -247,7 +247,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void artifactFetchFinished(ArtifactCacheEvent.Finished finished) {
     writeChromeTraceEvent("buck",
-        "artifact-" + finished.getOperation().toString().toLowerCase(),
+        "artifact_" + finished.getValueString(),
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of(
             "success", Boolean.toString(finished.isSuccess())),

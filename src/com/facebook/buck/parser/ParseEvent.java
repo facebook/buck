@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Joiner;
@@ -27,7 +28,7 @@ import com.google.common.collect.ImmutableList;
  * Base class for events about parsing build files..
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class ParseEvent extends BuckEvent {
+public abstract class ParseEvent extends AbstractBuckEvent {
   private final ImmutableList<BuildTarget> buildTargets;
 
   protected ParseEvent(Iterable<BuildTarget> buildTargets) {

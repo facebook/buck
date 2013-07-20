@@ -16,12 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class UninstallEvent extends BuckEvent {
+public abstract class UninstallEvent extends AbstractBuckEvent {
   private final String packageName;
 
   public UninstallEvent(String packageName) {
