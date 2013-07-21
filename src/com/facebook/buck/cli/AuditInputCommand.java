@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
@@ -70,7 +71,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }

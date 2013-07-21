@@ -25,6 +25,7 @@ import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -173,7 +174,7 @@ public class ProjectCommandTest {
 
     @Override
     PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)
-        throws IOException, NoSuchBuildTargetException {
+        throws BuildFileParseException, NoSuchBuildTargetException {
       assertNotNull(options);
       createPartialGraphCallPredicates.add(rulePredicate);
       return createPartialGraphCallReturnValues.removeFirst();

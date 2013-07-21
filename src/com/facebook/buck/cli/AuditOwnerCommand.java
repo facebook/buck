@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -85,7 +86,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }

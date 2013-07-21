@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -34,6 +35,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -98,7 +100,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
@@ -114,7 +116,12 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     // Print out matching targets in alphabetical order.
     if (options.getPrintJson()) {
-      printJsonForTargets(matchingBuildRules, options.getDefaultIncludes());
+      try {
+        printJsonForTargets(matchingBuildRules, options.getDefaultIncludes());
+      } catch (BuildFileParseException e) {
+        console.printBuildFailureWithoutStacktrace(e);
+        return 1;
+      }
     } else {
       printTargetsList(matchingBuildRules, options.isShowOutput());
     }
@@ -172,7 +179,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   @VisibleForTesting
   @SuppressWarnings("deprecation")
   void printJsonForTargets(SortedMap<String, BuildRule> buildIndex,
-      Iterable<String> defaultIncludes) throws IOException {
+      Iterable<String> defaultIncludes) throws BuildFileParseException {
     Parser parser = getParser();
     ImmutableList<String> includesCopy = ImmutableList.copyOf(defaultIncludes);
     try (ProjectBuildFileParser buildFileParser =
@@ -184,7 +191,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   private void printJsonForTargetsInternal(
       SortedMap<String, BuildRule> buildIndex,
       ImmutableList<String> defaultIncludes,
-      ProjectBuildFileParser buildFileParser) throws IOException {
+      ProjectBuildFileParser buildFileParser) throws BuildFileParseException {
     // Print the JSON representation of the build rule for the specified target(s).
     getStdOut().println("[");
 
@@ -234,7 +241,12 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
-      mapper.writerWithDefaultPrettyPrinter().writeValue(stringWriter, sortedTargetRule);
+      try {
+        mapper.writerWithDefaultPrettyPrinter().writeValue(stringWriter, sortedTargetRule);
+      } catch (IOException e) {
+        // Shouldn't be possible while writing to a StringWriter...
+        throw Throwables.propagate(e);
+      }
       String output = stringWriter.getBuffer().toString();
       if (keySetIterator.hasNext()) {
         output += ",";
@@ -300,7 +312,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           buildTarget.getBuildFile(),
           options.getDefaultIncludes(),
           buildFileParser);
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+      // TODO: this doesn't smell right!
       return null;
     }
 

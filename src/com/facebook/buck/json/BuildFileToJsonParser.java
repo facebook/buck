@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -84,7 +85,15 @@ public class BuildFileToJsonParser {
     while (true) {
       JsonToken token = parser.nextToken();
       if (token == null) {
-        return currentObjects;
+        if (currentObject != null) {
+          throw new EOFException("unexpected end-of-stream");
+        } else if (currentObjects == null) {
+          // This happens when buck.py failed to produce any output for this build rule (python
+          // parse error or raised exception, I bet).
+          throw new EOFException("missing build rules");
+        } else {
+          return currentObjects;
+        }
       }
 
       switch (token) {

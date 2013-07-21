@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
@@ -38,7 +39,6 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -47,7 +47,6 @@ import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -211,7 +210,7 @@ public class Parser {
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus)
-      throws IOException, NoSuchBuildTargetException {
+      throws BuildFileParseException, NoSuchBuildTargetException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     eventBus.post(ParseEvent.started(buildTargets));
@@ -269,10 +268,8 @@ public class Parser {
                       buildFileParser);
                 }
                 deps.add(buildTargetForDep);
-              } catch (NoSuchBuildTargetException e) {
+              } catch (NoSuchBuildTargetException | BuildFileParseException e ) {
                 throw new HumanReadableException(e);
-              } catch (IOException e) {
-                Throwables.propagate(e);
               }
             }
 
@@ -319,7 +316,7 @@ public class Parser {
       BuildTarget buildTarget,
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser)
-          throws IOException, NoSuchBuildTargetException {
+          throws BuildFileParseException, NoSuchBuildTargetException {
     if (isCacheComplete(defaultIncludes)) {
       // In this case, all of the build rules should have been loaded into the knownBuildTargets
       // Map before this method was invoked. Therefore, there should not be any more build files to
@@ -354,7 +351,7 @@ public class Parser {
       File buildFile,
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser)
-          throws IOException, NoSuchBuildTargetException {
+          throws BuildFileParseException, NoSuchBuildTargetException {
     Preconditions.checkNotNull(buildFile);
     Preconditions.checkNotNull(defaultIncludes);
     Preconditions.checkNotNull(buildFileParser);
@@ -470,7 +467,7 @@ public class Parser {
   public List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
                                                      Iterable<String> includes,
                                                      @Nullable RawRulePredicate filter)
-      throws IOException, NoSuchBuildTargetException {
+      throws BuildFileParseException, NoSuchBuildTargetException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
     if (!projectFilesystem.getProjectRoot().equals(filesystem.getProjectRoot())) {

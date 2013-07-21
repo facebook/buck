@@ -17,7 +17,6 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -188,10 +187,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
   public static List<Map<String, Object>> getAllRulesInProject(
       ProjectBuildFileParserFactory factory,
       Iterable<String> includes)
-      throws IOException {
+      throws BuildFileParseException {
     try (ProjectBuildFileParser buildFileParser = factory.createParser(includes)) {
       buildFileParser.setServerMode(false);
       return buildFileParser.getAllRulesInternal(Optional.<String>absent());
+    } catch (IOException e) {
+      throw BuildFileParseException.createForGenericBuildFileParseError(e);
     }
   }
 
@@ -200,8 +201,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  public List<Map<String, Object>> getAllRules(String buildFile) throws IOException {
-    return getAllRulesInternal(Optional.of(buildFile));
+  public List<Map<String, Object>> getAllRules(String buildFile)
+      throws BuildFileParseException {
+    try {
+      return getAllRulesInternal(Optional.of(buildFile));
+    } catch (IOException e) {
+      throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
+    }
   }
 
   @VisibleForTesting
@@ -235,12 +241,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPyStdoutParser = new BuildFileToJsonParser(buckPyProcess.getInputStream());
     }
 
-    // TODO(devjasta): verify that parse/script errors are handled properly here.
     return buckPyStdoutParser.nextRules();
   }
 
   @Override
-  public void close() throws IOException {
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void close() throws BuildFileParseException {
     if (isClosed) {
       return;
     }
@@ -248,15 +254,20 @@ public class ProjectBuildFileParser implements AutoCloseable {
     try {
       if (isInitialized) {
         if (isServerMode) {
-          // Allow buck.py to terminate gracefully...
-          buckPyStdinWriter.close();
+          // Allow buck.py to terminate gracefully.
+          try {
+            buckPyStdinWriter.close();
+          } catch (IOException e) {
+            // Safe to ignore since we've already flushed everything we wanted
+            // to write.
+          }
         }
 
         try {
           int exitCode = buckPyProcess.waitFor();
           if (exitCode != 0) {
-            throw new HumanReadableException("Parser did not exit cleanly (exit code: %d)",
-                exitCode);
+            BuildFileParseException.createForUnknownParseError(
+                String.format("Parser did not exit cleanly (exit code: %d)", exitCode));
           }
         } catch (InterruptedException e) {
           throw Throwables.propagate(e);

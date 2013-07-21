@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.java.HasClasspathEntries;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
@@ -75,7 +76,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }

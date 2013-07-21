@@ -26,6 +26,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.java.PrebuiltJarRule;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -125,7 +126,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testJsonOutputForBuildTarget() throws IOException {
+  public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
     final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
     final String outputFile = "buck-out/gen/test/outputFile";
@@ -197,7 +198,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testJsonOutputForMissingBuildTarget() throws IOException {
+  public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
     final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String outputFile = "buck-out/gen/test/outputFile";
 
