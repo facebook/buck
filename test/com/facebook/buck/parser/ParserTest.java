@@ -435,7 +435,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
   public void whenNotifiedOfNewSourceFileBuildTreeIsNotReconstructed()
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
 
     Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
     expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
@@ -461,7 +461,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
   public void whenNotifiedOfNewBuildFileBuildTreeIsReconstructed()
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
 
     Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
     expect(buildFileTreeSupplier.get())
@@ -488,7 +488,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
   public void whenNotifiedOfMultipleNewBuildFilesBuildTreeIsReconstructedOnce()
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
 
     Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
     expect(buildFileTreeSupplier.get())
@@ -517,7 +517,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
   public void whenNotifiedOfBuildFileChangeBuildTreeIsNotReconstructed()
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
 
     Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
     expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
@@ -543,7 +543,7 @@ public class ParserTest extends EasyMockSupport {
   @Test
   @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
   public void whenNotifiedOfSourceFileChangeBuildTreeIsNotReconstructed()
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
 
     Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
     expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
