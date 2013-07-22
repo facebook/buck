@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileSystems;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -55,11 +56,23 @@ import javax.annotation.Nullable;
 
 public final class Main {
 
+  /**
+   * Trying again won't help.
+   */
+  public static final int FAIL_EXIT_CODE = 1;
+
+  /**
+   * Trying again later might work.
+   */
+  public static final int BUSY_EXIT_CODE = 2;
+
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
   private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
+
+  private static final Semaphore commandSemaphore = new Semaphore(1);
 
   /**
    * Daemon used to monitor the file system and cache build rules between Main() method
@@ -301,20 +314,27 @@ public final class Main {
     return BuckConfig.createFromFiles(projectFilesystem, configFiles);
   }
 
-  private int tryRunMainWithExitCode(File projectRoot, String... args) throws IOException {
+  @VisibleForTesting
+  int tryRunMainWithExitCode(File projectRoot, String... args) throws IOException {
+    // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
+    if (!commandSemaphore.tryAcquire()) {
+      return BUSY_EXIT_CODE;
+    }
     try {
       return runMainWithExitCode(projectRoot, args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION, stdOut, stdErr, new Ansi());
       console.printBuildFailure(e.getHumanReadableErrorMessage());
-      return 1;
+      return FAIL_EXIT_CODE;
+    } finally {
+      commandSemaphore.release();
     }
   }
 
   public static void main(String[] args) {
     Main main = new Main(System.out, System.err);
     File projectRoot = new File(".");
-    int exitCode = 1;
+    int exitCode = FAIL_EXIT_CODE;
     try {
       exitCode = main.tryRunMainWithExitCode(projectRoot, args);
     } catch (Throwable t) {

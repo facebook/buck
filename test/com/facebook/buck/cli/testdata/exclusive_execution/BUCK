@@ -1,0 +1,7 @@
+genrule(
+  name = 'sleep',
+  srcs = [],
+  cmd = 'sleep 1s',
+  out = 'sleep',
+  deps = [],
+)
