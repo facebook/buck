@@ -118,6 +118,7 @@ public class Parser {
     /**
      * @return the cached BuildFileTree, or a new lazily constructed BuildFileTree.
      */
+    @Override
     public BuildFileTree get() {
       if (buildFileTree == null) {
         buildFileTree = supplier.get();

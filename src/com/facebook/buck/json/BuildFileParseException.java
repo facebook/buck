@@ -26,8 +26,10 @@ import java.io.IOException;
  * Thrown if we encounter an unexpected, fatal condition while interacting with the
  * build file parser.
  */
+@SuppressWarnings("serial")
 public class BuildFileParseException extends Exception
     implements ExceptionWithHumanReadableMessage {
+
   private BuildFileParseException(String message) {
     super(message);
   }
