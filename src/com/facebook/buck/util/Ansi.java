@@ -16,8 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Strings;
-
 import java.io.PrintStream;
 
 public final class Ansi {
@@ -50,16 +48,17 @@ public final class Ansi {
   private static final Ansi noTtyAnsi = new Ansi(false /* isTerminalThatSupportsColor */);
 
   public Ansi() {
-    // BuildBot does not supply a value for $TERM when it runs, in which case we should not be
-    // writing ANSI escape codes to stdout/stderr. Ideally, we would use isatty to determine whether
-    // stdout and stderr are connected to a terminal, but Java does not afford us such an API. In
-    // the future, we may just disable color output by default and support a .buckconfig file where
-    // the user can opt-in to color output as a preference.
-    this(Strings.nullToEmpty(System.getenv("TERM")).startsWith("xterm"));
+    this(isConnectedToTty());
   }
 
   private Ansi(boolean isTerminalThatSupportsColor) {
     this.isTerminalThatSupportsColor = isTerminalThatSupportsColor;
+  }
+
+  private static boolean isConnectedToTty() {
+    // Empirically, this seems to test whether either stdin or stdout are connected to a TTY and
+    // if both are, returns non-null.
+    return System.console() != null;
   }
 
   public static Ansi withoutTty() {
