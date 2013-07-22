@@ -33,7 +33,7 @@ if [ -e "${PROJECT_ROOT}/.buckversion" ] && [ ! -e "${PROJECT_ROOT}/.nobuckcheck
 
   # If the hash is in not in the user's repository, do a `git fetch`.
   if ! git cat-file -e "$BUCK_REQUIRED_VERSION"; then
-    git fetch
+    git fetch --all
   fi
 
 
