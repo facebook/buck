@@ -42,8 +42,8 @@ public class GenProGuardConfigStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "generate proguard.txt";
+  public String getShortName() {
+    return "generate_proguard_config";
   }
 
   @Override

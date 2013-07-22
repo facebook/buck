@@ -35,8 +35,8 @@ public class InstrumentStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return String.format("emma instr -out %s", JUnitStep.EMMA_OUTPUT_DIR);
+  public String getShortName() {
+    return "emma_instr";
   }
 
   @Override

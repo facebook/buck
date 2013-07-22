@@ -128,14 +128,14 @@ public class DefaultStepRunnerTest {
     }
 
     @Override
-    public String getShortName(ExecutionContext context) {
+    public String getShortName() {
       return "sleep";
     }
 
     @Override
     public String getDescription(ExecutionContext context) {
       return String.format("%s %d, then %s",
-          getShortName(context),
+          getShortName(),
           sleepMillis,
           exitCode == 0 ? "success" : "fail"
       );

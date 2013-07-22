@@ -124,7 +124,7 @@ public class XzStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return "xz";
   }
 }

@@ -58,12 +58,12 @@ public class CompositeStep implements Step, Iterable<Step> {
   }
 
   @Override
-  public String getShortName(final ExecutionContext context) {
-    return Joiner.on(" && ").join(Iterables.transform(steps,
+  public String getShortName() {
+    return Joiner.on("_&&_").join(Iterables.transform(steps,
         new Function<Step, String>() {
       @Override
       public String apply(Step step) {
-        return step.getShortName(context);
+        return step.getShortName();
       }
     }));
   }

@@ -141,8 +141,8 @@ public class FilterResourcesStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "resource filtering";
+  public String getShortName() {
+    return "resource_filtering";
   }
 
   @Override

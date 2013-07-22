@@ -77,11 +77,11 @@ public final class DefaultStepRunner implements StepRunner {
     BuckEventBus buckEventBus = context.getBuckEventBus();
 
     buckEventBus.post(StepEvent.started(step,
-        step.getShortName(context),
+        step.getShortName(),
         step.getDescription(context)));
     int exitCode = step.execute(context);
     buckEventBus.post(StepEvent.finished(step,
-        step.getShortName(context),
+        step.getShortName(),
         step.getDescription(context),
         exitCode));
     if (exitCode != 0) {

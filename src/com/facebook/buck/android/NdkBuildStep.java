@@ -46,8 +46,8 @@ public class NdkBuildStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "ndk-build";
+  public String getShortName() {
+    return "ndk_build";
   }
 
   @Override

@@ -103,8 +103,8 @@ public class ExtractResourcesStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "resource extraction";
+  public String getShortName() {
+    return "resource_extraction";
   }
 
 }

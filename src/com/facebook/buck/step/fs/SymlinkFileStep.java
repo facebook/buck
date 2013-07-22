@@ -36,8 +36,8 @@ public class SymlinkFileStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "ln -s";
+  public String getShortName() {
+    return "symlink_file";
   }
 
   @Override

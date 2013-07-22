@@ -42,7 +42,7 @@ public class AbstractExecutionStepTest {
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
     EasyMock.replay(context);
 
-    assertEquals(description, step.getShortName(context));
+    assertEquals(description, step.getShortName());
     assertEquals(description, step.getDescription(context));
 
     EasyMock.verify(context);

@@ -112,8 +112,8 @@ public class GenerateManifestStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "generate-manifest";
+  public String getShortName() {
+    return "generate_manifest";
   }
 
   private void warnUser(ExecutionContext context, String message) {

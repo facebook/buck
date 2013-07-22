@@ -145,7 +145,7 @@ public class ShellStepTest extends EasyMockSupport {
         return env;
       }
       @Override
-      public String getShortName(ExecutionContext context) {
+      public String getShortName() {
          return cmd.get(0);
       }
       @Override

@@ -79,8 +79,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "proguard obfuscation";
+  public String getShortName() {
+    return "proguard_obfuscation";
   }
 
   @Override

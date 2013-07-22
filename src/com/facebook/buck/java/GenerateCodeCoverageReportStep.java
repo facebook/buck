@@ -43,8 +43,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return String.format("emma report -Doutput.dir=%s", JUnitStep.EMMA_OUTPUT_DIR);
+  public String getShortName() {
+    return String.format("emma_report");
   }
 
   @Override

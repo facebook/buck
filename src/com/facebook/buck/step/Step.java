@@ -22,7 +22,7 @@ public interface Step {
   public int execute(ExecutionContext context);
 
   /** @return a short name/description for the command, such as "javac". Should fit on one line. */
-  public String getShortName(ExecutionContext context);
+  public String getShortName();
 
   public String getDescription(ExecutionContext context);
 }

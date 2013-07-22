@@ -70,7 +70,7 @@ class SignApkStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return "jarsigner";
   }
 

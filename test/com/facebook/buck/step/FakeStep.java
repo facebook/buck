@@ -33,7 +33,7 @@ public class FakeStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return shortName;
   }
 

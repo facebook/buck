@@ -115,7 +115,12 @@ public class ApkBuilderStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
+    return "apk_builder";
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
     return String.format(
         // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
         // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
@@ -138,10 +143,5 @@ public class ApkBuilderStep implements Step {
               }
             })),
         dexFile);
-  }
-
-  @Override
-  public String getDescription(ExecutionContext context) {
-    return getShortName(context);
   }
 }

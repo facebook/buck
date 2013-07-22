@@ -111,8 +111,8 @@ public class AaptStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return String.format("aapt package -F %s", pathToOutputApkFile);
+  public String getShortName() {
+    return String.format("aapt_package");
   }
 
 }

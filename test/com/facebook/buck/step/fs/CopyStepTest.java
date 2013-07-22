@@ -65,7 +65,7 @@ public class CopyStepTest {
   @Test
   public void testGetShortName() {
     CopyStep copyCommand = new CopyStep("here", "there");
-    assertEquals("cp", copyCommand.getShortName(context));
+    assertEquals("cp", copyCommand.getShortName());
   }
 
 }

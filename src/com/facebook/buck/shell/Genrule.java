@@ -252,9 +252,8 @@ public class Genrule extends AbstractCachingBuildRule {
       private String command;
 
       @Override
-      public String getShortName(ExecutionContext context) {
-        buildCmd(context.getProjectFilesystem(), cmd);
-        return String.format("genrule: %s", command);
+      public String getShortName() {
+        return String.format("genrule");
       }
 
       @Override

@@ -901,7 +901,7 @@ public class Project {
     ShellStep command = new ShellStep() {
 
       @Override
-      public String getShortName(ExecutionContext context) {
+      public String getShortName() {
         return "python";
       }
 

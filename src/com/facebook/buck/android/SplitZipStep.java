@@ -183,8 +183,8 @@ public class SplitZipStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "split-zip";
+  public String getShortName() {
+    return "split_zip";
   }
 
   @Override

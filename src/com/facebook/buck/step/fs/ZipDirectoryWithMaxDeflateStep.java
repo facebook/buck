@@ -140,12 +140,12 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return String.format("zip -r %s %s", outputZipPath, inputDirectoryPath);
+  public String getShortName() {
+    return "zip_directory";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getShortName(context);
+    return String.format("zip -r %s %s", outputZipPath, inputDirectoryPath);
   }
 }

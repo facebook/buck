@@ -35,7 +35,7 @@ public abstract class AbstractExecutionStep implements Step {
   abstract public int execute(ExecutionContext context);
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return description;
   }
 

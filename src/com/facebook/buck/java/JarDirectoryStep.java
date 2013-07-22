@@ -103,8 +103,8 @@ public class JarDirectoryStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "jar " + getJarArgs();
+  public String getShortName() {
+    return "jar";
   }
 
   @Override

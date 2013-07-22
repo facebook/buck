@@ -77,7 +77,7 @@ public class AidlStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return "aidl";
   }
 

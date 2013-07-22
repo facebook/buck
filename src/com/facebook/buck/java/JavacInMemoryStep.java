@@ -234,8 +234,8 @@ public class JavacInMemoryStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return String.format("javac %s", pathToOutputDirectory);
+  public String getShortName() {
+    return "javac";
   }
 
   public Set<String> getSrcs() {

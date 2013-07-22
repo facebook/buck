@@ -193,14 +193,14 @@ public class SmartDexingStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "smart-dex";
+  public String getShortName() {
+    return "smart_dex";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
     StringBuilder b = new StringBuilder();
-    b.append(getShortName(context));
+    b.append(getShortName());
     b.append(' ');
 
     Multimap<File, File> outputToInputs = getOutputToInputsMultimap();

@@ -43,7 +43,7 @@ public class RunShTestAndRecordResultStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return pathToShellScript;
   }
 
@@ -56,7 +56,7 @@ public class RunShTestAndRecordResultStep implements Step {
   public int execute(ExecutionContext context) {
     ShellStep test = new ShellStep() {
       @Override
-      public String getShortName(ExecutionContext context) {
+      public String getShortName() {
         return pathToShellScript;
       }
 

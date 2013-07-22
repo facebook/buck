@@ -409,13 +409,13 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       }
 
       @Override
-      public String getShortName(ExecutionContext context) {
-        return "symlink assets";
+      public String getShortName() {
+        return "symlink_assets";
       }
 
       @Override
       public String getDescription(ExecutionContext context) {
-        return getShortName(context);
+        return getShortName();
       }
     };
     commands.add(collectAssets);

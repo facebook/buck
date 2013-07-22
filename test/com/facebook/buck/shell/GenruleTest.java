@@ -205,8 +205,7 @@ public class GenruleTest {
     Step sixthStep = steps.get(6);
     assertTrue(sixthStep instanceof ShellStep);
     ShellStep genruleCommand = (ShellStep) sixthStep;
-    assertEquals("genrule: python convert_to_katana.py AndroidManifest.xml > $OUT",
-        genruleCommand.getShortName(executionContext));
+    assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(ImmutableMap.<String, String>builder()
         .put("SRCS", "/opt/local/fbandroid/src/com/facebook/katana/convert_to_katana.py " +
             "/opt/local/fbandroid/src/com/facebook/katana/AndroidManifest.xml")

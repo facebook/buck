@@ -66,8 +66,7 @@ public class JavacInMemoryStepTest {
   @Test
   public void testGetShortName() throws IOException {
     JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = createExecutionContext();
-    assertEquals("javac out", javac.getShortName(executionContext));
+    assertEquals("javac", javac.getShortName());
   }
 
   @Test

@@ -38,7 +38,7 @@ public class CopyStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return "cp";
   }
 

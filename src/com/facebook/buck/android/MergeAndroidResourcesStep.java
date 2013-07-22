@@ -339,13 +339,13 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
+  public String getShortName() {
     return "android-res-merge";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getShortName(context) + " " + Joiner.on(' ').join(symbolsFileToRDotJavaPackage.keySet());
+    return getShortName() + " " + Joiner.on(' ').join(symbolsFileToRDotJavaPackage.keySet());
   }
 
   private static class IntEnumerator {

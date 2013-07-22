@@ -41,8 +41,8 @@ public class MkdirStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return getDescription(context);
+  public String getShortName() {
+    return "mkdir";
   }
 
 }

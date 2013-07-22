@@ -57,7 +57,7 @@ public class SignApkStepTest {
         unsignedApkPath,
         outputPath);
 
-    assertEquals("jarsigner", signApkCommand.getShortName(context));
+    assertEquals("jarsigner", signApkCommand.getShortName());
 
     assertEquals(
         ImmutableList.of("jarsigner",

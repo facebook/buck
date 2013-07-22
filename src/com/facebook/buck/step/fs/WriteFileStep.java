@@ -55,8 +55,8 @@ public class WriteFileStep implements Step {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return "echo CONTENT > FILE";
+  public String getShortName() {
+    return "write_file";
   }
 
   @Override

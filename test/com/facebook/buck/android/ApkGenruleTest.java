@@ -207,8 +207,7 @@ public class ApkGenruleTest {
     Step seventhStep = steps.get(6);
     assertTrue(seventhStep instanceof ShellStep);
     ShellStep genruleCommand = (ShellStep) seventhStep;
-    assertEquals("genrule: python signer.py $APK key.properties > $OUT",
-        genruleCommand.getShortName(executionContext));
+    assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(new ImmutableMap.Builder<String, String>()
         .put("SRCS", "/opt/local/fbandroid/src/com/facebook/signer.py " +
             "/opt/local/fbandroid/src/com/facebook/key.properties")

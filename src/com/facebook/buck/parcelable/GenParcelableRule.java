@@ -86,7 +86,7 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
       }
 
       @Override
-      public String getShortName(ExecutionContext context) {
+      public String getShortName() {
         return "gen_parcelable";
       }
 

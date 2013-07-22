@@ -133,8 +133,8 @@ public class GenRDotJavaStep extends ShellStep {
   }
 
   @Override
-  public String getShortName(ExecutionContext context) {
-    return String.format("aapt package -J %s", genDirectoryPath);
+  public String getShortName() {
+    return String.format("aapt_package");
   }
 
   @Override
