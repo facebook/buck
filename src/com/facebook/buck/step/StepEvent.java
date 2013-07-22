@@ -18,6 +18,8 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.LeafEvent;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -25,7 +27,7 @@ import com.google.common.base.Preconditions;
  * Base class for events about steps.
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class StepEvent extends AbstractBuckEvent {
+public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   private final Step step;
   private final String shortName;
   private final String description;
@@ -46,6 +48,12 @@ public abstract class StepEvent extends AbstractBuckEvent {
 
   public String getDescription() {
     return description;
+  }
+
+  @Override
+  public String getCategory() {
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE,
+        getStep().getClass().getSimpleName());
   }
 
   @Override
