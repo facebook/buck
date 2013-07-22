@@ -28,10 +28,13 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashCodes;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.logging.Level;
@@ -286,8 +289,9 @@ public class RuleKey implements Comparable<RuleKey> {
         // than the file contents, in order to avoid the overhead of escaping SEPARATOR in the file
         // content.
         try {
-          byte[] fileBytes = Files.toByteArray(file);
-          HashCode fileSha1 = Hashing.sha1().hashBytes(fileBytes);
+          InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
+          HashCode fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
+
           if (logElms != null) {
             logElms.add(String.format("file(path=\"%s\", sha1=%s):", file.getPath(),
                 fileSha1.toString()));
