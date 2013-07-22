@@ -19,7 +19,6 @@ package com.facebook.buck.step;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -29,21 +28,15 @@ import com.google.common.base.Preconditions;
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   private final Step step;
-  private final String shortName;
   private final String description;
 
-  protected StepEvent(Step step, String shortName, String description) {
+  protected StepEvent(Step step, String description) {
     this.step = Preconditions.checkNotNull(step);
-    this.shortName = Preconditions.checkNotNull(shortName);
     this.description = Preconditions.checkNotNull(description);
   }
 
   public Step getStep() {
     return step;
-  }
-
-  public String getShortName() {
-    return shortName;
   }
 
   public String getDescription() {
@@ -52,13 +45,12 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
 
   @Override
   public String getCategory() {
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE,
-        getStep().getClass().getSimpleName());
+    return getStep().getShortName();
   }
 
   @Override
   protected String getValueString() {
-    return getShortName();
+    return getStep().getShortName();
   }
 
   @Override
@@ -78,17 +70,17 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   }
 
 
-  public static Started started(Step step, String shortName, String description) {
-    return new Started(step, shortName, description);
+  public static Started started(Step step, String description) {
+    return new Started(step, description);
   }
 
-  public static Finished finished(Step step, String shortName, String description, int exitCode) {
-    return new Finished(step, shortName, description, exitCode);
+  public static Finished finished(Step step, String description, int exitCode) {
+    return new Finished(step, description, exitCode);
   }
 
   public static class Started extends StepEvent {
-    protected Started(Step step, String shortName, String description) {
-      super(step, shortName, description);
+    protected Started(Step step, String description) {
+      super(step, description);
     }
 
     @Override
@@ -100,8 +92,8 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   public static class Finished extends StepEvent {
     private final int exitCode;
 
-    protected Finished(Step step, String shortName, String description, int exitCode) {
-      super(step, shortName, description);
+    protected Finished(Step step, String description, int exitCode) {
+      super(step, description);
       this.exitCode = exitCode;
     }
 

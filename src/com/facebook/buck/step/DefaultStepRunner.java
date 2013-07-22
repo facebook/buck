@@ -76,14 +76,9 @@ public final class DefaultStepRunner implements StepRunner {
 
     BuckEventBus buckEventBus = context.getBuckEventBus();
 
-    buckEventBus.post(StepEvent.started(step,
-        step.getShortName(),
-        step.getDescription(context)));
+    buckEventBus.post(StepEvent.started(step, step.getDescription(context)));
     int exitCode = step.execute(context);
-    buckEventBus.post(StepEvent.finished(step,
-        step.getShortName(),
-        step.getDescription(context),
-        exitCode));
+    buckEventBus.post(StepEvent.finished(step, step.getDescription(context), exitCode));
     if (exitCode != 0) {
       throw StepFailedException.createForFailingStep(step, context, exitCode, buildTarget);
     }

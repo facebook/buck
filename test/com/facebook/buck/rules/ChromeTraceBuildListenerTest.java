@@ -84,10 +84,10 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(CommandEvent.started("party", true));
     eventBus.post(BuildEvent.started(buildTargets));
     eventBus.post(BuildRuleEvent.started(rule));
-    eventBus.post(StepEvent.started(step, "fakeStep", "I'm a Fake Step!"));
+    eventBus.post(StepEvent.started(step, "I'm a Fake Step!"));
 
     // Intentionally fire events out of order to verify sorting happens.
-    BuckEvent stepFinished = StepEvent.finished(step, "fakeStep", "I'm a Fake Step!", 0);
+    BuckEvent stepFinished = StepEvent.finished(step, "I'm a Fake Step!", 0);
     stepFinished.configure(fakeClock.currentTimeMillis(),
         fakeClock.nanoTime(),
         threadIdSupplier.get());

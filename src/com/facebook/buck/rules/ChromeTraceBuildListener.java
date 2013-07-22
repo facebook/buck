@@ -140,7 +140,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void stepStarted(StepEvent.Started started) {
     writeChromeTraceEvent("buck",
-        started.getShortName(),
+        started.getStep().getShortName(),
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.<String, String>of(),
         started);
@@ -149,7 +149,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void stepFinished(StepEvent.Finished finished) {
     writeChromeTraceEvent("buck",
-        finished.getShortName(),
+        finished.getStep().getShortName(),
         ChromeTraceEvent.Phase.END,
         ImmutableMap.of("description", finished.getDescription()),
         finished);

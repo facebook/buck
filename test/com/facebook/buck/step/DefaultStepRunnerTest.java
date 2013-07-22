@@ -73,13 +73,13 @@ public class DefaultStepRunnerTest {
 
     ImmutableList<StepEvent> expected = ImmutableList.of(
         TestEventConfigerator.configureTestEvent(
-            StepEvent.started(passingStep, "step1", "fake step 1"), eventBus),
+            StepEvent.started(passingStep, "fake step 1"), eventBus),
         TestEventConfigerator.configureTestEvent(
-            StepEvent.finished(passingStep, "step1", "fake step 1", 0), eventBus),
+            StepEvent.finished(passingStep, "fake step 1", 0), eventBus),
         TestEventConfigerator.configureTestEvent(
-            StepEvent.started(failingStep, "step1", "fake step 1"), eventBus),
+            StepEvent.started(failingStep, "fake step 1"), eventBus),
         TestEventConfigerator.configureTestEvent(
-            StepEvent.finished(failingStep, "step1", "fake step 1", 1), eventBus));
+            StepEvent.finished(failingStep, "fake step 1", 1), eventBus));
 
     Iterable<StepEvent> events = Iterables.filter(listener.getEvents(), StepEvent.class);
     assertEquals(expected, ImmutableList.copyOf(events));
