@@ -92,8 +92,40 @@ public class Parser {
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
   private final Console console;
-  private final Supplier<BuildFileTree> buildFileTreeSupplier;
-  private BuildFileTree buildFiles;
+
+  /**
+   * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
+   * TODO(user): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
+   */
+  private static class BuildFileTreeCache implements Supplier<BuildFileTree> {
+    private final Supplier<BuildFileTree> supplier;
+    private @Nullable BuildFileTree buildFileTree;
+
+    /**
+     * @param buildFileTreeSupplier each call to get() must reconstruct the tree from disk.
+     */
+    public BuildFileTreeCache(Supplier<BuildFileTree> buildFileTreeSupplier) {
+      this.supplier = Preconditions.checkNotNull(buildFileTreeSupplier);
+    }
+
+    /**
+     * Discard the cached BuildFileTree.
+     */
+    public void invalidate() {
+      buildFileTree = null;
+    }
+
+    /**
+     * @return the cached BuildFileTree, or a new lazily constructed BuildFileTree.
+     */
+    public BuildFileTree get() {
+      if (buildFileTree == null) {
+        buildFileTree = supplier.get();
+      }
+      return buildFileTree;
+    }
+  }
+  private final BuildFileTreeCache buildFileTreeCache;
 
   public Parser(final ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
@@ -124,11 +156,11 @@ public class Parser {
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
          ProjectBuildFileParserFactory buildFileParserFactory) {
-    this.buildFileTreeSupplier = Preconditions.checkNotNull(buildFileTreeSupplier);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.console = Preconditions.checkNotNull(console);
-    this.buildFiles = buildFileTreeSupplier.get();
+    this.buildFileTreeCache = new BuildFileTreeCache(
+        Preconditions.checkNotNull(buildFileTreeSupplier));
     this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
@@ -389,7 +421,7 @@ public class Parser {
           map,
           console,
           projectFilesystem,
-          buildFiles,
+          buildFileTreeCache.get(),
           buildTargetParser,
           target));
       Object existingRule = knownBuildTargets.put(target, buildRuleBuilder);
@@ -532,7 +564,7 @@ public class Parser {
     }
 
     if (reconstructBuildFileTree) {
-      buildFiles = buildFileTreeSupplier.get();
+      buildFileTreeCache.invalidate();
     }
 
     // TODO(user): invalidate affected build files, rather than nuking all rules completely.

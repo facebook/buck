@@ -446,11 +446,13 @@ public class ParserTest extends EasyMockSupport {
         new DefaultProjectBuildFileParserFactory(filesystem),
         new BuildTargetParser(filesystem));
 
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
     WatchEvent<Path> event = createMock(WatchEvent.class);
     expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
     expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
     replay(event);
     parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     // Check that event was processed and BuildFileTree was supplied once.
     verify(event, buildFileTreeSupplier);
@@ -471,11 +473,42 @@ public class ParserTest extends EasyMockSupport {
         new DefaultProjectBuildFileParserFactory(filesystem),
         new BuildTargetParser(filesystem));
 
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
     WatchEvent<Path> event = createMock(WatchEvent.class);
     expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
-    expect(event.context()).andReturn(new File("./BUCK").toPath());
+    expect(event.context()).andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath());
     replay(event);
     parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+
+    // Check that event was processed and BuildFileTree was supplied twice.
+    verify(event, buildFileTreeSupplier);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
+  public void whenNotifiedOfMultipleNewBuildFilesBuildTreeIsReconstructedOnce()
+      throws IOException, NoSuchBuildTargetException {
+
+    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
+    expect(buildFileTreeSupplier.get())
+        .andReturn(new BuildFileTree(ImmutableSet.<String>of())).times(2);
+    replay(buildFileTreeSupplier);
+
+    Parser parser = createParser(buildFileTreeSupplier,
+        emptyBuildTargets(),
+        new DefaultProjectBuildFileParserFactory(filesystem),
+        new BuildTargetParser(filesystem));
+
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+    WatchEvent<Path> event = createMock(WatchEvent.class);
+    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
+    expect(event.context())
+        .andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath()).anyTimes();
+    replay(event);
+    parser.onFileSystemChange(event);
+    parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     // Check that event was processed and BuildFileTree was supplied twice.
     verify(event, buildFileTreeSupplier);
@@ -495,11 +528,13 @@ public class ParserTest extends EasyMockSupport {
         new DefaultProjectBuildFileParserFactory(filesystem),
         new BuildTargetParser(filesystem));
 
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
     WatchEvent<Path> event = createMock(WatchEvent.class);
     expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File("./BUCK").toPath());
+    expect(event.context()).andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath());
     replay(event);
     parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     // Check that event was processed and BuildFileTree was supplied once.
     verify(event, buildFileTreeSupplier);
@@ -524,6 +559,7 @@ public class ParserTest extends EasyMockSupport {
     expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
     replay(event);
     parser.onFileSystemChange(event);
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     // Check that event was processed and BuildFileTree was supplied once.
     verify(event, buildFileTreeSupplier);
