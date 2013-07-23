@@ -16,13 +16,19 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
-public class SymlinkFileStep extends ShellStep {
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class SymlinkFileStep implements Step {
 
   private final String source;
   private final String target;
@@ -41,10 +47,10 @@ public class SymlinkFileStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  public String getDescription (ExecutionContext context) {
     Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
     // Always symlink to an absolute path so the symlink is sure to be read correctly.
-    return ImmutableList.of(
+    return Joiner.on(" ").join(
         "ln",
         "-f",
         "-s",
@@ -52,4 +58,21 @@ public class SymlinkFileStep extends ShellStep {
         pathRelativizer.apply(target));
   }
 
+  @Override
+  public int execute(ExecutionContext context) {
+    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    Path targetPath = Paths.get(pathRelativizer.apply(target));
+    Path sourcePath = Paths.get(pathRelativizer.apply(source));
+    try {
+      if (targetPath.toFile().exists() && !targetPath.toFile().delete()) {
+        throw new HumanReadableException("Failed to delete symbolic link for %s",
+            targetPath.toAbsolutePath());
+      }
+      Files.createSymbolicLink(targetPath, sourcePath);
+      return 0;
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+  }
 }

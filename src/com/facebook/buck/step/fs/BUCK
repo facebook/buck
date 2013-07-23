@@ -4,6 +4,7 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
