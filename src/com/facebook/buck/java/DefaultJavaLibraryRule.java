@@ -39,6 +39,7 @@ import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -194,9 +195,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     // the iteration order of the sets passed to the constructor changes. See
     // AbstractBuildRule.getInputsToCompareToOutput() for details.
     ImmutableList.Builder<String> builder = ImmutableList.<String>builder().addAll(this.srcs);
-    for (SourcePath resource : resources) {
-      builder.add(resource.asReference());
-    }
+    builder.addAll(SourcePaths.filterInputsToCompareToOutput(resources));
     inputsToConsiderForCachingPurposes = builder.build();
 
     outputClasspathEntriesSupplier =
