@@ -36,6 +36,10 @@ so few things are quicker than copy-and-paste!
 Run the following commands to checkout Buck from GitHub, build it, and add it to your <code>$PATH</code>:
 {call buck.installationInstructions}{param withAlias : true /}{/call}
 
+While there, you may also want to set up <a href="{ROOT}command/buckd.html"><code>buckd</code></a>:
+
+<pre>sudo ln -s ${lb}PWD{rb}/bin/buckd /usr/bin/buckd</pre>
+
 <em>Currently, there is no way to download a precompiled binary for Buck.</em>
 
 <p>
@@ -176,8 +180,7 @@ default values for name, organizational unit, etc.
 Then create a <code>.properties</code> file that stores all of this information:
 
 {literal}<pre>
-echo "key.store=debug.keystore
-key.alias=my_alias
+echo "key.alias=my_alias
 key.store.password=android
 key.alias.password=android" > apps/myapp/debug.keystore.properties
 </pre>{/literal}
@@ -207,18 +210,24 @@ echo "&lt;?xml version='1.0' encoding='utf-8'?>
 &lt;/manifest>" > apps/myapp/AndroidManifest.xml
 </pre>{/literal}
 
-Now we define an <code><a href="rule/android_binary.html">android_binary()</a></code> rule in our build file:
+Now we define an {call buck.android_binary /} and {call buck.keystore /} rule in our build file:
 
 {literal}<pre>
 echo "android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
   target = 'Google Inc.:Google APIs:16',
-  keystore_properties = 'debug.keystore.properties',
+  keystore = ':debug_keystore',
   deps = [
     '//java/com/example/activity:activity',
     '//res/com/example/activity:res',
   ],
+)
+
+keystore(
+  name = 'debug_keystore',
+  store = 'debug.keystore',
+  properties = 'debug.keystore.properties',
 )
 
 project_config(
@@ -293,6 +302,8 @@ echo "*.iml
 /.idea/libraries/*.xml
 /.idea/modules.xml
 /.idea/runConfigurations/Debug_Buck_test.xml" > .gitignore
+/buck-cache
+/buck-out
 /.buckd
 </pre>{/literal}
 

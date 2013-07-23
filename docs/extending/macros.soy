@@ -63,8 +63,8 @@ produces both debug and release versions of an APK:
 def create_apks(
     name,
     manifest,
-    debug_keystore_properties,
-    release_keystore_properties,
+    debug_keystore,
+    release_keystore,
     proguard_config,
     deps):
 
@@ -72,9 +72,9 @@ def create_apks(
   for type in [ 'debug', 'release' ]:
     # Select the appropriate keystore.
     if type == 'debug':
-      keystore_properties = debug_keystore_properties
+      keystore = debug_keystore
     else:
-      keystore_properties = release_keystore_properties
+      keystore = release_keystore
 
     android_binary(
       # Note how we must parameterize the name of the
@@ -83,7 +83,7 @@ def create_apks(
       name = '%s_%s' % (name, type),
       manifest = manifest,
       target = 'Google Inc.:Google APIs:16',
-      keystore_properties = keystore_properties,
+      keystore = keystore,
       package_type = type,
       proguard_config = proguard_config,
       deps = deps,
@@ -100,8 +100,8 @@ Again, using this looks the same as defining a built-in build rule:
 create_apks(
   name = 'messenger',
   manifest = 'AndroidManifest.xml',
-  debug_keystore_properties = 'debug.keystore.properties',
-  release_keystore_properties = 'release.keystore.properties',
+  debug_keystore = '//keystores:debug',
+  release_keystore = '//keystores:prod',
   proguard_config = 'proguard.cfg',
   deps = [
     # ...

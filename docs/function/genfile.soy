@@ -51,11 +51,11 @@ android_binary(
   name = 'messenger',
   manifest = genfile('AndroidManifest.xml'),
   target = 'Google Inc.:Google APIs:16',
-  keystore_properties = 'keystore.properties',
+  keystore = '//keystores:prod',
   deps = [
     ':messenger_manifest',
-    # Additional dependent android_library rules would be listed here,
-    # as well.
+    # Additional dependent android_library rules would be listed
+    # here, as well.
   ],
 )
 </pre>{/literal}

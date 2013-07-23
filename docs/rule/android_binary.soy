@@ -43,29 +43,13 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
-  {param name: 'keystore_properties' /}
+  {param name: 'keystore' /}
   {param desc}
-  Relative path to a <code>.properties</code> file that defines the
-  following keystore properties:
+  A build target that identifies a {call buck.keystore /} to use to
+  sign the APK.
 
-{literal}<pre>
-key.store=debug.keystore
-key.alias=my_alias
-key.store.password=android
-key.alias.password=android
-</pre>{/literal}
-
-  Note that the value of <code>key.store</code> must also be a relative
-  path to the keystore itself.
-  <p>
   See <a href="{ROOT}setup/quickstart.html">Quick Start</a> for more
   details.
-  <p>
-  <strong>Note:</strong> This is unlike most rules in Buck because
-  this introduces a reference on a file (the value of <code>key.store</code>)
-  that is not evident from the build rule itself. This will likely be
-  replaced by a special <code>keystore</code> build rule at some point to
-  eliminate this irregularity.
   {/param}
 {/call}
 
@@ -157,7 +141,7 @@ android_binary(
   name = 'messenger',
   manifest = 'AndroidManifest.xml',
   target = 'Google Inc.:Google APIs:16',
-  keystore_properties = 'keystore.properties',
+  keystore = '//keystores:prod',
   package_type = 'release',
   proguard_config = 'proguard.cfg',
   deps = [

@@ -22,7 +22,6 @@ java_library(
 #  name = 'app',
 #  manifest = 'AndroidManifest.xml',
 #  target = 'Google Inc.:Google APIs:16',
-#  keystore_properties = 'keystore.properties',
 #  deps = [
 #    '//testdata/com/facebook/feed:feed',
 #  ],

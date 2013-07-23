@@ -77,7 +77,7 @@ android_binary(
   name = 'messenger',
   manifest = 'AndroidManifest.xml',
   target = 'Google Inc.:Google APIs:16',
-  keystore_properties = 'keystore.properties',
+  keystore = '//keystores:prod',
   package_type = 'release',
   proguard_config = 'proguard.cfg',
   deps = [
