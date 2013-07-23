@@ -233,7 +233,8 @@
 
   <target name="test" depends="java-test, py-test, lint" description="runs the unit tests" />
 
-  <target name="javadoc" description="generates HTML documentation for Java code">
+  <target name="javadoc" description="generates HTML documentation for Java code"
+      depends="compile">
     <mkdir dir="${javadoc.dir}" />
     <javadoc destdir="${javadoc.dir}"
              protected="true"

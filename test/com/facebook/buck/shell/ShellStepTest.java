@@ -139,7 +139,7 @@ public class ShellStepTest extends EasyMockSupport {
       File workingDirectory,
       final boolean shouldPrintStdErr,
       final boolean shouldRecordStdOut) {
-    return new ShellStep(null, workingDirectory) {
+    return new ShellStep(workingDirectory) {
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
         return env;

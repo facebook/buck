@@ -41,10 +41,6 @@ public abstract class ShellStep implements Step {
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
   private ImmutableList<String> shellCommandArgs;
 
-  /** If specified, the value to return for {@link #getDescription(com.facebook.buck.step.ExecutionContext)}. */
-  @Nullable
-  private final String description;
-
   /** If specified, working directory will be different from project root. **/
   @Nullable
   protected final File workingDirectory;
@@ -59,37 +55,11 @@ public abstract class ShellStep implements Step {
   private long startTime = 0L;
   private long endTime = 0L;
 
-  /**
-   * Creates a new {@link ShellStep} using the default logic to return a description from
-   * {@link #getDescription(com.facebook.buck.step.ExecutionContext)}.
-   */
   protected ShellStep() {
-    this(null, null);
+    this(/* workingDirectory */ null);
   }
 
-  /**
-   * @param description to return as the value of {@link #getDescription(com.facebook.buck.step.ExecutionContext)}. By
-   *     default, {@link #getDescription(com.facebook.buck.step.ExecutionContext)} returns a formatted version of the value
-   *     returned by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}; however, if
-   *     {@link #setup(com.facebook.buck.step.ExecutionContext)} is overridden, then it is likely that
-   *     {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)} cannot return a value until
-   *     {@link #execute(com.facebook.buck.step.ExecutionContext)} has been invoked. Because
-   *     {@link #getDescription(com.facebook.buck.step.ExecutionContext)} may be invoked before
-   *     {@link #execute(com.facebook.buck.step.ExecutionContext)} (usually for logging purposes), this constructor should
-   *     be used if {@link #getShellCommandInternal(com.facebook.buck.step.ExecutionContext)} cannot be invoked before
-   *     {@link #setup(com.facebook.buck.step.ExecutionContext)}.
-   */
-  protected ShellStep(String description) {
-    this(Preconditions.checkNotNull(description), null);
-  }
-
-  protected ShellStep(File workingDirectory) {
-    this(null, Preconditions.checkNotNull(workingDirectory));
-  }
-
-  @VisibleForTesting
-  ShellStep(@Nullable String description, @Nullable File workingDirectory) {
-    this.description = description;
+  protected ShellStep(@Nullable File workingDirectory) {
     this.workingDirectory = workingDirectory;
   }
 
@@ -176,44 +146,37 @@ public abstract class ShellStep implements Step {
   }
 
   /**
-   * Implementations of this method should not have any observable side-effects. If any I/O needs to
-   * be done to produce the shell command arguments, then it should be done in
-   * {@link #setup(ExecutionContext)}.
+   * Implementations of this method should not have any observable side-effects.
    */
   @VisibleForTesting
   protected abstract ImmutableList<String> getShellCommandInternal(ExecutionContext context);
 
   @Override
   public final String getDescription(ExecutionContext context) {
-    if (description == null) {
+    // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
+    // quoted as necessary.
+    Iterable<String> env = Iterables.transform(getEnvironmentVariables(context).entrySet(),
+        new Function<Entry<String, String>, String>() {
+          @Override
+          public String apply(Entry<String, String> e) {
+            return String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue()));
+          }
+    });
 
-      // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
-      // quoted as necessary.
-      Iterable<String> env = Iterables.transform(getEnvironmentVariables(context).entrySet(),
-          new Function<Entry<String, String>, String>() {
-            @Override
-            public String apply(Entry<String, String> e) {
-              return String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue()));
-            }
-      });
+    // Quote the arguments to the shell command as needed (this applies to $0 as well
+    // e.g. if we run '/path/a b.sh' quoting is needed).
+    Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.BASH_ESCAPER);
 
-      // Quote the arguments to the shell command as needed (this applies to $0 as well
-      // e.g. if we run '/path/a b.sh' quoting is needed).
-      Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.BASH_ESCAPER);
-
-      String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
-      if (getWorkingDirectory() == null) {
-        return shellCommand;
-      } else {
-        // If the ShellCommand has a specific working directory, set through ProcessBuilder, then
-        // this is what the user might type in a shell to get the same behavior. The (...) syntax
-        // introduces a subshell in which the command is only executed if cd was successful.
-        return String.format("(cd %s && %s)",
-            Escaper.escapeAsBashString(workingDirectory.getPath()),
-            shellCommand);
-      }
+    String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
+    if (getWorkingDirectory() == null) {
+      return shellCommand;
     } else {
-      return description;
+      // If the ShellCommand has a specific working directory, set through ProcessBuilder, then
+      // this is what the user might type in a shell to get the same behavior. The (...) syntax
+      // introduces a subshell in which the command is only executed if cd was successful.
+      return String.format("(cd %s && %s)",
+          Escaper.escapeAsBashString(workingDirectory.getPath()),
+          shellCommand);
     }
   }
 
