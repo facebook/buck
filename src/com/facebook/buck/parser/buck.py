@@ -511,7 +511,7 @@ def gen_parcelable(
 
 
 @provide_for_build
-def genrule(name, srcs, cmd, out, deps=[], visibility=[], build_env=None):
+def genrule(name, cmd, out, srcs=[], deps=[], visibility=[], build_env=None):
   add_rule({
     'type' : 'genrule',
     'name' : name,
