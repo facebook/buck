@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,13 +60,11 @@ public final class BuildRuleFactoryParams {
 
   public BuildRuleFactoryParams(
       Map<String, ?> instance,
-      Console console,
       ProjectFilesystem filesystem,
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
       BuildTarget target) {
     this(instance,
-        console,
         filesystem,
         buildFiles,
         buildTargetParser,
@@ -78,16 +75,14 @@ public final class BuildRuleFactoryParams {
   @VisibleForTesting
   BuildRuleFactoryParams(
       Map<String, ?> instance,
-      Console console,
       ProjectFilesystem filesystem,
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
       BuildTarget target,
       boolean ignoreFileExistenceChecks) {
     this.instance = instance;
-    Preconditions.checkNotNull(console);
     this.filesystem = filesystem;
-    this.buildFiles = buildFiles;
+    this.buildFiles = Preconditions.checkNotNull(buildFiles);
     this.buildTargetParser = buildTargetParser;
     this.buildTargetPatternParser = new BuildTargetPatternParser(filesystem);
     this.target = Preconditions.checkNotNull(target);
@@ -160,15 +155,7 @@ public final class BuildRuleFactoryParams {
         throw new RuntimeException(file + " is not a descendant of " + target.getBasePath());
       }
 
-      if (fullPath.contains("..")) {
-        handleError(
-            String.format("\"%s\" in target \"%s\" refers to a parent directory.",
-            fullPath, target.getFullyQualifiedName()));
-      }
-
-      if (buildTargetParser != null) {
-        checkFullPath(fullPath);
-      }
+      checkFullPath(fullPath);
 
       return fullPath;
     }
@@ -191,20 +178,22 @@ public final class BuildRuleFactoryParams {
   }
 
   private void checkFullPath(String fullPath) {
+    if (fullPath.contains("..")) {
+      throw new HumanReadableException(
+          "\"%s\" in target \"%s\" refers to a parent directory.",
+          fullPath,
+          target.getFullyQualifiedName());
+    }
+
     String ancestor = buildFiles.getBasePathOfAncestorTarget(fullPath);
     if (!target.getBasePath().equals(ancestor)) {
-      handleError(
-          String.format(
+      throw new HumanReadableException(
           "\"%s\" in target \"%s\" crosses a buck package boundary. Find the nearest BUCK file " +
           "in the directory containing this file and refer to the rule referencing the " +
           "desired file.",
-          fullPath, target));
+          fullPath,
+          target);
     }
-  }
-
-  private void handleError(
-      String message) {
-    throw new HumanReadableException(message);
   }
 
   public File resolveDirectoryRelativeToBuildFileDirectory(String path) {
@@ -216,6 +205,9 @@ public final class BuildRuleFactoryParams {
     Preconditions.checkArgument(!path.startsWith(GENFILE_PREFIX));
 
     String fullPath = resolvePathAgainstBuildTargetBase(path);
+
+    checkFullPath(fullPath);
+
     if (!ignoreFileExistenceChecks && !new File(fullPath).isDirectory()) {
       throw new RuntimeException("Not a directory: " + fullPath);
     }

@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
@@ -37,7 +36,6 @@ public final class NonCheckingBuildRuleFactoryParams {
       BuildTarget target) {
     return new BuildRuleFactoryParams(
         instance,
-        new TestConsole(),
         new ProjectFilesystem(new File(".")),
         new NonCheckingBuildFileTree(),
         buildTargetParser,

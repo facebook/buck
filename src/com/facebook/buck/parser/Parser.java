@@ -420,7 +420,6 @@ public class Parser {
 
       BuildRuleBuilder<?> buildRuleBuilder = factory.newInstance(new BuildRuleFactoryParams(
           map,
-          console,
           projectFilesystem,
           buildFileTreeCache.get(),
           buildTargetParser,

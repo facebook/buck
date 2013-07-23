@@ -32,7 +32,6 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.io.Files;
@@ -91,7 +90,6 @@ public class BuildRuleFactoryParamsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:wakizashi");
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
@@ -107,7 +105,6 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
@@ -121,12 +118,10 @@ public class BuildRuleFactoryParamsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook/demo:Main");
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
         buildTarget);
-
     // File exists, but is in a parent directory.
     try {
       params.resolveFilePathRelativeToBuildFileDirectory("../A.java");
@@ -145,12 +140,10 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
         buildTarget);
-
     try {
       // File exists, but crosses a buck package boundary.
       params.resolveFilePathRelativeToBuildFileDirectory("demo/B.java");
@@ -169,12 +162,10 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
         buildTarget);
-
     // File exists, is in a subdir but does not cross a buck package boundary
     String relativePath = params.resolveFilePathRelativeToBuildFileDirectory("nobuild/C.java");
     assertEquals("src/com/facebook/nobuild/C.java", relativePath);
@@ -186,12 +177,10 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
         target);
-
     AbstractBuildRuleBuilder<?> builder = createMock(AbstractBuildRuleBuilder.class);
     replay(builder);
 
@@ -208,12 +197,10 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
         target);
-
     DefaultJavaLibraryRule.Builder builder = createMock(DefaultJavaLibraryRule.Builder.class);
     expect(builder.addDep(
         new BuildTarget(
@@ -236,12 +223,10 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
         target);
-
     AbstractBuildRuleBuilder<?> builder = createMock(AbstractBuildRuleBuilder.class);
     replay(builder);
 
@@ -264,12 +249,10 @@ public class BuildRuleFactoryParamsTest {
 
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         null /* instance */,
-        new TestConsole(),
         filesystem,
         tree,
         parser,
         target);
-
     DefaultJavaLibraryRule.Builder builder = createMock(DefaultJavaLibraryRule.Builder.class);
     expect(builder.addDep(
         new BuildTarget(

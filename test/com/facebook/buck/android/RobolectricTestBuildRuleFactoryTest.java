@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.FakeJavaLibraryRule;
+import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -64,12 +64,12 @@ public class RobolectricTestBuildRuleFactoryTest {
         "vm_args", ImmutableList.of("-Dbuck.robolectric_dir=javatests/com/facebook/base"),
         "source_under_test", ImmutableList.of("//java/com/facebook/base:base"));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//javatests/com/facebook/base:base");
-    EasyMock.replay(projectFilesystem);
+    BuildFileTree buildFileTree = EasyMock.createMock(BuildFileTree.class);
+    EasyMock.replay(projectFilesystem, buildFileTree);
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance,
-        new TestConsole(),
         projectFilesystem,
-        /* buildFiles */ null,
+        buildFileTree,
         buildTargetParser,
         buildTarget);
 
@@ -96,6 +96,6 @@ public class RobolectricTestBuildRuleFactoryTest {
     assertEquals(ImmutableList.of("-Dbuck.robolectric_dir=javatests/com/facebook/base"),
         robolectricRule.getVmArgs());
     assertEquals(ImmutableSet.of(base), robolectricRule.getSourceUnderTest());
-    EasyMock.verify(projectFilesystem);
+    EasyMock.verify(projectFilesystem, buildFileTree);
   }
 }
