@@ -85,6 +85,9 @@ public class GenruleTest {
   @Before
   public void newFakeFilesystem() {
     fakeFilesystem = EasyMock.createNiceMock(ProjectFilesystem.class);
+    EasyMock.expect(fakeFilesystem.getPathRelativizer())
+        .andReturn(relativeToAbsolutePathFunction)
+        .times(0,  1);
     EasyMock.replay(fakeFilesystem);
   }
 
@@ -274,9 +277,7 @@ public class GenruleTest {
     // Interpolate the build target in the genrule cmd string.
     String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
 
-    // This creates an absolute path that ends with "/.", so drop the ".".
-    String basePathWithTrailingDot = new File(".").getAbsolutePath();
-    String basePath = basePathWithTrailingDot.substring(0, basePathWithTrailingDot.length() - 1);
+    String basePath = "/opt/local/fbandroid/";
 
     // Verify that the correct cmd was created.
     String expectedClasspath =
@@ -301,9 +302,7 @@ public class GenruleTest {
     // Interpolate the build target in the genrule cmd string.
     String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
 
-    // This creates an absolute path that ends with "/.", so drop the ".".
-    String basePathWithTrailingDot = new File(".").getAbsolutePath();
-    String basePath = basePathWithTrailingDot.substring(0, basePathWithTrailingDot.length() - 1);
+    String basePath = "/opt/local/fbandroid/";
 
     // Verify that the correct cmd was created.
     String expectedClasspath =
@@ -361,9 +360,7 @@ public class GenruleTest {
 
     String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
 
-    // This creates an absolute path that ends with "/.", so drop the ".".
-    String basePathWithTrailingDot = new File(".").getAbsolutePath();
-    String basePath = basePathWithTrailingDot.substring(0, basePathWithTrailingDot.length() - 1);
+    String basePath = "/opt/local/fbandroid/";
 
     // Verify that the correct cmd was created.
     String expectedClasspath =

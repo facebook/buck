@@ -16,6 +16,10 @@
 
 package com.facebook.buck.java;
 
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -23,6 +27,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
 
 import org.junit.Test;
 
@@ -66,7 +72,7 @@ public class JavaBinaryRuleTest {
         .setMainClass("com.facebook.base.Main"));
 
     // Strip the trailing "." from the absolute path to the current directory.
-    String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
+    final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
 
     // Each classpath entry is specified via its absolute path so that the executable command can be
     // run from a /tmp directory, if necessary.
@@ -76,7 +82,17 @@ public class JavaBinaryRuleTest {
 
     String expectedCommand = String.format("java -classpath %s com.facebook.base.Main",
         expectedClasspath);
-    assertEquals(expectedCommand, javaBinaryRule.getExecutableCommand());
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    Function<String, String> pathRelativizer = new Function<String, String>() {
+      @Override
+      public String apply(String path) {
+        return basePath + path;
+      }
+    };
+    expect(projectFilesystem.getPathRelativizer()).andReturn(pathRelativizer);
+    replay(projectFilesystem);
+    assertEquals(expectedCommand, javaBinaryRule.getExecutableCommand(projectFilesystem));
+    verify(projectFilesystem);
 
     assertFalse(
         "Library rules that are used exclusively by genrules should not be part of the classpath.",

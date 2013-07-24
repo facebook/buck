@@ -28,7 +28,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.Functions;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -60,12 +61,13 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   }
 
   @Override
-  public String getExecutableCommand() {
+  public String getExecutableCommand(ProjectFilesystem projectFilesystem) {
+    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
     String pythonPath = Joiner.on(':').join(Iterables.transform(getPythonPathEntries(),
-        Functions.RELATIVE_TO_ABSOLUTE_PATH));
+        pathRelativizer));
     return String.format("PYTHONPATH=%s python %s",
         pythonPath,
-        Functions.RELATIVE_TO_ABSOLUTE_PATH.apply(main));
+        pathRelativizer.apply(main));
   }
 
   private ImmutableSet<String> getPythonPathEntries() {

@@ -412,7 +412,7 @@ public class Genrule extends AbstractCachingBuildRule {
       String cmd,
       BuildRule matchingRule) {
     if (matchingRule instanceof BinaryBuildRule) {
-      return ((BinaryBuildRule) matchingRule).getExecutableCommand();
+      return ((BinaryBuildRule) matchingRule).getExecutableCommand(filesystem);
     }
 
     File output = filesystem.getFileForRelativePath(matchingRule.getPathToOutputFile());

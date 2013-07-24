@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.util.Functions;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,7 +43,7 @@ public class PrebuiltJarRuleTest {
         new BuildTarget(new File("lib/BUCK"), "//lib", "junit"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* visibilityPatterns */ ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        /* pathRelativizer */ Functions.RELATIVE_TO_ABSOLUTE_PATH);
+        /* pathRelativizer */ Functions.<String>identity());
     junitJarRule = new PrebuiltJarRule(buildRuleParams,
         "lib/junit-4.11.jar",
         Optional.of("lib/junit-4.11-sources.jar"),

@@ -33,7 +33,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.Functions;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -172,7 +172,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  public String getExecutableCommand() {
+  public String getExecutableCommand(ProjectFilesystem projectFilesystem) {
     Preconditions.checkState(mainClass != null,
         "Must specify a main class for %s in order to to run it.",
         getBuildTarget().getFullyQualifiedName());
@@ -180,7 +180,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
     return String.format("java -classpath %s %s",
         Joiner.on(':').join(Iterables.transform(
             getTransitiveClasspathEntries().values(),
-            Functions.RELATIVE_TO_ABSOLUTE_PATH)),
+            projectFilesystem.getPathRelativizer())),
         mainClass);
   }
 

@@ -39,11 +39,4 @@ public final class Functions {
     }
   };
 
-  public static Function<String, String> RELATIVE_TO_ABSOLUTE_PATH = new Function<String, String>() {
-    @Override
-    public String apply(String pathRelativeToProjectRoot) {
-      return new File(pathRelativeToProjectRoot).getAbsolutePath();
-    }
-  };
-
 }
