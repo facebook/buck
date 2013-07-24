@@ -149,6 +149,20 @@ public class ProjectWorkspace {
     public String getStderr() {
       return stderr;
     }
+
+    public void assertExitCode(int exitCode) {
+      if (exitCode == getExitCode()) {
+        return;
+      }
+
+      String failureMessage = String.format("Expected exit code %d but was %d.", exitCode, getExitCode());
+      System.err.println("=== " + failureMessage + " ===");
+      System.err.println("=== STDERR ===");
+      System.err.println(getStderr());
+      System.err.println("=== STDOUT ===");
+      System.err.println(getStdout());
+      fail(failureMessage);
+    }
   }
 
   /**
