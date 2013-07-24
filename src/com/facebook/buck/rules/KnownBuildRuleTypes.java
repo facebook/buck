@@ -38,6 +38,7 @@ import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
 import com.facebook.buck.python.PythonLibraryBuildRuleFactory;
 import com.facebook.buck.shell.ExportFileBuildRuleFactory;
 import com.facebook.buck.shell.GenruleBuildRuleFactory;
+import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -76,6 +77,7 @@ public class KnownBuildRuleTypes {
     register(BuildRuleType.PYTHON_LIBRARY, new PythonLibraryBuildRuleFactory());
     register(BuildRuleType.PYTHON_BINARY, new PythonBinaryBuildRuleFactory());
     register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
+    register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
     register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());
   }
 

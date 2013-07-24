@@ -1,0 +1,11 @@
+sh_binary(
+  name = 'node',
+  main = 'node',
+  resources = [
+    'binaries/os_x_node_executable',
+    'binaries/linux_node_executable',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

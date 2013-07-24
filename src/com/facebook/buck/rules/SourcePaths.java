@@ -16,7 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+
+import java.nio.file.Path;
 
 /**
  * Utilities for dealing with {@link SourcePath}s.
@@ -43,4 +46,14 @@ public class SourcePaths {
         SourcePath.TO_REFERENCE);
   }
 
+  public static Iterable<Path> toPaths(Iterable<SourcePath> sourcePaths,
+      final BuildContext context) {
+    Function<SourcePath, Path> transform = new Function<SourcePath, Path>() {
+      @Override
+      public Path apply(SourcePath sourcePath) {
+        return sourcePath.resolve(context);
+      }
+    };
+    return Iterables.transform(sourcePaths, transform);
+  }
 }

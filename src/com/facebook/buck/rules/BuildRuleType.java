@@ -42,6 +42,7 @@ public final class BuildRuleType {
   public static BuildRuleType PYTHON_BINARY = new BuildRuleType("python_binary");
   public static BuildRuleType PYTHON_LIBRARY = new BuildRuleType("python_library");
   public static BuildRuleType ROBOLECTRIC_TEST = new BuildRuleType("robolectric_test");
+  public static BuildRuleType SH_BINARY = new BuildRuleType("sh_binary");
   public static BuildRuleType SH_TEST = new BuildRuleType("sh_test");
 
   private final String name;

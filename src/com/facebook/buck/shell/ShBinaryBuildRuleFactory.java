@@ -14,26 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.shell;
 
-import com.facebook.buck.java.KeystoreRule.Builder;
-import com.facebook.buck.parser.AbstractTestRuleFactory;
+import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.shell.ShBinaryRule.Builder;
 
-public class KeystoreBuildRuleFactory extends AbstractTestRuleFactory<KeystoreRule.Builder> {
+import java.nio.file.Path;
+
+public class ShBinaryBuildRuleFactory extends AbstractBuildRuleFactory<ShBinaryRule.Builder> {
 
   @Override
   protected Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return KeystoreRule.newKeystoreBuilder(params);
+    return ShBinaryRule.newShBinaryBuilder(params);
   }
 
   @Override
   protected void amendBuilder(Builder builder, BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
-    builder.setStore(params.getRequiredFileAsPathRelativeToProjectRoot("store").toString());
-    builder.setProperties(params.getRequiredFileAsPathRelativeToProjectRoot("properties").toString());
+    Path main = params.getRequiredFileAsPathRelativeToProjectRoot("main");
+    builder.setMain(main);
   }
 
 }

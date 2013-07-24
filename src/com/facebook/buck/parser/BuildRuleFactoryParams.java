@@ -34,6 +34,8 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -121,9 +123,9 @@ public final class BuildRuleFactoryParams {
    * {@link #getRequiredStringAttribute(String)} with
    * {@link #resolveFilePathRelativeToBuildFileDirectory(String)}.
    */
-  public String getRequiredFileAsPathRelativeToProjectRoot(String attributeName) {
+  public Path getRequiredFileAsPathRelativeToProjectRoot(String attributeName) {
     String localPath = getRequiredStringAttribute(attributeName);
-    return resolveFilePathRelativeToBuildFileDirectory(localPath);
+    return Paths.get(resolveFilePathRelativeToBuildFileDirectory(localPath));
   }
 
   /**
