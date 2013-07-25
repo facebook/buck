@@ -261,7 +261,7 @@ public class ProjectTest {
     // Check the dependencies.
     DependentModule inheritedJdk = DependentModule.newInheritedJdk();
     DependentModule guavaAsProvidedDep = DependentModule.newLibrary(
-        guava.getBuildTarget(), "guava_10_0_1");
+        guava.getBuildTarget(), "third_party_guava_guava_10_0_1_jar");
     guavaAsProvidedDep.scope = "PROVIDED";
 
     assertListEquals(
@@ -366,7 +366,7 @@ public class ProjectTest {
 
     // Check the dependencies.
     DependentModule guavaAsCompiledDep = DependentModule.newLibrary(
-        guava.getBuildTarget(), "guava_10_0_1");
+        guava.getBuildTarget(), "third_party_guava_guava_10_0_1_jar");
     assertEquals("Important that Guava is listed as a 'COMPILED' dependency here because it is "
         + "only listed as a 'PROVIDED' dependency earlier.",
         ImmutableList.of(
@@ -460,9 +460,15 @@ public class ProjectTest {
     Module androidLibraryModule = Iterables.getOnlyElement(modules);
     assertListEquals(ImmutableList.of(
             DependentModule.newSourceFolder(),
-            DependentModule.newLibrary(easymock.getBuildTarget(), "easymock"),
-            DependentModule.newLibrary(cglib.getBuildTarget(), "cglib"),
-            DependentModule.newLibrary(objenesis.getBuildTarget(), "objenesis"),
+            DependentModule.newLibrary(
+                easymock.getBuildTarget(),
+                "third_party_java_easymock_easymock_jar"),
+            DependentModule.newLibrary(
+                cglib.getBuildTarget(),
+                "third_party_java_easymock_cglib_jar"),
+            DependentModule.newLibrary(
+                objenesis.getBuildTarget(),
+                "third_party_java_easymock_objenesis_jar"),
             DependentModule.newInheritedJdk()),
         androidLibraryModule.dependencies);
   }
@@ -506,7 +512,7 @@ public class ProjectTest {
 
     assertListEquals(ImmutableList.of(
             DependentModule.newSourceFolder(),
-            DependentModule.newLibrary(guava.getBuildTarget(), "guava"),
+            DependentModule.newLibrary(guava.getBuildTarget(), "third_party_java_guava_jar"),
             DependentModule.newStandardJdk()),
         comExampleBaseModule.dependencies);
   }
@@ -570,7 +576,7 @@ public class ProjectTest {
         "httpcore-4.0.1.jar.",
         ImmutableList.of(
             DependentModule.newSourceFolder(),
-            DependentModule.newLibrary(httpCore.getBuildTarget(), "httpcore_4_0_1"),
+            DependentModule.newLibrary(httpCore.getBuildTarget(), "httpcore_4_0_1_jar"),
             DependentModule.newModule(
                 supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
             DependentModule.newStandardJdk()),

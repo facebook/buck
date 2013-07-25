@@ -861,8 +861,7 @@ public class Project {
   }
 
   private static String getIntellijNameForBinaryJar(String binaryJar) {
-    String name = binaryJar.substring(binaryJar.lastIndexOf('/') + 1,
-        binaryJar.lastIndexOf('.'));
+    String name = binaryJar.replace('/', '_');
     return normalizeIntelliJName(name);
   }
 

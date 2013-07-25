@@ -16,8 +16,15 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Preconditions;
+
 public final class MoreStrings {
   public static final boolean isEmpty(CharSequence sequence) {
     return sequence.length() == 0;
+  }
+
+  public static String withoutSuffix(String str, String suffix) {
+    Preconditions.checkArgument(str.endsWith(suffix), "%s must end with %s", str, suffix);
+    return str.substring(0, str.length() - suffix.length());
   }
 }

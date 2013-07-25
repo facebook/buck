@@ -58,9 +58,9 @@ public class ProjectIntegrationTest {
         Joiner.on('\n').join(
           "MODIFIED FILES:",
           ".idea/compiler.xml",
-          ".idea/libraries/guava.xml",
-          ".idea/libraries/jsr305.xml",
-          ".idea/libraries/junit.xml",
+          ".idea/libraries/libs_guava_jar.xml",
+          ".idea/libraries/libs_jsr305_jar.xml",
+          ".idea/libraries/libs_junit_jar.xml",
           ".idea/modules.xml",
           ".idea/runConfigurations/Debug_Buck_test.xml",
           "modules/dep1/module_modules_dep1.iml",

@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
+import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -185,9 +186,12 @@ public class ProjectWorkspace {
           }
           String expectedFileContent = Files.toString(file.toFile(), Charsets.UTF_8);
           String observedFileContent = Files.toString(observedFile, Charsets.UTF_8);
+          String cleanPathToObservedFile = MoreStrings.withoutSuffix(
+              templatePath.relativize(file).toString(), EXPECTED_SUFFIX);
           assertEquals(
               String.format(
-                  "Expected content of %s to match that of %s.",
+                  "In %s, expected content of %s to match that of %s.",
+                  cleanPathToObservedFile,
                   expectedFileContent,
                   observedFileContent),
               expectedFileContent,
