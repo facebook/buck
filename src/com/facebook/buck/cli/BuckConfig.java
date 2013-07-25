@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -60,7 +59,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -431,10 +429,6 @@ class BuckConfig {
     }
   }
 
-  Optional<String> getPathToDefaultAndroidManifest() {
-    return getValue("project", "default_android_manifest");
-  }
-
   @Beta
   Optional<BuildDependencies> getBuildDependencies() {
     Optional<String> buildDependenciesOptional = getValue("build", "build_dependencies");
@@ -450,13 +444,6 @@ class BuckConfig {
     } else {
       return Optional.absent();
     }
-  }
-
-  List<String> getInitialTargets() {
-    Optional<String> initialTargets = getValue("project", "initial_targets");
-    return initialTargets.isPresent()
-        ? Lists.newArrayList(Splitter.on(' ').trimResults().split(initialTargets.get()))
-        : ImmutableList.<String>of();
   }
 
   public Ansi createAnsi() {
@@ -549,14 +536,9 @@ class BuckConfig {
     }
   }
 
-  private Optional<String> getValue(String sectionName, String propertyName) {
+  public Optional<String> getValue(String sectionName, String propertyName) {
     ImmutableMap<String, String> properties = this.getEntriesForSection(sectionName);
-    String value = properties.get(propertyName);
-    if (value != null) {
-      return Optional.of(value);
-    } else {
-      return Optional.absent();
-    }
+    return Optional.fromNullable(properties.get(propertyName));
   }
 
   @Override

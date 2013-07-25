@@ -721,7 +721,8 @@ public class ProjectTest {
         javaPackageFinder,
         executionContext,
         projectFilesystem,
-        Optional.<String>absent() /* pathToDefaultAndroidManifest */);
+        /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
+        /* pathToPostProcessScript */ Optional.<String>absent());
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);

@@ -40,6 +40,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -125,6 +126,7 @@ public class Project {
   private final ExecutionContext executionContext;
   private final ProjectFilesystem projectFilesystem;
   private final Optional<String> pathToDefaultAndroidManifest;
+  private final Optional<String> pathToPostProcessScript;
   private final Set<PrebuiltJarRule> libraryJars;
 
   public Project(PartialGraph partialGraph,
@@ -132,7 +134,8 @@ public class Project {
       JavaPackageFinder javaPackageFinder,
       ExecutionContext executionContext,
       ProjectFilesystem projectFilesystem,
-      Optional<String> pathToDefaultAndroidManifest) {
+      Optional<String> pathToDefaultAndroidManifest,
+      Optional<String> pathToPostProcessScript) {
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.buildFileTree = new BuildFileTree(partialGraph.getTargets());
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
@@ -140,10 +143,13 @@ public class Project {
     this.executionContext = Preconditions.checkNotNull(executionContext);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.pathToDefaultAndroidManifest = Preconditions.checkNotNull(pathToDefaultAndroidManifest);
+    this.pathToPostProcessScript = Preconditions.checkNotNull(pathToPostProcessScript);
     this.libraryJars = Sets.newHashSet();
   }
 
-  public int createIntellijProject(File jsonTempFile, PrintStream stdOut) throws IOException {
+  public int createIntellijProject(File jsonTempFile,
+      ProcessExecutor processExecutor,
+      PrintStream stdOut) throws IOException {
     List<Module> modules = createModulesForProjectConfigs();
     writeJsonConfig(jsonTempFile, modules);
 
@@ -171,6 +177,13 @@ public class Project {
     File compilerXmlFile = projectFilesystem.getFileForRelativePath(pathToCompilerXml);
     if (compilerXml.write(compilerXmlFile)) {
       modifiedFiles.add(pathToCompilerXml);
+    }
+
+    // If the user specified a post-processing script, then run it.
+    if (pathToPostProcessScript.isPresent()) {
+      String pathToScript = pathToPostProcessScript.get();
+      Process process = Runtime.getRuntime().exec(new String[] {pathToScript});
+      processExecutor.execute(process);
     }
 
     // If any files have been modified by `buck project`, then list them for the user.

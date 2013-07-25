@@ -43,6 +43,7 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -181,10 +182,14 @@ public class ProjectCommandTest {
     }
 
     @Override
-    int createIntellijProject(Project project, File jsonTemplate, PrintStream stdOut)
+    int createIntellijProject(Project project,
+        File jsonTemplate,
+        ProcessExecutor processExecutor,
+        PrintStream stdOut)
         throws IOException {
       assertNotNull(project);
       assertNotNull(jsonTemplate);
+      assertNotNull(processExecutor);
       assertNotNull(stdOut);
       return 0;
     }

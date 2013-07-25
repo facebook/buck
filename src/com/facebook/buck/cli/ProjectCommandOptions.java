@@ -18,6 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -49,11 +51,18 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   }
 
   public Optional<String> getPathToDefaultAndroidManifest() {
-    return getBuckConfig().getPathToDefaultAndroidManifest();
+    return getBuckConfig().getValue("project", "default_android_manifest");
+  }
+
+  public Optional<String> getPathToPostProcessScript() {
+    return getBuckConfig().getValue("project", "post_process");
   }
 
   private List<String> getInitialTargets() {
-    return getBuckConfig().getInitialTargets();
+    Optional<String> initialTargets = getBuckConfig().getValue("project", "initial_targets");
+    return initialTargets.isPresent()
+        ? Lists.newArrayList(Splitter.on(' ').trimResults().split(initialTargets.get()))
+        : ImmutableList.<String>of();
   }
 
   public boolean hasInitialTargets() {

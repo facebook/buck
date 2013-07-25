@@ -198,6 +198,18 @@ about source control systems.
   ignore = .git
 </pre>{/literal}
 
+A <code>post_process</code> property can reference a script that should be
+executed after the project files are generated. Because <code>buck project</code> is
+currently based on heuristics, the IntelliJ project that it generates may not be
+exactly what you want if you are using a non-traditional project structure.
+In these cases, you may want to let <code>buck project</code> do the bulk of the
+heavy-lifting, and then let your <code>post_process</code> script do some cleanup
+on the generated files.
+
+{literal}<pre>
+[project]
+  post_process = ./scripts/post_process_buck_project.sh
+</pre>{/literal}
 
     {/param}
   {/call}

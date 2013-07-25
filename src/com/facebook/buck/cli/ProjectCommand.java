@@ -25,6 +25,7 @@ import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -79,12 +80,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         options.getJavaPackageFinder(),
         executionContext,
         getProjectFilesystem(),
-        options.getPathToDefaultAndroidManifest());
+        options.getPathToDefaultAndroidManifest(),
+        options.getPathToPostProcessScript());
 
     File tempFile = new File(Files.createTempDir(), "project.json");
     int exitCode;
     try {
-      exitCode = createIntellijProject(project, tempFile, console.getStdOut());
+      exitCode = createIntellijProject(project,
+          tempFile,
+          executionContext.getProcessExecutor(),
+          console.getStdOut());
       if (exitCode != 0) {
         return exitCode;
       }
@@ -122,9 +127,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    * This is factored into a separate method for testing purposes.
    */
   @VisibleForTesting
-  int createIntellijProject(Project project, File jsonTemplate, PrintStream stdOut)
+  int createIntellijProject(Project project,
+      File jsonTemplate,
+      ProcessExecutor processExecutor,
+      PrintStream stdOut)
       throws IOException {
-    return project.createIntellijProject(jsonTemplate, stdOut);
+    return project.createIntellijProject(jsonTemplate, processExecutor, stdOut);
   }
 
   /**
