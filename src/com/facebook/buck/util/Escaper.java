@@ -20,6 +20,8 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
+import java.nio.file.Path;
+
 public final class Escaper {
 
   /** Utility class: do not instantiate. */
@@ -52,6 +54,10 @@ public final class Escaper {
     } else {
       return new StringBuilder("'").append(str.replace("'", "'\\''")).append("'").toString();
     }
+  }
+
+  public static String escapeAsBashString(Path path) {
+    return escapeAsBashString(path.toString());
   }
 
   public static String escapeAsXmlString(String str) {

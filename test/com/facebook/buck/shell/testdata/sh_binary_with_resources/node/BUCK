@@ -2,6 +2,7 @@ sh_binary(
   name = 'node',
   main = 'node',
   resources = [
+    'file with spaces in its name',
     'binaries/os_x_node_executable',
     'binaries/linux_node_executable',
   ],

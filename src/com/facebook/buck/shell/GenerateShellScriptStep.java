@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -105,11 +106,11 @@ public class GenerateShellScriptStep implements Step {
           || path.startsWith(basePath), "%s should start with %s", path, basePath);
 
       if (path.getNameCount() > 1) {
-        lines.add(String.format("mkdir -p %s", path.getParent()));
+        lines.add(String.format("mkdir -p %s", Escaper.escapeAsBashString(path.getParent())));
       }
       lines.add(String.format("ln -s %s $BUCK_PROJECT_ROOT/%s",
-                              pathRelativizer.apply(path.toString()),
-                              path));
+          Escaper.escapeAsBashString(pathRelativizer.apply(path.toString())),
+          Escaper.escapeAsBashString(path)));
     }
   }
 
