@@ -59,7 +59,7 @@ public class ZipStepTest {
         .add(".")
         .build();
 
-    ZipStep command = new ZipStep(zipFile, directory);
+    ZipStep command = new ZipStep(new File(zipFile), directory);
 
     // Assert that the command has been constructed with the right arguments.
     MoreAsserts.assertListEquals(expectedShellCommand,

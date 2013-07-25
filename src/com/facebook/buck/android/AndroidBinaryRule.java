@@ -45,6 +45,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RepackZipEntriesStep;
+import com.facebook.buck.step.fs.UnzipStep;
 import com.facebook.buck.step.fs.ZipDirectoryWithMaxDeflateStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -262,18 +263,21 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @VisibleForTesting
-  void copyNativeLibrary(
-      String sourceDir,
+  void unzipNativeLibrary(String sourceZip,
       String destinationDir,
       ImmutableList.Builder<Step> commands) {
-
+    String artifactsDir = String.format("%s/%s",
+        getBinPath("__native_zips__%s__"),
+        new File(sourceZip).getParent());
+    commands.add(new MakeCleanDirectoryStep(artifactsDir));
+    commands.add(new UnzipStep(sourceZip, artifactsDir, false));
     if (getCpuFilters().isEmpty()) {
-      commands.add(new BashStep(String.format("cp -R %s/* %s", sourceDir, destinationDir)));
+      commands.add(new BashStep(String.format("cp -R %s/* %s", artifactsDir, destinationDir)));
     } else {
       for (TargetCpuType cpuType: getCpuFilters()) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
-        String libsDirectory = sourceDir + "/" + abiDirectoryComponent.get();
+        String libsDirectory = artifactsDir + "/" + abiDirectoryComponent.get();
         commands.add(new BashStep(String.format(
             "[ -d %s ] && cp -R %s %s || exit 0", libsDirectory, libsDirectory, destinationDir)));
       }
@@ -422,16 +426,13 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     // Copy the transitive closure of files in native_libs to a single directory, if any.
     ImmutableSet.Builder<String> nativeLibraryDirectories = ImmutableSet.builder();
-    if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
+    if (!transitiveDependencies.nativeLibsZips.isEmpty()) {
       String pathForNativeLibs = getPathForNativeLibs();
       String libSubdirectory = pathForNativeLibs + "/lib";
       nativeLibraryDirectories.add(libSubdirectory);
       commands.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
-        if (nativeLibDir.endsWith("/")) {
-          nativeLibDir = nativeLibDir.substring(0, nativeLibDir.length() - 1);
-        }
-        copyNativeLibrary(nativeLibDir, libSubdirectory, commands);
+      for (String nativeLibZip : transitiveDependencies.nativeLibsZips) {
+        unzipNativeLibrary(nativeLibZip, libSubdirectory, commands);
       }
     }
 
@@ -441,17 +442,17 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
     Optional<String> assetsDirectory;
     if (transitiveDependencies.assetsDirectories.isEmpty() && extraAssets.isEmpty()
-        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+        && transitiveDependencies.nativeLibAssetsZips.isEmpty()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
     }
 
-    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+    if (!transitiveDependencies.nativeLibAssetsZips.isEmpty()) {
       String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
       commands.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
-      for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
-        copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, commands);
+      for (String nativeLibZip : transitiveDependencies.nativeLibAssetsZips) {
+        unzipNativeLibrary(nativeLibZip, nativeLibAssetsDir, commands);
       }
     }
 

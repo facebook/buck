@@ -19,23 +19,23 @@ import com.google.common.collect.ImmutableSet;
 
 public class AndroidTransitiveDependencies {
   public final ImmutableSet<String> assetsDirectories;
-  public final ImmutableSet<String> nativeLibsDirectories;
-  public final ImmutableSet<String> nativeLibAssetsDirectories;
+  public final ImmutableSet<String> nativeLibsZips;
+  public final ImmutableSet<String> nativeLibAssetsZips;
   public final ImmutableSet<String> manifestFiles;
   public final ImmutableSet<String> resDirectories;
   public final ImmutableSet<String> rDotJavaPackages;
   public final ImmutableSet<String> proguardConfigs;
 
   public AndroidTransitiveDependencies(ImmutableSet<String> assetsDirectories,
-                                       ImmutableSet<String> nativeLibsDirectories,
-                                       ImmutableSet<String> nativeLibAssetsDirectories,
+                                       ImmutableSet<String> nativeLibsZips,
+                                       ImmutableSet<String> nativeLibAssetsZips,
                                        ImmutableSet<String> manifestFiles,
                                        ImmutableSet<String> resDirectories,
                                        ImmutableSet<String> rDotJavaPackages,
                                        ImmutableSet<String> proguardConfigs) {
     this.assetsDirectories = ImmutableSet.copyOf(assetsDirectories);
-    this.nativeLibsDirectories = ImmutableSet.copyOf(nativeLibsDirectories);
-    this.nativeLibAssetsDirectories = ImmutableSet.copyOf(nativeLibAssetsDirectories);
+    this.nativeLibsZips = ImmutableSet.copyOf(nativeLibsZips);
+    this.nativeLibAssetsZips = ImmutableSet.copyOf(nativeLibAssetsZips);
     this.manifestFiles = ImmutableSet.copyOf(manifestFiles);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
     this.rDotJavaPackages = ImmutableSet.copyOf(rDotJavaPackages);

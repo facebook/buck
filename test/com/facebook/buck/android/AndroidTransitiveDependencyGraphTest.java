@@ -136,12 +136,12 @@ public class AndroidTransitiveDependencyGraphTest {
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
-        ImmutableSet.of(ndkLibraryRule.getLibraryPath()),
-        transitiveDeps.nativeLibsDirectories);
+        ImmutableSet.of(ndkLibraryRule.getPathToOutputFile()),
+        transitiveDeps.nativeLibsZips);
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
-        ImmutableSet.of(prebuiltNativeLibraryBuildRule.getLibraryPath()),
-        transitiveDeps.nativeLibAssetsDirectories);
+        ImmutableSet.of(prebuiltNativeLibraryBuildRule.getPathToOutputFile()),
+        transitiveDeps.nativeLibAssetsZips);
   }
 }

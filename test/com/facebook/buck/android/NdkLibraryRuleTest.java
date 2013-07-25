@@ -78,7 +78,7 @@ public class NdkLibraryRuleTest {
             basePath + "/main.cpp"),
         ImmutableList.copyOf(ndkLibraryRule.getInputsToCompareToOutput()));
 
-    List<Step> steps = ndkLibraryRule.buildInternal(context);
+    List<Step> steps = ndkLibraryRule.buildArchive(context);
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     File projectRoot = createMock(File.class);

@@ -70,7 +70,7 @@ public class ZipStep extends ShellStep {
   }
 
   private final Mode mode;
-  private final String pathToZipFile;
+  private final String absolutePathToZipFile;
   private final ImmutableSet<String> paths;
   private final boolean junkPaths;
   private final int compressionLevel;
@@ -87,7 +87,7 @@ public class ZipStep extends ShellStep {
    * @param mode one of {@link ZipStep.Mode#ADD}, {@link ZipStep.Mode#UPDATE UPDATE},
    *    {@link ZipStep.Mode#FRESHEN FRESHEN} or {@link ZipStep.Mode#DELETE DELETE}, as in the
    *    {@code zip} command.
-   * @param pathToZipFile path to archive to create or update
+   * @param absolutePathToZipFile path to archive to create or update
    * @param paths a set of files and/or directories to work on. The entire working directory is
    *    assumed if this set is empty.
    * @param junkPaths if {@code true}, the relative paths of added archive entries are discarded,
@@ -100,7 +100,7 @@ public class ZipStep extends ShellStep {
    */
   public ZipStep(
       Mode mode,
-      String pathToZipFile,
+      String absolutePathToZipFile,
       Set<String> paths,
       boolean junkPaths,
       int compressionLevel,
@@ -109,7 +109,7 @@ public class ZipStep extends ShellStep {
     Preconditions.checkArgument(compressionLevel >= MIN_COMPRESSION_LEVEL &&
         compressionLevel <= MAX_COMPRESSION_LEVEL, "compressionLevel out of bounds.");
     this.mode = mode;
-    this.pathToZipFile = Preconditions.checkNotNull(pathToZipFile);
+    this.absolutePathToZipFile = Preconditions.checkNotNull(absolutePathToZipFile);
     this.paths = ImmutableSet.copyOf(Preconditions.checkNotNull(paths));
     this.junkPaths = junkPaths;
     this.compressionLevel = compressionLevel;
@@ -119,15 +119,15 @@ public class ZipStep extends ShellStep {
    * Create a {@link ZipStep} that adds an entire directory to an archive. The files directly in
    * the directory will appear in the root of the archive. Default compression level is assumed.
    *
-   * @param pathToZipFile path to archive to create or update
+   * @param zipFile file to archive to create or update
    * @param directoryToAdd directory to add to the archive
    *
    * @see #ZipStep(Mode, String, Set, boolean, int, File)
    */
-  public ZipStep(String pathToZipFile, File directoryToAdd) {
+  public ZipStep(File zipFile, File directoryToAdd) {
     this(
         Mode.ADD,
-        pathToZipFile,
+        zipFile.getAbsolutePath(),
         ImmutableSet.<String>of() /* pathsToAdd */,
         false /* junkPaths */,
         DEFAULT_COMPRESSION_LEVEL /* compressionLevel */,
@@ -168,7 +168,7 @@ public class ZipStep extends ShellStep {
     }
 
     // destination archive
-    args.add(pathToZipFile);
+    args.add(absolutePathToZipFile);
 
     // files to add to archive
     if (paths.isEmpty()) {

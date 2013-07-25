@@ -118,11 +118,11 @@ public class AndroidTransitiveDependencyGraph {
 
     // Paths to native libs directories (often named libs/) that should be included as raw files
     // directories in the final APK.
-    final ImmutableSet.Builder<String> nativeLibsDirectories = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> nativeLibsZips = ImmutableSet.builder();
 
     // Paths to native libs directories that are to be treated as assets and so should be included
     // as raw files under /assets/lib/ directory in the APK.
-    final ImmutableSet.Builder<String> nativeLibAssetsDirectories = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> nativeLibAssetsZips = ImmutableSet.builder();
 
     // Path to the module's manifest file
     final ImmutableSet.Builder<String> manifestFiles = ImmutableSet.builder();
@@ -143,9 +143,9 @@ public class AndroidTransitiveDependencyGraph {
         if (rule instanceof NativeLibraryRule) {
           NativeLibraryRule nativeLibraryRule = (NativeLibraryRule)rule;
           if (nativeLibraryRule.isAsset()) {
-            nativeLibAssetsDirectories.add(nativeLibraryRule.getLibraryPath());
+            nativeLibAssetsZips.add(nativeLibraryRule.getPathToOutputFile());
           } else {
-            nativeLibsDirectories.add(nativeLibraryRule.getLibraryPath());
+            nativeLibsZips.add(nativeLibraryRule.getPathToOutputFile());
           }
         } else if (rule instanceof AndroidResourceRule) {
           AndroidResourceRule androidRule = (AndroidResourceRule) rule;
@@ -173,8 +173,8 @@ public class AndroidTransitiveDependencyGraph {
     }.start();
 
     return new AndroidTransitiveDependencies(assetsDirectories.build(),
-        nativeLibsDirectories.build(),
-        nativeLibAssetsDirectories.build(),
+        nativeLibsZips.build(),
+        nativeLibAssetsZips.build(),
         manifestFiles.build(),
         details.resDirectories,
         details.rDotJavaPackages,

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.KeystoreRule;
 import com.facebook.buck.model.BuildTarget;
@@ -36,17 +37,20 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.shell.BashStep;
+import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -54,6 +58,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import org.junit.Test;
@@ -63,6 +68,11 @@ import java.util.List;
 import java.util.Set;
 
 public class AndroidBinaryRuleTest {
+
+  /**
+   * Directory where native libraries are expected to put their output.
+   */
+  final String nativeOutDir = "buck-out/bin/__native_zips__fbandroid_with_dash_debug_fbsign__/";
 
   @Test
   public void testAndroidBinaryNoDx() {
@@ -527,40 +537,46 @@ public class AndroidBinaryRuleTest {
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.<String>of() /* cpuFilters */,
-        "/path/to/source",
-        "/path/to/destination/",
-        ImmutableSet.of("cp -R /path/to/source/* /path/to/destination/"));
+        "path/to/source/libs.zip",
+        "path/to/destination/",
+        ImmutableList.of(
+            "unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
+            "bash -c cp -R " + nativeOutDir + "path/to/source/* path/to/destination/"));
   }
 
   @Test
   public void testCopyNativeLibraryCommand() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of("armv7"),
-        "/path/to/source",
-        "/path/to/destination/",
-        ImmutableSet.of(
-            "[ -d /path/to/source/armeabi-v7a ] && " +
-                "cp -R /path/to/source/armeabi-v7a /path/to/destination/ || exit 0"));
+        "path/to/source/libs.zip",
+        "path/to/destination/",
+        ImmutableList.of(
+            "unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
+            "bash -c " +
+                "[ -d " + nativeOutDir + "path/to/source/armeabi-v7a ] && " +
+                "cp -R " + nativeOutDir + "path/to/source/armeabi-v7a path/to/destination/ || " +
+                "exit 0"));
   }
 
   @Test
   public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of("arm", "x86"),
-        "/path/to/source",
-        "/path/to/destination/",
-        ImmutableSet.of(
-            "[ -d /path/to/source/armeabi ] && " +
-                "cp -R /path/to/source/armeabi /path/to/destination/ || exit 0",
-            "[ -d /path/to/source/x86 ] && " +
-                "cp -R /path/to/source/x86 /path/to/destination/ || exit 0"));
+        "path/to/source/libs.zip",
+        "path/to/destination/",
+        ImmutableList.of(
+            "unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
+            "bash -c [ -d " + nativeOutDir + "path/to/source/armeabi ] && " +
+                "cp -R " + nativeOutDir + "path/to/source/armeabi path/to/destination/ || exit 0",
+            "bash -c [ -d " + nativeOutDir + "path/to/source/x86 ] && " +
+                "cp -R " + nativeOutDir + "path/to/source/x86 path/to/destination/ || exit 0"));
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
       ImmutableSet<String> cpuFilters,
-      String sourceDir,
+      String sourceZip,
       String destinationDir,
-      ImmutableSet<String> expectedBashCommands) {
+      ImmutableList<String> expectedShellCommands) {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
         new FakeAbstractBuildRuleBuilderParams())
@@ -575,14 +591,25 @@ public class AndroidBinaryRuleTest {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     AndroidBinaryRule buildRule = ruleResolver.buildAndAddToIndex(builder);
-    buildRule.copyNativeLibrary(sourceDir, destinationDir, commands);
+    buildRule.unzipNativeLibrary(sourceZip, destinationDir, commands);
 
     ImmutableList<Step> steps = commands.build();
-    assertEquals(steps.size(), expectedBashCommands.size());
 
-    for (Step command: commands.build()) {
-      assertTrue(expectedBashCommands.contains(
-          ((BashStep)command).getShellCommand(createMock(ExecutionContext.class)).get(2)));
+    assertEquals(steps.size(), expectedShellCommands.size() + 1);
+    assertEquals(MakeCleanDirectoryStep.class, steps.get(0).getClass());
+
+    ImmutableList<ShellStep> shellSteps =
+        ImmutableList.copyOf(Iterables.filter(steps, ShellStep.class));
+    assertEquals(shellSteps.size(), expectedShellCommands.size());
+    ExecutionContext context = ExecutionContext.builder()
+        .setConsole(new TestConsole())
+        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+        .setEventBus(new BuckEventBus())
+        .build();
+
+    for (int i = 0; i < shellSteps.size(); ++i) {
+      assertEquals(expectedShellCommands.get(i),
+          Joiner.on(" ").join((shellSteps.get(i)).getShellCommand(context)));
     }
   }
 

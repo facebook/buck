@@ -49,7 +49,7 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class NdkLibraryRule extends NativeLibraryRule {
+  public class NdkLibraryRule extends NativeLibraryRule {
 
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
   private final String makefileDirectory;
@@ -117,11 +117,11 @@ public class NdkLibraryRule extends NativeLibraryRule {
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
-    return ImmutableList.of((Step)new NdkBuildStep(
-        this.makefileDirectory,
+  protected List<Step> buildArchive(BuildContext context) throws IOException {
+    Step nkdBuildStep = new NdkBuildStep(this.makefileDirectory,
         this.buildArtifactsDirectory,
-        this.flags));
+        this.flags);
+    return ImmutableList.of(nkdBuildStep);
   }
 
   public static Builder newNdkLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {

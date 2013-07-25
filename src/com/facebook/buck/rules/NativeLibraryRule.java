@@ -16,12 +16,16 @@
 
 package com.facebook.buck.rules;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 /**
  * This provides a base class for build rules that build/pack native libraries / shared objects.
+ * All NativeLibraryRule's should produce a zip file containing the output of building the rule.
  *
  * See NdkLibraryRule and PrebuiltNativeLibraryBuildRule for concrete examples.
  */
-abstract public class NativeLibraryRule extends AbstractCachingBuildRule {
+abstract public class NativeLibraryRule extends ArchivingRule {
   private final boolean isAsset;
   private final String libraryPath;
 
@@ -34,6 +38,11 @@ abstract public class NativeLibraryRule extends AbstractCachingBuildRule {
 
   public boolean isAsset() {
     return isAsset;
+  }
+
+  @Override
+  protected Path getArchivePath() {
+    return Paths.get(getLibraryPath());
   }
 
   /**

@@ -32,7 +32,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -79,8 +78,7 @@ public class PrebuiltNativeLibraryBuildRule extends NativeLibraryRule {
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context)
-      throws IOException {
+  protected List<Step> buildArchive(BuildContext context) {
     // We're checking in prebuilt libraries for now, so this is a noop.
     return ImmutableList.of();
   }
