@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.android.common.annotations.NonNull;
-import com.android.common.utils.StdLogger;
 import com.android.manifmerger.ICallback;
 import com.android.manifmerger.IMergerLog;
 import com.android.manifmerger.ManifestMerger;
@@ -92,7 +91,7 @@ public class GenerateManifestStep implements Step {
       }
     };
 
-    IMergerLog log = MergerLog.wrapSdkLog(new StdLogger(StdLogger.Level.VERBOSE));
+    IMergerLog log = MergerLog.wrapSdkLog(new BuckEventAndroidLogger(context.getBuckEventBus()));
 
     ManifestMerger merger = new ManifestMerger(log, callback);
 
