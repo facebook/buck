@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  */
 public class AndroidPlatformTarget {
 
-  static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:16";
+  public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:18";
 
   private final String name;
   private final File androidJar;

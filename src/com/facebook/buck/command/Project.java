@@ -36,6 +36,7 @@ import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
@@ -279,7 +280,8 @@ public class Project {
     builder.append("# Do not modify this file -- YOUR CHANGES WILL BE ERASED!\n");
 
     // These are default values that IntelliJ or some other tool may overwrite.
-    builder.append("target=Google Inc.:Google APIs:16\n");
+    builder.append(
+        String.format("target=%s\n", AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET));
     builder.append("proguard.config=proguard.cfg\n");
 
     boolean isAndroidLibrary = module.isAndroidLibrary();
