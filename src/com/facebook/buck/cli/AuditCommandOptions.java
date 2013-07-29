@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
@@ -37,14 +36,11 @@ public class AuditCommandOptions extends AbstractCommandOptions {
       usage = "Print dependencies as Dot graph")
   private boolean generateDotOutput;
 
-  private final BuckConfig buckConfig;
-
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
   public AuditCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
-    this.buckConfig = Preconditions.checkNotNull(buckConfig);
   }
 
   public List<String> getArguments() {
@@ -52,7 +48,7 @@ public class AuditCommandOptions extends AbstractCommandOptions {
   }
 
   public List<String> getArgumentsFormattedAsBuildTargets() {
-    return CommandLineBuildTargetNormalizer.normalizeAll(buckConfig, getArguments());
+    return CommandLineBuildTargetNormalizer.normalizeAll(getBuckConfig(), getArguments());
   }
 
   public boolean shouldGenerateDotOutput() {
