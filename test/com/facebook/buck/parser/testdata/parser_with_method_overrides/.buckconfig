@@ -1,0 +1,2 @@
+[buildfile]
+    includes = //BUILD_DEFS

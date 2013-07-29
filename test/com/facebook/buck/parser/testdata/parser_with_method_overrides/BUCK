@@ -1,0 +1,14 @@
+STRING_VALUE = 'No one overwrote me'
+
+echo_genrule(
+  name='base_genrule',
+  deps=['//fakeModule:fake_genrule'],
+  echo_str=STRING_VALUE,
+  out='rootOut',
+)
+
+# If subsequent build files are parsed but aren't sandboxed, this will raise
+# an exception.  This tests that build files are in fact properly sandboxed
+# from each other.
+def genrule():
+  raise "I POLLUTED THE SCOPE!!!"

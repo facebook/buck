@@ -1,11 +1,12 @@
 from __future__ import with_statement
 
-import optparse
+import copy
 import functools
-import re
+import optparse
 import os
 import os.path
 import posixpath
+import re
 import sys
 
 try:
@@ -55,15 +56,46 @@ def provide_for_build(func):
   return func
 
 
-def make_build_file_symbol_table(build_env):
-  """Creates a symbol table with all the functions decorated by
-  @provide_for_build.
+class LazyBuildEnvPartial:
+  """Pairs a function with a build environment in which it should be executed.
+
+  Note that although both the function and build environment must be specified
+  via the constructor, the build environment may be reassigned after
+  construction.
+
+  To call the function with its build environment, use the invoke() method of
+  this class, which will forward the arguments from invoke() to the underlying
+  function.
   """
+
+  def __init__(self, func, default_build_env):
+    self.func = func
+    self.build_env = default_build_env
+
+  def invoke(self, *args, **kwargs):
+    """Invokes the bound function injecting 'build_env' into **kwargs."""
+    updated_kwargs = kwargs.copy()
+    updated_kwargs.update({'build_env': self.build_env})
+    return self.func(*args, **updated_kwargs)
+
+
+def make_build_file_symbol_table(build_env):
+  """Creates a symbol table with functions decorated by @provide_for_build."""
   symbol_table = {}
+  lazy_functions = []
   for func in BUILD_FUNCTIONS:
-    func_with_env = functools.partial(func, build_env=build_env)
-    symbol_table[func.__name__] = func_with_env
-  return symbol_table
+    func_with_env = LazyBuildEnvPartial(func, build_env)
+    symbol_table[func.__name__] = func_with_env.invoke
+    lazy_functions.append(func_with_env)
+  return {
+    'symbol_table': symbol_table,
+    'lazy_functions': lazy_functions}
+
+
+def update_lazy_functions(lazy_functions, build_env):
+  """Updates a list of LazyBuildEnvPartials with build_env."""
+  for lazy_function in lazy_functions:
+    lazy_function.build_env = build_env
 
 
 def add_rule(rule, build_env):
@@ -653,24 +685,43 @@ class BuildFileProcessor:
     self.server = server
     self.len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
 
-  """Process an individual build file and output a JSON object representative
-  of what was parsed."""
-  def process(self, build_file):
-    # Reset build_env for each build file so that the variables declared in the build file
-    # or the files in includes through include_defs() don't pollute the namespace for
-    # subsequent build files.
+    # Create root_build_env
     build_env = {}
+    build_env['PROJECT_ROOT'] = self.project_root
+    build_symbols = make_build_file_symbol_table(build_env)
+    build_env['BUILD_FILE_SYMBOL_TABLE'] = build_symbols['symbol_table']
+    build_env['LAZY_FUNCTIONS'] = build_symbols['lazy_functions']
+
+    # If there are any default includes, evaluate those first to populate the
+    # build_env.
+    for include in self.includes:
+      include_defs(include, build_env)
+
+    self.root_build_env = build_env
+
+  def process(self, build_file):
+    """Process an individual build file and output JSON of result to stdout."""
+
+    # Reset build_env for each build file so that the variables declared in the
+    # build file or the files in includes through include_defs() don't pollute
+    # the namespace for subsequent build files.
+    build_env = copy.copy(self.root_build_env)
     relative_path_to_build_file = relpath(build_file, self.project_root)
     build_env['BASE'] = relative_path_to_build_file[:self.len_suffix]
     build_env['BUILD_FILE_DIRECTORY'] = os.path.dirname(build_file)
-    build_env['PROJECT_ROOT'] = self.project_root
     build_env['RULES'] = {}
-    build_env['BUILD_FILE_SYMBOL_TABLE'] = make_build_file_symbol_table(build_env)
 
-    # If there are any default includes, evaluate those first to populate the build_env.
-    for include in self.includes:
-      include_defs(include, build_env)
-    execfile(os.path.join(self.project_root, build_file), build_env['BUILD_FILE_SYMBOL_TABLE'])
+    # Copy BUILD_FILE_SYMBOL_TABLE over.  This is the only dict that we need
+    # a sperate copy of since update_lazy_functions will modify it.
+    build_env['BUILD_FILE_SYMBOL_TABLE'] = copy.copy(
+        self.root_build_env['BUILD_FILE_SYMBOL_TABLE'])
+
+    # Re-apply build_env to the rules added in this file with
+    # @provide_for_build.
+    update_lazy_functions(build_env['LAZY_FUNCTIONS'], build_env)
+    execfile(os.path.join(self.project_root, build_file),
+             build_env['BUILD_FILE_SYMBOL_TABLE'])
+
     values = build_env['RULES'].values()
     if self.server:
       print json.dumps(values)
@@ -726,7 +777,7 @@ def main():
     buildFileProcessor.process(build_file)
 
   if options.server:
-    # Apparently for ... in sys.stdin doesn't work with Jython when a custom stdin is 
+    # Apparently for ... in sys.stdin doesn't work with Jython when a custom stdin is
     # provided by the caller in Java-land.  Claims that sys.stdin is a filereader which doesn't
     # offer an iterator.
     for build_file in iter(sys.stdin.readline, ''):

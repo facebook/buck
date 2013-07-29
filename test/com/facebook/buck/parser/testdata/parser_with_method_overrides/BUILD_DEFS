@@ -1,0 +1,7 @@
+def echo_genrule(name, echo_str, out, srcs=[], deps=[], visibility=[]):
+	genrule(name=name,
+		cmd='echo %s > $OUT' % echo_str,
+		out=out,
+		srcs=srcs,
+		deps=deps,
+		visibility=visibility)

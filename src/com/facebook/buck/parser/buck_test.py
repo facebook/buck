@@ -1,4 +1,5 @@
 from buck import glob_pattern_to_regex_string
+from buck import LazyBuildEnvPartial
 from buck import relpath
 import unittest
 import re
@@ -45,6 +46,20 @@ class TestBuck(unittest.TestCase):
     self.assertTrue(all_java_tests_re.match('MainTest.java'))
     self.assertFalse(all_java_tests_re.match('com/example/Main.java'))
     self.assertTrue(all_java_tests_re.match('com/example/MainTest.java'))
+
+
+  def test_lazy_build_env_partial(self):
+    def cobol_binary(name,
+        deps=[],
+        build_env=None):
+      return (name, deps, build_env)
+
+    testLazy = LazyBuildEnvPartial(cobol_binary, {})
+    self.assertEqual(('HAL', [1, 2, 3], {}),
+      testLazy.invoke(name='HAL', deps=[1, 2, 3]))
+    testLazy.build_env = {'abc': 789}
+    self.assertEqual(('HAL', [1, 2, 3], {'abc': 789}),
+      testLazy.invoke(name='HAL', deps=[1, 2, 3]))
 
 
   # Test the temporary reimplementation of relpath
