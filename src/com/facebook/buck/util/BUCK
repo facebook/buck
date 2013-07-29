@@ -30,6 +30,7 @@ IO_SRCS = [
   'DefaultDirectoryTraverser.java',
   'DirectoryTraverser.java',
   'DirectoryTraversal.java',
+  'DirtyPrintStreamDecorator.java',
   'InputStreamConsumer.java',
   'MoreFiles.java',
   'ProcessExecutor.java',

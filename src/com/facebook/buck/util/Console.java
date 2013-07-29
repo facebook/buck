@@ -24,8 +24,8 @@ import java.io.PrintStream;
 public class Console {
 
   private final Verbosity verbosity;
-  private final PrintStream stdOut;
-  private final PrintStream stdErr;
+  private final DirtyPrintStreamDecorator stdOut;
+  private final DirtyPrintStreamDecorator stdErr;
   private final Ansi ansi;
 
   public Console(Verbosity verbosity,
@@ -33,8 +33,8 @@ public class Console {
       PrintStream stdErr,
       Ansi ansi) {
     this.verbosity = Preconditions.checkNotNull(verbosity);
-    this.stdOut = Preconditions.checkNotNull(stdOut);
-    this.stdErr = Preconditions.checkNotNull(stdErr);
+    this.stdOut = new DirtyPrintStreamDecorator(Preconditions.checkNotNull(stdOut));
+    this.stdErr = new DirtyPrintStreamDecorator(Preconditions.checkNotNull(stdErr));
     this.ansi = Preconditions.checkNotNull(ansi);
   }
 
@@ -46,11 +46,11 @@ public class Console {
     return ansi;
   }
 
-  public PrintStream getStdOut() {
+  public DirtyPrintStreamDecorator getStdOut() {
     return stdOut;
   }
 
-  public PrintStream getStdErr() {
+  public DirtyPrintStreamDecorator getStdErr() {
     return stdErr;
   }
 
