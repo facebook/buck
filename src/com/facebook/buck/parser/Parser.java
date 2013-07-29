@@ -471,7 +471,7 @@ public class Parser {
    * @return the build target defined by the rule.
    */
   private BuildTarget parseBuildTargetFromRawRule(Map<String, Object> map, @Nullable File source) {
-    String basePath = (String)map.get("buck_base_path");
+    String basePath = (String)map.get("buck.base_path");
     File sourceOfBuildTarget;
     if (source == null) {
       String relativePathToBuildFile = !basePath.isEmpty()

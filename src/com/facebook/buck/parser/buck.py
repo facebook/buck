@@ -107,7 +107,7 @@ def add_rule(rule, build_env):
   if rule_name in build_env['RULES']:
     raise ValueError('Duplicate rule definition found.  Found %s and %s' %
         (rule, build_env['RULES'][rule_name]))
-  rule['buck_base_path'] = build_env['BASE']
+  rule['buck.base_path'] = build_env['BASE']
   build_env['RULES'][rule_name] = rule
 
 
@@ -730,7 +730,7 @@ class BuildFileProcessor:
         print json.dumps(value)
 
 # Inexplicably, this script appears to run faster when the arguments passed into it are absolute
-# paths. However, we want the "buck_base_path" property of each rule to be printed out to be the
+# paths. However, we want the "buck.base_path" property of each rule to be printed out to be the
 # base path of the build target that identifies the rule. That means that when parsing a BUILD file,
 # we must know its path relative to the root of the project to produce the base path.
 #

@@ -1,7 +1,7 @@
 [
 {
   "buck.output_file" : "{$OUTPUT_FILE}",
-  "buck_base_path" : "testdata/com/facebook/buck/cli",
+  "buck.base_path" : "testdata/com/facebook/buck/cli",
   "deps" : [ ],
   "export_deps": false,
   "name" : "test-library",

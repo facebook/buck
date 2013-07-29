@@ -161,7 +161,7 @@ public class ParserTest extends EasyMockSupport {
         "name", "feed",
         // A non-existent dependency: this is a user error that should be reported.
         "deps", ImmutableList.of(nonExistentBuildTarget),
-        "buck_base_path", "testdata/com/facebook/feed/model");
+        "buck.base_path", "testdata/com/facebook/feed/model");
     List<Map<String, Object>> ruleObjects = ImmutableList.of(rawRule);
 
     Parser parser = new Parser(
