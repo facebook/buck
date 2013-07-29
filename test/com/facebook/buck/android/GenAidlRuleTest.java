@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -96,10 +97,14 @@ public class GenAidlRuleTest {
         executionContext);
 
     String outputDirectory = String.format("%s/%s", BuckConstant.GEN_DIR, importPath);
+    MkdirStep mkdirStep = (MkdirStep) steps.get(0);
+    assertEquals("gen_aidl() should make a directory at " + outputDirectory,
+        mkdirStep.getPath(executionContext),
+        outputDirectory);
+
     MoreAsserts.assertShellCommands(
-        "gen_aidl() should make a directory and then use the aidl binary to write .java files.",
+        "gen_aidl() should use the aidl binary to write .java files.",
         ImmutableList.of(
-            String.format("mkdir -p %s", outputDirectory),
             String.format("%s -b -p%s -I%s -o%s %s",
                 pathToAidlExecutable,
                 pathToFrameworkAidl,
@@ -107,7 +112,7 @@ public class GenAidlRuleTest {
                 outputDirectory,
                 pathToAidl)
         ),
-        steps,
+        steps.subList(1, 2),
         executionContext);
 
     verify(androidPlatformTarget,

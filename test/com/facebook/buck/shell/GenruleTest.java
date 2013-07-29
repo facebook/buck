@@ -176,8 +176,8 @@ public class GenruleTest {
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        ImmutableList.of("mkdir", "-p", GEN_DIR + "/src/com/facebook/katana/"),
-        mkdirCommand.getShellCommand(executionContext));
+        GEN_DIR + "/src/com/facebook/katana/",
+        mkdirCommand.getPath(executionContext));
 
     Step mkTmpDir = steps.get(2);
     assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);

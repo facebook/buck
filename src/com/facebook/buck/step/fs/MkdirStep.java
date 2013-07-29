@@ -16,15 +16,16 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import java.io.File;
 
 /**
- * Command that runs {@code mkdir -p} on the specified directory.
+ * Command that runs equivalent command of {@code mkdir -p} on the specified directory.
  */
-public class MkdirStep extends ShellStep {
+public class MkdirStep implements Step {
 
   private final String pathRelativeToProjectRoot;
 
@@ -33,11 +34,14 @@ public class MkdirStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.of(
-        "mkdir",
-        "-p",
-        context.getProjectFilesystem().getPathRelativizer().apply(pathRelativeToProjectRoot));
+  public int execute(ExecutionContext context) {
+    synchronized(MkdirStep.class) {
+      File directory = new File(getPath(context));
+      if (directory.exists()) {
+        return 0;
+      }
+      return directory.mkdirs() ? 0 : -1;
+    }
   }
 
   @Override
@@ -45,4 +49,18 @@ public class MkdirStep extends ShellStep {
     return "mkdir";
   }
 
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return String.format("mkdir -p %s",
+        Escaper.escapeAsBashString(getPath(context)));
+  }
+
+  /**
+   * Get the path of the directory to make.
+   * @param context
+   * @return Path of the directory to make.
+   */
+  public String getPath(ExecutionContext context) {
+    return context.getProjectFilesystem().getPathRelativizer().apply(pathRelativeToProjectRoot);
+  }
 }

@@ -175,8 +175,8 @@ public class ApkGenruleTest {
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        ImmutableList.of("mkdir", "-p", GEN_DIR + "/src/com/facebook/"),
-        mkdirCommand.getShellCommand(executionContext));
+        GEN_DIR + "/src/com/facebook/",
+        mkdirCommand.getPath(executionContext));
 
     Step thirdStep = steps.get(2);
     assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
