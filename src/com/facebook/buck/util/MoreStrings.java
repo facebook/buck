@@ -19,6 +19,10 @@ package com.facebook.buck.util;
 import com.google.common.base.Preconditions;
 
 public final class MoreStrings {
+
+  /** Utility class: do not instantiate. */
+  private MoreStrings() {}
+
   public static final boolean isEmpty(CharSequence sequence) {
     return sequence.length() == 0;
   }
@@ -26,5 +30,14 @@ public final class MoreStrings {
   public static String withoutSuffix(String str, String suffix) {
     Preconditions.checkArgument(str.endsWith(suffix), "%s must end with %s", str, suffix);
     return str.substring(0, str.length() - suffix.length());
+  }
+
+  public static String capitalize(String str) {
+    Preconditions.checkNotNull(str);
+    if (!str.isEmpty()) {
+      return str.substring(0, 1).toUpperCase() + str.substring(1);
+    } else {
+      return "";
+    }
   }
 }
