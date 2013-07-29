@@ -81,10 +81,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   public ProjectBuildFileParser(
       ProjectFilesystem projectFilesystem,
-      ImmutableList<String> commonIncludes) {
+      Iterable<String> commonIncludes) {
     this.projectRoot = projectFilesystem.getProjectRoot();
     this.ignorePaths = projectFilesystem.getIgnorePaths();
-    this.commonIncludes = Preconditions.checkNotNull(commonIncludes);
+    this.commonIncludes = ImmutableList.copyOf(commonIncludes);
 
     // Default to server mode unless explicitly unset internally.
     setServerMode(true);

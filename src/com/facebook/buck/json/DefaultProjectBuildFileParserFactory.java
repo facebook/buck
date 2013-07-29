@@ -18,7 +18,6 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final ProjectFilesystem projectFilesystem;
@@ -29,6 +28,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
 
   @Override
   public ProjectBuildFileParser createParser(Iterable<String> commonIncludes) {
-    return new ProjectBuildFileParser(projectFilesystem, ImmutableList.copyOf(commonIncludes));
+    return new ProjectBuildFileParser(projectFilesystem, commonIncludes);
   }
 }

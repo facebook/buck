@@ -127,6 +127,10 @@ public class ProjectWorkspace {
     return new File(destDir, pathRelativeToProjectRoot);
   }
 
+  public String getFileContents(String pathRelativeToProjectRoot) throws IOException {
+    return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
+  }
+
   /** The result of running {@code buck} from the command line. */
   public static class ProcessResult {
     private final int exitCode;

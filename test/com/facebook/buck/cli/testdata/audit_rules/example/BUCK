@@ -1,0 +1,26 @@
+def my_genrule(
+    name,
+    out,
+    visibility = [],
+  ):
+  genrule(
+    name = name,
+    srcs = [
+      'foo.txt',
+      'bar.txt',
+    ],
+    cmd = 'cat $SRCS > $OUT',
+    out = out,
+    deps = [
+      '//fake:rule',
+    ],
+    visibility = visibility,
+  )
+
+my_genrule(
+  name = 'example',
+  out = 'baz.txt',
+  visibility = [
+    'PUBLIC',
+  ],
+)

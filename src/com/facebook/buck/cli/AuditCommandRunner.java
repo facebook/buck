@@ -61,7 +61,8 @@ public class AuditCommandRunner implements CommandRunner {
     auditCommands = ImmutableMap.of(
         "input",     new AuditInputCommand(params),
         "classpath", new AuditClasspathCommand(params),
-        "owner",     new AuditOwnerCommand(params));
+        "owner",     new AuditOwnerCommand(params),
+        "rules",     new AuditRulesCommand(params));
   }
 
   private void printUsage() {
