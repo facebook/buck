@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -30,7 +31,7 @@ public class EchoStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    System.out.println(message);
+    context.getBuckEventBus().post(LogEvent.info(message));
     return 0;
   }
 
