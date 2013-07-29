@@ -76,7 +76,7 @@ public class LogEvent extends AbstractBuckEvent {
 
   @Override
   public boolean eventsArePair(BuckEvent event) {
-    if (!(event instanceof BuckEvent)) {
+    if (!(event instanceof LogEvent)) {
       return false;
     }
 
