@@ -119,4 +119,13 @@ public class Paths {
   public static Iterable<String> transformFileToAbsolutePath(Iterable<File> files) {
     return Iterables.transform(files, Functions.FILE_TO_ABSOLUTE_PATH);
   }
+
+  /**
+   * Returns normalized path. On Windows \ will be replaced with /
+   * @param path
+   * @return Normalized path
+   */
+  public static String normalizePathSeparator(String path) {
+    return path.replace("\\", "/");
+  }
 }

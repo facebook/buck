@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.util.Paths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -62,7 +63,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
         "baseName must start with // but was %s",
         baseName);
 
-    String parentDirectoryName = buildFile.getParentFile().getAbsolutePath();
+    String parentDirectoryName = Paths.normalizePathSeparator(buildFile.getParentFile().getAbsolutePath());
     String basePath = baseName.substring(BUILD_TARGET_PREFIX.length());
     Preconditions.checkArgument(parentDirectoryName.endsWith(basePath),
         "file path %s did not end with %s for %s:%s", parentDirectoryName, basePath, baseName, shortName);
