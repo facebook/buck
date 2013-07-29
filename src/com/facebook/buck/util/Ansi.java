@@ -25,6 +25,7 @@ public final class Ansi {
   private static final String BOLD = "\u001B[1m";
 
   private static final String BLACK = "\u001B[30m";
+  private static final String GREY = "\u001B[30;1m";
 
   private static final String WHITE = "\u001B[37m";
 
@@ -35,6 +36,7 @@ public final class Ansi {
   private static final String ERROR_SEQUENCE = RED;
   private static final String WARNING_SEQUENCE = YELLOW;
   private static final String SUCCESS_SEQUENCE = GREEN;
+  private static final String SUBTLE_SEQUENCE = GREY;
 
   private static final String BACKGROUND_RED = "\u001B[41m";
   private static final String BACKGROUND_GREEN = "\u001B[42m";
@@ -43,16 +45,20 @@ public final class Ansi {
 
   private static final String HIGHLIGHTED_SUCCESS_SEQUENCE = BOLD + BACKGROUND_GREEN + BLACK;
 
-  private final boolean isTerminalThatSupportsColor;
+  private static final String CURSOR_PREVIOUS_LINE = "\u001B[%dA";
 
-  private static final Ansi noTtyAnsi = new Ansi(false /* isTerminalThatSupportsColor */);
+  private static final String ERASE_IN_LINE = "\u001B[%dK";
+
+  private final boolean isAnsiTerminal;
+
+  private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
 
   public Ansi() {
     this(isConnectedToTty());
   }
 
-  private Ansi(boolean isTerminalThatSupportsColor) {
-    this.isTerminalThatSupportsColor = isTerminalThatSupportsColor;
+  private Ansi(boolean isAnsiTerminal) {
+    this.isAnsiTerminal = isAnsiTerminal;
   }
 
   private static boolean isConnectedToTty() {
@@ -65,8 +71,12 @@ public final class Ansi {
     return noTtyAnsi;
   }
 
+  public boolean isAnsiTerminal() {
+    return isAnsiTerminal;
+  }
+
   public String asErrorText(String text) {
-    if (isTerminalThatSupportsColor) {
+    if (isAnsiTerminal) {
       return ERROR_SEQUENCE + text + RESET;
     } else {
       return text;
@@ -74,7 +84,7 @@ public final class Ansi {
   }
 
   public String asWarningText(String text) {
-    if (isTerminalThatSupportsColor) {
+    if (isAnsiTerminal) {
       return WARNING_SEQUENCE + text + RESET;
     } else {
       return text;
@@ -82,23 +92,31 @@ public final class Ansi {
   }
 
   public String asSuccessText(String text) {
-    if (isTerminalThatSupportsColor) {
+    if (isAnsiTerminal) {
       return SUCCESS_SEQUENCE + text + RESET;
     } else {
       return text;
     }
   }
 
+  public String asSubtleText(String text) {
+    if (isAnsiTerminal) {
+      return SUBTLE_SEQUENCE + text + RESET;
+    } else {
+      return text;
+    }
+  }
+
   public String getHighlightedWarningSequence() {
-    return isTerminalThatSupportsColor ? HIGHLIGHTED_WARNING_SEQUENCE : "";
+    return isAnsiTerminal ? HIGHLIGHTED_WARNING_SEQUENCE : "";
   }
 
   public String getHighlightedResetSequence() {
-    return isTerminalThatSupportsColor ? RESET : "";
+    return isAnsiTerminal ? RESET : "";
   }
 
   public String asHighlightedFailureText(String text) {
-    if (isTerminalThatSupportsColor) {
+    if (isAnsiTerminal) {
       return HIGHLIGHTED_WARNING_SEQUENCE + text + RESET;
     } else {
       return text;
@@ -106,7 +124,7 @@ public final class Ansi {
   }
 
   public String asHighlightedSuccessText(String text) {
-    if (isTerminalThatSupportsColor) {
+    if (isAnsiTerminal) {
       return HIGHLIGHTED_SUCCESS_SEQUENCE + text + RESET;
     } else {
       return text;
@@ -146,6 +164,28 @@ public final class Ansi {
       printlnHighlightedSuccessText(stream, text);
     } else {
       printlnHighlightedFailureText(stream, text);
+    }
+  }
+
+  /**
+   * Moves the cursor {@code y} lines up.
+   */
+  public String cursorPreviousLine(int y) {
+    if (isAnsiTerminal) {
+      return String.format(CURSOR_PREVIOUS_LINE, y);
+    } else {
+      return "";
+    }
+  }
+
+  /**
+   * Clears the line the cursor is currently on.
+   */
+  public String clearLine() {
+    if (isAnsiTerminal) {
+      return String.format(ERASE_IN_LINE, 2);
+    } else {
+      return "";
     }
   }
 }
