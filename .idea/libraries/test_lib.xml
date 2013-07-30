@@ -15,6 +15,7 @@
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/lib/guava-14.0.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/junit-4.11-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
