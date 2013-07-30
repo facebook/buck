@@ -66,7 +66,9 @@ public class GenerateManifestStepTest {
         skeletonPath,
         libraryManifestFiles.build(),
         manifestPath);
-    manifestCommand.execute(context);
+    int result = manifestCommand.execute(context);
+
+    assertEquals(0, result);
 
     String expected = Files.toString(new File(expectedOutputPath), Charsets.UTF_8);
     String output = Files.toString(manifestPath.toFile(), Charsets.UTF_8);
