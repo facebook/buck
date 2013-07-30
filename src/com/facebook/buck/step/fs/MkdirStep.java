@@ -57,7 +57,6 @@ public class MkdirStep implements Step {
 
   /**
    * Get the path of the directory to make.
-   * @param context
    * @return Path of the directory to make.
    */
   public String getPath(ExecutionContext context) {

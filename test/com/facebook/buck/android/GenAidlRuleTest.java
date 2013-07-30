@@ -28,10 +28,10 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -102,18 +102,18 @@ public class GenAidlRuleTest {
         mkdirStep.getPath(executionContext),
         outputDirectory);
 
-    MoreAsserts.assertShellCommands(
+    ShellStep aidlStep = (ShellStep) steps.get(1);
+    assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
-        ImmutableList.of(
-            String.format("%s -b -p%s -I%s -o%s %s",
-                pathToAidlExecutable,
-                pathToFrameworkAidl,
-                importPath,
-                outputDirectory,
-                pathToAidl)
-        ),
-        steps.subList(1, 2),
-        executionContext);
+        String.format("%s -b -p%s -I%s -o%s %s",
+            pathToAidlExecutable,
+            pathToFrameworkAidl,
+            importPath,
+            outputDirectory,
+            pathToAidl),
+        aidlStep.getDescription(executionContext));
+
+    assertEquals(2, steps.size());
 
     verify(androidPlatformTarget,
         aidlExecutable,
