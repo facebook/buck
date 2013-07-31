@@ -16,13 +16,20 @@
 
 package com.facebook.buck.cli;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
 public class AuditRulesOptions extends AbstractCommandOptions {
+
+  @Option(name = "--type",
+      aliases = { "-t" },
+      usage = "The types of rule to filter by")
+  private List<String> types = null;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -33,5 +40,9 @@ public class AuditRulesOptions extends AbstractCommandOptions {
 
   public List<String> getArguments() {
     return arguments;
+  }
+
+  public ImmutableSet<String> getTypes() {
+    return types == null ? ImmutableSet.<String>of() : ImmutableSet.copyOf(types);
   }
 }

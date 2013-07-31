@@ -23,6 +23,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -107,18 +108,29 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
         throw new HumanReadableException(e);
       }
 
-      // Format and print the rules from the raw data.
-      printRulesToStdout(rawRules);
+      // Format and print the rules from the raw data, filtered by type.
+      final ImmutableSet<String> types = options.getTypes();
+      Predicate<String> includeType = new Predicate<String>() {
+          @Override
+          public boolean apply(String type) {
+            return types.isEmpty() || types.contains(type);
+          }};
+      printRulesToStdout(rawRules, includeType);
     }
 
     return 0;
   }
 
-  private void printRulesToStdout(List<Map<String, Object>> rawRules) {
+  private void printRulesToStdout(List<Map<String, Object>> rawRules,
+      Predicate<String> includeType) {
     PrintStream out = console.getStdOut();
 
     for (Map<String, Object> rawRule : rawRules) {
       String type = (String)rawRule.get(TYPE_PROPERTY_NAME);
+      if (!includeType.apply(type)) {
+        continue;
+      }
+
       out.printf("%s(\n", type);
 
       // The properties in the order they should be displayed for this rule.

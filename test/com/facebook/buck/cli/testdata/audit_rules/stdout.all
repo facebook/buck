@@ -1,0 +1,28 @@
+# example/BUCK
+
+genrule(
+  name = "example",
+  cmd = "cat $SRCS > $OUT",
+  out = "baz.txt",
+  srcs = [
+    "foo.txt",
+    "bar.txt",
+  ],
+  deps = [
+    "//fake:rule",
+  ],
+  visibility = [
+    "PUBLIC",
+  ],
+)
+
+keystore(
+  name = "debug_keystore",
+  properties = "debug.keystore.properties",
+  store = "debug.keystore",
+  deps = [
+  ],
+  visibility = [
+  ],
+)
+
