@@ -37,6 +37,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
@@ -247,6 +248,7 @@ public class Parser {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     eventBus.post(ParseEvent.started(buildTargets));
+    DependencyGraph graph = null;
     try (ProjectBuildFileParser buildFileParser = buildFileParserFactory.createParser(
         defaultIncludes)) {
       if (!isCacheComplete(defaultIncludes)) {
@@ -260,9 +262,10 @@ public class Parser {
         }
       }
 
-      return findAllTransitiveDependencies(buildTargets, defaultIncludes, buildFileParser);
+      graph = findAllTransitiveDependencies(buildTargets, defaultIncludes, buildFileParser);
+      return graph;
     } finally {
-      eventBus.post(ParseEvent.finished(buildTargets));
+      eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
     }
   }
 

@@ -20,8 +20,10 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.DependencyGraph;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -70,8 +72,9 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
     return new Started(buildTargets);
   }
 
-  public static Finished finished(Iterable<BuildTarget> buildTargets) {
-    return new Finished(buildTargets);
+  public static Finished finished(Iterable<BuildTarget> buildTargets,
+      Optional<DependencyGraph> graph) {
+    return new Finished(buildTargets, graph);
   }
 
   public static class Started extends ParseEvent {
@@ -86,13 +89,36 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
   }
 
   public static class Finished extends ParseEvent {
-    protected Finished(Iterable<BuildTarget> buildTargets) {
+    /** If this is {@link Optional#absent()}, then the parse did not complete successfully. */
+    private final Optional<DependencyGraph> graph;
+
+    protected Finished(Iterable<BuildTarget> buildTargets, Optional<DependencyGraph> graph) {
       super(buildTargets);
+      this.graph = Preconditions.checkNotNull(graph);
     }
 
     @Override
     protected String getEventName() {
       return "ParseFinished";
+    }
+
+    public Optional<DependencyGraph> getGraph() {
+      return graph;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(super.equals(obj))) {
+        return false;
+      }
+
+      Finished that = (Finished)obj;
+      return Objects.equal(this.getGraph(), that.getGraph());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(getBuildTargets(), getGraph());
     }
   }
 }

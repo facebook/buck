@@ -274,7 +274,9 @@ public class ParserTest extends EasyMockSupport {
 
     ImmutableList<ParseEvent> expected = ImmutableList.of(
         TestEventConfigerator.configureTestEvent(ParseEvent.started(buildTargets), eventBus),
-        TestEventConfigerator.configureTestEvent(ParseEvent.finished(buildTargets), eventBus));
+        TestEventConfigerator.configureTestEvent(ParseEvent.finished(buildTargets,
+            Optional.of(graph)),
+            eventBus));
 
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
     assertEquals(expected, ImmutableList.copyOf(events));

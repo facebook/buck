@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CacheResult;
+import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
@@ -76,7 +77,8 @@ public class SimpleConsoleEventBusListenerTest {
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
 
-    rawEventBus.post(configureTestEventAtTime(ParseEvent.finished(buildTargets),
+    rawEventBus.post(configureTestEventAtTime(ParseEvent.finished(buildTargets,
+        Optional.<DependencyGraph>absent()),
         400L, TimeUnit.MILLISECONDS, threadId));
 
     final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.40s\n";
