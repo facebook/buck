@@ -1,0 +1,18 @@
+prebuilt_jar(
+  name = 'jetty-all',
+  binary_jar = 'jetty-all-9.0.4.v20130625.jar',
+)
+
+prebuilt_jar(
+  name = 'servlet-api',
+  binary_jar = 'servlet-api.jar',
+)
+
+java_library(
+  name = 'jetty',
+  export_deps = True,
+  deps = [
+    ':jetty-all',
+    ':servlet-api',
+  ],
+)

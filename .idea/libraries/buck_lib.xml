@@ -10,6 +10,8 @@
       <root url="jar://$PROJECT_DIR$/lib/ddmlib-r21.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/sdklib.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/guava-14.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jetty/jetty-all-9.0.4.v20130625.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jetty/servlet-api.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
