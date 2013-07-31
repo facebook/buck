@@ -272,6 +272,7 @@ public class ParserTest extends EasyMockSupport {
     BuildRule barRule = graph.findBuildRuleByTarget(barTarget);
     assertNotNull(barRule);
 
+    eventBus.flushForTesting();
     ImmutableList<ParseEvent> expected = ImmutableList.of(
         TestEventConfigerator.configureTestEvent(ParseEvent.started(buildTargets), eventBus),
         TestEventConfigerator.configureTestEvent(ParseEvent.finished(buildTargets,

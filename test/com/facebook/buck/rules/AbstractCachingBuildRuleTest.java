@@ -193,6 +193,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         /* defaultValue */ null);
     assertEquals(expectedRuleKeyHash, firstLineInSuccessFile);
 
+    buckEventBus.flushForTesting();
     List<BuckEvent> events = listener.getEvents();
     assertEquals(events.get(0),
         configureTestEvent(BuildRuleEvent.started(cachingRule), buckEventBus));
@@ -259,6 +260,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     assertEquals(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, success.getType());
     assertTrue(buildRule.isAbiLoadedFromDisk());
 
+    buckEventBus.flushForTesting();
     List<BuckEvent> events = listener.getEvents();
     assertEquals(events.get(0),
         configureTestEvent(BuildRuleEvent.started(buildRule), buckEventBus));

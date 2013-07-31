@@ -17,9 +17,16 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.AsyncEventBus;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Thin wrapper around guava event bus.
@@ -32,22 +39,35 @@ public class BuckEventBus {
     }
   };
 
-  public static Supplier<Long> getDefaultThreadIdSupplier() {
-    return DEFAULT_THREAD_ID_SUPPLIER;
-  }
+  /** This is the {@link Executor} that powers the {@link AsyncEventBus}. */
+  private final ThreadPoolExecutor executor;
 
-  private final EventBus eventBus;
+  private final AsyncEventBus eventBus;
   private final Clock clock;
   private final Supplier<Long> threadIdSupplier;
 
   public BuckEventBus() {
-    this(new EventBus(), new DefaultClock(), getDefaultThreadIdSupplier());
+    this(new DefaultClock(), getDefaultThreadIdSupplier());
   }
 
-  public BuckEventBus(EventBus eventBus, Clock clock, Supplier<Long> threadIdSupplier) {
-    this.eventBus = Preconditions.checkNotNull(eventBus);
+  public BuckEventBus(Clock clock, Supplier<Long> threadIdSupplier) {
+    // We instantiate this.executor using the implementation of Executors.newSingleThreadExecutor().
+    // The problem with newSingleThreadExecutor is that it returns an ExecutorService; however, we
+    // need to use the getQueue() method that is available in ThreadPoolExecutor, but is not
+    // exposed via the ThreadPoolExecutor interface.
+    this.executor = new ThreadPoolExecutor(/* corePoolSize */ 1,
+        /* maximumPoolSize */ 1,
+        /* keepAliveTime */ 0L,
+        TimeUnit.MILLISECONDS,
+        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
+        new ThreadPoolExecutor.DiscardPolicy());
+    this.eventBus = new AsyncEventBus("buck-build-events", executor);
     this.clock = Preconditions.checkNotNull(clock);
     this.threadIdSupplier = Preconditions.checkNotNull(threadIdSupplier);
+  }
+
+  public static Supplier<Long> getDefaultThreadIdSupplier() {
+    return DEFAULT_THREAD_ID_SUPPLIER;
   }
 
   public void post(BuckEvent event) {
@@ -57,6 +77,41 @@ public class BuckEventBus {
 
   public void register(Object object) {
     eventBus.register(object);
+  }
+
+  /**
+   * Execute {@link Runnable}s in the underlying {@link ExecutorService} until there aren't any
+   * left to execute. This differs from {@link ExecutorService#shutdown()} because this method
+   * still allows new {@link Runnable}s to be submitted to the {@link ExecutorService} while this
+   * method is running.
+   */
+  @VisibleForTesting
+  public void flushForTesting() {
+    while (!executor.getQueue().isEmpty()) {
+      try {
+        Thread.sleep(50L);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
+  }
+
+  /**
+   * Posts the specified event directly to the underlying {@link AsyncEventBus}.
+   * <p>
+   * TODO(royw): Try to eliminate this method.
+   */
+  @VisibleForTesting
+  public void postDirectlyToAsyncEventBusForTesting(BuckEvent event) {
+    eventBus.post(event);
+  }
+
+  /**
+   * @return the underlying {@link ExecutorService} that is being used to process the events posted
+   *     to this event bus.
+   */
+  public ExecutorService getExecutorService() {
+    return executor;
   }
 
   public Clock getClock() {

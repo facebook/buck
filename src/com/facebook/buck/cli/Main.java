@@ -33,13 +33,11 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.concurrent.MoreBuckExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 
 import java.io.Closeable;
@@ -49,7 +47,6 @@ import java.io.PrintStream;
 import java.nio.file.FileSystems;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -219,12 +216,8 @@ public final class Main {
       parser = new Parser(projectFilesystem, knownBuildRuleTypes, console);
     }
 
-    ExecutorService busExecutor = MoreBuckExecutors.newCachedThreadPool(
-        new ThreadPoolExecutor.DiscardPolicy());
-
     Clock clock = new DefaultClock();
     BuckEventBus buildEventBus = new BuckEventBus(
-        new AsyncEventBus("buck-build-events", busExecutor),
         clock,
         BuckEventBus.getDefaultThreadIdSupplier());
 
@@ -258,9 +251,10 @@ public final class Main {
 
       buildEventBus.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
 
-      busExecutor.shutdown();
+      ExecutorService buildEventBusExecutor = buildEventBus.getExecutorService();
+      buildEventBusExecutor.shutdown();
       try {
-        busExecutor.awaitTermination(15, TimeUnit.SECONDS);
+        buildEventBusExecutor.awaitTermination(15, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         // Give the eventBus 15 seconds to finish dispatching all events, but if they should fail
         // to finish in that amount of time just eat it, the end user doesn't care.

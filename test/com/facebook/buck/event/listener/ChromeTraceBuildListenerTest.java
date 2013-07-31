@@ -50,7 +50,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.eventbus.EventBus;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,10 +82,9 @@ public class ChromeTraceBuildListenerTest {
     replay(context);
 
     ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
-    EventBus internalEventBus = new EventBus();
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     Supplier<Long> threadIdSupplier = BuckEventBus.getDefaultThreadIdSupplier();
-    BuckEventBus eventBus = new BuckEventBus(internalEventBus, fakeClock, threadIdSupplier);
+    BuckEventBus eventBus = new BuckEventBus(fakeClock, threadIdSupplier);
     eventBus.register(listener);
 
     eventBus.post(CommandEvent.started("party", true));
@@ -110,11 +108,12 @@ public class ChromeTraceBuildListenerTest {
         fakeClock.nanoTime(),
         threadIdSupplier.get());
 
-    internalEventBus.post(ruleFinished);
-    internalEventBus.post(stepFinished);
+    eventBus.postDirectlyToAsyncEventBusForTesting(ruleFinished);
+    eventBus.postDirectlyToAsyncEventBusForTesting(stepFinished);
 
     eventBus.post(BuildEvent.finished(buildTargets, 0));
     eventBus.post(CommandEvent.finished("party", true, 0));
+    eventBus.flushForTesting();
     listener.outputTrace();
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BIN_DIR + "/build.trace");

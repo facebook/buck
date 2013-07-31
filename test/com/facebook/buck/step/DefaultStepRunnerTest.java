@@ -70,6 +70,7 @@ public class DefaultStepRunnerTest {
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
     }
+    eventBus.flushForTesting();
 
     ImmutableList<StepEvent> expected = ImmutableList.of(
         TestEventConfigerator.configureTestEvent(
