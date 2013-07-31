@@ -18,10 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.ArtifactCacheEvent;
-import com.facebook.buck.rules.ChromeTraceBuildListener;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.LoggingArtifactCacheDecorator;

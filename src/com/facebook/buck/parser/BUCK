@@ -1,28 +1,12 @@
-EVENTS_SRCS = [
-  'ParseEvent.java',
-]
-java_library(
-  name = 'events',
-  srcs = EVENTS_SRCS,
-  deps = [
-    '//lib:guava',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/model:model',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
 PARSER_SRCS = [
   'Parser.java',
   'PartialGraph.java',
+  'ParseEvent.java',
 ]
 java_library(
   name = 'parser',
   srcs = PARSER_SRCS,
   deps = [
-    ':events',
     ':project',
     ':support',
     '//lib:guava',
@@ -62,7 +46,7 @@ java_library(
 
 java_library(
   name = 'support',
-  srcs = glob(['*.java'], excludes = EVENTS_SRCS + PARSER_SRCS + PROJECT_SRCS),
+  srcs = glob(['*.java'], excludes = PARSER_SRCS + PROJECT_SRCS),
   deps = [
     '//lib:guava',
     '//lib:jsr305',

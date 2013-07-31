@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.event.listener;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
@@ -28,6 +28,14 @@ import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleStatus;
+import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CacheResult;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;

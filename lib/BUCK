@@ -86,6 +86,7 @@ prebuilt_jar(
   name = 'jackson-annotations',
   binary_jar = 'jackson-annotations-2.0.5.jar',
   visibility = [
+    '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/command:command',
     '//test/...',
   ],
@@ -105,7 +106,7 @@ prebuilt_jar(
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/command:command',
-    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',
     '//test/...',
