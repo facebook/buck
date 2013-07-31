@@ -121,8 +121,7 @@ public class Paths {
   }
 
   /**
-   * Returns normalized path. On Windows \ will be replaced with /
-   * @param path
+   * Returns normalized path. On Windows \ will be replaced with /.
    * @return Normalized path
    */
   public static String normalizePathSeparator(String path) {

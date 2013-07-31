@@ -58,14 +58,22 @@ public class PathsTest {
     Paths.getBasename(null, ".json");
   }
 
+  @Test
   public void testGetBasenameWithSuffix() {
     assertEquals("bar", Paths.getBasename("bar.json", ".json"));
     assertEquals("bar", Paths.getBasename("/foo/bar.json", ".json"));
     assertEquals("bar.simple", Paths.getBasename("/foo/bar.simple", ".json"));
   }
 
+  @Test
   public void testGetBasenameWithoutSuffix() {
     assertEquals("bar.json", Paths.getBasename("/foo/bar.json", null));
     assertEquals("bar", Paths.getBasename("/foo/bar", ""));
+  }
+
+  @Test
+  public void testNormalizePathSeparator() {
+    assertEquals("C:/Windows/System32/drivers.dll",
+        Paths.normalizePathSeparator("C:\\Windows\\System32\\drivers.dll"));
   }
 }
