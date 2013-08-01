@@ -156,6 +156,20 @@ only versions r7 through r8d:
   max_version = r8d
 </pre>{/literal}
 
+
+<h2>[test]</h2>
+
+This section may define a <code>timeout</code> for each test that buck runs.
+The value given is in milliseconds.
+
+{literal}<pre>
+# This specifies a maximum timeout of 5 minutes (300000 
+# milliseconds) per test. A JUnit test can override this 
+# via its `@Test` annotation.
+timeout = 300000
+</pre>{/literal}
+
+
 <h2>[project]</h2>
 
 This section may define a <code>default_android_manifest</code> property
