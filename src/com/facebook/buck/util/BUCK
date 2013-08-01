@@ -48,12 +48,13 @@ java_library(
 )
 
 NETWORK_SRCS = [
-  'HttpUtil.java',
+  'HttpEndpoint.java',
 ]
 java_library(
   name = 'network',
   srcs = NETWORK_SRCS,
   deps = [
+    ':exceptions',
     '//lib:guava',
   ],
   visibility = [ 'PUBLIC' ],
