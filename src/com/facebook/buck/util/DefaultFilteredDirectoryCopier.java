@@ -48,10 +48,9 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
 
   @Override
   public void copyDirs(Map<String, String> sourcesToDestinations,
-      Predicate<File> pred,
-      ProcessExecutor processExecutor) {
+      Predicate<File> pred) {
     for (Map.Entry<String, String> e : sourcesToDestinations.entrySet()) {
-      copyDir(e.getKey(), e.getValue(), pred, processExecutor);
+      copyDir(e.getKey(), e.getValue(), pred);
     }
   }
 
@@ -59,14 +58,13 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
   public void copyDir(
       String srcDir,
       String destDir,
-      final Predicate<File> pred,
-      ProcessExecutor processExecutor) {
+      final Predicate<File> pred) {
     final File dest = new File(destDir);
 
     // Remove existing contents if any.
     if (dest.exists()) {
       try {
-        MoreFiles.rmdir(dest.getAbsolutePath(), processExecutor);
+        MoreFiles.rmdir(dest.getAbsolutePath());
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }

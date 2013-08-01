@@ -131,10 +131,8 @@ public class ProjectFilesystem {
   /**
    * Recursively delete everything under the specified path.
    */
-  public void rmdir(String path, ProcessExecutor processExecutor) throws IOException {
-    // TODO(mbolin): Reimplement this so it no longer requires a processExecutor using the
-    // SimpleFileVisitor introduced in Java 7.
-    MoreFiles.rmdir(pathRelativizer.apply(path), processExecutor);
+  public void rmdir(String path) throws IOException {
+    MoreFiles.rmdir(pathRelativizer.apply(path));
   }
 
   /**

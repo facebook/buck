@@ -29,7 +29,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -41,12 +43,14 @@ public final class MoreFiles {
   /** Utility class: do not instantiate. */
   private MoreFiles() {}
 
-  public static void rmdir(String path, ProcessExecutor processExecutor) throws IOException {
-    // Unfortunately, Guava's Files.deleteRecursively() method is deprecated.
-    // This is what the deprecation message suggested to do instead.
-    // Unfortunately, it is not cross-platform.
-    Process process = Runtime.getRuntime().exec(new String[] {"rm", "-rf", path});
-    processExecutor.execute(process);
+  public static void rmdir(String path) throws IOException {
+    try {
+      deleteRecursively(Paths.get(path));
+    } catch (NoSuchFileException e) {
+      // Delete anyway even if the directory does not exist
+      // This behavior is the same as rm -rf
+      return;
+    }
   }
 
   /**

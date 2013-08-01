@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Project;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 
@@ -58,18 +57,17 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
     // directories itself so we can blow away BuckConstant.ANNOTATION_DIR as part of `buck clean`.
     // This will also reduce how long `buck project` takes.
     //
-    ProcessExecutor processExecutor = new ProcessExecutor(console);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
     if (options.isCleanBuckProjectFiles()) {
       // Delete directories that were created for the purpose of `buck project`.
       // TODO(mbolin): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
-      projectFilesystem.rmdir(Project.ANDROID_GEN_DIR, processExecutor);
-      projectFilesystem.rmdir(BuckConstant.ANNOTATION_DIR, processExecutor);
+      projectFilesystem.rmdir(Project.ANDROID_GEN_DIR);
+      projectFilesystem.rmdir(BuckConstant.ANNOTATION_DIR);
     } else {
-      projectFilesystem.rmdir(BuckConstant.BIN_DIR, processExecutor);
-      projectFilesystem.rmdir(BuckConstant.GEN_DIR, processExecutor);
+      projectFilesystem.rmdir(BuckConstant.BIN_DIR);
+      projectFilesystem.rmdir(BuckConstant.GEN_DIR);
     }
 
     return 0;

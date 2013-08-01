@@ -29,8 +29,7 @@ public interface FilteredDirectoryCopier {
    * @param pred predicate to test against
    */
   public abstract void copyDirs(Map<String, String> sourcesToDestinations,
-      Predicate<File> pred,
-      ProcessExecutor processExecutor);
+      Predicate<File> pred);
 
   /**
    * Creates a filtered copy of a directory.
@@ -41,7 +40,6 @@ public interface FilteredDirectoryCopier {
   public abstract void copyDir(
       String srcDir,
       String destDir,
-      Predicate<File> pred,
-      ProcessExecutor processExecutor);
+      Predicate<File> pred);
 
 }

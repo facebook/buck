@@ -44,6 +44,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
@@ -160,8 +161,8 @@ public class GenruleTest {
     assertEquals(7, steps.size());
 
     Step firstStep = steps.get(0);
-    assertTrue(firstStep instanceof ShellStep);
-    ShellStep rmCommand = (ShellStep) firstStep;
+    assertTrue(firstStep instanceof RmStep);
+    RmStep rmCommand = (RmStep) firstStep;
     ExecutionContext executionContext = newEmptyExecutionContext();
     assertEquals(
         "First command should delete the output file to be written by the genrule.",

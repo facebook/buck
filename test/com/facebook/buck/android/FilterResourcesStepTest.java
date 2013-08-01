@@ -95,10 +95,8 @@ public class FilterResourcesStepTest {
     // We'll want to see what the filtering command passes to the copier.
     Capture<Map<String, String>> dirMapCapture = new Capture<Map<String, String>>();
     Capture<Predicate<File>> predCapture = new Capture<Predicate<File>>();
-    Capture<ProcessExecutor> processExecutorCapture = new Capture<ProcessExecutor>();
     copier.copyDirs(EasyMock.capture(dirMapCapture),
-        EasyMock.capture(predCapture),
-        EasyMock.capture(processExecutorCapture));
+        EasyMock.capture(predCapture));
     EasyMock.replay(copier);
 
     ImageScaler scaler = EasyMock.createMock(FilterResourcesStep.ImageScaler.class);

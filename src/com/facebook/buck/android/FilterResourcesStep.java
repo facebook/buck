@@ -124,8 +124,7 @@ public class FilterResourcesStep implements Step {
     Predicate<File> densityFilter = Filters.createImageDensityFilter(drawables, resourceFilter);
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
     filteredDirectoryCopier.copyDirs(originalToFiltered,
-        densityFilter,
-        context.getProcessExecutor());
+        densityFilter);
 
     // If an ImageScaler was specified, but only if it is available, try to apply it.
     if ((imageScaler != null) && imageScaler.isAvailable(context)) {

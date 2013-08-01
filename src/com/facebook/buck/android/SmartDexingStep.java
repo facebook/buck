@@ -28,8 +28,8 @@ import com.facebook.buck.util.ClasspathTraversal;
 import com.facebook.buck.util.ClasspathTraverser;
 import com.facebook.buck.util.DefaultClasspathTraverser;
 import com.facebook.buck.util.FileLike;
-import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -147,7 +147,7 @@ public class SmartDexingStep implements Step {
         removeExtraneousSecondaryArtifacts(
             inputResolver.getSecondaryOutputDir(),
             outputToInputs.keySet(),
-            context);
+            context.getProjectFilesystem());
       }
       return 0;
     } catch (StepFailedException e) {
@@ -184,10 +184,10 @@ public class SmartDexingStep implements Step {
   private void removeExtraneousSecondaryArtifacts(
       File secondaryOutputDir,
       Set<File> producedArtifacts,
-      ExecutionContext context) throws IOException {
+      ProjectFilesystem projectFilesystem) throws IOException {
     for (File secondaryOutput : secondaryOutputDir.listFiles()) {
       if (!producedArtifacts.contains(secondaryOutput)) {
-        MoreFiles.rmdir(secondaryOutput.getAbsolutePath(), context.getProcessExecutor());
+        projectFilesystem.rmdir(secondaryOutput.getAbsolutePath());
       }
     }
   }

@@ -16,13 +16,17 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class RmStep extends ShellStep {
+import java.io.File;
+import java.io.IOException;
+
+public class RmStep implements Step {
 
   private final String patternToDelete;
   private final boolean shouldForceDeletion;
@@ -40,8 +44,7 @@ public class RmStep extends ShellStep {
     this.shouldRecurse = shouldRecurse;
   }
 
-  @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  public ImmutableList<String> getShellCommand(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("rm");
 
@@ -64,4 +67,32 @@ public class RmStep extends ShellStep {
     return "rm";
   }
 
+  @Override
+  public int execute(ExecutionContext context) {
+    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    if (shouldRecurse) {
+      // Delete a folder recursively
+      try {
+        context.getProjectFilesystem().rmdir(patternToDelete);
+      } catch (IOException e) {
+        if (shouldForceDeletion) {
+          return 0;
+        }
+        e.printStackTrace(context.getStdErr());
+        return 1;
+      }
+    } else {
+      // Delete a single file
+      File file = new File(pathRelativizer.apply(patternToDelete));
+      if (!file.delete() && !shouldForceDeletion) {
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return Joiner.on(" ").join(getShellCommand(context));
+  }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.TestConsole;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
@@ -109,8 +108,7 @@ public class ZipSplitterTest {
   @After
   public void tearDown() throws IOException {
     if (privateDir != null) {
-      ProcessExecutor processExecutor = new ProcessExecutor(new TestConsole());
-      MoreFiles.rmdir(privateDir.getAbsolutePath(), processExecutor);
+      MoreFiles.rmdir(privateDir.getAbsolutePath());
     }
   }
 

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 
@@ -27,7 +26,6 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 
 import org.easymock.Capture;
@@ -52,9 +50,9 @@ public class CleanCommandTest extends EasyMockSupport {
     CleanCommand cleanCommand = createCommand();
     ProjectFilesystem projectFilesystem = cleanCommand.getProjectFilesystem();
     Capture<String> binDir = new Capture<>();
-    projectFilesystem.rmdir(capture(binDir), anyObject(ProcessExecutor.class));
+    projectFilesystem.rmdir(capture(binDir));
     Capture<String> genDir = new Capture<>();
-    projectFilesystem.rmdir(capture(genDir), anyObject(ProcessExecutor.class));
+    projectFilesystem.rmdir(capture(genDir));
 
     replayAll();
 
@@ -74,9 +72,9 @@ public class CleanCommandTest extends EasyMockSupport {
     CleanCommand cleanCommand = createCommand();
     ProjectFilesystem projectFilesystem = cleanCommand.getProjectFilesystem();
     Capture<String> androidGenDir = new Capture<>();
-    projectFilesystem.rmdir(capture(androidGenDir), anyObject(ProcessExecutor.class));
+    projectFilesystem.rmdir(capture(androidGenDir));
     Capture<String> annotationDir = new Capture<>();
-    projectFilesystem.rmdir(capture(annotationDir), anyObject(ProcessExecutor.class));
+    projectFilesystem.rmdir(capture(annotationDir));
 
     replayAll();
 
