@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
 import static org.junit.Assert.assertEquals;
@@ -25,6 +25,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleStatus;
+import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CacheResult;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;

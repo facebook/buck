@@ -6,6 +6,7 @@ java_library(
     '//lib:jackson-annotations',
     '//lib:jackson-core',
     '//lib:jackson-databind',
+    '//lib:jsr305',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/cli:events',
     '//src/com/facebook/buck/event:event',

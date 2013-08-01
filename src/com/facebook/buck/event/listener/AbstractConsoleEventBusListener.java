@@ -13,13 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.event.listener;
 
 import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
