@@ -45,6 +45,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     extends AbstractCommandRunner<T> {
 
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
+  private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
   // Taken from ddms source code.
   final static int INSTALL_TIMEOUT = 2*60*1000; // 2 min
@@ -153,17 +154,6 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
       // ADB was already initialized, we're fine, so just ignore.
     }
 
-    final Object sync = new Object();
-    AndroidDebugBridge.addDebugBridgeChangeListener(
-        new AndroidDebugBridge.IDebugBridgeChangeListener() {
-          @Override
-          public void bridgeChanged(AndroidDebugBridge bridge) {
-            synchronized (sync) {
-              sync.notifyAll();
-            }
-          }
-    });
-
     AndroidDebugBridge adb = null;
     if (context != null) {
       adb = AndroidDebugBridge.createBridge(context.getPathToAdbExecutable(), false);
@@ -182,10 +172,9 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
         break;
       }
       try {
-        synchronized (sync) {
-          sync.wait(timeLeft);
-        }
+        Thread.sleep(ADB_CONNECT_TIME_STEP_MS);
       } catch (InterruptedException ex) {
+        Thread.currentThread().interrupt();
         break;
       }
     }
