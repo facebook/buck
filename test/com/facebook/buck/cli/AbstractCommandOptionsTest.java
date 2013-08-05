@@ -16,9 +16,19 @@
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.anyObject;
+
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
+
+import java.io.File;
 
 import org.easymock.EasyMockSupport;
+import com.google.common.base.Optional;
 import org.junit.Test;
 
 /** Unit test for {@link AbstractCommandOptions}. */
@@ -30,5 +40,103 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
     AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
 
     assertSame(buckConfig, options.getBuckConfig());
+  }
+
+  private BuckConfig mockNdkBuckConfig(String minNdkVersion, String maxNdkVersion) {
+    BuckConfig buckConfig = createMock(BuckConfig.class);
+
+    expect(buckConfig.getMinimumNdkVersion())
+        .andReturn(Optional.of(minNdkVersion));
+    expect(buckConfig.getMaximumNdkVersion())
+        .andReturn(Optional.of(maxNdkVersion));
+
+    return buckConfig;
+  }
+
+  private ProjectFilesystem mockNdkFileSystem(String ndkVersion) {
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+
+    expect(projectFilesystem.readFirstLineFromFile(anyObject(File.class)))
+        .andReturn(Optional.of(ndkVersion));
+
+    return projectFilesystem;
+  }
+
+  @Test
+  public void testNdkExactVersion() {
+    BuckConfig buckConfig = mockNdkBuckConfig("r8", "r8");
+    ProjectFilesystem projectFilesystem = mockNdkFileSystem("r8");
+
+    replayAll();
+    AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
+    options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+    verifyAll();
+  }
+
+  @Test
+  public void testNdkWideVersion() {
+    BuckConfig buckConfig = mockNdkBuckConfig("r8", "r8e");
+    ProjectFilesystem projectFilesystem = mockNdkFileSystem("r8d");
+
+    replayAll();
+    AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
+    options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+    verifyAll();
+  }
+
+  @Test
+  public void testNdkTooOldVersion() {
+    BuckConfig buckConfig = mockNdkBuckConfig("r8", "r8e");
+    ProjectFilesystem projectFilesystem = mockNdkFileSystem("r7");
+
+    replayAll();
+    AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
+    try {
+      options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+      fail("Should not be valid");
+    } catch (HumanReadableException e) {
+      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r7 from /some/path/to/ndk", e.getMessage());
+    }
+    verifyAll();
+  }
+
+  @Test
+  public void testNdkTooNewVersion() {
+    BuckConfig buckConfig = mockNdkBuckConfig("r8", "r8e");
+    ProjectFilesystem projectFilesystem = mockNdkFileSystem("r9");
+
+    replayAll();
+    AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
+    try {
+      options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+      fail("Should not be valid");
+    } catch (HumanReadableException e) {
+      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r9 from /some/path/to/ndk", e.getMessage());
+    }
+    verifyAll();
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testNdkOnlyMinVersion() {
+    BuckConfig buckConfig = createMock(BuckConfig.class);
+
+    expect(buckConfig.getMinimumNdkVersion())
+        .andReturn(Optional.of("r8"));
+    Optional<String> empty = Optional.absent();
+    expect(buckConfig.getMaximumNdkVersion())
+        .andReturn(empty);
+
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+
+    replayAll();
+    AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
+    try {
+      options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+      fail("Should not be valid");
+    } catch (HumanReadableException e) {
+      assertEquals("Either both min_version and max_version are provided or neither are", e.getMessage());
+    }
+    verifyAll();
   }
 }

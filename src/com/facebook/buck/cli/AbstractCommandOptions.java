@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -30,6 +32,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 public abstract class AbstractCommandOptions {
 
@@ -83,8 +86,49 @@ public abstract class AbstractCommandOptions {
   }
 
   /** @return androidNdkDir */
-  protected Optional<File> findAndroidNdkDir() {
-    return findDirectoryByPropertiesThenEnvironmentVariable("ndk.dir", "ANDROID_NDK");
+  protected Optional<File> findAndroidNdkDir(ProjectFilesystem projectFilesystem) {
+    Optional<File> path =
+      findDirectoryByPropertiesThenEnvironmentVariable("ndk.dir", "ANDROID_NDK");
+    if (path.isPresent()) {
+      validateNdkVersion(projectFilesystem, path.get());
+    }
+    return path;
+  }
+
+  @VisibleForTesting
+  void validateNdkVersion(ProjectFilesystem projectFilesystem, File ndkPath) {
+    Optional<String> minVersion = this.buckConfig.getMinimumNdkVersion();
+    Optional<String> maxVersion = this.buckConfig.getMaximumNdkVersion();
+
+    if (minVersion.isPresent() && maxVersion.isPresent()) {
+      File versionPath = new File(ndkPath, "RELEASE.TXT");
+      Optional<String> contents = projectFilesystem.readFirstLineFromFile(versionPath);
+      String version;
+
+      if (contents.isPresent()) {
+        version = new StringTokenizer(contents.get()).nextToken();
+      } else {
+        throw new HumanReadableException(
+            "Failed to read NDK version from %s", versionPath.getPath());
+      }
+
+      // Example forms: r8, r8b, r9
+      if (version.length() < 2) {
+        throw new HumanReadableException("Invalid NDK version: %s", version);
+      }
+
+      if (version.compareTo(minVersion.get()) < 0 || version.compareTo(maxVersion.get()) > 0) {
+        throw new HumanReadableException(
+            "Supported NDK versions are between %s and %s but Buck is configured to use %s from %s",
+            minVersion.get(),
+            maxVersion.get(),
+            version,
+            ndkPath);
+      }
+    } else if (minVersion.isPresent() || maxVersion.isPresent()) {
+      throw new HumanReadableException(
+          "Either both min_version and max_version are provided or neither are");
+    }
   }
 
   /**

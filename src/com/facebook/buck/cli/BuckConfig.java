@@ -536,6 +536,14 @@ class BuckConfig {
     }
   }
 
+  public Optional<String> getMinimumNdkVersion() {
+    return getValue("ndk", "min_version");
+  }
+
+  public Optional<String> getMaximumNdkVersion() {
+    return getValue("ndk", "max_version");
+  }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     ImmutableMap<String, String> properties = this.getEntriesForSection(sectionName);
     return Optional.fromNullable(properties.get(propertyName));

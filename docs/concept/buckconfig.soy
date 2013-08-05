@@ -143,6 +143,19 @@ generated JAR file. Hopefully <code>src_roots</code> will be removed at some
 point.
 
 
+<h2>[ndk]</h2>
+
+This section may define both <code>min_version</code> and{sp}
+<code>max_version</code> properties to enable Buck to check before building an{sp}
+{call buck.ndk_library /} that the project supports the configured NDK. Both
+properties must be specified to enable this check. For example, to support
+only versions r7 through r8d:
+{literal}<pre>
+[ndk]
+  min_version = r7
+  max_version = r8d
+</pre>{/literal}
+
 <h2>[project]</h2>
 
 This section may define a <code>default_android_manifest</code> property

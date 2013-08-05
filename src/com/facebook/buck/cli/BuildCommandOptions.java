@@ -145,7 +145,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     }
     return new Build(graph,
         findAndroidSdkDir(),
-        findAndroidNdkDir(),
+        findAndroidNdkDir(projectFilesystem),
         targetDevice,
         projectFilesystem,
         artifactCache,

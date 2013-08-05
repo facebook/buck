@@ -160,11 +160,20 @@ public class ProjectFilesystem {
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
     Preconditions.checkNotNull(pathRelativeToProjectRoot);
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
+    return readFirstLineFromFile(file);
+  }
+
+  /**
+   * Attempts to read the first line of the specified file. If the file does not exist, is empty,
+   * or encounters an error while being read, {@link Optional#absent()} is returned. Otherwise, an
+   * {@link Optional} with the first line of the file will be returned.
+   */
+  public Optional<String> readFirstLineFromFile(File file) {
     try {
       String firstLine = Files.readFirstLine(file, Charsets.UTF_8);
       return Optional.fromNullable(firstLine);
     } catch (IOException e) {
-      // Because pathRelativeToProjectRoot is not even guaranteed to exist, swallow the IOException.
+      // Because the file is not even guaranteed to exist, swallow the IOException.
       return Optional.absent();
     }
   }
