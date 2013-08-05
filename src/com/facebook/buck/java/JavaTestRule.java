@@ -74,10 +74,13 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   private final ImmutableSet<String> labels;
 
+  private final ImmutableSet<String> contacts;
+
   protected JavaTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<SourcePath> resources,
       Set<String> labels,
+      Set<String> contacts,
       Optional<String> proguardConfig,
       JavacOptions javacOptions,
       List<String> vmArgs,
@@ -91,6 +94,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
     this.labels = ImmutableSet.copyOf(labels);
+    this.contacts = ImmutableSet.copyOf(contacts);
   }
 
   @Override
@@ -101,6 +105,11 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   @Override
   public ImmutableSet<String> getLabels() {
     return labels;
+  }
+
+  @Override
+  public ImmutableSet<String> getContacts() {
+    return contacts;
   }
 
   @Override
@@ -240,6 +249,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   @Override
   public Callable<TestResults> interpretTestResults(final ExecutionContext context) {
+    final ImmutableSet<String> contacts = getContacts();
     return new Callable<TestResults>() {
 
       @Override
@@ -260,7 +270,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
           summaries.add(summary);
         }
 
-        return new TestResults(summaries);
+        return new TestResults(contacts, summaries);
       }
 
     };
@@ -378,6 +388,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     @Nullable protected List<String> vmArgs = ImmutableList.of();
     protected ImmutableSet<BuildTarget> sourcesUnderTest = ImmutableSet.of();
     protected ImmutableSet<String> labels = ImmutableSet.of();
+    protected ImmutableSet<String> contacts = ImmutableSet.of();
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -394,6 +405,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
           srcs,
           resources,
           labels,
+          contacts,
           proguardConfig,
           javacOptions.build(),
           vmArgs,
@@ -431,6 +443,11 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     @Override
     public Builder setLabels(ImmutableSet<String> labels) {
       this.labels = labels;
+      return this;
+    }
+
+    public Builder setContacts(ImmutableSet<String> contacts) {
+      this.contacts = contacts;
       return this;
     }
 

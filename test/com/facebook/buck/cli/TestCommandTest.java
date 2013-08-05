@@ -58,18 +58,19 @@ import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class TestCommandTest {
 
@@ -274,6 +275,11 @@ public class TestCommandTest {
     return new DependencyGraph(graph);
   }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> d80e841... Add "contacts" as an option to java_test()
   /**
    * Tests the --xml flag, ensuring that test result data is correctly
    * formatted.
@@ -316,7 +322,7 @@ public class TestCommandTest {
     TestCaseSummary testCase = new TestCaseSummary("TestCase", resultList);
     List<TestCaseSummary> testCases = ImmutableList.of(testCase);
 
-    TestResults testResults = new TestResults(testCases);
+    TestResults testResults = new TestResults(ImmutableSet.<String>of(), testCases);
     List<TestResults> testResultsList = ImmutableList.of(testResults);
 
     // Call the XML generation method with our test data.
@@ -388,6 +394,10 @@ public class TestCommandTest {
       (expectedStr.equals(firstChild.getNodeValue())));
   }
 
+<<<<<<< HEAD
+=======
+>>>>>>> Add "contacts" as an option to java_test()
+>>>>>>> d80e841... Add "contacts" as an option to java_test()
   @Test
   public void testGetCandidateRulesByIncludedLabels() throws CmdLineException {
     TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,

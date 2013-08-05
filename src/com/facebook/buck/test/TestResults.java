@@ -18,6 +18,7 @@ package com.facebook.buck.test;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
@@ -30,14 +31,16 @@ import javax.annotation.concurrent.Immutable;
 public class TestResults {
 
   private static final TestResults EMPTY_TEST_RESULTS = new TestResults(
-      ImmutableList.<TestCaseSummary>of());
+      null, ImmutableList.<TestCaseSummary>of());
 
+  private final ImmutableSet<String> contacts;
   private final ImmutableList<TestCaseSummary> testCases;
   private final List<TestCaseSummary> failures;
   private final int failureCount;
 
   @Beta
-  public TestResults(List<TestCaseSummary> testCases) {
+  public TestResults(ImmutableSet<String> contacts, List<TestCaseSummary> testCases) {
+    this.contacts = contacts;
     this.testCases = ImmutableList.copyOf(testCases);
 
     int failureCount = 0;
@@ -66,6 +69,10 @@ public class TestResults {
 
   public ImmutableList<TestCaseSummary> getTestCases() {
     return testCases;
+  }
+
+  public ImmutableSet<String> getContacts() {
+    return contacts;
   }
 }
 

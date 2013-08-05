@@ -100,4 +100,9 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   public ImmutableSet<String> getLabels() {
     return labels;
   }
+
+  @Override
+  public ImmutableSet<String> getContacts() {
+    return ImmutableSet.of();
+  }
 }

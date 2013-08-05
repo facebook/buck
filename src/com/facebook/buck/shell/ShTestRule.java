@@ -86,6 +86,10 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
     return labels;
   }
 
+  public ImmutableSet<String> getContacts() {
+    return ImmutableSet.<String>of();
+  }
+
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     // Nothing to build: test is run directly.
@@ -125,6 +129,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
   @Override
   public Callable<TestResults> interpretTestResults(ExecutionContext context) {
+    final ImmutableSet<String> contacts = getContacts();
     return new Callable<TestResults>() {
 
       @Override
@@ -135,7 +140,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
             TestResultSummary.class);
         TestCaseSummary testCaseSummary = new TestCaseSummary(
             getFullyQualifiedName(), ImmutableList.of(testResultSummary));
-        return new TestResults(ImmutableList.of(testCaseSummary));
+        return new TestResults(contacts, ImmutableList.of(testCaseSummary));
       }
 
     };

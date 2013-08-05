@@ -26,6 +26,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.util.List;
+
 public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTestRule.Builder> {
 
   @Override
@@ -59,5 +61,9 @@ public class JavaTestBuildRuleFactory extends AbstractTestRuleFactory<JavaTestRu
     ImmutableSet<BuildTarget> sourceUnderTest = ImmutableSet.copyOf(Iterables.transform(
         params.getOptionalListAttribute("source_under_test"), contextualBuildParser));
     builder.setSourceUnderTest(sourceUnderTest);
+
+    // contacts
+    List<String> contacts = params.getOptionalListAttribute("contacts");
+    builder.setContacts(ImmutableSet.copyOf(contacts));
   }
 }

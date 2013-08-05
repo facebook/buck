@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -32,7 +33,7 @@ public class IndividualTestEventTest {
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        tests, new TestResults(ImmutableList.<TestCaseSummary>of()));
+        tests, new TestResults(ImmutableSet.<String>of(), ImmutableList.<TestCaseSummary>of()));
 
     assertTrue(started.eventsArePair(finished));
     assertTrue(finished.eventsArePair(started));
@@ -45,7 +46,7 @@ public class IndividualTestEventTest {
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        otherTests, new TestResults(ImmutableList.<TestCaseSummary>of()));
+        otherTests, new TestResults(ImmutableSet.<String>of(), ImmutableList.<TestCaseSummary>of()));
 
     assertFalse(started.eventsArePair(finished));
     assertFalse(finished.eventsArePair(started));

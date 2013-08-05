@@ -26,6 +26,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -98,7 +99,7 @@ public class TestResultFormatterTest {
   public void allTestsPassingShouldBeAcknowledged() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.of(results));
@@ -110,7 +111,7 @@ public class TestResultFormatterTest {
   public void shouldReportTheNumberOfFailingTests() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest, failingTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.of(results));
@@ -122,7 +123,7 @@ public class TestResultFormatterTest {
   public void shouldReportMinimalInformationForAPassingTest() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);
@@ -135,7 +136,7 @@ public class TestResultFormatterTest {
   public void shouldOutputStackTraceStdOutAndStdErrOfFailingTest() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    TestResults results = new TestResults(ImmutableList.of(summary));
+    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);

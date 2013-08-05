@@ -221,6 +221,7 @@ def java_test(
     target='6',
     vm_args=[],
     source_under_test=[],
+    contacts=[],
     deps=[],
     visibility=[],
     build_env=None):
@@ -234,6 +235,7 @@ def java_test(
     'target' : target,
     'vm_args' : vm_args,
     'source_under_test' : source_under_test,
+    'contacts' : contacts,
     'deps' : deps,
     'visibility' : visibility,
   }, build_env)
@@ -247,6 +249,7 @@ def robolectric_test(
     resources=[],
     vm_args=[],
     source_under_test=[],
+    contacts=[],
     deps=[],
     visibility=[],
     build_env=None):
@@ -258,6 +261,7 @@ def robolectric_test(
     'resources' : resources,
     'vm_args' : vm_args,
     'source_under_test' : source_under_test,
+    'contacts' : contacts,
     'deps' : deps,
     'visibility' : visibility,
   }, build_env)
