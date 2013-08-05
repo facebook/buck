@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -34,8 +33,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -180,18 +179,13 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   @SuppressWarnings("deprecation")
   void printJsonForTargets(SortedMap<String, BuildRule> buildIndex,
       Iterable<String> defaultIncludes) throws BuildFileParseException {
-    Parser parser = getParser();
     ImmutableList<String> includesCopy = ImmutableList.copyOf(defaultIncludes);
-    try (ProjectBuildFileParser buildFileParser =
-        parser.createBuildFileParser(includesCopy)) {
-      printJsonForTargetsInternal(buildIndex, includesCopy, buildFileParser);
-    }
+    printJsonForTargetsInternal(buildIndex, includesCopy);
   }
 
   private void printJsonForTargetsInternal(
       SortedMap<String, BuildRule> buildIndex,
-      ImmutableList<String> defaultIncludes,
-      ProjectBuildFileParser buildFileParser) throws BuildFileParseException {
+      ImmutableList<String> defaultIncludes) throws BuildFileParseException {
     // Print the JSON representation of the build rule for the specified target(s).
     getStdOut().println("[");
 
@@ -206,7 +200,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
       List<Map<String, Object>> rules;
       try {
-        rules = getParser().parseBuildFile(buildFile, defaultIncludes, buildFileParser);
+        rules = getParser().parseBuildFile(buildFile, defaultIncludes);
       } catch (NoSuchBuildTargetException e) {
         console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
@@ -304,14 +298,12 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     // Get all valid targets in our target directory by reading the build file.
 
-    List<Map<String, Object>> ruleObjects = null;
+    List<Map<String, Object>> ruleObjects;
     Parser parser = getParser();
-    try (ProjectBuildFileParser buildFileParser = parser.createBuildFileParser(
-        options.getDefaultIncludes())) {
+    try {
       ruleObjects = parser.parseBuildFile(
           buildTarget.getBuildFile(),
-          options.getDefaultIncludes(),
-          buildFileParser);
+          options.getDefaultIncludes());
     } catch (NoSuchBuildTargetException | BuildFileParseException e) {
       // TODO: this doesn't smell right!
       return null;

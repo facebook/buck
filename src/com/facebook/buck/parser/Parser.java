@@ -169,23 +169,6 @@ public class Parser {
     this.parsedBuildFiles = ArrayListMultimap.create();
   }
 
-  /**
-   * Create a new build file parser on demand.
-   *
-   * @param includes Common includes bundled with each parsed build file.
-   * @return New parser instance.
-   *
-   * @deprecated This is currently public due to leaky abstractions present in this class.
-   *     For new code, please avoid calling this and instead consider refactoring the
-   *     {@link Parser} interface so that all of its parsing methods are self-contained and do
-   *     not need to expose the caller to the stateful nature of the underlying
-   *     {@link ProjectBuildFileParser}.
-   */
-  @Deprecated
-  public ProjectBuildFileParser createBuildFileParser(Iterable<String> includes) {
-    return buildFileParserFactory.createParser(includes);
-  }
-
   public BuildTargetParser getBuildTargetParser() {
     return buildTargetParser;
   }
@@ -269,16 +252,25 @@ public class Parser {
     }
   }
 
+  @VisibleForTesting
+  DependencyGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
+      Iterable<BuildTarget> toExplore,
+      final Iterable<String> defaultIncludes) {
+    ProjectBuildFileParser parser = buildFileParserFactory.createParser(defaultIncludes);
+    return findAllTransitiveDependencies(toExplore, defaultIncludes, parser);
+  }
+
+
   /**
    * @param toExplore BuildTargets whose dependencies need to be explored.
    */
   @VisibleForTesting
-  DependencyGraph findAllTransitiveDependencies(
+  private DependencyGraph findAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes,
       final ProjectBuildFileParser buildFileParser) {
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
+    final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
         new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
@@ -376,6 +368,16 @@ public class Parser {
     }
 
     parseBuildFile(buildFile, defaultIncludes, buildFileParser);
+  }
+
+  public List<Map<String, Object>> parseBuildFile(
+      File buildFile,
+      Iterable<String> defaultIncludes)
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    ProjectBuildFileParser projectBuildFileParser =
+        buildFileParserFactory.createParser(defaultIncludes);
+
+    return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser);
   }
 
   /**

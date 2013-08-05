@@ -178,11 +178,9 @@ public class ParserTest extends EasyMockSupport {
         "feed");
     assertEquals(ImmutableList.of(expectedBuildTarget), targets);
 
-    try (ProjectBuildFileParser buildFileParser = parser.createBuildFileParser(
-        ImmutableList.<String>of())) {
-      parser.findAllTransitiveDependencies(targets,
-          ImmutableList.<String>of(),
-          buildFileParser);
+    try {
+      parser.onlyUseThisWhenTestingToFindAllTransitiveDependencies(
+          targets, ImmutableList.<String>of());
       fail("Should have thrown a HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -232,11 +230,8 @@ public class ParserTest extends EasyMockSupport {
     BuildTarget rootNode = BuildTargetFactory.newInstance("//:A");
     Iterable<BuildTarget> buildTargets = ImmutableSet.of(rootNode);
     Iterable<String> defaultIncludes = ImmutableList.of();
-    try (ProjectBuildFileParser buildFileParser = parser.createBuildFileParser(
-        ImmutableList.<String>of())) {
-      parser.findAllTransitiveDependencies(buildTargets,
-          defaultIncludes,
-          buildFileParser);
+    try {
+      parser.onlyUseThisWhenTestingToFindAllTransitiveDependencies(buildTargets, defaultIncludes);
       fail("Should have thrown a HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals("Cycle found: //:C -> //:E -> //:F -> //:C", e.getMessage());
