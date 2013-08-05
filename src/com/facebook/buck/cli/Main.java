@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
+import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
+import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.ArtifactCacheEvent;
@@ -33,6 +35,8 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -226,7 +230,9 @@ public final class Main {
     if (command.isPresent()) {
       ImmutableList<BuckEventListener> eventListeners =
           addEventListeners(buildEventBus,
-              projectFilesystem);
+              clock,
+              projectFilesystem,
+              console);
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
@@ -274,10 +280,26 @@ public final class Main {
   }
 
   private ImmutableList<BuckEventListener> addEventListeners(BuckEventBus buckEvents,
-      ProjectFilesystem projectFilesystem) {
-    ImmutableList<BuckEventListener> eventListeners = ImmutableList.of(
-      new JavaUtilsLoggingBuildListener(),
-      new ChromeTraceBuildListener(projectFilesystem));
+      Clock clock,
+      ProjectFilesystem projectFilesystem,
+      Console console) {
+    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+
+    ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
+        ImmutableList.<BuckEventListener>builder()
+          .add(new JavaUtilsLoggingBuildListener())
+          .add(new ChromeTraceBuildListener(projectFilesystem));
+
+    if (console.getAnsi().isAnsiTerminal()) {
+      SuperConsoleEventBusListener superConsole =
+          new SuperConsoleEventBusListener(console, clock, executionEnvironment);
+      superConsole.startRenderScheduler(100, TimeUnit.MILLISECONDS);
+      eventListenersBuilder.add(superConsole);
+    } else {
+      eventListenersBuilder.add(new SimpleConsoleEventBusListener(console, clock));
+    }
+
+    ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 
     for (BuckEventListener eventListener : eventListeners) {
       buckEvents.register(eventListener);

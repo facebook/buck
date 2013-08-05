@@ -104,6 +104,7 @@ public class BuckEventBus {
   @VisibleForTesting
   public void postDirectlyToAsyncEventBusForTesting(BuckEvent event) {
     eventBus.post(event);
+    flushForTesting();
   }
 
   /**

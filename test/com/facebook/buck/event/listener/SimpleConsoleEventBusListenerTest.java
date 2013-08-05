@@ -71,7 +71,6 @@ public class SimpleConsoleEventBusListenerTest {
         BuildEvent.started(buildTargets), 0L, TimeUnit.MILLISECONDS, threadId));
     eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
         ParseEvent.started(buildTargets), 0L, TimeUnit.MILLISECONDS, threadId));
-    eventBus.flushForTesting();
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
@@ -82,7 +81,6 @@ public class SimpleConsoleEventBusListenerTest {
             400L,
             TimeUnit.MILLISECONDS,
             threadId));
-    eventBus.flushForTesting();
 
     final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.40s\n";
 
@@ -101,7 +99,6 @@ public class SimpleConsoleEventBusListenerTest {
         1000L, TimeUnit.MILLISECONDS, threadId));
     eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
         BuildEvent.finished(buildTargets, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
-    eventBus.flushForTesting();
 
     final String buildingLine = "[-] BUILDING...FINISHED 0.83s\n";
 
@@ -111,7 +108,6 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
         LogEvent.severe("I've made a huge mistake."), 1500L, TimeUnit.MILLISECONDS, threadId));
-    eventBus.flushForTesting();
 
     final String logLine = "I've made a huge mistake.\n";
 
@@ -121,7 +117,6 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
         InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId));
-    eventBus.flushForTesting();
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine + buildingLine + logLine,
@@ -129,7 +124,6 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
         InstallEvent.finished(fakeTarget, true), 4000L, TimeUnit.MILLISECONDS, threadId));
-    eventBus.flushForTesting();
 
     final String installLine = "[-] INSTALLING...FINISHED 1.50s\n";
 

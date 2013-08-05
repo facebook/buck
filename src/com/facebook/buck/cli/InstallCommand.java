@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -248,22 +249,14 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       }
     }
 
-    PrintStream stdOut = console.getStdOut();
-    stdOut.printf("Installing apk on %s.\n", name);
+    getBuckEventBus().post(LogEvent.info("Installing apk on %s.", name));
     try {
-      long start = System.currentTimeMillis();
       String reason = device.installPackage(apk.getAbsolutePath(), true);
-      long end = System.currentTimeMillis();
-
       if (reason != null) {
         console.printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
         return false;
       }
-
-      long delta = end - start;
-      stdOut.printf("Installed apk on %s in %d.%03ds.\n", name, delta / 1000, delta % 1000);
       return true;
-
     } catch (InstallException ex) {
       console.printBuildFailure(String.format("Failed to install apk on %s.", name));
       ex.printStackTrace(console.getStdErr());

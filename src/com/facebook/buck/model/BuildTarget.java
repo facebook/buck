@@ -33,6 +33,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   private final File buildFile;
   private final String baseName;
   private final String shortName;
+  private final String fullyQualifiedName;
 
   /**
    * Reserved for special internal targets such as {@link BuildTarget#ANDROID_SDK}, as well as
@@ -44,14 +45,15 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   }
 
   /**
-   * Reserved for testing: normal constructor precondition checks are omitted.
-   */
-  @VisibleForTesting
-  BuildTarget(String baseName, String shortName, File buildFile) {
-    this.buildFile = buildFile;
-    this.baseName = Preconditions.checkNotNull(baseName);
-    this.shortName = Preconditions.checkNotNull(shortName);
-  }
+    * Reserved for testing: normal constructor precondition checks are omitted.
+    */
+    @VisibleForTesting
+        BuildTarget(String baseName, String shortName, File buildFile) {
+      this.buildFile = buildFile;
+      this.baseName = Preconditions.checkNotNull(baseName);
+      this.shortName = Preconditions.checkNotNull(shortName);
+      this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
+    }
 
   public BuildTarget(File buildFile, String baseName, String shortName) {
     Preconditions.checkNotNull(buildFile);
@@ -70,6 +72,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
     this.baseName = baseName;
 
     this.shortName = Preconditions.checkNotNull(shortName);
+    this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
   }
 
   /**
@@ -83,6 +86,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
     this.buildFile = null;
     this.baseName = String.format("//%s", relativePath);
     this.shortName = inputFile.getName();
+    this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
   }
 
   /**
@@ -166,7 +170,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
    * "//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return String.format("%s:%s", baseName, shortName);
+    return fullyQualifiedName;
   }
 
   @Override

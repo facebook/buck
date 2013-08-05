@@ -17,11 +17,13 @@
 package com.facebook.buck.junit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,13 +52,17 @@ public class BuildThenTestIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:example");
     assertEquals("", testResult.getStdout());
-    assertEquals(Joiner.on("\n").join(
-        "BUILDING //:example",
-        "BUILD SUCCESSFUL",
+    ImmutableList<String> resultList = ImmutableList.copyOf(
+        Splitter.on("\n").split(testResult.getStderr()));
+    assertEquals(6, resultList.size());
+
+    assertTrue(resultList.get(0).startsWith("[-] PARSING BUILD FILES...FINISHED"));
+    assertTrue(resultList.get(1).startsWith("[-] BUILDING...FINISHED"));
+    assertEquals(ImmutableList.of(
         "TESTING //:example",
         "PASS <100ms  1 Passed   0 Failed   com.example.MyTest",
-        "TESTS PASSED") + '\n',
-        testResult.getStderr());
+        "TESTS PASSED"),
+        resultList.subList(2, 5));
     assertEquals("Passing tests should exit with 0.", 0, testResult.getExitCode());
 
     workspace.verify();

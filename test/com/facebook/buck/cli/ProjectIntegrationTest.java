@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -49,10 +48,6 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
 
-    String stderr = result.getStderr();
-    assertTrue(
-        "Nothing should be written to stderr except possibly an Android platform warning.",
-        stderr.isEmpty() || stderr.startsWith("No Android platform target specified."));
     assertEquals(
         "`buck project` should report the files it modified.",
         Joiner.on('\n').join(

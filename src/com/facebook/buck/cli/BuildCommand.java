@@ -30,7 +30,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -96,7 +95,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         console,
         getBuckEventBus(),
         Optional.<TargetDevice>absent());
-    getStdErr().printf("BUILDING %s\n", Joiner.on(' ').join(buildTargets));
     int exitCode = 0;
     try {
       exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
@@ -111,7 +109,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return exitCode;
     }
 
-    console.getAnsi().printlnHighlightedSuccessText(getStdErr(), "BUILD SUCCESSFUL");
     return 0;
   }
 

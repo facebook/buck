@@ -41,7 +41,6 @@ import javax.annotation.Nullable;
 public class AbstractConsoleEventBusListener implements BuckEventListener {
   protected static final DecimalFormat timeFormatter = new DecimalFormat("0.00s");
   protected static final long UNFINISHED_EVENT_PAIR = -1;
-
   protected final Console console;
   protected final Clock clock;
   protected final Ansi ansi;

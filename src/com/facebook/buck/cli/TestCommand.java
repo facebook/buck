@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
@@ -392,7 +393,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     } else {
       targetsBeingTested = Joiner.on(' ').join(options.getArgumentsFormattedAsBuildTargets());
     }
-    getStdErr().printf("TESTING %s\n", targetsBeingTested);
+    getBuckEventBus().post(LogEvent.info("TESTING %s", targetsBeingTested));
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
