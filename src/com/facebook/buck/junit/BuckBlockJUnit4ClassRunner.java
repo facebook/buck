@@ -143,6 +143,15 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     return false;
   }
 
+  /**
+   * Override default init error collector so that class without any test methods will pass
+   */
+  @Override
+  protected void collectInitializationErrors(List<Throwable> errors) {
+    if (!computeTestMethods().isEmpty()) {
+      super.collectInitializationErrors(errors);
+    }
+  }
 
   // Copied from BuckBlockJUnit4ClassRunner in JUnit 4.11.
   private long getTimeout(Test annotation) {

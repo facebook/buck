@@ -67,4 +67,18 @@ public class BuildThenTestIntegrationTest {
 
     workspace.verify();
   }
+
+  /**
+   * Test should pass even when we run tests on non JUnit test classes
+   */
+  @Test
+  public void testRunningTestOnClassWithoutTestMethods() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "build_then_test", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult testResult = workspace.runBuckCommand("test", "//:nontestclass");
+    assertEquals("Passing test should exit with 0.", 0, testResult.getExitCode());
+  }
+
 }

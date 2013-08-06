@@ -1,16 +1,26 @@
-java_test(
-  name = 'example',
-  srcs = glob(['MyTest.java']),
+java_library(
+  name = 'SubTests',
+  srcs = glob(['*Subtest*.java']),
   deps = [
     ':junit',
   ],
 )
 
 java_test(
-  name = 'nontestclass',
-  srcs = glob(['*.java']),
+  name = 'SimpleSuiteTest',
+  srcs = glob(['SimpleSuiteTest.java']),
   deps = [
     ':junit',
+    ':SubTests',
+  ],
+)
+
+java_test(
+  name = 'FailingSuiteTest',
+  srcs = glob(['FailingSuiteTest.java']),
+  deps = [
+    ':junit',
+    ':SubTests',
   ],
 )
 

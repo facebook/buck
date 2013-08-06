@@ -16,13 +16,14 @@
 
 package com.facebook.buck.junit;
 
+import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Method;
-import java.util.concurrent.Callable;
+import java.util.List;
 
 /**
  * Result of an individual test method in JUnit. Similar to {@link Result}, except that it always
@@ -58,58 +59,101 @@ final class TestResult {
   }
 
   /**
-   * Runs the specified test method using the specified test runner.
+   * Creates RunListener that will prepare individual result for each test
+   * and store it to results list afterwards.
    */
-  static TestResult runTestMethod(Callable<Result> runTestAndProduceJUnitResult, Method testMethod)
-      throws Exception {
+  static RunListener createSingleTestResultRunListener(final List<TestResult> results) {
+    return new RunListener() {
 
-    // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
-    // form of System.out.println) the developer is using to debug the test.
-    PrintStream originalOut = System.out;
-    PrintStream originalErr = System.err;
-    ByteArrayOutputStream rawStdOutBytes = new ByteArrayOutputStream();
-    ByteArrayOutputStream rawStdErrBytes = new ByteArrayOutputStream();
-    PrintStream stdOutStream = new PrintStream(
-        rawStdOutBytes, true /* autoFlush */, ENCODING);
-    PrintStream stdErrStream = new PrintStream(
-        rawStdErrBytes, true /* autoFlush */, ENCODING);
-    System.setOut(stdOutStream);
-    System.setErr(stdErrStream);
+      private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
+      private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
+      private Result result;
+      private RunListener resultListener;
 
-    // Run the test!
-    Result result = runTestAndProduceJUnitResult.call();
+      @Override
+      public void testStarted(Description description) throws Exception {
+        // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
+        // form of System.out.println) the developer is using to debug the test.
+        originalOut = System.out;
+        originalErr = System.err;
+        rawStdOutBytes = new ByteArrayOutputStream();
+        rawStdErrBytes = new ByteArrayOutputStream();
+        stdOutStream = new PrintStream(
+            rawStdOutBytes, true /* autoFlush */, ENCODING);
+        stdErrStream = new PrintStream(
+            rawStdErrBytes, true /* autoFlush */, ENCODING);
+        System.setOut(stdOutStream);
+        System.setErr(stdErrStream);
 
-    // Restore the original stdout/stderr.
-    System.setOut(originalOut);
-    System.setErr(originalErr);
+        // Prepare single-test result.
+        result = new Result();
+        resultListener = result.createListener();
+        resultListener.testRunStarted(description);
+        resultListener.testStarted(description);
+      }
 
-    // Get the stdout/stderr written during the test as strings.
-    stdOutStream.flush();
-    stdErrStream.flush();
+      @Override
+      public void testFinished(Description description) throws Exception {
+        // Shutdown single-test result.
+        resultListener.testFinished(description);
+        resultListener.testRunFinished(result);
+        resultListener = null;
 
-    int numFailures = result.getFailureCount();
-    String className = testMethod.getDeclaringClass().getCanonicalName();
-    String methodName = testMethod.getName();
-    // In practice, I have seen one case of a test having more than one failure:
-    // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2 failures.
-    // However, I am not sure what to make of it, so we let it through.
-    if (numFailures < 0) {
-      throw new IllegalStateException(String.format(
-          "Unexpected number of failures while testing %s#%s(): %d (%s)",
-          className,
-          methodName,
-          numFailures,
-          result.getFailures()));
-    }
-    Failure failure = numFailures == 0 ? null : result.getFailures().get(0);
+        // Restore the original stdout/stderr.
+        System.setOut(originalOut);
+        System.setErr(originalErr);
 
-    String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
-    String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
-    return new TestResult(className,
-        methodName,
-        result.getRunTime(),
-        failure,
-        stdOut,
-        stdErr);
+        // Get the stdout/stderr written during the test as strings.
+        stdOutStream.flush();
+        stdErrStream.flush();
+
+        int numFailures = result.getFailureCount();
+        String className = description.getClassName();
+        String methodName = description.getMethodName();
+        // In practice, I have seen one case of a test having more than one failure:
+        // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2 failures.
+        // However, I am not sure what to make of it, so we let it through.
+        if (numFailures < 0) {
+          throw new IllegalStateException(String.format(
+              "Unexpected number of failures while testing %s#%s(): %d (%s)",
+              className,
+              methodName,
+              numFailures,
+              result.getFailures()));
+        }
+        Failure failure = numFailures == 0 ? null : result.getFailures().get(0);
+
+        String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
+        String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
+
+        results.add(new TestResult(className,
+            methodName,
+            result.getRunTime(),
+            failure,
+            stdOut,
+            stdErr));
+      }
+
+      @Override
+      public void testAssumptionFailure(Failure failure) {
+        if (resultListener != null) {
+          resultListener.testAssumptionFailure(failure);
+        }
+      }
+
+      @Override
+      public void testFailure(Failure failure) throws Exception {
+        if (resultListener != null) {
+          resultListener.testFailure(failure);
+        }
+      }
+
+      @Override
+      public void testIgnored(Description description) throws Exception {
+        if (resultListener != null) {
+          resultListener.testIgnored(description);
+        }
+      }
+    };
   }
 }

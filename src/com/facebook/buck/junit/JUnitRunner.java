@@ -20,11 +20,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
 import org.junit.internal.builders.JUnit4Builder;
+import org.junit.runner.Computer;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
-import org.junit.runner.Result;
 import org.junit.runner.Runner;
-import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.Failure;
 import org.junit.runners.model.RunnerBuilder;
 import org.w3c.dom.Document;
@@ -40,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -78,53 +76,31 @@ public final class JUnitRunner {
   }
 
   public void run() throws Throwable {
-    RunnerBuilder runnerBuilder = createRunnerBuilder();
-    final JUnitCore jUnit3TestRunner = new JUnitCore();
-
     for (String className : testClassNames) {
       final Class<?> testClass = Class.forName(className);
       Ignore ignore = testClass.getAnnotation(Ignore.class);
-      boolean isTestClassIgnored = ignore != null;
+      boolean isTestClassIgnored = (ignore != null || !isTestClass(testClass));
 
       List<TestResult> results;
       if (isTestClassIgnored) {
         // Test case has @Ignore annotation, so do nothing.
         results = Collections.emptyList();
       } else {
-        // Run each test method individually.
-        results = new ArrayList<TestResult>();
-        Method[] publicInstanceMethods = testClass.getMethods();
-        for (final Method method : publicInstanceMethods) {
-          if (!isTestMethod(method)) {
-            continue;
-          }
+        results = new ArrayList<>();
+        JUnitCore jUnitCore = new JUnitCore();
 
-          Runner runner = runnerBuilder.runnerForClass(testClass);
-          Callable<Result> runTestAndProduceJUnitResult;
-          if (runner instanceof BuckBlockJUnit4ClassRunner) {
-            final BuckBlockJUnit4ClassRunner jUnit4Runner = (BuckBlockJUnit4ClassRunner)runner;
-            runTestAndProduceJUnitResult = new Callable<Result>() {
-              @Override
-              public Result call() throws NoTestsRemainException {
-                return jUnit4Runner.runTest(method);
-              }
-            };
-          } else {
-            runTestAndProduceJUnitResult = new Callable<Result>() {
-              @Override
-              public Result call() {
-                Request request = Request.method(testClass, method.getName());
-                return jUnit3TestRunner.run(request);
-              }
-            };
-          }
+        Runner suite = new Computer().getSuite(createRunnerBuilder(), new Class<?>[]{testClass});
+        Request request = Request.runner(suite);
 
-          TestResult testResult = TestResult.runTestMethod(runTestAndProduceJUnitResult, method);
-          results.add(testResult);
-        }
+        jUnitCore.addListener(TestResult.createSingleTestResultRunListener(results));
+        jUnitCore.run(request);
       }
       writeResult(className, results);
     }
+  }
+
+  private boolean isTestClass(Class<?> klass) {
+    return klass.getConstructors().length <= 1;
   }
 
   /**
