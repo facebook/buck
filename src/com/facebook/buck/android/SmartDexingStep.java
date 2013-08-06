@@ -21,6 +21,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.RepackZipEntriesStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.step.fs.ZipStep;
@@ -435,6 +436,7 @@ public class SmartDexingStep implements Step {
             ZipStep.MIN_COMPRESSION_LEVEL,
             /* workingDirectory */ null
         ));
+        steps.add(new RmStep(tempDexJarOutput, true));
         steps.add(new XzStep(repackedJar));
       } else {
         steps.add(new DxStep(outputPath, srcs));

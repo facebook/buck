@@ -90,7 +90,7 @@ public class XzStep implements Step {
         sourceFile,
         sourceFile + ".xz",
         /* compressionLevel */ 4,
-        /* keep */ true,
+        /* keep */ false,
         XZ.CHECK_CRC32);
   }
 
