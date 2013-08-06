@@ -760,7 +760,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   public Optional<Sha1HashCode> getAbiKey() {
     Preconditions.checkState(isRuleBuilt(),
         "%s must be built before its ABI key can be returned.", this);
-    return Optional.fromNullable(abiKeySupplier.get());
+    return Optional.fromNullable(abiKeySupplier == null ? null : abiKeySupplier.get());
   }
 
   private void setAbiKey(Supplier<Sha1HashCode> abiKeySupplier) {
