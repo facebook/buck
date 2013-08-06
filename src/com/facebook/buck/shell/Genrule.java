@@ -196,6 +196,8 @@ public class Genrule extends AbstractCachingBuildRule {
     for (BuildRule dep : getDeps()) {
       transformNames(processedBuildRules, depFiles, dep);
     }
+
+    environmentVariablesBuilder.put("GEN_DIR", relativeToAbsolutePathFunction.apply(BuckConstant.GEN_DIR));
     environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory);
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory);
@@ -218,7 +220,22 @@ public class Genrule extends AbstractCachingBuildRule {
 
     String output = rule.getPathToOutputFile();
     if (output != null) {
-      appendTo.add(relativeToAbsolutePathFunction.apply(output));
+      // TODO(mbolin): This is a giant hack and we should do away with $DEPS altogether.
+      // There can be a lot of paths here and the filesystem location can be arbitrarily long.
+      // We can easily hit the shell command character limit. What this does is find
+      // BuckConstant.GEN_DIR (which should be the same for every path) and replaces
+      // it with a shell variable. This way the character count is much lower when run
+      // from the shell but anyone reading the environment variable will get the
+      // full paths due to variable interpolation
+      if (output.startsWith(BuckConstant.GEN_DIR)) {
+        String relativePath = output.substring(BuckConstant.GEN_DIR.length());
+        if (relativePath.charAt(0) != '/') {
+          relativePath = "/" + relativePath;
+        }
+        appendTo.add("$GEN_DIR" + relativePath);
+      } else {
+        appendTo.add(relativeToAbsolutePathFunction.apply(output));
+      }
     }
 
     for (BuildRule dep : rule.getDeps()) {

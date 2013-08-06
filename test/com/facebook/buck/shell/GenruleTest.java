@@ -214,8 +214,9 @@ public class GenruleTest {
         .put("SRCS", "/opt/local/fbandroid/src/com/facebook/katana/convert_to_katana.py " +
             "/opt/local/fbandroid/src/com/facebook/katana/AndroidManifest.xml")
         .put("OUT", "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml")
+        .put("GEN_DIR", "/opt/local/fbandroid/" + GEN_DIR)
         .put("DEPS",
-            "/opt/local/fbandroid/" + GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar")
+            "$GEN_DIR/java/com/facebook/util/lib__util__output/util.jar")
         .put("TMP", "/opt/local/fbandroid/" + pathToTmpDir)
         .put("SRCDIR", "/opt/local/fbandroid/" + pathToSrcDir)
         .build(),
