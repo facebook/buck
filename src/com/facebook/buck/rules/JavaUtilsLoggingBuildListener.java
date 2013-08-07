@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -117,6 +118,15 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
       builder.append("\n");
 
       return builder.toString();
+    }
+  }
+
+  public static void closeLogFile() {
+    for (Handler handler : LOG.getHandlers()) {
+      if (handler instanceof FileHandler) {
+        LOG.removeHandler(handler);
+        handler.close();
+      }
     }
   }
 }

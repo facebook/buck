@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Project;
+import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -66,6 +67,9 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
       projectFilesystem.rmdir(Project.ANDROID_GEN_DIR);
       projectFilesystem.rmdir(BuckConstant.ANNOTATION_DIR);
     } else {
+      // On Windows, you have to close all files that will be deleted.
+      // Because buck clean will delete build.log, you must close it first.
+      JavaUtilsLoggingBuildListener.closeLogFile();
       projectFilesystem.rmdir(BuckConstant.BIN_DIR);
       projectFilesystem.rmdir(BuckConstant.GEN_DIR);
     }
