@@ -24,6 +24,14 @@ java_test(
   ],
 )
 
+java_test(
+  name = 'ParametrizedTest',
+  srcs = glob(['ParametrizedTest.java']),
+  deps = [
+    ':junit',
+  ],
+)
+
 prebuilt_jar(
   name = 'junit',
   binary_jar = 'junit-4.11.jar',

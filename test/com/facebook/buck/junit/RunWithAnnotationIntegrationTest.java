@@ -23,11 +23,18 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.XmlDomParser;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import java.io.FileReader;
 import java.io.IOException;
 
 public class RunWithAnnotationIntegrationTest {
@@ -41,7 +48,6 @@ public class RunWithAnnotationIntegrationTest {
         this, "runwith", temporaryFolder);
     workspace.setUp();
 
-    // ExceedsAnnotationTimeoutTest should fail.
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:SimpleSuiteTest");
     assertEquals("Test should pass", 0, suiteTestResult.getExitCode());
     assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
@@ -53,13 +59,43 @@ public class RunWithAnnotationIntegrationTest {
         this, "runwith", temporaryFolder);
     workspace.setUp();
 
-    // ExceedsAnnotationTimeoutTest should fail.
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:FailingSuiteTest");
     assertEquals("Test should fail because of one of subtests failure",
         1,
         suiteTestResult.getExitCode());
     assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
     assertThat(suiteTestResult.getStderr(), containsString("1 Failed"));
+  }
+
+  @Test
+  public void testParametrizedTestRun4Cases() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "runwith", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:ParametrizedTest");
+    suiteTestResult.assertExitCode("Test should pass", 0);
+    assertThat(suiteTestResult.getStderr(), containsString("4 Passed"));
+
+    Document doc = XmlDomParser.parse(new InputSource(new FileReader(workspace.getFile(
+        "buck-out/gen/__java_test_ParametrizedTest_output__/com.example.ParametrizedTest.xml"))),
+        false);
+
+    NodeList testNodes = doc.getElementsByTagName("test");
+    assertEquals(4, testNodes.getLength());
+
+    for (int i = 0; i < testNodes.getLength(); i++) {
+      Node testNode = testNodes.item(i);
+
+      String expectedName = String.format("parametrizedTest[%d]", i);
+      assertEquals(expectedName, testNode.getAttributes().getNamedItem("name").getTextContent());
+
+      String expectedStdout = String.format("Parameter: %d\n", i);
+      assertEquals(
+          expectedStdout,
+          ((Element) testNode).getElementsByTagName("stdout").item(0).getTextContent());
+    }
+
   }
 
 }

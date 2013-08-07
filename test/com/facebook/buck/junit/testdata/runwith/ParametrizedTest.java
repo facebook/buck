@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,15 +16,31 @@
 
 package com.example;
 
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.runners.Parameterized;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
-    Subtest1.class,
-    Subtest2.class,
-    FailingSubtest.class,
-})
-public class FailingSuiteTest {
+import java.util.Arrays;
+import java.util.Collection;
+
+@RunWith(Parameterized.class)
+public class ParametrizedTest {
+
+  private int number;
+
+  public ParametrizedTest(int number) {
+    this.number = number;
+  }
+
+  @Parameterized.Parameters
+  public static Collection<Object[]> data() {
+    Object[][] data = new Object[][] { { 0 }, { 1 }, { 2 }, { 3 } };
+    return Arrays.asList(data);
+  }
+
+  @Test
+  public void parametrizedTest() {
+    System.out.println("Parameter: " + number);
+  }
 
 }

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.junit.testdata.runwith;
+package com.example;
 
 import org.junit.Test;
 
