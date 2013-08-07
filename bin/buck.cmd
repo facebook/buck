@@ -1,37 +1,73 @@
+:: Copyright 2013-present Facebook, Inc.
+::
+:: Licensed under the Apache License, Version 2.0 (the "License"); you may
+:: not use this file except in compliance with the License. You may obtain
+:: a copy of the License at
+::
+::     http://www.apache.org/licenses/LICENSE-2.0
+::
+:: Unless required by applicable law or agreed to in writing, software
+:: distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+:: WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+:: License for the specific language governing permissions and limitations
+:: under the License.
+
+:: FIXME (carbokuo) This script is migrated from bin/buck and bin/buck_common and still very incomplete.
+
 @echo off
 set ORIGINAL_WORKING_DIRECTORY=%cd%
 set PROJECT_ROOT=%cd%
 set BUCK_BIN_DIRECTORY=%~dp0
 cd %BUCK_BIN_DIRECTORY%\..
 set BUCK_DIRECTORY=%cd%
+cd %ORIGINAL_WORKING_DIRECTORY%
 
 set BUCKD_DIR=%PROJECT_ROOT%\.buckd
 set BUCKD_LOG_FILE=%PROJECT_ROOT%\buckd.log
 set BUCKD_PID_FILE=%PROJECT_ROOT%\buckd.pid
 set BUCKD_PORT_FILE=%PROJECT_ROOT%\buckd.port
 set BUCKD_RUNNING=0
-rem kill -0 `cat "$BUCKD_PID_FILE" 2> /dev/null` &> /dev/null || BUCKD_RUNNING=1
 
-if not exist %PROJECT_ROOT%\.buckversion goto SET_BUCK_REQUIRED_VERSION_END
-  if exist %PROJECT_ROOT%\.nobuckcheck goto SET_BUCK_REQUIRED_VERSION_END
-  set /p BUCK_REQUIRED_VERSION=<%PROJECT_ROOT%\.buckversion
-  rem TODO checkout the required version
-:SET_BUCK_REQUIRED_VERSION_END
+if exist %PROJECT_ROOT%\.buckversion (
+  if not exist %PROJECT_ROOT%\.nobuckcheck (
+    set /p BUCK_REQUIRED_VERSION=<%PROJECT_ROOT%\.buckversion
+    rem TODO checkout the required version
+  )
+)
 
 set BUCK_REPOSITORY_DIRTY=0
 set BUCK_CURRENT_VERSION=N/A
 set BUCK_VERSION_TIMESTAMP=-1
-if not exist .git goto GET_BUCK_VERSION_END
-  git rev-parse HEAD >%TEMP%\BUCK_CURRENT_VERSION
-  set /p BUCK_CURRENT_VERSION=<%TEMP%\BUCK_CURRENT_VERSION
-  git log --pretty=format:%%ct -1 HEAD >%TEMP%\BUCK_VERSION_TIMESTAMP
-  set /p BUCK_VERSION_TIMESTAMP=<%TEMP%\BUCK_VERSION_TIMESTAMP
-:GET_BUCK_VERSION_END
+set BUCK_GIT_DIRECTORY=%BUCK_DIRECTORY%\.git
+
+:: The following commands are to retrieve output from external commands.
+:: Because the second following command contains % (percent sign), it could not be executed in a for /f statement.
+:: The workaround is to write the output of the command into a temp file and read it.
+:: The name of the temp file contains a random number in order to avoid race condition.
+set BUCK_VERSION_TIMESTAMP_TEMPFILE=%TEMP%\BUCK_VERSION_TIMESTAMP_%RANDOM%.tmp
+if exist %BUCK_GIT_DIRECTORY% (
+  for /f %%i in ('git --git-dir %BUCK_GIT_DIRECTORY% rev-parse HEAD') do set BUCK_CURRENT_VERSION=%%i
+  git --git-dir %BUCK_GIT_DIRECTORY% log --pretty=format:%%ct -1 HEAD >%BUCK_VERSION_TIMESTAMP_TEMPFILE%
+  set /p BUCK_VERSION_TIMESTAMP=<%BUCK_VERSION_TIMESTAMP_TEMPFILE%
+)
 
 set BUCK_VERSION_UID=N/A
+:: TODO (carbokuo) Retrieve BUCK_VERSION_UID
 
-set DEFAULT_PYTHON_INTERP=python
-set PYTHON_INTERP=%DEFAULT_PYTHON_INTERP%
+:: Find python.exe defined in %PATH%. If not found, jython will be used instead.
+if not defined PYTHON_INTERP (
+  set PYTHON_INTERP=
+  for %%e in (%PATHEXT%) do (
+    for %%X in (python%%e) do (
+      if not defined PYTHON_INTERP (
+        set PYTHON_INTERP=%%~$PATH:X
+      )
+    )
+  )
+  if not defined PYTHON_INTERP (
+    set PYTHON_INTERP=%BUCK_BIN_DIRECTORY%\jython.cmd
+  )
+)
 
 set RELATIVE_PATH_TO_BUCK_PY=src/com/facebook/buck/parser/buck.py
 set PATH_TO_BUCK_PY=%BUCK_DIRECTORY%\%RELATIVE_PATH_TO_BUCK_PY%
@@ -89,5 +125,3 @@ java ^
   -Dbuck.daemon=false ^
   com.facebook.buck.cli.Main ^
   %*
-
-cd %ORIGINAL_WORKING_DIRECTORY%

@@ -17,6 +17,8 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -75,5 +77,12 @@ public class PathsTest {
   public void testNormalizePathSeparator() {
     assertEquals("C:/Windows/System32/drivers.dll",
         Paths.normalizePathSeparator("C:\\Windows\\System32\\drivers.dll"));
+  }
+
+  @Test
+  public void testContainsBackslash() {
+    assertTrue(Paths.containsBackslash("C:\\Windows\\System32\\drivers.dll"));
+    assertFalse(Paths.containsBackslash("C:/Windows"));
+    assertFalse(Paths.containsBackslash("/usr/bin"));
   }
 }

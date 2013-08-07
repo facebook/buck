@@ -127,4 +127,9 @@ public class Paths {
   public static String normalizePathSeparator(String path) {
     return path.replace("\\", "/");
   }
+
+  /** @return true if the specified path contains a backslash character. */
+  public static boolean containsBackslash(String path) {
+    return path.indexOf('\\') >= 0;
+  }
 }

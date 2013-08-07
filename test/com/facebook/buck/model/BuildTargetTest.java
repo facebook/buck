@@ -18,10 +18,18 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.File;
+import java.io.IOException;
 
 public class BuildTargetTest {
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
 
   @Test
   public void testRootBuildTarget() {
@@ -45,6 +53,18 @@ public class BuildTargetTest {
     assertEquals("java/com/facebook/", rootTarget.getBasePathWithSlash());
     assertEquals("//java/com/facebook:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//java/com/facebook:fb4a", rootTarget.toString());
+  }
+
+  @Test
+  public void testBuildTargetWithBackslash() throws IOException {
+    folder.create();
+    File buildFile = new File(folder.newFolder("com", "microsoft", "windows"), "buck");
+    assertTrue(buildFile.createNewFile());
+    BuildTarget rootTargetWithBackslash = new BuildTarget(
+        buildFile,
+        "//com\\microsoft\\windows",
+        "something");
+    assertEquals("//com/microsoft/windows", rootTargetWithBackslash.getBaseName());
   }
 
   @Test

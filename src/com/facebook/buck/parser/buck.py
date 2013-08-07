@@ -5,7 +5,6 @@ import functools
 import optparse
 import os
 import os.path
-import posixpath
 import re
 import sys
 
@@ -16,20 +15,20 @@ except ImportError:
 
 
 # TODO(user): upgrade to a jython including os.relpath
-def relpath(path, start=posixpath.curdir):
+def relpath(path, start=os.path.curdir):
   """
   Return a relative filepath to path from the current directory or an optional start point.
   """
   if not path:
     raise ValueError("no path specified")
-  start_list = posixpath.abspath(start).split(posixpath.sep)
-  path_list = posixpath.abspath(path).split(posixpath.sep)
+  start_list = os.path.abspath(start).split(os.path.sep)
+  path_list = os.path.abspath(path).split(os.path.sep)
   # Work out how much of the filepath is shared by start and path.
-  common = len(posixpath.commonprefix([start_list, path_list]))
-  rel_list = [posixpath.pardir] * (len(start_list) - common) + path_list[common:]
+  common = len(os.path.commonprefix([start_list, path_list]))
+  rel_list = [os.path.pardir] * (len(start_list) - common) + path_list[common:]
   if not rel_list:
-    return posixpath.curdir
-  return posixpath.join(*rel_list)
+    return os.path.curdir
+  return os.path.join(*rel_list)
 
 
 # When build files are executed, the functions in this file tagged with
@@ -760,12 +759,12 @@ def main():
   elif not options.server:
     # Find all of the build files in the project root. Symlinks will not be traversed.
     # Search must be done top-down so that directory filtering works as desired.
-    ignore_paths = [posixpath.join(project_root, d) for d in options.ignore_paths or []]
+    ignore_paths = [os.path.join(project_root, d) for d in options.ignore_paths or []]
     build_files = []
     for dirpath, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=False):
       # Do not walk directories that contain generated/non-source files.
       # All modifications to dirnames must occur in-place.
-      dirnames[:] = [d for d in dirnames if not (posixpath.join(dirpath, d) in ignore_paths)]
+      dirnames[:] = [d for d in dirnames if not (os.path.join(dirpath, d) in ignore_paths)]
 
       if BUILD_RULES_FILE_NAME in filenames:
         build_file = os.path.join(dirpath, BUILD_RULES_FILE_NAME)

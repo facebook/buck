@@ -65,6 +65,11 @@ public final class BuildTarget implements Comparable<BuildTarget> {
         "baseName must start with // but was %s",
         baseName);
 
+    // On Windows, basePath may contain backslashes, which are not permitted by BuildTarget.
+    if (Paths.containsBackslash(baseName)) {
+      baseName = Paths.normalizePathSeparator(baseName);
+    }
+
     String parentDirectoryName = Paths.normalizePathSeparator(buildFile.getParentFile().getAbsolutePath());
     String basePath = baseName.substring(BUILD_TARGET_PREFIX.length());
     Preconditions.checkArgument(parentDirectoryName.endsWith(basePath),
