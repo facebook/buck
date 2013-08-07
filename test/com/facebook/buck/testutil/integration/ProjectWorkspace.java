@@ -156,6 +156,10 @@ public class ProjectWorkspace {
     }
 
     public void assertExitCode(int exitCode) {
+      assertExitCode(null, exitCode);
+    }
+
+    public void assertExitCode(String message, int exitCode) {
       if (exitCode == getExitCode()) {
         return;
       }
@@ -166,7 +170,11 @@ public class ProjectWorkspace {
       System.err.println(getStderr());
       System.err.println("=== STDOUT ===");
       System.err.println(getStdout());
-      fail(failureMessage);
+      if (message != null) {
+        fail(message);
+      } else {
+        fail(failureMessage);
+      }
     }
   }
 
