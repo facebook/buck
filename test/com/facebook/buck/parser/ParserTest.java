@@ -46,6 +46,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
@@ -106,7 +107,7 @@ public class ParserTest extends EasyMockSupport {
 
     buildRuleTypes = new KnownBuildRuleTypes();
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
-        new DefaultProjectBuildFileParserFactory(filesystem);
+        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER);
     testParser = createParser(emptyBuildTargets(), testBuildFileParserFactory);
   }
 
@@ -167,7 +168,8 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = new Parser(
         new ProjectFilesystem(new File(".")),
         new KnownBuildRuleTypes(),
-        new TestConsole());
+        new TestConsole(),
+        BuckTestConstant.PYTHON_INTERPRETER);
 
     parser.parseRawRulesInternal(ruleObjects, null);
     RawRulePredicate predicate = alwaysTrue();
@@ -441,7 +443,7 @@ public class ParserTest extends EasyMockSupport {
 
     Parser parser = createParser(buildFileTreeSupplier,
         emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem),
+        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
         new BuildTargetParser(filesystem));
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
@@ -468,7 +470,7 @@ public class ParserTest extends EasyMockSupport {
 
     Parser parser = createParser(buildFileTreeSupplier,
         emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem),
+        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
         new BuildTargetParser(filesystem));
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
@@ -495,7 +497,7 @@ public class ParserTest extends EasyMockSupport {
 
     Parser parser = createParser(buildFileTreeSupplier,
         emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem),
+        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
         new BuildTargetParser(filesystem));
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
@@ -523,7 +525,7 @@ public class ParserTest extends EasyMockSupport {
 
     Parser parser = createParser(buildFileTreeSupplier,
         emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem),
+        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
         new BuildTargetParser(filesystem));
 
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
@@ -549,7 +551,7 @@ public class ParserTest extends EasyMockSupport {
 
     Parser parser = createParser(buildFileTreeSupplier,
         emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem),
+        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
         new BuildTargetParser(filesystem));
 
     WatchEvent<Path> event = createMock(WatchEvent.class);
@@ -782,7 +784,7 @@ public class ParserTest extends EasyMockSupport {
 
     private class TestProjectBuildFileParser extends ProjectBuildFileParser {
       public TestProjectBuildFileParser() {
-        super(projectFilesystem, ImmutableList.<String>of());
+        super(projectFilesystem, ImmutableList.<String>of(), "python");
       }
 
       @Override

@@ -245,7 +245,8 @@ public class AuditOwnerCommandTest {
         filesystem,
         buildRuleTypes,
         artifactCache,
-        eventBus));
+        eventBus,
+        buckConfig.getPythonInterpreter()));
   }
 
   @Test

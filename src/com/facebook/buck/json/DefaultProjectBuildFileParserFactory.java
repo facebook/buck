@@ -21,13 +21,16 @@ import com.google.common.base.Preconditions;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final ProjectFilesystem projectFilesystem;
+  private final String pythonInterpreter;
 
-  public DefaultProjectBuildFileParserFactory(ProjectFilesystem projectFilesystem) {
+  public DefaultProjectBuildFileParserFactory(ProjectFilesystem projectFilesystem,
+                                              String pythonInterpreter) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
   }
 
   @Override
   public ProjectBuildFileParser createParser(Iterable<String> commonIncludes) {
-    return new ProjectBuildFileParser(projectFilesystem, commonIncludes);
+    return new ProjectBuildFileParser(projectFilesystem, commonIncludes, pythonInterpreter);
   }
 }

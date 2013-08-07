@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 
@@ -93,7 +94,8 @@ public class InstallCommandTest {
         filesystem,
         buildRuleTypes,
         artifactCache,
-        eventBus));
+        eventBus,
+        BuckTestConstant.PYTHON_INTERPRETER));
   }
 
   /**

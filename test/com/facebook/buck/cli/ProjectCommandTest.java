@@ -43,6 +43,7 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -170,7 +171,8 @@ public class ProjectCommandTest {
           new ProjectFilesystem(new File(".")),
           new KnownBuildRuleTypes(),
           artifactCache,
-          new BuckEventBus()));
+          new BuckEventBus(),
+          BuckTestConstant.PYTHON_INTERPRETER));
     }
 
     @Override

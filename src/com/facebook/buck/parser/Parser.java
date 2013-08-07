@@ -131,7 +131,8 @@ public class Parser {
 
   public Parser(final ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
-      Console console) {
+      Console console,
+      String pythonInterpreter) {
     this(projectFilesystem,
         buildRuleTypes,
         console,
@@ -144,7 +145,7 @@ public class Parser {
         },
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
-        new DefaultProjectBuildFileParserFactory(projectFilesystem));
+        new DefaultProjectBuildFileParserFactory(projectFilesystem, pythonInterpreter));
   }
 
   /**

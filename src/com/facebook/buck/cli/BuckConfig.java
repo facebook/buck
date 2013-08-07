@@ -565,4 +565,46 @@ class BuckConfig {
   public int hashCode() {
     return Objects.hashCode(sectionsToEntries);
   }
+
+  private String[] getEnv(String propertyName, String separator) {
+    String value = System.getenv(propertyName);
+    if (value == null) {
+      value = "";
+    }
+    return value.split(separator);
+  }
+
+  /**
+   * Returns the path to python interpreter. Firstly, it queries "python" under "tools" section
+   * defined in .buckconfig. If not found or invalid, it will try to find python under PATH.
+   * @return The found python interpreter.
+   */
+  public String getPythonInterpreter() {
+    String interpreter = getValue("tools", "python").or("python");
+    // Try finding interpreter with file name directly.
+    File executable = new File(interpreter);
+    if (executable.canExecute()) {
+      return executable.getAbsolutePath();
+    }
+
+    // Try to prepend path
+    // For windows, executables have certain extension names, i.e. .exe, .bat, .cmd, etc, which are
+    // defined in %PATHEXT%
+    String[] paths = getEnv("PATH", File.pathSeparator);
+    String[] pathExts = getEnv("PATHEXT", File.pathSeparator);
+    for (String path : paths) {
+      for (String pathExt : pathExts) {
+        executable = new File(path, interpreter + pathExt);
+        if (executable.canExecute()) {
+          return executable.getAbsolutePath();
+        }
+      }
+    }
+
+    // Use Jython as a fallback
+    interpreter = System.getProperty("buck.path_to_python_interp", "bin/jython");
+    executable = new File(interpreter);
+    assert(executable.canExecute());
+    return interpreter;
+  }
 }

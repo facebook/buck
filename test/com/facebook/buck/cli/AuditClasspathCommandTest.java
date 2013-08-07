@@ -36,6 +36,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -71,7 +72,8 @@ public class AuditClasspathCommandTest {
         projectFilesystem,
         buildRuleTypes,
         artifactCache,
-        eventBus));
+        eventBus,
+        BuckTestConstant.PYTHON_INTERPRETER));
   }
 
   private PartialGraph createGraphFromBuildRules(BuildRuleResolver ruleResolver,

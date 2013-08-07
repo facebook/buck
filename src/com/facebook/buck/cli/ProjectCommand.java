@@ -81,7 +81,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         executionContext,
         getProjectFilesystem(),
         options.getPathToDefaultAndroidManifest(),
-        options.getPathToPostProcessScript());
+        options.getPathToPostProcessScript(),
+        options.getBuckConfig().getPythonInterpreter());
 
     File tempFile = new File(Files.createTempDir(), "project.json");
     int exitCode;

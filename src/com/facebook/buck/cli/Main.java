@@ -92,7 +92,10 @@ public final class Main {
                   BuckConfig config,
                   Console console) throws IOException {
       this.config = config;
-      this.parser = new Parser(projectFilesystem, new KnownBuildRuleTypes(), console);
+      this.parser = new Parser(projectFilesystem,
+          new KnownBuildRuleTypes(),
+          console,
+          config.getPythonInterpreter());
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
@@ -218,7 +221,10 @@ public final class Main {
       daemon.watchFileSystem();
       parser = daemon.getParser();
     } else {
-      parser = new Parser(projectFilesystem, knownBuildRuleTypes, console);
+      parser = new Parser(projectFilesystem,
+          knownBuildRuleTypes,
+          console,
+          config.getPythonInterpreter());
     }
 
     Clock clock = new DefaultClock();

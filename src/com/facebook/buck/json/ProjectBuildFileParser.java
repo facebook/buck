@@ -41,27 +41,6 @@ import java.util.Map;
  * parsing phase and must be closed afterward to free up resources.
  */
 public class ProjectBuildFileParser implements AutoCloseable {
-
-  /**
-   * Path to the Python interpreter to use.  Hardcoding the default of python for
-   * now which causes all integration tests of buck itself to fallback (which do not
-   * invoke via {@code bin/buck_common} and therefore do not have this property set).
-   * This should be addressed by offering a proper strategy for selecting the correct
-   * interpreter for the system involving auto-detection and/or global buck configuration.
-   * Additionally, there must be a strategy by which this value can be adjusted for integration
-   * tests so that they can verify both the python and jython environments remain
-   * functional.
-   * <p>
-   * Note there is a serious gotcha by using bin/jython here for buck integration tests today.
-   * This is because Jython's startup time is incredibly slow (2-3s), multiplied n times
-   * for each test.  The fix may well involve reviving Jython integrated directly into
-   * buck but this has to be done very cafefully as to not add performance regressions for
-   * users who do not take the jython code path.
-   * <p>
-   */
-  private static final String PATH_TO_PYTHON_INTERP =
-      System.getProperty("buck.path_to_python_interp", "python");
-
   /** Path to the buck.py script that is used to evaluate a build file. */
   private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
       "src/com/facebook/buck/parser/buck.py");
@@ -74,6 +53,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final File projectRoot;
   private final ImmutableSet<String> ignorePaths;
   private final ImmutableList<String> commonIncludes;
+  private final String pythonInterpreter;
 
   private boolean isServerMode;
 
@@ -82,10 +62,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   public ProjectBuildFileParser(
       ProjectFilesystem projectFilesystem,
-      Iterable<String> commonIncludes) {
+      Iterable<String> commonIncludes,
+      String pythonInterpreter) {
     this.projectRoot = projectFilesystem.getProjectRoot();
     this.ignorePaths = projectFilesystem.getIgnorePaths();
     this.commonIncludes = ImmutableList.copyOf(commonIncludes);
+    this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
 
     // Default to server mode unless explicitly unset internally.
     setServerMode(true);
@@ -151,7 +133,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     // Invoking buck.py and read JSON-formatted build rules from its stdout.
     ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
 
-    argBuilder.add(PATH_TO_PYTHON_INTERP);
+    argBuilder.add(pythonInterpreter);
 
     // Ask python to unbuffer stdout so that we can coordinate based on the output as it is
     // produced.

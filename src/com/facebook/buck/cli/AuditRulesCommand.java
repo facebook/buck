@@ -87,7 +87,8 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
   int runCommandWithOptions(AuditRulesOptions options) throws IOException {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     ProjectBuildFileParser parser = new ProjectBuildFileParser(projectFilesystem,
-        options.getBuckConfig().getDefaultIncludes());
+        options.getBuckConfig().getDefaultIncludes(),
+        options.getBuckConfig().getPythonInterpreter());
     PrintStream out = console.getStdOut();
     for (String pathToBuildFile : options.getArguments()) {
       // Print a comment with the path to the build file.

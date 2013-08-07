@@ -44,13 +44,14 @@ class CommandRunnerParams {
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCache artifactCache,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      String pythonInterpreter) {
     this(console,
         projectFilesystem,
         buildRuleTypes,
         artifactCache,
         eventBus,
-        new Parser(projectFilesystem, buildRuleTypes, console));
+        new Parser(projectFilesystem, buildRuleTypes, console, pythonInterpreter));
   }
 
   public CommandRunnerParams(

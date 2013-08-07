@@ -45,6 +45,7 @@ import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -728,7 +729,8 @@ public class ProjectTest {
         executionContext,
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
-        /* pathToPostProcessScript */ Optional.<String>absent());
+        /* pathToPostProcessScript */ Optional.<String>absent(),
+        BuckTestConstant.PYTHON_INTERPRETER);
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);

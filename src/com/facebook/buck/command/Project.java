@@ -129,6 +129,7 @@ public class Project {
   private final Optional<String> pathToDefaultAndroidManifest;
   private final Optional<String> pathToPostProcessScript;
   private final Set<PrebuiltJarRule> libraryJars;
+  private final String pythonInterpreter;
 
   public Project(PartialGraph partialGraph,
       Map<String, String> basePathToAliasMap,
@@ -136,7 +137,8 @@ public class Project {
       ExecutionContext executionContext,
       ProjectFilesystem projectFilesystem,
       Optional<String> pathToDefaultAndroidManifest,
-      Optional<String> pathToPostProcessScript) {
+      Optional<String> pathToPostProcessScript,
+      String pythonInterpreter) {
     this.partialGraph = Preconditions.checkNotNull(partialGraph);
     this.buildFileTree = new BuildFileTree(partialGraph.getTargets());
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
@@ -146,6 +148,7 @@ public class Project {
     this.pathToDefaultAndroidManifest = Preconditions.checkNotNull(pathToDefaultAndroidManifest);
     this.pathToPostProcessScript = Preconditions.checkNotNull(pathToPostProcessScript);
     this.libraryJars = Sets.newHashSet();
+    this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
   }
 
   public int createIntellijProject(File jsonTempFile,
@@ -910,7 +913,7 @@ public class Project {
 
   private ExitCodeAndStdOut processJsonConfig(File jsonTempFile) throws IOException {
     final ImmutableList<String> args = ImmutableList.of(
-        "python", PATH_TO_INTELLIJ_PY, jsonTempFile.getAbsolutePath());
+        pythonInterpreter, PATH_TO_INTELLIJ_PY, jsonTempFile.getAbsolutePath());
 
     ShellStep command = new ShellStep() {
 

@@ -48,6 +48,7 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -122,7 +123,8 @@ public class TargetsCommandTest {
             projectFilesystem,
             buildRuleTypes,
             artifactCache,
-            eventBus));
+            eventBus,
+            BuckTestConstant.PYTHON_INTERPRETER));
   }
 
   @Test

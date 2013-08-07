@@ -69,6 +69,9 @@ if not defined PYTHON_INTERP (
   )
 )
 
+:: Path to Python interpreter will be tried to find. If not found, Jython will be used.
+set PYTHON_INTERP_FALLBACK=%BUCK_BIN_DIRECTORY%\jython.cmd
+
 set RELATIVE_PATH_TO_BUCK_PY=src/com/facebook/buck/parser/buck.py
 set PATH_TO_BUCK_PY=%BUCK_DIRECTORY%\%RELATIVE_PATH_TO_BUCK_PY%
 
@@ -80,7 +83,7 @@ set BUCK_JAVA_ARGS=^
 -Dbuck.abi_processor_classes=%BUCK_DIRECTORY%\build\abi_processor\classes ^
 -Dbuck.path_to_emma_jar=%BUCK_DIRECTORY%\third-party\java\emma-2.0.5312\out\emma-2.0.5312.jar ^
 -Dbuck.test_util_no_tests_dir=true ^
--Dbuck.path_to_python_interp=%PYTHON_INTERP% ^
+-Dbuck.path_to_python_interp=%PYTHON_INTERP_FALLBACK% ^
 -Dbuck.path_to_buck_py=%PATH_TO_BUCK_PY% ^
 -Dbuck.path_to_intellij_py=%BUCK_DIRECTORY%\src\com\facebook\buck\command\intellij.py ^
 -Dbuck.git_commit=%BUCK_CURRENT_VERSION% ^
