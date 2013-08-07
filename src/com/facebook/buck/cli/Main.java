@@ -37,6 +37,7 @@ import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -88,8 +89,8 @@ public final class Main {
     private final BuckConfig config;
 
     public Daemon(ProjectFilesystem projectFilesystem,
-        BuckConfig config,
-        Console console) throws IOException {
+                  BuckConfig config,
+                  Console console) throws IOException {
       this.config = config;
       this.parser = new Parser(projectFilesystem, new KnownBuildRuleTypes(), console);
       this.fileEventBus = new EventBus("file-change-events");
@@ -126,8 +127,8 @@ public final class Main {
   }
 
   private Daemon getDaemon(ProjectFilesystem filesystem,
-      BuckConfig config,
-      Console console) throws IOException {
+                           BuckConfig config,
+                           Console console) throws IOException {
     if (daemon == null) {
       daemon = new Daemon(filesystem, config, console);
     } else {
@@ -280,15 +281,15 @@ public final class Main {
   }
 
   private ImmutableList<BuckEventListener> addEventListeners(BuckEventBus buckEvents,
-      Clock clock,
-      ProjectFilesystem projectFilesystem,
-      Console console) {
+                                                             Clock clock,
+                                                             ProjectFilesystem projectFilesystem,
+                                                             Console console) {
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
 
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
-          .add(new JavaUtilsLoggingBuildListener())
-          .add(new ChromeTraceBuildListener(projectFilesystem));
+            .add(new JavaUtilsLoggingBuildListener())
+            .add(new ChromeTraceBuildListener(projectFilesystem));
 
     if (console.getAnsi().isAnsiTerminal()) {
       SuperConsoleEventBusListener superConsole =
@@ -339,7 +340,10 @@ public final class Main {
     try {
       return runMainWithExitCode(projectRoot, args);
     } catch (HumanReadableException e) {
-      Console console = new Console(Verbosity.STANDARD_INFORMATION, stdOut, stdErr, new Ansi());
+      Console console = new Console(Verbosity.STANDARD_INFORMATION,
+          stdOut,
+          stdErr,
+          new Ansi(Platform.detect()));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return FAIL_EXIT_CODE;
     } finally {

@@ -15,30 +15,32 @@
  */
 package com.facebook.buck.util.environment;
 
-public interface ExecutionEnvironment {
+public enum Platform {
+  LINUX("Linux"),
+  MACOS("OS X"),
+  WINDOWS("Windows"),
+  UNKNOWN("Unknown");
 
-  /**
-   * @return The current hostname or 'unknown'
-   */
-  public String getHostname();
+  private String platformName;
 
-  /**
-   * @return The current username or 'unknown'
-   */
-  public String getUsername();
+  Platform(String platformName) {
+    this.platformName = platformName;
+  }
 
-  /**
-   * @return The number of cores on this machine.
-   */
-  public int getAvailableCores();
+  public String getPrintableName() {
+    return platformName;
+  }
 
-  /**
-   * @return The amount of system memory on this machine.
-   */
-  public long getTotalMemoryInMb();
-
-  /**
-   * @return The current operating system.
-   */
-  public Platform getPlatform();
+  public static Platform detect() {
+    String platformName = System.getProperty("os.name");
+    if (platformName.startsWith("Linux")) {
+      return LINUX;
+    } else if (platformName.startsWith("Mac OS")) {
+      return MACOS;
+    } else if (platformName.startsWith("Windows")) {
+      return WINDOWS;
+    } else {
+      return UNKNOWN;
+    }
+  }
 }

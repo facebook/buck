@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -140,7 +141,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Thread stderrConsumer = new Thread(new InputStreamConsumer(stderr,
         System.err,
         true /* shouldRedirect */,
-        new Ansi()));
+        new Ansi(Platform.detect())));
     stderrConsumer.start();
 
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));

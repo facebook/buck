@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.environment.Platform;
+
 import java.io.PrintStream;
 
 public final class Ansi {
@@ -53,8 +55,8 @@ public final class Ansi {
 
   private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
 
-  public Ansi() {
-    this(isConnectedToTty());
+  public Ansi(Platform platform) {
+    this(isConnectedToTty() && platform != Platform.WINDOWS);
   }
 
   private Ansi(boolean isAnsiTerminal) {

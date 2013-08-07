@@ -23,6 +23,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -66,9 +68,8 @@ public class ShBinaryRuleIntegrationTest {
     // Verify contents of output.txt
     File outputFile = workspace.getFile("buck-out/gen/app/output.txt");
     List<String> lines = Files.readLines(outputFile, Charsets.US_ASCII);
-    String expectedPlatform = System.getProperty("os.name").startsWith("Mac OS")
-        ? "OS X"
-        : "Linux";
+    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+    String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));
   }

@@ -32,6 +32,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -456,7 +457,7 @@ class BuckConfig {
       // It would be nice to be able to mirror those nuances.
       case "auto":
       default:
-        return new Ansi();
+        return new Ansi(Platform.detect());
     }
   }
 

@@ -24,6 +24,11 @@ import java.net.UnknownHostException;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   private static final long  MEGABYTE = 1024L * 1024L;
+  private Platform platform;
+
+  public DefaultExecutionEnvironment() {
+    platform = Platform.detect();
+  }
 
   @Override
   public String getHostname() {
@@ -51,5 +56,10 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
     OperatingSystemMXBean osBean =
         (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     return osBean.getTotalPhysicalMemorySize() / MEGABYTE;
+  }
+
+  @Override
+  public Platform getPlatform() {
+    return platform;
   }
 }
