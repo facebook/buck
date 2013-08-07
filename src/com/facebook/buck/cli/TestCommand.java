@@ -45,7 +45,6 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
@@ -61,7 +60,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -74,6 +72,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
@@ -457,7 +465,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Write out the results as XML, if requested.
     if (options.getPathToXmlTestOutput() != null) {
-      writeXmlOutput(completedResults, options.getPathToXmlTestOutput());
+      try (Writer writer = Files.newWriter(
+        new File(options.getPathToXmlTestOutput()),
+        Charsets.UTF_8)) {
+        writeXmlOutput(completedResults, writer);
+      }
     }
 
     // Print whether each test succeeded or failed.
@@ -536,25 +548,42 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     return rulesUnderTest.build();
   }
 
-  private void writeXmlOutput(List<TestResults> allResults, String pathToXmlTestOutput)
+  /**
+   * Writes the test results in XML format to the supplied writer.
+   *
+   * This method does NOT close the writer object.
+   * @param allResults The test results.
+   * @param writer The writer in which the XML data will be written to.
+   */
+  public static void writeXmlOutput(List<TestResults> allResults, Writer writer)
       throws IOException {
-    Writer writer = null;
     try {
-      writer = Files.newWriter(new File(pathToXmlTestOutput), Charsets.UTF_8);
-      writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tests>\n");
+      // Build the XML output.
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      DocumentBuilder docBuilder = dbf.newDocumentBuilder();
+      Document doc = docBuilder.newDocument();
+      // Create the <tests> tag. All test data will be within this tag.
+      Element testsEl = doc.createElement("tests");
+      doc.appendChild(testsEl);
 
       for (TestResults results : allResults) {
         for (TestCaseSummary testCase : results.getTestCases()) {
-          writer.write(String.format("<test name=\"%s\" status=\"%s\" time=\"%s\" />\n",
-              Escaper.escapeAsXmlString(testCase.getTestCaseName()),
-              testCase.isSuccess() ? "PASS" : "FAIL",
-              testCase.getTotalTime()));
+          // Create the <test name="..." status="..." time="..."> tag.
+          // This records a single test case result in the test suite.
+          Element testEl = doc.createElement("test");
+          testEl.setAttribute("name", testCase.getTestCaseName());
+          testEl.setAttribute("status", testCase.isSuccess() ? "PASS" : "FAIL");
+          testEl.setAttribute("time", Long.toString(testCase.getTotalTime()));
+          testsEl.appendChild(testEl);
         }
       }
 
-      writer.write("</tests>\n");
-    } finally {
-      Closeables.close(writer, false /* swallowIOException */);
+      // Write XML to the writer.
+      TransformerFactory tf = TransformerFactory.newInstance();
+      Transformer transformer = tf.newTransformer();
+      transformer.transform(new DOMSource(doc), new StreamResult(writer));
+    } catch (TransformerException | ParserConfigurationException ex) {
+      throw new IOException("Unable to build the XML document!");
     }
   }
 
