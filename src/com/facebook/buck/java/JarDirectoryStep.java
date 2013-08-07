@@ -147,11 +147,9 @@ public class JarDirectoryStep implements Step {
       manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
     }
 
-    Closer closer = Closer.create();
-    try {
-      JarOutputStream outputFile = closer.register(new JarOutputStream(
-          new BufferedOutputStream(new FileOutputStream(
-              filesystem.getFileForRelativePath(pathToOutputFile)))));
+    try (JarOutputStream outputFile = new JarOutputStream(
+        new BufferedOutputStream(new FileOutputStream(
+        filesystem.getFileForRelativePath(pathToOutputFile))))) {
 
       Set<String> directoryEntriesInsertedIntoOutputJar = Sets.newHashSet();
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
@@ -177,8 +175,6 @@ public class JarDirectoryStep implements Step {
       JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
       outputFile.putNextEntry(manifestEntry);
       manifest.write(outputFile);
-    } finally {
-      closer.close();
     }
   }
 
@@ -186,12 +182,12 @@ public class JarDirectoryStep implements Step {
    * @param file is assumed to be a zip file.
    * @param jar is the file being written.
    * @param manifest that should get a copy of (@code jar}'s manifest entries.
-   * @param directoryEntriesInsertedIntoOutputJar is used to avoid duplicate entries.
+   * @param alreadyAddedEntries is used to avoid duplicate entries.
    */
   private void copyZipEntriesToJar(File file,
       final JarOutputStream jar,
       Manifest manifest,
-      Set<String> directoryEntriesInsertedIntoOutputJar) throws IOException {
+      Set<String> alreadyAddedEntries) throws IOException {
     ZipFile zip = new ZipFile(file);
     for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
       ZipEntry entry = entries.nextElement();
@@ -204,7 +200,8 @@ public class JarDirectoryStep implements Step {
       }
 
       // The same directory entry cannot be added more than once.
-      if (directoryEntriesInsertedIntoOutputJar.contains(entryName)) {
+      if (!alreadyAddedEntries.add(entryName)) {
+        // Duplicate entries. Skip.
         continue;
       }
 
@@ -212,10 +209,6 @@ public class JarDirectoryStep implements Step {
       InputStream inputStream = zip.getInputStream(entry);
       ByteStreams.copy(inputStream, jar);
       jar.closeEntry();
-
-      if (entryName.endsWith("/")) {
-        directoryEntriesInsertedIntoOutputJar.add(entryName);
-      }
     }
   }
 
