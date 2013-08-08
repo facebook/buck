@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
@@ -122,7 +122,7 @@ public class JUnitStepTest {
         .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
         .setConsole(console)
         .setDebugEnabled(true)
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
     List<String> observedArgs = junit.getShellCommand(executionContext);

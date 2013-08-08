@@ -26,7 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.KeystoreRule;
 import com.facebook.buck.model.BuildTarget;
@@ -604,7 +604,7 @@ public class AndroidBinaryRuleTest {
     ExecutionContext context = ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
     for (int i = 0; i < shellSteps.size(); ++i) {

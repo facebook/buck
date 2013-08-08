@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.json.BuildFileParseException;
@@ -44,9 +45,9 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
@@ -257,7 +258,7 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     // The EventBus should be updated with events indicating how parsing ran.
-    BuckEventBus eventBus = new BuckEventBus();
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
@@ -269,7 +270,6 @@ public class ParserTest extends EasyMockSupport {
     BuildRule barRule = graph.findBuildRuleByTarget(barTarget);
     assertNotNull(barRule);
 
-    eventBus.flushForTesting();
     ImmutableList<ParseEvent> expected = ImmutableList.of(
         TestEventConfigerator.configureTestEvent(ParseEvent.started(buildTargets), eventBus),
         TestEventConfigerator.configureTestEvent(ParseEvent.finished(buildTargets,
@@ -293,7 +293,7 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new BuckEventBus());
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, BuckEventBusFactory.newInstance());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target //java/com/facebook:raz in build file " +
@@ -328,7 +328,7 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, new BuckEventBus());
+      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, BuckEventBusFactory.newInstance());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target " +
@@ -592,7 +592,7 @@ public class ParserTest extends EasyMockSupport {
 
     DependencyGraph graph = testParser.parseBuildFilesForTargets(buildTargets,
         defaultIncludes,
-        new BuckEventBus());
+        BuckEventBusFactory.newInstance());
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
@@ -686,7 +686,7 @@ public class ParserTest extends EasyMockSupport {
     BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo", testBuildFile);
     parser.parseBuildFilesForTargets(ImmutableList.of(foo),
         Lists.<String>newArrayList(),
-        new BuckEventBus());
+        BuckEventBusFactory.newInstance());
 
     assertEquals("Should have cached build rules.", 1, buildFileParserFactory.calls);
   }
@@ -701,7 +701,7 @@ public class ParserTest extends EasyMockSupport {
     BuildTarget foo = BuildTargetFactory.newInstance("//java/com/facebook", "foo", testBuildFile);
     parser.parseBuildFilesForTargets(ImmutableList.of(foo),
         Lists.<String>newArrayList(),
-        new BuckEventBus());
+        BuckEventBusFactory.newInstance());
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     assertEquals("Should have replaced build rules", 2, buildFileParserFactory.calls);

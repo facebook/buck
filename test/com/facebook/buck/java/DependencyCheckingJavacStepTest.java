@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
@@ -64,7 +64,7 @@ public class DependencyCheckingJavacStepTest extends EasyMockSupport {
           }
         })
         .setConsole(new TestConsole())
-        .setEventBus(new BuckEventBus()).build();
+        .setEventBus(BuckEventBusFactory.newInstance()).build();
 
     DependencyCheckingJavacStep firstOrder = createTestStep(BuildDependencies.FIRST_ORDER_ONLY);
     DependencyCheckingJavacStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);

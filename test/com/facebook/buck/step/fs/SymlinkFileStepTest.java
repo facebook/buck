@@ -18,7 +18,7 @@ package com.facebook.buck.step.fs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -42,7 +42,7 @@ public class SymlinkFileStepTest {
     ExecutionContext context = ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(tmpDir.getRoot()))
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
     File source = tmpDir.newFile();

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -41,10 +42,10 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.eventbus.EventBus;
 
 import org.junit.Test;
 
@@ -54,8 +55,8 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testSimpleBuild() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    Supplier<Long> threadIdSupplier = BuckEventBus.getDefaultThreadIdSupplier();
-    BuckEventBus eventBus = new BuckEventBus(fakeClock, threadIdSupplier);
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     TestConsole console = new TestConsole();
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
@@ -74,16 +75,16 @@ public class SuperConsoleEventBusListenerTest {
         new SuperConsoleEventBusListener(console, fakeClock, new DefaultExecutionEnvironment());
     eventBus.register(listener);
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildEvent.started(buildTargets),
         0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         ParseEvent.started(buildTargets),
         0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 300L, ImmutableList.of("[+] PARSING BUILD FILES...0.30s"));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(
+    rawEventBus.post(
         configureTestEventAtTime(ParseEvent.finished(buildTargets,
                                                      Optional.<DependencyGraph>absent()),
         400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -93,7 +94,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
         "[+] BUILDING...0.14s"));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(fakeRule),
         600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -103,7 +104,7 @@ public class SuperConsoleEventBusListenerTest {
         " |=> //banana:stand...  0.20s (checking local cache)"));
 
     FakeStep fakeStep = new FakeStep("doing_something", "working hard", 0);
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         StepEvent.started(fakeStep, "working hard"),
           800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -111,10 +112,10 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.50s",
         " |=> //banana:stand...  0.30s (running doing_something[0.10s])"));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         StepEvent.finished(fakeStep, "working hard", 0),
         900L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
           fakeRule,
           BuildRuleStatus.SUCCESS,
@@ -126,7 +127,7 @@ public class SuperConsoleEventBusListenerTest {
         "[+] BUILDING...0.60s",
         " |=> IDLE"));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(cachedRule),
         1010L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
@@ -135,7 +136,7 @@ public class SuperConsoleEventBusListenerTest {
         " |=> IDLE",
         " |=> //chicken:dance...  0.09s (checking local cache)"));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
           cachedRule,
           BuildRuleStatus.SUCCESS,
@@ -143,7 +144,7 @@ public class SuperConsoleEventBusListenerTest {
           Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
         1120L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildEvent.finished(buildTargets, 0),
         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -151,7 +152,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         LogEvent.severe("I've made a huge mistake."),
         1500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -160,7 +161,7 @@ public class SuperConsoleEventBusListenerTest {
         "Log:",
         "I've made a huge mistake."));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         InstallEvent.started(fakeTarget),
         2500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -170,7 +171,7 @@ public class SuperConsoleEventBusListenerTest {
         "Log:",
         "I've made a huge mistake."));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         InstallEvent.finished(fakeTarget, true),
         4000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 

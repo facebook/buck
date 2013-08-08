@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -48,7 +48,7 @@ public class BuildContextTest {
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
-    builder.setEventBus(new BuckEventBus());
+    builder.setEventBus(BuckEventBusFactory.newInstance());
 
     AndroidPlatformTarget androidPlatformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
     List<File> entries = ImmutableList.of(
@@ -89,7 +89,7 @@ public class BuildContextTest {
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
-    builder.setEventBus(new BuckEventBus());
+    builder.setEventBus(BuckEventBusFactory.newInstance());
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
@@ -110,7 +110,7 @@ public class BuildContextTest {
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
     builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
-    builder.setEventBus(new BuckEventBus());
+    builder.setEventBus(BuckEventBusFactory.newInstance());
 
     // Set to absent value.
     builder.setAndroidBootclasspathForAndroidPlatformTarget(
@@ -135,7 +135,7 @@ public class BuildContextTest {
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
         .setConsole(console)
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
     console.setVerbosity(Verbosity.STANDARD_INFORMATION);

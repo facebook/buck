@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -239,7 +240,7 @@ public class AuditOwnerCommandTest {
     Console console = new TestConsole();
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    BuckEventBus eventBus = new BuckEventBus();
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     return new AuditOwnerCommand(new CommandRunnerParams(
         console,
         filesystem,

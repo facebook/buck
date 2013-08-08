@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -50,6 +51,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.eventbus.EventBus;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,8 +85,9 @@ public class ChromeTraceBuildListenerTest {
 
     ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
-    Supplier<Long> threadIdSupplier = BuckEventBus.getDefaultThreadIdSupplier();
-    BuckEventBus eventBus = new BuckEventBus(fakeClock, threadIdSupplier);
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    Supplier<Long> threadIdSupplier = BuckEventBusFactory.getThreadIdSupplierFor(eventBus);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     eventBus.register(listener);
 
     eventBus.post(CommandEvent.started("party", true));
@@ -108,12 +111,11 @@ public class ChromeTraceBuildListenerTest {
         fakeClock.nanoTime(),
         threadIdSupplier.get());
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(ruleFinished);
-    eventBus.postDirectlyToAsyncEventBusForTesting(stepFinished);
+    rawEventBus.post(ruleFinished);
+    rawEventBus.post(stepFinished);
 
     eventBus.post(BuildEvent.finished(buildTargets, 0));
     eventBus.post(CommandEvent.finished("party", true, 0));
-    eventBus.flushForTesting();
     listener.outputTrace();
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BIN_DIR + "/build.trace");

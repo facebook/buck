@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.testutil.TestConsole;
@@ -46,7 +47,7 @@ public class DefaultStepRunnerTest {
     Step failingStep = new FakeStep("step1", "fake step 1", 1);
 
     // The EventBus should be updated with events indicating how the steps were run.
-    BuckEventBus eventBus = new BuckEventBus();
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
@@ -70,7 +71,6 @@ public class DefaultStepRunnerTest {
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
     }
-    eventBus.flushForTesting();
 
     ImmutableList<StepEvent> expected = ImmutableList.of(
         TestEventConfigerator.configureTestEvent(
@@ -99,7 +99,7 @@ public class DefaultStepRunnerTest {
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setConsole(new TestConsole())
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
         .setDaemon(true)

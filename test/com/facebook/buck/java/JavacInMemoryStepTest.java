@@ -19,7 +19,7 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
@@ -124,7 +124,7 @@ public class JavacInMemoryStepTest {
     return ExecutionContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
         .setConsole(new TestConsole())
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
   }
 }

@@ -19,11 +19,11 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
@@ -52,7 +52,7 @@ public class JarDirectoryStepTest {
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(zipup))
         .setConsole(new TestConsole())
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
     int returnCode = step.execute(context);
@@ -81,7 +81,7 @@ public class JarDirectoryStepTest {
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(zipup))
         .setConsole(new TestConsole())
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
     int returnCode = step.execute(context);

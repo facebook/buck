@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -38,10 +39,10 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.eventbus.EventBus;
 
 import org.junit.Test;
 
@@ -51,8 +52,8 @@ public class SimpleConsoleEventBusListenerTest {
   @Test
   public void testSimpleBuild() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    Supplier<Long> threadIdSupplier = BuckEventBus.getDefaultThreadIdSupplier();
-    BuckEventBus eventBus = new BuckEventBus(fakeClock, threadIdSupplier);
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     TestConsole console = new TestConsole();
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
@@ -67,15 +68,15 @@ public class SimpleConsoleEventBusListenerTest {
 
     final long threadId = 0;
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildEvent.started(buildTargets), 0L, TimeUnit.MILLISECONDS, threadId));
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         ParseEvent.started(buildTargets), 0L, TimeUnit.MILLISECONDS, threadId));
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         ParseEvent.finished(buildTargets,
             Optional.<DependencyGraph>absent()),
             400L,
@@ -88,16 +89,16 @@ public class SimpleConsoleEventBusListenerTest {
     assertEquals(parsingLine,
         console.getTextWrittenToStdErr());
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(fakeRule), 600L, TimeUnit.MILLISECONDS, threadId));
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(BuildRuleEvent.finished(
+    rawEventBus.post(configureTestEventAtTime(BuildRuleEvent.finished(
         fakeRule,
         BuildRuleStatus.SUCCESS,
         CacheResult.MISS,
         Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
         1000L, TimeUnit.MILLISECONDS, threadId));
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         BuildEvent.finished(buildTargets, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
     final String buildingLine = "[-] BUILDING...FINISHED 0.83s\n";
@@ -106,7 +107,7 @@ public class SimpleConsoleEventBusListenerTest {
     assertEquals(parsingLine + buildingLine,
         console.getTextWrittenToStdErr());
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         LogEvent.severe("I've made a huge mistake."), 1500L, TimeUnit.MILLISECONDS, threadId));
 
     final String logLine = "I've made a huge mistake.\n";
@@ -115,14 +116,14 @@ public class SimpleConsoleEventBusListenerTest {
     assertEquals(parsingLine + buildingLine + logLine,
         console.getTextWrittenToStdErr());
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId));
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine + buildingLine + logLine,
         console.getTextWrittenToStdErr());
 
-    eventBus.postDirectlyToAsyncEventBusForTesting(configureTestEventAtTime(
+    rawEventBus.post(configureTestEventAtTime(
         InstallEvent.finished(fakeTarget, true), 4000L, TimeUnit.MILLISECONDS, threadId));
 
     final String installLine = "[-] INSTALLING...FINISHED 1.50s\n";

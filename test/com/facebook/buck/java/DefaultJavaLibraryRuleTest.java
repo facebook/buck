@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryRule;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.AnnotationProcessingData;
@@ -107,7 +107,7 @@ public class DefaultJavaLibraryRuleTest {
     stubContext = BuildContext.builder()
         .setArtifactCache(new NoopArtifactCache())
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .setJavaPackageFinder(packageFinder)
         .setProjectRoot(root)
         .setProjectFilesystem(new ProjectFilesystem(root))
@@ -807,7 +807,7 @@ public class DefaultJavaLibraryRuleTest {
         .setBuildDependencies(BuildDependencies.TRANSITIVE)
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
         .setAndroidBootclasspathForAndroidPlatformTarget(Optional.of(platformTarget))
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
   }
 
@@ -903,7 +903,7 @@ public class DefaultJavaLibraryRuleTest {
           .setProjectFilesystem(new ProjectFilesystem(new File(".")))
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
-          .setEventBus(new BuckEventBus())
+          .setEventBus(BuckEventBusFactory.newInstance())
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,

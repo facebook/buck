@@ -27,11 +27,12 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.BuckTestConstant;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 
@@ -88,7 +89,7 @@ public class InstallCommandTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
     KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    BuckEventBus eventBus = new BuckEventBus();
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     return new InstallCommand(new CommandRunnerParams(
         console,
         filesystem,

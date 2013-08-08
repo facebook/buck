@@ -20,7 +20,7 @@ import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.KeystoreRule;
 import com.facebook.buck.model.BuildTarget;
@@ -147,7 +147,7 @@ public class ApkGenruleTest {
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
     ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
         "src/com/facebook/key.properties",
@@ -235,7 +235,7 @@ public class ApkGenruleTest {
             return Functions.identity();
           }
         })
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
   }
 }

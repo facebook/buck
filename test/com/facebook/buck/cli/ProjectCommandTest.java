@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.command.Project;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.json.BuildFileParseException;
@@ -41,9 +41,9 @@ import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.ProjectConfigRule;
+import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -171,7 +171,7 @@ public class ProjectCommandTest {
           new ProjectFilesystem(new File(".")),
           new KnownBuildRuleTypes(),
           artifactCache,
-          new BuckEventBus(),
+          BuckEventBusFactory.newInstance(),
           BuckTestConstant.PYTHON_INTERPRETER));
     }
 

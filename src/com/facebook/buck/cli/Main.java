@@ -228,9 +228,7 @@ public final class Main {
     }
 
     Clock clock = new DefaultClock();
-    BuckEventBus buildEventBus = new BuckEventBus(
-        clock,
-        BuckEventBus.getDefaultThreadIdSupplier());
+    BuckEventBus buildEventBus = new BuckEventBus(clock);
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0]);

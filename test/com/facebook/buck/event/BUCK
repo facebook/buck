@@ -1,11 +1,23 @@
-TEST_SRCS = [
-  'FakeBuckEventListener.java',
-  'TestEventConfigerator.java',
-]
+java_test(
+  name = 'event',
+  srcs = glob(['*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/event:event',
+  ],
+  deps = [
+    ':testutil',
+    '//lib:junit',
+    '//src/com/facebook/buck/event:event',
+  ],
+)
 
 java_library(
   name = 'testutil',
-  srcs = TEST_SRCS,
+  srcs = [
+    'BuckEventBusFactory.java',
+    'FakeBuckEventListener.java',
+    'TestEventConfigerator.java',
+  ],
   deps = [
     '//lib:guava',
     '//src/com/facebook/buck/event:event',

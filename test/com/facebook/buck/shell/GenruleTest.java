@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaBinaryRule;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -235,7 +235,7 @@ public class GenruleTest {
             return Functions.identity();
           }
         })
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
   }
 
@@ -463,7 +463,7 @@ public class GenruleTest {
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
         .setAndroidPlatformTarget(Optional.of(android))
-        .setEventBus(new BuckEventBus())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
