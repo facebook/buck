@@ -40,4 +40,35 @@ public final class MoreStrings {
       return "";
     }
   }
+
+  public static int getLevenshteinDistance(String str1, String str2) {
+      Preconditions.checkNotNull(str1);
+      Preconditions.checkNotNull(str2);
+
+      char[] arr1 = str1.toCharArray();
+      char[] arr2 = str2.toCharArray();
+      int[][] levenshteinDist = new int [arr1.length + 1][arr2.length + 1];
+
+      for (int i = 0; i <= arr1.length; i++) {
+        levenshteinDist[i][0] = i;
+      }
+
+      for (int j = 1; j <= arr2.length; j++) {
+        levenshteinDist[0][j] = j;
+      }
+
+      for (int i = 1; i <= arr1.length; i++) {
+        for (int j = 1; j <= arr2.length; j++) {
+          if (arr1[i - 1] == arr2[j - 1]) {
+            levenshteinDist[i][j] = levenshteinDist[i - 1][j - 1];
+          } else {
+            levenshteinDist[i][j] = 
+              Math.min(levenshteinDist[i - 1][j] + 1,
+                  Math.min(levenshteinDist[i][j - 1] + 1, levenshteinDist[i - 1][j - 1] + 1));
+          }
+        }
+      }
+      
+      return levenshteinDist[arr1.length][arr2.length];
+    }
 }

@@ -16,10 +16,14 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 
 public enum Command {
@@ -49,6 +53,14 @@ public enum Command {
       "uninstalls an APK",
       UninstallCommand.class),
   ;
+
+  /**
+   * Defines the maximum possible fuzziness of a input command. If the
+   * levenshtein distance between the fuzzy input and the closest command is
+   * larger than MAX_ERROR_RATIO * length_of_closest_command, rejects the input.
+   * The value is chosen empirically so that minor typos can be corrected.
+   */
+  public static final double MAX_ERROR_RATIO = 0.5;
 
   private final String shortDescription;
   private final Class<? extends CommandRunner> commandRunnerClass;
@@ -84,18 +96,55 @@ public enum Command {
   }
 
   /**
-   * @return a non-empty {@link Optional} if {@code name} corresponds to a command; otherwise,
-   *   an empty {@link Optional}. This will return the latter if the user tries to run something
-   *   like {@code buck --help}.
+   * @return a non-empty {@link Optional} if {@code name} corresponds to a
+   *     command or its levenshtein distance to the closest command isn't larger
+   *     than {@link #MAX_ERROR_RATIO} * length_of_closest_command; otherwise, an
+   *     empty {@link Optional}. This will return the latter if the user tries
+   *     to run something like {@code buck --help}.
    */
-  public static Optional<Command> getCommandForName(String name) {
+  public static Optional<Command> getCommandForName(String name, Console console) {
+    Preconditions.checkNotNull(name);
+    Preconditions.checkNotNull(console);
+
     Command command;
     try {
       command = valueOf(name.toUpperCase());
     } catch (IllegalArgumentException e) {
-      return Optional.absent();
+      Optional<Command> fuzzyCommand = fuzzyMatch(name.toUpperCase());
+
+      if (fuzzyCommand.isPresent()) {
+        PrintStream stdErr = console.getStdErr();
+        stdErr.printf("(Cannot find command '%s', assuming command '%s'.)\n",
+            name,
+            fuzzyCommand.get().name().toLowerCase());
+      }
+
+      return fuzzyCommand;
     }
+
     return Optional.of(command);
   }
 
+  private static Optional<Command> fuzzyMatch(String name) {
+    Preconditions.checkNotNull(name);
+    name = name.toUpperCase();
+
+    int minDist = Integer.MAX_VALUE;
+    Command closestCommand = null;
+
+    for (Command command : values()) {
+      int levenshteinDist = MoreStrings.getLevenshteinDistance(name, command.name());
+      if (levenshteinDist < minDist) {
+        minDist = levenshteinDist;
+        closestCommand = command;
+      }
+    }
+
+    if (closestCommand != null &&
+        ((double)minDist) / closestCommand.name().length() <= MAX_ERROR_RATIO) {
+      return Optional.of(closestCommand);
+    }
+
+    return Optional.absent();
+  }
 }

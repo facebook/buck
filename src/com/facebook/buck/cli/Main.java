@@ -231,7 +231,7 @@ public final class Main {
     BuckEventBus buildEventBus = new BuckEventBus(clock);
 
     // Find and execute command.
-    Optional<Command> command = Command.getCommandForName(args[0]);
+    Optional<Command> command = Command.getCommandForName(args[0], console);
     if (command.isPresent()) {
       ImmutableList<BuckEventListener> eventListeners =
           addEventListeners(buildEventBus,
