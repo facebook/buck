@@ -17,7 +17,6 @@
 package com.facebook.buck.junit;
 
 import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
 import org.junit.internal.builders.JUnit4Builder;
 import org.junit.runner.Computer;
@@ -34,7 +33,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,8 +47,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import junit.framework.TestCase;
 
 /**
  * Class that runs a set of JUnit tests and writes the results to a directory.
@@ -198,29 +194,6 @@ public final class JUnitRunner {
     DOMSource source = new DOMSource(doc);
     trans.transform(source, streamResult);
     output.close();
-  }
-
-  /* @VisibleForTesting */
-  static boolean isTestMethod(Method method) {
-    // Always ignore a method if it has an @Ignore annotation.
-    if (method.getAnnotation(Ignore.class) != null) {
-      return false;
-    }
-
-    // JUnit 4: Methods annotated with @Test are considered tests. Also must be no-arg methods, but
-    // JUnit will complain about that when it tries to run the method.
-    if (method.getAnnotation(Test.class) != null) {
-      return true;
-    }
-
-    // JUnit 3: Declaring class is a subclass of TestCase and method is public void no-arg whose
-    // name starts with "test". Ideally, all tests in the codebase would use the JUnit 4 style, but
-    // some test cases have not been converted yet.
-    Class<?> declaringClass = method.getDeclaringClass();
-    return (TestCase.class.isAssignableFrom(declaringClass)
-        && method.getName().startsWith("test")
-        && method.getParameterTypes().length == 0
-        && method.getReturnType().equals(Void.TYPE));
   }
 
   /**
