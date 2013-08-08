@@ -18,6 +18,7 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -42,7 +43,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
 
@@ -88,7 +88,7 @@ public class Build {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
-        dependencyGraph, androidSdkDir, console.getStdErr());
+        dependencyGraph, androidSdkDir, eventBus);
     this.executionContext = ExecutionContext.builder()
         .setProjectFilesystem(projectFilesystem)
         .setConsole(console)
@@ -125,10 +125,10 @@ public class Build {
   }
 
   public static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      DependencyGraph dependencyGraph, Optional<File> androidSdkDirOption, PrintStream stdErr) {
+      DependencyGraph dependencyGraph, Optional<File> androidSdkDirOption, BuckEventBus eventBus) {
     if (androidSdkDirOption.isPresent()) {
       File androidSdkDir = androidSdkDirOption.get();
-      return findAndroidPlatformTarget(dependencyGraph, androidSdkDir, stdErr);
+      return findAndroidPlatformTarget(dependencyGraph, androidSdkDir, eventBus);
     } else {
       // If the Android SDK has not been specified, then no AndroidPlatformTarget can be found.
       return Optional.<AndroidPlatformTarget>absent();
@@ -136,7 +136,7 @@ public class Build {
   }
 
   private static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      final DependencyGraph dependencyGraph, final File androidSdkDir, final PrintStream stdErr) {
+      final DependencyGraph dependencyGraph, final File androidSdkDir, final BuckEventBus eventBus) {
     // Traverse the dependency graph to determine androidPlatformTarget.
     AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>> traversal =
         new AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>>(dependencyGraph) {
@@ -180,11 +180,10 @@ public class Build {
             throw new RuntimeException("No target found with id: " + androidPlatformTargetId);
           }
         } else if (isEncounteredAndroidRuleInTraversal) {
-          // Print the start of the message first in case getDefaultPlatformTarget() fails.
-          stdErr.print("No Android platform target specified. Using default: ");
           AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
               .getDefaultPlatformTarget(androidSdkDir);
-          stdErr.println(androidPlatformTarget.getName());
+          eventBus.post(LogEvent.warning("No Android platform target specified. Using default: %s",
+              androidPlatformTarget.getName()));
           result = Optional.of(androidPlatformTarget);
         } else {
           result = Optional.absent();

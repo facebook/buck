@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
@@ -30,7 +31,6 @@ import org.kohsuke.args4j.Option;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -178,7 +178,7 @@ public abstract class AbstractCommandOptions {
   }
 
   protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      DependencyGraph dependencyGraph, PrintStream stdErr) {
-    return Build.findAndroidPlatformTarget(dependencyGraph, findAndroidSdkDir(), stdErr);
+      DependencyGraph dependencyGraph, BuckEventBus eventBus) {
+    return Build.findAndroidPlatformTarget(dependencyGraph, findAndroidSdkDir(), eventBus);
   }
 }
