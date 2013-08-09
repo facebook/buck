@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Map;
@@ -32,69 +31,51 @@ import java.util.Map;
  */
 public class HttpEndpoint {
 
-  private final static int DEFAULT_COMMON_TIMEOUT_MS = 5000;
+  public static final int DEFAULT_COMMON_TIMEOUT_MS = 5000;
 
   private URL url;
   private int timeout = DEFAULT_COMMON_TIMEOUT_MS;
 
-  public HttpEndpoint(String url) {
-    try {
-      this.url = new URL(url);
-    } catch (MalformedURLException e) {
-      throw new HumanReadableException(e.getMessage());
-    }
+  public HttpEndpoint(String url) throws IOException {
+    this.url = new URL(url);
   }
 
-  public InputStream post(Map<String,Object> params) {
+  public InputStream post(Map<String,Object> params) throws IOException {
     return post(encodeParameters(params));
   }
 
-  public InputStream post(String content) {
+  public InputStream post(String content) throws IOException {
     HttpURLConnection connection = buildConnection("POST");
     connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
     return send(connection, content);
   }
 
-  private InputStream send(HttpURLConnection connection, String content) {
-    try {
-      DataOutputStream out = new DataOutputStream(connection.getOutputStream());
-      out.writeBytes(content);
-      out.flush();
-      out.close();
-      return connection.getInputStream();
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          "Error sending and receiving data to %s: %s",
-          url,
-          e.getMessage());
-    }
+  private InputStream send(HttpURLConnection connection, String content) throws IOException {
+    DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+    out.writeBytes(content);
+    out.flush();
+    out.close();
+    return connection.getInputStream();
   }
 
-  private HttpURLConnection buildConnection(String httpMethod) {
-    try {
-      HttpURLConnection connection = (HttpURLConnection) this.url.openConnection();
-      connection.setUseCaches(false);
-      connection.setDoOutput(true);
-      connection.setConnectTimeout(timeout);
-      connection.setReadTimeout(timeout);
-      connection.setRequestMethod(httpMethod);
-      return connection;
-    } catch (IOException e) {
-      throw new HumanReadableException("Unable to open connection to %s", this.url);
-    }
+  private HttpURLConnection buildConnection(String httpMethod) throws IOException {
+    HttpURLConnection connection = (HttpURLConnection) this.url.openConnection();
+    connection.setUseCaches(false);
+    connection.setDoOutput(true);
+    connection.setConnectTimeout(timeout);
+    connection.setReadTimeout(timeout);
+    connection.setRequestMethod(httpMethod);
+    return connection;
   }
 
-  private static String encodeParameters(Map<String,Object> params) {
+  private static String encodeParameters(Map<String,Object> params)
+      throws UnsupportedEncodingException {
     String content = "";
     for (Object key : params.keySet()) {
       Object value = params.get(key);
-      try {
-        String ukey = URLEncoder.encode((String) key, String.valueOf(Charsets.UTF_8));
-        String uvalue = URLEncoder.encode(String.valueOf(value), String.valueOf(Charsets.UTF_8));
-        content += ukey + "=" + uvalue + "&";
-      } catch (UnsupportedEncodingException e) {
-        throw new HumanReadableException("Unable to URL encode '%s': %s", key, value);
-      }
+      String ukey = URLEncoder.encode((String) key, String.valueOf(Charsets.UTF_8));
+      String uvalue = URLEncoder.encode(String.valueOf(value), String.valueOf(Charsets.UTF_8));
+      content += ukey + "=" + uvalue + "&";
     }
     return content.substring(0, content.length()-1);
   }
