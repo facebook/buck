@@ -82,17 +82,17 @@ public class SuperConsoleEventBusListenerTest {
         ParseEvent.started(buildTargets),
         0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    validateConsole(console, listener, 300L, ImmutableList.of("[+] PARSING BUILD FILES...0.30s"));
+    validateConsole(console, listener, 300L, ImmutableList.of("[+] PARSING BUILD FILES...0.3s"));
 
     rawEventBus.post(
         configureTestEventAtTime(ParseEvent.finished(buildTargets,
                                                      Optional.<DependencyGraph>absent()),
         400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.40s";
+    final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.4s";
 
     validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.14s"));
+        "[+] BUILDING...0.1s"));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(fakeRule),
@@ -100,8 +100,8 @@ public class SuperConsoleEventBusListenerTest {
 
 
     validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.40s",
-        " |=> //banana:stand...  0.20s (checking local cache)"));
+        "[+] BUILDING...0.4s",
+        " |=> //banana:stand...  0.2s (checking local cache)"));
 
     FakeStep fakeStep = new FakeStep("doing_something", "working hard", 0);
     rawEventBus.post(configureTestEventAtTime(
@@ -109,8 +109,8 @@ public class SuperConsoleEventBusListenerTest {
           800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 900L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.50s",
-        " |=> //banana:stand...  0.30s (running doing_something[0.10s])"));
+        "[+] BUILDING...0.5s",
+        " |=> //banana:stand...  0.3s (running doing_something[0.1s])"));
 
     rawEventBus.post(configureTestEventAtTime(
         StepEvent.finished(fakeStep, "working hard", 0),
@@ -124,7 +124,7 @@ public class SuperConsoleEventBusListenerTest {
         1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 1000L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.60s",
+        "[+] BUILDING...0.6s",
         " |=> IDLE"));
 
     rawEventBus.post(configureTestEventAtTime(
@@ -132,9 +132,9 @@ public class SuperConsoleEventBusListenerTest {
         1010L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.70s",
+        "[+] BUILDING...0.7s",
         " |=> IDLE",
-        " |=> //chicken:dance...  0.09s (checking local cache)"));
+        " |=> //chicken:dance...  0.1s (checking local cache)"));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
@@ -148,7 +148,7 @@ public class SuperConsoleEventBusListenerTest {
         BuildEvent.finished(buildTargets, 0),
         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    final String buildingLine = "[-] BUILDING...FINISHED 0.83s";
+    final String buildingLine = "[-] BUILDING...FINISHED 0.8s";
 
     validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
 
@@ -167,7 +167,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 3000L, ImmutableList.of(parsingLine,
         buildingLine,
-        "[+] INSTALLING...0.50s",
+        "[+] INSTALLING...0.5s",
         "Log:",
         "I've made a huge mistake."));
 
@@ -177,7 +177,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 5000L, ImmutableList.of(parsingLine,
         buildingLine,
-        "[-] INSTALLING...FINISHED 1.50s",
+        "[-] INSTALLING...FINISHED 1.5s",
         "Log:",
         "I've made a huge mistake."));
 

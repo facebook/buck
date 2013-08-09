@@ -83,7 +83,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.40s\n";
+    final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.4s\n";
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine,
@@ -101,7 +101,7 @@ public class SimpleConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildEvent.finished(buildTargets, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
-    final String buildingLine = "[-] BUILDING...FINISHED 0.83s\n";
+    final String buildingLine = "[-] BUILDING...FINISHED 0.8s\n";
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine + buildingLine,
@@ -126,7 +126,7 @@ public class SimpleConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         InstallEvent.finished(fakeTarget, true), 4000L, TimeUnit.MILLISECONDS, threadId));
 
-    final String installLine = "[-] INSTALLING...FINISHED 1.50s\n";
+    final String installLine = "[-] INSTALLING...FINISHED 1.5s\n";
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine + buildingLine + logLine + installLine,
