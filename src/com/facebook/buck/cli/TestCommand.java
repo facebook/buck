@@ -123,10 +123,15 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     results = filterTestRules(options, results);
 
     BuildContext buildContext = build.getBuildContext();
-    ExecutionContext executionContext = build.getExecutionContext();
+    ExecutionContext buildExecutionContext = build.getExecutionContext();
+    ExecutionContext testExecutionContext = ExecutionContext.builder().
+        setExecutionContext(buildExecutionContext).
+        setTargetDevice(options.getTargetDeviceOptional()).
+        build();
+
     return runTestsAndShutdownExecutor(results,
         buildContext,
-        executionContext,
+        testExecutionContext,
         options);
   }
 

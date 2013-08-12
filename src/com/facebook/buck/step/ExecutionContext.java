@@ -202,6 +202,19 @@ public class ExecutionContext {
           eventBus);
     }
 
+    public Builder setExecutionContext(ExecutionContext executionContext) {
+      setProjectFilesystem(executionContext.getProjectFilesystem());
+      setConsole(executionContext.getConsole());
+      setAndroidPlatformTarget(executionContext.getAndroidPlatformTargetOptional());
+      setNdkRoot(executionContext.getNdkRoot());
+      setTargetDevice(executionContext.getTargetDeviceOptional());
+      setDefaultTestTimeoutMillis(executionContext.getDefaultTestTimeoutMillis());
+      setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled());
+      setDebugEnabled(executionContext.isDebugEnabled());
+      setEventBus(executionContext.getBuckEventBus());
+      return this;
+    }
+
     public Builder setProjectFilesystem(ProjectFilesystem projectFilesystem) {
       this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
       return this;
