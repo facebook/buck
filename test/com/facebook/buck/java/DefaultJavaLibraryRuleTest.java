@@ -42,6 +42,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
@@ -79,7 +80,9 @@ import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -94,6 +97,9 @@ public class DefaultJavaLibraryRuleTest {
       "//android/java/src/com/facebook:fb";
   private static final String ANNOTATION_SCENARIO_GEN_PATH =
       BuckConstant.ANNOTATION_DIR + "/android/java/src/com/facebook/__fb_gen__";
+
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
 
   private BuildContext stubContext;
 
@@ -243,17 +249,25 @@ public class DefaultJavaLibraryRuleTest {
 
   /** Make sure that when isAndroidLibrary is true, that the Android bootclasspath is used. */
   @Test
+  @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testBuildInternalWithAndroidBootclasspath() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb");
-    String src = "android/java/src/com/facebook/Main.java";
+    String folder = "android/java/src/com/facebook";
+    tmp.newFolder(folder.split("/"));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//" + folder + ":fb");
+
+    String src = folder + "/Main.java";
+    tmp.newFile(src);
+
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
-        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(
+            new DefaultBuildRuleBuilderParams(projectFilesystem))
         .setBuildTarget(buildTarget)
         .addSrc(src));
 
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
-    BuildContext context = createBuildContext(javaLibrary, bootclasspath);
+    BuildContext context = createBuildContext(javaLibrary, bootclasspath, projectFilesystem);
 
     List<Step> steps = javaLibrary.getBuildSteps(context);
 
@@ -546,7 +560,7 @@ public class DefaultJavaLibraryRuleTest {
    * @see DefaultJavaLibraryRule#getAbiKeyForDeps()
    */
   @Test
-  public void testGetAbiKeyForDepsInThePresenceOfExportDeps() {
+  public void testGetAbiKeyForDepsInThePresenceOfExportDeps() throws IOException {
     // Create a java_library named //:tinylib with a hardcoded ABI key.
     String tinyLibAbiKeyHash = Strings.repeat("a", 40);
     JavaLibraryRule tinyLibrary = createDefaultJavaLibaryRuleWithAbiKey(
@@ -787,7 +801,8 @@ public class DefaultJavaLibraryRuleTest {
 
   // TODO(mbolin): Eliminate the bootclasspath parameter, as it is completely misused in this test.
   private BuildContext createBuildContext(DefaultJavaLibraryRule javaLibrary,
-                                          @Nullable String bootclasspath) {
+                                          @Nullable String bootclasspath,
+                                          @Nullable ProjectFilesystem projectFilesystem) {
     AndroidPlatformTarget platformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
     ImmutableList<File> bootclasspathEntries = (bootclasspath == null)
         ? ImmutableList.<File>of(new File("I am not used"))
@@ -796,13 +811,21 @@ public class DefaultJavaLibraryRuleTest {
         .anyTimes();
     replay(platformTarget);
 
+    File projectRoot;
+    if (projectFilesystem == null) {
+      projectRoot = EasyMock.createMock(File.class);
+      projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    } else {
+      projectRoot = projectFilesystem.getProjectRoot();
+    }
+
     // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
     // Also, remove setProjectRoot() and get it from ProjectFilesystem.getRoot().
     return BuildContext.builder()
-        .setProjectRoot(EasyMock.createMock(File.class))
+        .setProjectRoot(projectRoot)
         .setDependencyGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
-        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
+        .setProjectFilesystem(projectFilesystem)
         .setArtifactCache(new NoopArtifactCache())
         .setBuildDependencies(BuildDependencies.TRANSITIVE)
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
@@ -812,7 +835,7 @@ public class DefaultJavaLibraryRuleTest {
   }
 
   private enum AnnotationProcessorTarget {
-    VALID_PREBUILT_JAR("//tools/java/src/com/someone/library:prebuilt-processors") {
+    VALID_PREBUILT_JAR("//tools/java/src/com/facebook/library:prebuilt-processors") {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new PrebuiltJarRule(
@@ -875,7 +898,7 @@ public class DefaultJavaLibraryRuleTest {
     private ExecutionContext executionContext;
     private BuildContext buildContext;
 
-    public AnnotationProcessingScenario() {
+    public AnnotationProcessingScenario() throws IOException {
       annotationProcessingParamsBuilder = new AnnotationProcessingParams.Builder();
       buildRuleIndex = Maps.newHashMap();
       ruleResolver = new BuildRuleResolver(buildRuleIndex);
@@ -894,13 +917,14 @@ public class DefaultJavaLibraryRuleTest {
     }
 
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
-      DefaultJavaLibraryRule javaLibrary = createJavaLibraryRule();
-      buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
+      ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+      DefaultJavaLibraryRule javaLibrary = createJavaLibraryRule(projectFilesystem);
+      buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null, projectFilesystem);
       List<Step> steps = javaLibrary.getBuildSteps(buildContext);
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
       executionContext = ExecutionContext.builder()
-          .setProjectFilesystem(new ProjectFilesystem(new File(".")))
+          .setProjectFilesystem(projectFilesystem)
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
           .setEventBus(BuckEventBusFactory.newInstance())
@@ -913,11 +937,14 @@ public class DefaultJavaLibraryRuleTest {
     }
 
     // TODO(simons): Actually generate a java library rule, rather than an android one.
-    private DefaultJavaLibraryRule createJavaLibraryRule() {
+    private DefaultJavaLibraryRule createJavaLibraryRule(ProjectFilesystem projectFilesystem)
+        throws IOException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
       annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);
 
+      tmp.newFolder("android", "java", "src", "com", "facebook");
       String src = "android/java/src/com/facebook/Main.java";
+      tmp.newFile(src);
 
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build(ruleResolver);
       JavacOptions.Builder options = JavacOptions.builder().setAnnotationProcessingData(params);
@@ -927,7 +954,7 @@ public class DefaultJavaLibraryRuleTest {
               buildTarget,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
               /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-              /* pathRelativizer */ Functions.<String>identity()),
+              projectFilesystem.getPathRelativizer()),
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<String>absent(),

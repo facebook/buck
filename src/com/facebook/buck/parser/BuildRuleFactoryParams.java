@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.BuckConstant;
@@ -99,13 +100,7 @@ public final class BuildRuleFactoryParams {
       }
     };
 
-    final Function<String, String> pathRelativizer = filesystem.getPathRelativizer();
-    this.abstractBuildRuleFactoryParams = new AbstractBuildRuleBuilderParams() {
-      @Override
-      public Function<String, String> getPathRelativizer() {
-        return pathRelativizer;
-      }
-    };
+    this.abstractBuildRuleFactoryParams = new DefaultBuildRuleBuilderParams(filesystem);
   }
 
   /** This is package-private so that only AbstractBuildRuleFactory can access it. */
