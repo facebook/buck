@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -93,16 +92,6 @@ public interface BuildRule extends Comparable<BuildRule> {
    */
   @Nullable
   public String getPathToOutputFile();
-
-  /**
-   * If the BuildRule has an output (as reported by getOutput()), return the OutputKey associated
-   * with the file returned by getOutput(); return a non-idempotent OutputKey otherwise.
-   *
-   * @return key based on the BuildRule's output contents if getOutput() returns non-null; a
-   * nonIdempotent OutputKey otherwise. A missing/unreadable output file results in a non-idempotent
-   * OutputKey.
-   */
-  public OutputKey getOutputKey(ProjectFilesystem projectFilesystem);
 
   /**
    * If the resulting RuleKey is non-idempotent, it must not be internally memoized -- subsequent

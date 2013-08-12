@@ -20,13 +20,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.io.File;
 
 import javax.annotation.Nullable;
 
@@ -35,7 +32,6 @@ abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
-  @Nullable private OutputKey outputKey;
   @Nullable private RuleKey ruleKey;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
@@ -139,24 +135,6 @@ abstract class AbstractBuildRule implements BuildRule {
   @Override @Nullable
   public String getPathToOutputFile() {
     return null;
-  }
-
-  @Override
-  public OutputKey getOutputKey(ProjectFilesystem projectFilesystem) {
-    if (this.outputKey != null) {
-      return this.outputKey;
-    }
-    String pathToOutputFile = getPathToOutputFile();
-    File outputFile = pathToOutputFile == null
-        ? null
-        : projectFilesystem.getFileForRelativePath(pathToOutputFile);
-    OutputKey outputKey = new OutputKey(outputFile);
-    this.outputKey = OutputKey.filter(outputKey);
-    return outputKey;
-  }
-
-  protected void resetOutputKey() {
-    outputKey = null;
   }
 
   /**

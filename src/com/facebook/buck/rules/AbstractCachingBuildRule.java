@@ -421,9 +421,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
       ArtifactCache artifactCache,
       boolean fromCache)
       throws IOException {
-    // Drop our cached output key, since it probably changed.
-    resetOutputKey();
-
     // Write the success file.
     writeSuccessFile(projectFilesystem);
 

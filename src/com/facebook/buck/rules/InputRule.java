@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -45,7 +44,6 @@ public class InputRule implements BuildRule {
   private final String relativePath;
   private final BuildTarget buildTarget;
   private final ListenableFuture<BuildRuleSuccess> buildOutput;
-  @Nullable private OutputKey outputKey;
   @Nullable private RuleKey ruleKey;
 
   /**
@@ -148,20 +146,6 @@ public class InputRule implements BuildRule {
   @Override
   public String getPathToOutputFile() {
     return relativePath;
-  }
-
-  @Override
-  public OutputKey getOutputKey(ProjectFilesystem projectFilesystem) {
-    if (this.outputKey != null) {
-      return this.outputKey;
-    }
-    String pathToOutputFile = getPathToOutputFile();
-    File outputFile = pathToOutputFile == null
-        ? null
-        : projectFilesystem.getFileForRelativePath(pathToOutputFile);
-    OutputKey outputKey = new OutputKey(outputFile);
-    this.outputKey = OutputKey.filter(outputKey);
-    return outputKey;
   }
 
   @Override

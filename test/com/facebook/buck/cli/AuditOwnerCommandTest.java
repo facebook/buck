@@ -34,7 +34,6 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
-import com.facebook.buck.rules.OutputKey;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
@@ -73,11 +72,6 @@ public class AuditOwnerCommandTest {
     @Override
     public String getPathToOutputFile() {
       return null;
-    }
-
-    @Override
-    public final OutputKey getOutputKey(ProjectFilesystem projectFilesystem) {
-      throw new UnsupportedOperationException();
     }
 
     @Override
