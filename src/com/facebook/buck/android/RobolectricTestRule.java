@@ -64,7 +64,7 @@ public class RobolectricTestRule extends JavaTestRule {
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput() {
+  public List<String> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
   }
 

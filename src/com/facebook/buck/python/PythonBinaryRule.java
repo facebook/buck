@@ -50,7 +50,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("main", main);
   }
@@ -99,7 +99,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     if (main != null) {
       return ImmutableList.of(main);
     } else {
@@ -108,7 +108,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context)
       throws IOException {
     // TODO(mbolin): Package Python code, if appropriate. There does not appear to be a standard
     // cross-platform way to do this.

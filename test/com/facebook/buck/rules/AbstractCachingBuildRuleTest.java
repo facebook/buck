@@ -460,12 +460,12 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    protected List<Step> buildInternal(BuildContext context) throws IOException {
+    public List<Step> getBuildSteps(BuildContext context) throws IOException {
       return buildSteps;
     }
 
     @Override
-    protected Iterable<String> getInputsToCompareToOutput() {
+    public Iterable<String> getInputsToCompareToOutput() {
       throw new UnsupportedOperationException();
     }
 
@@ -475,8 +475,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    protected void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
-        ProjectFilesystem projectFilesystem) throws IOException {
+    public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
+                                                                   ProjectFilesystem projectFilesystem) throws IOException {
       numCallsToRecordOutputFileDetailsAfterFetchedFromArtifactCache++;
       if (recordOutputFileDetailsAfterFetchedFromArtifactCacheShouldThrowIOException) {
         throw new IOException("Failed to record output file details!");
@@ -497,12 +497,12 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    protected Iterable<String> getInputsToCompareToOutput() {
+    public Iterable<String> getInputsToCompareToOutput() {
       throw new UnsupportedOperationException("method should not be called");
     }
 
     @Override
-    protected List<Step> buildInternal(BuildContext context)
+    public List<Step> getBuildSteps(BuildContext context)
         throws IOException {
       throw new UnsupportedOperationException("method should not be called");
     }

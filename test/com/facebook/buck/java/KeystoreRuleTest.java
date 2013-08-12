@@ -65,7 +65,7 @@ public class KeystoreRuleTest {
     replay(buildContext);
 
     KeystoreRule keystore = createKeystoreRuleForTest();
-    List<Step> buildSteps = keystore.buildInternal(buildContext);
+    List<Step> buildSteps = keystore.getBuildSteps(buildContext);
     assertEquals(ImmutableList.<Step>of(), buildSteps);
 
     verify(buildContext);

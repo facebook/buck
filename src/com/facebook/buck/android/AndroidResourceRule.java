@@ -127,7 +127,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes = ImmutableSortedSet
         .naturalOrder();
 
@@ -160,7 +160,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context)
       throws IOException {
     // If there is no res directory, then there is no R.java to generate.
     // TODO(mbolin): Change android_resources() so that 'res' is required.
@@ -225,7 +225,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(#2493457): This rule uses the aapt binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aapt is used.
 

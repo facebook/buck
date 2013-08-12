@@ -199,7 +199,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("manifest", manifest)
         .set("target", target)
@@ -300,7 +300,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput() {
+  public List<String> getInputsToCompareToOutput() {
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     inputs.add(manifest);
     if (proguardConfig.isPresent()) {
@@ -315,7 +315,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) {
+  public List<Step> getBuildSteps(BuildContext context) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     // Map from asset name to pathname for extra files to be added to assets.
     ImmutableMap.Builder<String, File> extraAssetsBuilder = ImmutableMap.builder();

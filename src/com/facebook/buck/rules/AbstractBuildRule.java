@@ -175,7 +175,7 @@ abstract class AbstractBuildRule implements BuildRule {
    * }
    * </pre>
    */
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder;
   }
 

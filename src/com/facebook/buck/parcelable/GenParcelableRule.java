@@ -56,12 +56,12 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     return srcs;
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context)
       throws IOException {
     Step step = new Step() {
 
@@ -117,7 +117,7 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .set("outputDirectory", outputDirectory);

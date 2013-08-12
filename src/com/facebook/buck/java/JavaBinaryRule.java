@@ -80,7 +80,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     ImmutableSortedSet.Builder<String> metaInfFiles = ImmutableSortedSet.naturalOrder();
     addMetaInfContents(metaInfFiles);
 
@@ -96,7 +96,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
     ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
 
@@ -110,7 +110,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     String outputDirectory = getOutputDirectory();

@@ -82,7 +82,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("apkUnderTest", apkUnderTest);
   }

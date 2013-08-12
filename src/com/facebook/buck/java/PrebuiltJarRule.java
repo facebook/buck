@@ -106,7 +106,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     return ImmutableList.of(getBinaryJar());
   }
 
@@ -141,7 +141,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context)
       throws IOException {
     return ImmutableList.of();
   }
@@ -157,7 +157,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("binaryJar", binaryJar)
         .set("sourceJar", sourceJar)

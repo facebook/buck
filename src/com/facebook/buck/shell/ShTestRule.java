@@ -64,7 +64,7 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("test", test);
   }
@@ -85,7 +85,7 @@ public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
   }
 
   @Override
-  public List<Step> buildInternal(BuildContext context) {
+  public List<Step> getBuildSteps(BuildContext context) {
     // Nothing to build: test is run directly.
     return ImmutableList.of();
   }

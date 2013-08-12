@@ -68,7 +68,8 @@ import javax.annotation.Nullable;
  * How we plan to generify the ABI logic is up in the air.
  */
 @Beta
-public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
+public abstract class AbstractCachingBuildRule extends AbstractBuildRule
+    implements Buildable, BuildRule {
 
   /**
    * Lock used to ensure that the logic to kick off a build is performed at most once.
@@ -84,7 +85,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
   private final Function<String, String> pathRelativizer;
 
-  /** @see #getInputsToCompareToOutput(BuildContext) */
+  /** @see #getInputsToCompareToOutput()  */
   private Iterable<InputRule> inputsToCompareToOutputs;
 
   protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
@@ -113,17 +114,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     }
   }
 
-  /**
-   * Get the set of input files whose contents should be hashed for the purpose of determining
-   * whether this rule is cached.
-   * <p>
-   * Note that the collection of inputs is specified as a list, because for some build rules
-   * (such as {@link com.facebook.buck.shell.Genrule}), the order of the inputs is significant. If
-   * the order of the inputs is not significant for the build rule, then the list should be
-   * alphabetized so that lists with the same elements will be {@code .equals()} to one another.
-   */
-  abstract protected Iterable<String> getInputsToCompareToOutput();
-
   @Override
   public Iterable<InputRule> getInputs() {
     if (inputsToCompareToOutputs == null) {
@@ -134,7 +124,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // For a rule that lists its inputs via a "srcs" argument, this may seem redundant, but it is
     // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
@@ -382,16 +372,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     }
   }
 
-  /**
-   * This method is invoked if the output file is successfully fetched from the
-   * {@link ArtifactCache}. This is where a rule has the opportunity to record any relevant metadata
-   * about the artifact.
-   * <p>
-   * The default implementation of this method is empty.
-   * @param cache The {@link ArtifactCache} that was used to fetch the output file.
-   * @param projectFilesystem to use to determine where a metadata file should be written.
-   */
-  protected void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
+  @Override
+  public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
       ProjectFilesystem projectFilesystem) throws IOException {
   }
 
@@ -404,7 +386,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     context.logBuildInfo("[BUILDING %s]", getFullyQualifiedName());
 
     // Get and run all of the commands.
-    List<Step> steps = buildInternal(context);
+    List<Step> steps = getBuildSteps(context);
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
@@ -412,14 +394,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   /**
-   * When this method is invoked, all of its dependencies will have been built.
-   */
-  abstract protected List<Step> buildInternal(BuildContext context) throws IOException;
-
-  /**
    * For a rule that is read from the build cache, it may have fields that would normally be
-   * populated by executing the steps returned by {@link #buildInternal(BuildContext)}. Because
-   * {@link #buildInternal(BuildContext)} is not invoked for cached rules, a rule may need to
+   * populated by executing the steps returned by {@link #getBuildSteps(BuildContext)}. Because
+   * {@link #getBuildSteps(BuildContext)} is not invoked for cached rules, a rule may need to
    * implement this method to populate those fields in some other way. For a cached rule, this
    * method will be invoked just before the future returned by {@link #build(BuildContext)} is
    * resolved.

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -80,7 +79,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("apk", apk);
   }
@@ -99,11 +98,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
     return getAbsoluteOutputFilePath();
   }
 
-  // Override so that test code and method are in same package; otherwise @VisibleForTesting has
-  // no effect.
-  @VisibleForTesting
   @Override
-  protected ImmutableSortedSet<String> getInputsToCompareToOutput() {
+  public ImmutableSortedSet<String> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
   }
 

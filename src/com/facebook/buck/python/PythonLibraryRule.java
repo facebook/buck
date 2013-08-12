@@ -60,7 +60,7 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .set("pythonPathDirectory", pythonPathDirectory);
@@ -78,7 +78,7 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     return srcs;
   }
 
@@ -87,7 +87,7 @@ public class PythonLibraryRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Symlink all of the sources to a generated directory so that the generated directory can be

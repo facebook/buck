@@ -102,7 +102,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     ImmutableSortedSet<? extends BuildRule> srcUnderTest = ImmutableSortedSet.copyOf(
         sourceUnderTest);
     super.appendToRuleKey(builder)

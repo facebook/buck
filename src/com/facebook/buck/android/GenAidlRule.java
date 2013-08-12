@@ -78,7 +78,7 @@ public class GenAidlRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aidl is used.
     return super.appendToRuleKey(builder)
@@ -87,12 +87,12 @@ public class GenAidlRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected ImmutableList<String> getInputsToCompareToOutput() {
+  public ImmutableList<String> getInputsToCompareToOutput() {
     return ImmutableList.of(aidlFilePath);
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context)
       throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 

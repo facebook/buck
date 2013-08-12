@@ -64,7 +64,7 @@ public abstract class ArchivingRule extends AbstractCachingBuildRule {
   abstract protected List<Step> buildArchive(BuildContext context) throws IOException;
 
   @Override
-  protected final List<Step> buildInternal(BuildContext context) throws IOException {
+  public final List<Step> getBuildSteps(BuildContext context) throws IOException {
     String pathToOutputFile = getPathToOutputFile();
     String outputParentDirectory = new File(pathToOutputFile).getParent();
 

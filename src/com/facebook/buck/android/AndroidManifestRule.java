@@ -76,7 +76,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput() {
+  public List<String> getInputsToCompareToOutput() {
     ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
     // manifestFile is an *output*, so it should be omitted here.
     inputsToConsiderForCachingPurposes.add(skeletonFile);
@@ -84,7 +84,7 @@ public class AndroidManifestRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
     ImmutableList<HasAndroidResourceDeps> depsWithAndroidResources = getAndroidResourceDeps(
         context.getDependencyGraph());
     AndroidTransitiveDependencies transitiveDependencies =

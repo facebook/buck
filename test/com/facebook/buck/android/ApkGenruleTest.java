@@ -156,7 +156,7 @@ public class ApkGenruleTest {
         apkGenrule.getInputsToCompareToOutput());
 
     // Verify that the shell commands that the genrule produces are correct.
-    List<Step> steps = apkGenrule.buildInternal(buildContext);
+    List<Step> steps = apkGenrule.getBuildSteps(buildContext);
     assertEquals(7, steps.size());
 
     Step firstStep = steps.get(0);

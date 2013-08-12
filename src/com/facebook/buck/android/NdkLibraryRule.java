@@ -99,7 +99,7 @@ import java.util.Set;
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(#2493457): This rule uses the ndk-build script (part of the Android NDK), so the RuleKey
     // should incorporate which version of the NDK is used.
 
@@ -112,7 +112,7 @@ import java.util.Set;
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     return this.sources;
   }
 

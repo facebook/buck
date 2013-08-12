@@ -124,7 +124,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   /**
    * This returns the ABI key for this rule. This will be set <em>EITHER</em> as part of
-   * {@link #recordOutputFileDetailsAfterFetchedFromArtifactCache(ArtifactCache, ProjectFilesystem)}
+   * {@link #recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache, ProjectFilesystem)}
    * or while the build steps (in particular, the javac step) for this rule are created. In the case
    * of the latter, the {@link Supplier} is guaranteed to be able to return (a possibly null) value
    * after the build steps have been executed.
@@ -168,7 +168,9 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   };
 
   /**
-   * This is set in {@link #buildInternal(com.facebook.buck.rules.BuildContext)} and is available to subclasses.
+   * This is set in
+   * {@link AbstractCachingBuildRule#getBuildSteps(com.facebook.buck.rules.BuildContext)} and is
+   * available to subclasses.
    */
   protected ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
 
@@ -420,7 +422,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .setSourcePaths("resources", resources)
@@ -466,7 +468,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   @Override
   @Nullable
-  protected List<String> getInputsToCompareToOutput() {
+  public List<String> getInputsToCompareToOutput() {
     return inputsToConsiderForCachingPurposes;
   }
 
@@ -480,7 +482,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * attribute. They are compiled into a directory under {@link BuckConstant#BIN_DIR}.
    */
   @Override
-  protected final List<Step> buildInternal(BuildContext context) throws IOException {
+  public final List<Step> getBuildSteps(BuildContext context) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     BuildTarget buildTarget = getBuildTarget();
 
@@ -713,7 +715,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  protected void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
+  public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
       ProjectFilesystem projectFilesystem) throws IOException {
     RuleKey ruleKey = createRuleKeyForAbiKeyProjection();
     File abiKeyFile = projectFilesystem.getFileForRelativePath(getPathToAbiOutputFile());

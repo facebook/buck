@@ -170,7 +170,7 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected ImmutableSortedSet<String> getInputsToCompareToOutput() {
+  public ImmutableSortedSet<String> getInputsToCompareToOutput() {
     return ImmutableSortedSet.copyOf(srcs);
   }
 
@@ -180,7 +180,7 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .set("cmd", cmd);
@@ -245,7 +245,7 @@ public class Genrule extends AbstractCachingBuildRule {
 
   @Override
   @VisibleForTesting
-  public List<Step> buildInternal(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Delete the old output for this rule, if it exists.

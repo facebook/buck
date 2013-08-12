@@ -46,7 +46,7 @@ public class AndroidManifestRuleTest {
    * Tests the following methods:
    * <ul>
    *   <li>{@link AndroidManifestRule#getType()}
-   *   <li>{@link AndroidManifestRule#getInputsToCompareToOutput()}
+   *   <li>{@link com.facebook.buck.rules.AbstractCachingBuildRule#getInputsToCompareToOutput()}
    *   <li>{@link AndroidManifestRule#getPathToOutputFile()}
    * </ul>
    */
@@ -77,7 +77,7 @@ public class AndroidManifestRuleTest {
     EasyMock.expect(buildContext.getDependencyGraph()).andReturn(dependencyGraph);
     EasyMock.replay(buildContext);
 
-    List<Step> steps = androidManifestRule.buildInternal(buildContext);
+    List<Step> steps = androidManifestRule.getBuildSteps(buildContext);
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             new GenerateManifestStep(

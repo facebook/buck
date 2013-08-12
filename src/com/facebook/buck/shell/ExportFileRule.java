@@ -110,12 +110,12 @@ public class ExportFileRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     return ImmutableSet.of(src);
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
     String pathToOutputFile = out.get();
 
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()

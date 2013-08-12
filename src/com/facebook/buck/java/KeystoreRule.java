@@ -51,12 +51,12 @@ public class KeystoreRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     return ImmutableList.of(pathToStore, pathToProperties);
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return super.appendToRuleKey(builder)
         .set("store", pathToStore)
         .set("properties", pathToProperties);
@@ -71,7 +71,7 @@ public class KeystoreRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
     // Nothing to build: this is like a glorified export_deps() rule.
     return ImmutableList.of();
   }

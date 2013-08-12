@@ -69,7 +69,7 @@ public class GenAidlRuleTest {
 
     assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput());
 
-    List<Step> steps = genAidlRule.buildInternal(context);
+    List<Step> steps = genAidlRule.getBuildSteps(context);
 
     final String pathToAidlExecutable = "/usr/local/bin/aidl";
     final String pathToFrameworkAidl = "/home/root/android/platforms/android-16/framework.aidl";

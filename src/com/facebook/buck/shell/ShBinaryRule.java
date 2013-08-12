@@ -65,13 +65,13 @@ public class ShBinaryRule extends AbstractCachingBuildRule implements BinaryBuil
   }
 
   @Override
-  protected Iterable<String> getInputsToCompareToOutput() {
+  public Iterable<String> getInputsToCompareToOutput() {
     return Iterables.concat(ImmutableList.of(main.toString()),
         SourcePaths.filterInputsToCompareToOutput(resources));
   }
 
   @Override
-  protected List<Step> buildInternal(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
     MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(output.getParent().toString());
 
     // Generate an .sh file that builds up an environment and invokes the user's script.

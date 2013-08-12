@@ -255,7 +255,7 @@ public class DefaultJavaLibraryRuleTest {
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
     BuildContext context = createBuildContext(javaLibrary, bootclasspath);
 
-    List<Step> steps = javaLibrary.buildInternal(context);
+    List<Step> steps = javaLibrary.getBuildSteps(context);
 
     // Find the JavacInMemoryCommand and verify its bootclasspath.
     Step step = Iterables.find(steps, new Predicate<Step>() {
@@ -896,7 +896,7 @@ public class DefaultJavaLibraryRuleTest {
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
       DefaultJavaLibraryRule javaLibrary = createJavaLibraryRule();
       buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
-      List<Step> steps = javaLibrary.buildInternal(buildContext);
+      List<Step> steps = javaLibrary.getBuildSteps(buildContext);
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
       executionContext = ExecutionContext.builder()

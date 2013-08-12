@@ -74,13 +74,13 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   @Override
-  protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
      return super.appendToRuleKey(builder)
          .set("manifest", manifestFile.orNull());
   }
 
   @Override
-  protected List<String> getInputsToCompareToOutput() {
+  public List<String> getInputsToCompareToOutput() {
     if (manifestFile.isPresent()) {
       return ImmutableList.<String>builder()
           .addAll(super.getInputsToCompareToOutput())

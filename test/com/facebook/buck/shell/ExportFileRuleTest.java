@@ -74,7 +74,7 @@ public class ExportFileRuleTest {
     ExportFileRule rule = new ExportFileRule(
         params, Optional.<String>absent(), Optional.<String>absent());
 
-    List<Step> steps = rule.buildInternal(context);
+    List<Step> steps = rule.getBuildSteps(context);
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         "example.html",
@@ -87,7 +87,7 @@ public class ExportFileRuleTest {
     ExportFileRule rule = new ExportFileRule(
         params, Optional.<String>absent(), Optional.of("fish"));
 
-    List<Step> steps = rule.buildInternal(context);
+    List<Step> steps = rule.getBuildSteps(context);
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         "example.html",
@@ -99,7 +99,7 @@ public class ExportFileRuleTest {
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFileRule rule = new ExportFileRule(params, Optional.of("chips"), Optional.of("fish"));
 
-    List<Step> steps = rule.buildInternal(context);
+    List<Step> steps = rule.getBuildSteps(context);
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         "chips",
