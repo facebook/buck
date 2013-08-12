@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 
+import java.io.IOException;
+
 /**
  * {@link BuildRule} that can avoid rebuilding itself when the ABI of its deps has not changed and
  * all properties of the rule other than its deps have not changed.
@@ -33,7 +35,7 @@ public interface AbiRule {
    *
    * @return {@link Optional#absent()} if there is an error when computing the {@link RuleKey}
    */
-  public Optional<RuleKey> getRuleKeyWithoutDeps();
+  public Optional<RuleKey> getRuleKeyWithoutDeps() throws IOException;
 
   /**
    * This is the same as {@link #getRuleKeyWithoutDeps()}, but is the {@link RuleKey} for the output
@@ -52,7 +54,7 @@ public interface AbiRule {
    *
    * @return {@link Optional#absent()} if not all deps that should have an ABI key have one.
    */
-  public Optional<Sha1HashCode> getAbiKeyForDeps();
+  public Optional<Sha1HashCode> getAbiKeyForDeps() throws IOException;
 
   /**
    * This is the same as {@link #getAbiKeyForDeps()}, but is the ABI key of this rule's deps that

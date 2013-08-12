@@ -25,6 +25,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
 abstract class AbstractBuildRule implements BuildRule {
@@ -153,7 +155,7 @@ abstract class AbstractBuildRule implements BuildRule {
    * }
    * </pre>
    */
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder;
   }
 
@@ -161,7 +163,7 @@ abstract class AbstractBuildRule implements BuildRule {
    * This method should be overridden only for unit testing.
    */
   @Override
-  public RuleKey getRuleKey() {
+  public RuleKey getRuleKey() throws IOException {
     if (this.ruleKey != null) {
       return this.ruleKey;
     } else {
@@ -181,7 +183,7 @@ abstract class AbstractBuildRule implements BuildRule {
    *
    * @see AbiRule#getRuleKeyWithoutDeps()
    */
-  protected RuleKey createRuleKeyWithoutDeps() {
+  protected RuleKey createRuleKeyWithoutDeps() throws IOException {
     return appendToRuleKey(RuleKey.builderWithoutDeps(this)).build();
   }
 

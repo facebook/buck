@@ -99,7 +99,7 @@ import java.util.Set;
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     // TODO(#2493457): This rule uses the ndk-build script (part of the Android NDK), so the RuleKey
     // should incorporate which version of the NDK is used.
 

@@ -28,6 +28,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 /**
  * Unit test for {@link RuleKey}.
  */
@@ -43,7 +45,7 @@ public class RuleKeyTest {
    * Ensure that build rules with the same inputs but different deps have unique RuleKeys.
    */
   @Test
-  public void testRuleKeyDependsOnDeps() {
+  public void testRuleKeyDependsOnDeps() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.

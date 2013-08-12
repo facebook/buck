@@ -80,7 +80,7 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     ImmutableSortedSet.Builder<String> metaInfFiles = ImmutableSortedSet.naturalOrder();
     addMetaInfContents(metaInfFiles);
 

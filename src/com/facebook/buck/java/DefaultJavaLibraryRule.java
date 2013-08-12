@@ -373,7 +373,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public Optional<RuleKey> getRuleKeyWithoutDeps() {
+  public Optional<RuleKey> getRuleKeyWithoutDeps() throws IOException {
     return Optional.of(createRuleKeyWithoutDeps());
   }
 
@@ -388,7 +388,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * lacks an ABI key, then returns {@link Optional#absent()}.
    */
   @Override
-  public Optional<Sha1HashCode> getAbiKeyForDeps() {
+  public Optional<Sha1HashCode> getAbiKeyForDeps() throws IOException {
     // Make sure to consider declared classpath entries and not just immediate deps because there
     // may be deps that use export_deps=True.
     SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
@@ -422,7 +422,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .setSourcePaths("resources", resources)
@@ -583,7 +583,13 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     Step recordAbiKey = new AbstractExecutionStep("record ABI key") {
       @Override
       public int execute(ExecutionContext context) {
-        RuleKey ruleKey = createRuleKeyForAbiKeyProjection();
+        RuleKey ruleKey;
+        try {
+          ruleKey = createRuleKeyForAbiKeyProjection();
+        } catch (IOException e) {
+          e.printStackTrace(context.getStdErr());
+          return 1;
+        }
         ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
         File abiKeyFile = projectFilesystem.getFileForRelativePath(getPathToAbiOutputFile());
         artifactCache.store(ruleKey, abiKeyFile);
@@ -599,7 +605,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * Assuming the build has completed successfully, the ABI should have been computed, and it should
    * be stored for subsequent builds.
    */
-  private void addStepsToRecordAbiToDisk(ImmutableList.Builder<Step> commands) {
+  private void addStepsToRecordAbiToDisk(ImmutableList.Builder<Step> commands) throws IOException {
     // Note that the parent directories for all of the files written by these steps should already
     // have been created by a previous step. Therefore, there is no reason to add a MkdrStep here.
 
@@ -739,7 +745,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
    * rule when we know its RuleKey, because we can reproduce the RuleKey returned by this method
    * using the rule's RuleKey and the value {@code "namespace.abi_key"}.
    */
-  private RuleKey createRuleKeyForAbiKeyProjection() {
+  private RuleKey createRuleKeyForAbiKeyProjection() throws IOException {
     RuleKey.Builder builder = RuleKey.builder(this);
     appendToRuleKey(builder);
     builder.set("namespace.abi_key", (String)null);

@@ -192,7 +192,7 @@ public class RuleKey implements Comparable<RuleKey> {
    * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
    * arguments.
    */
-  public static Builder builder(BuildRule rule) {
+  public static Builder builder(BuildRule rule) throws IOException {
     return builder(rule, /* includeDeps */ true);
   }
 
@@ -200,11 +200,11 @@ public class RuleKey implements Comparable<RuleKey> {
    * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
    * arguments <em>except</em> for its <code>deps</doe>.
    */
-  public static Builder builderWithoutDeps(BuildRule rule) {
+  public static Builder builderWithoutDeps(BuildRule rule) throws IOException {
     return builder(rule, /* includeDeps */ false);
   }
 
-  private static Builder builder(BuildRule rule, boolean includeDeps) {
+  private static Builder builder(BuildRule rule, boolean includeDeps) throws IOException {
     Builder builder = new Builder()
         .set("name", rule.getFullyQualifiedName())
 
@@ -358,7 +358,7 @@ public class RuleKey implements Comparable<RuleKey> {
       return setKey(key).setVal(val);
     }
 
-    public Builder set(String key, @Nullable BuildRule val) {
+    public Builder set(String key, @Nullable BuildRule val) throws IOException {
       return setKey(key).setVal(val != null ? val.getRuleKey() : null);
     }
 
@@ -382,7 +382,7 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
-    public Builder setInputs(String key, @Nullable Iterable<InputRule> val) {
+    public Builder setInputs(String key, @Nullable Iterable<InputRule> val) throws IOException {
       setKey(key);
       if (val != null) {
         for (InputRule inputRule : val) {
@@ -402,7 +402,8 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
-    public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val) {
+    public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val)
+        throws IOException {
       setKey(key);
       if (val != null) {
         for (BuildRule buildRule : val) {

@@ -32,6 +32,8 @@ import com.facebook.buck.util.ZipSplitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.IOException;
+
 
 /**
  * Apk that functions as a test package in Android.
@@ -82,7 +84,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .set("apkUnderTest", apkUnderTest);
   }

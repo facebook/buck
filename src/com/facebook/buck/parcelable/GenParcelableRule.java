@@ -117,7 +117,7 @@ public class GenParcelableRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .set("outputDirectory", outputDirectory);

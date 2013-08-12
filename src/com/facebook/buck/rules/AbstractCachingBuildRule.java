@@ -124,7 +124,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     // For a rule that lists its inputs via a "srcs" argument, this may seem redundant, but it is
     // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
@@ -162,7 +162,11 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
 
             @Override
             public void onSuccess(List<BuildRuleSuccess> deps) {
-              buildOnceDepsAreBuilt(context);
+              try {
+                buildOnceDepsAreBuilt(context);
+              } catch (IOException e) {
+                onFailure(e);
+              }
             }
 
             @Override
@@ -207,7 +211,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
    * that end, this method should never throw an exception, or else Buck will hang waiting for
    * {@link #buildRuleResult} to be resolved.
    */
-  private void buildOnceDepsAreBuilt(final BuildContext context) {
+  private void buildOnceDepsAreBuilt(final BuildContext context) throws IOException {
     BuckEventBus eventBus = context.getEventBus();
     ProjectFilesystem projectFilesystem = getProjectFilesystemFromBuildContext(context);
 
@@ -287,7 +291,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     String pathToOutputFile = getPathToOutputFile();
     boolean fromCache = pathToOutputFile != null
         && context.getArtifactCache().fetch(
-            getRuleKey(),
+            ruleKey,
             projectFilesystem.getFileForRelativePath(pathToOutputFile));
     CacheResult cacheResult = fromCache ? CacheResult.HIT : CacheResult.MISS;
 
@@ -445,7 +449,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     projectFilesystem.writeLinesToPath(lines, path);
   }
 
-  private Iterable<String> getSuccessFileStringsForBuildRules() {
+  private Iterable<String> getSuccessFileStringsForBuildRules() throws IOException {
     // For now, the one and only line written to the .success file is the RuleKey hash.
     return ImmutableList.of(getRuleKey().toString());
   }

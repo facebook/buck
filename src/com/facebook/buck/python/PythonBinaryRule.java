@@ -50,7 +50,7 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .set("main", main);
   }

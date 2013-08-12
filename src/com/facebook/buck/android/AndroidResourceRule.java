@@ -225,7 +225,7 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     // TODO(#2493457): This rule uses the aapt binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aapt is used.
 

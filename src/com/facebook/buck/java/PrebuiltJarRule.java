@@ -111,7 +111,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public Optional<Sha1HashCode> getAbiKey() {
+  public Optional<Sha1HashCode> getAbiKey() throws IOException {
     return Optional.of(new Sha1HashCode(getRuleKey().toString()));
   }
 
@@ -157,7 +157,7 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .set("binaryJar", binaryJar)
         .set("sourceJar", sourceJar)

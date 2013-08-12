@@ -180,7 +180,7 @@ public class Genrule extends AbstractCachingBuildRule {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .set("srcs", srcs)
         .set("cmd", cmd);

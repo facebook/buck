@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.annotation.Nullable;
 
@@ -149,7 +150,7 @@ public class InputRule implements BuildRule {
   }
 
   @Override
-  public RuleKey getRuleKey() {
+  public RuleKey getRuleKey() throws IOException {
     if (this.ruleKey == null) {
       ruleKey = RuleKey.builder(this).set("inputFile", inputFile).build();
     }

@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
 public interface BuildRule extends Comparable<BuildRule> {
@@ -94,18 +96,10 @@ public interface BuildRule extends Comparable<BuildRule> {
   public String getPathToOutputFile();
 
   /**
-   * If the resulting RuleKey is non-idempotent, it must not be internally memoized -- subsequent
-   * calls to getRuleKey() must re-evaluate the BuildRule's transitive state. Under normal operating
-   * conditions non-idempotent RuleKeys may arise due to not-yet-generated outputs. With careful
-   * ordering of execution planning versus RuleKey generation it is usually possible to avoid the
-   * creation of non-idempotent RuleKeys. However, dependency graph construction/evaluation would
-   * need to be incremental in order to reliably maintain an invariant which would allow blind
-   * RuleKey memoization.
-   *
    * @return key based on the BuildRule's state, including the transitive closure of its
-   * dependencies' keys.
+   *     dependencies' keys.
    */
-  public RuleKey getRuleKey();
+  public RuleKey getRuleKey() throws IOException;
 
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override

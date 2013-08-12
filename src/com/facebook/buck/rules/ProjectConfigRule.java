@@ -27,6 +27,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -229,7 +230,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .set("srcRule", srcRule)
         .set("srcSourceRoots", srcSourceRoots)

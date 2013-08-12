@@ -56,7 +56,7 @@ public class KeystoreRule extends AbstractCachingBuildRule {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .set("store", pathToStore)
         .set("properties", pathToProperties);

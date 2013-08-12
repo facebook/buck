@@ -32,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -74,7 +75,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
      return super.appendToRuleKey(builder)
          .set("manifest", manifestFile.orNull());
   }

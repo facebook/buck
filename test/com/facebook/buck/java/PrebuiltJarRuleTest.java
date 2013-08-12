@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 public class PrebuiltJarRuleTest {
 
@@ -51,7 +52,7 @@ public class PrebuiltJarRuleTest {
   }
 
   @Test
-  public void testAbiKeyIsSameAsRuleKey() {
+  public void testAbiKeyIsSameAsRuleKey() throws IOException {
     assertEquals(
         junitJarRule.getRuleKey().toString(),
         junitJarRule.getAbiKey().get().getHash());

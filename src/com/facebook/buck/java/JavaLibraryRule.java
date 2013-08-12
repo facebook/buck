@@ -23,6 +23,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
+
 public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
@@ -61,5 +63,5 @@ public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
    * Returns {@link Optional#absent()} if the rule did not build successfully, or if the ABI could
    * not be extracted for any reason.
    */
-  public Optional<Sha1HashCode> getAbiKey();
+  public Optional<Sha1HashCode> getAbiKey() throws IOException;
 }
