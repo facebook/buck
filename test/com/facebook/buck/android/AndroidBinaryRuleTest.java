@@ -600,7 +600,7 @@ public class AndroidBinaryRuleTest {
 
     ImmutableList<ShellStep> shellSteps =
         ImmutableList.copyOf(Iterables.filter(steps, ShellStep.class));
-    assertEquals(shellSteps.size(), expectedShellCommands.size());
+    assertEquals(shellSteps.size(), expectedShellCommands.size() - 1);
     ExecutionContext context = ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
@@ -608,7 +608,7 @@ public class AndroidBinaryRuleTest {
         .build();
 
     for (int i = 0; i < shellSteps.size(); ++i) {
-      assertEquals(expectedShellCommands.get(i),
+      assertEquals(expectedShellCommands.get(i + 1),
           Joiner.on(" ").join((shellSteps.get(i)).getShellCommand(context)));
     }
   }

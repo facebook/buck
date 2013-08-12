@@ -18,6 +18,7 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.CompositeStep;
+import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -35,7 +36,7 @@ import javax.annotation.Nullable;
  */
 public class RepackZipEntriesStep extends CompositeStep {
 
-  private static List<ShellStep> createSubCommands(
+  private static List<Step> createSubCommands(
       String inputFile,
       String outputFile,
       ImmutableSet<String> entries,
@@ -48,7 +49,7 @@ public class RepackZipEntriesStep extends CompositeStep {
     }
 
     // Extract the entries we want to repack.
-    ShellStep unzip = new UnzipStep(
+    UnzipStep unzip = new UnzipStep(
         inputFile,
         workingDirectory.getAbsolutePath(),
         true,

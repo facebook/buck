@@ -72,12 +72,23 @@ public class Zip implements AutoCloseable {
     assertNotNull("Unable to determine root of file system: " + fs, root);
   }
 
-  public void add(String fileName, String contents) throws IOException {
+  public void add(String fileName, byte[] contents) throws IOException {
     Path zipPath = fs.getPath(root.toString(), fileName);
     if (Files.notExists(zipPath.getParent())) {
       Files.createDirectory(zipPath.getParent());
     }
-    Files.write(zipPath, contents.getBytes(), CREATE, WRITE);
+    Files.write(zipPath, contents, CREATE, WRITE);
+  }
+
+  public void add(String fileName, String contents) throws IOException {
+    add(fileName, contents.getBytes());
+  }
+
+  public void addDir(String dirName) throws IOException {
+    Path zipPath = fs.getPath(root.toString(), dirName);
+    if (Files.notExists(zipPath)) {
+      Files.createDirectory(zipPath);
+    }
   }
 
   public Set<String> getFileNames() throws IOException {

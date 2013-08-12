@@ -16,16 +16,25 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.ByteStreams;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-public class UnzipStep extends ShellStep {
+public class UnzipStep implements Step {
 
   private final String pathToZipFile;
   private final String pathToDestinationDirectory;
@@ -74,7 +83,26 @@ public class UnzipStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  public String getShortName() {
+    return "unzip";
+  }
+
+  @Override
+  public int execute(ExecutionContext context) {
+    try {
+      extractZipFile(pathToZipFile,
+          pathToDestinationDirectory,
+          filesToExtract,
+          overwriteExistingFiles);
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+    return 0;
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("unzip");
 
@@ -101,12 +129,51 @@ public class UnzipStep extends ShellStep {
     // specific files within the archive to unzip -- if empty, extract all
     args.addAll(filesToExtract);
 
-    return args.build();
+    return Joiner.on(" ").join(args.build());
   }
 
-  @Override
-  public String getShortName() {
-    return "unzip";
-  }
+  @VisibleForTesting
+  static void extractZipFile(String zipFile,
+                             String destination,
+                             ImmutableSet<String> filesToExtract,
+                             boolean overwriteExistingFiles) throws IOException {
+    // Create output directory is not exists
+    File folder = new File(destination);
+    // TODO UnzipStep could be a CompositeStep with a MakeCleanDirectoryStep for the output dir.
+    if (!folder.exists() && !folder.mkdirs()) {
+      throw new IOException(String.format("Folder %s could not be created.", folder.toString()));
+    }
 
+    try (ZipInputStream zip = new ZipInputStream(new FileInputStream(zipFile))) {
+      for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+        String fileName = entry.getName();
+        // If filesToExtract is not empty, check if current entry is contained.
+        if (!filesToExtract.isEmpty() && !filesToExtract.contains(fileName)) {
+          continue;
+        }
+        File target = new File(folder, fileName);
+        if (target.exists() && !overwriteExistingFiles) {
+          continue;
+        }
+        if (entry.isDirectory()) {
+          // Create the directory and all its parent directories
+          if (!target.mkdirs()) {
+            throw new IOException(String.format("Folder %s could not be created.",
+                target.toString()));
+          }
+        } else {
+          // Create parent folder
+          File parentFolder = target.getParentFile();
+          if (!parentFolder.exists() && !parentFolder.mkdirs()) {
+            throw new IOException(String.format("Folder %s could not be created.",
+                parentFolder.toString()));
+          }
+          // Write file
+          try (FileOutputStream out = new FileOutputStream(target)) {
+            ByteStreams.copy(zip, out);
+          }
+        }
+      }
+    }
+  }
 }

@@ -22,10 +22,11 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
@@ -50,13 +51,13 @@ public class RepackZipEntriesStepTest {
     expect(context.getVerbosity()).andReturn(Verbosity.ALL).times(2);
     replay(context);
 
-    List<String> unzipExpected = new ImmutableList.Builder<String>()
+    String unzipExpected = Joiner.on(" ").join(new ImmutableList.Builder<String>()
         .add("unzip")
         .add("-o")
         .add("-d").add(dir.getPath())
         .add(inApk)
         .addAll(entries)
-        .build();
+        .build());
 
     List<String> copyExpected = ImmutableList.of(
         "cp",
@@ -80,17 +81,18 @@ public class RepackZipEntriesStepTest {
         dir);
 
     // Go over the subcommands.
-    Iterator<ShellStep> iter = Iterators.filter(command.iterator(),
-        ShellStep.class);
+    Iterator<Step> iter = Iterators.filter(command.iterator(), Step.class);
 
     // First entries are unzipped.
-    MoreAsserts.assertListEquals(unzipExpected, iter.next().getShellCommand(context));
+    UnzipStep unzipStep = (UnzipStep) iter.next();
+    assertEquals(unzipExpected, unzipStep.getDescription(context));
 
     // A copy of the archive would be created.
-    MoreAsserts.assertListEquals(copyExpected, iter.next().getShellCommand(context));
+    CopyStep copyStep = (CopyStep) iter.next();
+    MoreAsserts.assertListEquals(copyExpected, copyStep.getShellCommand(context));
 
     // And then the entries would be zipped back in.
-    ShellStep zipCommand = iter.next();
+    ZipStep zipCommand = (ZipStep) iter.next();
     MoreAsserts.assertListEquals(zipExpected, zipCommand.getShellCommand(context));
     assertEquals(zipCommand.getWorkingDirectory(), dir);
 
