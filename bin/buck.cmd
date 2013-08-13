@@ -15,6 +15,19 @@
 :: FIXME (carbokuo) This script is migrated from bin/buck and bin/buck_common and still very incomplete.
 
 @echo off
+
+:: Check %JAVA_HOME%
+if "%JAVA_HOME%"=="" (
+  echo Please have JDK 1.7 or higher installed and set environment variable %%JAVA_HOME%%.
+  exit /b
+)
+:: Check java
+set JAVA=%JAVA_HOME%\bin\java.exe
+if not exist "%JAVA%" (
+  echo java.exe not found under "%JAVA_HOME%\bin". Please check your environment variable %%JAVA_HOME%%.
+  exit /b
+)
+
 set ORIGINAL_WORKING_DIRECTORY=%cd%
 set PROJECT_ROOT=%cd%
 set BUCK_BIN_DIRECTORY=%~dp0
@@ -28,8 +41,8 @@ set BUCKD_PID_FILE=%PROJECT_ROOT%\buckd.pid
 set BUCKD_PORT_FILE=%PROJECT_ROOT%\buckd.port
 set BUCKD_RUNNING=0
 
-if exist %PROJECT_ROOT%\.buckversion (
-  if not exist %PROJECT_ROOT%\.nobuckcheck (
+if exist "%PROJECT_ROOT%\.buckversion" (
+  if not exist "%PROJECT_ROOT%\.nobuckcheck" (
     set /p BUCK_REQUIRED_VERSION=<%PROJECT_ROOT%\.buckversion
     rem TODO checkout the required version
   )
@@ -45,7 +58,7 @@ set BUCK_GIT_DIRECTORY=%BUCK_DIRECTORY%\.git
 :: The workaround is to write the output of the command into a temp file and read it.
 :: The name of the temp file contains a random number in order to avoid race condition.
 set BUCK_VERSION_TIMESTAMP_TEMPFILE=%TEMP%\BUCK_VERSION_TIMESTAMP_%RANDOM%.tmp
-if exist %BUCK_GIT_DIRECTORY% (
+if exist "%BUCK_GIT_DIRECTORY%" (
   for /f %%i in ('git --git-dir %BUCK_GIT_DIRECTORY% rev-parse HEAD') do set BUCK_CURRENT_VERSION=%%i
   git --git-dir %BUCK_GIT_DIRECTORY% log --pretty=format:%%ct -1 HEAD >%BUCK_VERSION_TIMESTAMP_TEMPFILE%
   set /p BUCK_VERSION_TIMESTAMP=<%BUCK_VERSION_TIMESTAMP_TEMPFILE%
@@ -122,7 +135,7 @@ set BUCK_JAVA_CLASSPATH=^
 %BUCK_DIRECTORY%\third-party\java\astyanax\slf4j-log4j12-1.7.2.jar;^
 %BUCK_DIRECTORY%\third-party\java\xz-java-1.3\xz-1.3.jar
 
-java ^
+"%JAVA%" ^
   -classpath %BUCK_JAVA_CLASSPATH% ^
   %BUCK_JAVA_ARGS% ^
   -Dbuck.daemon=false ^
