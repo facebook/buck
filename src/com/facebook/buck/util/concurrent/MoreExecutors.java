@@ -29,7 +29,7 @@ public class MoreExecutors {
 
   /**
    * Creates a single threaded executor that silently discards rejected tasks. The problem with
-   * {@link java.util.concurrent.Executors#newSingleThreadExecutor()) is that it does not let us
+   * {@link java.util.concurrent.Executors#newSingleThreadExecutor()} is that it does not let us
    * specify a RejectedExecutionHandler, which we need to ensure that garbage is not spewed to the
    * user's console if the build fails.
    *

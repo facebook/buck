@@ -158,7 +158,7 @@ public class JUnitStep extends ShellStep {
     classpath.add(testRunnerClassesDirectory);
 
     // Add the -classpath argument.
-    args.add("-classpath").add(Joiner.on(':').join(classpath));
+    args.add("-classpath").add(Joiner.on(File.pathSeparator).join(classpath));
 
     // Specify the Java class whose main() method should be run. This is the class that is
     // responsible for running the tests.

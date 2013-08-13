@@ -750,7 +750,9 @@ def main():
       help='Invoke as a server to parse individual BUCK files on demand.')
   (options, args) = parser.parse_args()
 
-  project_root = options.project_root
+  # Even though project_root is absolute path, it may not be concise. For example, it might be
+  # like "C:\project\.\rule". We normalize it in order to make it consistent with ignore_paths.
+  project_root = os.path.abspath(options.project_root)
 
   build_files = []
   if args:
@@ -759,7 +761,10 @@ def main():
   elif not options.server:
     # Find all of the build files in the project root. Symlinks will not be traversed.
     # Search must be done top-down so that directory filtering works as desired.
-    ignore_paths = [os.path.join(project_root, d) for d in options.ignore_paths or []]
+    # options.ignore_paths may contain /, which is needed to be normalized in order to do string
+    # pattern matching.
+    ignore_paths = [os.path.abspath(os.path.join(project_root, d))
+        for d in options.ignore_paths or []]
     build_files = []
     for dirpath, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=False):
       # Do not walk directories that contain generated/non-source files.

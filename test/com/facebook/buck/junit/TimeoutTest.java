@@ -36,8 +36,6 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 public class TimeoutTest {
