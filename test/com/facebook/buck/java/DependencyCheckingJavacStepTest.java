@@ -74,7 +74,8 @@ public class DependencyCheckingJavacStepTest extends EasyMockSupport {
         firstOrder.getDescription(context));
     assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar foobar.java",
         warn.getDescription(context));
-    assertEquals("javac -target 6 -source 6 -g -d . -classpath bar.jar:foo.jar foobar.java",
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath bar.jar" + File.pathSeparator +
+        "foo.jar foobar.java",
         transitive.getDescription(context));
   }
 
