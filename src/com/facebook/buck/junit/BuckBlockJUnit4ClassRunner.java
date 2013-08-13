@@ -18,7 +18,6 @@ package com.facebook.buck.junit;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -34,6 +33,13 @@ import org.junit.runners.model.Statement;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * JUnit-4-compatible test class runner that supports the concept of a "default timeout." If the
@@ -45,12 +51,52 @@ import java.util.List;
  */
 public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
 
+  // We create an ExecutorService based on the implementation of
+  // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
+  // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
+  // garbage is not spewed to the user's console if the build fails.
+  // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
+  // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
+  // garbage is not spewed to the user's console if the build fails.
+  private final ExecutorService executor = new ThreadPoolExecutor(
+        /* corePoolSize */ 1,
+        /* maximumPoolSize */ 1,
+        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
+        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
+        /* handler */ new ThreadPoolExecutor.DiscardPolicy());
+
   private final long defaultTestTimeoutMillis;
 
   public BuckBlockJUnit4ClassRunner(Class<?> klass, long defaultTestTimeoutMillis)
       throws InitializationError {
     super(klass);
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
+  }
+
+  @Override
+  protected Object createTest() throws Exception {
+    // Pushing tests onto threads because the test timeout has been set is Unexpected Behaviour. It
+    // causes things like the SingleThreadGuard in jmock2 to get most upset because the test is
+    // being run on a thread different from the one it was created on. Work around this by creating
+    // the test on the same thread we will be timing it out on.
+    // See https://github.com/junit-team/junit/issues/686 for more context.
+    if (isNeedingCustomTimeout()) {
+      return super.createTest();
+    }
+
+    Callable<Object> maker = new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        return BuckBlockJUnit4ClassRunner.super.createTest();
+      }
+    };
+
+    Future<Object> createdTest = executor.submit(maker);
+    return createdTest.get();
+  }
+
+  private boolean isNeedingCustomTimeout() {
+    return defaultTestTimeoutMillis <= 0 || hasTimeoutRule();
   }
 
   /**
@@ -99,27 +145,55 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   /**
    * Override the default timeout behavior so that when no timeout is specified in the {@link Test}
    * annotation, the timeout specified by the constructor will be used (if it has been set).
-   * <p>
-   * <strong>IMPORTANT</strong> In JUnit 4.11, this method is tagged as deprecated with the note:
-   * "Will be private soon: use Rules instead." That suggests that we should override
-   * {@link #getTestRules(Object)} so that it includes an additional {@link Timeout}, if
-   * appropriate. However, {@link Timeout} was not introduced until JUnit 4.7 and
-   * {@link org.junit.rules.TestRule}
-   * was not introduced until JUnit 4.9, so the current solution is more backwards-compatible. We
-   * will likely have to revisit this in the future.
    */
   @Override
-  protected Statement withPotentialTimeout(FrameworkMethod method, Object test, Statement next) {
-    long timeout = getTimeout(method.getAnnotation(Test.class));
-    if (timeout > 0) {
-      return new FailOnTimeout(next, timeout);
-    } else if (defaultTestTimeoutMillis > 0) {
-      // If the test class has a Timeout @Rule, then that should supercede the default timeout.
-      // Note that the Timeout is likely being used to workaround the threading issues with
-      // org.junit.Test#timeout(): https://github.com/junit-team/junit/issues/686.
-      return hasTimeoutRule() ? next : new FailOnTimeout(next, defaultTestTimeoutMillis);
-    } else {
-      return next;
+  protected Statement methodBlock(FrameworkMethod method) {
+    Statement statement = super.methodBlock(method);
+
+    // If the test class has a Timeout @Rule, then that should supersede the default timeout.
+    if (!isNeedingCustomTimeout()) {
+      statement = new SameThreadFailOnTimeout(testName(method), statement);
+    }
+
+    return statement;
+  }
+
+  private class SameThreadFailOnTimeout extends Statement {
+    private final Callable<Throwable> callable;
+    private final String testName;
+
+    public SameThreadFailOnTimeout(String testName, final Statement next) {
+      this.testName = testName;
+      this.callable = new Callable<Throwable>() {
+        @Override
+        public Throwable call() {
+          try {
+            next.evaluate();
+            return null;
+          } catch (Throwable throwable) {
+            return throwable;
+          }
+        }
+      };
+    }
+
+    @Override
+    public void evaluate() throws Throwable {
+      Future<Throwable> submitted = executor.submit(callable);
+      try {
+        Throwable result = submitted.get(defaultTestTimeoutMillis, TimeUnit.MILLISECONDS);
+        if (result != null) {
+          throw result;
+        }
+      } catch (TimeoutException e) {
+        submitted.cancel(true);
+        // The default timeout doesn't indicate which test was running.
+        String message = String.format("test %s timed out after %d milliseconds",
+            testName,
+            defaultTestTimeoutMillis);
+
+        throw new Exception(message);
+      }
     }
   }
 
@@ -151,14 +225,6 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     if (!computeTestMethods().isEmpty()) {
       super.collectInitializationErrors(errors);
     }
-  }
-
-  // Copied from BuckBlockJUnit4ClassRunner in JUnit 4.11.
-  private long getTimeout(Test annotation) {
-    if (annotation == null) {
-      return 0;
-    }
-    return annotation.timeout();
   }
 
 }
