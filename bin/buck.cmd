@@ -67,21 +67,6 @@ if exist "%BUCK_GIT_DIRECTORY%" (
 set BUCK_VERSION_UID=N/A
 :: TODO (carbokuo) Retrieve BUCK_VERSION_UID
 
-:: Find python.exe defined in %PATH%. If not found, jython will be used instead.
-if not defined PYTHON_INTERP (
-  set PYTHON_INTERP=
-  for %%e in (%PATHEXT%) do (
-    for %%X in (python%%e) do (
-      if not defined PYTHON_INTERP (
-        set PYTHON_INTERP=%%~$PATH:X
-      )
-    )
-  )
-  if not defined PYTHON_INTERP (
-    set PYTHON_INTERP=%BUCK_BIN_DIRECTORY%\jython.cmd
-  )
-)
-
 :: Path to Python interpreter will be tried to find. If not found, Jython will be used.
 set PYTHON_INTERP_FALLBACK=%BUCK_BIN_DIRECTORY%\jython.cmd
 
