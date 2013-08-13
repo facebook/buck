@@ -28,11 +28,15 @@ import com.facebook.buck.util.ProjectFilesystem;
 import java.io.File;
 
 import org.easymock.EasyMockSupport;
+
 import com.google.common.base.Optional;
+
 import org.junit.Test;
 
 /** Unit test for {@link AbstractCommandOptions}. */
 public class AbstractCommandOptionsTest extends EasyMockSupport {
+
+  private final File pathToNdk = new File("/path/to/ndk");
 
   @Test
   public void testConstructor() {
@@ -69,7 +73,7 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
 
     replayAll();
     AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
-    options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+    options.validateNdkVersion(projectFilesystem, pathToNdk);
     verifyAll();
   }
 
@@ -80,7 +84,7 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
 
     replayAll();
     AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
-    options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+    options.validateNdkVersion(projectFilesystem, pathToNdk);
     verifyAll();
   }
 
@@ -92,10 +96,10 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
     replayAll();
     AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
     try {
-      options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+      options.validateNdkVersion(projectFilesystem, pathToNdk);
       fail("Should not be valid");
     } catch (HumanReadableException e) {
-      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r7 from /some/path/to/ndk", e.getMessage());
+      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r7 from " + pathToNdk.getAbsolutePath(), e.getMessage());
     }
     verifyAll();
   }
@@ -108,10 +112,10 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
     replayAll();
     AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
     try {
-      options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+      options.validateNdkVersion(projectFilesystem, pathToNdk);
       fail("Should not be valid");
     } catch (HumanReadableException e) {
-      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r9 from /some/path/to/ndk", e.getMessage());
+      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r9 from " + pathToNdk.getAbsolutePath(), e.getMessage());
     }
     verifyAll();
   }
@@ -132,7 +136,7 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
     replayAll();
     AbstractCommandOptions options = new AbstractCommandOptions(buckConfig) {};
     try {
-      options.validateNdkVersion(projectFilesystem, new File("/some/path/to/ndk"));
+      options.validateNdkVersion(projectFilesystem, pathToNdk);
       fail("Should not be valid");
     } catch (HumanReadableException e) {
       assertEquals("Either both min_version and max_version are provided or neither are", e.getMessage());

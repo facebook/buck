@@ -36,9 +36,10 @@ import java.util.Set;
 
 public class ZipStepTest {
 
+  private final String zipFile = new File("/path/to/file.zip").getAbsolutePath();
+
   @Test
   public void testGetShellCommandInternalOnZipCommandWithSpecifiedDirectory() {
-    final String zipFile = "/path/to/file.zip";
     final int compressionLevel = ZipStep.DEFAULT_COMPRESSION_LEVEL;
 
     final File directory = new File("/some/other/path");
@@ -73,7 +74,6 @@ public class ZipStepTest {
 
   @Test
   public void testGetShellCommandInternalOnZipCommandWithSpecifiedPaths() {
-    final String zipFile = "/path/to/file.zip";
     final Set<String> paths = ImmutableSet.of("a/path", "another.path");
     final int compressionLevel = 7;
     final File workingDirectory = new File("/some/other/path");

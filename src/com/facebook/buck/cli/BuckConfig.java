@@ -31,6 +31,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.Beta;
@@ -314,7 +315,7 @@ class BuckConfig {
         new Function<String, String>() {
       @Override
       public String apply(String path) {
-        return new File(path).getPath();
+        return Paths.normalizePathSeparator(new File(path).getPath());
       }
     })).build();
   }

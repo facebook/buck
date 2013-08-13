@@ -23,6 +23,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
@@ -64,7 +65,7 @@ public class BuildContextTest {
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
 
-    String androidBootclasspath = androidBootclasspathSupplier.get();
+    String androidBootclasspath = Paths.normalizePathSeparator(androidBootclasspathSupplier.get());
     assertEquals(
         "add-ons/addon-google_apis-google-15/libs/effects.jar:" +
         "add-ons/addon-google_apis-google-15/libs/maps.jar:" +

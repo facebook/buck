@@ -43,7 +43,7 @@ public class RepackZipEntriesStepTest {
     final String outApk = "dest.apk";
     final int compressionLevel = 8;
     final ImmutableSet<String> entries = ImmutableSet.of("resources.arsc");
-    final File dir = new File("/tmp/mydir");
+    File dir = new File("/tmp/mydir");
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(context.getVerbosity()).andReturn(Verbosity.ALL).times(2);

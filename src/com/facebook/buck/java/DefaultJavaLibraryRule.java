@@ -48,6 +48,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -802,7 +803,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
         //
         // Therefore, some path-wrangling is required to produce the correct string.
 
-        String resource = rawResource.resolve(context).toString();
+        String resource = Paths.normalizePathSeparator(rawResource.resolve(context).toString());
         String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource);
         String relativeSymlinkPath;
 
