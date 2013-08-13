@@ -18,7 +18,7 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.MoreFutures;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

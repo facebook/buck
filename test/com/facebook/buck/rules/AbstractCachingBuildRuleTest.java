@@ -36,7 +36,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.MoreFutures;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;

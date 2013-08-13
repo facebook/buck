@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.concurrent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,9 +26,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.Test;
 
-/**
- * Unit test for {@link MoreFutures}.
- */
 public class MoreFuturesTest {
 
   @Test

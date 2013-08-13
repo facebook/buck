@@ -23,7 +23,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
-import com.facebook.buck.util.MoreFutures;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

@@ -16,15 +16,13 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.AsyncEventBus;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Thin wrapper around guava event bus.
@@ -43,16 +41,7 @@ public class BuckEventBus {
   private final Supplier<Long> threadIdSupplier;
 
   public BuckEventBus(Clock clock) {
-    // We create an ExecutorService based on the implementation of
-    // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
-    // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
-    // garbage is not spewed to the user's console if the build fails.
-    this(clock, new ThreadPoolExecutor(
-        /* corePoolSize */ 1,
-        /* maximumPoolSize */ 1,
-        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
-        /* handler */ new ThreadPoolExecutor.DiscardPolicy()));
+    this(clock, MoreExecutors.newSingleThreadExecutor());
   }
 
   @VisibleForTesting
