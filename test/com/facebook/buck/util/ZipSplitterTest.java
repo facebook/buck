@@ -23,11 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,7 +39,10 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class ZipSplitterTest {
-  private File privateDir;
+
+  @Rule
+  public TemporaryFolder tmpDir = new TemporaryFolder();
+
   private File testInZip;
   private Set<File> testInZips;
   private File outPrimary;
@@ -54,13 +57,12 @@ public class ZipSplitterTest {
   @Before
   public void setUp() throws Exception {
     byte[] fakeData = {0, 0, 0, 0};
-    privateDir = Files.createTempDir();
 
     // Map of output file => [ zip entry, ... ]
     Multimap<File, String> outputToInputMap = LinkedHashMultimap.create();
 
     // Uber in zip for tests.
-    testInZip = new File(privateDir, "in.zip");
+    testInZip = new File(tmpDir.getRoot(), "in.zip");
     outputToInputMap.putAll(testInZip, ImmutableList.of(
         "secondary-1",
         "secondary-2",
@@ -70,7 +72,7 @@ public class ZipSplitterTest {
 
     // Tests with multiple input zips.
     testInZips = Sets.newLinkedHashSet();
-    File inA = new File(privateDir, "in-a.zip");
+    File inA = new File(tmpDir.getRoot(), "in-a.zip");
     testInZips.add(inA);
     outputToInputMap.putAll(inA, ImmutableList.of(
         "primary-a-1",
@@ -79,12 +81,12 @@ public class ZipSplitterTest {
         "secondary-a-1",
         "secondary-a-2",
         "secondary-a-3"));
-    File inB = new File(privateDir, "in-b.zip");
+    File inB = new File(tmpDir.getRoot(), "in-b.zip");
     testInZips.add(inB);
     outputToInputMap.putAll(inB, ImmutableList.of(
         "secondary-b-1",
         "secondary-b-2"));
-    File inC = new File(privateDir, "in-c.zip");
+    File inC = new File(tmpDir.getRoot(), "in-c.zip");
     testInZips.add(inC);
     outputToInputMap.putAll(inC, ImmutableList.of(
         "secondary-c-1",
@@ -101,22 +103,15 @@ public class ZipSplitterTest {
       zipOut.close();
     }
 
-    outPrimary = new File(privateDir, "primary.zip");
+    outPrimary = new File(tmpDir.getRoot(), "primary.zip");
     secondaryPattern = "secondary-%d.zip";
-  }
-
-  @After
-  public void tearDown() throws IOException {
-    if (privateDir != null) {
-      MoreFiles.rmdir(privateDir.getAbsolutePath());
-    }
   }
 
   @Test
   public void testBigLimit() throws IOException {
     ZipSplitter.splitZip(Collections.singleton(testInZip),
         outPrimary,
-        privateDir,
+        tmpDir.getRoot(),
         secondaryPattern,
         999 /* soft limit */,
         999 /* hard limit */,
@@ -133,7 +128,7 @@ public class ZipSplitterTest {
   public void testMediumLimit() throws IOException {
     ZipSplitter.splitZip(Collections.singleton(testInZip),
         outPrimary,
-        privateDir,
+        tmpDir.getRoot(),
         secondaryPattern,
         12 /* soft limit */,
         12 /* hard limit */,
@@ -150,7 +145,7 @@ public class ZipSplitterTest {
   public void testSmallLimit() throws IOException {
     ZipSplitter.splitZip(Collections.singleton(testInZip),
         outPrimary,
-        privateDir,
+        tmpDir.getRoot(),
         secondaryPattern,
         8 /* soft limit */,
         8 /* hard limit */,
@@ -168,7 +163,7 @@ public class ZipSplitterTest {
     ZipSplitter.splitZip(
         Collections.singleton(testInZip),
         outPrimary,
-        privateDir,
+        tmpDir.getRoot(),
         secondaryPattern,
         999 /* soft limit */,
         999,
@@ -186,7 +181,7 @@ public class ZipSplitterTest {
     ZipSplitter.splitZip(
         Collections.singleton(testInZip),
         outPrimary,
-        privateDir,
+        tmpDir.getRoot(),
         secondaryPattern,
         12 /* soft limit */,
         12,
@@ -205,7 +200,7 @@ public class ZipSplitterTest {
     ZipSplitter.splitZip(
         Collections.singleton(testInZip),
         outPrimary,
-        privateDir,
+        tmpDir.getRoot(),
         secondaryPattern,
         8 /* soft limit */,
         8,
@@ -223,7 +218,7 @@ public class ZipSplitterTest {
   public void testSoftLimit() throws IOException {
     ZipSplitter.splitZip(testInZips,
         outPrimary,
-        privateDir,
+        tmpDir.getRoot(),
         secondaryPattern,
         8 /* soft limit */,
         12 /* hard limit */,
@@ -248,7 +243,7 @@ public class ZipSplitterTest {
 
   private boolean nthSecondaryZipContains(int index, String name) throws IOException {
     String zipName = String.format(secondaryPattern, index);
-    return zipContains(new File(privateDir, zipName), name);
+    return zipContains(new File(tmpDir.getRoot(), zipName), name);
   }
 
   private static boolean zipContains(File file, String name) throws IOException {
