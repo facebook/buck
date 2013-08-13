@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Properties;
@@ -205,5 +206,17 @@ public class ProjectFilesystem {
     return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
         event.kind() == StandardWatchEventKinds.ENTRY_MODIFY ||
         event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
+  }
+
+  public void copyFolder(String source, String target) throws IOException {
+    Path targetPath = java.nio.file.Paths.get(pathRelativizer.apply(target));
+    Path sourcePath = java.nio.file.Paths.get(pathRelativizer.apply(source));
+    MoreFiles.copyRecursively(sourcePath, targetPath);
+  }
+
+  public void copyFile(String source, String target) throws IOException {
+    Path targetPath = java.nio.file.Paths.get(pathRelativizer.apply(target));
+    Path sourcePath = java.nio.file.Paths.get(pathRelativizer.apply(source));
+    java.nio.file.Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
   }
 }

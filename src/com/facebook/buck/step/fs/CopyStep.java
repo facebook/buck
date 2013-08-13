@@ -16,12 +16,16 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class CopyStep extends ShellStep {
+import java.io.IOException;
+
+public class CopyStep implements Step {
 
   private final String source;
   private final String destination;
@@ -43,20 +47,16 @@ public class CopyStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(
-      ExecutionContext context) {
+  public String getDescription (ExecutionContext context) {
+    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
     ImmutableList.Builder<String> args = ImmutableList.builder();
-
     args.add("cp");
-
     if (shouldRecurse) {
       args.add("-R");
     }
-
-    args.add(source);
-    args.add(destination);
-
-    return args.build();
+    args.add(pathRelativizer.apply(source));
+    args.add(pathRelativizer.apply(destination));
+    return Joiner.on(" ").join(args.build());
   }
 
   public String getSource() {
@@ -65,5 +65,24 @@ public class CopyStep extends ShellStep {
 
   public String getDestination() {
     return destination;
+  }
+
+  public boolean isRecursive() {
+    return shouldRecurse;
+  }
+
+  @Override
+  public int execute(ExecutionContext context) {
+    try {
+      if (shouldRecurse) {
+        context.getProjectFilesystem().copyFolder(source, destination);
+      } else {
+        context.getProjectFilesystem().copyFile(source, destination);
+      }
+      return 0;
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
   }
 }

@@ -21,10 +21,9 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertFalse;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +34,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.List;
 
 public class RepackZipEntriesStepTest {
 
@@ -59,12 +57,7 @@ public class RepackZipEntriesStepTest {
         .addAll(entries)
         .build());
 
-    List<String> copyExpected = ImmutableList.of(
-        "cp",
-        inApk,
-        outApk);
-
-    List<String> zipExpected = new ImmutableList.Builder<String>()
+    ImmutableList<String> zipExpected = new ImmutableList.Builder<String>()
         .add("zip")
         .add("-X")
         .add("-r")
@@ -89,12 +82,17 @@ public class RepackZipEntriesStepTest {
 
     // A copy of the archive would be created.
     CopyStep copyStep = (CopyStep) iter.next();
-    MoreAsserts.assertListEquals(copyExpected, copyStep.getShellCommand(context));
+
+    assertEquals(inApk, copyStep.getSource());
+    assertEquals(outApk, copyStep.getDestination());
+    assertFalse(copyStep.isRecursive());
 
     // And then the entries would be zipped back in.
-    ZipStep zipCommand = (ZipStep) iter.next();
-    MoreAsserts.assertListEquals(zipExpected, zipCommand.getShellCommand(context));
-    assertEquals(zipCommand.getWorkingDirectory(), dir);
+    ZipStep zipStep = (ZipStep) iter.next();
+    assertEquals(zipExpected, zipStep.getShellCommand(context));
+
+    //ShellStep zipCommand = iter.next();
+    assertEquals(zipStep.getWorkingDirectory(), dir);
 
     verify(context);
   }

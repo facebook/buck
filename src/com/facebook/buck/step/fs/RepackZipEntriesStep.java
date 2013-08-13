@@ -16,7 +16,6 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -56,10 +55,10 @@ public class RepackZipEntriesStep extends CompositeStep {
         entries);
 
     // Initialize destination archive with copy of source archive.
-    ShellStep cp = new CopyStep(inputFile, outputFile);
+    CopyStep cp = new CopyStep(inputFile, outputFile);
 
     // Finally, update the entries in the destination archive, using compressionLevel.
-    ShellStep zip = new ZipStep(
+    ZipStep zip = new ZipStep(
         ZipStep.Mode.ADD,
         new File(outputFile).getAbsolutePath(),
         entries,

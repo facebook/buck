@@ -17,10 +17,10 @@
 package com.facebook.buck.step.fs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.collect.ImmutableList;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -47,9 +47,9 @@ public class CopyStepTest {
     String source = "path/to/source.txt";
     String destination = "path/to/destination.txt";
     CopyStep copyCommand = new CopyStep(source, destination);
-    MoreAsserts.assertListEquals(
-        ImmutableList.of("cp", "path/to/source.txt", "path/to/destination.txt"),
-        copyCommand.getShellCommand(context));
+    assertEquals(source, copyCommand.getSource());
+    assertEquals(destination, copyCommand.getDestination());
+    assertFalse(copyCommand.isRecursive());
   }
 
   @Test
@@ -57,9 +57,9 @@ public class CopyStepTest {
     String source = "path/to/source";
     String destination = "path/to/destination";
     CopyStep copyCommand = new CopyStep(source, destination, /* shouldRecurse */ true);
-    MoreAsserts.assertListEquals(
-        ImmutableList.of("cp", "-R", "path/to/source", "path/to/destination"),
-        copyCommand.getShellCommand(context));
+    assertEquals(source, copyCommand.getSource());
+    assertEquals(destination, copyCommand.getDestination());
+    assertTrue(copyCommand.isRecursive());
   }
 
   @Test
