@@ -38,7 +38,7 @@ public class CapturingPrintStream extends PrintStream {
 
   public String getContentsAsString(Charset charset) {
     try {
-      return byteArrayOutputStream.toString(charset.name());
+      return byteArrayOutputStream.toString(charset.name()).replace("\r\n", "\n");
     } catch (UnsupportedEncodingException e) {
       throw Throwables.propagate(e);
     }

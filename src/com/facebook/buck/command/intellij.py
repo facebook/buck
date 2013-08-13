@@ -354,7 +354,7 @@ def write_file_if_changed(path, content):
   else:
     needs_update = True
   if needs_update:
-    out = open(path, 'w')
+    out = open(path, 'wb')
     out.write(content)
     MODIFIED_FILES.append(path)
 
