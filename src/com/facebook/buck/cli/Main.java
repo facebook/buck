@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
@@ -211,7 +212,7 @@ public final class Main {
         createBuckConfig(new ProjectFilesystem(projectRoot)).getIgnorePaths());
     BuckConfig config = createBuckConfig(projectFilesystem);
     Verbosity verbosity = VerbosityParser.parse(args);
-    Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
+    final Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
     KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
 
     // Create or get and invalidate cached command parameters.
@@ -228,7 +229,7 @@ public final class Main {
     }
 
     Clock clock = new DefaultClock();
-    BuckEventBus buildEventBus = new BuckEventBus(clock);
+    final BuckEventBus buildEventBus = new BuckEventBus(clock);
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0], console);
@@ -246,17 +247,29 @@ public final class Main {
 
       buildEventBus.post(CommandEvent.started(commandName, isDaemon()));
 
-      buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
-      ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
-          .decorate(config.createArtifactCache(console));
-      buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT,
-          /* success */ true));
+      // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
+      // running commands such as `buck clean`.
+      ArtifactCacheFactory artifactCacheFactory = new ArtifactCacheFactory() {
+        @Override
+        public ArtifactCache newInstance(AbstractCommandOptions options) {
+          if (options.isNoCache()) {
+            return new NoopArtifactCache();
+          } else {
+            buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
+            ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
+                .decorate(options.getBuckConfig().createArtifactCache(console));
+            buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT,
+                /* success */ true));
+            return artifactCache;
+          }
+        }
+      };
 
       int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
           console,
           projectFilesystem,
           new KnownBuildRuleTypes(),
-          artifactCache,
+          artifactCacheFactory,
           buildEventBus,
           parser));
 

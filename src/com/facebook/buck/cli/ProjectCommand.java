@@ -61,7 +61,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   }
 
   @Override
-  int runCommandWithOptions(ProjectCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(ProjectCommandOptions options) throws IOException {
     // Create a PartialGraph that only contains targets that can be represented as IDE
     // configuration files.
     PartialGraph partialGraph;

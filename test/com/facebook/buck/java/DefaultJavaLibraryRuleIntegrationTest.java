@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -57,6 +58,14 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:no_srcs");
     assertEquals("Successful build should exit with 0.", 0, buildResult.getExitCode());
+    File outputFile = workspace.getFile("buck-out/gen/lib__no_srcs__output/no_srcs.jar");
+    assertTrue(outputFile.exists());
+    // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:
+    //
+    //   HashCode hashOfOriginalJar = Files.hash(outputFile, Hashing.sha1());
+    //
+    // And then compare that to the output when //:no_srcs is built again with --no-cache.
+    long sizeOfOriginalJar = outputFile.length();
 
     // This verifies that the ABI key was written correctly.
     workspace.verify();
@@ -86,12 +95,24 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:no_srcs");
     assertEquals("Successful build should exit with 0.", 0, buildResult2.getExitCode());
-    File outputFile = workspace.getFile("buck-out/gen/lib__no_srcs__output/no_srcs.jar");
     assertTrue(outputFile.isFile());
     assertEquals(
         "The content of the output file will be 'Hello World!' if it is read from the build cache.",
         "Hello world!\n",
         Files.toString(outputFile, Charsets.UTF_8));
+
+    // Run `buck build` yet again, but this time, specify `--no-cache`.
+    ProcessResult buildResult3 = workspace.runBuckCommand("build", "--no-cache", "//:no_srcs");
+    buildResult3.assertExitCode(0);
+    assertNotEquals(
+        "The contents of the file should no longer be pulled from the corrupted build cache.",
+        "Hello world!\n",
+        Files.toString(outputFile, Charsets.UTF_8));
+    assertEquals(
+        "We cannot do a byte-for-byte comparision with the original JAR because timestamps might " +
+        "have changed, but we verify that they are the same size, as a proxy.",
+        sizeOfOriginalJar,
+        outputFile.length());
   }
 
   @Test

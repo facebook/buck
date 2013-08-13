@@ -64,7 +64,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   }
 
   @Override
-  int runCommandWithOptions(TargetsCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(TargetsCommandOptions options) throws IOException {
     // Exit early if --resolvealias is passed in: no need to parse any build files.
     if (options.isResolveAlias()) {
       return doResolveAlias(options);

@@ -51,6 +51,11 @@ public abstract class AbstractCommandOptions {
   private int verbosityLevel = -1;
 
   @Option(
+      name = "--no-cache",
+      usage = "Whether to ignore the [cache] declared in .buckconfig.")
+  private boolean noCache = false;
+
+  @Option(
       name = HELP_LONG_ARG,
       usage = "Prints the available options and exits.")
   private boolean help = false;
@@ -59,6 +64,11 @@ public abstract class AbstractCommandOptions {
 
   AbstractCommandOptions(BuckConfig buckConfig) {
     this.buckConfig = Preconditions.checkNotNull(buckConfig);
+  }
+
+  /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
+  public boolean isNoCache() {
+    return noCache;
   }
 
   protected BuckConfig getBuckConfig() {

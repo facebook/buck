@@ -49,7 +49,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   }
 
   @Override
-  int runCommandWithOptions(AuditCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(AuditCommandOptions options) throws IOException {
     // Create a PartialGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(

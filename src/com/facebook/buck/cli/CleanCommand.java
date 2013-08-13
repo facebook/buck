@@ -35,7 +35,7 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
   }
 
   @Override
-  int runCommandWithOptions(CleanCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(CleanCommandOptions options) throws IOException {
     if (!options.getArguments().isEmpty()) {
       getStdErr().printf("Unrecognized argument%s to buck clean: %s\n",
           options.getArguments().size() == 1 ? "" : "s",

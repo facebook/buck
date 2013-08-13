@@ -239,7 +239,7 @@ public class AuditOwnerCommandTest {
         console,
         filesystem,
         buildRuleTypes,
-        artifactCache,
+        new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
         buckConfig.getPythonInterpreter()));
   }

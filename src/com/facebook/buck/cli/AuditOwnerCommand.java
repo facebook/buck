@@ -76,7 +76,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   }
 
   @Override
-  int runCommandWithOptions(AuditOwnerOptions options) throws IOException {
+  int runCommandWithOptionsInternal(AuditOwnerOptions options) throws IOException {
 
     // Build full graph.
     PartialGraph graph;

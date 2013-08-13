@@ -53,8 +53,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   }
 
   @Override
-  public synchronized int runCommandWithOptions(BuildCommandOptions options)
-      throws IOException {
+  int runCommandWithOptionsInternal(BuildCommandOptions options) throws IOException {
     // Set the logger level based on the verbosity option.
     Verbosity verbosity = console.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);

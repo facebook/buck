@@ -27,6 +27,8 @@ java_library(
     ':FakeBuckConfig',
     '//lib:guava',
     '//lib:ddmlib',
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/rules:rules',
   ],
   visibility = [
     'PUBLIC',

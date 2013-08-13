@@ -38,22 +38,30 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implements CommandRunner {
 
   private final CommandRunnerParams commandRunnerParams;
   protected final Console console;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
-  private final ArtifactCache artifactCache;
+  private final ArtifactCacheFactory artifactCacheFactory;
   private final Parser parser;
   private final BuckEventBus eventBus;
+
+  /** This is constructed lazily. */
+  @Nullable private T options;
+
+  /** This is constructed lazily. */
+  @Nullable private volatile ArtifactCache artifactCache;
 
   protected AbstractCommandRunner(CommandRunnerParams params) {
     this.commandRunnerParams = Preconditions.checkNotNull(params);
     this.console = Preconditions.checkNotNull(params.getConsole());
     this.projectFilesystem = Preconditions.checkNotNull(params.getProjectFilesystem());
     this.buildRuleTypes = Preconditions.checkNotNull(params.getBuildRuleTypes());
-    this.artifactCache = Preconditions.checkNotNull(params.getArtifactCache());
+    this.artifactCacheFactory = Preconditions.checkNotNull(params.getArtifactCacheFactory());
     this.parser = Preconditions.checkNotNull(params.getParser());
     this.eventBus = Preconditions.checkNotNull(params.getBuckEventBus());
   }
@@ -104,7 +112,17 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   /**
    * @return the exit code this process should exit with
    */
-  abstract int runCommandWithOptions(T options) throws IOException;
+  public synchronized final int runCommandWithOptions(T options) throws IOException {
+    this.options = options;
+    return runCommandWithOptionsInternal(options);
+  }
+
+  /**
+   * Invoked by {@link #runCommandWithOptions(AbstractCommandOptions)} after {@code #options} has
+   * been set.
+   * @return the exit code this process should exit with
+   */
+  abstract int runCommandWithOptionsInternal(T options) throws IOException;
 
   /**
    * @return may be null
@@ -146,6 +164,16 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   public ArtifactCache getArtifactCache() {
+    // Lazily construct the ArtifactCache, as not all commands (like `buck clean`) need it.
+    if (artifactCache == null) {
+      synchronized (this) {
+        if (artifactCache == null) {
+          Preconditions.checkNotNull(options,
+              "getArtifactCache() should not be invoked before runCommand().");
+          artifactCache = artifactCacheFactory.newInstance(options);
+        }
+      }
+    }
     return artifactCache;
   }
 

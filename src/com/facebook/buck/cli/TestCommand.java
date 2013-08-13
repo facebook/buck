@@ -95,7 +95,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @Override
-  int runCommandWithOptions(final TestCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(final TestCommandOptions options) throws IOException {
     // If the user asked to run all of the tests, use a special method for that that is optimized to
     // parse all of the build files and traverse the dependency graph to find all of the tests to
     // run.

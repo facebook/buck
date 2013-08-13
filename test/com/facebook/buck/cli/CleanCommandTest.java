@@ -100,7 +100,7 @@ public class CleanCommandTest extends EasyMockSupport {
         new TestConsole(),
         createMock(ProjectFilesystem.class),
         createMock(KnownBuildRuleTypes.class),
-        createMock(ArtifactCache.class),
+        new InstanceArtifactCacheFactory(createMock(ArtifactCache.class)),
         createMock(BuckEventBus.class),
         createMock(Parser.class));
     return new CleanCommand(params);

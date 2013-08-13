@@ -123,7 +123,7 @@ public class TargetsCommandTest {
             console,
             projectFilesystem,
             buildRuleTypes,
-            artifactCache,
+            new InstanceArtifactCacheFactory(artifactCache),
             eventBus,
             BuckTestConstant.PYTHON_INTERPRETER));
   }

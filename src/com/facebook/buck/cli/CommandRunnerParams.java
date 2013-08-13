@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -32,9 +31,9 @@ import com.google.common.base.Preconditions;
  */
 class CommandRunnerParams {
 
-  private final ArtifactCache artifactCache;
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
+  private final ArtifactCacheFactory artifactCacheFactory;
   private final Console console;
   private final Parser parser;
   private final BuckEventBus eventBus;
@@ -43,13 +42,13 @@ class CommandRunnerParams {
       Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache,
+      ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       String pythonInterpreter) {
     this(console,
         projectFilesystem,
         buildRuleTypes,
-        artifactCache,
+        artifactCacheFactory,
         eventBus,
         new Parser(projectFilesystem, buildRuleTypes, console, pythonInterpreter));
   }
@@ -58,13 +57,13 @@ class CommandRunnerParams {
       Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
-      ArtifactCache artifactCache,
+      ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       Parser parser) {
     this.console = Preconditions.checkNotNull(console);
-    this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
+    this.artifactCacheFactory = Preconditions.checkNotNull(artifactCacheFactory);
     this.eventBus = Preconditions.checkNotNull(eventBus);
     this.parser = Preconditions.checkNotNull(parser);
   }
@@ -81,16 +80,16 @@ class CommandRunnerParams {
     return console.getVerbosity();
   }
 
-  public ArtifactCache getArtifactCache() {
-    return artifactCache;
-  }
-
   public ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
   }
 
   public KnownBuildRuleTypes getBuildRuleTypes() {
     return buildRuleTypes;
+  }
+
+  public ArtifactCacheFactory getArtifactCacheFactory() {
+    return artifactCacheFactory;
   }
 
   public Parser getParser() {

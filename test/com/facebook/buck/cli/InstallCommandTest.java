@@ -94,7 +94,7 @@ public class InstallCommandTest {
         console,
         filesystem,
         buildRuleTypes,
-        artifactCache,
+        new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
         BuckTestConstant.PYTHON_INTERPRETER));
   }

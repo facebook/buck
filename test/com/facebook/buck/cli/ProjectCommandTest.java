@@ -170,7 +170,7 @@ public class ProjectCommandTest {
           new TestConsole(),
           new ProjectFilesystem(new File(".")),
           new KnownBuildRuleTypes(),
-          artifactCache,
+          new InstanceArtifactCacheFactory(artifactCache),
           BuckEventBusFactory.newInstance(),
           BuckTestConstant.PYTHON_INTERPRETER));
     }
