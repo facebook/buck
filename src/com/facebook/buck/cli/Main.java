@@ -45,12 +45,17 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
+import com.google.common.reflect.ClassPath;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
@@ -244,7 +249,8 @@ public final class Main {
           addEventListeners(buildEventBus,
               clock,
               projectFilesystem,
-              console);
+              console,
+              config);
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
@@ -304,10 +310,63 @@ public final class Main {
     }
   }
 
+  private void loadListenersFromBuckConfig(
+      ImmutableList.Builder<BuckEventListener> eventListeners,
+      ProjectFilesystem projectFilesystem,
+      BuckConfig config) {
+    final ImmutableSet<String> paths = config.getListenerJars();
+    if (paths.isEmpty()) {
+      return;
+    }
+
+    URL[] urlsArray = new URL[paths.size()];
+    try {
+      int i = 0;
+      for (String path : paths) {
+        String urlString = "file://" + projectFilesystem.getPathRelativizer().apply(path);
+        urlsArray[i] = new URL(urlString);
+        i++;
+      }
+    } catch (MalformedURLException e) {
+      throw new HumanReadableException(e.getMessage());
+    }
+
+    // This ClassLoader is disconnected to allow searching the JARs (and just the JARs) for classes.
+    ClassLoader isolatedClassLoader = URLClassLoader.newInstance(urlsArray, null);
+
+    ImmutableSet<ClassPath.ClassInfo> classInfos;
+    try {
+      ClassPath classPath = ClassPath.from(isolatedClassLoader);
+      classInfos = classPath.getTopLevelClasses();
+    } catch (IOException e) {
+      throw new HumanReadableException(e.getMessage());
+    }
+
+    // This ClassLoader will actually work, because it is joined to the parent ClassLoader.
+    URLClassLoader workingClassLoader = URLClassLoader.newInstance(urlsArray);
+
+    for (ClassPath.ClassInfo classInfo : classInfos) {
+      String className = classInfo.getName();
+      try {
+        Class<?> aClass = Class.forName(className, true, workingClassLoader);
+        if (BuckEventListener.class.isAssignableFrom(aClass)) {
+          BuckEventListener listener = aClass.asSubclass(BuckEventListener.class).newInstance();
+          eventListeners.add(listener);
+        }
+      } catch (ReflectiveOperationException e) {
+        throw new HumanReadableException("Error loading event listener class '%s': %s: %s",
+            className,
+            e.getClass(),
+            e.getMessage());
+      }
+    }
+  }
+
   private ImmutableList<BuckEventListener> addEventListeners(BuckEventBus buckEvents,
                                                              Clock clock,
                                                              ProjectFilesystem projectFilesystem,
-                                                             Console console) {
+                                                             Console console,
+                                                             BuckConfig config) {
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
 
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
@@ -323,6 +382,8 @@ public final class Main {
     } else {
       eventListenersBuilder.add(new SimpleConsoleEventBusListener(console, clock));
     }
+
+    loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 

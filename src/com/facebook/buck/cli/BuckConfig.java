@@ -416,6 +416,12 @@ class BuckConfig {
     return Long.parseLong(getValue("test", "timeout").or("0"));
   }
 
+  public ImmutableSet<String> getListenerJars() {
+    String jarPathsString = getValue("extensions", "listeners").or("");
+    Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
+    return ImmutableSet.copyOf(splitter.split(jarPathsString));
+  }
+
   @VisibleForTesting
   DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
     Optional<String> srcRootsOptional = getValue("java", "src_roots");
