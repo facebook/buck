@@ -36,8 +36,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -518,8 +518,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public Optional<RuleKey> getRuleKeyWithoutDeps() {
-      return Optional.of(new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9"));
+    public RuleKey getRuleKeyWithoutDeps() {
+      return new RuleKey("efd7d450d9f1c3d9e43392dec63b1f31692305b9");
     }
 
     @Override

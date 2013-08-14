@@ -32,10 +32,9 @@ public interface AbiRule {
    * that of its inputs. This returns a {@link RuleKey} that is a function of only its inputs, which
    * can be used to determine whether the definition or inputs of the rule changed independent of
    * changes to its [transitive] deps.
-   *
-   * @return {@link Optional#absent()} if there is an error when computing the {@link RuleKey}
+   * @return a non-null {@link RuleKey}.
    */
-  public Optional<RuleKey> getRuleKeyWithoutDeps() throws IOException;
+  public RuleKey getRuleKeyWithoutDeps() throws IOException;
 
   /**
    * This is the same as {@link #getRuleKeyWithoutDeps()}, but is the {@link RuleKey} for the output

@@ -23,8 +23,8 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
-import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -240,9 +240,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     if (this instanceof AbiRule) {
       AbiRule abiRule = (AbiRule)this;
 
-      Optional<RuleKey> ruleKeyNoDeps = abiRule.getRuleKeyWithoutDeps();
+      RuleKey ruleKeyNoDeps = abiRule.getRuleKeyWithoutDeps();
       Optional<RuleKey> cachedRuleKeyNoDeps = abiRule.getRuleKeyWithoutDepsOnDisk(projectFilesystem);
-      if (ruleKeyNoDeps.isPresent() && ruleKeyNoDeps.equals(cachedRuleKeyNoDeps)) {
+      if (ruleKeyNoDeps.equals(cachedRuleKeyNoDeps.orNull())) {
         // The RuleKey for the definition of this build rule and its input files has not changed.
         // Therefore, if the ABI of its deps has not changed, there is nothing to rebuild.
         Optional<Sha1HashCode> abiKeyForDeps = abiRule.getAbiKeyForDeps();

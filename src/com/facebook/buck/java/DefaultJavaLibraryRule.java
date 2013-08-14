@@ -375,8 +375,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public Optional<RuleKey> getRuleKeyWithoutDeps() throws IOException {
-    return Optional.of(createRuleKeyWithoutDeps());
+  public RuleKey getRuleKeyWithoutDeps() throws IOException {
+    return createRuleKeyWithoutDeps();
   }
 
   @Override
@@ -624,10 +624,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       commands.add(new WriteFileStep(abiKeyForDeps.get().getHash(), getPathToAbiKeyForDepsFile()));
     }
 
-    Optional<RuleKey> ruleKeyNoDeps = getRuleKeyWithoutDeps();
-    if (ruleKeyNoDeps.isPresent()) {
-      commands.add(new WriteFileStep(ruleKeyNoDeps.get().toString(), getPathToRuleKeyNoDepsFile()));
-    }
+    RuleKey ruleKeyNoDeps = getRuleKeyWithoutDeps();
+    commands.add(new WriteFileStep(ruleKeyNoDeps.toString(), getPathToRuleKeyNoDepsFile()));
   }
 
   /**
