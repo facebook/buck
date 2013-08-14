@@ -34,7 +34,7 @@ abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
-  @Nullable private RuleKey ruleKey;
+  @Nullable private volatile RuleKey ruleKey;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
     Preconditions.checkNotNull(buildRuleParams);
@@ -164,17 +164,18 @@ abstract class AbstractBuildRule implements BuildRule {
    */
   @Override
   public RuleKey getRuleKey() throws IOException {
-    if (this.ruleKey != null) {
-      return this.ruleKey;
-    } else {
-      RuleKey.Builder builder = RuleKey.builder(this);
-      appendToRuleKey(builder);
-      RuleKey ruleKey = builder.build();
-      // Although this.ruleKey could be null, the RuleKey returned by this method is guaranteed to
-      // be non-null.
-      this.ruleKey = RuleKey.filter(ruleKey);
-      return ruleKey;
+    // This uses the "double-checked locking using volatile" pattern:
+    // http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html.
+    if (ruleKey == null) {
+      synchronized (this) {
+        if (ruleKey == null) {
+          RuleKey.Builder builder = RuleKey.builder(this);
+          appendToRuleKey(builder);
+          ruleKey = builder.build();
+        }
+      }
     }
+    return ruleKey;
   }
 
   /**

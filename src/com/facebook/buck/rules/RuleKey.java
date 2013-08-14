@@ -19,7 +19,9 @@ package com.facebook.buck.rules;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,7 +37,6 @@ import com.google.common.io.InputSupplier;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,8 +48,8 @@ import javax.annotation.Nullable;
  * relevant to idempotency. The RuleKey.Builder API conceptually implements the construction of an
  * ordered map, and the key/val pairs are digested using an internal serialization that guarantees
  * a 1:1 mapping for each distinct vector of keys
- * <header,k1,...,kn> in RuleKey.builder(header).set(k1, v1) ... .set(kn, vn).build().
- *
+ * &lt;header,k1,...,kn> in RuleKey.builder(header).set(k1, v1) ... .set(kn, vn).build().
+ * <p>
  * Note carefully that in order to reliably avoid accidental collisions, each RuleKey schema, as
  * defined by the key vector, must have a distinct header. Otherwise it is possible (if unlikely)
  * for serialized value data to alias serialized key data, with the result being identical RuleKeys
@@ -57,28 +58,13 @@ import javax.annotation.Nullable;
  * of set() calls should be identical, even if values are missing. The set() methods specifically
  * handle null values to accommodate this regime.
  */
-public class RuleKey implements Comparable<RuleKey> {
+public class RuleKey {
 
-  private static final String nonIdempotentRuleString = builder().nonIdempotent().build().toString();
+  private final HashCode hashCode;
 
-  /**
-   * Takes a string and uses it to construct a {@link RuleKey}.
-   * <p>
-   * Is likely particularly useful with {@link Optional#transform(Function)}.
-   */
-  public static final Function<String, RuleKey> TO_RULE_KEY =
-      new Function<String, RuleKey>() {
-        @Override
-        public RuleKey apply(String hash) {
-          if (nonIdempotentRuleString.equals(hash)) {
-            return builder().nonIdempotent().build();
-          }
-          return new RuleKey(hash);
-        }
-  };
-
-  // TODO(mbolin): Do not let this be @Nullable anymore.
-  @Nullable private final HashCode hashCode;
+  private RuleKey(HashCode hashCode) {
+    this.hashCode = Preconditions.checkNotNull(hashCode);
+  }
 
   /**
    * @param hashString string that conforms to the contract of the return value of
@@ -100,88 +86,41 @@ public class RuleKey implements Comparable<RuleKey> {
     return bytes;
   }
 
-  private RuleKey(HashCode hashCode) {
-    this.hashCode = hashCode;
-  }
-
-  @Nullable
   public HashCode getHashCode() {
     return hashCode;
   }
 
-  public boolean isIdempotent() {
-    return (hashCode != null);
-  }
-
-  /**
-   * Non-idempotent RuleKeys are normally output as strings of 'x' characters, but when comparing
-   * two sets of RuleKeys in textual form it is necessary to mangle one of the two sets, so that
-   * non-idempotent RuleKeys are never considered equal.
-   */
-  public String toString(boolean mangleNonIdempotent) {
-    if (!isIdempotent()) {
-      return new String (new char[Hashing.sha1().bits() / 4]).replace("\0",
-          mangleNonIdempotent ? "y" : "x");
-    }
-    return hashCode.toString();
-  }
-
+  /** @return the {@link #toString} of the hash code that underlies this RuleKey. */
   @Override
   public String toString() {
-    return toString(false);
+    return getHashCode().toString();
   }
 
   /**
-   * Order non-idempotent RuleKeys as less than all idempotent RuleKeys.
-   *
-   * non-idempotent < idempotent
+   * Takes a string and uses it to construct a {@link RuleKey}.
+   * <p>
+   * Is likely particularly useful with {@link Optional#transform(Function)}.
    */
-  @Override
-  public int compareTo(RuleKey other) {
-    if (!isIdempotent()) {
-      if (!other.isIdempotent()) {
-        return 0;
-      }
-      return -1;
-    } else if (!other.isIdempotent()) {
-      return 1;
-    }
-    return ByteBuffer.wrap(hashCode.asBytes()).compareTo(ByteBuffer.wrap(other.hashCode.asBytes()));
-  }
+  public static final Function<String, RuleKey> TO_RULE_KEY =
+      new Function<String, RuleKey>() {
+        @Override
+        public RuleKey apply(String hash) {
+          return new RuleKey(hash);
+        }
+  };
 
-  /**
-   * Treat non-idempotent RuleKeys as unequal to everything, including other non-idempotent
-   * RuleKeys.
-   */
   @Override
-  public boolean equals(Object that) {
-    if (!(that instanceof RuleKey)) {
+  public boolean equals(Object obj) {
+    if (!(obj instanceof RuleKey)) {
       return false;
     }
-    RuleKey other = (RuleKey) that;
-    if (!isIdempotent() || !other.isIdempotent()) {
-      return false;
-    }
-    return (compareTo(other) == 0);
+    RuleKey that = (RuleKey)obj;
+    return Objects.equal(this.getHashCode(), that.getHashCode());
   }
 
   @Override
   public int hashCode() {
-    if (!isIdempotent()) {
-      return 0;
-    }
-    return super.hashCode();
-  }
-
-  /**
-   * Helper method used to avoid memoizing non-idempotent RuleKeys.
-   */
-  @Nullable
-  public static RuleKey filter(RuleKey ruleKey) {
-    if (!ruleKey.isIdempotent()) {
-      return null;
-    }
-    return ruleKey;
+    return this.getHashCode().hashCode();
   }
 
   public static Builder builder() {
@@ -283,28 +222,19 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate().feed(sectionLabel.getBytes()).separate();
     }
 
-    private Builder setVal(@Nullable File file) {
+    private Builder setVal(@Nullable File file) throws IOException {
       if (file != null) {
         // Compute a separate SHA-1 for the file contents and feed that into messageDigest rather
         // than the file contents, in order to avoid the overhead of escaping SEPARATOR in the file
         // content.
-        try {
-          InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
-          HashCode fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
+        InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
+        HashCode fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
 
-          if (logElms != null) {
-            logElms.add(String.format("file(path=\"%s\", sha1=%s):", file.getPath(),
-                fileSha1.toString()));
-          }
-          feed(fileSha1.asBytes());
-        } catch (IOException e) {
-          // The file is nonexistent/unreadable; generate a RuleKey that prevents accidental
-          // caching.
-          if (logElms != null) {
-            logElms.add(String.format("file(path=\"%s\", sha1=random):", file.getPath()));
-          }
-          nonIdempotent();
+        if (logElms != null) {
+          logElms.add(String.format("file(path=\"%s\", sha1=%s):", file.getPath(),
+              fileSha1.toString()));
         }
+        feed(fileSha1.asBytes());
       }
       return separate();
     }
@@ -329,16 +259,14 @@ public class RuleKey implements Comparable<RuleKey> {
     private Builder setVal(@Nullable RuleKey ruleKey) {
       if (ruleKey != null) {
         if (logElms != null) {
-          logElms.add(String.format("%sruleKey(sha1=%s):",
-              ruleKey.isIdempotent() ? "" : "non-idempotent ", ruleKey.toString()));
+          logElms.add(String.format("ruleKey(sha1=%s):", ruleKey));
         }
-        feed(ruleKey.toString().getBytes())
-            .mergeIdempotence(ruleKey.isIdempotent());
+        feed(ruleKey.toString().getBytes());
       }
       return separate();
     }
 
-    public Builder set(String key, @Nullable File val) {
+    public Builder set(String key, @Nullable File val) throws IOException {
       return setKey(key).setVal(val);
     }
 
@@ -424,35 +352,10 @@ public class RuleKey implements Comparable<RuleKey> {
       return separate();
     }
 
-    /**
-     * The idempotence of the RuleKey to be built is false if this method is ever called with a
-     * false argument.
-     */
-    public Builder mergeIdempotence(boolean idempotence) {
-      if (!idempotence) {
-        idempotent = false;
-      }
-      return this;
-    }
-
-    /**
-     * Non-idempotent RuleKeys can be built by calling nonIdempotent() at any building stage. This
-     * method is intended for generation of RuleKeys to be associated with non-cacheable BuildRule
-     * results.
-     */
-    public Builder nonIdempotent() {
-      if (logElms != null) {
-        logElms.add(String.format("nonIdempotent()"));
-      }
-      return mergeIdempotence(false);
-    }
-
     public RuleKey build() {
       RuleKey ruleKey = idempotent ? new RuleKey(hasher.hash()) : new RuleKey((HashCode)null);
       if (logElms != null) {
-        logger.info(String.format("%sRuleKey %s=%s",
-            ruleKey.isIdempotent() ? "" : "non-idempotent ", ruleKey.toString(),
-            Joiner.on("").join(logElms)));
+        logger.info(String.format("RuleKey %s=%s", ruleKey, Joiner.on("").join(logElms)));
       }
       return ruleKey;
     }

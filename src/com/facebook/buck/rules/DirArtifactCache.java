@@ -39,9 +39,6 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public boolean fetch(RuleKey ruleKey, File output) {
-    if (!ruleKey.isIdempotent()) {
-      return false;
-    }
     boolean success = false;
     File cacheEntry = new File(cacheDir, ruleKey.toString());
     if (cacheEntry.exists()) {
@@ -65,9 +62,6 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public void store(RuleKey ruleKey, File output) {
-    if (!ruleKey.isIdempotent()) {
-      return;
-    }
     File cacheEntry = new File(cacheDir, ruleKey.toString());
     File tmpCacheEntry = null;
     try {

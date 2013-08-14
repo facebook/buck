@@ -173,9 +173,6 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   @Override
   public boolean fetch(RuleKey ruleKey, File output) {
-    if (!ruleKey.isIdempotent()) {
-      return false;
-    }
     Optional<KeyspaceAndTtl> keyspaceAndTtl = getKeyspaceAndTtl();
     if (!keyspaceAndTtl.isPresent()) {
       // Connecting to Cassandra failed, return false
@@ -217,7 +214,7 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   @Override
   public void store(RuleKey ruleKey, File output) {
-    if (!doStore || !ruleKey.isIdempotent()) {
+    if (!doStore) {
       return;
     }
 
