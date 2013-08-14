@@ -20,6 +20,8 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
@@ -61,6 +63,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final ScheduledExecutorService renderScheduler;
 
+  private final TestResultFormatter testFormatter;
+
   private int lastNumLinesPrinted;
 
   public SuperConsoleEventBusListener(Console console,
@@ -74,6 +78,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.logEvents = new ConcurrentLinkedQueue<>();
 
     this.renderScheduler = Executors.newScheduledThreadPool(1);
+    this.testFormatter = new TestResultFormatter(console.getAnsi());
   }
 
   /**
@@ -148,11 +153,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    * @param lines Builder of lines to render this frame.
    */
   private void renderLogMessages(ImmutableList.Builder<String> lines) {
-    if (!logEvents.isEmpty()) {
-      lines.add("Log:");
-      for (LogEvent logEvent : logEvents) {
-        formatLogEvent(logEvent, lines);
-      }
+    if (logEvents.isEmpty()) {
+      return;
+    }
+
+    lines.add("Log:");
+    for (LogEvent logEvent : logEvents) {
+      formatLogEvent(logEvent, lines);
     }
   }
 
@@ -254,6 +261,31 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void artifactFinished(ArtifactCacheEvent.Finished finished) {
     threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
+  }
+
+  @Subscribe
+  public void testRunStarted(TestRunEvent.Started event) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    testFormatter.runStarted(builder, event.isRunAllTests(), event.getTargetNames());
+    logEvents.add(LogEvent.info(Joiner.on('\n').join(builder.build())));
+  }
+
+  @Subscribe
+  public void testResultsAvailable(IndividualTestEvent.Finished event) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    testFormatter.reportResult(builder, event.getResults());
+
+    // We could just format as if this was a log entry, but doing so causes the console to flicker
+    // obscenely and isn't conducive to running tests. Since this is the last step of the build, the
+    // output will still render just fine if we write directly to stderr.
+    console.getStdErr().println(Joiner.on('\n').join(builder.build()));
+  }
+
+  @Subscribe
+  public void testRunComplete(TestRunEvent.Finished event) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    testFormatter.runComplete(builder, event.getResults());
+    console.getStdErr().println(Joiner.on('\n').join(builder.build()));
   }
 
   @Subscribe

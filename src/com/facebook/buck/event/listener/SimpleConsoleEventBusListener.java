@@ -19,6 +19,8 @@ import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
@@ -32,11 +34,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListener {
   private final AtomicLong parseTime;
+  private final TestResultFormatter testFormatter;
 
   public SimpleConsoleEventBusListener(Console console, Clock clock) {
     super(console, clock);
 
     this.parseTime = new AtomicLong(0);
+    this.testFormatter = new TestResultFormatter(console.getAnsi());
   }
 
   @Override
@@ -85,6 +89,27 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   public void logEvent(LogEvent event) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     formatLogEvent(event, lines);
+    printLines(lines);
+  }
+
+  @Subscribe
+  public void testRunStarted(TestRunEvent.Started event) {
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    testFormatter.runStarted(lines, event.isRunAllTests(), event.getTargetNames());
+    printLines(lines);
+  }
+
+  @Subscribe
+  public void testRunCompleted(TestRunEvent.Finished event) {
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    testFormatter.runComplete(lines, event.getResults());
+    printLines(lines);
+  }
+
+  @Subscribe
+  public void testResultsAvailable(IndividualTestEvent.Finished event) {
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    testFormatter.reportResult(lines, event.getResults());
     printLines(lines);
   }
 

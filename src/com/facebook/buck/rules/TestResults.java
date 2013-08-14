@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.Ansi;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
 
@@ -68,34 +67,5 @@ public class TestResults {
   public ImmutableList<TestCaseSummary> getTestCases() {
     return testCases;
   }
-
-  /** @return a detailed summary that ends with a trailing newline */
-  public String getSummaryWithFailureDetails(Ansi ansi) {
-    StringBuilder builder = new StringBuilder();
-    for (TestCaseSummary testCase : testCases) {
-      builder.append(testCase.getOneLineSummary(ansi)).append('\n');
-
-      if (!testCase.isSuccess()) {
-        for (TestResultSummary testResult : testCase.getTestResults()) {
-          if (!testResult.isSuccess()) {
-            builder.append(String.format("FAILURE %s: %s\n%s\n",
-                testResult.getTestName(),
-                testResult.getMessage(),
-                testResult.getStacktrace()));
-
-            if (testResult.getStdOut() != null) {
-              builder.append(String.format("====STANDARD OUT====\n%s\n", testResult.getStdOut()));
-            }
-
-            if (testResult.getStdErr() != null) {
-              builder.append(String.format("====STANDARD ERR====\n%s\n", testResult.getStdErr()));
-            }
-          }
-        }
-      }
-    }
-    return builder.toString();
-  }
-
 }
 

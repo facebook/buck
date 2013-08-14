@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
-import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
@@ -35,23 +34,23 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestCaseSummary;
 import com.facebook.buck.rules.TestResults;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -65,6 +64,9 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -72,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -80,8 +83,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
@@ -377,7 +378,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildContext buildContext,
       ExecutionContext executionContext,
       StepRunner stepRunner,
-      TestCommandOptions options) throws IOException {
+      final TestCommandOptions options) throws IOException {
     ImmutableSet<JavaLibraryRule> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.
     if (options.isCodeCoverageEnabled()) {
@@ -399,14 +400,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       rulesUnderTest = ImmutableSet.of();
     }
 
-    // Inform the user that we are now running the tests.
-    String targetsBeingTested;
-    if (options.isRunAllTests()) {
-      targetsBeingTested = "ALL TESTS";
-    } else {
-      targetsBeingTested = Joiner.on(' ').join(options.getArgumentsFormattedAsBuildTargets());
-    }
-    getBuckEventBus().post(LogEvent.info("TESTING %s", targetsBeingTested));
+    getBuckEventBus().post(TestRunEvent.started(
+        options.isRunAllTests(), options.getArgumentsFormattedAsBuildTargets()));
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
@@ -422,7 +417,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       @Override
       public void onSuccess(TestResults testResults) {
         if (printTestResults) {
-          getStdErr().print(testResults.getSummaryWithFailureDetails(console.getAnsi()));
+          getBuckEventBus().post(IndividualTestEvent.finished(
+              options.getArgumentsFormattedAsBuildTargets(), testResults));
         }
       }
 
@@ -440,6 +436,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // Determine whether the test needs to be executed.
       boolean isTestRunRequired = isTestRunRequiredForTest(test, executionContext);
       if (isTestRunRequired) {
+        getBuckEventBus().post(IndividualTestEvent.started(
+            options.getArgumentsFormattedAsBuildTargets()));
         steps = test.runTests(buildContext, executionContext);
       } else {
         steps = ImmutableList.of();
@@ -468,6 +466,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       return 1;
     }
 
+    getBuckEventBus().post(TestRunEvent.finished(
+        options.getArgumentsFormattedAsBuildTargets(), completedResults));
+
     // Write out the results as XML, if requested.
     if (options.getPathToXmlTestOutput() != null) {
       try (Writer writer = Files.newWriter(
@@ -475,27 +476,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         Charsets.UTF_8)) {
         writeXmlOutput(completedResults, writer);
       }
-    }
-
-    // Print whether each test succeeded or failed.
-    boolean isAllTestsPassed = true;
-    int numFailures = 0;
-    Ansi ansi = console.getAnsi();
-    for (TestResults summary : completedResults) {
-      if (!summary.isSuccess()) {
-        isAllTestsPassed = false;
-        numFailures += summary.getFailureCount();
-      }
-    }
-
-    // Print the summary of the test results.
-    if (completedResults.isEmpty()) {
-      ansi.printlnHighlightedFailureText(getStdErr(), "NO TESTS RAN");
-    } else if (isAllTestsPassed) {
-      ansi.printlnHighlightedSuccessText(getStdErr(), "TESTS PASSED");
-    } else {
-      ansi.printlnHighlightedFailureText(getStdErr(),
-          String.format("TESTS FAILED: %d Failures", numFailures));
     }
 
     // Generate the code coverage report.
@@ -511,7 +491,14 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     }
 
-    return isAllTestsPassed ? 0 : 1;
+    boolean failures = Iterables.any(completedResults, new Predicate<TestResults>() {
+      @Override
+      public boolean apply(TestResults results) {
+        return !results.isSuccess();
+      }
+    });
+
+    return failures ? 1 : 0;
   }
 
   @VisibleForTesting
@@ -596,5 +583,4 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   String getUsageIntro() {
     return "Specify build rules to test.";
   }
-
 }
