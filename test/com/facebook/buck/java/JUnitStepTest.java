@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 
@@ -78,7 +80,7 @@ public class JUnitStepTest {
             vmArg2,
             "-verbose",
             "-classpath",
-            "foo:bar/baz:build/classes/junit",
+            Joiner.on(File.pathSeparator).join("foo", "bar/baz", "build/classes/junit"),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
             "5000",
@@ -134,7 +136,7 @@ public class JUnitStepTest {
             vmArg2,
             "-verbose",
             "-classpath",
-            "foo:bar/baz:build/classes/junit",
+            Joiner.on(File.pathSeparator).join("foo", "bar/baz", "build/classes/junit"),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
             "0",
