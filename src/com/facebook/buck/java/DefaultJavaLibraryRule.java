@@ -736,6 +736,20 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
       // upload the corresponding ABI key. When this happens, getAbiKey() should return null.
       setAbiKey(Suppliers.ofInstance((Sha1HashCode)null));
     }
+
+    // When the output is fetched from the artifact cache, the following files will
+    // still be lying around, and they likely contain data from the previous build:
+    // (1) abi
+    // (2) abi_deps
+    // (3) rule_key_no_deps
+    // Currently, this method is designed to overwrite the abi file, but is missing the
+    // logic to overwrite the abi_deps and rule_key_no_deps files.
+    // As we have discovered through experience, having outdated data is far worse than having no
+    // data, so for safety, we delete these files.
+    // TODO(mbolin): Store abi_deps and rule_key_no_deps in the artifact cache so that these values
+    // can be leveraged upon subsequent builds.
+    projectFilesystem.deleteFileAtPath(getPathToAbiKeyForDepsFile());
+    projectFilesystem.deleteFileAtPath(getPathToRuleKeyNoDepsFile());
   }
 
   /**

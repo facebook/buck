@@ -1,10 +1,9 @@
-FAKES_SRCS = [
-  'FakeDefaultJavaLibraryRule.java',
-  'FakeJavaLibraryRule.java',
-]
 java_library(
   name = 'fakes',
-  srcs = FAKES_SRCS,
+  srcs = [
+    'FakeDefaultJavaLibraryRule.java',
+    'FakeJavaLibraryRule.java',
+  ],
   deps = [
     '//lib:guava',
     '//lib:jsr305',
@@ -22,7 +21,7 @@ java_library(
 
 java_test(
   name = 'java',
-  srcs = glob(['*.java'], excludes = FAKES_SRCS),
+  srcs = glob(['*Test.java']),
   resources = glob(['testdata/**/*']),
   source_under_test = [
     '//src/com/facebook/buck/java:rules',
@@ -34,6 +33,7 @@ java_test(
     '//lib:easymock',
     '//lib:guava',
     '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/android:rules',
