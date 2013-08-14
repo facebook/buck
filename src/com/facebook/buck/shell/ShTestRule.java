@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestCaseSummary;
@@ -50,7 +51,7 @@ import java.util.concurrent.Callable;
  * Test whose correctness is determined by running a specified shell script. If running the shell
  * script returns a non-zero error code, the test is considered a failure.
  */
-public class ShTestRule extends AbstractCachingBuildRule implements TestRule {
+public class ShTestRule extends AbstractCachingBuildRule implements TestRule, Buildable {
 
   private final String test;
   private final ImmutableSet<String> labels;

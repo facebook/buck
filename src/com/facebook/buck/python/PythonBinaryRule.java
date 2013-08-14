@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -40,7 +41,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.List;
 
-public class PythonBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule {
+public class PythonBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule, Buildable {
 
   private final String main;
 

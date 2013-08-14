@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
@@ -76,7 +77,7 @@ import javax.annotation.Nullable;
  * of the file to be saved.
  */
 // TODO(simons): Extend to also allow exporting a rule.
-public class ExportFileRule extends AbstractCachingBuildRule {
+public class ExportFileRule extends AbstractCachingBuildRule implements Buildable {
 
   private final String src;
   private final Supplier<String> out;

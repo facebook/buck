@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -106,7 +107,7 @@ import java.util.regex.Pattern;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractCachingBuildRule {
+public class Genrule extends AbstractCachingBuildRule implements Buildable {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.

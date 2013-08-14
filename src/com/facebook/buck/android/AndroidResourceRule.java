@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -60,7 +61,7 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AndroidResourceRule extends AbstractCachingBuildRule implements HasAndroidResourceDeps {
+public class AndroidResourceRule extends AbstractCachingBuildRule implements HasAndroidResourceDeps, Buildable {
 
   /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResourceRule}. */
   private static final Function<HasAndroidResourceDeps, String> GET_RES_FOR_RULE =

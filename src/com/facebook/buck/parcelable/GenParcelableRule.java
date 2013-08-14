@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -39,7 +40,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-public class GenParcelableRule extends AbstractCachingBuildRule {
+public class GenParcelableRule extends AbstractCachingBuildRule implements Buildable {
 
   private final ImmutableSortedSet<String> srcs;
   private final String outputDirectory;

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -48,7 +49,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule,
-    HasClasspathEntries {
+    HasClasspathEntries, Buildable {
 
   @Nullable
   private final String mainClass;

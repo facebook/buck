@@ -85,7 +85,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
 
   private final Function<String, String> pathRelativizer;
 
-  /** @see #getInputsToCompareToOutput()  */
+  /** @see Buildable#getInputsToCompareToOutput()  */
   private Iterable<InputRule> inputsToCompareToOutputs;
 
   protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
@@ -399,11 +399,11 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
 
   /**
    * For a rule that is read from the build cache, it may have fields that would normally be
-   * populated by executing the steps returned by {@link #getBuildSteps(BuildContext)}. Because
-   * {@link #getBuildSteps(BuildContext)} is not invoked for cached rules, a rule may need to
-   * implement this method to populate those fields in some other way. For a cached rule, this
-   * method will be invoked just before the future returned by {@link #build(BuildContext)} is
-   * resolved.
+   * populated by executing the steps returned by {@link Buildable#getBuildSteps(BuildContext)}.
+   * Because {@link Buildable#getBuildSteps(BuildContext)} is not invoked for cached rules, a rule
+   * may need to implement this method to populate those fields in some other way. For a cached
+   * rule, this method will be invoked just before the future returned by
+   * {@link #build(BuildContext)} is resolved.
    * <p>
    * By default, this method does nothing except return {@code true}.
    * @param projectFilesystem can be used to load

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
@@ -37,7 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class PythonLibraryRule extends AbstractCachingBuildRule {
+public class PythonLibraryRule extends AbstractCachingBuildRule implements Buildable {
 
   private final ImmutableSortedSet<String> srcs;
   private final Optional<String> pythonPathDirectory;

@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -84,7 +85,7 @@ import java.util.Set;
  * </pre>
  */
 public class AndroidBinaryRule extends AbstractCachingBuildRule implements
-    HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule {
+    HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule, Buildable {
 
   /**
    * The largest file size Froyo will deflate.

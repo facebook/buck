@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
@@ -98,7 +99,7 @@ import javax.annotation.Nullable;
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
 public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
-    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries {
+    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, Buildable {
 
   private final ImmutableSortedSet<String> srcs;
 

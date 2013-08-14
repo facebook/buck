@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
@@ -59,7 +60,7 @@ import java.util.List;
  * )
  * </pre>
  */
-public class AndroidManifestRule extends AbstractCachingBuildRule {
+public class AndroidManifestRule extends AbstractCachingBuildRule implements Buildable {
 
   private final String skeletonFile;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
@@ -44,7 +45,7 @@ import java.util.List;
  * A rule that establishes a pre-compiled JAR file as a dependency.
  */
 public class PrebuiltJarRule extends AbstractCachingBuildRule
-    implements JavaLibraryRule, HasClasspathEntries {
+    implements JavaLibraryRule, HasClasspathEntries, Buildable {
 
   private final String binaryJar;
   private final Optional<String> sourceJar;

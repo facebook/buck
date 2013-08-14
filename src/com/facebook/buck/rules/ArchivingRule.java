@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * Base class for rules which produce an archive of files.
  */
-public abstract class ArchivingRule extends AbstractCachingBuildRule {
+public abstract class ArchivingRule extends AbstractCachingBuildRule implements Buildable {
 
   private final String outputZip;
 

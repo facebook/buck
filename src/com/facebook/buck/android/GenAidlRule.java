@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -54,7 +55,7 @@ import java.util.List;
  * )
  * </pre>
  */
-public class GenAidlRule extends AbstractCachingBuildRule {
+public class GenAidlRule extends AbstractCachingBuildRule implements Buildable {
 
   private final String aidlFilePath;
   private final String importPath;
