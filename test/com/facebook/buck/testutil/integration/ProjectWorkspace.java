@@ -159,22 +159,23 @@ public class ProjectWorkspace {
       assertExitCode(null, exitCode);
     }
 
-    public void assertExitCode(String message, int exitCode) {
+    public void assertExitCode(@Nullable String message, int exitCode) {
       if (exitCode == getExitCode()) {
         return;
       }
 
-      String failureMessage = String.format("Expected exit code %d but was %d.", exitCode, getExitCode());
+      String failureMessage = String.format(
+          "Expected exit code %d but was %d.", exitCode, getExitCode());
+      if (message != null) {
+        failureMessage = message + " " + failureMessage;
+      }
+
       System.err.println("=== " + failureMessage + " ===");
       System.err.println("=== STDERR ===");
       System.err.println(getStderr());
       System.err.println("=== STDOUT ===");
       System.err.println(getStdout());
-      if (message != null) {
-        fail(message);
-      } else {
-        fail(failureMessage);
-      }
+      fail(failureMessage);
     }
   }
 
