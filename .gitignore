@@ -33,3 +33,5 @@ local.properties
 # OS X
 .DS_Store
 
+
+docs/.globals.json.out

@@ -1,4 +1,8 @@
 {
+  //
+  // This JSON will be (or has been) pre-processed by soyweb.sh!
+  //
+
   "FB_APP_ID" : "584556688222168",
 
   "GITHUB_URL" : "https://www.github.com/facebook/buck/",
@@ -17,5 +21,5 @@
   // which is why we use a shorter, potentially less-descriptive variable name.
   //
   // The value must always end with a forward slash.
-  "ROOT" : "/buck/"
+  "ROOT" : "__ROOT__"
 }
