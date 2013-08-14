@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DirectoryTraversal;
@@ -46,6 +48,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -151,15 +154,19 @@ public class JarDirectoryStep implements Step {
         new BufferedOutputStream(new FileOutputStream(
         filesystem.getFileForRelativePath(pathToOutputFile))))) {
 
-      Set<String> directoryEntriesInsertedIntoOutputJar = Sets.newHashSet();
+      Set<String> alreadyAddedEntries = Sets.newHashSet();
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (String entry : entriesToJar) {
         File file = projectFilesystem.getFileForRelativePath(entry);
         if (file.isFile()) {
           // Assume the file is a ZIP/JAR file.
-          copyZipEntriesToJar(file, outputFile, manifest, directoryEntriesInsertedIntoOutputJar);
+          copyZipEntriesToJar(file,
+              outputFile,
+              manifest,
+              alreadyAddedEntries,
+              context.getBuckEventBus());
         } else if (file.isDirectory()) {
-          addFilesInDirectoryToJar(file, outputFile, directoryEntriesInsertedIntoOutputJar);
+          addFilesInDirectoryToJar(file, outputFile, alreadyAddedEntries, context.getBuckEventBus());
         } else {
           throw new IllegalStateException("Must be a file or directory: " + file);
         }
@@ -187,7 +194,8 @@ public class JarDirectoryStep implements Step {
   private void copyZipEntriesToJar(File file,
       final JarOutputStream jar,
       Manifest manifest,
-      Set<String> alreadyAddedEntries) throws IOException {
+      Set<String> alreadyAddedEntries,
+      BuckEventBus eventBus) throws IOException {
     ZipFile zip = new ZipFile(file);
     for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
       ZipEntry entry = entries.nextElement();
@@ -202,6 +210,8 @@ public class JarDirectoryStep implements Step {
       // The same directory entry cannot be added more than once.
       if (!alreadyAddedEntries.add(entryName)) {
         // Duplicate entries. Skip.
+        eventBus.post(LogEvent.create(
+            Level.FINE, "Duplicate found when adding file to jar: %s", entryName));
         continue;
       }
 
@@ -232,7 +242,8 @@ public class JarDirectoryStep implements Step {
    */
   private void addFilesInDirectoryToJar(File directory,
       final JarOutputStream jar,
-      final Set<String> directoryEntriesInsertedIntoOutputJar) {
+      final Set<String> alreadyAddedEntries,
+      final BuckEventBus eventBus) {
     new DirectoryTraversal(directory) {
 
       @Override
@@ -241,7 +252,9 @@ public class JarDirectoryStep implements Step {
         String entryName = entry.getName();
         entry.setTime(file.lastModified());
         try {
-          if (directoryEntriesInsertedIntoOutputJar.contains(entryName)) {
+          if (alreadyAddedEntries.contains(entryName)) {
+            eventBus.post(LogEvent.create(
+                Level.FINE, "Duplicate found when adding directory to jar: %s", relativePath));
             return;
           }
           jar.putNextEntry(entry);
@@ -249,7 +262,7 @@ public class JarDirectoryStep implements Step {
           jar.closeEntry();
 
           if (entryName.endsWith("/")) {
-            directoryEntriesInsertedIntoOutputJar.add(entryName);
+            alreadyAddedEntries.add(entryName);
           }
         } catch (IOException e) {
           Throwables.propagate(e);
