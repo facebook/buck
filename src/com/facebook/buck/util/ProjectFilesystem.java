@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -118,8 +119,8 @@ public class ProjectFilesystem {
   /**
    * Allows {@link java.nio.file.Files#isDirectory} to be faked in tests.
    */
-  public boolean isDirectory(Path child, LinkOption linkOption) {
-    return java.nio.file.Files.isDirectory(child, linkOption);
+  public boolean isDirectory(Path child, LinkOption... linkOptions) {
+    return java.nio.file.Files.isDirectory(child, linkOptions);
   }
 
   /**
@@ -218,5 +219,19 @@ public class ProjectFilesystem {
     Path targetPath = java.nio.file.Paths.get(pathRelativizer.apply(target));
     Path sourcePath = java.nio.file.Paths.get(pathRelativizer.apply(source));
     java.nio.file.Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+  }
+
+  public void createSymLink(Path sourcePath, Path targetPath) throws IOException {
+    if (Platform.detect() == Platform.WINDOWS) {
+      if (isDirectory(sourcePath)) {
+        // Creating symlinks to directories on Windows requires escalated privileges. We're just
+        // going to have to copy things recursively.
+        MoreFiles.copyRecursively(sourcePath, targetPath);
+      } else {
+        java.nio.file.Files.createLink(targetPath, sourcePath);
+      }
+    } else {
+      java.nio.file.Files.createSymbolicLink(targetPath, sourcePath);
+    }
   }
 }

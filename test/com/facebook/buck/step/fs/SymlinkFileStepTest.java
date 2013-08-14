@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -30,7 +31,6 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 public class SymlinkFileStepTest {
   @Rule
@@ -46,7 +46,7 @@ public class SymlinkFileStepTest {
         .build();
 
     File source = tmpDir.newFile();
-    Files.write("foobar", source, Charset.defaultCharset());
+    Files.write("foobar", source, Charsets.UTF_8);
 
     File target = tmpDir.newFile();
     target.delete();
@@ -58,6 +58,10 @@ public class SymlinkFileStepTest {
     step.execute(context);
 
     assertTrue(target.exists());
-    assertEquals("foobar", Files.readFirstLine(target, Charset.defaultCharset()));
+    assertEquals("foobar", Files.readFirstLine(target, Charsets.UTF_8));
+
+    // Modify the original file and see if the linked file changes as well.
+    Files.write("new", source, Charsets.UTF_8);
+    assertEquals("new", Files.readFirstLine(target, Charsets.UTF_8));
   }
 }

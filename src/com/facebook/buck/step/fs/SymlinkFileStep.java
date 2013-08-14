@@ -24,7 +24,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -33,9 +32,6 @@ public class SymlinkFileStep implements Step {
   private final String source;
   private final String target;
 
-  /**
-   * Both {@code source} and {@code target} must refer to a file (as opposed to a directory).
-   */
   public SymlinkFileStep(String source, String target) {
     this.source = Preconditions.checkNotNull(source);
     this.target = Preconditions.checkNotNull(target);
@@ -68,7 +64,7 @@ public class SymlinkFileStep implements Step {
         throw new HumanReadableException("Failed to delete symbolic link for %s",
             targetPath.toAbsolutePath());
       }
-      Files.createSymbolicLink(targetPath, sourcePath);
+      context.getProjectFilesystem().createSymLink(sourcePath, targetPath);
       return 0;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
