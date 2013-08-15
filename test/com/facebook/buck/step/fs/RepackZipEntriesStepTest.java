@@ -52,7 +52,7 @@ public class RepackZipEntriesStepTest {
     String unzipExpected = Joiner.on(" ").join(new ImmutableList.Builder<String>()
         .add("unzip")
         .add("-o")
-        .add("-d").add(dir.getPath())
+        .add("-d").add(dir.getAbsolutePath())
         .add(inApk)
         .addAll(entries)
         .build());
@@ -92,7 +92,7 @@ public class RepackZipEntriesStepTest {
     assertEquals(zipExpected, zipStep.getShellCommand(context));
 
     //ShellStep zipCommand = iter.next();
-    assertEquals(zipStep.getWorkingDirectory(), dir);
+    assertEquals(zipStep.getWorkingDirectory().getAbsolutePath(), dir.getAbsolutePath());
 
     verify(context);
   }
