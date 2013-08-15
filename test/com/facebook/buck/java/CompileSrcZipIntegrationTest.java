@@ -16,8 +16,6 @@
 
 package com.facebook.buck.java;
 
-import static org.junit.Assert.assertEquals;
-
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -40,6 +38,6 @@ public class CompileSrcZipIntegrationTest {
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:lib");
-    assertEquals("Successful build should exit with 0.", 0, buildResult.getExitCode());
+    buildResult.assertExitCode("Successful build should exit with 0.", 0);
   }
 }

@@ -143,7 +143,14 @@ public class ProjectWorkspace {
       this.stderr = Preconditions.checkNotNull(stderr);
     }
 
-    public int getExitCode() {
+    /**
+     * Returns the exit code from the process.
+     * <p>
+     * Currently, this method is private because, in practice, any time a client might want to use
+     * it, it is more appropriate to use {@link #assertExitCode(String, int)} instead. If a valid
+     * use case arises, then we should make this getter public.
+     */
+    private int getExitCode() {
       return exitCode;
     }
 

@@ -57,7 +57,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:no_srcs");
-    assertEquals("Successful build should exit with 0.", 0, buildResult.getExitCode());
+    buildResult.assertExitCode("Successful build should exit with 0.", 0);
     File outputFile = workspace.getFile("buck-out/gen/lib__no_srcs__output/no_srcs.jar");
     assertTrue(outputFile.exists());
     // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:
@@ -85,7 +85,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
 
     // Run `buck clean`.
     ProcessResult cleanResult = workspace.runBuckCommand("clean");
-    assertEquals("Successful clean should exit with 0.", 0, cleanResult.getExitCode());
+    cleanResult.assertExitCode("Successful clean should exit with 0.", 0);
     assertEquals("The build cache should still exist.", 2, buildCache.listFiles().length);
 
     // Corrupt the build cache!
@@ -94,7 +94,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:no_srcs");
-    assertEquals("Successful build should exit with 0.", 0, buildResult2.getExitCode());
+    buildResult2.assertExitCode("Successful build should exit with 0.", 0);
     assertTrue(outputFile.isFile());
     assertEquals(
         "The content of the output file will be 'Hello World!' if it is read from the build cache.",
@@ -123,7 +123,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:biz");
-    assertEquals("Successful build should exit with 0.", 0, buildResult.getExitCode());
+    buildResult.assertExitCode("Successful build should exit with 0.", 0);
 
     String utilRuleKey = getContents("buck-out/bin/.success/util");
     String utilRuleKeyNoDeps = getContents("buck-out/gen/lib__util__abi/rule_key_no_deps");
@@ -147,7 +147,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:biz");
-    assertEquals("Successful build should exit with 0.", 0, buildResult2.getExitCode());
+    buildResult2.assertExitCode("Successful build should exit with 0.", 0);
 
     assertThat(utilRuleKey, not(equalTo(getContents("buck-out/bin/.success/util"))));
     assertThat(utilRuleKeyNoDeps, not(equalTo(getContents("buck-out/gen/lib__util__abi/rule_key_no_deps"))));
@@ -176,7 +176,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     // explode when its dependent rule (:biz) invokes the dependency's getAbiKey() method as part of
     // its own getAbiKeyForDeps().
     ProcessResult buildResult3 = workspace.runBuckCommand("build", "//:biz");
-    assertEquals("Successful build should exit with 0.", 0, buildResult3.getExitCode());
+    buildResult3.assertExitCode("Successful build should exit with 0.", 0);
   }
 
   /**

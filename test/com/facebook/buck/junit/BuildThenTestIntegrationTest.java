@@ -48,7 +48,7 @@ public class BuildThenTestIntegrationTest {
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:example");
-    assertEquals("Successful build should exit with 0.", 0, buildResult.getExitCode());
+    buildResult.assertExitCode("Successful build should exit with 0.", 0);
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:example");
     assertEquals("", testResult.getStdout());
@@ -63,7 +63,7 @@ public class BuildThenTestIntegrationTest {
         "PASS <100ms  1 Passed   0 Failed   com.example.MyTest",
         "TESTS PASSED"),
         resultList.subList(2, 5));
-    assertEquals("Passing tests should exit with 0.", 0, testResult.getExitCode());
+    testResult.assertExitCode("Passing tests should exit with 0.", 0);
 
     workspace.verify();
   }
@@ -78,7 +78,7 @@ public class BuildThenTestIntegrationTest {
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:nontestclass");
-    assertEquals("Passing test should exit with 0.", 0, testResult.getExitCode());
+    testResult.assertExitCode("Passing test should exit with 0.", 0);
   }
 
 }

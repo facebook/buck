@@ -18,7 +18,6 @@ package com.facebook.buck.junit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -64,9 +63,7 @@ public class TimeoutIntegrationTest {
     // ExceedsAnnotationTimeoutTest should fail.
     ProcessResult exceedsAnnotationTimeoutTestResult = workspace.runBuckCommand(
         "test", "//:ExceedsAnnotationTimeoutTest");
-    assertEquals("Test should fail due to timeout",
-        1,
-        exceedsAnnotationTimeoutTestResult.getExitCode());
+    exceedsAnnotationTimeoutTestResult.assertExitCode("Test should fail due to timeout", 1);
     assertThat(exceedsAnnotationTimeoutTestResult.getStderr(),
         containsString(
             "FAILURE testShouldFailDueToExpiredTimeout: test timed out after 1000 milliseconds"));
@@ -74,14 +71,14 @@ public class TimeoutIntegrationTest {
     // TimeoutChangesBehaviorTest should pass.
     ProcessResult timeoutTestWithoutTimeout = workspace.runBuckCommand(
         "test", "//:TimeoutChangesBehaviorTest");
-    assertEquals(0, timeoutTestWithoutTimeout.getExitCode());
+    timeoutTestWithoutTimeout.assertExitCode(0);
 
     // TimeoutChangesBehaviorTest with @Test(timeout) specified should fail.
     // See https://github.com/junit-team/junit/issues/686 about why it fails.
     modifyTimeoutInTestAnnotation(PATH_TO_TIMEOUT_BEHAVIOR_TEST, /* addTimeout */ true);
     ProcessResult timeoutTestWithTimeoutOnAnnotation = workspace.runBuckCommand(
         "test", "//:TimeoutChangesBehaviorTest");
-    assertEquals(1, timeoutTestWithTimeoutOnAnnotation.getExitCode());
+    timeoutTestWithTimeoutOnAnnotation.assertExitCode(1);
     assertThat(timeoutTestWithTimeoutOnAnnotation.getStderr(),
         containsString(
             "FAILURE testTimeoutDictatesTheSuccessOfThisTest: " +
@@ -92,7 +89,7 @@ public class TimeoutIntegrationTest {
     insertTimeoutRule(PATH_TO_TIMEOUT_BEHAVIOR_TEST);
     ProcessResult timeoutTestWithTimeoutRule = workspace.runBuckCommand(
         "test", "//:TimeoutChangesBehaviorTest");
-    assertEquals(0, timeoutTestWithTimeoutRule.getExitCode());
+    timeoutTestWithTimeoutRule.assertExitCode(0);
 
     workspace.verify();
   }

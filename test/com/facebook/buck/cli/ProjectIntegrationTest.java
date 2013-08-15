@@ -44,7 +44,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
-    assertEquals("buck project should exit cleanly", 0, result.getExitCode());
+    result.assertExitCode("buck project should exit cleanly", 0);
 
     workspace.verify();
 
@@ -82,7 +82,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
-    assertEquals("buck project should exit cleanly", 0, result.getExitCode());
+    result.assertExitCode("buck project should exit cleanly", 0);
 
     workspace.verify();
   }

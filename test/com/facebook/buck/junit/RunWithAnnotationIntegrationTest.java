@@ -49,7 +49,7 @@ public class RunWithAnnotationIntegrationTest {
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:SimpleSuiteTest");
-    assertEquals("Test should pass", 0, suiteTestResult.getExitCode());
+    suiteTestResult.assertExitCode("Test should pass", 0);
     assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
   }
 
@@ -60,9 +60,7 @@ public class RunWithAnnotationIntegrationTest {
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:FailingSuiteTest");
-    assertEquals("Test should fail because of one of subtests failure",
-        1,
-        suiteTestResult.getExitCode());
+    suiteTestResult.assertExitCode("Test should fail because of one of subtests failure", 1);
     assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
     assertThat(suiteTestResult.getStderr(), containsString("1 Failed"));
   }
