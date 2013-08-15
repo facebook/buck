@@ -232,10 +232,10 @@ public class MergeAndroidResourcesStep implements Step {
     Preconditions.checkNotNull(packageName);
     Preconditions.checkNotNull(resources);
 
-    writer.append("package ").append(packageName).append(';').println();
-    writer.println();
-    writer.println("public class R {");
-    writer.println();
+    writer.append("package ").append(packageName).append(';').print('\n');
+    writer.print('\n');
+    writer.print("public class R {\n");
+    writer.print('\n');
 
     String lastType = null;
     for (Resource res : resources) {
@@ -243,18 +243,18 @@ public class MergeAndroidResourcesStep implements Step {
       if (!type.equals(lastType)) {
         // If the previous type needs, to be closed, then close it.
         if (lastType != null) {
-          writer.println("  }");
-          writer.println();
+          writer.print("  }\n");
+          writer.print('\n');
         }
 
         // Now start the block for the new type.
-        writer.append("  public static class ").append(type).append(" {").println();
+        writer.append("  public static class ").append(type).append(" {").print('\n');
         lastType = type;
       }
 
       // Write out the resource.
       // Write as an int.
-      writer.println(String.format("    public static %s %s=%s;",
+      writer.print(String.format("    public static %s %s=%s;\n",
           res.idType,
           res.name,
           res.idValueToWrite));
@@ -263,12 +263,12 @@ public class MergeAndroidResourcesStep implements Step {
     // If some type was written (e.g., the for loop was entered), then the last type needs to be
     // closed.
     if (lastType != null) {
-      writer.println("  }");
-      writer.println();
+      writer.print("  }\n");
+      writer.print('\n');
     }
 
     // Close the class definition.
-    writer.println("}");
+    writer.print("}\n");
   }
 
   public static String getOutputFilePath(String pathToGeneratedJavaFiles, String rDotJavaPackage) {
