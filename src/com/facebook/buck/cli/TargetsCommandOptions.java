@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.util.Paths;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
@@ -70,14 +71,16 @@ public class TargetsCommandOptions extends BuildCommandOptions {
       File projectRoot, ImmutableSet<String> nonCanonicalFilePaths)
       throws IOException {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    String projectRootCanonicalFullPathWithEndSlash = projectRoot.getCanonicalPath() + "/";
+    String projectRootCanonicalFullPathWithEndSlash = projectRoot.getCanonicalPath() +
+        File.separator;
     for (String filePath : nonCanonicalFilePaths) {
       String canonicalFullPath = new File(filePath).getCanonicalPath();
 
       // Ignore files that aren't under project root.
       if (canonicalFullPath.startsWith(projectRootCanonicalFullPathWithEndSlash)) {
         builder.add(
-            canonicalFullPath.substring(projectRootCanonicalFullPathWithEndSlash.length()));
+            Paths.normalizePathSeparator(canonicalFullPath.substring(
+                projectRootCanonicalFullPathWithEndSlash.length())));
       }
     }
     return builder.build();
