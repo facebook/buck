@@ -14,9 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Throwables;

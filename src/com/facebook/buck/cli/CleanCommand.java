@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Project;
-import com.facebook.buck.rules.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
