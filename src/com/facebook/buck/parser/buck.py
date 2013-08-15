@@ -707,7 +707,7 @@ class BuildFileProcessor:
     # build file or the files in includes through include_defs() don't pollute
     # the namespace for subsequent build files.
     build_env = copy.copy(self.root_build_env)
-    relative_path_to_build_file = relpath(build_file, self.project_root)
+    relative_path_to_build_file = relpath(build_file, self.project_root).replace('\\', '/')
     build_env['BASE'] = relative_path_to_build_file[:self.len_suffix]
     build_env['BUILD_FILE_DIRECTORY'] = os.path.dirname(build_file)
     build_env['RULES'] = {}
