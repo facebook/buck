@@ -18,9 +18,9 @@ package com.facebook.buck.event.listener;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.TestCaseSummary;
-import com.facebook.buck.rules.TestResultSummary;
-import com.facebook.buck.rules.TestResults;
+import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResults;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;

@@ -19,7 +19,7 @@ java_test(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/rules:test',
+    '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/timing:timing',

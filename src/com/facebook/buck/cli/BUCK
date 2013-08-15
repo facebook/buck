@@ -44,7 +44,7 @@ java_library(
     '//src/com/facebook/buck/parser:project',
     '//src/com/facebook/buck/parser:support',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/rules:test',
+    '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',

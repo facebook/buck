@@ -1,22 +1,3 @@
-# Sources for dealing with test results.
-TEST_SRCS = [
-  'TestCaseSummary.java',
-  'TestResults.java',
-  'TestResultSummary.java',
-  'XmlTestResultParser.java',
-]
-java_library(
-  name = 'test',
-  srcs = TEST_SRCS,
-  deps = [
-    '//lib:guava',
-    '//lib:jsr305',
-    '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:util',
-  ],
-  visibility = ['PUBLIC'],
-)
-
 java_library(
   name = 'types',
   srcs = ['KnownBuildRuleTypes.java'],
@@ -41,9 +22,8 @@ java_library(
 
 java_library(
   name = 'rules',
-  srcs = glob(['*.java'], excludes = TEST_SRCS + ['KnownBuildRuleTypes.java']),
+  srcs = glob(['*.java'], excludes = ['KnownBuildRuleTypes.java']),
   deps = [
-    ':test',
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/android:exceptions',
@@ -55,6 +35,7 @@ java_library(
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

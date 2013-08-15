@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.test.TestResults;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;

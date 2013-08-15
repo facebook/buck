@@ -16,9 +16,9 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.TestResultSummary;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.test.TestResultSummary;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.test.TestResults;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 

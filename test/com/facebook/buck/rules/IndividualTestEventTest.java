@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.test.TestResults;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
