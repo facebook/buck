@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -146,6 +147,12 @@ public class AndroidTransitiveDependencyGraph {
             nativeLibAssetsZips.add(nativeLibraryRule.getPathToOutputFile());
           } else {
             nativeLibsZips.add(nativeLibraryRule.getPathToOutputFile());
+          }
+
+          // In the rare event that a PrebuiltNativeLibraryBuildRule has deps, it is likely another
+          // NativeLibraryRule that will need to be included in the final APK, so traverse the deps.
+          if (rule instanceof PrebuiltNativeLibraryBuildRule) {
+            return true;
           }
         } else if (rule instanceof AndroidResourceRule) {
           AndroidResourceRule androidRule = (AndroidResourceRule) rule;
