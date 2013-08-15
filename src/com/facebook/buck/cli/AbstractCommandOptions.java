@@ -133,7 +133,7 @@ public abstract class AbstractCommandOptions {
             minVersion.get(),
             maxVersion.get(),
             version,
-            ndkPath);
+            ndkPath.getAbsolutePath());
       }
     } else if (minVersion.isPresent() || maxVersion.isPresent()) {
       throw new HumanReadableException(
