@@ -42,11 +42,13 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.UnzipStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
+import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Function;
@@ -540,7 +542,6 @@ public class AndroidBinaryRuleTest {
         "path/to/source/libs.zip",
         "path/to/destination/",
         ImmutableList.of(
-            "unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
             "bash -c cp -R " + nativeOutDir + "path/to/source/* path/to/destination/"));
   }
 
@@ -551,7 +552,6 @@ public class AndroidBinaryRuleTest {
         "path/to/source/libs.zip",
         "path/to/destination/",
         ImmutableList.of(
-            "unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
             "bash -c " +
                 "[ -d " + nativeOutDir + "path/to/source/armeabi-v7a ] && " +
                 "cp -R " + nativeOutDir + "path/to/source/armeabi-v7a path/to/destination/ || " +
@@ -565,7 +565,6 @@ public class AndroidBinaryRuleTest {
         "path/to/source/libs.zip",
         "path/to/destination/",
         ImmutableList.of(
-            "unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
             "bash -c [ -d " + nativeOutDir + "path/to/source/armeabi ] && " +
                 "cp -R " + nativeOutDir + "path/to/source/armeabi path/to/destination/ || exit 0",
             "bash -c [ -d " + nativeOutDir + "path/to/source/x86 ] && " +
@@ -595,21 +594,28 @@ public class AndroidBinaryRuleTest {
 
     ImmutableList<Step> steps = commands.build();
 
-    assertEquals(steps.size(), expectedShellCommands.size() + 1);
+    assertEquals(steps.size() - 2, expectedShellCommands.size());
     assertEquals(MakeCleanDirectoryStep.class, steps.get(0).getClass());
 
-    ImmutableList<ShellStep> shellSteps =
-        ImmutableList.copyOf(Iterables.filter(steps, ShellStep.class));
-    assertEquals(shellSteps.size(), expectedShellCommands.size() - 1);
     ExecutionContext context = ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();
 
+    assertEquals(UnzipStep.class, steps.get(1).getClass());
+    UnzipStep unzip = (UnzipStep)steps.get(1);
+    assertEquals("unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
+        Paths.normalizePathSeparator(unzip.getDescription(context)));
+
+    ImmutableList<ShellStep> shellSteps =
+        ImmutableList.copyOf(Iterables.filter(steps, ShellStep.class));
+    assertEquals(shellSteps.size(), expectedShellCommands.size());
+
     for (int i = 0; i < shellSteps.size(); ++i) {
-      assertEquals(expectedShellCommands.get(i + 1),
-          Joiner.on(" ").join((shellSteps.get(i)).getShellCommand(context)));
+      assertEquals(expectedShellCommands.get(i),
+          Paths.normalizePathSeparator(
+              Joiner.on(" ").join((shellSteps.get(i)).getShellCommand(context))));
     }
   }
 
