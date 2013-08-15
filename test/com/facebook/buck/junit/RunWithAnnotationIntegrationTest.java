@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -27,7 +28,6 @@ import com.facebook.buck.util.XmlDomParser;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,7 +40,7 @@ import java.io.IOException;
 public class RunWithAnnotationIntegrationTest {
 
   @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
   public void testSimpleSuiteRun2TestCases() throws IOException {

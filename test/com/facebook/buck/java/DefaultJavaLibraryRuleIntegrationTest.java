@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.abi.AbiWriterProtocol;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -34,7 +35,6 @@ import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,8 @@ import java.io.IOException;
  */
 public class DefaultJavaLibraryRuleIntegrationTest {
 
-  @Rule public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   private ProjectWorkspace workspace;
 

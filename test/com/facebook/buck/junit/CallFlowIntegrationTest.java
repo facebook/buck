@@ -19,20 +19,20 @@ package com.facebook.buck.junit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 
 public class CallFlowIntegrationTest {
 
   @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
   public void testCallFlow() throws IOException {

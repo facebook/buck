@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -27,7 +28,6 @@ import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +36,7 @@ import java.nio.charset.Charset;
 public class CachedTestIntegrationTest {
 
   @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   /**
    * This is a regression test. We had a situation where we did the following with the build cache

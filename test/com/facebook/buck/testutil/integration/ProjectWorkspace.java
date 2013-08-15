@@ -84,7 +84,7 @@ public class ProjectWorkspace {
    *     written. By requiring a {@link TemporaryFolder} rather than a {@link File}, we can ensure
    *     that JUnit will clean up the test correctly.
    */
-  public ProjectWorkspace(File templateDir, TemporaryFolder temporaryFolder) {
+  public ProjectWorkspace(File templateDir, DebuggableTemporaryFolder temporaryFolder) {
     Preconditions.checkNotNull(templateDir);
     Preconditions.checkNotNull(temporaryFolder);
     this.templatePath = templateDir.toPath();

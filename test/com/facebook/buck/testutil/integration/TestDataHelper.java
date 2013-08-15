@@ -19,8 +19,6 @@ package com.facebook.buck.testutil.integration;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.util.List;
@@ -61,7 +59,7 @@ public class TestDataHelper {
   public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase,
       String scenario,
-      TemporaryFolder temporaryFolder) {
+      DebuggableTemporaryFolder temporaryFolder) {
     File templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
     return new ProjectWorkspace(templateDir, temporaryFolder);
   }

@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -42,7 +43,6 @@ import com.google.common.collect.Iterables;
 import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +56,7 @@ import javax.annotation.Nullable;
 public class BuckConfigTest {
 
   @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
   public void testSortOrder() throws IOException {

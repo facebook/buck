@@ -16,18 +16,18 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 
 public class ParserIntegrationTest {
   @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
   public void testParserFilesAreSandboxed() throws IOException {

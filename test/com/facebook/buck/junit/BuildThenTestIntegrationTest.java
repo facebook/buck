@@ -19,6 +19,7 @@ package com.facebook.buck.junit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -27,14 +28,13 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 
 public class BuildThenTestIntegrationTest {
 
   @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   /**
    * It is possible to build a test without running it. It is important to make sure that even

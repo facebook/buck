@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -28,7 +29,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -42,7 +42,7 @@ public class DaemonIntegrationTest {
   private ScheduledExecutorService executorService;
 
   @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Before
   public void setUp() {

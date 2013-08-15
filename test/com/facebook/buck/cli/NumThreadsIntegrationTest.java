@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -29,7 +30,6 @@ import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.io.IOException;
 public class NumThreadsIntegrationTest {
 
   @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
   public void testCommandLineNumThreadsArgOverridesBuckConfig() throws IOException {

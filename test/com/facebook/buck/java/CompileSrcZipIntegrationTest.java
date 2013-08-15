@@ -16,20 +16,20 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 
 public class CompileSrcZipIntegrationTest {
 
   @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
   public void testJavaLibraryRuleAcceptsZipFileOfJavaSourceCodeAsInput() throws IOException {

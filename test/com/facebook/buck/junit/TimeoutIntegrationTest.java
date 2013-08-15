@@ -19,6 +19,7 @@ package com.facebook.buck.junit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -30,7 +31,6 @@ import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class TimeoutIntegrationTest {
   private static final String PATH_TO_TIMEOUT_BEHAVIOR_TEST = "TimeoutChangesBehaviorTest.java";
 
   @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
   public void testThatTimeoutsInTestsWorkAsExpected() throws IOException {
