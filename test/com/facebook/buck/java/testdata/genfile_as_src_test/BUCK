@@ -1,0 +1,50 @@
+genrule(
+  name = 'resource',
+  srcs = [
+    'LameGenfile.java',
+    'resource.base.txt',
+  ],
+  cmd = ('TEXT=`cat resource.base.txt`;' +
+    'sed \"s/REPLACEME/$TEXT/g\" LameGenfile.java > $OUT'),
+  out = 'LameGenfile.java',
+)
+
+java_library(
+  name = 'library',
+  srcs = [
+    genfile('LameGenfile.java'),
+  ],
+  deps = [
+    ':resource',
+  ],
+)
+
+java_test(
+  name = 'test',
+  srcs = [
+    'LameTest.java',
+  ],
+  deps = [
+    ':junit',
+    ':library',
+  ],
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit-4.11.jar',
+  deps = [
+    ':hamcrest-core',
+    ':hamcrest-library',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest-core',
+  binary_jar = 'hamcrest-core-1.3.jar',
+)
+
+prebuilt_jar(
+  name = 'hamcrest-library',
+  binary_jar = 'hamcrest-library-1.3.jar',
+)
