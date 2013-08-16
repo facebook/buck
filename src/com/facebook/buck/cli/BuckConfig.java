@@ -397,6 +397,10 @@ class BuckConfig {
     return ImmutableMap.copyOf(basePathToAlias);
   }
 
+  public ImmutableSet<String> getAliases() {
+    return this.aliasToBuildTargetMap.keySet();
+  }
+
   public long getDefaultTestTimeoutMillis() {
     return Long.parseLong(getValue("test", "timeout").or("0"));
   }

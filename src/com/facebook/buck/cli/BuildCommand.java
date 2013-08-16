@@ -30,9 +30,12 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 
 import java.io.IOException;
 import java.util.Set;
@@ -67,6 +70,16 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
     if (buildTargets.isEmpty()) {
       console.printBuildFailure("Must specify at least one build target.");
+
+      // If there are aliases defined in .buckconfig, suggest that the user
+      // build one of them. We show the user only the first 10 aliases.
+      ImmutableSet<String> aliases = options.getBuckConfig().getAliases();
+      if (!aliases.isEmpty()) {
+        console.getStdErr().println(String.format(
+            "Try building one of the following targets:\n%s",
+            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10))
+        ));
+      }
       return 1;
     }
 

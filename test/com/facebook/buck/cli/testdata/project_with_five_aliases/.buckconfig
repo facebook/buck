@@ -1,0 +1,6 @@
+[alias]
+	myapp = //:myapp
+	my_app = myapp
+	mi_app = myapp
+	mon_app = myapp
+	mein_app = myapp
