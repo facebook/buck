@@ -133,7 +133,8 @@ public class SplitZipStep implements Step {
           ZIP_SIZE_SOFT_LIMIT,
           ZIP_SIZE_HARD_LIMIT,
           requiredInPrimaryZip,
-          dexSplitStrategy);
+          dexSplitStrategy,
+          ZipSplitter.CanaryStrategy.INCLUDE_CANARIES);
 
       BufferedWriter secondaryMetaInfoWriter = Files.newWriter(new File(secondaryJarMetaPath),
           Charsets.UTF_8);

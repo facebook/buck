@@ -25,12 +25,15 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -44,6 +47,36 @@ public class ZipSplitter {
     ;
   }
 
+  public static enum CanaryStrategy {
+    INCLUDE_CANARIES,
+    DONT_INCLUDE_CANARIES,
+    ;
+  }
+
+  /*
+    Produced by compiling the folowing Java file with JDK 7 with "-target 6 -source 6".
+      package secondary.dex01;
+      public interface Canary {}
+  */
+  private static final byte[] CANARY_TEMPLATE = {
+       -54,   -2,  -70,  -66, 0x00, 0x00, 0x00, 0x32,
+      0x00, 0x05, 0x07, 0x00, 0x03, 0x07, 0x00, 0x04,
+      0x01, 0x00, 0x16, 0x73, 0x65, 0x63, 0x6f, 0x6e,
+      0x64, 0x61, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x78,
+      0x30, 0x31, 0x2f, 0x43, 0x61, 0x6e, 0x61, 0x72,
+      0x79, 0x01, 0x00, 0x10, 0x6a, 0x61, 0x76, 0x61,
+      0x2f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x4f, 0x62,
+      0x6a, 0x65, 0x63, 0x74, 0x06, 0x01, 0x00, 0x01,
+      0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00
+  };
+  /**
+   * Offset into {@link #CANARY_TEMPLATE} where we find the 2-byte UTF-8 index that must be
+   * updated for each canary class to change the package.
+   */
+  private static final int CANARY_INDEX_OFFSET = 32;
+  private static final String CANARY_PATH_FORMAT = "secondary/dex%02d/Canary.class";
+
   private final Set<File> inFiles;
   private final File outPrimary;
   private final File outSecondaryDir;
@@ -52,6 +85,7 @@ public class ZipSplitter {
   private final long zipSizeHardLimit;
   private final Predicate<String> requiredInPrimaryZip;
   private final DexSplitStrategy dexSplitStrategy;
+  private final CanaryStrategy canaryStrategy;
 
   private final ImmutableList.Builder<File> secondaryFiles = ImmutableList.builder();
   private long remainingSize;
@@ -68,7 +102,9 @@ public class ZipSplitter {
       long zipSizeSoftLimit,
       long zipSizeHardLimit,
       Predicate<String> requiredInPrimaryZip,
-      DexSplitStrategy dexSplitStrategy) {
+      DexSplitStrategy dexSplitStrategy,
+      CanaryStrategy canaryStrategy) {
+    this.canaryStrategy = canaryStrategy;
     this.inFiles = ImmutableSet.copyOf(inFiles);
     this.outPrimary = Preconditions.checkNotNull(outPrimary);
     this.outSecondaryDir = Preconditions.checkNotNull(outSecondaryDir);
@@ -109,6 +145,7 @@ public class ZipSplitter {
    * @param requiredInPrimaryZip Determine which input <em>entries</em> are necessary in the
    *     primary output zip file.  Note that this is referring to the entries contained within
    *     {@code inFiles}, not the input files themselves.
+   * @param canaryStrategy Determine whether to include canary classes for easy verification.
    * @return Secondary output zip files.
    * @throws IOException
    */
@@ -120,7 +157,8 @@ public class ZipSplitter {
       long zipSizeSoftLimit,
       long zipSizeHardLimit,
       Predicate<String> requiredInPrimaryZip,
-      DexSplitStrategy dexSplitStrategy) throws IOException {
+      DexSplitStrategy dexSplitStrategy,
+      CanaryStrategy canaryStrategy) throws IOException {
     ZipSplitter splitter = new ZipSplitter(
         inFiles,
         outPrimary,
@@ -129,7 +167,8 @@ public class ZipSplitter {
         zipSizeSoftLimit,
         zipSizeHardLimit,
         requiredInPrimaryZip,
-        dexSplitStrategy);
+        dexSplitStrategy,
+        canaryStrategy);
     return splitter.execute();
   }
 
@@ -235,6 +274,10 @@ public class ZipSplitter {
         secondaryFiles.add(newSecondaryFile);
         currentSecondaryOut = newZipOutput(newSecondaryFile);
         newSecondaryOutOnNextEntry = false;
+        if (canaryStrategy == CanaryStrategy.INCLUDE_CANARIES) {
+          // Make sure the first class in the new secondary dex can be safely loaded.
+          addCanaryClass(currentSecondaryOut, currentSecondaryIndex);
+        }
         // We've already tested for this. It really shouldn't happen.
         Preconditions.checkState(currentSecondaryOut.canPutEntry(entry));
       }
@@ -243,6 +286,49 @@ public class ZipSplitter {
 
     targetOut.putEntry(entry);
     remainingSize -= entrySize;
+  }
+
+  /**
+   * Adds a "canary" class to a secondary dex that can be safely loaded on any system.
+   * This avoids an issue where, during secondary dex loading, we attempt to verify a
+   * secondary dex by loading an arbitrary class, but the class we try to load isn't
+   * valid on that system (e.g., it depends on Google Maps, but we are on AOSP).
+   *
+   * @param outZip Zip file to write the canary class to.
+   * @param index Index of the current zip (to ensure unique names).
+   */
+  private void addCanaryClass(
+      ZipOutputStreamHelper outZip,
+      final int index)
+      throws IOException {
+    final byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
+    final String canaryIndexStr = String.format("%02d", index);
+    byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charset.forName("UTF-8"));
+    Preconditions.checkState(canaryIndexBytes.length == 2,
+        "Formatted index string should always be 2 bytes.");
+    System.arraycopy(canaryIndexBytes, 0, canaryClass, CANARY_INDEX_OFFSET, 2);
+
+    outZip.putEntry(new AbstractFileLike() {
+      @Override
+      public File getContainer() {
+        return new File(":memory:");
+      }
+
+      @Override
+      public String getRelativePath() {
+        return String.format(CANARY_PATH_FORMAT, index);
+      }
+
+      @Override
+      public long getSize() {
+        return canaryClass.length;
+      }
+
+      @Override
+      public InputStream getInput() {
+        return new ByteArrayInputStream(canaryClass);
+      }
+    });
   }
 
   private ZipOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {

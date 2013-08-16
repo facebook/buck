@@ -116,7 +116,8 @@ public class ZipSplitterTest {
         999 /* soft limit */,
         999 /* hard limit */,
         processor,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE);
+        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
     assertTrue(primaryZipContains("primary"));
     assertTrue(primaryZipContains("secondary-1"));
     assertTrue(primaryZipContains("secondary-2"));
@@ -133,7 +134,8 @@ public class ZipSplitterTest {
         12 /* soft limit */,
         12 /* hard limit */,
         processor,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE);
+        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
     assertTrue(primaryZipContains("primary"));
     assertTrue(primaryZipContains("secondary-3"));
     assertTrue(primaryZipContains("secondary-4"));
@@ -150,7 +152,8 @@ public class ZipSplitterTest {
         8 /* soft limit */,
         8 /* hard limit */,
         processor,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE);
+        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
     assertTrue(primaryZipContains("primary"));
     assertTrue(primaryZipContains("secondary-4"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
@@ -168,7 +171,8 @@ public class ZipSplitterTest {
         999 /* soft limit */,
         999,
         processor,
-        ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE);
+        ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
     assertTrue(primaryZipContains("primary"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
     assertTrue(nthSecondaryZipContains(1, "secondary-2"));
@@ -186,8 +190,8 @@ public class ZipSplitterTest {
         12 /* soft limit */,
         12,
         processor,
-        ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
-    );
+        ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
     assertTrue(primaryZipContains("primary"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
     assertTrue(nthSecondaryZipContains(1, "secondary-2"));
@@ -205,8 +209,8 @@ public class ZipSplitterTest {
         8 /* soft limit */,
         8,
         processor,
-        ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
-    );
+        ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
     assertTrue(primaryZipContains("primary"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
     assertTrue(nthSecondaryZipContains(1, "secondary-2"));
@@ -223,7 +227,8 @@ public class ZipSplitterTest {
         8 /* soft limit */,
         12 /* hard limit */,
         processor,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE);
+        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
     assertTrue(primaryZipContains("primary-a-1"));
     assertTrue(primaryZipContains("primary-a-2"));
     assertTrue(primaryZipContains("primary-a-3"));
@@ -235,6 +240,24 @@ public class ZipSplitterTest {
     assertTrue(nthSecondaryZipContains(3, "secondary-c-1"));
     assertTrue(nthSecondaryZipContains(3, "secondary-c-2"));
     assertTrue(nthSecondaryZipContains(3, "secondary-c-3"));
+  }
+
+  @Test
+  public void testCanary() throws IOException {
+    ZipSplitter.splitZip(
+        Collections.singleton(testInZip),
+        outPrimary,
+        tmpDir.getRoot(),
+        secondaryPattern,
+        80 /* soft limit */,
+        80,
+        processor,
+        ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
+        ZipSplitter.CanaryStrategy.INCLUDE_CANARIES);
+    assertTrue(nthSecondaryZipContains(1, "secondary/dex01/Canary.class"));
+    assertTrue(nthSecondaryZipContains(2, "secondary/dex02/Canary.class"));
+    assertTrue(nthSecondaryZipContains(3, "secondary/dex03/Canary.class"));
+    assertTrue(nthSecondaryZipContains(4, "secondary/dex04/Canary.class"));
   }
 
   private boolean primaryZipContains(String name) throws IOException {
