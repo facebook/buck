@@ -28,7 +28,11 @@ BUCK_DIRECTORY="$PWD"
 
 # If there is a .buckversion file in the project root, then make sure that Buck is at that version.
 # The only way to override this is to include a .nobuckcheck file in the project root.
-if [ -e "${PROJECT_ROOT}/.buckversion" ] && [ ! -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
+if [ -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
+  echo >&2 ":::"
+  echo >&2 "::: '.nobuckcheck' file is present.  Not updating buck"
+  echo >&2 ":::"
+elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
   BUCK_REQUIRED_VERSION=`cat ${PROJECT_ROOT}/.buckversion`
 
   # If the hash is in not in the user's repository, do a `git fetch`.
