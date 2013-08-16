@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
@@ -25,6 +28,7 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,6 +41,8 @@ import java.util.List;
 import java.util.Set;
 
 public class AndroidLibraryRule extends DefaultJavaLibraryRule {
+
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /**
    * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
@@ -65,13 +71,13 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     return BuildRuleType.ANDROID_LIBRARY;
   }
 
-  public Optional<String> getManifestFile() {
-    return manifestFile;
+  @Override
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
   }
 
-  @Override
-  public boolean isAndroidRule() {
-    return true;
+  public Optional<String> getManifestFile() {
+    return manifestFile;
   }
 
   @Override

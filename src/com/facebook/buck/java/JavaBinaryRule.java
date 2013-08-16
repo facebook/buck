@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -26,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -50,6 +53,8 @@ import javax.annotation.Nullable;
 
 public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule,
     HasClasspathEntries, Buildable {
+
+  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
   @Nullable
   private final String mainClass;
@@ -94,6 +99,11 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
   @Override
   public BuildRuleType getType() {
     return BuildRuleType.JAVA_BINARY;
+  }
+
+  @Override
+  public BuildableProperties getProperties() {
+    return OUTPUT_TYPE;
   }
 
   @Override
@@ -165,11 +175,6 @@ public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBu
 
   public static Builder newJavaBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
-  }
-
-  @Override
-  public boolean isPackagingRule() {
-    return true;
   }
 
   @Override

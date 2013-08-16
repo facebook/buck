@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -27,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
@@ -46,6 +49,8 @@ import java.util.List;
  */
 public class PrebuiltJarRule extends AbstractCachingBuildRule
     implements JavaLibraryRule, HasClasspathEntries, Buildable {
+
+  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private final String binaryJar;
   private final Optional<String> sourceJar;
@@ -92,6 +97,11 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   @Override
   public BuildRuleType getType() {
     return BuildRuleType.PREBUILT_JAR;
+  }
+
+  @Override
+  public BuildableProperties getProperties() {
+    return OUTPUT_TYPE;
   }
 
   public String getBinaryJar() {
@@ -150,11 +160,6 @@ public class PrebuiltJarRule extends AbstractCachingBuildRule
   @Override
   public String getPathToOutputFile() {
     return getBinaryJar();
-  }
-
-  @Override
-  public boolean isLibrary() {
-    return true;
   }
 
   @Override

@@ -16,6 +16,9 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+
 import com.facebook.buck.android.HasAndroidResourceDeps;
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.graph.TopologicalSort;
@@ -35,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
@@ -100,6 +104,8 @@ import javax.annotation.Nullable;
  */
 public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
     implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, Buildable {
+
+  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private final ImmutableSortedSet<String> srcs;
 
@@ -365,16 +371,6 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return false;
-  }
-
-  @Override
-  public boolean isLibrary() {
-    return true;
-  }
-
-  @Override
   public RuleKey getRuleKeyWithoutDeps() throws IOException {
     return createRuleKeyWithoutDeps();
   }
@@ -440,6 +436,11 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
   }
 
   @Override
+  public BuildableProperties getProperties() {
+    return OUTPUT_TYPE;
+  }
+
+  @Override
   public ImmutableSortedSet<String> getJavaSrcs() {
     return srcs;
   }
@@ -490,7 +491,7 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
     JavacOptions javacOptions = this.javacOptions;
     // Only override the bootclasspath if this rule is supposed to compile Android code.
-    if (isAndroidRule()) {
+    if (getProperties().is(ANDROID)) {
       javacOptions = JavacOptions.builder(this.javacOptions)
           .setBootclasspath(context.getAndroidBootclasspathSupplier().get())
           .build();

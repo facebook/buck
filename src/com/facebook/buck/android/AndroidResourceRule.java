@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
@@ -26,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -62,6 +66,8 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class AndroidResourceRule extends AbstractCachingBuildRule implements HasAndroidResourceDeps, Buildable {
+
+  private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResourceRule}. */
   private static final Function<HasAndroidResourceDeps, String> GET_RES_FOR_RULE =
@@ -216,13 +222,8 @@ public class AndroidResourceRule extends AbstractCachingBuildRule implements Has
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return true;
-  }
-
-  @Override
-  public boolean isLibrary() {
-    return true;
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
   }
 
   @Override

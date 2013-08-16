@@ -29,6 +29,9 @@ import javax.annotation.Nullable;
  * whether the rule needs to be rebuilt and how to actually go about building the rule itself.
  */
 public interface Buildable {
+
+  public BuildableProperties getProperties();
+
   /**
    * Get the set of input files whose contents should be hashed for the purpose of determining
    * whether this rule is cached.

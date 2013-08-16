@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+
 import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
@@ -82,7 +84,7 @@ public class AndroidTransitiveDependencyGraph {
         }
         // AbstractDependencyVisitor will start from this (AndroidBinaryRule) so make sure it
         // descends to its dependencies even though it is not a library rule.
-        return rule.isLibrary() || rule == buildRule;
+        return rule.getProperties().is(LIBRARY) || rule == buildRule;
       }
     }.start();
 
@@ -175,7 +177,7 @@ public class AndroidTransitiveDependencyGraph {
         }
         // AbstractDependencyVisitor will start from this (AndroidBinaryRule) so make sure it
         // descends to its dependencies even though it is not a library rule.
-        return rule.isLibrary() || rule == buildRule;
+        return rule.getProperties().is(LIBRARY) || (rule == buildRule);
       }
     }.start();
 

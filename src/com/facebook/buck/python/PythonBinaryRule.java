@@ -16,6 +16,8 @@
 
 package com.facebook.buck.python;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
+
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
@@ -27,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -43,6 +46,7 @@ import java.util.List;
 
 public class PythonBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule, Buildable {
 
+  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
   private final String main;
 
   protected PythonBinaryRule(BuildRuleParams buildRuleParams, String main) {
@@ -59,6 +63,11 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
   @Override
   public BuildRuleType getType() {
     return BuildRuleType.PYTHON_BINARY;
+  }
+
+  @Override
+  public BuildableProperties getProperties() {
+    return OUTPUT_TYPE;
   }
 
   @Override
@@ -114,11 +123,6 @@ public class PythonBinaryRule extends AbstractCachingBuildRule implements Binary
     // TODO(mbolin): Package Python code, if appropriate. There does not appear to be a standard
     // cross-platform way to do this.
     return ImmutableList.of();
-  }
-
-  @Override
-  public boolean isPackagingRule() {
-    return true;
   }
 
   public static Builder newPythonBinaryBuilder(AbstractBuildRuleBuilderParams params) {

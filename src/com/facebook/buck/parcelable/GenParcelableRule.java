@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parcelable;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
@@ -24,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -41,6 +44,8 @@ import java.util.List;
 import java.util.Set;
 
 public class GenParcelableRule extends AbstractCachingBuildRule implements Buildable {
+
+  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
 
   private final ImmutableSortedSet<String> srcs;
   private final String outputDirectory;
@@ -113,8 +118,8 @@ public class GenParcelableRule extends AbstractCachingBuildRule implements Build
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return true;
+  public BuildableProperties getProperties() {
+    return OUTPUT_TYPE;
   }
 
   @Override

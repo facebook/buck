@@ -16,6 +16,8 @@
 
 package com.facebook.buck.command;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+
 import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
@@ -147,7 +149,7 @@ public class Build {
 
       @Override
       public void visit(BuildRule rule) {
-        if (rule.isAndroidRule()) {
+        if (rule.getProperties().is(ANDROID)) {
           isEncounteredAndroidRuleInTraversal = true;
         }
 

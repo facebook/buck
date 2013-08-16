@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -66,7 +67,7 @@ public class NdkLibraryRuleTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     Assert.assertEquals(BuildRuleType.NDK_LIBRARY, ndkLibraryRule.getType());
-    assertTrue(ndkLibraryRule.isAndroidRule());
+    assertTrue(ndkLibraryRule.getProperties().is(ANDROID));
     assertTrue(ndkLibraryRule.isAsset());
     Assert.assertEquals(BuckConstant.GEN_DIR + "/" + basePath + "/__libbase/libs",
         ndkLibraryRule.getLibraryPath());

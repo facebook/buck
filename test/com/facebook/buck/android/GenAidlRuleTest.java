@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -30,8 +31,8 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -65,7 +66,7 @@ public class GenAidlRuleTest {
         .setImportPath(importPath));
 
     assertEquals(BuildRuleType.GEN_AIDL, genAidlRule.getType());
-    assertTrue(genAidlRule.isAndroidRule());
+    assertTrue(genAidlRule.getProperties().is(ANDROID));
 
     assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput());
 

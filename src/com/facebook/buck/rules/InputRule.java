@@ -98,6 +98,11 @@ public class InputRule implements BuildRule {
   }
 
   @Override
+  public BuildableProperties getProperties() {
+    return BuildableProperties.NONE;
+  }
+
+  @Override
   public ImmutableSortedSet<BuildRule> getDeps() {
     return ImmutableSortedSet.of();
   }
@@ -123,22 +128,7 @@ public class InputRule implements BuildRule {
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return false;
-  }
-
-  @Override
-  public boolean isLibrary() {
-    return false;
-  }
-
-  @Override
   public boolean getExportDeps() {
-    return false;
-  }
-
-  @Override
-  public boolean isPackagingRule() {
     return false;
   }
 

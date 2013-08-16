@@ -16,6 +16,10 @@
 
 package com.facebook.buck.command;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
+
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
@@ -410,7 +414,7 @@ public class Project {
 
     // IntelliJ expects all Android projects to have a gen/ folder, even if there is no src/
     // directory specified.
-    boolean isAndroidRule = projectRule.isAndroidRule();
+    boolean isAndroidRule = projectRule.getProperties().is(ANDROID);
     if (isAndroidRule) {
       boolean hasSourceFolders = !module.sourceFolders.isEmpty();
       module.sourceFolders.add(SourceFolder.GEN);
@@ -736,8 +740,8 @@ public class Project {
 
       @Override
       public boolean visit(BuildRule dep) {
-        boolean depShouldExportDeps = dep.getExportDeps() || rule.isPackagingRule();
-        boolean shouldVisitDeps = (dep.isLibrary() && (depShouldExportDeps))
+        boolean depShouldExportDeps = dep.getExportDeps() || rule.getProperties().is(PACKAGING);
+        boolean shouldVisitDeps = (dep.getProperties().is(LIBRARY) && (depShouldExportDeps))
             || (dep instanceof AndroidResourceRule)
             || dep == rule;
 

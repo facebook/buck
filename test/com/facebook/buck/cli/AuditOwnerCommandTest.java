@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -85,6 +86,11 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
+    public BuildableProperties getProperties() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public ImmutableSortedSet<BuildRule> getDeps() {
       throw new UnsupportedOperationException();
     }
@@ -110,22 +116,7 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
-    public boolean isAndroidRule() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isLibrary() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean getExportDeps() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isPackagingRule() {
       throw new UnsupportedOperationException();
     }
 

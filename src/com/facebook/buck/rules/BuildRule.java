@@ -34,6 +34,8 @@ public interface BuildRule extends Comparable<BuildRule> {
 
   public BuildRuleType getType();
 
+  public BuildableProperties getProperties();
+
   /**
    * @return the value of the "deps" attribute for this build rule
    */
@@ -66,20 +68,6 @@ public interface BuildRule extends Comparable<BuildRule> {
    * invoked.
    */
   public BuildRuleSuccess.Type getBuildResultType();
-
-  /**
-   * @return whether this rule exists only in an Android project.
-   */
-  public boolean isAndroidRule();
-
-  public boolean isLibrary();
-
-  /**
-   * @return whether or not this rule is considered a packaging rule.  Packaging rules
-   *   (like java_binary) are rules that package up all of their transitive dependencies in their
-   *   final output.
-   */
-  public boolean isPackagingRule();
 
   /**
    * @return whether or not this rule exports its dependencies to all rules depending on it.

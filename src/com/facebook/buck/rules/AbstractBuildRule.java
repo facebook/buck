@@ -55,6 +55,11 @@ abstract class AbstractBuildRule implements BuildRule {
   public abstract BuildRuleType getType();
 
   @Override
+  public BuildableProperties getProperties() {
+    return BuildableProperties.NONE;
+  }
+
+  @Override
   public final BuildTarget getBuildTarget() {
     return buildTarget;
   }
@@ -62,21 +67,6 @@ abstract class AbstractBuildRule implements BuildRule {
   @Override
   public final String getFullyQualifiedName() {
     return buildTarget.getFullyQualifiedName();
-  }
-
-  @Override
-  public boolean isAndroidRule() {
-    return false;
-  }
-
-  @Override
-  public boolean isLibrary() {
-    return false;
-  }
-
-  @Override
-  public boolean isPackagingRule() {
-    return false;
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -25,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -57,6 +60,8 @@ import java.util.List;
  */
 public class GenAidlRule extends AbstractCachingBuildRule implements Buildable {
 
+  private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
+
   private final String aidlFilePath;
   private final String importPath;
 
@@ -74,8 +79,8 @@ public class GenAidlRule extends AbstractCachingBuildRule implements Buildable {
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return true;
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
   }
 
   @Override

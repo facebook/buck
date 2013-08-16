@@ -16,6 +16,10 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
+
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
@@ -25,6 +29,7 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +39,9 @@ import java.util.List;
 import java.util.Set;
 
 public class RobolectricTestRule extends JavaTestRule {
+
+  private final static BuildableProperties PROPERTIES = new BuildableProperties(
+      ANDROID, LIBRARY, TEST);
 
   protected RobolectricTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
@@ -59,8 +67,8 @@ public class RobolectricTestRule extends JavaTestRule {
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return true;
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
   }
 
   @Override

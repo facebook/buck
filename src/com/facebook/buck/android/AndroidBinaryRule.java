@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
+
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.java.Classpaths;
@@ -33,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -86,6 +90,8 @@ import java.util.Set;
  */
 public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule, Buildable {
+
+  private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
   /**
    * The largest file size Froyo will deflate.
@@ -186,13 +192,8 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return true;
-  }
-
-  @Override
-  public boolean isPackagingRule() {
-    return true;
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
   }
 
   @Override

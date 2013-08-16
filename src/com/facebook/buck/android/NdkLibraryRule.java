@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -23,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NativeLibraryRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
@@ -50,6 +54,8 @@ import java.util.Set;
  * </pre>
  */
   public class NdkLibraryRule extends NativeLibraryRule {
+
+  private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
   private final String makefileDirectory;
@@ -94,8 +100,8 @@ import java.util.Set;
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return true;
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.python;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractCachingBuildRule;
@@ -24,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
@@ -40,6 +43,7 @@ import java.util.List;
 
 public class PythonLibraryRule extends AbstractCachingBuildRule implements Buildable {
 
+  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
   private final ImmutableSortedSet<String> srcs;
   private final Optional<String> pythonPathDirectory;
 
@@ -53,11 +57,6 @@ public class PythonLibraryRule extends AbstractCachingBuildRule implements Build
     } else {
       this.pythonPathDirectory = Optional.of(getPathToPythonPathDirectory());
     }
-  }
-
-  @Override
-  public boolean isLibrary() {
-    return true;
   }
 
   @Override
@@ -110,6 +109,11 @@ public class PythonLibraryRule extends AbstractCachingBuildRule implements Build
   @Override
   public BuildRuleType getType() {
     return BuildRuleType.PYTHON_LIBRARY;
+  }
+
+  @Override
+  public BuildableProperties getProperties() {
+    return OUTPUT_TYPE;
   }
 
   public static Builder newPythonLibraryBuilder(AbstractBuildRuleBuilderParams params) {

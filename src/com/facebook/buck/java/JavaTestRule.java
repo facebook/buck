@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -153,7 +155,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     // If there are android resources, then compile the uber R.java files and add them to the
     // classpath used to run the test runner.
     ImmutableSet<String> classpathEntries;
-    if (isAndroidRule()) {
+    if (getProperties().is(ANDROID)) {
       BuildTarget buildTarget = getBuildTarget();
       String rDotJavaClasspathEntry;
       UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, steps);

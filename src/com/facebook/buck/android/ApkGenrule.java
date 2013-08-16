@@ -16,12 +16,15 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.Genrule;
@@ -53,6 +56,7 @@ import java.util.List;
  */
 public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
   private final InstallableBuildRule apk;
 
   private ApkGenrule(BuildRuleParams buildRuleParams,
@@ -75,8 +79,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   }
 
   @Override
-  public boolean isAndroidRule() {
-    return true;
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
   }
 
   @Override
