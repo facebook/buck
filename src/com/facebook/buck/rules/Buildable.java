@@ -22,6 +22,8 @@ import com.facebook.buck.util.ProjectFilesystem;
 import java.io.IOException;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents something that Buck is able to build, encapsulating the logic of how to determine
  * whether the rule needs to be rebuilt and how to actually go about building the rule itself.
@@ -56,4 +58,11 @@ public interface Buildable {
    */
   public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
       ProjectFilesystem projectFilesystem) throws IOException;
+
+  /**
+   * @return the relative path to the primary output of the build rule. If non-null, this path must
+   *     identify a single file (as opposed to a directory).
+   */
+  @Nullable
+  public String getPathToOutputFile();
 }

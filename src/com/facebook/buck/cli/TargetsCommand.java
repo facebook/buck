@@ -25,6 +25,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.util.HumanReadableException;
@@ -134,7 +135,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     for (Map.Entry<String, BuildRule> target : matchingBuildRules.entrySet()) {
       String output = target.getKey();
       if (showOutput) {
-        String outputPath = target.getValue().getPathToOutputFile();
+        BuildRule buildRule = target.getValue();
+        String outputPath = ((Buildable)buildRule).getPathToOutputFile();
         if (outputPath != null) {
           output += " " + outputPath;
         }
@@ -223,7 +225,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         continue;
       }
 
-      String outputPath = buildRule.getPathToOutputFile();
+      String outputPath = ((Buildable)buildRule).getPathToOutputFile();
       if (outputPath != null) {
         targetRule.put("buck.output_file", outputPath);
       }

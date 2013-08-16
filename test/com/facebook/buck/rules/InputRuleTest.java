@@ -45,11 +45,6 @@ public class InputRuleTest {
   }
 
   @Test
-  public void testGetPathToOutputFileIsRelative() {
-    assertEquals("src/com/facebook/buck/cli/Main.java", inputRule.getPathToOutputFile());
-  }
-
-  @Test
   public void testGetInputsIsEmpty() {
     assertTrue("Even though inputRule is itself an InputRule, its getInputs() should be empty.",
         Iterables.isEmpty(inputRule.getInputs()));

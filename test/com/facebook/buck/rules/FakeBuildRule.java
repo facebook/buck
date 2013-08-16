@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -25,9 +27,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.annotation.Nullable;
 
-public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
+public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Buildable {
 
   private final BuildRuleType type;
 
@@ -83,5 +88,22 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     throw new IllegalStateException("This method should not be called");
+  }
+
+  @Override
+  public Iterable<String> getInputsToCompareToOutput() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void recordOutputFileDetailsAfterFetchFromArtifactCache(
+      ArtifactCache cache, ProjectFilesystem projectFilesystem)
+      throws IOException {
+    throw new UnsupportedOperationException();
   }
 }

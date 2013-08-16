@@ -42,7 +42,6 @@ public class InputRule implements BuildRule {
   private static final BuildRuleSuccess.Type SUCCESS_TYPE = BuildRuleSuccess.Type.BY_DEFINITION;
 
   private final File inputFile;
-  private final String relativePath;
   private final BuildTarget buildTarget;
   private final ListenableFuture<BuildRuleSuccess> buildOutput;
   @Nullable private RuleKey ruleKey;
@@ -56,7 +55,6 @@ public class InputRule implements BuildRule {
   @VisibleForTesting
   protected InputRule(File inputFile, String relativePath) {
     this.inputFile = Preconditions.checkNotNull(inputFile);
-    this.relativePath = Preconditions.checkNotNull(relativePath);
     this.buildTarget = BuildTarget.createBuildTargetForInputFile(inputFile, relativePath);
     this.buildOutput = Futures.immediateFuture(new BuildRuleSuccess(this, SUCCESS_TYPE));
   }
@@ -142,11 +140,6 @@ public class InputRule implements BuildRule {
   @Override
   public boolean isPackagingRule() {
     return false;
-  }
-
-  @Override
-  public String getPathToOutputFile() {
-    return relativePath;
   }
 
   @Override

@@ -134,11 +134,6 @@ abstract class AbstractBuildRule implements BuildRule {
     return getFullyQualifiedName();
   }
 
-  @Override @Nullable
-  public String getPathToOutputFile() {
-    return null;
-  }
-
   /**
    * {@link #getRuleKey()} and {@link #createRuleKeyWithoutDeps()} uses this when constructing
    * {@link RuleKey}s for this class. Every subclass that extends the rule state in a way that

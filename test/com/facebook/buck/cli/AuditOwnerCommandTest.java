@@ -70,11 +70,6 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
-    public String getPathToOutputFile() {
-      return null;
-    }
-
-    @Override
     public BuildTarget getBuildTarget() {
       return target;
     }

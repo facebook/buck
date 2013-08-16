@@ -24,8 +24,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 
-import javax.annotation.Nullable;
-
 public interface BuildRule extends Comparable<BuildRule> {
 
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
@@ -87,13 +85,6 @@ public interface BuildRule extends Comparable<BuildRule> {
    * @return whether or not this rule exports its dependencies to all rules depending on it.
    */
   public boolean getExportDeps();
-
-  /**
-   * @return the relative path to the primary output of the build rule. If non-null, this path must
-   *     identify a single file (as opposed to a directory).
-   */
-  @Nullable
-  public String getPathToOutputFile();
 
   /**
    * @return key based on the BuildRule's state, including the transitive closure of its

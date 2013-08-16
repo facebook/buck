@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -25,7 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 
-public interface JavaLibraryRule extends BuildRule, HasClasspathEntries {
+public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntries {
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     build a jar associated with this rule.  Contains the classpath entries for the transitive

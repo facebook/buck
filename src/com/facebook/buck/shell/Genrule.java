@@ -219,7 +219,7 @@ public class Genrule extends AbstractCachingBuildRule implements Buildable {
     }
     processedBuildRules.add(rule);
 
-    String output = rule.getPathToOutputFile();
+    String output = ((Buildable)rule).getPathToOutputFile();
     if (output != null) {
       // TODO(mbolin): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
@@ -392,13 +392,14 @@ public class Genrule extends AbstractCachingBuildRule implements Buildable {
       }
 
       String replacement;
+      Buildable matchingBuildable = (Buildable)matchingRule;
       switch (matcher.group(2)) {
         case "exe":
-          replacement = getExecutableReplacementFrom(filesystem, command, matchingRule);
+          replacement = getExecutableReplacementFrom(filesystem, command, matchingBuildable);
           break;
 
         case "location":
-          replacement = getLocationReplacementFrom(filesystem, matchingRule);
+          replacement = getLocationReplacementFrom(filesystem, matchingBuildable);
           break;
 
         default:
@@ -412,7 +413,7 @@ public class Genrule extends AbstractCachingBuildRule implements Buildable {
     return buffer.toString();
   }
 
-  private String getLocationReplacementFrom(ProjectFilesystem filesystem, BuildRule matchingRule) {
+  private String getLocationReplacementFrom(ProjectFilesystem filesystem, Buildable matchingRule) {
     return filesystem.getPathRelativizer().apply(matchingRule.getPathToOutputFile());
   }
 
@@ -428,7 +429,7 @@ public class Genrule extends AbstractCachingBuildRule implements Buildable {
   private String getExecutableReplacementFrom(
       ProjectFilesystem filesystem,
       String cmd,
-      BuildRule matchingRule) {
+      Buildable matchingRule) {
     if (matchingRule instanceof BinaryBuildRule) {
       return ((BinaryBuildRule) matchingRule).getExecutableCommand(filesystem);
     }
@@ -440,7 +441,7 @@ public class Genrule extends AbstractCachingBuildRule implements Buildable {
 
     throw new HumanReadableException(
         "%s must correspond to a binary rule or file in %s for %s %s",
-        matchingRule.getFullyQualifiedName(),
+        matchingRule,
         cmd,
         getType().getName(),
         getFullyQualifiedName());

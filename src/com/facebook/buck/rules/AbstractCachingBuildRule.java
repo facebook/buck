@@ -462,6 +462,13 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
         getBuildTarget().getShortName());
   }
 
+  // TODO(mbolin): This should be abstract: each rule should be required to define this for itself.
+  @Override
+  @Nullable
+  public String getPathToOutputFile() {
+    return null;
+  }
+
   /**
    * Helper function for subclasses to create their lists of files for caching.
    */

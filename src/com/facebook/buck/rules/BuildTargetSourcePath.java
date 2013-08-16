@@ -41,7 +41,7 @@ public class BuildTargetSourcePath extends AbstractSourcePath {
       throw new HumanReadableException("Cannot resolve: %s", buildTarget);
     }
 
-    String path = rule.getPathToOutputFile();
+    String path = ((Buildable)rule).getPathToOutputFile();
     if (path == null) {
       throw new HumanReadableException("No known output for: %s", buildTarget);
     }
