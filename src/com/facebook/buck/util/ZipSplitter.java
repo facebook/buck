@@ -40,7 +40,8 @@ public class ZipSplitter {
 
   public static enum DexSplitStrategy {
     MAXIMIZE_PRIMARY_DEX_SIZE,
-    MINIMIZE_PRIMARY_DEX_SIZE;
+    MINIMIZE_PRIMARY_DEX_SIZE,
+    ;
   }
 
   private final Set<File> inFiles;
