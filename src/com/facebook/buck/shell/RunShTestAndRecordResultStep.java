@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,35 +55,49 @@ public class RunShTestAndRecordResultStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    ShellStep test = new ShellStep() {
-      @Override
-      public String getShortName() {
-        return pathToShellScript;
-      }
+    TestResultSummary summary;
+    if (Platform.detect() == Platform.WINDOWS) {
+      // Ignore sh_test on Windows.
+      summary = new TestResultSummary(
+          pathToShellScript,
+          "sh_test",
+          /* isSuccess */ true,
+          /* duration*/ 0,
+          /* message */ "sh_test ignored on Windows",
+          /* stacktrace */ null,
+          /* stdout */ null,
+          /* stderr */ null);
+    } else {
+      ShellStep test = new ShellStep() {
+        @Override
+        public String getShortName() {
+          return pathToShellScript;
+        }
 
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(
-          ExecutionContext context) {
-        return ImmutableList.of(pathToShellScript);
-      }
+        @Override
+        protected ImmutableList<String> getShellCommandInternal(
+            ExecutionContext context) {
+          return ImmutableList.of(pathToShellScript);
+        }
 
-      @Override
-      protected boolean shouldRecordStdout() {
-        return true;
-      }
-    };
-    int exitCode = test.execute(context);
+        @Override
+        protected boolean shouldRecordStdout() {
+          return true;
+        }
+      };
+      int exitCode = test.execute(context);
 
-    // Write test result.
-    TestResultSummary summary = new TestResultSummary(
-        pathToShellScript,
-        "sh_test",
-        /* isSuccess */ exitCode == 0,
-        test.getDuration(),
-        /* message */ null,
-        /* stacktrace */ null,
-        test.getStdOut(),
-        /* stderr */ null);
+      // Write test result.
+      summary = new TestResultSummary(
+          pathToShellScript,
+          "sh_test",
+          /* isSuccess */ exitCode == 0,
+          test.getDuration(),
+          /* message */ null,
+          /* stacktrace */ null,
+          test.getStdOut(),
+          /* stderr */ null);
+    }
 
     ObjectMapper mapper = new ObjectMapper();
     try {
