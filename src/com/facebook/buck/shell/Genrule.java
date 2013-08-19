@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -107,7 +107,7 @@ import java.util.regex.Pattern;
  * <p>
  * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractCachingBuildRule implements Buildable {
+public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
@@ -219,7 +219,9 @@ public class Genrule extends AbstractCachingBuildRule implements Buildable {
     }
     processedBuildRules.add(rule);
 
-    String output = ((Buildable)rule).getPathToOutputFile();
+    Buildable buildable = Preconditions.checkNotNull(rule.getBuildable());
+
+    String output = buildable.getPathToOutputFile();
     if (output != null) {
       // TODO(mbolin): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
@@ -392,7 +394,7 @@ public class Genrule extends AbstractCachingBuildRule implements Buildable {
       }
 
       String replacement;
-      Buildable matchingBuildable = (Buildable)matchingRule;
+      Buildable matchingBuildable = matchingRule.getBuildable();
       switch (matcher.group(2)) {
         case "exe":
           replacement = getExecutableReplacementFrom(filesystem, command, matchingBuildable);

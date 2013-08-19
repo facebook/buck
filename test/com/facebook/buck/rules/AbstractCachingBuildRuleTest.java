@@ -416,7 +416,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         buildSteps);
   }
 
-  private static class BuildableAbstractCachingBuildRule extends AbstractCachingBuildRule implements Buildable {
+  private static class BuildableAbstractCachingBuildRule extends DoNotUseAbstractBuildable {
 
     private final Iterable<InputRule> inputRules;
     private final String pathToOutputFile;
@@ -487,7 +487,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   /**
    * {@link AbstractCachingBuildRule} that implements {@link AbiRule}.
    */
-  private static class TestAbstractCachingBuildRule extends AbstractCachingBuildRule
+  private static class TestAbstractCachingBuildRule extends DoNotUseAbstractBuildable
       implements AbiRule, Buildable {
 
     private boolean isAbiLoadedFromDisk = false;

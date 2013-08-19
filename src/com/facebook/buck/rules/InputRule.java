@@ -82,6 +82,12 @@ public class InputRule implements BuildRule {
     return SUCCESS_TYPE;
   }
 
+  @Nullable
+  @Override
+  public Buildable getBuildable() {
+    return null;
+  }
+
   @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;

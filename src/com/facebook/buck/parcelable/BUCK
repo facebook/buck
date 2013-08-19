@@ -1,6 +1,6 @@
 RULES_SRCS = [
   'GenParcelableBuildRuleFactory.java',
-  'GenParcelableRule.java',
+  'GenParcelable.java',
 ]
 java_library(
   name = 'rules',
@@ -8,6 +8,7 @@ java_library(
   deps = [
     ':parcelable',
     '//lib:guava',
+    '//lib:jsr305',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:support',
     '//src/com/facebook/buck/rules:rules',

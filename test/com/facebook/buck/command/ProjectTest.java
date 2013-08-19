@@ -29,7 +29,7 @@ import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
-import com.facebook.buck.java.KeystoreRule;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -173,7 +173,7 @@ public class ProjectTest {
     // keystore //keystore:debug
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     ruleResolver.buildAndAddToIndex(
-        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
         .setProperties("keystore/debug.keystore.properties"));

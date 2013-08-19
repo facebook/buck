@@ -21,12 +21,11 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -58,7 +57,7 @@ import java.util.List;
  * )
  * </pre>
  */
-public class GenAidlRule extends AbstractCachingBuildRule implements Buildable {
+public class GenAidlRule extends DoNotUseAbstractBuildable {
 
   private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 

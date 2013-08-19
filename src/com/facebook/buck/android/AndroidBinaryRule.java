@@ -24,12 +24,11 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibraryRule;
-import com.facebook.buck.java.KeystoreRule;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -38,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -88,8 +88,8 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class AndroidBinaryRule extends AbstractCachingBuildRule implements
-    HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule, Buildable {
+public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
+    HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule {
 
   private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
@@ -132,7 +132,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
 
   private final String manifest;
   private final String target;
-  private final KeystoreRule keystore;
+  private final Keystore keystore;
   private final PackageType packageType;
   private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
@@ -156,7 +156,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
       BuildRuleParams buildRuleParams,
       String manifest,
       String target,
-      KeystoreRule keystore,
+      Keystore keystore,
       PackageType packageType,
       Set<BuildRule> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
@@ -635,7 +635,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     return getBinPath("__native_libs_%s__");
   }
 
-  public KeystoreRule getKeystore() {
+  public Keystore getKeystore() {
     return keystore;
   }
 
@@ -933,13 +933,15 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
     @Override
     public AndroidBinaryRule build(BuildRuleResolver ruleResolver) {
       // Make sure the "keystore" argument refers to a KeystoreRule.
-      BuildRule keystoreRule = ruleResolver.get(keystoreTarget);
-      if (!(keystoreRule instanceof KeystoreRule)) {
+      BuildRule rule = ruleResolver.get(keystoreTarget);
+
+      Buildable keystore = rule.getBuildable();
+      if (!(keystore instanceof Keystore)) {
         throw new HumanReadableException(
             "In %s, keystore='%s' must be a keystore() but was %s().",
             getBuildTarget(),
-            keystoreRule.getFullyQualifiedName(),
-            keystoreRule.getType().getName());
+            rule.getFullyQualifiedName(),
+            rule.getType().getName());
       }
 
       boolean allowNonExistentRule =
@@ -948,7 +950,7 @@ public class AndroidBinaryRule extends AbstractCachingBuildRule implements
           createBuildRuleParams(ruleResolver),
           manifest,
           target,
-          (KeystoreRule)keystoreRule,
+          (Keystore)keystore,
           packageType,
           getBuildTargetsAsBuildRules(ruleResolver,
               buildRulesToExcludeFromDex,

@@ -22,14 +22,14 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
-public class ExportFileBuildRuleFactory extends AbstractBuildRuleFactory<ExportFileRule.Builder> {
+public class ExportFileBuildRuleFactory extends AbstractBuildRuleFactory<ExportFile.Builder> {
   @Override
-  public ExportFileRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return ExportFileRule.newExportFileBuilder(params);
+  public ExportFile.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return ExportFile.newExportFileBuilder(params);
   }
 
   @Override
-  protected void amendBuilder(ExportFileRule.Builder builder, BuildRuleFactoryParams params)
+  protected void amendBuilder(ExportFile.Builder builder, BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
     Optional<String> src = params.getOptionalStringAttribute("src");
     builder.setSrc(src.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));

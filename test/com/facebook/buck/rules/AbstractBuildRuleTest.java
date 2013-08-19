@@ -37,6 +37,8 @@ import org.junit.Test;
 
 import java.util.Comparator;
 
+import javax.annotation.Nullable;
+
 public class AbstractBuildRuleTest {
 
   private static final BuildTarget orcaTarget = BuildTargetFactory.newInstance(
@@ -207,6 +209,12 @@ public class AbstractBuildRuleTest {
     return new AbstractBuildRule(buildRuleParams) {
       @Override
       public BuildRuleType getType() {
+        throw new IllegalStateException("This method should not be called");
+      }
+
+      @Nullable
+      @Override
+      public Buildable getBuildable() {
         throw new IllegalStateException("This method should not be called");
       }
 

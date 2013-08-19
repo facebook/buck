@@ -20,7 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -41,7 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class PythonLibraryRule extends AbstractCachingBuildRule implements Buildable {
+public class PythonLibraryRule extends DoNotUseAbstractBuildable implements Buildable {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
   private final ImmutableSortedSet<String> srcs;

@@ -107,6 +107,13 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
     return BuildRuleType.PROJECT_CONFIG;
   }
 
+  @Nullable
+  @Override
+  public Buildable getBuildable() {
+    // TODO(simons): Perhaps return some sort of no-op buildable?
+    return null;
+  }
+
   /**
    * @return the BuildRule that should determine the type of IDE project to create. This will be
    *     the srcRule, if it is present; otherwise, it will be the test rule.

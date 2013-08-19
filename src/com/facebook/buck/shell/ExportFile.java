@@ -16,14 +16,12 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
@@ -77,16 +75,14 @@ import javax.annotation.Nullable;
  * of the file to be saved.
  */
 // TODO(simons): Extend to also allow exporting a rule.
-public class ExportFileRule extends AbstractCachingBuildRule implements Buildable {
+public class ExportFile extends AbstractBuildable {
 
   private final String src;
   private final Supplier<String> out;
 
 
   @VisibleForTesting
-  ExportFileRule(BuildRuleParams params, Optional<String> src, Optional<String> out) {
-    super(params);
-
+  ExportFile(final BuildRuleParams params, Optional<String> src, Optional<String> out) {
     String shortName = params.getBuildTarget().getShortName();
 
     this.src = src.or(shortName);
@@ -99,15 +95,10 @@ public class ExportFileRule extends AbstractCachingBuildRule implements Buildabl
         String name = new File(outName).getName();
         return String.format("%s/%s%s",
             BuckConstant.GEN_DIR,
-            getBuildTarget().getBasePathWithSlash(),
+            params.getBuildTarget().getBasePathWithSlash(),
             name);
       }
     });
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.EXPORT_FILE;
   }
 
   @Override
@@ -135,7 +126,7 @@ public class ExportFileRule extends AbstractCachingBuildRule implements Buildabl
     return new Builder(params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<ExportFileRule> {
+  public static class Builder extends AbstractBuildable.Builder {
     private Optional<String> src;
     private Optional<String> out;
 
@@ -154,10 +145,13 @@ public class ExportFileRule extends AbstractCachingBuildRule implements Buildabl
     }
 
     @Override
-    public ExportFileRule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams params = createBuildRuleParams(ruleResolver);
+    protected BuildRuleType getType() {
+      return BuildRuleType.EXPORT_FILE;
+    }
 
-      return new ExportFileRule(params, src, out);
+    @Override
+    protected ExportFile newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+      return new ExportFile(params, src, out);
     }
   }
 }

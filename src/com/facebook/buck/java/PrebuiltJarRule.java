@@ -23,12 +23,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -47,8 +46,8 @@ import java.util.List;
 /**
  * A rule that establishes a pre-compiled JAR file as a dependency.
  */
-public class PrebuiltJarRule extends AbstractCachingBuildRule
-    implements JavaLibraryRule, HasClasspathEntries, Buildable {
+public class PrebuiltJarRule extends DoNotUseAbstractBuildable
+    implements JavaLibraryRule, HasClasspathEntries {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 

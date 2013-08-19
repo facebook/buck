@@ -69,7 +69,9 @@ import javax.annotation.Nullable;
  */
 @Beta
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule
-    implements Buildable, BuildRule {
+    implements BuildRule {
+
+  private final Buildable buildable;
 
   /**
    * Lock used to ensure that the logic to kick off a build is performed at most once.
@@ -88,11 +90,20 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
   /** @see Buildable#getInputsToCompareToOutput()  */
   private Iterable<InputRule> inputsToCompareToOutputs;
 
+  protected AbstractCachingBuildRule(Buildable buildable, BuildRuleParams params) {
+    super(params);
+    this.buildable = Preconditions.checkNotNull(buildable);
+    this.hasBuildStarted = new AtomicBoolean(false);
+    this.buildRuleResult = SettableFuture.create();
+    this.pathRelativizer = params.getPathRelativizer();
+  }
+
   protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
       super(buildRuleParams);
     this.hasBuildStarted = new AtomicBoolean(false);
     this.buildRuleResult = SettableFuture.create();
     this.pathRelativizer = buildRuleParams.getPathRelativizer();
+    this.buildable = Preconditions.checkNotNull(getBuildable());
   }
 
   /**
@@ -118,7 +129,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
   public Iterable<InputRule> getInputs() {
     if (inputsToCompareToOutputs == null) {
       inputsToCompareToOutputs = InputRule.inputPathsAsInputRules(
-          getInputsToCompareToOutput(), pathRelativizer);
+          buildable.getInputsToCompareToOutput(), pathRelativizer);
     }
     return inputsToCompareToOutputs;
   }
@@ -129,8 +140,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
     // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
-    return super.appendToRuleKey(builder)
+    builder = super.appendToRuleKey(builder)
         .setInputs("buck.inputs", getInputs());
+    // TODO(simons): Rename this when no Buildables extend this class.
+    return buildable.appendDetailsToRuleKey(builder);
   }
 
   @Override
@@ -288,7 +301,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // should organize our output directories so we can solve this for all rules at once.
 
     // Before deciding to build, check the ArtifactCache.
-    String pathToOutputFile = getPathToOutputFile();
+    String pathToOutputFile = buildable.getPathToOutputFile();
     boolean fromCache = pathToOutputFile != null
         && context.getArtifactCache().fetch(
             ruleKey,
@@ -298,7 +311,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // Give the rule a chance to record metadata about the artifact.
     if (fromCache) {
       try {
-        recordOutputFileDetailsAfterFetchFromArtifactCache(context.getArtifactCache(),
+        buildable.recordOutputFileDetailsAfterFetchFromArtifactCache(context.getArtifactCache(),
             projectFilesystem);
       } catch (IOException e) {
         recordBuildRuleFailure(e, BuildRuleStatus.FAIL, cacheResult, eventBus);
@@ -376,11 +389,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     }
   }
 
-  @Override
-  public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
-      ProjectFilesystem projectFilesystem) throws IOException {
-  }
-
   /**
    * Execute the commands for this build rule. Requires all dependent rules are already built
    * successfully.
@@ -390,7 +398,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     context.logBuildInfo("[BUILDING %s]", getFullyQualifiedName());
 
     // Get and run all of the commands.
-    List<Step> steps = getBuildSteps(context);
+    List<Step> steps = buildable.getBuildSteps(context);
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
@@ -429,7 +437,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     writeSuccessFile(projectFilesystem);
 
     // Store output to cache.
-    String pathToOutputFile = getPathToOutputFile();
+    String pathToOutputFile = buildable.getPathToOutputFile();
     if (pathToOutputFile != null && !fromCache) {
       File output = projectFilesystem.getFileForRelativePath(pathToOutputFile);
       artifactCache.store(getRuleKey(), output);
@@ -460,13 +468,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
         BuckConstant.BIN_DIR,
         getBuildTarget().getBasePathWithSlash(),
         getBuildTarget().getShortName());
-  }
-
-  // TODO(mbolin): This should be abstract: each rule should be required to define this for itself.
-  @Override
-  @Nullable
-  public String getPathToOutputFile() {
-    return null;
   }
 
   /**

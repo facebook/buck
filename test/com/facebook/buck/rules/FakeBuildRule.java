@@ -91,6 +91,11 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    throw new IllegalStateException("This method should not be called");
+  }
+
+  @Override
   public Iterable<String> getInputsToCompareToOutput() {
     throw new UnsupportedOperationException();
   }

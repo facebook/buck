@@ -24,7 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
-import com.facebook.buck.java.KeystoreRule;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
@@ -114,7 +114,7 @@ public class AuditClasspathCommandTest {
         .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
     BuildTarget keystoreBuildTarget = BuildTargetFactory.newInstance("//:keystore");
     ruleResolver.buildAndAddToIndex(
-        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreBuildTarget)
         .setStore("debug.keystore")
         .setProperties("keystore.properties"));

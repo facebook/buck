@@ -52,7 +52,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-public class ExportFileRuleTest {
+public class ExportFileTest {
 
   private BuildRuleParams params;
   private BuildContext context;
@@ -71,7 +71,7 @@ public class ExportFileRuleTest {
 
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
-    ExportFileRule rule = new ExportFileRule(
+    ExportFile rule = new ExportFile(
         params, Optional.<String>absent(), Optional.<String>absent());
 
     List<Step> steps = rule.getBuildSteps(context);
@@ -84,7 +84,7 @@ public class ExportFileRuleTest {
 
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
-    ExportFileRule rule = new ExportFileRule(
+    ExportFile rule = new ExportFile(
         params, Optional.<String>absent(), Optional.of("fish"));
 
     List<Step> steps = rule.getBuildSteps(context);
@@ -97,7 +97,7 @@ public class ExportFileRuleTest {
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
-    ExportFileRule rule = new ExportFileRule(params, Optional.of("chips"), Optional.of("fish"));
+    ExportFile rule = new ExportFile(params, Optional.of("chips"), Optional.of("fish"));
 
     List<Step> steps = rule.getBuildSteps(context);
 

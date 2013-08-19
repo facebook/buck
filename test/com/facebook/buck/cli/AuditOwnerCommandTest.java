@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InputRule;
@@ -49,6 +50,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
+
+import javax.annotation.Nullable;
 
 /**
  * Outputs targets that own a specified list of files.
@@ -83,6 +86,12 @@ public class AuditOwnerCommandTest {
     @Override
     public BuildRuleType getType() {
       throw new UnsupportedOperationException();
+    }
+
+    @Nullable
+    @Override
+    public Buildable getBuildable() {
+      return null;
     }
 
     @Override

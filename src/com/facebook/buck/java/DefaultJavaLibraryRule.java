@@ -29,7 +29,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
@@ -102,8 +101,8 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
-    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, Buildable {
+public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
+    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -177,8 +176,8 @@ public class DefaultJavaLibraryRule extends AbstractCachingBuildRule
 
   /**
    * This is set in
-   * {@link AbstractCachingBuildRule#getBuildSteps(com.facebook.buck.rules.BuildContext)} and is
-   * available to subclasses.
+   * {@link com.facebook.buck.rules.Buildable#getBuildSteps(com.facebook.buck.rules.BuildContext)}
+   * and is available to subclasses.
    */
   protected ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
 

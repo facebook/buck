@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -35,11 +36,11 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
-public class KeystoreRuleTest {
+public class KeystoreTest {
 
-  private static KeystoreRule createKeystoreRuleForTest() {
+  private static AbstractCachingBuildRule createKeystoreRuleForTest() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    return KeystoreRule
+    return Keystore
         .newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore("keystores/debug.keystore")
@@ -49,8 +50,10 @@ public class KeystoreRuleTest {
 
   @Test
   public void testObservers() {
-    KeystoreRule keystore = createKeystoreRuleForTest();
-    assertEquals(BuildRuleType.KEYSTORE, keystore.getType());
+    AbstractCachingBuildRule rule = createKeystoreRuleForTest();
+    assertEquals(BuildRuleType.KEYSTORE, rule.getType());
+
+    Keystore keystore = (Keystore) rule.getBuildable();
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of("keystores/debug.keystore", "keystores/debug.keystore.properties"),
         keystore.getInputsToCompareToOutput());
@@ -64,8 +67,8 @@ public class KeystoreRuleTest {
 
     replay(buildContext);
 
-    KeystoreRule keystore = createKeystoreRuleForTest();
-    List<Step> buildSteps = keystore.getBuildSteps(buildContext);
+    AbstractCachingBuildRule keystore = createKeystoreRuleForTest();
+    List<Step> buildSteps = keystore.getBuildable().getBuildSteps(buildContext);
     assertEquals(ImmutableList.<Step>of(), buildSteps);
 
     verify(buildContext);

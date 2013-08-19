@@ -33,7 +33,7 @@ java_library(
     'JavaLibraryBuildRuleFactory.java',
     'JavaTestRule.java',
     'JavaTestBuildRuleFactory.java',
-    'KeystoreRule.java',
+    'Keystore.java',
     'KeystoreBuildRuleFactory.java',
     'PrebuiltJarRule.java',
     'PrebuiltJarBuildRuleFactory.java',

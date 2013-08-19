@@ -19,13 +19,12 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -43,7 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class ShBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule, Buildable {
+public class ShBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule {
 
   private final Path main;
   private final ImmutableSet<SourcePath> resources;

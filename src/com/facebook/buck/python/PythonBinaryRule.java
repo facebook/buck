@@ -20,7 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -44,7 +43,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.List;
 
-public class PythonBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule, Buildable {
+public class PythonBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
   private final String main;

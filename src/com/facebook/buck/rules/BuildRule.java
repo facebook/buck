@@ -24,6 +24,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 
+import javax.annotation.Nullable;
+
 public interface BuildRule extends Comparable<BuildRule> {
 
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
@@ -35,6 +37,9 @@ public interface BuildRule extends Comparable<BuildRule> {
   public BuildRuleType getType();
 
   public BuildableProperties getProperties();
+
+  @Nullable
+  public Buildable getBuildable();
 
   /**
    * @return the value of the "deps" attribute for this build rule

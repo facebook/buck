@@ -48,7 +48,7 @@ public interface Buildable {
    */
   public List<Step> getBuildSteps(BuildContext context) throws IOException;
 
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException;
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException;
 
   /**
    * This method is invoked if the output file is successfully fetched from the

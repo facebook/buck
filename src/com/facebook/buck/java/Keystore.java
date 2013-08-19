@@ -17,14 +17,12 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -33,22 +31,23 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
 
-public class KeystoreRule extends AbstractCachingBuildRule implements Buildable {
+import javax.annotation.Nullable;
+
+public class Keystore extends AbstractBuildable {
 
   private final String pathToStore;
   private final String pathToProperties;
 
-  protected KeystoreRule(BuildRuleParams buildRuleParams,
-      String store,
-      String properties) {
-    super(buildRuleParams);
+  protected Keystore(String store,
+                     String properties) {
     this.pathToStore = Preconditions.checkNotNull(store);
     this.pathToProperties = Preconditions.checkNotNull(properties);
   }
 
+  @Nullable
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.KEYSTORE;
+  public String getPathToOutputFile() {
+    return null;
   }
 
   @Override
@@ -57,8 +56,8 @@ public class KeystoreRule extends AbstractCachingBuildRule implements Buildable 
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder
         .set("store", pathToStore)
         .set("properties", pathToProperties);
   }
@@ -81,7 +80,7 @@ public class KeystoreRule extends AbstractCachingBuildRule implements Buildable 
     return new Builder(params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<KeystoreRule> {
+  public static class Builder extends AbstractBuildable.Builder {
 
     private String pathToStore;
     private String pathToProperties;
@@ -97,9 +96,13 @@ public class KeystoreRule extends AbstractCachingBuildRule implements Buildable 
     }
 
     @Override
-    public KeystoreRule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-      return new KeystoreRule(buildRuleParams, pathToStore, pathToProperties);
+    protected BuildRuleType getType() {
+      return BuildRuleType.KEYSTORE;
+    }
+
+    @Override
+    protected Keystore newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+      return new Keystore(pathToStore, pathToProperties);
     }
 
     public Builder setStore(String pathToStore) {

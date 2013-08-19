@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.KeystoreRule;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -163,7 +163,7 @@ public class AndroidResourceRuleTest {
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     ruleResolver.buildAndAddToIndex(
-        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
         .setProperties("keystore/debug.keystore.properties"));

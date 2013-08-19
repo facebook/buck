@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.KeystoreRule;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -86,7 +86,7 @@ public class ApkGenruleTest {
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     ruleResolver.buildAndAddToIndex(
-        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
         .setProperties("keystore/debug.keystore.properties"));

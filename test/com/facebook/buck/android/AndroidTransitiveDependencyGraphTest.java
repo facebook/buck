@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
-import com.facebook.buck.java.KeystoreRule;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -88,7 +88,7 @@ public class AndroidTransitiveDependencyGraphTest {
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     ruleResolver.buildAndAddToIndex(
-        KeystoreRule.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
         .setProperties("keystore/debug.keystore.properties"));

@@ -1,6 +1,6 @@
 RULES_SRCS = [
+  'ExportFile.java',
   'ExportFileBuildRuleFactory.java',
-  'ExportFileRule.java',
   'Genrule.java',
   'GenruleBuildRuleFactory.java',
   'ShBinaryRule.java',

@@ -54,6 +54,12 @@ abstract class AbstractBuildRule implements BuildRule {
   @Override
   public abstract BuildRuleType getType();
 
+  @Nullable
+  @Override
+  public Buildable getBuildable() {
+    return null;
+  }
+
   @Override
   public BuildableProperties getProperties() {
     return BuildableProperties.NONE;

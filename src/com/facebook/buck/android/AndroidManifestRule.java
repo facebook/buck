@@ -19,12 +19,11 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
@@ -60,7 +59,7 @@ import java.util.List;
  * )
  * </pre>
  */
-public class AndroidManifestRule extends AbstractCachingBuildRule implements Buildable {
+public class AndroidManifestRule extends DoNotUseAbstractBuildable {
 
   private final String skeletonFile;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;

@@ -18,14 +18,12 @@ package com.facebook.buck.parcelable;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
@@ -43,22 +41,29 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-public class GenParcelableRule extends AbstractCachingBuildRule implements Buildable {
+import javax.annotation.Nullable;
+
+public class GenParcelable extends AbstractBuildable {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
 
   private final ImmutableSortedSet<String> srcs;
   private final String outputDirectory;
 
-  private GenParcelableRule(BuildRuleParams buildRuleParams,
-      Set<String> srcs) {
-    super(buildRuleParams);
+  private GenParcelable(BuildRuleParams buildRuleParams,
+                        Set<String> srcs) {
     this.srcs = ImmutableSortedSet.copyOf(srcs);
 
     this.outputDirectory = String.format("%s/%s/__%s__",
         BuckConstant.GEN_DIR,
         buildRuleParams.getBuildTarget().getBasePath(),
         buildRuleParams.getBuildTarget().getShortName());
+  }
+
+  @Nullable
+  @Override
+  public String getPathToOutputFile() {
+    return null;
   }
 
   @Override
@@ -111,20 +116,14 @@ public class GenParcelableRule extends AbstractCachingBuildRule implements Build
         + parcelableClass.getClassName() + ".java";
   }
 
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.GEN_PARCELABLE;
-  }
-
   @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder
         .set("srcs", srcs)
         .set("outputDirectory", outputDirectory);
   }
@@ -133,7 +132,7 @@ public class GenParcelableRule extends AbstractCachingBuildRule implements Build
     return new Builder(params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<GenParcelableRule> implements
+  public static class Builder extends AbstractBuildable.Builder implements
       SrcsAttributeBuilder {
 
     private ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
@@ -149,9 +148,13 @@ public class GenParcelableRule extends AbstractCachingBuildRule implements Build
     }
 
     @Override
-    public GenParcelableRule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-      return new GenParcelableRule(buildRuleParams, srcs.build());
+    public BuildRuleType getType() {
+      return BuildRuleType.GEN_PARCELABLE;
+    }
+
+    @Override
+    protected GenParcelable newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+      return new GenParcelable(params, srcs.build());
     }
   }
 }

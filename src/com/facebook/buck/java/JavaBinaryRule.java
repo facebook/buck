@@ -21,13 +21,12 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.AbstractCachingBuildRule;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -51,8 +50,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public class JavaBinaryRule extends AbstractCachingBuildRule implements BinaryBuildRule,
-    HasClasspathEntries, Buildable {
+public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule,
+    HasClasspathEntries {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
