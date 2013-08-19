@@ -40,8 +40,12 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResults;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,9 +59,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class TestCommandTest {
 
@@ -260,6 +272,120 @@ public class TestCommandTest {
     }
 
     return new DependencyGraph(graph);
+  }
+
+  /**
+   * Tests the --xml flag, ensuring that test result data is correctly
+   * formatted.
+   */
+  @Test
+  public void testXmlGeneration() throws Exception {
+    // Set up sample test data.
+    TestResultSummary result1 = new TestResultSummary(
+        /* testCaseName */ "TestCase",
+        /* testName */ "passTest",
+        /* isSuccess */ true,
+        /* time */ 5000,
+        /* message */ null,
+        /* stacktrace */ null,
+        /* stdOut */ null,
+        /* stdErr */ null);
+    TestResultSummary result2 = new TestResultSummary(
+        /* testCaseName */ "TestCase",
+        /* testName */ "failWithMsg",
+        /* isSuccess */ false,
+        /* time */ 7000,
+        /* message */ "Index out of bounds!",
+        /* stacktrace */ "Stacktrace",
+        /* stdOut */ null,
+        /* stdErr */ null);
+    TestResultSummary result3 = new TestResultSummary(
+        /* testCaseName */ "TestCase",
+        /* testName */ "failNoMsg",
+        /* isSuccess */ false,
+        /* time */ 4000,
+        /* message */ null,
+        /* stacktrace */ null,
+        /* stdOut */ null,
+        /* stdErr */ null);
+    List<TestResultSummary> resultList = ImmutableList.of(
+      result1,
+      result2,
+      result3);
+
+    TestCaseSummary testCase = new TestCaseSummary("TestCase", resultList);
+    List<TestCaseSummary> testCases = ImmutableList.of(testCase);
+
+    TestResults testResults = new TestResults(testCases);
+    List<TestResults> testResultsList = ImmutableList.of(testResults);
+
+    // Call the XML generation method with our test data.
+    StringWriter writer = new StringWriter();
+    TestCommand.writeXmlOutput(testResultsList, writer);
+    ByteArrayInputStream resultStream = new ByteArrayInputStream(
+      writer.toString().getBytes());
+
+    // Convert the raw XML data into a DOM object, which we will check.
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = dbf.newDocumentBuilder();
+    Document doc = docBuilder.parse(resultStream);
+
+    // Check for exactly one <tests> tag.
+    NodeList testsList = doc.getElementsByTagName("tests");
+    assertEquals(testsList.getLength(), 1);
+
+    // Check for exactly one <test> tag.
+    Element testsEl = (Element) testsList.item(0);
+    NodeList testList = testsEl.getElementsByTagName("test");
+    assertEquals(testList.getLength(), 1);
+
+    // Check for exactly three <testresult> tags.
+    // There should be two failures and one success.
+    Element testEl = (Element) testList.item(0);
+    NodeList resultsList = testEl.getElementsByTagName("testresult");
+    assertEquals(resultsList.getLength(), 3);
+
+    // Verify the text elements of the first <testresult> tag.
+    Element passResultEl = (Element) resultsList.item(0);
+    assertEquals(passResultEl.getAttribute("name"), "passTest");
+    assertEquals(passResultEl.getAttribute("time"), "5000");
+    checkXmlTextContents(passResultEl, "message", "");
+    checkXmlTextContents(passResultEl, "stacktrace", "");
+
+    // Verify the text elements of the second <testresult> tag.
+    assertEquals(testEl.getAttribute("name"), "TestCase");
+    Element failResultEl1 = (Element) resultsList.item(1);
+    assertEquals(failResultEl1.getAttribute("name"), "failWithMsg");
+    assertEquals(failResultEl1.getAttribute("time"), "7000");
+    checkXmlTextContents(failResultEl1, "message", "Index out of bounds!");
+    checkXmlTextContents(failResultEl1, "stacktrace", "Stacktrace");
+
+    // Verify the text elements of the third <testresult> tag.
+    Element failResultEl2 = (Element) resultsList.item(2);
+    assertEquals(failResultEl2.getAttribute("name"), "failNoMsg");
+    assertEquals(failResultEl2.getAttribute("time"), "4000");
+    checkXmlTextContents(failResultEl2, "message", "");
+    checkXmlTextContents(failResultEl2, "stacktrace", "");
+  }
+
+  /**
+   * Helper method for testXMLGeneration().
+   * Used to verify the message and stacktrace fields
+   */
+  private void checkXmlTextContents(Element testResult,
+      String attributeName,
+      String expectedValue) {
+    // Check for exactly one text element.
+    NodeList fieldMatchList = testResult.getElementsByTagName(attributeName);
+    assertEquals(fieldMatchList.getLength(), 1);
+    Element fieldEl = (Element) fieldMatchList.item(0);
+
+    // Check that the value within the text element is as expected.
+    Node firstChild = fieldEl.getFirstChild();
+    String expectedStr = Strings.nullToEmpty(expectedValue);
+    assertTrue(
+      ((firstChild == null) && (expectedStr.equals(""))) ||
+      (expectedStr.equals(firstChild.getNodeValue())));
   }
 
   @Test

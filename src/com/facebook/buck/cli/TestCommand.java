@@ -44,6 +44,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -53,6 +54,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -567,6 +569,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           testEl.setAttribute("status", testCase.isSuccess() ? "PASS" : "FAIL");
           testEl.setAttribute("time", Long.toString(testCase.getTotalTime()));
           testsEl.appendChild(testEl);
+
+          // Loop through the test case and add XML data (name, message, and
+          // stacktrace) for each individual test, if present.
+          addExtraXmlInfo(testCase, testEl);
         }
       }
 
@@ -576,6 +582,53 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       transformer.transform(new DOMSource(doc), new StreamResult(writer));
     } catch (TransformerException | ParserConfigurationException ex) {
       throw new IOException("Unable to build the XML document!");
+    }
+  }
+
+  /**
+   * A helper method that adds extra XML.
+   *
+   * This includes a test name, time (in ms), message, and stack trace, when
+   * present.
+   * Example:
+   *
+   * <pre>
+   * &lt;testresult name="failed_test" time="200">
+   *   &lt;message>Reason for test failure&lt;/message>
+   *   &lt;stacktrace>Stacktrace here&lt;/stacktrace>
+   * &lt;/testresult>
+   * </pre>
+   *
+   * @param testCase The test case summary containing one or more tests.
+   * @param testEl The XML element object for the <test> tag, in which extra
+   *     information tags will be added.
+   */
+  @VisibleForTesting
+  static void addExtraXmlInfo(TestCaseSummary testCase, Element testEl) {
+    Document doc = testEl.getOwnerDocument();
+    // Loop through the test case and extract test data.
+    for (TestResultSummary testResult : testCase.getTestResults()) {
+      // Extract the test name and time.
+      String name = Strings.nullToEmpty(testResult.getTestName());
+      String time = Long.toString(testResult.getTime());
+
+      // Create the tag: <testresult name="..." time="...">
+      Element testResultEl = doc.createElement("testresult");
+      testResultEl.setAttribute("name", name);
+      testResultEl.setAttribute("time", time);
+      testEl.appendChild(testResultEl);
+
+      // Create the tag: <message>(Error message here)</message>
+      Element messageEl = doc.createElement("message");
+      String message = Strings.nullToEmpty(testResult.getMessage());
+      messageEl.appendChild(doc.createTextNode(message));
+      testResultEl.appendChild(messageEl);
+
+      // Create the tag: <stacktrace>(Stacktrace here)</stacktrace>
+      Element stacktraceEl = doc.createElement("stacktrace");
+      String stacktrace = Strings.nullToEmpty(testResult.getStacktrace());
+      stacktraceEl.appendChild(doc.createTextNode(stacktrace));
+      testResultEl.appendChild(stacktraceEl);
     }
   }
 
