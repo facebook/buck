@@ -31,7 +31,7 @@ public class SourcePaths {
 
   /**
    * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that are suitable to
-   * be returned by {@link AbstractCachingBuildRule#getInputsToCompareToOutput()}.
+   * be returned by {@link Buildable#getInputsToCompareToOutput()}.
    */
   public static Iterable<String> filterInputsToCompareToOutput(
       Iterable<? extends SourcePath> sources) {

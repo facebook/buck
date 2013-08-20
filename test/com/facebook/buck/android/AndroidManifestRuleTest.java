@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.step.Step;
@@ -46,7 +47,7 @@ public class AndroidManifestRuleTest {
    * Tests the following methods:
    * <ul>
    *   <li>{@link AndroidManifestRule#getType()}
-   *   <li>{@link com.facebook.buck.rules.AbstractCachingBuildRule#getInputsToCompareToOutput()}
+   *   <li>{@link Buildable#getInputsToCompareToOutput()}
    *   <li>{@link AndroidManifestRule#getPathToOutputFile()}
    * </ul>
    */

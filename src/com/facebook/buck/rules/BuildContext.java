@@ -90,7 +90,7 @@ public class BuildContext {
 
   /**
    * TODO(mbolin): Try to eliminate this method.
-   * @deprecated {@link AbstractCachingBuildRule#getBuildSteps(BuildContext)} should be producing
+   * @deprecated {@link Buildable#getBuildSteps(BuildContext)} should be producing
    *     relative paths that should be resolved by a {@link ProjectFilesystem} from an
    *     {@link ExecutionContext} rather than from a {@link BuildContext}.
    */
