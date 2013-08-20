@@ -18,13 +18,13 @@ package com.facebook.buck.dalvik;
 
 import com.facebook.buck.java.classes.AbstractFileLike;
 import com.facebook.buck.java.classes.FileLike;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
@@ -71,7 +71,7 @@ public class CanaryFactory {
   public static FileLike create(final int index) throws IOException {
     final byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
     final String canaryIndexStr = String.format("%02d", index);
-    byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charset.forName("UTF-8"));
+    byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charsets.UTF_8);
     Preconditions.checkState(canaryIndexBytes.length == 2,
         "Formatted index string should always be 2 bytes.");
     System.arraycopy(canaryIndexBytes, 0, canaryClass, CANARY_INDEX_OFFSET, 2);
