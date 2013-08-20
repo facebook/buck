@@ -54,18 +54,6 @@ import javax.annotation.Nullable;
  * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
  * matches the one on disk, then it has no work to do. It should also try to fetch its output from
  * an {@link ArtifactCache} to avoid doing any computation.
- * <p>
- * TODO(mbolin, simons): This should be converted from an abstract class that relies on inheritance
- * to a final class that takes an object that implements the following methods:
- * <ul>
- *   <li>getInputsToCompareToOutput()
- *   <li>buildInternal()
- *   <li>appendToRuleKey()
- *   <li>recordOutputFileDetailsAfterFetchFromArtifactCache()
- * </ul>
- * Ultimately, we plan to define a BuildRuleDescriptor, from which we will at least be able to
- * provide the implementation of getInputsToCompareToOutput() and appendToRuleKey() automatically.
- * How we plan to generify the ABI logic is up in the air.
  */
 @Beta
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule
