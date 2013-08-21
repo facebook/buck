@@ -105,7 +105,7 @@ public class GenerateManifestStep implements Step {
       throw new HumanReadableException("Error generating manifest file");
     }
 
-    if (Platform.detect() == Platform.WINDOWS) {
+    if (context.getPlatform() == Platform.WINDOWS) {
       // Convert line endings to Lf on Windows.
       try {
         String xmlText = Files.toString(outManifestFile, Charsets.UTF_8);

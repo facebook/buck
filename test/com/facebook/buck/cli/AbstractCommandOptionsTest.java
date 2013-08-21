@@ -24,14 +24,11 @@ import static org.easymock.EasyMock.anyObject;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
+import org.easymock.EasyMockSupport;
+import org.junit.Test;
 
 import java.io.File;
-
-import org.easymock.EasyMockSupport;
-
-import com.google.common.base.Optional;
-
-import org.junit.Test;
 
 /** Unit test for {@link AbstractCommandOptions}. */
 public class AbstractCommandOptionsTest extends EasyMockSupport {

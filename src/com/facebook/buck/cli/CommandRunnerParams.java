@@ -23,6 +23,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 
 /**
@@ -37,6 +38,7 @@ class CommandRunnerParams {
   private final Console console;
   private final Parser parser;
   private final BuckEventBus eventBus;
+  private final Platform platform;
 
   public CommandRunnerParams(
       Console console,
@@ -44,13 +46,15 @@ class CommandRunnerParams {
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
-      String pythonInterpreter) {
+      String pythonInterpreter,
+      Platform platform) {
     this(console,
         projectFilesystem,
         buildRuleTypes,
         artifactCacheFactory,
         eventBus,
-        new Parser(projectFilesystem, buildRuleTypes, console, pythonInterpreter));
+        new Parser(projectFilesystem, buildRuleTypes, console, pythonInterpreter),
+        platform);
   }
 
   public CommandRunnerParams(
@@ -59,13 +63,15 @@ class CommandRunnerParams {
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
-      Parser parser) {
+      Parser parser,
+      Platform platform) {
     this.console = Preconditions.checkNotNull(console);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.artifactCacheFactory = Preconditions.checkNotNull(artifactCacheFactory);
     this.eventBus = Preconditions.checkNotNull(eventBus);
     this.parser = Preconditions.checkNotNull(parser);
+    this.platform = Preconditions.checkNotNull(platform);
   }
 
   public Ansi getAnsi() {
@@ -98,5 +104,9 @@ class CommandRunnerParams {
 
   public BuckEventBus getBuckEventBus() {
     return eventBus;
+  }
+
+  public Platform getPlatform() {
+    return platform;
   }
 }

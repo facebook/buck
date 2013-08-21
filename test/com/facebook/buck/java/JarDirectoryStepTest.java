@@ -24,6 +24,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
@@ -53,6 +54,7 @@ public class JarDirectoryStepTest {
         .setProjectFilesystem(new ProjectFilesystem(zipup))
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
 
     int returnCode = step.execute(context);
@@ -82,6 +84,7 @@ public class JarDirectoryStepTest {
         .setProjectFilesystem(new ProjectFilesystem(zipup))
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
 
     int returnCode = step.execute(context);

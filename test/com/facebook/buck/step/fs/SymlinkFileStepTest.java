@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -43,6 +44,7 @@ public class SymlinkFileStepTest {
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(tmpDir.getRoot()))
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
 
     File source = tmpDir.newFile();

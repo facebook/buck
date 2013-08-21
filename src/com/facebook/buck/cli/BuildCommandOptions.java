@@ -26,6 +26,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -139,7 +140,8 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       ArtifactCache artifactCache,
       Console console,
       BuckEventBus eventBus,
-      Optional<TargetDevice> targetDevice) {
+      Optional<TargetDevice> targetDevice,
+      Platform platform) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
@@ -156,6 +158,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         isCodeCoverageEnabled(),
         isDebugEnabled(),
         getBuildDependencies(),
-        eventBus);
+        eventBus,
+        platform);
   }
 }

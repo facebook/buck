@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
@@ -46,7 +47,8 @@ public class FakeBuckConfig extends BuckConfig {
       Map<String, Map<String, String>> sections,
       ProjectFilesystem projectFilesystem) {
     super(sections,
-      projectFilesystem,
-      new BuildTargetParser(projectFilesystem));
+        projectFilesystem,
+        new BuildTargetParser(projectFilesystem),
+        Platform.detect());
   }
 }

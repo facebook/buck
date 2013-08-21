@@ -95,6 +95,8 @@ class BuckConfig {
 
   private final BuildTargetParser buildTargetParser;
 
+  private final Platform platform;
+
   private enum ArtifactCacheNames {
     dir,
     cassandra
@@ -115,7 +117,8 @@ class BuckConfig {
   @VisibleForTesting
   BuckConfig(Map<String, Map<String, String>> sectionsToEntries,
       ProjectFilesystem projectFilesystem,
-      BuildTargetParser buildTargetParser) {
+      BuildTargetParser buildTargetParser,
+      Platform platform) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
 
@@ -132,6 +135,8 @@ class BuckConfig {
     this.aliasToBuildTargetMap = createAliasToBuildTargetMap(
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
+
+    this.platform = platform;
   }
 
   /**
@@ -142,7 +147,8 @@ class BuckConfig {
    * @param files The sequence of {@code .buckconfig} files to load.
    */
   public static BuckConfig createFromFiles(ProjectFilesystem projectFilesystem,
-      Iterable<File> files)
+      Iterable<File> files,
+      Platform platform)
       throws IOException {
     Preconditions.checkNotNull(projectFilesystem);
     Preconditions.checkNotNull(files);
@@ -152,7 +158,8 @@ class BuckConfig {
       return new BuckConfig(
           ImmutableMap.<String, Map<String, String>>of(),
           projectFilesystem,
-          buildTargetParser);
+          buildTargetParser,
+          platform);
     }
 
     // Convert the Files to Readers.
@@ -160,7 +167,7 @@ class BuckConfig {
     for (File file : files) {
       readers.add(Files.newReader(file, Charsets.UTF_8));
     }
-    return createFromReaders(readers.build(), projectFilesystem, buildTargetParser);
+    return createFromReaders(readers.build(), projectFilesystem, buildTargetParser, platform);
   }
 
   /**
@@ -199,9 +206,11 @@ class BuckConfig {
   static BuckConfig createFromReader(
       Reader reader,
       ProjectFilesystem projectFilesystem,
-      BuildTargetParser buildTargetParser)
+      BuildTargetParser buildTargetParser,
+      Platform platform)
       throws IOException {
-    return createFromReaders(ImmutableList.of(reader), projectFilesystem, buildTargetParser);
+    return createFromReaders(
+        ImmutableList.of(reader), projectFilesystem, buildTargetParser, platform);
   }
 
   @VisibleForTesting
@@ -256,10 +265,11 @@ class BuckConfig {
   @VisibleForTesting
   static BuckConfig createFromReaders(Iterable<Reader> readers,
       ProjectFilesystem projectFilesystem,
-      BuildTargetParser buildTargetParser)
+      BuildTargetParser buildTargetParser,
+      Platform platform)
       throws IOException {
     Map<String, Map<String, String>> sectionsToEntries = createFromReaders(readers);
-    return new BuckConfig(sectionsToEntries, projectFilesystem, buildTargetParser);
+    return new BuckConfig(sectionsToEntries, projectFilesystem, buildTargetParser, platform);
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
@@ -462,7 +472,7 @@ class BuckConfig {
       // It would be nice to be able to mirror those nuances.
       case "auto":
       default:
-        return new Ansi(Platform.detect());
+        return new Ansi(platform);
     }
   }
 

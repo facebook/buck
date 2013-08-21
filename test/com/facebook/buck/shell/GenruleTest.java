@@ -51,6 +51,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -236,6 +237,7 @@ public class GenruleTest {
           }
         })
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
   }
 
@@ -464,6 +466,7 @@ public class GenruleTest {
         .setProjectFilesystem(new ProjectFilesystem(new File(".")))
         .setAndroidPlatformTarget(Optional.of(android))
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

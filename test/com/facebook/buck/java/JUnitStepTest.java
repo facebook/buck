@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -125,6 +126,7 @@ public class JUnitStepTest {
         .setConsole(console)
         .setDebugEnabled(true)
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
 
     List<String> observedArgs = junit.getShellCommand(executionContext);

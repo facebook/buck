@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -342,7 +343,7 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[project]",
         "ignore = .git, foo, bar/, baz//, a/b/c"));
-    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser);
+    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
 
     ImmutableSet<String> ignorePaths = config.getIgnorePaths();
     assertEquals("Should ignore paths, sans trailing slashes", ignorePaths, ImmutableSet.of(
@@ -370,7 +371,7 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[cache]",
         "dir = cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser);
+    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
 
     ImmutableSet<String> ignorePaths = config.getIgnorePaths();
     assertTrue("Relative cache directory should be in set of ignored paths",
@@ -388,7 +389,7 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[cache]",
         "dir = /cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser);
+    BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
 
     ImmutableSet<String> ignorePaths = config.getIgnorePaths();
     assertFalse("Absolute cache directory should not be in set of ignored paths",
@@ -436,6 +437,6 @@ public class BuckConfigTest {
     if (parser == null) {
       parser = new BuildTargetParser(projectFilesystem);
     }
-    return BuckConfig.createFromReader(reader, projectFilesystem, parser);
+    return BuckConfig.createFromReader(reader, projectFilesystem, parser, Platform.detect());
   }
 }

@@ -26,6 +26,7 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -55,6 +56,7 @@ public class DefaultStepRunnerTest {
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setConsole(new TestConsole())
         .setEventBus(eventBus)
+        .setPlatform(Platform.detect())
         .build();
 
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -100,6 +102,7 @@ public class DefaultStepRunnerTest {
         .setProjectFilesystem(createMock(ProjectFilesystem.class))
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
     ThreadFactory threadFactory = new ThreadFactoryBuilder()
         .setDaemon(true)

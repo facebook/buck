@@ -46,6 +46,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -117,7 +118,8 @@ public class ProjectCommandTest {
     return BuckConfig.createFromReader(
         new StringReader(contents),
         dummyProjectFilesystem,
-        new BuildTargetParser(dummyProjectFilesystem));
+        new BuildTargetParser(dummyProjectFilesystem),
+        Platform.detect());
   }
 
   private static void checkPredicate(
@@ -172,7 +174,8 @@ public class ProjectCommandTest {
           new KnownBuildRuleTypes(),
           new InstanceArtifactCacheFactory(artifactCache),
           BuckEventBusFactory.newInstance(),
-          BuckTestConstant.PYTHON_INTERPRETER));
+          BuckTestConstant.PYTHON_INTERPRETER,
+          Platform.detect()));
     }
 
     @Override

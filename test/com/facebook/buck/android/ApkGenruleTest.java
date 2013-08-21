@@ -48,6 +48,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -236,6 +237,7 @@ public class ApkGenruleTest {
           }
         })
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.LINUX) // Fix platform to Linux to use bash in genrule.
         .build();
   }
 }

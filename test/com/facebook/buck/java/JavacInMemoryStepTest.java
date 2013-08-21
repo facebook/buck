@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -125,6 +126,7 @@ public class JavacInMemoryStepTest {
         .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
         .setConsole(new TestConsole())
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
   }
 }

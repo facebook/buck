@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -64,7 +65,9 @@ public class DependencyCheckingJavacStepTest extends EasyMockSupport {
           }
         })
         .setConsole(new TestConsole())
-        .setEventBus(BuckEventBusFactory.newInstance()).build();
+        .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
+        .build();
 
     DependencyCheckingJavacStep firstOrder = createTestStep(BuildDependencies.FIRST_ORDER_ONLY);
     DependencyCheckingJavacStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);

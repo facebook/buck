@@ -56,7 +56,7 @@ public class RunShTestAndRecordResultStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     TestResultSummary summary;
-    if (Platform.detect() == Platform.WINDOWS) {
+    if (context.getPlatform() == Platform.WINDOWS) {
       // Ignore sh_test on Windows.
       summary = new TestResultSummary(
           pathToShellScript,

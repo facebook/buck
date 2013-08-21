@@ -38,6 +38,7 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -86,7 +87,8 @@ public class Build {
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
       BuildDependencies buildDependencies,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      Platform platform) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
@@ -101,6 +103,7 @@ public class Build {
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setDebugEnabled(isDebugEnabled)
         .setEventBus(eventBus)
+        .setPlatform(platform)
         .build();
     this.artifactCache = Preconditions.checkNotNull(artifactCache);
     this.stepRunner = new DefaultStepRunner(executionContext, listeningExecutorService);

@@ -24,6 +24,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -43,6 +44,7 @@ public class ExecutionContext {
   private final boolean isDebugEnabled;
   private final ProcessExecutor processExecutor;
   private final BuckEventBus eventBus;
+  private final Platform platform;
 
   private ExecutionContext(
       ProjectFilesystem projectFilesystem,
@@ -53,7 +55,8 @@ public class ExecutionContext {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      Platform platform) {
     this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
@@ -65,6 +68,7 @@ public class ExecutionContext {
     this.isDebugEnabled = isDebugEnabled;
     this.processExecutor = new ProcessExecutor(console);
     this.eventBus = Preconditions.checkNotNull(eventBus);
+    this.platform = Preconditions.checkNotNull(platform);
   }
 
   /**
@@ -81,7 +85,8 @@ public class ExecutionContext {
         getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled,
-        eventBus);
+        eventBus,
+        platform);
   }
 
   public Verbosity getVerbosity() {
@@ -114,6 +119,10 @@ public class ExecutionContext {
 
   public BuckEventBus getBuckEventBus() {
     return eventBus;
+  }
+
+  public Platform getPlatform() {
+    return platform;
   }
 
   /**
@@ -186,6 +195,7 @@ public class ExecutionContext {
     private boolean isCodeCoverageEnabled = false;
     private boolean isDebugEnabled = false;
     private BuckEventBus eventBus = null;
+    private Platform platform = null;
 
     private Builder() {}
 
@@ -199,7 +209,8 @@ public class ExecutionContext {
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
           isDebugEnabled,
-          eventBus);
+          eventBus,
+          platform);
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -212,6 +223,7 @@ public class ExecutionContext {
       setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled());
       setDebugEnabled(executionContext.isDebugEnabled());
       setEventBus(executionContext.getBuckEventBus());
+      setPlatform(executionContext.getPlatform());
       return this;
     }
 
@@ -260,6 +272,11 @@ public class ExecutionContext {
 
     public Builder setEventBus(BuckEventBus eventBus) {
       this.eventBus = Preconditions.checkNotNull(eventBus);
+      return this;
+    }
+
+    public Builder setPlatform(Platform platform) {
+      this.platform = Preconditions.checkNotNull(platform);
       return this;
     }
   }

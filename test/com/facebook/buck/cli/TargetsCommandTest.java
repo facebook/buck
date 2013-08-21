@@ -51,6 +51,7 @@ import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -125,7 +126,8 @@ public class TargetsCommandTest {
             buildRuleTypes,
             new InstanceArtifactCacheFactory(artifactCache),
             eventBus,
-            BuckTestConstant.PYTHON_INTERPRETER));
+            BuckTestConstant.PYTHON_INTERPRETER,
+            Platform.detect()));
   }
 
   @Test
@@ -240,7 +242,7 @@ public class TargetsCommandTest {
     EasyMock.replay(parser);
     Reader reader = new StringReader("");
     BuckConfig config = BuckConfig.createFromReader(
-        reader, new ProjectFilesystem(new File(".")), parser);
+        reader, new ProjectFilesystem(new File(".")), parser, Platform.detect());
     TargetsCommandOptions options = new TargetsCommandOptions(config);
 
     // Test a valid target.

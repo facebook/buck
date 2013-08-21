@@ -28,6 +28,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -49,6 +50,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Parser parser;
   private final BuckEventBus eventBus;
+  private final Platform platform;
 
   /** This is constructed lazily. */
   @Nullable private T options;
@@ -64,6 +66,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.artifactCacheFactory = Preconditions.checkNotNull(params.getArtifactCacheFactory());
     this.parser = Preconditions.checkNotNull(params.getParser());
     this.eventBus = Preconditions.checkNotNull(params.getBuckEventBus());
+    this.platform = Preconditions.checkNotNull(params.getPlatform());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -216,6 +219,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
             options.findAndroidPlatformTarget(dependencyGraph, getBuckEventBus()))
         .setNdkRoot(options.findAndroidNdkDir(getProjectFilesystem()))
         .setEventBus(eventBus)
+        .setPlatform(platform)
         .build();
   }
 

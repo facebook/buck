@@ -27,6 +27,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
@@ -102,7 +103,8 @@ public class CleanCommandTest extends EasyMockSupport {
         createMock(KnownBuildRuleTypes.class),
         new InstanceArtifactCacheFactory(createMock(ArtifactCache.class)),
         createMock(BuckEventBus.class),
-        createMock(Parser.class));
+        createMock(Parser.class),
+        Platform.detect());
     return new CleanCommand(params);
   }
 

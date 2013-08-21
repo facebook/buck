@@ -64,6 +64,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -928,6 +929,7 @@ public class DefaultJavaLibraryRuleTest {
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
           .setEventBus(BuckEventBusFactory.newInstance())
+          .setPlatform(Platform.detect())
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,

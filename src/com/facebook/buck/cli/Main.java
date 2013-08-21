@@ -77,6 +77,8 @@ public final class Main {
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
 
+  private final Platform platform;
+
   /**
    * Daemon used to monitor the file system and cache build rules between Main() method
    * invocations is static so that it can outlive Main() objects and survive for the lifetime
@@ -160,6 +162,7 @@ public final class Main {
   public Main(PrintStream stdOut, PrintStream stdErr) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);
+    this.platform = Platform.detect();
   }
 
   /** Prints the usage message to standard error. */
@@ -209,8 +212,8 @@ public final class Main {
     // solves a bootstrapping issue).
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(
         projectRoot,
-        createBuckConfig(new ProjectFilesystem(projectRoot)).getIgnorePaths());
-    BuckConfig config = createBuckConfig(projectFilesystem);
+        createBuckConfig(new ProjectFilesystem(projectRoot), platform).getIgnorePaths());
+    BuckConfig config = createBuckConfig(projectFilesystem, platform);
     Verbosity verbosity = VerbosityParser.parse(args);
     final Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
     KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
@@ -271,7 +274,8 @@ public final class Main {
           new KnownBuildRuleTypes(),
           artifactCacheFactory,
           buildEventBus,
-          parser));
+          parser,
+          platform));
 
       buildEventBus.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
 
@@ -331,7 +335,7 @@ public final class Main {
   /**
    * @param projectFilesystem The directory that is the root of the project being built.
    */
-  private static BuckConfig createBuckConfig(ProjectFilesystem projectFilesystem)
+  private static BuckConfig createBuckConfig(ProjectFilesystem projectFilesystem, Platform platform)
       throws IOException {
     ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
     File configFile = projectFilesystem.getFileForRelativePath(DEFAULT_BUCK_CONFIG_FILE_NAME);
@@ -345,7 +349,7 @@ public final class Main {
     }
 
     ImmutableList<File> configFiles = configFileBuilder.build();
-    return BuckConfig.createFromFiles(projectFilesystem, configFiles);
+    return BuckConfig.createFromFiles(projectFilesystem, configFiles, platform);
   }
 
   @VisibleForTesting
@@ -360,7 +364,7 @@ public final class Main {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
           stdOut,
           stdErr,
-          new Ansi(Platform.detect()));
+          new Ansi(platform));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return FAIL_EXIT_CODE;
     } finally {

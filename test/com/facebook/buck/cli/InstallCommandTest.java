@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -96,7 +97,8 @@ public class InstallCommandTest {
         buildRuleTypes,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
-        BuckTestConstant.PYTHON_INTERPRETER));
+        BuckTestConstant.PYTHON_INTERPRETER,
+        Platform.detect()));
   }
 
   /**

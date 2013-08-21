@@ -40,6 +40,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -236,7 +237,8 @@ public class AuditOwnerCommandTest {
         buildRuleTypes,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
-        buckConfig.getPythonInterpreter()));
+        buckConfig.getPythonInterpreter(),
+        Platform.detect()));
   }
 
   @Test
