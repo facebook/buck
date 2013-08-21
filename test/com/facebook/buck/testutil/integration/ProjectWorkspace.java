@@ -24,6 +24,7 @@ import com.facebook.buck.cli.Main;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import javax.annotation.Nullable;
@@ -98,6 +100,34 @@ public class ProjectWorkspace {
    */
   public void setUp() throws IOException {
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      // Hack for symlinks on Windows.
+      SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
+        @Override
+        public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+          if (attrs.size() <= 4096) {
+            // On most file systems length of path must be less than 4096.
+            File file = path.toFile();
+            // Symbolic links are checked out as normal files containing a one-line path.
+            String linkTo = Files.toString(file, Charsets.UTF_8);
+            File linkToFile = new File(templatePath.toFile(), linkTo);
+            if (linkToFile.isFile()) {
+              java.nio.file.Files.copy(
+                  linkToFile.toPath(), path, StandardCopyOption.REPLACE_EXISTING);
+            } else if (linkToFile.isDirectory()) {
+              if (!file.delete()) {
+                throw new IOException();
+              }
+              MoreFiles.copyRecursively(linkToFile.toPath(), path);
+            }
+          }
+          return FileVisitResult.CONTINUE;
+        }
+      };
+      java.nio.file.Files.walkFileTree(destPath, copyDirVisitor);
+    }
+
     isSetUp = true;
   }
 
