@@ -252,7 +252,7 @@ public class AndroidBinaryRuleTest {
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) {
-        String rootPath = traversal.getRoot().getPath();
+        String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
         if ("java/src/com/facebook/base/assets2".equals(rootPath)) {
           traversal.visit(
               new File("java/src/com/facebook/base/assets2",
@@ -329,7 +329,7 @@ public class AndroidBinaryRuleTest {
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) {
-        String rootPath = traversal.getRoot().getPath();
+        String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
         if ("java/src/com/facebook/base/assets1".equals(rootPath)) {
           traversal.visit(
               new File("java/src/com/facebook/base/assets1",

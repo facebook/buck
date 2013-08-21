@@ -568,8 +568,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
       commands.add(new MkdirAndSymlinkFileStep(
-          entry.getValue().getPath(),
-          destinationDirectory + "/" + entry.getKey()));
+          Paths.normalizePathSeparator(entry.getValue().getPath()),
+          Paths.normalizePathSeparator(destinationDirectory + "/" + entry.getKey())));
     }
 
     return Optional.of(destination);
@@ -693,7 +693,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
     String obfuscatedName = Paths.getBasename(classpathEntry, ".jar") + "-obfuscated.jar";
-    String dirName = new File(classpathEntry).getParent();
+    String dirName = Paths.normalizePathSeparator(new File(classpathEntry).getParent());
     String outputJar = getPathForProGuardDirectory() + "/" + dirName + "/" +
         obfuscatedName;
     return outputJar;
