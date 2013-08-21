@@ -26,9 +26,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -43,6 +45,8 @@ public class ShBinaryRuleIntegrationTest {
 
   @Test
   public void testTrivialShBinaryRule() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "sh_binary_trivial", temporaryFolder);
     workspace.setUp();
@@ -58,6 +62,8 @@ public class ShBinaryRuleIntegrationTest {
 
   @Test
   public void testShBinaryWithResources() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "sh_binary_with_resources", temporaryFolder);
     workspace.setUp();
@@ -76,6 +82,8 @@ public class ShBinaryRuleIntegrationTest {
 
   @Test
   public void testShBinaryCannotOverwriteResource() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "sh_binary_with_overwrite_violation", temporaryFolder);
     workspace.setUp();
