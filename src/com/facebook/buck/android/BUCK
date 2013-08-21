@@ -105,6 +105,7 @@ java_library(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/environment:environment',
     '//third-party/java/aosp/src/com/android:aosp',
   ],
   visibility = ['PUBLIC'],

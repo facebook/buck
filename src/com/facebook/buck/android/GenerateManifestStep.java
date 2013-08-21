@@ -24,6 +24,8 @@ import com.android.manifmerger.MergerLog;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -95,11 +97,23 @@ public class GenerateManifestStep implements Step {
 
     ManifestMerger merger = new ManifestMerger(log, callback);
 
+    File outManifestFile = new File(outManifestPath);
     if (!merger.process(
-        new File(outManifestPath),
+        outManifestFile,
         skeletonManifestFile,
         Iterables.toArray(libraryManifestFiles, File.class))) {
       throw new HumanReadableException("Error generating manifest file");
+    }
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      // Convert line endings to Lf on Windows.
+      try {
+        String xmlText = Files.toString(outManifestFile, Charsets.UTF_8);
+        xmlText = xmlText.replace("\r\n", "\n");
+        Files.write(xmlText.getBytes(Charsets.UTF_8), outManifestFile);
+      } catch (IOException e) {
+        throw new HumanReadableException("Error converting line endings of manifest file");
+      }
     }
 
     return 0;
