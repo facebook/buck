@@ -40,7 +40,7 @@ public class ParametrizedTest {
 
   @Test
   public void parametrizedTest() {
-    System.out.println("Parameter: " + number);
+    System.out.print(String.format("Parameter: %d\n", number));
   }
 
 }
