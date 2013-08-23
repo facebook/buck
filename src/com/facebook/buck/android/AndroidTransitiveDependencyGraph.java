@@ -18,14 +18,14 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
+import com.facebook.buck.cpp.PrebuiltNativeLibrary;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.NativeLibraryRule;
+import com.facebook.buck.rules.NativeLibraryBuildable;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -143,8 +143,8 @@ public class AndroidTransitiveDependencyGraph {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
-        if (rule instanceof NativeLibraryRule) {
-          NativeLibraryRule nativeLibraryRule = (NativeLibraryRule)rule;
+        if (rule.getBuildable() instanceof NativeLibraryBuildable) {
+          NativeLibraryBuildable nativeLibraryRule = (NativeLibraryBuildable) rule.getBuildable();
           if (nativeLibraryRule.isAsset()) {
             nativeLibAssetsZips.add(nativeLibraryRule.getPathToOutputFile());
           } else {
@@ -153,7 +153,7 @@ public class AndroidTransitiveDependencyGraph {
 
           // In the rare event that a PrebuiltNativeLibraryBuildRule has deps, it is likely another
           // NativeLibraryRule that will need to be included in the final APK, so traverse the deps.
-          if (rule instanceof PrebuiltNativeLibraryBuildRule) {
+          if (rule.getBuildable() instanceof PrebuiltNativeLibrary) {
             return true;
           }
         } else if (rule instanceof AndroidResourceRule) {

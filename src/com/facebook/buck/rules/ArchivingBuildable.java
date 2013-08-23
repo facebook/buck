@@ -31,13 +31,12 @@ import java.util.List;
 /**
  * Base class for rules which produce an archive of files.
  */
-public abstract class ArchivingRule extends DoNotUseAbstractBuildable {
+public abstract class ArchivingBuildable extends AbstractBuildable {
 
   private final String outputZip;
 
-  protected ArchivingRule(BuildRuleParams buildRuleParams) {
-    super(buildRuleParams);
-    this.outputZip = getPathToOutputZip(getBuildTarget());
+  protected ArchivingBuildable(BuildRuleParams buildRuleParams) {
+    this.outputZip = getPathToOutputZip(buildRuleParams.getBuildTarget());
   }
 
   /**

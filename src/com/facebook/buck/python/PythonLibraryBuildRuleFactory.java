@@ -21,15 +21,15 @@ import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
-public class PythonLibraryBuildRuleFactory extends AbstractBuildRuleFactory<PythonLibraryRule.Builder> {
+public class PythonLibraryBuildRuleFactory extends AbstractBuildRuleFactory<PythonLibrary.Builder> {
 
   @Override
-  protected PythonLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return PythonLibraryRule.newPythonLibraryBuilder(params);
+  protected PythonLibrary.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return PythonLibrary.newPythonLibraryBuilder(params);
   }
 
   @Override
-  protected void amendBuilder(PythonLibraryRule.Builder builder,
+  protected void amendBuilder(PythonLibrary.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
   }
 

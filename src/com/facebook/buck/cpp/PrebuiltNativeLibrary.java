@@ -23,7 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.NativeLibraryRule;
+import com.facebook.buck.rules.NativeLibraryBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -49,21 +49,21 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class PrebuiltNativeLibraryBuildRule extends NativeLibraryRule {
+public class PrebuiltNativeLibrary extends NativeLibraryBuildable {
 
   private final DirectoryTraverser directoryTraverser;
 
-  protected PrebuiltNativeLibraryBuildRule(BuildRuleParams buildRuleParams,
-      String nativeLibs,
-      boolean isAsset,
-      DirectoryTraverser directoryTraverser) {
+  protected PrebuiltNativeLibrary(BuildRuleParams buildRuleParams,
+                                  String nativeLibs,
+                                  boolean isAsset,
+                                  DirectoryTraverser directoryTraverser) {
     super(buildRuleParams, isAsset, nativeLibs);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder
         .set("nativeLibs", getLibraryPath())
         .set("is_asset", isAsset());
   }
@@ -84,16 +84,11 @@ public class PrebuiltNativeLibraryBuildRule extends NativeLibraryRule {
     return ImmutableList.of();
   }
 
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.PREBUILT_NATIVE_LIBRARY;
-  }
-
   public static Builder newPrebuiltNativeLibrary(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
-  public static class Builder extends NativeLibraryRule.Builder<PrebuiltNativeLibraryBuildRule> {
+  public static class Builder extends NativeLibraryBuildable.Builder {
     @Nullable
     private String nativeLibs = null;
 
@@ -102,8 +97,14 @@ public class PrebuiltNativeLibraryBuildRule extends NativeLibraryRule {
     }
 
     @Override
-    public PrebuiltNativeLibraryBuildRule build(BuildRuleResolver ruleResolver) {
-      return new PrebuiltNativeLibraryBuildRule(createBuildRuleParams(ruleResolver),
+    protected BuildRuleType getType() {
+      return BuildRuleType.PREBUILT_NATIVE_LIBRARY;
+    }
+
+    @Override
+    protected PrebuiltNativeLibrary newBuildable(BuildRuleParams params,
+        BuildRuleResolver resolver) {
+      return new PrebuiltNativeLibrary(params,
           this.nativeLibs,
           this.isAsset,
           new DefaultDirectoryTraverser());

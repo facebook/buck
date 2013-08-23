@@ -66,7 +66,7 @@ public class PrebuiltNativeLibraryRuleTest {
         ImmutableSortedSet.<BuildRule>of() /* deps */,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
         /* pathRelativizer */ Functions.<String>identity());
-    PrebuiltNativeLibraryBuildRule nativeLibraryRule = new PrebuiltNativeLibraryBuildRule(
+    PrebuiltNativeLibrary nativeLibraryRule = new PrebuiltNativeLibrary(
         buildRuleParams,
         "java/src/com/facebook/base/libs",
         false,

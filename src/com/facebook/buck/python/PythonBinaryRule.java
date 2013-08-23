@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -87,10 +88,11 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
 
       @Override
       public boolean visit(BuildRule rule) {
-        if (rule instanceof PythonLibraryRule) {
-          PythonLibraryRule pythonLibraryRule = (PythonLibraryRule)rule;
+        Buildable buildable = rule.getBuildable();
+        if (buildable instanceof PythonLibrary) {
+          PythonLibrary pythonLibrary = (PythonLibrary) buildable;
 
-          Optional<String> pythonPathEntry = pythonLibraryRule.getPythonPathDirectory();
+          Optional<String> pythonPathEntry = pythonLibrary.getPythonPathDirectory();
           if (pythonPathEntry.isPresent()) {
             entries.add(pythonPathEntry.get());
           }

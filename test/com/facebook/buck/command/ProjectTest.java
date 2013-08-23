@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
-import com.facebook.buck.android.NdkLibraryRule;
+import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -44,8 +44,8 @@ import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.BuckTestConstant;
+import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -764,8 +764,8 @@ public class ProjectTest {
     // )
 
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
-    NdkLibraryRule ndkLibrary = ruleResolver.buildAndAddToIndex(
-        NdkLibraryRule.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
+        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(fooJni)
         .addSrc("Android.mk")
         .addVisibilityPattern(new SingletonBuildTargetPattern("//third_party/java/foo:foo")));
@@ -787,7 +787,7 @@ public class ProjectTest {
             DependentModule.newInheritedJdk()),
         androidLibraryModule.dependencies);
     assertEquals(
-        String.format("../../../../%s", ndkLibrary.getLibraryPath()),
+        String.format("../../../../%s", ((NdkLibrary) ndkLibrary.getBuildable()).getLibraryPath()),
         androidLibraryModule.nativeLibs);
   }
 

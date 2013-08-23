@@ -25,11 +25,11 @@ import java.nio.file.Paths;
  *
  * See NdkLibraryRule and PrebuiltNativeLibraryBuildRule for concrete examples.
  */
-abstract public class NativeLibraryRule extends ArchivingRule {
+abstract public class NativeLibraryBuildable extends ArchivingBuildable {
   private final boolean isAsset;
   private final String libraryPath;
 
-  public NativeLibraryRule(BuildRuleParams params, boolean isAsset, String libraryPath) {
+  public NativeLibraryBuildable(BuildRuleParams params, boolean isAsset, String libraryPath) {
     super(params);
     this.isAsset = isAsset;
     this.libraryPath = libraryPath;
@@ -53,7 +53,7 @@ abstract public class NativeLibraryRule extends ArchivingRule {
     return libraryPath;
   }
 
-  abstract public static class Builder<T extends NativeLibraryRule> extends AbstractBuildRuleBuilder<T> {
+  abstract public static class Builder extends AbstractBuildable.Builder {
 
     protected boolean isAsset = false;
 
@@ -61,7 +61,7 @@ abstract public class NativeLibraryRule extends ArchivingRule {
       super(params);
     }
 
-    public Builder<T> setIsAsset(boolean isAsset) {
+    public Builder setIsAsset(boolean isAsset) {
       this.isAsset = isAsset;
       return this;
     }

@@ -31,9 +31,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 /**
- * Unit test for {@link PythonLibraryRule}.
+ * Unit test for {@link PythonLibrary}.
  */
-public class PythonLibraryRuleTest {
+public class PythonLibraryTest {
 
   @Test
   public void testGetters() {
@@ -43,11 +43,11 @@ public class PythonLibraryRuleTest {
         /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
         /* pathRelativizer */ Functions.<String>identity());
     ImmutableSortedSet<String> srcs = ImmutableSortedSet.of("");
-    PythonLibraryRule pythonLibraryRule = new PythonLibraryRule(
+    PythonLibrary pythonLibrary = new PythonLibrary(
         buildRuleParams,
         srcs);
 
-    assertTrue(pythonLibraryRule.getProperties().is(LIBRARY));
-    assertSame(srcs, pythonLibraryRule.getPythonSrcs());
+    assertTrue(pythonLibrary.getProperties().is(LIBRARY));
+    assertSame(srcs, pythonLibrary.getPythonSrcs());
   }
 }

@@ -22,18 +22,18 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 import java.util.List;
 
-public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory<NdkLibraryRule.Builder> {
+public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory<NdkLibrary.Builder> {
 
   public NdkLibraryBuildRuleFactory() {
   }
 
   @Override
-  public NdkLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return NdkLibraryRule.newNdkLibraryRuleBuilder(params);
+  public NdkLibrary.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return NdkLibrary.newNdkLibraryRuleBuilder(params);
   }
 
   @Override
-  protected void amendBuilder(NdkLibraryRule.Builder builder, BuildRuleFactoryParams params) {
+  protected void amendBuilder(NdkLibrary.Builder builder, BuildRuleFactoryParams params) {
     // flags
     List<String> flags = params.getOptionalListAttribute("flags");
     for (String flag : flags) {

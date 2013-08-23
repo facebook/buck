@@ -18,14 +18,13 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
@@ -41,15 +40,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class PythonLibraryRule extends DoNotUseAbstractBuildable implements Buildable {
+import javax.annotation.Nullable;
+
+public class PythonLibrary extends AbstractBuildable {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private final BuildTarget buildTarget;
   private final ImmutableSortedSet<String> srcs;
   private final Optional<String> pythonPathDirectory;
 
-  protected PythonLibraryRule(BuildRuleParams buildRuleParams,
-      ImmutableSortedSet<String> srcs) {
-    super(buildRuleParams);
+  protected PythonLibrary(BuildRuleParams buildRuleParams,
+                          ImmutableSortedSet<String> srcs) {
+    this.buildTarget = buildRuleParams.getBuildTarget();
     this.srcs = ImmutableSortedSet.copyOf(srcs);
 
     if (srcs.isEmpty()) {
@@ -59,9 +61,15 @@ public class PythonLibraryRule extends DoNotUseAbstractBuildable implements Buil
     }
   }
 
+  @Nullable
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+  public String getPathToOutputFile() {
+    return null;
+  }
+
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder
         .set("srcs", srcs)
         .set("pythonPathDirectory", pythonPathDirectory);
   }
@@ -69,8 +77,8 @@ public class PythonLibraryRule extends DoNotUseAbstractBuildable implements Buil
   private String getPathToPythonPathDirectory() {
     return String.format("%s/%s/__pylib_%s/",
         BuckConstant.BIN_DIR,
-        getBuildTarget().getBasePath(),
-        getBuildTarget().getShortName());
+        buildTarget.getBasePath(),
+        buildTarget.getShortName());
   }
 
   public ImmutableSortedSet<String> getPythonSrcs() {
@@ -107,11 +115,6 @@ public class PythonLibraryRule extends DoNotUseAbstractBuildable implements Buil
   }
 
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.PYTHON_LIBRARY;
-  }
-
-  @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
   }
@@ -120,7 +123,7 @@ public class PythonLibraryRule extends DoNotUseAbstractBuildable implements Buil
     return new Builder(params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<PythonLibraryRule>
+  public static class Builder extends AbstractBuildable.Builder
       implements SrcsAttributeBuilder {
     protected ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
 
@@ -135,9 +138,13 @@ public class PythonLibraryRule extends DoNotUseAbstractBuildable implements Buil
     }
 
     @Override
-    public PythonLibraryRule build(BuildRuleResolver ruleResolver) {
-      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
-      return new PythonLibraryRule(buildRuleParams, srcs.build());
+    public BuildRuleType getType() {
+      return BuildRuleType.PYTHON_LIBRARY;
+    }
+
+    @Override
+    protected PythonLibrary newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+      return new PythonLibrary(params, srcs.build());
     }
   }
 }

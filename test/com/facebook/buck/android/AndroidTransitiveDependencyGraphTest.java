@@ -18,13 +18,14 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
+import com.facebook.buck.cpp.PrebuiltNativeLibrary;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
@@ -58,15 +59,15 @@ public class AndroidTransitiveDependencyGraphTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
 
-    NdkLibraryRule ndkLibraryRule = ruleResolver.buildAndAddToIndex(
-        NdkLibraryRule.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
+        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/native_library:library"))
             .addSrc("Android.mk")
             .setIsAsset(false)
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    PrebuiltNativeLibraryBuildRule prebuiltNativeLibraryBuildRule = ruleResolver.buildAndAddToIndex(
-        PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule prebuiltNativeLibraryBuild = ruleResolver.buildAndAddToIndex(
+        PrebuiltNativeLibrary.newPrebuiltNativeLibrary(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/prebuilt_native_library:library"))
         .setNativeLibsDirectory("/java/com/facebook/prebuilt_native_library/libs")
         .setIsAsset(true)
@@ -77,8 +78,8 @@ public class AndroidTransitiveDependencyGraphTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:example"))
             .addDep(guavaRule.getBuildTarget())
             .addDep(jsr305Rule.getBuildTarget())
-            .addDep(prebuiltNativeLibraryBuildRule.getBuildTarget())
-            .addDep(ndkLibraryRule.getBuildTarget()));
+            .addDep(prebuiltNativeLibraryBuild.getBuildTarget())
+            .addDep(ndkLibrary.getBuildTarget()));
 
     AndroidResourceRule manifestRule = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
@@ -136,12 +137,12 @@ public class AndroidTransitiveDependencyGraphTest {
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
-        ImmutableSet.of(ndkLibraryRule.getPathToOutputFile()),
+        ImmutableSet.of(ndkLibrary.getBuildable().getPathToOutputFile()),
         transitiveDeps.nativeLibsZips);
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
-        ImmutableSet.of(prebuiltNativeLibraryBuildRule.getPathToOutputFile()),
+        ImmutableSet.of(prebuiltNativeLibraryBuild.getBuildable().getPathToOutputFile()),
         transitiveDeps.nativeLibAssetsZips);
   }
 }

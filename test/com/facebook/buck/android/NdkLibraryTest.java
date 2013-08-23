@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
@@ -44,9 +45,9 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Unit test for {@link com.facebook.buck.android.NdkLibraryRule}.
+ * Unit test for {@link NdkLibrary}.
  */
-public class NdkLibraryRuleTest {
+public class NdkLibraryTest {
 
   @Test
   public void testSimpleNdkLibraryRule() throws IOException {
@@ -54,8 +55,8 @@ public class NdkLibraryRuleTest {
 
     String basePath = "java/src/com/facebook/base";
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    NdkLibraryRule ndkLibraryRule = ruleResolver.buildAndAddToIndex(
-        NdkLibraryRule.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    BuildRule rule = ruleResolver.buildAndAddToIndex(
+        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance(
             String.format("//%s:base", basePath)))
         .addSrc(basePath + "/Application.mk")
@@ -66,20 +67,23 @@ public class NdkLibraryRuleTest {
         .setIsAsset(true)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    Assert.assertEquals(BuildRuleType.NDK_LIBRARY, ndkLibraryRule.getType());
-    assertTrue(ndkLibraryRule.getProperties().is(ANDROID));
-    assertTrue(ndkLibraryRule.isAsset());
+    Assert.assertEquals(BuildRuleType.NDK_LIBRARY, rule.getType());
+
+    NdkLibrary ndkLibrary = (NdkLibrary) rule.getBuildable();
+
+    assertTrue(ndkLibrary.getProperties().is(ANDROID));
+    assertTrue(ndkLibrary.isAsset());
     Assert.assertEquals(BuckConstant.GEN_DIR + "/" + basePath + "/__libbase/libs",
-        ndkLibraryRule.getLibraryPath());
+        ndkLibrary.getLibraryPath());
 
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             basePath + "/Android.mk",
             basePath + "/Application.mk",
             basePath + "/main.cpp"),
-        ImmutableList.copyOf(ndkLibraryRule.getInputsToCompareToOutput()));
+        ImmutableList.copyOf(ndkLibrary.getInputsToCompareToOutput()));
 
-    List<Step> steps = ndkLibraryRule.buildArchive(context);
+    List<Step> steps = ndkLibrary.buildArchive(context);
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     File projectRoot = createMock(File.class);

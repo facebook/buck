@@ -25,13 +25,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cpp.PrebuiltNativeLibraryBuildRule;
+import com.facebook.buck.cpp.PrebuiltNativeLibrary;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
@@ -409,8 +410,8 @@ public class AndroidBinaryRuleTest {
     if (!Strings.isNullOrEmpty(nativeLibsDirectory)) {
       BuildTarget nativeLibOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_native_libs");
-      PrebuiltNativeLibraryBuildRule nativeLibsRule = ruleResolver.buildAndAddToIndex(
-          PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary(
+      BuildRule nativeLibsRule = ruleResolver.buildAndAddToIndex(
+          PrebuiltNativeLibrary.newPrebuiltNativeLibrary(
               new FakeAbstractBuildRuleBuilderParams())
           .setBuildTarget(nativeLibOnebuildTarget)
           .setNativeLibsDirectory(nativeLibsDirectory));

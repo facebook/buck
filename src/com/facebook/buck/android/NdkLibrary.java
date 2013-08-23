@@ -27,7 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.NativeLibraryRule;
+import com.facebook.buck.rules.NativeLibraryBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
@@ -53,7 +53,7 @@ import java.util.Set;
  * )
  * </pre>
  */
-  public class NdkLibraryRule extends NativeLibraryRule {
+  public class NdkLibrary extends NativeLibraryBuildable {
 
   private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -64,7 +64,7 @@ import java.util.Set;
   private final ImmutableSortedSet<String> sources;
   private final ImmutableList<String> flags;
 
-  protected NdkLibraryRule(
+  protected NdkLibrary(
       BuildRuleParams buildRuleParams,
       Set<String> sources,
       List<String> flags,
@@ -95,21 +95,16 @@ import java.util.Set;
   }
 
   @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.NDK_LIBRARY;
-  }
-
-  @Override
   public BuildableProperties getProperties() {
     return PROPERTIES;
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     // TODO(#2493457): This rule uses the ndk-build script (part of the Android NDK), so the RuleKey
     // should incorporate which version of the NDK is used.
 
-    return super.appendToRuleKey(builder)
+    return builder
         .set("makefileDirectory", makefileDirectory)
         .set("buildArtifactsDirectory", buildArtifactsDirectory)
         .set("sources", sources)
@@ -134,7 +129,7 @@ import java.util.Set;
     return new Builder(params);
   }
 
-  public static class Builder extends NativeLibraryRule.Builder<NdkLibraryRule>
+  public static class Builder extends NativeLibraryBuildable.Builder
       implements SrcsAttributeBuilder {
     private Set<String> sources = Sets.newHashSet();
     private ImmutableList.Builder<String> flags = ImmutableList.builder();
@@ -144,12 +139,13 @@ import java.util.Set;
     }
 
     @Override
-    public NdkLibraryRule build(BuildRuleResolver ruleResolver) {
-      return new NdkLibraryRule(
-          createBuildRuleParams(ruleResolver),
-          sources,
-          flags.build(),
-          this.isAsset);
+    public BuildRuleType getType() {
+      return BuildRuleType.NDK_LIBRARY;
+    }
+
+    @Override
+    protected NdkLibrary newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+      return new NdkLibrary(params, sources, flags.build(), this.isAsset);
     }
 
     @Override

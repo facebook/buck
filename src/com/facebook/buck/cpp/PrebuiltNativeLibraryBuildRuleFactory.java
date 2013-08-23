@@ -22,15 +22,15 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 public class PrebuiltNativeLibraryBuildRuleFactory
-    extends AbstractBuildRuleFactory<PrebuiltNativeLibraryBuildRule.Builder> {
+    extends AbstractBuildRuleFactory<PrebuiltNativeLibrary.Builder> {
 
   @Override
-  protected PrebuiltNativeLibraryBuildRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return PrebuiltNativeLibraryBuildRule.newPrebuiltNativeLibrary(params);
+  protected PrebuiltNativeLibrary.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return PrebuiltNativeLibrary.newPrebuiltNativeLibrary(params);
   }
 
   @Override
-  protected void amendBuilder(PrebuiltNativeLibraryBuildRule.Builder builder,
+  protected void amendBuilder(PrebuiltNativeLibrary.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     // native_libs
     String nativeLibs = params.getRequiredStringAttribute("native_libs");

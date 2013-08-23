@@ -25,7 +25,7 @@ import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
 import com.facebook.buck.android.GenAidlRule;
-import com.facebook.buck.android.NdkLibraryRule;
+import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.AnnotationProcessingData;
@@ -34,6 +34,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigRule;
@@ -365,11 +366,12 @@ public class Project {
 
   private Module createModuleForProjectConfig(ProjectConfigRule projectConfig) throws IOException {
     BuildRule projectRule = projectConfig.getProjectRule();
+    Buildable buildable = projectRule.getBuildable();
     Preconditions.checkState(projectRule instanceof JavaLibraryRule
         || projectRule instanceof AndroidLibraryRule
         || projectRule instanceof AndroidResourceRule
         || projectRule instanceof AndroidBinaryRule
-        || projectRule instanceof NdkLibraryRule,
+        || buildable instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
 
@@ -438,11 +440,11 @@ public class Project {
     DependentModule jdkDependency;
     if (isAndroidRule) {
       // android details
-      if (projectRule instanceof NdkLibraryRule) {
-        NdkLibraryRule ndkLibraryRule = (NdkLibraryRule)projectRule;
+      if (projectRule.getBuildable() instanceof NdkLibrary) {
+        NdkLibrary ndkLibrary = (NdkLibrary) projectRule.getBuildable();
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-        module.nativeLibs = Paths.computeRelativePath(relativePath, ndkLibraryRule.getLibraryPath());
+        module.nativeLibs = Paths.computeRelativePath(relativePath, ndkLibrary.getLibraryPath());
       } else if (projectRule instanceof AndroidResourceRule) {
         AndroidResourceRule androidResourceRule = (AndroidResourceRule)projectRule;
         module.resFolder = createRelativePath(androidResourceRule.getRes(), target);
@@ -785,7 +787,7 @@ public class Project {
           libraryJars.add((PrebuiltJarRule) dep);
           String libraryName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
-        } else if (dep instanceof NdkLibraryRule) {
+        } else if (dep instanceof NdkLibrary) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {

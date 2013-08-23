@@ -58,7 +58,7 @@ RULES_SRCS = [
   'GenAidlRule.java',
   'HasAndroidPlatformTarget.java',
   'NdkLibraryBuildRuleFactory.java',
-  'NdkLibraryRule.java',
+  'NdkLibrary.java',
   'RobolectricTestBuildRuleFactory.java',
   'RobolectricTestRule.java',
 ]
