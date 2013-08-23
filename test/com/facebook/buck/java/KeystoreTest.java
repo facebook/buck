@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
@@ -68,7 +69,8 @@ public class KeystoreTest {
     replay(buildContext);
 
     AbstractCachingBuildRule keystore = createKeystoreRuleForTest();
-    List<Step> buildSteps = keystore.getBuildable().getBuildSteps(buildContext);
+    List<Step> buildSteps = keystore.getBuildable().getBuildSteps(buildContext,
+        new FakeBuildableContext());
     assertEquals(ImmutableList.<Step>of(), buildSteps);
 
     verify(buildContext);

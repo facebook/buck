@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
@@ -72,7 +73,7 @@ public class GenParcelable extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
     Step step = new Step() {
 

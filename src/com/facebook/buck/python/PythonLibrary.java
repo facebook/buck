@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -95,7 +96,7 @@ public class PythonLibrary extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Symlink all of the sources to a generated directory so that the generated directory can be

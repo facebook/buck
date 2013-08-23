@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -119,7 +120,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
     // TODO(mbolin): Package Python code, if appropriate. There does not appear to be a standard
     // cross-platform way to do this.

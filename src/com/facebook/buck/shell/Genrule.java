@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -27,6 +26,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -262,7 +263,8 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   @Override
   @VisibleForTesting
-  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Delete the old output for this rule, if it exists.

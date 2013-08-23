@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
@@ -107,7 +108,8 @@ public class ExportFile extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     String pathToOutputFile = out.get();
 
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()

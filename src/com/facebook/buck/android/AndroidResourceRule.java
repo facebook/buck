@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -166,7 +167,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
     // If there is no res directory, then there is no R.java to generate.
     // TODO(mbolin): Change android_resources() so that 'res' is required.

@@ -46,7 +46,8 @@ public interface Buildable {
   /**
    * When this method is invoked, all of its dependencies will have been built.
    */
-  public List<Step> getBuildSteps(BuildContext context) throws IOException;
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException;
 
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException;
 

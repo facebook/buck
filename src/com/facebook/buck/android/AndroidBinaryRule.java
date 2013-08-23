@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
@@ -318,7 +319,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     // Map from asset name to pathname for extra files to be added to assets.
     ImmutableMap.Builder<String, File> extraAssetsBuilder = ImmutableMap.builder();

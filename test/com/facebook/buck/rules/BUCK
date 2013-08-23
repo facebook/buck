@@ -2,6 +2,7 @@ java_library(
   name = 'testutil',
   srcs = [
     'FakeAbstractBuildRuleBuilderParams.java',
+    'FakeBuildableContext.java',
     'FakeBuildRule.java',
     'FakeInputRule.java',
     'FakeTestRule.java',

@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -151,7 +152,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context)
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
     return ImmutableList.of();
   }

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
@@ -74,7 +75,7 @@ public class ExportFileTest {
     ExportFile rule = new ExportFile(
         params, Optional.<String>absent(), Optional.<String>absent());
 
-    List<Step> steps = rule.getBuildSteps(context);
+    List<Step> steps = rule.getBuildSteps(context, new FakeBuildableContext());
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         "example.html",
@@ -87,7 +88,7 @@ public class ExportFileTest {
     ExportFile rule = new ExportFile(
         params, Optional.<String>absent(), Optional.of("fish"));
 
-    List<Step> steps = rule.getBuildSteps(context);
+    List<Step> steps = rule.getBuildSteps(context, new FakeBuildableContext());
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         "example.html",
@@ -99,7 +100,7 @@ public class ExportFileTest {
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFile rule = new ExportFile(params, Optional.of("chips"), Optional.of("fish"));
 
-    List<Step> steps = rule.getBuildSteps(context);
+    List<Step> steps = rule.getBuildSteps(context, new FakeBuildableContext());
 
     MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
         "chips",

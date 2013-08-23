@@ -460,7 +460,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context) throws IOException {
+    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+        throws IOException {
       return buildSteps;
     }
 
@@ -502,7 +503,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context)
+    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
         throws IOException {
       throw new UnsupportedOperationException("method should not be called");
     }

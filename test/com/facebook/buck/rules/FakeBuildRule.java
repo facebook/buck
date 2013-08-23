@@ -101,7 +101,8 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     throw new UnsupportedOperationException();
   }
 

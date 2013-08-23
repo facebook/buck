@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -70,7 +71,7 @@ public class GenAidlRuleTest {
 
     assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput());
 
-    List<Step> steps = genAidlRule.getBuildSteps(context);
+    List<Step> steps = genAidlRule.getBuildSteps(context, new FakeBuildableContext());
 
     final String pathToAidlExecutable = "/usr/local/bin/aidl";
     final String pathToFrameworkAidl = "/home/root/android/platforms/android-16/framework.aidl";

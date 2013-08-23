@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -176,7 +177,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   /**
    * This is set in
-   * {@link com.facebook.buck.rules.Buildable#getBuildSteps(com.facebook.buck.rules.BuildContext)}
+   * {@link com.facebook.buck.rules.Buildable#getBuildSteps(com.facebook.buck.rules.BuildContext, BuildableContext)}
    * and is available to subclasses.
    */
   protected ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
@@ -484,7 +485,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * attribute. They are compiled into a directory under {@link BuckConstant#BIN_DIR}.
    */
   @Override
-  public final List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     BuildTarget buildTarget = getBuildTarget();
 

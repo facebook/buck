@@ -45,6 +45,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -270,7 +271,7 @@ public class DefaultJavaLibraryRuleTest {
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
     BuildContext context = createBuildContext(javaLibrary, bootclasspath, projectFilesystem);
 
-    List<Step> steps = javaLibrary.getBuildSteps(context);
+    List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
     // Find the JavacInMemoryCommand and verify its bootclasspath.
     Step step = Iterables.find(steps, new Predicate<Step>() {
@@ -921,7 +922,7 @@ public class DefaultJavaLibraryRuleTest {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
       DefaultJavaLibraryRule javaLibrary = createJavaLibraryRule(projectFilesystem);
       buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null, projectFilesystem);
-      List<Step> steps = javaLibrary.getBuildSteps(buildContext);
+      List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());
       JavacInMemoryStep javacCommand = lastJavacCommand(steps);
 
       executionContext = ExecutionContext.builder()

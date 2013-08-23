@@ -386,7 +386,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     context.logBuildInfo("[BUILDING %s]", getFullyQualifiedName());
 
     // Get and run all of the commands.
-    List<Step> steps = buildable.getBuildSteps(context);
+    BuildableContext buildableContext = new DefaultBuildableContext();
+    List<Step> steps = buildable.getBuildSteps(context, buildableContext);
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
@@ -395,8 +396,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
 
   /**
    * For a rule that is read from the build cache, it may have fields that would normally be
-   * populated by executing the steps returned by {@link Buildable#getBuildSteps(BuildContext)}.
-   * Because {@link Buildable#getBuildSteps(BuildContext)} is not invoked for cached rules, a rule
+   * populated by executing the steps returned by {@link Buildable#getBuildSteps(BuildContext, BuildableContext)}.
+   * Because {@link Buildable#getBuildSteps(BuildContext, BuildableContext)} is not invoked for cached rules, a rule
    * may need to implement this method to populate those fields in some other way. For a cached
    * rule, this method will be invoked just before the future returned by
    * {@link #build(BuildContext)} is resolved.

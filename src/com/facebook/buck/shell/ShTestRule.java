@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -86,7 +87,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     // Nothing to build: test is run directly.
     return ImmutableList.of();
   }

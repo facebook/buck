@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.Genrule.Builder;
 import com.facebook.buck.shell.Genrule.GenruleStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -160,7 +161,7 @@ public class GenruleTest {
         genrule.getInputsToCompareToOutput());
 
     // Verify that the shell commands that the genrule produces are correct.
-    List<Step> steps = genrule.getBuildSteps(buildContext);
+    List<Step> steps = genrule.getBuildSteps(buildContext, new FakeBuildableContext());
     assertEquals(7, steps.size());
 
     Step firstStep = steps.get(0);

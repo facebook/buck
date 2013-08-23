@@ -19,12 +19,13 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -71,7 +72,8 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable implements BinaryBui
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(output.getParent().toString());
 
     // Generate an .sh file that builds up an environment and invokes the user's script.

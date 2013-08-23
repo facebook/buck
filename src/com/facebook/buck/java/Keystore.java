@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -71,7 +72,7 @@ public class Keystore extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
     // Nothing to build: this is like a glorified export_deps() rule.
     return ImmutableList.of();
   }

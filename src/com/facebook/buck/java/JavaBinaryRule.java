@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -120,7 +121,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     String outputDirectory = getOutputDirectory();

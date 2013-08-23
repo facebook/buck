@@ -63,7 +63,8 @@ public abstract class ArchivingBuildable extends AbstractBuildable {
   abstract protected List<Step> buildArchive(BuildContext context) throws IOException;
 
   @Override
-  public final List<Step> getBuildSteps(BuildContext context) throws IOException {
+  public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     String pathToOutputFile = getPathToOutputFile();
     String outputParentDirectory = new File(pathToOutputFile).getParent();
 

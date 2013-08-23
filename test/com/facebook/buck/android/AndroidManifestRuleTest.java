@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
@@ -78,7 +79,7 @@ public class AndroidManifestRuleTest {
     EasyMock.expect(buildContext.getDependencyGraph()).andReturn(dependencyGraph);
     EasyMock.replay(buildContext);
 
-    List<Step> steps = androidManifestRule.getBuildSteps(buildContext);
+    List<Step> steps = androidManifestRule.getBuildSteps(buildContext, new FakeBuildableContext());
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             new GenerateManifestStep(
