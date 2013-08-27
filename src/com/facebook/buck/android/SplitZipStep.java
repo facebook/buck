@@ -47,12 +47,12 @@ import java.util.zip.ZipFile;
  */
 public class SplitZipStep implements Step {
 
-  private static final int ZIP_SIZE_SOFT_LIMIT = 12 * 1024 * 1024;
+  private static final int ZIP_SIZE_SOFT_LIMIT = 11 * 1024 * 1024;
 
   /**
    * The uncompressed class size is a very simple metric that we can use to roughly estimate
    * whether we will hit the DexOpt LinearAlloc limit.  When we hit the limit, we were around
-   * 20 MB uncompressed, so use 14 MB as a safer upper limit.
+   * 20 MB uncompressed, so use 13 MB as a safer upper limit.
    */
   private static final int ZIP_SIZE_HARD_LIMIT = ZIP_SIZE_SOFT_LIMIT + (2 * 1024 * 1024);
 
