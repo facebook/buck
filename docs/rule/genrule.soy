@@ -32,9 +32,11 @@
 
 {call buck.arg}
   {param name: 'cmd' /}
+  {param default: 'None' /}
   {param desc}
-  The shell command to run to generate the output file. It will be
-  subject to the following environment variable substitutions:
+  The shell command to run to generate the output file. It is the fallback of <code>bash</code>
+  {sp}and <code>cmd_exe</code>.
+  It will be subject to the following environment variable substitutions:
     <dl>
       <dt><code>SRCS</code><dt>
       <dd>A space-delimited string expansion of the <code>srcs</code>
@@ -76,6 +78,25 @@
 {/call}
 
 {call buck.arg}
+  {param name: 'bash' /}
+  {param default: 'None' /}
+  {param desc}
+  The platform-specific version of parameter <code>cmd</code>.
+  It runs on UNIX in which <code>bash</code> is installed and has a higher priority than
+  {sp}<code>cmd</code>. Command specified will be run with <code>/bin/bash -c</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'cmd_exe' /}
+  {param default: 'None' /}
+  {param desc}
+  The platform-specific version of parameter <code>cmd</code>. It runs on Windows and has a higher
+  {sp}priority than <code>cmd</code>. Command specified will be run with <code>cmd.exe /c</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'out' /}
   {param desc}
    The name of the output file. Must be unique within the build file
@@ -109,8 +130,10 @@ genrule(
   srcs = [
     'AndroidManifest.xml',
   ],
-  cmd = 'python $(exe //python/android:basic_to_full) ' \
+  bash = 'python $(exe //python/android:basic_to_full) ' \
       '$SRCDIR/AndroidManifest.xml > $OUT',
+  cmd_exe = 'python.exe $(exe //python/android:basic_to_full) ' \
+      '%SRCDIR%\\AndroidManifest.xml > %OUT%',
   out = 'AndroidManifest.xml',
   deps = [
     '//python/android:basic_to_full',

@@ -294,7 +294,7 @@ public class DefaultJavaLibraryRuleTest {
     BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
     Genrule.newGenruleBuilder(params)
         .setBuildTarget(genruleBuildTarget)
-        .setCmd("echo 'aha' > $OUT")
+        .setBash(Optional.of("echo 'aha' > $OUT"))
         .setOut("stuff.txt")
         .build(ruleResolver);
 

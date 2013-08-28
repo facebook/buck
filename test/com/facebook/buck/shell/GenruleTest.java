@@ -39,6 +39,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.shell.Genrule.Builder;
+import com.facebook.buck.shell.Genrule.GenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -49,6 +50,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -227,7 +229,7 @@ public class GenruleTest {
         genruleCommand.getShellCommand(executionContext));
   }
 
-  private ExecutionContext newEmptyExecutionContext() {
+  private ExecutionContext newEmptyExecutionContext(Platform platform) {
     return ExecutionContext.builder()
         .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
@@ -237,8 +239,12 @@ public class GenruleTest {
           }
         })
         .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
+        .setPlatform(platform)
         .build();
+  }
+
+  private ExecutionContext newEmptyExecutionContext() {
+    return newEmptyExecutionContext(Platform.detect());
   }
 
   @Test
@@ -277,9 +283,10 @@ public class GenruleTest {
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
+    GenruleStep genruleStep = rule.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
-    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
+    String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
 
     String basePath = "/opt/local/fbandroid/";
 
@@ -302,9 +309,10 @@ public class GenruleTest {
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
+    GenruleStep genruleStep = rule.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
-    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
+    String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
 
     String basePath = "/opt/local/fbandroid/";
 
@@ -334,9 +342,10 @@ public class GenruleTest {
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
+    GenruleStep genruleStep = rule.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
-    String transformedString = rule.replaceMatches(filesystem, originalCmd);
+    String transformedString = genruleStep.replaceMatches(filesystem, originalCmd);
 
     // Verify that the correct cmd was created.
     String pathToOutput = String.format(
@@ -361,8 +370,9 @@ public class GenruleTest {
     String contextBasePath = "java/com/facebook/util";
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
+    GenruleStep genruleStep = rule.createGenruleStep();
 
-    String transformedString = rule.replaceMatches(fakeFilesystem, originalCmd);
+    String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
 
     String basePath = "/opt/local/fbandroid/";
 
@@ -384,7 +394,7 @@ public class GenruleTest {
         Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
-        .setCmd("ignored")
+        .setBash(Optional.of("ignored"))
         .addSrc("in-dir.txt")
         .addSrc("foo/bar.html")
         .addSrc("other/place.txt")
@@ -438,7 +448,7 @@ public class GenruleTest {
     Builder ruleBuilder = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction)
         .setBuildTarget(target)
-        .setCmd(originalCmd)
+        .setBash(Optional.of(originalCmd))
         .setOut("example-file");
 
     for (BuildRule dep : deps) {
@@ -457,7 +467,7 @@ public class GenruleTest {
 
     Genrule rule = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
-        .setCmd("true")
+        .setBash(Optional.of("true"))
         .setOut("/dev/null")
         .build(new BuildRuleResolver());
 
@@ -476,5 +486,60 @@ public class GenruleTest {
     assertEquals(fakeDx.getAbsolutePath(), env.get("DX"));
 
     EasyMock.verify(android);
+  }
+
+  @Test
+  public void testGetShellCommand() {
+    String bash = "rm -rf /usr";
+    String cmdExe = "rmdir /s /q C:\\Windows";
+    String cmd = "echo \"Hello\"";
+    String genruleName = "//example:genrule";
+    ExecutionContext linuxExecutionContext = newEmptyExecutionContext(Platform.LINUX);
+    ExecutionContext windowsExecutionContext = newEmptyExecutionContext(Platform.WINDOWS);
+
+    // Test platform-specific
+    Genrule rule = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(BuildTargetFactory.newInstance(genruleName))
+        .setBash(Optional.of(bash))
+        .setCmdExe(Optional.of(cmdExe))
+        .setOut("out.txt")
+        .build(new BuildRuleResolver());
+
+    ImmutableList<String> command = rule.createGenruleStep().getShellCommand(linuxExecutionContext);
+    assertEquals(ImmutableList.of("/bin/bash", "-c", bash), command);
+
+    command = rule.createGenruleStep().getShellCommand(windowsExecutionContext);
+    assertEquals(ImmutableList.of("cmd.exe", "/c", cmdExe), command);
+
+    // Test fallback
+    rule = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
+        .setCmd(Optional.of(cmd))
+        .setOut("out.txt")
+        .build(new BuildRuleResolver());
+    command = rule.createGenruleStep().getShellCommand(linuxExecutionContext);
+    assertEquals(ImmutableList.of("/bin/bash", "-c", cmd), command);
+
+    command = rule.createGenruleStep().getShellCommand(windowsExecutionContext);
+    assertEquals(ImmutableList.of("cmd.exe", "/c", cmd), command);
+
+    // Test command absent
+    rule = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
+        .setOut("out.txt")
+        .build(new BuildRuleResolver());
+    try {
+      rule.createGenruleStep().getShellCommand(linuxExecutionContext);
+    } catch (HumanReadableException e) {
+      assertEquals(String.format("You must specify either bash or cmd for genrule %s.",
+          genruleName), e.getHumanReadableErrorMessage());
+    }
+
+    try {
+      rule.createGenruleStep().getShellCommand(windowsExecutionContext);
+    } catch (HumanReadableException e) {
+      assertEquals(String.format("You must specify either cmd_exe or cmd for genrule %s.",
+          genruleName), e.getHumanReadableErrorMessage());
+    }
   }
 }

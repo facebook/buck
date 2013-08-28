@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.google.common.base.Optional;
 
 public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory<ApkGenrule.Builder> {
 
@@ -30,8 +31,17 @@ public final class ApkGenruleBuildRuleFactory extends AbstractBuildRuleFactory<A
 
   @Override
   protected void amendBuilder(ApkGenrule.Builder builder, BuildRuleFactoryParams params) {
-    String cmd = params.getRequiredStringAttribute("cmd");
+    // cmd
+    Optional<String> cmd = params.getOptionalStringAttribute("cmd");
     builder.setCmd(cmd);
+
+    // bash
+    Optional<String> bash = params.getOptionalStringAttribute("bash");
+    builder.setBash(bash);
+
+    // cmd_exe
+    Optional<String> cmdExe = params.getOptionalStringAttribute("cmd_exe");
+    builder.setCmdExe(cmdExe);
 
     BuildTarget apk = params.getRequiredBuildTarget("apk");
     builder.setApk(apk);
