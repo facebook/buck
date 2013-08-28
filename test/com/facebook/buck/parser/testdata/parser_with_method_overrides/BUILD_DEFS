@@ -1,6 +1,7 @@
 def echo_genrule(name, echo_str, out, srcs=[], deps=[], visibility=[]):
 	genrule(name=name,
-		cmd='echo %s > $OUT' % echo_str,
+		bash='echo %s > $OUT' % echo_str,
+		cmd_exe='echo %s> %%OUT%%' % echo_str,
 		out=out,
 		srcs=srcs,
 		deps=deps,

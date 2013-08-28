@@ -236,6 +236,7 @@ public class ProjectWorkspace {
           }
           String expectedFileContent = Files.toString(file.toFile(), Charsets.UTF_8);
           String observedFileContent = Files.toString(observedFile, Charsets.UTF_8);
+          observedFileContent = observedFileContent.replace("\r\n", "\n");
           String cleanPathToObservedFile = MoreStrings.withoutSuffix(
               templatePath.relativize(file).toString(), EXPECTED_SUFFIX);
           assertEquals(
