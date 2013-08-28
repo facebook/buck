@@ -1,7 +1,8 @@
 genrule(
   name = 'sleep',
   srcs = [],
-  cmd = 'sleep 1s',
+  bash = 'sleep 1s',
+  cmd_exe = 'powershell -command "Start-Sleep -s 1"',
   out = 'sleep',
   deps = [],
 )
