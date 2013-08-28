@@ -31,10 +31,16 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.step.TargetDevice;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 
@@ -42,6 +48,21 @@ public class RobolectricTestRule extends JavaTestRule {
 
   private final static BuildableProperties PROPERTIES = new BuildableProperties(
       ANDROID, LIBRARY, TEST);
+
+  /**
+   * Used by robolectric test runner to get list of resource directories that
+   * can be used for tests.
+   */
+  final static String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
+      "buck.robolectric_res_directories";
+
+  private final static Function<HasAndroidResourceDeps, String> RESOURCE_DIRECTORY_FUNCTION =
+      new Function<HasAndroidResourceDeps, String>() {
+    @Override
+    public String apply(HasAndroidResourceDeps input) {
+      return input.getRes();
+    }
+  };
 
   protected RobolectricTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
@@ -74,6 +95,23 @@ public class RobolectricTestRule extends JavaTestRule {
   @Override
   public List<String> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
+  }
+
+  @Override
+  protected void onAmendVmArgs(ImmutableList.Builder<String> vmArgsBuilder,
+      Optional<TargetDevice> targetDevice) {
+    super.onAmendVmArgs(vmArgsBuilder, targetDevice);
+    vmArgsBuilder.add(getRobolectricResourceDirectories(androidResourceDeps));
+  }
+
+  @VisibleForTesting
+  String getRobolectricResourceDirectories(List<HasAndroidResourceDeps> resourceDeps) {
+    String resourceDirectories = Joiner.on(File.pathSeparator)
+        .join(Iterables.transform(resourceDeps, RESOURCE_DIRECTORY_FUNCTION));
+
+    return String.format("-D%s=%s",
+        LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME,
+        resourceDirectories);
   }
 
   public static Builder newRobolectricTestRuleBuilder(AbstractBuildRuleBuilderParams params) {

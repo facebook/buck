@@ -182,23 +182,33 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   @VisibleForTesting
   List<String> amendVmArgs(List<String> existingVmArgs, Optional<TargetDevice> targetDevice) {
+    ImmutableList.Builder<String> vmArgs = ImmutableList.builder();
+    vmArgs.addAll(existingVmArgs);
+    onAmendVmArgs(vmArgs, targetDevice);
+    return vmArgs.build();
+  }
+
+  /**
+   * Override this method if you need to amend vm args. Subclasses are required
+   * to call super.onAmendVmArgs(...).
+   */
+  protected void onAmendVmArgs(ImmutableList.Builder<String> vmArgsBuilder,
+                               Optional<TargetDevice> targetDevice) {
     if (!targetDevice.isPresent()) {
-      return existingVmArgs;
+      return;
     }
 
-    ImmutableList.Builder<String> args = ImmutableList.<String>builder().addAll(existingVmArgs);
     if (targetDevice.isPresent()) {
       TargetDevice device = targetDevice.get();
       if (device.isEmulator()) {
-        args.add("-Dbuck.device=emulator");
+        vmArgsBuilder.add("-Dbuck.device=emulator");
       } else {
-        args.add("-Dbuck.device=device");
+        vmArgsBuilder.add("-Dbuck.device=device");
       }
       if (device.hasIdentifier()) {
-        args.add("-Dbuck.device.id=" + device.getIdentifier());
+        vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier());
       }
     }
-    return args.build();
   }
 
   @Override
