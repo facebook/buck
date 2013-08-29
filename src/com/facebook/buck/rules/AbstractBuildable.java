@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -46,12 +45,6 @@ public abstract class AbstractBuildable implements Buildable {
     return builder;
   }
 
-  @Override
-  public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
-      ProjectFilesystem projectFilesystem) throws IOException {
-    // no-op
-  }
-
   /**
    * Helper function for subclasses to create their lists of files for caching.
    */
@@ -65,7 +58,6 @@ public abstract class AbstractBuildable implements Buildable {
         ImmutableSet.of(pathToDirectory), traverser);
     inputsToConsiderForCachingPurposes.addAll(files);
   }
-
 
   protected static abstract class Builder extends AbstractBuildRuleBuilder<AbstractCachingBuildRule> {
 

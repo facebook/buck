@@ -22,10 +22,15 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -33,11 +38,16 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Properties;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * An injectable service for interacting with the filesystem.
  */
 public class ProjectFilesystem {
+
+  // TODO(mbolin): This file is heavy on the use of java.lang.String rather than java.nio.file.Path.
+  // Migrate from String to Path.
 
   private final File projectRoot;
   private final Function<String, String> pathRelativizer;
@@ -79,6 +89,10 @@ public class ProjectFilesystem {
     return pathRelativeToProjectRoot.isEmpty()
         ? projectRoot
         : new File(projectRoot, pathRelativeToProjectRoot);
+  }
+
+  public File getFileForRelativePath(Path pathRelativeToProjectRoot) {
+    return projectRoot.toPath().resolve(pathRelativeToProjectRoot).toFile();
   }
 
   public boolean exists(String pathRelativeToProjectRoot) {
@@ -152,6 +166,44 @@ public class ProjectFilesystem {
   public void writeLinesToPath(Iterable<String> lines, String pathRelativeToProjectRoot)
       throws IOException {
     MoreFiles.writeLinesToFile(lines, getFileForRelativePath(pathRelativeToProjectRoot));
+  }
+
+  public void writeContentsToPath(String contents, Path pathRelativeToProjectRoot)
+      throws IOException {
+    Files.write(contents, getFileForRelativePath(pathRelativeToProjectRoot), Charsets.UTF_8);
+  }
+
+  /**
+   * Reads a file and returns its contents if the file exists.
+   * <p>
+   * If the file does not exist, {@link Optional#absent()} will be returned.
+   * <p>
+   * If the file exists, but cannot be read, a {@link RuntimeException} will be thrown.
+   */
+  public Optional<String> readFileIfItExists(String pathRelativeToProjectRoot) {
+    File fileToRead = getFileForRelativePath(pathRelativeToProjectRoot);
+    return readFileIfItExists(fileToRead, pathRelativeToProjectRoot);
+  }
+
+  public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
+    File fileToRead = getFileForRelativePath(pathRelativeToProjectRoot);
+    return readFileIfItExists(fileToRead, pathRelativeToProjectRoot.toString());
+  }
+
+  private Optional<String> readFileIfItExists(File fileToRead, String pathRelativeToProjectRoot) {
+    if (fileToRead.isFile()) {
+      String contents;
+      try {
+        contents = Files.toString(fileToRead, Charsets.UTF_8);
+      } catch (IOException e) {
+        // Alternatively, we could return Optional.absent(), though something seems suspicious if we
+        // have already verified that fileToRead is a file and then we cannot read it.
+        throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
+      }
+      return Optional.of(contents);
+    } else {
+      return Optional.absent();
+    }
   }
 
   /**
@@ -232,6 +284,25 @@ public class ProjectFilesystem {
       }
     } else {
       java.nio.file.Files.createSymbolicLink(targetPath, sourcePath);
+    }
+  }
+
+  /**
+   * Takes a sequence of paths relative to the project root and writes a zip file to {@code out}
+   * with the contents and structure that matches that of the specified paths.
+   */
+  public void createZip(Iterable<Path> pathsToIncludeInZip, File out) throws IOException {
+    Preconditions.checkState(!Iterables.isEmpty(pathsToIncludeInZip));
+    try (ZipOutputStream zip = new ZipOutputStream(
+        new BufferedOutputStream(
+            new FileOutputStream(out)))) {
+      for (Path path : pathsToIncludeInZip) {
+        ZipEntry entry = new ZipEntry(path.toString());
+        zip.putNextEntry(entry);
+        InputStream input = Files.newInputStreamSupplier(getFileForRelativePath(path)).getInput();
+        ByteStreams.copy(input, zip);
+        zip.closeEntry();
+      }
     }
   }
 }

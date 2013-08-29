@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.ShellStep;
@@ -48,9 +49,9 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Unit test for {@link com.facebook.buck.android.GenAidlRule}.
+ * Unit test for {@link com.facebook.buck.android.GenAidl}.
  */
-public class GenAidlRuleTest {
+public class GenAidlTest {
 
   @Test
   public void testSimpleGenAidlRule() throws IOException {
@@ -60,13 +61,14 @@ public class GenAidlRuleTest {
     String importPath = "java/com/example/base/";
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    GenAidlRule genAidlRule = ruleResolver.buildAndAddToIndex(
-        GenAidlRule.newGenAidlRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+    GenAidl.Builder builder = GenAidl
+        .newGenAidlRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService"))
         .setAidl(pathToAidl)
-        .setImportPath(importPath));
+        .setImportPath(importPath);
+    Buildable genAidlRule = ruleResolver.buildAndAddToIndex(builder).getBuildable();
 
-    assertEquals(BuildRuleType.GEN_AIDL, genAidlRule.getType());
+    assertEquals(BuildRuleType.GEN_AIDL, builder.getType());
     assertTrue(genAidlRule.getProperties().is(ANDROID));
 
     assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput());
@@ -98,7 +100,8 @@ public class GenAidlRuleTest {
         frameworkIdlFile,
         executionContext);
 
-    String outputDirectory = String.format("%s/%s", BuckConstant.GEN_DIR, importPath);
+    String outputDirectory = BuckConstant.BIN_DIR +
+        "/java/com/example/base/.IWhateverService.aidl";
     MkdirStep mkdirStep = (MkdirStep) steps.get(0);
     assertEquals("gen_aidl() should make a directory at " + outputDirectory,
         mkdirStep.getPath(executionContext),
@@ -115,7 +118,7 @@ public class GenAidlRuleTest {
             pathToAidl),
         aidlStep.getDescription(executionContext));
 
-    assertEquals(2, steps.size());
+    assertEquals(4, steps.size());
 
     verify(androidPlatformTarget,
         aidlExecutable,

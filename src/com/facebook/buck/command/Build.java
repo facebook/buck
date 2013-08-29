@@ -203,7 +203,6 @@ public class Build {
   public ListenableFuture<List<BuildRuleSuccess>> executeBuild(Set<BuildRule> rulesToBuild)
       throws IOException, StepFailedException {
     buildContext = BuildContext.builder()
-        .setProjectRoot(executionContext.getProjectDirectoryRoot())
         .setDependencyGraph(dependencyGraph)
         .setStepRunner(stepRunner)
         .setProjectFilesystem(executionContext.getProjectFilesystem())

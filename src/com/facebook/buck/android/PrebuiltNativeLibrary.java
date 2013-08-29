@@ -14,16 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.cpp;
+package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.NativeLibraryBuildable;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -43,22 +44,34 @@ import javax.annotation.Nullable;
  * <p>
  * Suppose this were a rule defined in <code>src/com/facebook/feed/BUILD</code>:
  * <pre>
- * prebuild_native_library(
+ * prebuilt_native_library(
  *   name = 'face_dot_com',
  *   native_libs = 'nativeLibs',
  * )
  * </pre>
  */
-public class PrebuiltNativeLibrary extends NativeLibraryBuildable {
+public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLibraryBuildable {
 
+  private final boolean isAsset;
+  private final String libraryPath;
   private final DirectoryTraverser directoryTraverser;
 
-  protected PrebuiltNativeLibrary(BuildRuleParams buildRuleParams,
-                                  String nativeLibs,
+  protected PrebuiltNativeLibrary(String nativeLibsDirectory,
                                   boolean isAsset,
                                   DirectoryTraverser directoryTraverser) {
-    super(buildRuleParams, isAsset, nativeLibs);
+    this.isAsset = isAsset;
+    this.libraryPath = Preconditions.checkNotNull(nativeLibsDirectory);
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
+  }
+
+  @Override
+  public boolean isAsset() {
+    return isAsset;
+  }
+
+  @Override
+  public String getLibraryPath() {
+    return libraryPath;
   }
 
   @Override
@@ -79,7 +92,14 @@ public class PrebuiltNativeLibrary extends NativeLibraryBuildable {
   }
 
   @Override
-  protected List<Step> buildArchive(BuildContext context) {
+  @Nullable
+  public String getPathToOutputFile() {
+    // A prebuilt_native_library does not have a "primary output" at this time.
+    return null;
+  }
+
+  @Override
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     // We're checking in prebuilt libraries for now, so this is a noop.
     return ImmutableList.of();
   }
@@ -88,7 +108,9 @@ public class PrebuiltNativeLibrary extends NativeLibraryBuildable {
     return new Builder(params);
   }
 
-  public static class Builder extends NativeLibraryBuildable.Builder {
+  public static class Builder extends AbstractBuildable.Builder {
+
+    private boolean isAsset = false;
     @Nullable
     private String nativeLibs = null;
 
@@ -101,13 +123,15 @@ public class PrebuiltNativeLibrary extends NativeLibraryBuildable {
       return BuildRuleType.PREBUILT_NATIVE_LIBRARY;
     }
 
+    public Builder setIsAsset(boolean isAsset) {
+      this.isAsset = isAsset;
+      return this;
+    }
+
     @Override
     protected PrebuiltNativeLibrary newBuildable(BuildRuleParams params,
         BuildRuleResolver resolver) {
-      return new PrebuiltNativeLibrary(params,
-          this.nativeLibs,
-          this.isAsset,
-          new DefaultDirectoryTraverser());
+      return new PrebuiltNativeLibrary(nativeLibs, isAsset, new DefaultDirectoryTraverser());
     }
 
     @Override

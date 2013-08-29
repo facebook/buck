@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
@@ -31,13 +31,13 @@ import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 public class BuildContext {
 
-  public final File projectRoot;
   private final DependencyGraph dependencyGraph;
   private final StepRunner stepRunner;
   private final ProjectFilesystem projectFilesystem;
@@ -46,11 +46,9 @@ public class BuildContext {
   private final BuckEventBus events;
   private final Supplier<String> androidBootclasspathSupplier;
   private final BuildDependencies buildDependencies;
-
   @Nullable private final Console console;
 
   private BuildContext(
-      File projectRoot,
       DependencyGraph dependencyGraph,
       StepRunner stepRunner,
       ProjectFilesystem projectFilesystem,
@@ -59,8 +57,7 @@ public class BuildContext {
       BuckEventBus events,
       Supplier<String> androidBootclasspathSupplier,
       BuildDependencies buildDependencies,
-      Console console) {
-    this.projectRoot = Preconditions.checkNotNull(projectRoot);
+      @Nullable Console console) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
@@ -70,6 +67,10 @@ public class BuildContext {
     this.androidBootclasspathSupplier = Preconditions.checkNotNull(androidBootclasspathSupplier);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
     this.console = console;
+  }
+
+  public Path getProjectRoot() {
+    return getProjectFilesystem().getProjectRoot().toPath();
   }
 
   public StepRunner getStepRunner() {
@@ -89,13 +90,17 @@ public class BuildContext {
   }
 
   /**
-   * TODO(mbolin): Try to eliminate this method.
-   * @deprecated {@link Buildable#getBuildSteps(BuildContext, BuildableContext)} should be producing
-   *     relative paths that should be resolved by a {@link ProjectFilesystem} from an
-   *     {@link ExecutionContext} rather than from a {@link BuildContext}.
+   * By design, there is no getter for {@link ProjectFilesystem}. At the point where a
+   * {@link Buildable} is using a {@link BuildContext} to generate its {@link Step}s, it should
+   * not be doing any I/O on local disk. Any reads should be mediated through
+   * {@link OnDiskBuildInfo}, and {@link BuildInfoRecorder} will take care of writes after the fact.
+   * The {@link Buildable} should be working with relative file paths so that builds can ultimately
+   * be distributed.
+   * <p>
+   * The primary reason this method exists is so that someone who blindly tries to add such a getter
+   * will encounter a compilation error and will [hopefully] discover this comment.
    */
-  @Deprecated
-  public ProjectFilesystem getProjectFilesystem() {
+  private ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
   }
 
@@ -115,6 +120,28 @@ public class BuildContext {
     return buildDependencies;
   }
 
+  /**
+   * Creates an {@link OnDiskBuildInfo}.
+   * <p>
+   * This method should be visible to {@link AbstractCachingBuildRule}, but not {@link Buildable}s
+   * in general.
+   */
+  OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target) {
+    return new OnDiskBuildInfo(target, projectFilesystem);
+  }
+
+  /**
+   * Creates an {@link BuildInfoRecorder}.
+   * <p>
+   * This method should be visible to {@link AbstractCachingBuildRule}, but not {@link Buildable}s
+   * in general.
+   */
+  BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget,
+      RuleKey ruleKey,
+      RuleKey ruleKeyWithoutDeps) {
+    return new BuildInfoRecorder(buildTarget, projectFilesystem, ruleKey, ruleKeyWithoutDeps);
+  }
+
   public void logBuildInfo(String format, Object... args) {
     if (console != null && console.getVerbosity().shouldPrintOutput()) {
       console.getStdErr().printf(format + '\n', args);
@@ -127,7 +154,6 @@ public class BuildContext {
 
   public static class Builder {
 
-    private File projectRoot = null;
     private DependencyGraph dependencyGraph = null;
     private StepRunner stepRunner = null;
     private ProjectFilesystem projectFilesystem = null;
@@ -145,7 +171,6 @@ public class BuildContext {
         setDefaultAndroidBootclasspathSupplier();
       }
       return new BuildContext(
-          projectRoot,
           dependencyGraph,
           stepRunner,
           projectFilesystem,
@@ -155,11 +180,6 @@ public class BuildContext {
           androidBootclasspathSupplier,
           buildDependencies,
           console);
-    }
-
-    public Builder setProjectRoot(File projectRoot) {
-      this.projectRoot = projectRoot;
-      return this;
     }
 
     public Builder setDependencyGraph(DependencyGraph dependencyGraph) {

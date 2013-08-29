@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cpp.PrebuiltNativeLibrary;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.java.PrebuiltJarRule;
@@ -137,12 +136,13 @@ public class AndroidTransitiveDependencyGraphTest {
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
-        ImmutableSet.of(ndkLibrary.getBuildable().getPathToOutputFile()),
-        transitiveDeps.nativeLibsZips);
+        ImmutableSet.of(((NativeLibraryBuildable)ndkLibrary.getBuildable()).getLibraryPath()),
+        transitiveDeps.nativeLibsDirectories);
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
-        ImmutableSet.of(prebuiltNativeLibraryBuild.getBuildable().getPathToOutputFile()),
-        transitiveDeps.nativeLibAssetsZips);
+        ImmutableSet.of(((NativeLibraryBuildable)prebuiltNativeLibraryBuild.getBuildable())
+            .getLibraryPath()),
+        transitiveDeps.nativeLibAssetsDirectories);
   }
 }

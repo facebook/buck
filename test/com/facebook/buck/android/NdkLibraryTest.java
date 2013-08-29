@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -37,7 +39,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -67,14 +68,13 @@ public class NdkLibraryTest {
         .setIsAsset(true)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-    Assert.assertEquals(BuildRuleType.NDK_LIBRARY, rule.getType());
+    assertEquals(BuildRuleType.NDK_LIBRARY, rule.getType());
 
     NdkLibrary ndkLibrary = (NdkLibrary) rule.getBuildable();
 
     assertTrue(ndkLibrary.getProperties().is(ANDROID));
     assertTrue(ndkLibrary.isAsset());
-    Assert.assertEquals(BuckConstant.GEN_DIR + "/" + basePath + "/__libbase/libs",
-        ndkLibrary.getLibraryPath());
+    assertEquals(BuckConstant.GEN_DIR + "/" + basePath + "/__libbase", ndkLibrary.getLibraryPath());
 
     MoreAsserts.assertListEquals(
         ImmutableList.of(
@@ -83,7 +83,7 @@ public class NdkLibraryTest {
             basePath + "/main.cpp"),
         ImmutableList.copyOf(ndkLibrary.getInputsToCompareToOutput()));
 
-    List<Step> steps = ndkLibrary.buildArchive(context);
+    List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     File projectRoot = createMock(File.class);
@@ -103,15 +103,15 @@ public class NdkLibraryTest {
               "NDK_OUT=/foo/%s/%s/%s/",
               Runtime.getRuntime().availableProcessors(),
               basePath,
-              BuckConstant.GEN_DIR,
+              BuckConstant.BIN_DIR,
               basePath,
               "__libbase",
               basePath,
-              BuckConstant.GEN_DIR,
+              BuckConstant.BIN_DIR,
               basePath,
               "__libbase")
         ),
-        steps,
+        steps.subList(0, 1),
         executionContext);
     verify(executionContext, projectRoot);
   }

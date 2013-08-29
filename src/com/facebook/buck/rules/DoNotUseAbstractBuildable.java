@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.ProjectFilesystem;
-
 import java.io.IOException;
 
 import javax.annotation.Nullable;
@@ -56,11 +54,5 @@ public abstract class DoNotUseAbstractBuildable extends AbstractCachingBuildRule
   @Override
   public String getPathToOutputFile() {
     return null;
-  }
-
-  @Override
-  public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
-      ProjectFilesystem projectFilesystem) throws IOException {
-    // no-op
   }
 }

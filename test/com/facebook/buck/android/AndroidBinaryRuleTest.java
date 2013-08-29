@@ -25,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cpp.PrebuiltNativeLibrary;
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -38,21 +36,17 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
-import com.facebook.buck.step.fs.UnzipStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.Paths;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipSplitter;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -62,7 +56,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import org.junit.Test;
@@ -541,22 +534,22 @@ public class AndroidBinaryRuleTest {
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.<String>of() /* cpuFilters */,
-        "path/to/source/libs.zip",
-        "path/to/destination/",
+        "/path/to/source",
+        "/path/to/destination/",
         ImmutableList.of(
-            "bash -c cp -R " + nativeOutDir + "path/to/source/* path/to/destination/"));
+            "bash -c cp -R /path/to/source/* /path/to/destination/"));
   }
 
   @Test
   public void testCopyNativeLibraryCommand() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of("armv7"),
-        "path/to/source/libs.zip",
-        "path/to/destination/",
+        "/path/to/source",
+        "/path/to/destination/",
         ImmutableList.of(
             "bash -c " +
-                "[ -d " + nativeOutDir + "path/to/source/armeabi-v7a ] && " +
-                "cp -R " + nativeOutDir + "path/to/source/armeabi-v7a path/to/destination/ || " +
+                "[ -d /path/to/source/armeabi-v7a ] && " +
+                "cp -R /path/to/source/armeabi-v7a /path/to/destination/ || " +
                 "exit 0"));
   }
 
@@ -564,18 +557,18 @@ public class AndroidBinaryRuleTest {
   public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of("arm", "x86"),
-        "path/to/source/libs.zip",
-        "path/to/destination/",
+        "/path/to/source",
+        "/path/to/destination/",
         ImmutableList.of(
-            "bash -c [ -d " + nativeOutDir + "path/to/source/armeabi ] && " +
-                "cp -R " + nativeOutDir + "path/to/source/armeabi path/to/destination/ || exit 0",
-            "bash -c [ -d " + nativeOutDir + "path/to/source/x86 ] && " +
-                "cp -R " + nativeOutDir + "path/to/source/x86 path/to/destination/ || exit 0"));
+            "bash -c [ -d /path/to/source/armeabi ] && " +
+                "cp -R /path/to/source/armeabi /path/to/destination/ || exit 0",
+            "bash -c [ -d /path/to/source/x86 ] && " +
+                "cp -R /path/to/source/x86 /path/to/destination/ || exit 0"));
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
       ImmutableSet<String> cpuFilters,
-      String sourceZip,
+      String sourceDir,
       String destinationDir,
       ImmutableList<String> expectedShellCommands) {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
@@ -592,34 +585,21 @@ public class AndroidBinaryRuleTest {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     AndroidBinaryRule buildRule = ruleResolver.buildAndAddToIndex(builder);
-    buildRule.unzipNativeLibrary(sourceZip, destinationDir, commands);
+    buildRule.copyNativeLibrary(sourceDir, destinationDir, commands);
 
     ImmutableList<Step> steps = commands.build();
 
-    assertEquals(steps.size() - 2, expectedShellCommands.size());
-    assertEquals(MakeCleanDirectoryStep.class, steps.get(0).getClass());
+    assertEquals(steps.size(), expectedShellCommands.size());
+    ExecutionContext context = createMock(ExecutionContext.class);
+    replay(context);
 
-    ExecutionContext context = ExecutionContext.builder()
-        .setConsole(new TestConsole())
-        .setProjectFilesystem(new ProjectFilesystem(new File(".")))
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
-        .build();
-
-    assertEquals(UnzipStep.class, steps.get(1).getClass());
-    UnzipStep unzip = (UnzipStep)steps.get(1);
-    assertEquals("unzip -q -d " + nativeOutDir + "path/to/source path/to/source/libs.zip",
-        Paths.normalizePathSeparator(unzip.getDescription(context)));
-
-    ImmutableList<ShellStep> shellSteps =
-        ImmutableList.copyOf(Iterables.filter(steps, ShellStep.class));
-    assertEquals(shellSteps.size(), expectedShellCommands.size());
-
-    for (int i = 0; i < shellSteps.size(); ++i) {
-      assertEquals(expectedShellCommands.get(i),
-          Paths.normalizePathSeparator(
-              Joiner.on(" ").join((shellSteps.get(i)).getShellCommand(context))));
+    for (int i = 0; i < steps.size(); ++i) {
+      Iterable<String> observedArgs = ((BashStep)steps.get(i)).getShellCommand(context);
+      String observedCommand = Joiner.on(' ').join(observedArgs);
+      assertEquals(expectedShellCommands.get(i), observedCommand);
     }
+
+    verify(context);
   }
 
   private BuildTarget addKeystoreRule(BuildRuleResolver ruleResolver) {

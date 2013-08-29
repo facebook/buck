@@ -22,16 +22,19 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.NativeLibraryBuildable;
+import com.facebook.buck.rules.RecordArtifactsInDirectoryStep;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,6 +43,8 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * An object that represents a collection of Android NDK source code.
@@ -53,45 +58,90 @@ import java.util.Set;
  * )
  * </pre>
  */
-  public class NdkLibrary extends NativeLibraryBuildable {
+public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuildable {
 
   private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
+  /** @see NativeLibraryBuildable#isAsset() */
+  private final boolean isAsset;
+
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
   private final String makefileDirectory;
-
+  private final String lastPathComponent;
   private final String buildArtifactsDirectory;
+  private final String genDirectory;
+
   private final ImmutableSortedSet<String> sources;
   private final ImmutableList<String> flags;
 
   protected NdkLibrary(
-      BuildRuleParams buildRuleParams,
+      BuildTarget buildTarget,
       Set<String> sources,
       List<String> flags,
       boolean isAsset) {
-    super(buildRuleParams, isAsset, getLibsPath(buildRuleParams.getBuildTarget()));
+    this.isAsset = isAsset;
+
+    this.makefileDirectory = buildTarget.getBasePathWithSlash();
+    this.lastPathComponent = "__lib" + buildTarget.getShortName();
+    this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);
+    this.genDirectory = getBuildArtifactsDirectory(buildTarget, false /* isScratchDir */);
 
     Preconditions.checkArgument(!sources.isEmpty(),
         "Must include at least one file (Android.mk?) in ndk_library rule");
     this.sources = ImmutableSortedSet.copyOf(sources);
-    this.makefileDirectory = getMakefileDirectory(buildRuleParams.getBuildTarget());
-    this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildRuleParams.getBuildTarget());
     this.flags = ImmutableList.copyOf(flags);
   }
 
-  private static String getMakefileDirectory(BuildTarget target) {
-    return target.getBasePathWithSlash();
+  @Override
+  public boolean isAsset() {
+    return isAsset;
   }
 
-  private static String getBuildArtifactsDirectory(BuildTarget target) {
-    return String.format("%s/%s__lib%s/",
-        BuckConstant.GEN_DIR,
-        getMakefileDirectory(target),
-        target.getShortName());
+  @Override
+  public String getLibraryPath() {
+    return genDirectory;
   }
 
-  private static String getLibsPath(BuildTarget target) {
-    return getBuildArtifactsDirectory(target) + "libs";
+  @Override
+  @Nullable
+  public String getPathToOutputFile() {
+    // An ndk_library() does not have a "primary output" at this time.
+    return null;
+  }
+
+  @Override
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
+    Step nkdBuildStep = new NdkBuildStep(makefileDirectory, buildArtifactsDirectory + "/", flags);
+
+    // .so files are written to the libs/ subdirectory of the output directory.
+    // All of them should be recorded via the BuildableContext.
+    String binDirectory = buildArtifactsDirectory + "/libs/";
+    Function<String, String> artifactPathTransform = new Function<String, String>() {
+      @Override
+      public String apply(String pathRelativeTo) {
+        return lastPathComponent + "/" + pathRelativeTo;
+      }
+    };
+    Step recordStep = new RecordArtifactsInDirectoryStep(
+        buildableContext,
+        binDirectory,
+        genDirectory,
+        artifactPathTransform);
+    return ImmutableList.of(nkdBuildStep, recordStep);
+  }
+
+  /**
+   * @param isScratchDir true if this should be the "working directory" where a build rule may write
+   *     intermediate files when computing its output. false if this should be the gen/ directory
+   *     where the "official" outputs of the build rule should be written. Files of the latter type
+   *     can be referenced via the genfile() function.
+   */
+  private String getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
+    return String.format("%s/%s%s",
+        isScratchDir ? BuckConstant.BIN_DIR : BuckConstant.GEN_DIR,
+        target.getBasePathWithSlash(),
+        lastPathComponent);
   }
 
   @Override
@@ -103,10 +153,7 @@ import java.util.Set;
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     // TODO(#2493457): This rule uses the ndk-build script (part of the Android NDK), so the RuleKey
     // should incorporate which version of the NDK is used.
-
     return builder
-        .set("makefileDirectory", makefileDirectory)
-        .set("buildArtifactsDirectory", buildArtifactsDirectory)
         .set("sources", sources)
         .set("flags", flags)
         .set("is_asset", isAsset());
@@ -117,20 +164,13 @@ import java.util.Set;
     return this.sources;
   }
 
-  @Override
-  protected List<Step> buildArchive(BuildContext context) throws IOException {
-    Step nkdBuildStep = new NdkBuildStep(this.makefileDirectory,
-        this.buildArtifactsDirectory,
-        this.flags);
-    return ImmutableList.of(nkdBuildStep);
-  }
-
   public static Builder newNdkLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
-  public static class Builder extends NativeLibraryBuildable.Builder
-      implements SrcsAttributeBuilder {
+  public static class Builder extends AbstractBuildable.Builder implements SrcsAttributeBuilder {
+
+    private boolean isAsset = false;
     private Set<String> sources = Sets.newHashSet();
     private ImmutableList.Builder<String> flags = ImmutableList.builder();
 
@@ -145,7 +185,12 @@ import java.util.Set;
 
     @Override
     protected NdkLibrary newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new NdkLibrary(params, sources, flags.build(), this.isAsset);
+      return new NdkLibrary(params.getBuildTarget(), sources, flags.build(), isAsset);
+    }
+
+    public Builder setIsAsset(boolean isAsset) {
+      this.isAsset = isAsset;
+      return this;
     }
 
     @Override

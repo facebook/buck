@@ -51,7 +51,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RepackZipEntriesStep;
-import com.facebook.buck.step.fs.UnzipStep;
 import com.facebook.buck.step.fs.ZipDirectoryWithMaxDeflateStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -266,22 +265,20 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   }
 
+  // TODO(user): Replace the BashSteps in this class with Steps that are platform-agnostic.
+  // You'll need to do this as part of making it possible to build an APK on Windows using Buck.
+
   @VisibleForTesting
-  void unzipNativeLibrary(String sourceZip,
+  void copyNativeLibrary(String sourceDir,
       String destinationDir,
       ImmutableList.Builder<Step> commands) {
-    String artifactsDir = String.format("%s/%s",
-        getBinPath("__native_zips__%s__"),
-        new File(sourceZip).getParent());
-    commands.add(new MakeCleanDirectoryStep(artifactsDir));
-    commands.add(new UnzipStep(sourceZip, artifactsDir, false));
     if (getCpuFilters().isEmpty()) {
-      commands.add(new BashStep(String.format("cp -R %s/* %s", artifactsDir, destinationDir)));
+      commands.add(new BashStep(String.format("cp -R %s/* %s", sourceDir, destinationDir)));
     } else {
       for (TargetCpuType cpuType: getCpuFilters()) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
-        String libsDirectory = artifactsDir + "/" + abiDirectoryComponent.get();
+        String libsDirectory = sourceDir + "/" + abiDirectoryComponent.get();
         commands.add(new BashStep(String.format(
             "[ -d %s ] && cp -R %s %s || exit 0", libsDirectory, libsDirectory, destinationDir)));
       }
@@ -430,13 +427,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Copy the transitive closure of files in native_libs to a single directory, if any.
     ImmutableSet.Builder<String> nativeLibraryDirectories = ImmutableSet.builder();
-    if (!transitiveDependencies.nativeLibsZips.isEmpty()) {
+    if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
       String pathForNativeLibs = getPathForNativeLibs();
       String libSubdirectory = pathForNativeLibs + "/lib";
       nativeLibraryDirectories.add(libSubdirectory);
       commands.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (String nativeLibZip : transitiveDependencies.nativeLibsZips) {
-        unzipNativeLibrary(nativeLibZip, libSubdirectory, commands);
+      for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
+        // TODO(mbolin): Verify whether this check is actually necessary. If not, remove it.
+        if (nativeLibDir.endsWith("/")) {
+          nativeLibDir = nativeLibDir.substring(0, nativeLibDir.length() - 1);
+        }
+        copyNativeLibrary(nativeLibDir, libSubdirectory, commands);
       }
     }
 
@@ -446,17 +447,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     Optional<String> assetsDirectory;
     if (transitiveDependencies.assetsDirectories.isEmpty() && extraAssets.isEmpty()
-        && transitiveDependencies.nativeLibAssetsZips.isEmpty()) {
+        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
     }
 
-    if (!transitiveDependencies.nativeLibAssetsZips.isEmpty()) {
+    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
       String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
       commands.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
-      for (String nativeLibZip : transitiveDependencies.nativeLibAssetsZips) {
-        unzipNativeLibrary(nativeLibZip, nativeLibAssetsDir, commands);
+      for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
+        copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, commands);
       }
     }
 

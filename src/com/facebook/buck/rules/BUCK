@@ -5,7 +5,6 @@ java_library(
     ':rules',
     '//lib:guava',
     '//src/com/facebook/buck/android:rules',
-    '//src/com/facebook/buck/cpp:rules',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/parcelable:rules',
     '//src/com/facebook/buck/parser:project',

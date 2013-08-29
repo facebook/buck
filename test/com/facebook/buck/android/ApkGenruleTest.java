@@ -143,7 +143,6 @@ public class ApkGenruleTest {
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
     BuildContext buildContext = BuildContext.builder()
-        .setProjectRoot(EasyMock.createNiceMock(File.class))
         .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
         .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))

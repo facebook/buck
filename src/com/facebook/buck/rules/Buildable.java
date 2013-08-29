@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.ProjectFilesystem;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,18 +51,12 @@ public interface Buildable {
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException;
 
   /**
-   * This method is invoked if the output file is successfully fetched from the
-   * {@link ArtifactCache}. This is where a rule has the opportunity to record any relevant metadata
-   * about the artifact.
-   * <p>
-   * The default implementation of this method is empty.
-   * @param cache The {@link ArtifactCache} that was used to fetch the output file.
-   * @param projectFilesystem to use to determine where a metadata file should be written.
-   */
-  public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
-      ProjectFilesystem projectFilesystem) throws IOException;
-
-  /**
+   * Currently, this is used by {@link AbstractCachingBuildRule} to determine which files should be
+   * be included in the {@link BuildInfoRecorder}. Ultimately, a {@link Buildable} should be
+   * responsible for updating the {@link BuildInfoRecorder} itself in its
+   * {@link #getBuildSteps(BuildContext, BuildableContext)} method. The use of this method should be
+   * restricted to things like {@code buck targets --show_output}.
+   *
    * @return the relative path to the primary output of the build rule. If non-null, this path must
    *     identify a single file (as opposed to a directory).
    */

@@ -18,6 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.EnumSet;
 
 /**
  * Token provided by the result of {@link BuildRule#build(BuildContext)}, demonstrating that the
@@ -28,24 +31,65 @@ public class BuildRuleSuccess {
   private final BuildRule rule;
   private final Type type;
 
+  private static enum Property {
+    SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING,
+    SHOULD_UPLOAD_RESULTING_ARTIFACT,
+    SHOULD_WRITE_RECORDED_METADATA_TO_DISK,
+  }
+
   public static enum Type {
     /** Built by executing the {@link Step}s for the rule. */
-    BUILT_LOCALLY,
+    BUILT_LOCALLY(
+        Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
+        Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK
+        ),
 
     /** Fetched via the {@link ArtifactCache}. */
-    FETCHED_FROM_CACHE,
+    FETCHED_FROM_CACHE(
+        Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING
+        ),
 
     /** Computed {@link RuleKey} matches the one on disk. */
-    MATCHING_RULE_KEY,
+    MATCHING_RULE_KEY(
+        Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING
+        ),
 
     /**
      * Computed {@link RuleKey} without deps matches the one on disk <em>AND</em> the ABI key for
      * the deps matches the one on disk.
      */
-    MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
+    MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS(
+        Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING,
+        Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
+        Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK
+        ),
 
     /** Created trivially, such as an {@link InputRule} or {@link ProjectConfigRule}. */
     BY_DEFINITION,
+
+    ;
+
+    private final EnumSet<Property> properties;
+
+    private Type() {
+      this.properties = EnumSet.noneOf(Property.class);
+    }
+
+    private Type(Property... properties) {
+      this.properties = EnumSet.copyOf(ImmutableSet.copyOf(properties));
+    }
+
+    public boolean shouldInitializeFromDiskAfterBuilding() {
+      return properties.contains(Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING);
+    }
+
+    public boolean shouldWriteRecordedMetadataToDiskAfterBuilding() {
+      return properties.contains(Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK);
+    }
+
+    public boolean shouldUploadResultingArtifact() {
+      return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT);
+    }
   }
 
   public BuildRuleSuccess(BuildRule rule, Type type) {

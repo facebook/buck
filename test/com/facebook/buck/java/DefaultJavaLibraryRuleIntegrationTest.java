@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import static java.nio.file.StandardOpenOption.WRITE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
@@ -38,6 +39,9 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 
 /**
  * Integration test that verifies that a {@link DefaultJavaLibraryRule} writes its ABI key as part
@@ -74,24 +78,26 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     // Verify the build cache.
     File buildCache = workspace.getFile("cache_dir");
     assertTrue(buildCache.isDirectory());
-    assertEquals("There should be two entries in the build cache.",
-        2,
+    assertEquals("There should be one entry (a zip) in the build cache.",
+        1,
         buildCache.listFiles().length);
 
     // Verify the ABI key entry in the build cache.
-    File[] cacheEntries = buildCache.listFiles();
-    File abiKeyEntry = cacheEntries[0].length() == 41 ? cacheEntries[0] : cacheEntries[1];
+    Path artifactZip = buildCache.listFiles()[0].toPath();
+    FileSystem zipFs = FileSystems.newFileSystem(artifactZip, /* loader */ null);
+    Path abiKeyEntry = zipFs.getPath("/buck-out/bin/.no_srcs/metadata/ABI_KEY");
     assertEquals(AbiWriterProtocol.EMPTY_ABI_KEY,
-        Files.readFirstLine(abiKeyEntry, Charsets.UTF_8));
+        new String(java.nio.file.Files.readAllBytes(abiKeyEntry)));
 
     // Run `buck clean`.
     ProcessResult cleanResult = workspace.runBuckCommand("clean");
     cleanResult.assertExitCode("Successful clean should exit with 0.", 0);
-    assertEquals("The build cache should still exist.", 2, buildCache.listFiles().length);
+    assertEquals("The build cache should still exist.", 1, buildCache.listFiles().length);
 
     // Corrupt the build cache!
-    File outputFileEntry = cacheEntries[0].length() == 41 ? cacheEntries[1] : cacheEntries[0];
-    Files.write("Hello world!\n", outputFileEntry, Charsets.UTF_8);
+    Path outputInZip = zipFs.getPath("/buck-out/gen/lib__no_srcs__output/no_srcs.jar");
+    java.nio.file.Files.write(outputInZip, "Hello world!".getBytes(), WRITE);
+    zipFs.close();
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:no_srcs");
@@ -99,15 +105,17 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     assertTrue(outputFile.isFile());
     assertEquals(
         "The content of the output file will be 'Hello World!' if it is read from the build cache.",
-        "Hello world!\n",
+        "Hello world!",
         Files.toString(outputFile, Charsets.UTF_8));
 
-    // Run `buck build` yet again, but this time, specify `--no-cache`.
+    // Run `buck clean` followed by `buck build` yet again, but this time, specify `--no-cache`.
+    ProcessResult cleanResult2 = workspace.runBuckCommand("clean");
+    cleanResult2.assertExitCode("Successful clean should exit with 0.", 0);
     ProcessResult buildResult3 = workspace.runBuckCommand("build", "--no-cache", "//:no_srcs");
     buildResult3.assertExitCode(0);
     assertNotEquals(
         "The contents of the file should no longer be pulled from the corrupted build cache.",
-        "Hello world!\n",
+        "Hello world!",
         Files.toString(outputFile, Charsets.UTF_8));
     assertEquals(
         "We cannot do a byte-for-byte comparision with the original JAR because timestamps might " +
@@ -126,18 +134,19 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:biz");
     buildResult.assertExitCode("Successful build should exit with 0.", 0);
 
-    String utilRuleKey = getContents("buck-out/bin/.success/util");
-    String utilRuleKeyNoDeps = getContents("buck-out/gen/lib__util__abi/rule_key_no_deps");
-    String utilAbi = getContents("buck-out/gen/lib__util__abi/abi");
-    String utilAbiForDeps = getContents("buck-out/gen/lib__util__abi/abi_deps");
+    String utilRuleKey = getContents("buck-out/bin/.util/metadata/RULE_KEY");
+    String utilRuleKeyNoDeps = getContents("buck-out/bin/.util/metadata/RULE_KEY_NO_DEPS");
+    String utilAbi = getContents("buck-out/bin/.util/metadata/ABI_KEY");
+    String utilAbiForDeps = getContents("buck-out/bin/.util/metadata/ABI_KEY_FOR_DEPS");
 
-    String bizRuleKey = getContents("buck-out/bin/.success/biz");
-    String bizRuleKeyNoDeps = getContents("buck-out/gen/lib__biz__abi/rule_key_no_deps");
-    String bizAbi = getContents("buck-out/gen/lib__biz__abi/abi");
-    String bizAbiForDeps = getContents("buck-out/gen/lib__biz__abi/abi_deps");
+    String bizRuleKey = getContents("buck-out/bin/.biz/metadata/RULE_KEY");
+    String bizRuleKeyNoDeps = getContents("buck-out/bin/.biz/metadata/RULE_KEY_NO_DEPS");
+    String bizAbi = getContents("buck-out/bin/.biz/metadata/ABI_KEY");
+    String bizAbiForDeps = getContents("buck-out/bin/.biz/metadata/ABI_KEY_FOR_DEPS");
 
     long utilJarSize = workspace.getFile("buck-out/gen/lib__util__output/util.jar").length();
-    long bizJarLastModified = workspace.getFile("buck-out/gen/lib__biz__output/biz.jar").lastModified();
+    long bizJarLastModified = workspace.getFile("buck-out/gen/lib__biz__output/biz.jar")
+        .lastModified();
 
     // TODO(mbolin): Run uber-biz.jar and verify it prints "Hello World!\n".
 
@@ -150,15 +159,15 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:biz");
     buildResult2.assertExitCode("Successful build should exit with 0.", 0);
 
-    assertThat(utilRuleKey, not(equalTo(getContents("buck-out/bin/.success/util"))));
-    assertThat(utilRuleKeyNoDeps, not(equalTo(getContents("buck-out/gen/lib__util__abi/rule_key_no_deps"))));
-    assertEquals(utilAbi, getContents("buck-out/gen/lib__util__abi/abi"));
-    assertEquals(utilAbiForDeps, getContents("buck-out/gen/lib__util__abi/abi_deps"));
+    assertThat(utilRuleKey, not(equalTo(getContents("buck-out/bin/.util/metadata/RULE_KEY"))));
+    assertThat(utilRuleKeyNoDeps, not(equalTo(getContents("buck-out/bin/.util/metadata/RULE_KEY_NO_DEPS"))));
+    assertEquals(utilAbi, getContents("buck-out/bin/.util/metadata/ABI_KEY"));
+    assertEquals(utilAbiForDeps, getContents("buck-out/bin/.util/metadata/ABI_KEY_FOR_DEPS"));
 
-    assertThat(bizRuleKey, not(equalTo(getContents("buck-out/bin/.success/biz"))));
-    assertEquals(bizRuleKeyNoDeps, getContents("buck-out/gen/lib__biz__abi/rule_key_no_deps"));
-    assertEquals(bizAbi, getContents("buck-out/gen/lib__biz__abi/abi"));
-    assertEquals(bizAbiForDeps, getContents("buck-out/gen/lib__biz__abi/abi_deps"));
+    assertThat(bizRuleKey, not(equalTo(getContents("buck-out/bin/.biz/metadata/RULE_KEY"))));
+    assertEquals(bizRuleKeyNoDeps, getContents("buck-out/bin/.biz/metadata/RULE_KEY_NO_DEPS"));
+    assertEquals(bizAbi, getContents("buck-out/bin/.biz/metadata/ABI_KEY"));
+    assertEquals(bizAbiForDeps, getContents("buck-out/bin/.biz/metadata/ABI_KEY_FOR_DEPS"));
 
     assertThat(
         "util.jar should have been rewritten, so its file size should have changed.",

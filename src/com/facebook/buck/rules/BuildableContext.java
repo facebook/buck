@@ -36,4 +36,9 @@ public interface BuildableContext {
    */
   public void addMetadata(String key, String value);
 
+  /**
+   * @see BuildInfoRecorder#recordArtifact(String)
+   */
+  // TODO(mbolin): A Path would be a more appropriate parameter type.
+  public void recordArtifact(String pathToArtifact);
 }

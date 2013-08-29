@@ -117,7 +117,6 @@ public class DefaultJavaLibraryRuleTest {
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setJavaPackageFinder(packageFinder)
-        .setProjectRoot(root)
         .setProjectFilesystem(new ProjectFilesystem(root))
         .setStepRunner(stepRunner)
         .build();
@@ -813,18 +812,12 @@ public class DefaultJavaLibraryRuleTest {
         .anyTimes();
     replay(platformTarget);
 
-    File projectRoot;
     if (projectFilesystem == null) {
-      projectRoot = EasyMock.createMock(File.class);
       projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    } else {
-      projectRoot = projectFilesystem.getProjectRoot();
     }
 
     // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
-    // Also, remove setProjectRoot() and get it from ProjectFilesystem.getRoot().
     return BuildContext.builder()
-        .setProjectRoot(projectRoot)
         .setDependencyGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)

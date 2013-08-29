@@ -131,7 +131,7 @@ abstract class AbstractBuildRule implements BuildRule {
   }
 
   /**
-   * {@link #getRuleKey()} and {@link #createRuleKeyWithoutDeps()} uses this when constructing
+   * {@link #getRuleKey()} and {@link #getRuleKeyWithoutDeps()} uses this when constructing
    * {@link RuleKey}s for this class. Every subclass that extends the rule state in a way that
    * matters to idempotency must override
    * {@link #appendToRuleKey(com.facebook.buck.rules.RuleKey.Builder)} and append its state to the
@@ -172,10 +172,9 @@ abstract class AbstractBuildRule implements BuildRule {
   /**
    * Creates a new {@link RuleKey} for this {@link BuildRule} that does not take {@link #getDeps()}
    * into account.
-   *
-   * @see AbiRule#getRuleKeyWithoutDeps()
    */
-  protected RuleKey createRuleKeyWithoutDeps() throws IOException {
+  @Override
+  public RuleKey getRuleKeyWithoutDeps() throws IOException {
     return appendToRuleKey(RuleKey.builderWithoutDeps(this)).build();
   }
 

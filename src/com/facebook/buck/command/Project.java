@@ -24,7 +24,7 @@ import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
-import com.facebook.buck.android.GenAidlRule;
+import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
@@ -798,7 +798,7 @@ public class Project {
         } else if (dep instanceof AndroidResourceRule) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
-        } else if (dep instanceof GenAidlRule) {
+        } else if (dep.getBuildable() instanceof GenAidl) {
           // This will likely be handled appropriately by the IDE's Android plugin.
           return shouldVisitDeps;
         } else {

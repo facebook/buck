@@ -29,17 +29,17 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.JavaPackageFinder;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -51,12 +51,9 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Paths;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -71,7 +68,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 import com.google.common.reflect.ClassPath;
 
 import java.io.File;
@@ -132,10 +128,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   /**
    * This returns the ABI key for this rule. This will be set <em>EITHER</em> as part of
-   * {@link #recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache, ProjectFilesystem)}
-   * or while the build steps (in particular, the javac step) for this rule are created. In the case
-   * of the latter, the {@link Supplier} is guaranteed to be able to return (a possibly null) value
-   * after the build steps have been executed.
+   * {@link #initializeFromDisk(OnDiskBuildInfo)}, or while the build steps (in particular, the
+   * javac step) for this rule are created. In the case of the latter, the {@link Supplier} is
+   * guaranteed to be able to return (a possibly null) value after the build steps have been
+   * executed.
    * <p>
    * This field should be set exclusively through {@link #setAbiKey(Supplier)}
    */
@@ -328,19 +324,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
         target.getShortName());
-
   }
 
   private String getPathToAbiOutputFile() {
     return String.format("%s/abi", getPathToAbiOutputDir());
-  }
-
-  private String getPathToAbiKeyForDepsFile() {
-    return String.format("%s/abi_deps", getPathToAbiOutputDir());
-  }
-
-  private String getPathToRuleKeyNoDepsFile() {
-    return String.format("%s/rule_key_no_deps", getPathToAbiOutputDir());
   }
 
   private static String getOutputJarDirPath(BuildTarget target) {
@@ -370,25 +357,12 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         target.getShortName());
   }
 
-  @Override
-  public RuleKey getRuleKeyWithoutDeps() throws IOException {
-    return createRuleKeyWithoutDeps();
-  }
-
-  @Override
-  public Optional<RuleKey> getRuleKeyWithoutDepsOnDisk(ProjectFilesystem projectFilesystem) {
-    return projectFilesystem.readFirstLine(getPathToRuleKeyNoDepsFile())
-        .transform(RuleKey.TO_RULE_KEY);
-  }
-
   /**
    * Finds all deps that implement JavaLibraryRule and hash their ABI keys together. If any dep
    * lacks an ABI key, then returns {@link Optional#absent()}.
    */
   @Override
   public Optional<Sha1HashCode> getAbiKeyForDeps() throws IOException {
-    // Make sure to consider declared classpath entries and not just immediate deps because there
-    // may be deps that use export_deps=True.
     SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {
@@ -411,12 +385,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
 
     return Optional.of(new Sha1HashCode(hasher.hash().toString()));
-  }
-
-  @Override
-  public Optional<Sha1HashCode> getAbiKeyForDepsOnDisk(ProjectFilesystem projectFilesystem) {
-    return projectFilesystem.readFirstLine(getPathToAbiKeyForDepsFile())
-        .transform(Sha1HashCode.TO_SHA1);
   }
 
   @Override
@@ -485,7 +453,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * attribute. They are compiled into a directory under {@link BuckConstant#BIN_DIR}.
    */
   @Override
-  public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
+  public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     BuildTarget buildTarget = getBuildTarget();
 
@@ -579,27 +548,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         "abiKeySupplier must be set so that getAbiKey() will " +
         "return a non-null value if this rule builds successfully.");
 
-    addStepsToRecordAbiToDisk(commands);
-
-    // Add a step that writes the ABI key to the ArtifactCache.
-    final ArtifactCache artifactCache = context.getArtifactCache();
-    Step recordAbiKey = new AbstractExecutionStep("record ABI key") {
-      @Override
-      public int execute(ExecutionContext context) {
-        RuleKey ruleKey;
-        try {
-          ruleKey = createRuleKeyForAbiKeyProjection();
-        } catch (IOException e) {
-          e.printStackTrace(context.getStdErr());
-          return 1;
-        }
-        ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-        File abiKeyFile = projectFilesystem.getFileForRelativePath(getPathToAbiOutputFile());
-        artifactCache.store(ruleKey, abiKeyFile);
-        return 0;
-      }
-    };
-    commands.add(recordAbiKey);
+    addStepsToRecordAbiToDisk(commands, buildableContext);
 
     return commands.build();
   }
@@ -608,25 +557,21 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * Assuming the build has completed successfully, the ABI should have been computed, and it should
    * be stored for subsequent builds.
    */
-  private void addStepsToRecordAbiToDisk(ImmutableList.Builder<Step> commands) throws IOException {
+  private void addStepsToRecordAbiToDisk(ImmutableList.Builder<Step> commands,
+      final BuildableContext buildableContext) throws IOException {
     // Note that the parent directories for all of the files written by these steps should already
-    // have been created by a previous step. Therefore, there is no reason to add a MkdrStep here.
-
-    Supplier<String> abiKeyHash = Suppliers.compose(new Function<Sha1HashCode, String>() {
+    // have been created by a previous step. Therefore, there is no reason to add a MkdirStep here.
+    commands.add(new AbstractExecutionStep("recording ABI metadata") {
       @Override
-      public String apply(Sha1HashCode abiKey) {
-        return abiKey.getHash();
+      public int execute(ExecutionContext context) {
+        Sha1HashCode abiKey = abiKeySupplier.get();
+        buildableContext.addMetadata(ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
+        return 0;
       }
-    }, abiKeySupplier);
-    commands.add(new WriteFileStep(abiKeyHash, getPathToAbiOutputFile()));
+    });
 
-    Optional<Sha1HashCode> abiKeyForDeps = getAbiKeyForDeps();
-    if (abiKeyForDeps.isPresent()) {
-      commands.add(new WriteFileStep(abiKeyForDeps.get().getHash(), getPathToAbiKeyForDepsFile()));
-    }
-
-    RuleKey ruleKeyNoDeps = getRuleKeyWithoutDeps();
-    commands.add(new WriteFileStep(ruleKeyNoDeps.toString(), getPathToRuleKeyNoDepsFile()));
+    buildableContext.addMetadata(ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+        getAbiKeyForDeps().get().getHash());
   }
 
   /**
@@ -721,61 +666,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     return Optional.of(suggestBuildRuleFn);
   }
 
-  @Override
-  public void recordOutputFileDetailsAfterFetchFromArtifactCache(ArtifactCache cache,
-      ProjectFilesystem projectFilesystem) throws IOException {
-    RuleKey ruleKey = createRuleKeyForAbiKeyProjection();
-    File abiKeyFile = projectFilesystem.getFileForRelativePath(getPathToAbiOutputFile());
-    boolean isSuccess = cache.fetch(ruleKey, abiKeyFile);
-    if (isSuccess) {
-      String abiKey = Files.readFirstLine(abiKeyFile, Charsets.UTF_8);
-      Sha1HashCode hash = abiKey != null ? new Sha1HashCode(abiKey) : null;
-      setAbiKey(Suppliers.ofInstance(hash));
-    } else {
-      // It is possible that, for whatever reason, the code that uploaded the artifact failed to
-      // upload the corresponding ABI key. When this happens, getAbiKey() should return null.
-      setAbiKey(Suppliers.ofInstance((Sha1HashCode)null));
-    }
-
-    // When the output is fetched from the artifact cache, the following files will
-    // still be lying around, and they likely contain data from the previous build:
-    // (1) abi
-    // (2) abi_deps
-    // (3) rule_key_no_deps
-    // Currently, this method is designed to overwrite the abi file, but is missing the
-    // logic to overwrite the abi_deps and rule_key_no_deps files.
-    // As we have discovered through experience, having outdated data is far worse than having no
-    // data, so for safety, we delete these files.
-    // TODO(mbolin): Store abi_deps and rule_key_no_deps in the artifact cache so that these values
-    // can be leveraged upon subsequent builds.
-    projectFilesystem.deleteFileAtPath(getPathToAbiKeyForDepsFile());
-    projectFilesystem.deleteFileAtPath(getPathToRuleKeyNoDepsFile());
-  }
-
   /**
-   * This returns a RuleKey that is a hash of this rule's ordinary RuleKey and a known value. (The
-   * known value is {@code "namespace.abi_key"}, which includes a period to distinguish it from
-   * an ordinary property name.) This new RuleKey is associated with the ABI for this rule in the
-   * {@link ArtifactCache}. This enables us to query an {@link ArtifactCache} for an ABI for a build
-   * rule when we know its RuleKey, because we can reproduce the RuleKey returned by this method
-   * using the rule's RuleKey and the value {@code "namespace.abi_key"}.
+   * Instructs this rule to report the ABI it has on disk as its current ABI.
    */
-  private RuleKey createRuleKeyForAbiKeyProjection() throws IOException {
-    RuleKey.Builder builder = RuleKey.builder(this);
-    appendToRuleKey(builder);
-    builder.set("namespace.abi_key", (String)null);
-    return builder.build();
-  }
-
   @Override
-  public boolean initializeFromDisk(ProjectFilesystem projectFilesystem) {
-    Optional<String> abiKeyHash = projectFilesystem.readFirstLine(getPathToAbiOutputFile());
+  public void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
     if (abiKeyHash.isPresent()) {
-      String hash = abiKeyHash.get();
-      setAbiKey(Suppliers.ofInstance(new Sha1HashCode(hash)));
-      return true;
+      setAbiKey(Suppliers.ofInstance(abiKeyHash.get()));
     } else {
-      return false;
+      throw new IllegalStateException(String.format(
+          "Should not be initializing %s from disk if the ABI key is not written.", this));
     }
   }
 

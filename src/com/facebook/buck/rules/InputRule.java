@@ -171,4 +171,9 @@ public class InputRule implements BuildRule {
   public String toString() {
     return getFullyQualifiedName();
   }
+
+  @Override
+  public RuleKey getRuleKeyWithoutDeps() throws IOException {
+    throw new UnsupportedOperationException();
+  }
 }

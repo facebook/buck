@@ -17,8 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Fake implementation of {@link BuildableContext} for testing.
@@ -26,6 +28,8 @@ import java.util.Map;
 public class FakeBuildableContext implements BuildableContext {
 
   private final Map<String, String> metadata = Maps.newHashMap();
+
+  private final Set<String> artifacts = Sets.newHashSet();
 
   @Override
   public void addMetadata(String key, String value) {
@@ -39,4 +43,8 @@ public class FakeBuildableContext implements BuildableContext {
     }
   }
 
+  @Override
+  public void recordArtifact(String pathToArtifact) {
+    artifacts.add(pathToArtifact);
+  }
 }

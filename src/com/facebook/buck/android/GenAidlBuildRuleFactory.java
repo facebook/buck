@@ -22,15 +22,15 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
 import java.io.File;
 
-public class GenAidlBuildRuleFactory extends AbstractBuildRuleFactory<GenAidlRule.Builder> {
+public class GenAidlBuildRuleFactory extends AbstractBuildRuleFactory<GenAidl.Builder> {
 
   @Override
-  public GenAidlRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return GenAidlRule.newGenAidlRuleBuilder(params);
+  public GenAidl.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return GenAidl.newGenAidlRuleBuilder(params);
   }
 
   @Override
-  protected void amendBuilder(GenAidlRule.Builder builder, BuildRuleFactoryParams params) {
+  protected void amendBuilder(GenAidl.Builder builder, BuildRuleFactoryParams params) {
     // aidl
     String aidlAttribute = params.getRequiredStringAttribute("aidl");
     String aidlPath = params.resolveFilePathRelativeToBuildFileDirectory(aidlAttribute);

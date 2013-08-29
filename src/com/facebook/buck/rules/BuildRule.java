@@ -85,6 +85,15 @@ public interface BuildRule extends Comparable<BuildRule> {
    */
   public RuleKey getRuleKey() throws IOException;
 
+  /**
+   * Normally, a {@link RuleKey} is a function of the {@link RuleKey} of each of its deps as well as
+   * that of its inputs. This returns a {@link RuleKey} that is a function of only its inputs, which
+   * can be used to determine whether the definition or inputs of the rule changed independent of
+   * changes to its [transitive] deps.
+   * @return a non-null {@link RuleKey}.
+   */
+  public RuleKey getRuleKeyWithoutDeps() throws IOException;
+
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override
   public String toString();

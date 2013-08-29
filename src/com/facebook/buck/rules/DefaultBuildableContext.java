@@ -18,12 +18,22 @@ package com.facebook.buck.rules;
 
 public class DefaultBuildableContext implements BuildableContext {
 
-  // TODO(mbolin): Introduce a non-trivial implementation in a follow-up diff.
-  public DefaultBuildableContext() {
+  @SuppressWarnings("unused") // This will be used soon, I swear!
+  private final OnDiskBuildInfo onDiskBuildInfo;
+  private final BuildInfoRecorder recorder;
+
+  public DefaultBuildableContext(OnDiskBuildInfo onDiskBuildInfo, BuildInfoRecorder recorder) {
+    this.onDiskBuildInfo = onDiskBuildInfo;
+    this.recorder = recorder;
   }
 
   @Override
   public void addMetadata(String key, String value) {
+    recorder.addMetadata(key, value);
   }
 
+  @Override
+  public void recordArtifact(String pathToArtifact) {
+    recorder.recordArtifact(pathToArtifact);
+  }
 }

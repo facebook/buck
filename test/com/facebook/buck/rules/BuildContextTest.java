@@ -43,7 +43,6 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
     builder.setStepRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
@@ -84,7 +83,6 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
     builder.setStepRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
@@ -105,7 +103,6 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setProjectRoot(EasyMock.createMock(File.class));
     builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
     builder.setStepRunner(EasyMock.createMock(StepRunner.class));
     builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
@@ -129,7 +126,6 @@ public class BuildContextTest {
   public void testLogBuildInfo() {
     TestConsole console = new TestConsole();
     BuildContext buildContext = BuildContext.builder()
-        .setProjectRoot(EasyMock.createMock(File.class))
         .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))

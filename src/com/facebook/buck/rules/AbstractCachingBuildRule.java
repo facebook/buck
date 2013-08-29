@@ -23,19 +23,16 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.Beta;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -43,6 +40,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -87,7 +85,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
   }
 
   protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
-      super(buildRuleParams);
+    super(buildRuleParams);
     this.hasBuildStarted = new AtomicBoolean(false);
     this.buildRuleResult = SettableFuture.create();
     this.pathRelativizer = buildRuleParams.getPathRelativizer();
@@ -161,45 +159,136 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
       Futures.addCallback(allBuiltDeps,
           new FutureCallback<List<BuildRuleSuccess>>() {
 
+            private final BuckEventBus eventBus = context.getEventBus();
+
+            private final OnDiskBuildInfo onDiskBuildInfo = context.createOnDiskBuildInfoFor(
+                getBuildTarget());
+
+            /**
+             * It is imperative that:
+             * <ol>
+             *   <li>The {@link BuildInfoRecorder} is not constructed until all of the
+             *       {@link Buildable}'s {@code deps} are guaranteed to be built. This ensures that
+             *       the {@link RuleKey} will be available before the {@link BuildInfoRecorder} is
+             *       constructed.
+             *       <p>
+             *       This is why a {@link Supplier} is used.
+             *   <li>Only one {@link BuildInfoRecorder} is created per {@link Buildable}. This
+             *       ensures that all build-related information for a {@link Buildable} goes though
+             *       a single recorder, whose data will be persisted in {@link #onSuccess(List)}.
+             *       <p>
+             *       This is why {@link Suppliers#memoize(Supplier)} is used.
+             * </ol>
+             */
+            private final Supplier<BuildInfoRecorder> buildInfoRecorder = Suppliers.memoize(
+                new Supplier<BuildInfoRecorder>() {
+                  @Override
+                  public BuildInfoRecorder get() {
+                    AbstractBuildRule buildRule = AbstractCachingBuildRule.this;
+                    RuleKey ruleKey;
+                    RuleKey ruleKeyWithoutDeps;
+                    try {
+                      ruleKey = buildRule.getRuleKey();
+                      ruleKeyWithoutDeps = buildRule.getRuleKeyWithoutDeps();
+                    } catch (IOException e) {
+                      throw new RuntimeException(e);
+                    }
+
+                    return context.createBuildInfoRecorder(
+                        buildRule.getBuildTarget(), ruleKey, ruleKeyWithoutDeps);
+                  }
+                });
+
+            private boolean startOfBuildWasRecordedOnTheEventBus = false;
+
             @Override
             public void onSuccess(List<BuildRuleSuccess> deps) {
+              // Record the start of the build.
+              eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
+              startOfBuildWasRecordedOnTheEventBus = true;
+
               try {
-                buildOnceDepsAreBuilt(context);
+                BuildResult result = buildOnceDepsAreBuilt(
+                    context, onDiskBuildInfo, buildInfoRecorder.get());
+                if (result.isSuccess()) {
+                  recordBuildRuleSuccess(result);
+                } else {
+                  recordBuildRuleFailure(result);
+                }
               } catch (IOException e) {
                 onFailure(e);
               }
             }
 
+            private void recordBuildRuleSuccess(BuildResult result) {
+              // Make sure that all of the local files have the same values they would as if the
+              // rule had been built locally.
+              if (result.success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
+                try {
+                  buildInfoRecorder.get().writeMetadataToDisk();
+                } catch (IOException e) {
+                  onFailure(e);
+                }
+              }
+
+              // Give the rule a chance to populate its internal data structures now that all of the
+              // files should be in a valid state.
+              if (result.success.shouldInitializeFromDiskAfterBuilding()) {
+                initializeFromDisk(onDiskBuildInfo);
+              }
+
+              // Only now that the rule should be in a completely valid state, resolve the future.
+              BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(
+                  AbstractCachingBuildRule.this, result.success);
+              buildRuleResult.set(buildRuleSuccess);
+
+              // Do the post to the event bus immediately after the future is set so that the
+              // build time measurement is as accurate as possible.
+              eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
+                  result.status,
+                  result.cacheResult,
+                  Optional.of(result.success)));
+
+              // Finally, upload to the artifact cache.
+              if (result.success.shouldUploadResultingArtifact()) {
+                buildInfoRecorder.get().performUploadToArtifactCache(context.getArtifactCache(),
+                    eventBus);
+              }
+            }
+
             @Override
             public void onFailure(Throwable failure) {
-              recordBuildRuleFailure(failure,
-                  BuildRuleStatus.FAIL,
-                  CacheResult.MISS,
-                  context.getEventBus());
+              recordBuildRuleFailure(new BuildResult(failure));
+            }
+
+            private void recordBuildRuleFailure(BuildResult result) {
+              // TODO(mbolin): Delete all genfiles and metadata, as they are not guaranteed to be
+              // valid at this point?
+
+              // Note that startOfBuildWasRecordedOnTheEventBus will be false if onSuccess() was
+              // never invoked.
+              if (startOfBuildWasRecordedOnTheEventBus) {
+                eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
+                    result.status,
+                    result.cacheResult,
+                    Optional.<BuildRuleSuccess.Type>absent()));
+              }
+
+              // It seems possible (albeit unlikely) that something could go wrong in
+              // recordBuildRuleSuccess() after buildRuleResult has been resolved such that Buck
+              // would attempt to resolve the future again, which would fail.
+              buildRuleResult.setException(result.failure);
             }
           },
           context.getExecutor());
-    } catch (Throwable throwable) {
+    } catch (Throwable failure) {
       // This is a defensive catch block: if buildRuleResult is never satisfied, then Buck will
       // hang because a callback that is waiting for this rule's future to complete will never be
       // executed.
-      recordBuildRuleFailure(throwable,
-          BuildRuleStatus.FAIL,
-          CacheResult.MISS,
-          context.getEventBus());
+      buildRuleResult.setException(failure);
     }
 
     return buildRuleResult;
-  }
-
-  /**
-   * Uses the deprecated {@link BuildContext#getProjectFilesystem()} method to get a
-   * {@link ProjectFilesystem}. This is abstracted into its own method to reduce the reach of the
-   * {@link SuppressWarnings} annotation.
-   */
-  @SuppressWarnings("deprecation")
-  private ProjectFilesystem getProjectFilesystemFromBuildContext(BuildContext context) {
-    return context.getProjectFilesystem();
   }
 
   /**
@@ -212,12 +301,18 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
    * that end, this method should never throw an exception, or else Buck will hang waiting for
    * {@link #buildRuleResult} to be resolved.
    */
-  private void buildOnceDepsAreBuilt(final BuildContext context) throws IOException {
-    BuckEventBus eventBus = context.getEventBus();
-    ProjectFilesystem projectFilesystem = getProjectFilesystemFromBuildContext(context);
+  private BuildResult buildOnceDepsAreBuilt(final BuildContext context,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder) throws IOException {
+    // Compute the current RuleKey and compare it to the one stored on disk.
+    RuleKey ruleKey = getRuleKey();
+    Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();
 
-    // Record the start of the build.
-    eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
+    // If the RuleKeys match, then there is nothing to build.
+    if (ruleKey.equals(cachedRuleKey.orNull())) {
+      context.logBuildInfo("[UNCHANGED %s]", getFullyQualifiedName());
+      return new BuildResult(BuildRuleSuccess.Type.MATCHING_RULE_KEY, CacheResult.HIT);
+    }
 
     // Deciding whether we need to rebuild is tricky business. We want to rebuild as little as
     // possible while always being sound.
@@ -241,152 +336,132 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     if (this instanceof AbiRule) {
       AbiRule abiRule = (AbiRule)this;
 
-      RuleKey ruleKeyNoDeps = abiRule.getRuleKeyWithoutDeps();
-      Optional<RuleKey> cachedRuleKeyNoDeps = abiRule.getRuleKeyWithoutDepsOnDisk(projectFilesystem);
+      RuleKey ruleKeyNoDeps = getRuleKeyWithoutDeps();
+      Optional<RuleKey> cachedRuleKeyNoDeps = onDiskBuildInfo.getRuleKeyWithoutDeps();
       if (ruleKeyNoDeps.equals(cachedRuleKeyNoDeps.orNull())) {
         // The RuleKey for the definition of this build rule and its input files has not changed.
         // Therefore, if the ABI of its deps has not changed, there is nothing to rebuild.
         Optional<Sha1HashCode> abiKeyForDeps = abiRule.getAbiKeyForDeps();
-        Optional<Sha1HashCode> cachedAbiKeyForDeps = abiRule.getAbiKeyForDepsOnDisk(projectFilesystem);
-        if (abiKeyForDeps.isPresent()
-            && abiKeyForDeps.equals(cachedAbiKeyForDeps)
-            && abiRule.initializeFromDisk(projectFilesystem)) {
-          // Although no rebuild is required, we still need to write the updated RuleKey.
-          try {
-            writeSuccessFile(projectFilesystem);
-          } catch (IOException e) {
-            recordBuildRuleFailure(e, BuildRuleStatus.FAIL, CacheResult.HIT, eventBus);
-            return;
-          }
-
-          recordBuildRuleSuccess(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-              BuildRuleStatus.SUCCESS,
-              CacheResult.HIT,
-              eventBus);
-          return;
+        Optional<Sha1HashCode> cachedAbiKeyForDeps = onDiskBuildInfo.getHash(
+            AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
+        if (abiKeyForDeps.isPresent() && abiKeyForDeps.equals(cachedAbiKeyForDeps)) {
+          // Re-copy the ABI metadata.
+          // TODO(mbolin): This seems really bad: there could be other metadata to copy, too?
+          buildInfoRecorder.addMetadata(
+              AbiRule.ABI_KEY_ON_DISK_METADATA,
+              onDiskBuildInfo.getValue(AbiRule.ABI_KEY_ON_DISK_METADATA).get());
+          buildInfoRecorder.addMetadata(
+              AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+              cachedAbiKeyForDeps.get().getHash());
+          return new BuildResult(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
+              CacheResult.HIT);
         }
       }
     }
 
-    // Compute the current RuleKey and compare it to the one stored on disk.
-    RuleKey ruleKey = getRuleKey();
-    Optional<RuleKey> cachedRuleKey = getRuleKeyOnDisk(projectFilesystem);
-
-    // If the RuleKeys match, then there is nothing to build.
-    if (cachedRuleKey.isPresent() && ruleKey.equals(cachedRuleKey.get())) {
-      initializeFromDisk(projectFilesystem);
-      context.logBuildInfo("[UNCHANGED %s]", getFullyQualifiedName());
-      recordBuildRuleSuccess(BuildRuleSuccess.Type.MATCHING_RULE_KEY,
-          BuildRuleStatus.SUCCESS,
-          CacheResult.HIT,
-          eventBus);
-      return;
-    }
-
-    // TODO(mbolin): Make sure that all output files are deleted before proceeding. This is
-    // particularly important for tests: their test result files must be deleted. Otherwise, we
-    // might replace the artifact for the rule, but leave the old test result files in place. We
-    // should organize our output directories so we can solve this for all rules at once.
-
     // Before deciding to build, check the ArtifactCache.
-    String pathToOutputFile = buildable.getPathToOutputFile();
-    boolean fromCache = pathToOutputFile != null
-        && context.getArtifactCache().fetch(
-            ruleKey,
-            projectFilesystem.getFileForRelativePath(pathToOutputFile));
-    CacheResult cacheResult = fromCache ? CacheResult.HIT : CacheResult.MISS;
-
-    // Give the rule a chance to record metadata about the artifact.
-    if (fromCache) {
-      try {
-        buildable.recordOutputFileDetailsAfterFetchFromArtifactCache(context.getArtifactCache(),
-            projectFilesystem);
-      } catch (IOException e) {
-        recordBuildRuleFailure(e, BuildRuleStatus.FAIL, cacheResult, eventBus);
-        return;
-      }
-    }
+    // The fetched file is now a ZIP file, so it needs to be unzipped.
+    boolean fromCache = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+        buildInfoRecorder,
+        context.getArtifactCache(),
+        context.getProjectRoot());
 
     // Run the steps to build this rule since it was not found in the cache.
-    if (!fromCache) {
-      try {
-        executeCommandsNowThatDepsAreBuilt(context);
-      } catch (IOException|StepFailedException e) {
-        recordBuildRuleFailure(e, BuildRuleStatus.FAIL, cacheResult, eventBus);
-        return;
-      }
+    if (fromCache) {
+      return new BuildResult(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, CacheResult.HIT);
     }
 
-    // Record that the build rule has built successfully.
+    // The only remaining option is to build locally.
     try {
-      recordBuildRuleCompleted(projectFilesystem, context.getArtifactCache(), fromCache);
+      executeCommandsNowThatDepsAreBuilt(context, onDiskBuildInfo, buildInfoRecorder);
+    } catch (IOException | StepFailedException e) {
+      return new BuildResult(e);
+    }
+
+    // Given that the Buildable has built successfully, record that the output file has been
+    // written, assuming it has one.
+    // TODO(mbolin): Buildable.getSteps() should use BuildableContext such that Buildable is
+    // responsible for invoking recordArtifact() itself. Once that is done, this call to
+    // recordArtifact() should be deleted.
+    String pathToOutputFile = buildable.getPathToOutputFile();
+    if (pathToOutputFile != null && pathToOutputFile.startsWith(BuckConstant.GEN_DIR)) {
+      String prefix = BuckConstant.GEN_DIR + '/' + getBuildTarget().getBasePathWithSlash();
+      buildInfoRecorder.recordArtifact(pathToOutputFile.substring(prefix.length()));
+    }
+
+    return new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY, CacheResult.MISS);
+  }
+
+  private boolean tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+      BuildInfoRecorder buildInfoRecorder,
+      ArtifactCache artifactCache,
+      Path projectRoot) {
+    // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
+    // that we are creating a zip-based FileSystem.
+    File zipFile;
+    try {
+      zipFile = File.createTempFile(getFullyQualifiedName().replace('/', '_'), ".zip");
     } catch (IOException e) {
-      // If we failed to record the success, then we are in a potentially bad state where we have a
-      // new output but an old RuleKey record.
-      // TODO(mbolin): Make a final attempt to clear the invalid RuleKey record.
-      recordBuildRuleFailure(e, BuildRuleStatus.FAIL, cacheResult, eventBus);
-      return;
+      throw new RuntimeException(e);
     }
 
-    // We made it to the end of the method! Record our success.
-    BuildRuleSuccess.Type successType = fromCache ? BuildRuleSuccess.Type.FETCHED_FROM_CACHE
-                                                  : BuildRuleSuccess.Type.BUILT_LOCALLY;
-    recordBuildRuleSuccess(successType, BuildRuleStatus.SUCCESS, cacheResult, eventBus);
-    return;
-  }
+    // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
+    // Then we could download directly from Cassandra into the on-disk cache and unzip it from
+    // there.
+    boolean isSuccessfulFetch = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
+    if (!isSuccessfulFetch) {
+      return false;
+    }
 
-  private void recordBuildRuleSuccess(BuildRuleSuccess.Type type,
-      BuildRuleStatus buildRuleStatus,
-      CacheResult cacheResult,
-      BuckEventBus eventBus) {
-    eventBus.post(BuildRuleEvent.finished(this, buildRuleStatus, cacheResult, Optional.of(type)));
-    buildRuleResult.set(new BuildRuleSuccess(this, type));
-  }
+    // We unzip the file in the root of the project directory.
+    // Ideally, the following would work:
+    //
+    // Path pathToZip = Paths.get(zipFile.getAbsolutePath());
+    // FileSystem fs = FileSystems.newFileSystem(pathToZip, /* loader */ null);
+    // Path root = Iterables.getOnlyElement(fs.getRootDirectories());
+    // MoreFiles.copyRecursively(root, projectRoot);
+    //
+    // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
+    // to resolve a Path for a zip entry against a file Path on disk.
 
-  private void recordBuildRuleFailure(Throwable failure,
-      BuildRuleStatus buildRuleStatus,
-      CacheResult cacheResult,
-      BuckEventBus eventBus) {
-    eventBus.post(BuildRuleEvent.finished(this,
-        buildRuleStatus,
-        cacheResult,
-        Optional.<BuildRuleSuccess.Type>absent()));
-    buildRuleResult.setException(failure);
-  }
+    // TODO(user, simons): Make this work on Windows. A custom implementation of unzip in Java
+    // needs to be heavily tested to ensure that it works on all platforms in a multithreaded
+    // environment. In my testing of the unzip executable, this has not been an issue, so this level
+    // of fidelity needs to be maintained.
+    ProcessBuilder processBuilder = new ProcessBuilder(
+        "unzip", "-o", "-qq", zipFile.getAbsolutePath());
+    processBuilder.directory(projectRoot.toFile());
 
-  /**
-   * Return this rule's RuleKey from the previous run if it is available on disk.
-   * <p>
-   * Any sort of internal IOException will be masked via {@link Optional#absent()}.
-   */
-  @VisibleForTesting
-  Optional<RuleKey> getRuleKeyOnDisk(ProjectFilesystem projectFilesystem) {
-    Optional<File> successFile = projectFilesystem.getFileIfExists(getPathToSuccessFile());
-    if (successFile.isPresent()) {
-      try {
-        String ruleKeyHash = Files.readFirstLine(successFile.get(), Charsets.US_ASCII);
-        return Optional.of(new RuleKey(ruleKeyHash));
-      } catch (IOException|NumberFormatException|NullPointerException e) {
-        // As we transition into a new format for a .success file, old versions of .success files
-        // may be lying around, which could throw any of these exceptions. When this happens, we
-        // treat the .success file the same as if it were missing.
-        return Optional.absent();
+    // TODO(mbolin): In the failure cases, try to clean up or warn the user?
+    try {
+      Process process = processBuilder.start();
+      int exitCode = process.waitFor();
+      if (exitCode != 0) {
+        throw new RuntimeException("Failed to unzip " + zipFile);
       }
-    } else {
-      return Optional.absent();
+    } catch (IOException | InterruptedException e) {
+      return false;
     }
+
+    // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
+    // around for debugging purposes.
+    zipFile.delete();
+    return true;
   }
 
   /**
    * Execute the commands for this build rule. Requires all dependent rules are already built
    * successfully.
    */
-  private void executeCommandsNowThatDepsAreBuilt(BuildContext context)
+  private void executeCommandsNowThatDepsAreBuilt(BuildContext context,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder)
       throws IOException, StepFailedException {
     context.logBuildInfo("[BUILDING %s]", getFullyQualifiedName());
 
     // Get and run all of the commands.
-    BuildableContext buildableContext = new DefaultBuildableContext();
+    BuildableContext buildableContext = new DefaultBuildableContext(onDiskBuildInfo,
+        buildInfoRecorder);
     List<Step> steps = buildable.getBuildSteps(context, buildableContext);
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
@@ -396,67 +471,46 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
 
   /**
    * For a rule that is read from the build cache, it may have fields that would normally be
-   * populated by executing the steps returned by {@link Buildable#getBuildSteps(BuildContext, BuildableContext)}.
-   * Because {@link Buildable#getBuildSteps(BuildContext, BuildableContext)} is not invoked for cached rules, a rule
+   * populated by executing the steps returned by
+   * {@link Buildable#getBuildSteps(BuildContext, BuildableContext)}. Because
+   * {@link Buildable#getBuildSteps(BuildContext, BuildableContext)} is not invoked for cached rules, a rule
    * may need to implement this method to populate those fields in some other way. For a cached
    * rule, this method will be invoked just before the future returned by
    * {@link #build(BuildContext)} is resolved.
-   * <p>
-   * By default, this method does nothing except return {@code true}.
-   * @param projectFilesystem can be used to load
-   * @return whether the internal data structures were populated successfully.
+   * @param onDiskBuildInfo can be used to read metadata from disk to help initialize the rule.
    */
-  protected boolean initializeFromDisk(ProjectFilesystem projectFilesystem) {
-    return true;
-  }
+  protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {}
 
   /**
-   * Record that the outputs for the build rule have been written. They may have been written by
-   * either:
-   * <ol>
-   *   <li>The build rule executing all of its steps successfully.
-   *   <li>The build rule pulling down the output artifacts via the ArtifactCache.
-   * </ol>
+   * This is a union type that represents either a success or a failure. This exists so that
+   * {@link #buildOnceDepsAreBuilt(BuildContext, OnDiskBuildInfo, BuildInfoRecorder)} can return a
+   * strongly typed value.
    */
-  private void recordBuildRuleCompleted(ProjectFilesystem projectFilesystem,
-      ArtifactCache artifactCache,
-      boolean fromCache)
-      throws IOException {
-    // Write the success file.
-    writeSuccessFile(projectFilesystem);
+  private static class BuildResult {
 
-    // Store output to cache.
-    String pathToOutputFile = buildable.getPathToOutputFile();
-    if (pathToOutputFile != null && !fromCache) {
-      File output = projectFilesystem.getFileForRelativePath(pathToOutputFile);
-      artifactCache.store(getRuleKey(), output);
+    private final BuildRuleStatus status;
+    private final CacheResult cacheResult;
+
+    @Nullable private final BuildRuleSuccess.Type success;
+    @Nullable private final Throwable failure;
+
+    BuildResult(BuildRuleSuccess.Type success, CacheResult cacheResult) {
+      this.status = BuildRuleStatus.SUCCESS;
+      this.cacheResult = Preconditions.checkNotNull(cacheResult);
+      this.success = Preconditions.checkNotNull(success);
+      this.failure = null;
     }
-  }
 
-  /**
-   * Write out a file that represents that this build rule succeeded, as well as the inputs that
-   * were used. The last-modified time of this file, and its contents, will be used to determine
-   * whether this rule should be cached.
-   * @throws IOException
-   */
-  private void writeSuccessFile(ProjectFilesystem projectFilesystem) throws IOException {
-    String path = getPathToSuccessFile();
-    projectFilesystem.createParentDirs(path);
-    Iterable<String> lines = getSuccessFileStringsForBuildRules();
-    projectFilesystem.writeLinesToPath(lines, path);
-  }
+    BuildResult(Throwable failure) {
+      this.status = BuildRuleStatus.FAIL;
+      this.cacheResult = CacheResult.MISS;
+      this.success = null;
+      this.failure = Preconditions.checkNotNull(failure);
+    }
 
-  private Iterable<String> getSuccessFileStringsForBuildRules() throws IOException {
-    // For now, the one and only line written to the .success file is the RuleKey hash.
-    return ImmutableList.of(getRuleKey().toString());
-  }
-
-  @VisibleForTesting
-  String getPathToSuccessFile() {
-    return String.format("%s/%s.success/%s",
-        BuckConstant.BIN_DIR,
-        getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName());
+    boolean isSuccess() {
+      return status == BuildRuleStatus.SUCCESS;
+    }
   }
 
   /**

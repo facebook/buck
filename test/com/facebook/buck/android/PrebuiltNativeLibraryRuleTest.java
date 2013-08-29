@@ -14,24 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.cpp;
+package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.Paths;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -59,15 +51,7 @@ public class PrebuiltNativeLibraryRuleTest {
 
     // Create an android_library rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//java/src/com/facebook/base", "base");
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
-        buildTarget,
-        ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        /* pathRelativizer */ Functions.<String>identity());
     PrebuiltNativeLibrary nativeLibraryRule = new PrebuiltNativeLibrary(
-        buildRuleParams,
         "java/src/com/facebook/base/libs",
         false,
         traverser);

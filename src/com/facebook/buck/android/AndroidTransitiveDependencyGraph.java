@@ -18,14 +18,12 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.cpp.PrebuiltNativeLibrary;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.NativeLibraryBuildable;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -121,11 +119,11 @@ public class AndroidTransitiveDependencyGraph {
 
     // Paths to native libs directories (often named libs/) that should be included as raw files
     // directories in the final APK.
-    final ImmutableSet.Builder<String> nativeLibsZips = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> nativeLibsDirectories = ImmutableSet.builder();
 
     // Paths to native libs directories that are to be treated as assets and so should be included
     // as raw files under /assets/lib/ directory in the APK.
-    final ImmutableSet.Builder<String> nativeLibAssetsZips = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> nativeLibAssetsDirectories = ImmutableSet.builder();
 
     // Path to the module's manifest file
     final ImmutableSet.Builder<String> manifestFiles = ImmutableSet.builder();
@@ -146,9 +144,9 @@ public class AndroidTransitiveDependencyGraph {
         if (rule.getBuildable() instanceof NativeLibraryBuildable) {
           NativeLibraryBuildable nativeLibraryRule = (NativeLibraryBuildable) rule.getBuildable();
           if (nativeLibraryRule.isAsset()) {
-            nativeLibAssetsZips.add(nativeLibraryRule.getPathToOutputFile());
+            nativeLibAssetsDirectories.add(nativeLibraryRule.getLibraryPath());
           } else {
-            nativeLibsZips.add(nativeLibraryRule.getPathToOutputFile());
+            nativeLibsDirectories.add(nativeLibraryRule.getLibraryPath());
           }
 
           // In the rare event that a PrebuiltNativeLibraryBuildRule has deps, it is likely another
@@ -182,8 +180,8 @@ public class AndroidTransitiveDependencyGraph {
     }.start();
 
     return new AndroidTransitiveDependencies(assetsDirectories.build(),
-        nativeLibsZips.build(),
-        nativeLibAssetsZips.build(),
+        nativeLibsDirectories.build(),
+        nativeLibAssetsDirectories.build(),
         manifestFiles.build(),
         details.resDirectories,
         details.rDotJavaPackages,

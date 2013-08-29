@@ -136,6 +136,11 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
+    public final RuleKey getRuleKeyWithoutDeps() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int compareTo(BuildRule buildRule) {
       throw new UnsupportedOperationException();
     }

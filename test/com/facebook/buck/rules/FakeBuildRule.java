@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -102,13 +101,6 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
 
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
-      throws IOException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void recordOutputFileDetailsAfterFetchFromArtifactCache(
-      ArtifactCache cache, ProjectFilesystem projectFilesystem)
       throws IOException {
     throw new UnsupportedOperationException();
   }
