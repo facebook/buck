@@ -448,7 +448,9 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
                 matcher.group(2), getFullyQualifiedName());
         }
 
-        matcher.appendReplacement(buffer, replacement);
+        // `replacement` may contain Windows style directory separator backslash (\), which will be
+        // considered as escape character. Escape them.
+        matcher.appendReplacement(buffer, replacement.replace("\\", "\\\\"));
       }
       matcher.appendTail(buffer);
       return buffer.toString();
