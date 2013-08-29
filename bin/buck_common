@@ -196,5 +196,9 @@ BUCK_JAVA_ARGS="${BUCK_EXTRA_JAVA_ARGS} \
 -Dbuck.buckd_dir=${BUCKD_DIR} \
 -Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties"
 
-# To debug BUCK, uncomment the following line to wait on port 8888 for Eclipse.
-# BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
+# To debug BUCK, set BUCK_DEBUG_MODE in your environment to anything non-empty,
+# then connect to port 8888.
+if [ "$BUCK_DEBUG_MODE" ]; then
+  arg="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
+  BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS $arg"
+fi
