@@ -67,21 +67,48 @@ public class ProjectFilesystemWatcher implements Closeable {
       if (dir == null) {
         continue; // Ignored or unknown directory.
       }
-      for (WatchEvent<?> event : key.pollEvents()) {
+      for (final WatchEvent<?> event : key.pollEvents()) {
         if (filesystem.isPathChangeEvent(event)) {
+
+          // Check against ignored directories.
           Path name = (Path) event.context();
-          Path child = dir.resolve(name);
+          final Path child = dir.resolve(name);
           if (shouldIgnore(child)) {
             continue;
           }
+
+          // If directory is created, watch its children.
           if (filesystem.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
             if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
               registerAll(child);
             }
             continue; // TODO(user): post events about directories?
           }
+
+          // Path returned by event.context() is relative to key directory, so return resolved
+          // child Path instead to allow clients to access the full, absolute Path correctly.
+          eventBus.post(new WatchEvent<Path>(){
+
+            @Override
+            @SuppressWarnings("unchecked") // Needed for conversion from Kind<?> to Kind<Path>
+            public Kind<Path> kind() {
+              return (Kind<Path>) event.kind();
+            }
+
+            @Override
+            public int count() {
+              return event.count();
+            }
+
+            @Override
+            public Path context() {
+              return child;
+            }
+          });
+
+        } else {
+          eventBus.post(event);
         }
-        eventBus.post(event);
       }
 
       // Reset key and remove from set if directory no longer accessible

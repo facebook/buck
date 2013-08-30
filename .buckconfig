@@ -15,7 +15,7 @@
       test/com/facebook/buck/java/testdata, \
       test/com/facebook/buck/junit/testdata, \
       test/com/facebook/buck/parser/testdata, \
-      test/com/facebook/buck/shell/testdata, \
+      test/com/facebook/buck/shell/testdata,
 [test]
     # Maximum timeout of 1 minute per test.
     timeout = 60000

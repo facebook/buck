@@ -18,10 +18,7 @@ package com.facebook.buck.parser;
 
 import static com.facebook.buck.parser.RawRulePredicates.alwaysFalse;
 import static com.facebook.buck.parser.RawRulePredicates.alwaysTrue;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -82,6 +79,9 @@ import java.util.Set;
 public class ParserTest extends EasyMockSupport {
 
   private File testBuildFile;
+  private File includedByBuildFile;
+  private File includedByIncludeFile;
+  private File defaultIncludeFile;
   private Parser testParser;
   private KnownBuildRuleTypes buildRuleTypes;
   private ProjectFilesystem filesystem;
@@ -93,13 +93,36 @@ public class ParserTest extends EasyMockSupport {
   public void setUp() throws IOException {
     tempDir.newFolder("java", "com", "facebook");
 
+    defaultIncludeFile = tempDir.newFile(
+        "java/com/facebook/defaultIncludeFile");
+    Files.write(
+        "\n",
+        defaultIncludeFile,
+        Charsets.UTF_8);
+
+    includedByIncludeFile = tempDir.newFile(
+        "java/com/facebook/includedByIncludeFile");
+    Files.write(
+        "\n",
+        includedByIncludeFile,
+        Charsets.UTF_8);
+
+    includedByBuildFile = tempDir.newFile(
+        "java/com/facebook/includedByBuildFile");
+    Files.write(
+        "include_defs('//java/com/facebook/includedByIncludeFile')\n",
+        includedByBuildFile,
+        Charsets.UTF_8);
+
     testBuildFile = tempDir.newFile(
         "java/com/facebook/" + BuckConstant.BUILD_RULES_FILE_NAME);
     Files.write(
+        "include_defs('//java/com/facebook/includedByBuildFile')\n" +
         "java_library(name = 'foo')\n" +
         "java_library(name = 'bar')\n",
         testBuildFile,
         Charsets.UTF_8);
+
     tempDir.newFile("bar.py");
 
     // Create a temp directory with some build files.
@@ -126,10 +149,18 @@ public class ParserTest extends EasyMockSupport {
     };
   }
 
+  private Parser createParser(Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets) {
+    return createParser(
+        Suppliers.ofInstance(BuildFileTree.constructBuildFileTree(filesystem)),
+        knownBuildTargets,
+        new TestProjectBuildFileParserFactory(filesystem),
+        new BuildTargetParser(filesystem));
+  }
+
   private Parser createParser(Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
                               ProjectBuildFileParserFactory buildFileParserFactory) {
     return createParser(
-        Suppliers.ofInstance(new BuildFileTree(ImmutableSet.<String>of())),
+        Suppliers.ofInstance(BuildFileTree.constructBuildFileTree(filesystem)),
         knownBuildTargets,
         buildFileParserFactory,
         new BuildTargetParser(filesystem));
@@ -374,195 +405,464 @@ public class ParserTest extends EasyMockSupport {
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
   public void whenNotifiedOfNonPathEventThenCacheRulesAreInvalidated()
       throws BuildFileParseException, NoSuchBuildTargetException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Object> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.OVERFLOW).anyTimes();
-    replay(event);
-    parser.onFileSystemChange(event);
+    // Call filterAllTargetsInProject to populate the cache.
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    verify(event);
+    // Process event.
+    WatchEvent<Object> event = createOverflowEvent();
+    parser.onFileSystemChange(event);
+
+    // Call filterAllTargetsInProject to request cached rules.
+    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  // TODO(jimp/devjasta): clean up the horrible ProjectBuildFileParserFactory mess.
+  private void parseBuildFile(File buildFile, Parser parser,
+                              ProjectBuildFileParserFactory buildFileParserFactory)
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    parser.parseBuildFile(buildFile,
+        /* defaultIncludes */ ImmutableList.<String>of(),
+        buildFileParserFactory.createParser(/* commonIncludes */ Lists.<String>newArrayList()));
+  }
+
+  private WatchEvent<Object> createOverflowEvent() {
+    return new WatchEvent<Object>() {
+      @Override
+      public Kind<Object> kind() {
+        return StandardWatchEventKinds.OVERFLOW;
+      }
+
+      @Override
+      public int count() {
+        return 0;
+      }
+
+      @Override
+      public Object context() {
+        return null;
+      }
+    };
+  }
+
+  private WatchEvent<Path> createEvent(final File file, final WatchEvent.Kind<Path> kind) {
+    return new WatchEvent<Path>() {
+      @Override
+      public Kind<Path> kind() {
+        return kind;
+      }
+
+      @Override
+      public int count() {
+        return 0;
+      }
+
+      @Override
+      public Path context() {
+        return file.toPath();
+      }
+    };
+  }
+
+  @Test
+  public void whenNotifiedOfBuildFileAddThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(testBuildFile, StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
-  public void whenNotifiedOfNonSourcePathEventThenCacheRulesAreInvalidated()
+  public void whenNotifiedOfBuildFileChangeThenCacheRulesAreInvalidated()
       throws BuildFileParseException, NoSuchBuildTargetException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem);
-    Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
+    Parser parser = createParser(emptyBuildTargets());
 
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath());
-    replay(event);
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(testBuildFile, StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    verify(event);
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
-  public void whenNotifiedOfSourcePathEventThenCacheRulesAreNotInvalidated()
+  public void whenNotifiedOfBuildFileDeleteThenCacheRulesAreInvalidated()
       throws BuildFileParseException, NoSuchBuildTargetException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem);
-    Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
+    Parser parser = createParser(emptyBuildTargets());
 
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
-    replay(event);
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(testBuildFile, StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    verify(event);
-    assertEquals("Should have cached build rules.", 1, buildFileParserFactory.calls);
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
-  public void whenNotifiedOfNewSourceFileBuildTreeIsNotReconstructed()
-      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
+  public void whenNotifiedOfIncludeFileAddThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
 
-    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
-    expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
-    replay(buildFileTreeSupplier);
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
-    Parser parser = createParser(buildFileTreeSupplier,
-        emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
-        new BuildTargetParser(filesystem));
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
-    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
-    replay(event);
+    // Process event.
+    WatchEvent<Path> event = createEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    // Check that event was processed and BuildFileTree was supplied once.
-    verify(event, buildFileTreeSupplier);
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
-  public void whenNotifiedOfNewBuildFileBuildTreeIsReconstructed()
-      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
+  public void whenNotifiedOfIncludeFileChangeThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
 
-    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
-    expect(buildFileTreeSupplier.get())
-        .andReturn(new BuildFileTree(ImmutableSet.<String>of())).times(2);
-    replay(buildFileTreeSupplier);
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
-    Parser parser = createParser(buildFileTreeSupplier,
-        emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
-        new BuildTargetParser(filesystem));
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
-    expect(event.context()).andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath());
-    replay(event);
+    // Process event.
+    WatchEvent<Path> event = createEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    // Check that event was processed and BuildFileTree was supplied twice.
-    verify(event, buildFileTreeSupplier);
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
-  public void whenNotifiedOfMultipleNewBuildFilesBuildTreeIsReconstructedOnce()
-      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
+  public void whenNotifiedOfIncludeFileDeleteThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
 
-    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
-    expect(buildFileTreeSupplier.get())
-        .andReturn(new BuildFileTree(ImmutableSet.<String>of())).times(2);
-    replay(buildFileTreeSupplier);
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
-    Parser parser = createParser(buildFileTreeSupplier,
-        emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
-        new BuildTargetParser(filesystem));
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
-    expect(event.context())
-        .andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath()).anyTimes();
-    replay(event);
+    // Process event.
+    WatchEvent<Path> event = createEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
-    parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    // Check that event was processed and BuildFileTree was supplied twice.
-    verify(event, buildFileTreeSupplier);
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
-  public void whenNotifiedOfBuildFileChangeBuildTreeIsNotReconstructed()
-      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
+  public void whenNotifiedOf2ndOrderIncludeFileAddThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
 
-    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
-    expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
-    replay(buildFileTreeSupplier);
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
-    Parser parser = createParser(buildFileTreeSupplier,
-        emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
-        new BuildTargetParser(filesystem));
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File(BuckConstant.BUILD_RULES_FILE_NAME).toPath());
-    replay(event);
+    // Process event.
+    WatchEvent<Path> event = createEvent(includedByIncludeFile,
+        StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    // Check that event was processed and BuildFileTree was supplied once.
-    verify(event, buildFileTreeSupplier);
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
 
   @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent and Supplier classes.
-  public void whenNotifiedOfSourceFileChangeBuildTreeIsNotReconstructed()
-      throws IOException, NoSuchBuildTargetException, BuildFileParseException {
+  public void whenNotifiedOf2ndOrderIncludeFileChangeThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
 
-    Supplier<BuildFileTree> buildFileTreeSupplier = createStrictMock(Supplier.class);
-    expect(buildFileTreeSupplier.get()).andReturn(new BuildFileTree(ImmutableSet.<String>of()));
-    replay(buildFileTreeSupplier);
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
-    Parser parser = createParser(buildFileTreeSupplier,
-        emptyBuildTargets(),
-        new DefaultProjectBuildFileParserFactory(filesystem, BuckTestConstant.PYTHON_INTERPRETER),
-        new BuildTargetParser(filesystem));
-
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
-    replay(event);
+    // Process event.
+    WatchEvent<Path> event = createEvent(includedByIncludeFile,
+        StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
-    // Check that event was processed and BuildFileTree was supplied once.
-    verify(event, buildFileTreeSupplier);
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOf2ndOrderIncludeFileDeleteThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(includedByIncludeFile,
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfDefaultIncludeFileAddThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(defaultIncludeFile,
+        StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfDefaultIncludeFileChangeThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(defaultIncludeFile,
+        StandardWatchEventKinds.ENTRY_MODIFY);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+
+  }
+
+  @Test
+  public void whenNotifiedOfDefaultIncludeFileDeleteThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(defaultIncludeFile,
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
+  // TODO(user): avoid invalidation when arbitrary contained (possibly backup) files are added.
+  public void whenNotifiedOfContainedFileAddThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("java/com/facebook/SomeClass.java"),
+        StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfContainedFileChangeThenCacheRulesAreNotInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("java/com/facebook/SomeClass.java"),
+        StandardWatchEventKinds.ENTRY_MODIFY);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call did not repopulate the cache.
+    assertEquals("Should have not invalidated cache.", 1, buildFileParserFactory.calls);
+  }
+
+  @Test
+  // TODO(user): avoid invalidation when arbitrary contained (possibly backup) files are deleted.
+  public void whenNotifiedOfContainedFileDeleteThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("java/com/facebook/SomeClass.java"),
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfUnrelatedFileAddThenCacheRulesAreNotInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("SomeClass.java__backup"),
+        StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call did not repopulate the cache.
+    assertEquals("Should have not invalidated cache.", 1, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfUnrelatedFileChangeThenCacheRulesAreNotInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("SomeClass.java__backup"),
+        StandardWatchEventKinds.ENTRY_MODIFY);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call did not repopulate the cache.
+    assertEquals("Should have not invalidated cache.", 1, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfUnrelatedFileDeleteThenCacheRulesAreNotInvalidated()
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("SomeClass.java__backup"),
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call did not repopulate the cache.
+    assertEquals("Should have not invalidated cache.", 1, buildFileParserFactory.calls);
   }
 
   @Test
@@ -600,66 +900,6 @@ public class ParserTest extends EasyMockSupport {
     assertNotNull(barRule);
 
     assertEquals(ImmutableSet.of(barRule), fooRule.getDeps());
-  }
-
-  @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
-  public void whenSourceFileAddedThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, NoSuchBuildTargetException {
-    TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(filesystem);
-    Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_CREATE).anyTimes();
-    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
-    replay(event);
-    parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-
-    verify(event);
-    assertEquals("Should not have cached build rules.", 2, buildFileParserFactory.calls);
-  }
-
-  @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
-  public void whenSourceFileModifiedThenCacheRulesAreNotInvalidated()
-      throws BuildFileParseException, NoSuchBuildTargetException {
-    TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(filesystem);
-    Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_MODIFY).anyTimes();
-    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
-    replay(event);
-    parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-
-    verify(event);
-    assertEquals("Should have cached build rules.", 1, buildFileParserFactory.calls);
-  }
-
-  @Test
-  @SuppressWarnings("unchecked") // Needed to mock generic WatchEvent class.
-  public void whenSourceFileDeletedThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, NoSuchBuildTargetException {
-    TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(filesystem);
-    Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
-
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-    WatchEvent<Path> event = createMock(WatchEvent.class);
-    expect(event.kind()).andReturn(StandardWatchEventKinds.ENTRY_DELETE).anyTimes();
-    expect(event.context()).andReturn(new File("./SomeClass.java").toPath());
-    replay(event);
-    parser.onFileSystemChange(event);
-    parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
-
-    verify(event);
-    assertEquals("Should not have cached build rules.", 2, buildFileParserFactory.calls);
   }
 
   @Test
@@ -784,7 +1024,7 @@ public class ParserTest extends EasyMockSupport {
 
     private class TestProjectBuildFileParser extends ProjectBuildFileParser {
       public TestProjectBuildFileParser() {
-        super(projectFilesystem, ImmutableList.<String>of(), "python");
+        super(projectFilesystem, ImmutableList.of("//java/com/facebook/defaultIncludeFile"), "python");
       }
 
       @Override

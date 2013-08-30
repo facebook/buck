@@ -645,6 +645,7 @@ def include_defs(name, build_env=None):
     raise ValueError('include_defs argument "%s" must begin with //' % name)
   relative_path = name[2:]
   include_file = os.path.join(build_env['PROJECT_ROOT'], relative_path)
+  build_env['INCLUDES'].append(include_file)
   execfile(include_file, build_env['BUILD_FILE_SYMBOL_TABLE'])
 
 
@@ -713,6 +714,7 @@ class BuildFileProcessor:
     build_symbols = make_build_file_symbol_table(build_env)
     build_env['BUILD_FILE_SYMBOL_TABLE'] = build_symbols['symbol_table']
     build_env['LAZY_FUNCTIONS'] = build_symbols['lazy_functions']
+    build_env['INCLUDES'] = []
 
     # If there are any default includes, evaluate those first to populate the
     # build_env.
@@ -745,6 +747,7 @@ class BuildFileProcessor:
              build_env['BUILD_FILE_SYMBOL_TABLE'])
 
     values = build_env['RULES'].values()
+    values.append({"__includes": [build_file] + build_env['INCLUDES']})
     if self.server:
       print json.dumps(values)
     else:

@@ -57,12 +57,16 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * High-level build file parsing machinery.  Primarily responsible for producing a
  * {@link DependencyGraph} based on a set of targets.  Also exposes some low-level facilities to
- * parse individual build files.
+ * parse individual build files. Caches build rules to minimise the number of calls to python and
+ * processes filesystem WatchEvents to invalidate the cache as files change. Expected to be used
+ * from a single thread, so methods are not synchronized or thread safe.
  */
+@NotThreadSafe
 public class Parser {
 
   private final BuildTargetParser buildTargetParser;
@@ -70,7 +74,7 @@ public class Parser {
   /**
    * The build files that have been parsed and whose build rules are in {@link #knownBuildTargets}.
    */
-  private final ListMultimap<File, Map<String, Object>> parsedBuildFiles;
+  private final ListMultimap<Path, Map<String, Object>> parsedBuildFiles;
 
   /**
    * True if all build files have been parsed and so all rules are in {@link #knownBuildTargets}.
@@ -78,21 +82,38 @@ public class Parser {
   private boolean allBuildFilesParsed;
 
   /**
-   * Files included by build files. Changing includes invalidates cached build rules.
+   * Files included by build files. If the default includes are changed, then build files need to be
+   * reevaluated with the new includes, so the includes used when populating the rule cache are
+   * stored between requests to parse build files and the cache is invalidated and build files
+   * reevaluated if the includes change.
    */
   @Nullable
-  private List<String> includes;
+  private List<String> cacheDefaultIncludes;
 
   /**
    * We parse a build file in search for one particular rule; however, we also keep track of the
    * other rules that were also parsed from it.
    */
+  // TODO(user): Stop caching these in addition to parsedBuildFiles?
   private final Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets;
 
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
   private final Console console;
+
+  /**
+   * Key of the meta-rule that lists the build files executed while reading rules.
+   * The value is a list of strings with the root build file as the head and included
+   * build files as the tail, for example: {"__includes":["/jimp/BUCK", "/jimp/buck_includes"]}
+   */
+  private static final String INCLUDES_META_RULE = "__includes";
+
+  /**
+   * A map from absolute included files ({@code /jimp/BUILD_DEFS}, for example) to the build files
+   * that depend on them (typically {@code /jimp/BUCK} files).
+   */
+  private final ListMultimap<Path, Path> buildFileDependents;
 
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
@@ -168,6 +189,7 @@ public class Parser {
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
     this.parsedBuildFiles = ArrayListMultimap.create();
+    this.buildFileDependents = ArrayListMultimap.create();
   }
 
   public BuildTargetParser getBuildTargetParser() {
@@ -179,39 +201,50 @@ public class Parser {
   }
 
   /**
-   * @param file the build file to look up in the {@link #parsedBuildFiles} cache.
+   * The rules in a build file are cached if that specific build file was parsed or all build
+   * files in the project were parsed and the includes haven't changed since the rules were
+   * cached.
+   *
+   * @param buildFile the build file to look up in the {@link #parsedBuildFiles} cache.
    * @param includes the files to include before executing the build file.
    * @return true if the build file has already been parsed and its rules are cached.
    */
-  private boolean isCached(File file, Iterable<String> includes) {
-    return isCacheValid(includes) && (allBuildFilesParsed || parsedBuildFiles.containsKey(file));
+  private boolean isCached(File buildFile, Iterable<String> includes) {
+    return !invalidateCacheOnIncludeChange(includes) && (allBuildFilesParsed ||
+        parsedBuildFiles.containsKey(normalize(buildFile.toPath())));
   }
 
   /**
+   * The cache is complete if all build files in the project were parsed and the includes haven't
+   * changed since the rules were cached.
+   *
    * @param includes the files to include before executing the build file.
    * @return true if all build files have already been parsed and their rules are cached.
    */
   private boolean isCacheComplete(Iterable<String> includes) {
-    return isCacheValid(includes) && allBuildFilesParsed;
+    return !invalidateCacheOnIncludeChange(includes) && allBuildFilesParsed;
   }
 
   /**
+   * Invalidates the cached build rules if {@code includes} have changed since the last call.
+   * If the cache is invalidated the new {@code includes} used to build the new cache are stored.
+   *
    * @param includes the files to include before executing the build file.
-   * @return true if the cached build rules are valid. Invalidates the cache if not.
+   * @return true if the cache was invalidated, false if the cache is still valid.
    */
-  private boolean isCacheValid(Iterable<String> includes) {
+  private boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
     List<String> includesList = Lists.newArrayList(includes);
-    if (!includesList.equals(this.includes)) {
+    if (!includesList.equals(this.cacheDefaultIncludes)) {
       invalidateCache();
-      this.includes = includesList;
-      return false;
+      this.cacheDefaultIncludes = includesList;
+      return true;
     }
-    return true;
+    return false;
   }
 
   private void invalidateCache() {
     if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().println("Parser invalidating cache");
+      console.getStdErr().println("Parser invalidating entire cache");
     }
     parsedBuildFiles.clear();
     knownBuildTargets.clear();
@@ -401,10 +434,10 @@ public class Parser {
             buildFile);
       }
 
-      parseRawRulesInternal(buildFileParser.getAllRules(buildFile.getPath()),
+      parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile.getPath()),
           buildFile);
     }
-    return parsedBuildFiles.get(buildFile);
+    return parsedBuildFiles.get(normalize(buildFile.toPath()));
   }
 
   /**
@@ -415,6 +448,12 @@ public class Parser {
   void parseRawRulesInternal(Iterable<Map<String, Object>> rules,
       @Nullable File source) throws NoSuchBuildTargetException {
     for (Map<String, Object> map : rules) {
+
+      if (isMetaRule(map)) {
+        parseMetaRule(map);
+        continue;
+      }
+
       BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
       BuildTarget target = parseBuildTargetFromRawRule(map, source);
       BuildRuleFactory<?> factory = buildRuleTypes.getFactory(buildRuleType);
@@ -434,8 +473,34 @@ public class Parser {
       if (existingRule != null) {
         throw new RuntimeException("Duplicate definition for " + target.getFullyQualifiedName());
       }
-      parsedBuildFiles.put(target.getBuildFile(), map);
+      parsedBuildFiles.put(normalize(target.getBuildFile().toPath()), map);
     }
+  }
+
+  /**
+   * @param map a build rule read from a build file.
+   * @return true if map represents a meta rule.
+   */
+  private boolean isMetaRule(Map<String, Object> map) {
+    return map.containsKey(INCLUDES_META_RULE);
+  }
+
+  /**
+   * Processes build file meta rules and returns true if map represents a meta rule.
+   * @param map a meta rule read from a build file.
+   */
+  @SuppressWarnings("unchecked") // Needed for downcast from Object to List<String>.
+  private boolean parseMetaRule(Map<String, Object> map) {
+    Preconditions.checkState(isMetaRule(map));
+
+    // INCLUDES_META_RULE maps to a list of file paths: the head is a
+    // dependent build file and the tail is a list of the files it includes.
+    List<String> fileNames = ((List<String>) map.get(INCLUDES_META_RULE));
+    Path dependent = normalize(new File(fileNames.get(0)).toPath());
+    for (String fileName : fileNames) {
+      buildFileDependents.put(normalize(new File(fileName).toPath()), dependent);
+    }
+    return true;
   }
 
   /**
@@ -530,7 +595,7 @@ public class Parser {
   private String createContextString(WatchEvent<?> event) {
     if (projectFilesystem.isPathChangeEvent(event)) {
       Path path = (Path) event.context();
-      return path.toAbsolutePath().toString();
+      return path.toAbsolutePath().normalize().toString();
     }
     return event.context().toString();
   }
@@ -547,33 +612,91 @@ public class Parser {
           createContextString(event));
     }
 
-    boolean reconstructBuildFileTree = false;
     if (projectFilesystem.isPathChangeEvent(event)) {
-      String path = event.context().toString();
-      if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-        if (path.endsWith(".java")) {
-          // TODO(user): Track the files imported by build files
-          // Currently we just assume changed ".java" can't affect build rules.
-          // Adding or deleting ".java" files requires build files to be reevaluated due to globing.
-          return;
-        }
-      } else {
+      Path path = (Path) event.context();
+
+      if (isPathCreateOrDeleteEvent(event)) {
+
         if (path.endsWith(BuckConstant.BUILD_RULES_FILE_NAME)) {
-          // A BUCK file was added or deleted, so reconstruct the build file tree.
-          reconstructBuildFileTree = true;
+
+          // If a build file has been added or removed, reconstruct the build file tree.
+          buildFileTreeCache.invalidate();
+
         }
+
+        // Added or removed files can affect globs, so invalidate the package build file.
+        // TODO(user): avoid invalidating build files when backup files are added or removed.
+        String packageBuildFilePath =
+            buildFileTreeCache.get().getBasePathOfAncestorTarget(
+                projectFilesystem.getProjectRoot().toPath().relativize(path).toString());
+        invalidateDependents(
+            projectFilesystem.getFileForRelativePath(
+                packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());
       }
+
+      // Invalidate the raw rules and targets dependent on this file.
+      invalidateDependents(path);
+
     } else {
-      // A non-path-change event happened: we have no idea what's going on,
-      // so reconstruct the build file tree to be safe.
-      reconstructBuildFileTree = true;
-    }
 
-    if (reconstructBuildFileTree) {
+      // Non-path change event, likely an overflow due to many change events: invalidate everything.
       buildFileTreeCache.invalidate();
+      invalidateCache();
+    }
+  }
+
+  private boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
+    return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
+        event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
+  }
+
+  /**
+   * Remove the targets and rules defined by {@code path} from the cache and recursively remove the
+   * targets and rules defined by files that transitively include {@code path} from the cache.
+   * @param path The File that has changed.
+   */
+  private void invalidateDependents(Path path) {
+    // Normalize path to ensure it hashes equally with map keys.
+    path = normalize(path);
+
+    if (parsedBuildFiles.containsKey(path)) {
+      if (console.getVerbosity() == Verbosity.ALL) {
+        console.getStdErr().printf("Parser invalidating %s cache\n",
+            path.toAbsolutePath());
+      }
+
+      // Remove all targets defined by path from cache.
+      for (Map<String, Object> rawRule : parsedBuildFiles.get(path)) {
+        BuildTarget target = parseBuildTargetFromRawRule(rawRule, null);
+        knownBuildTargets.remove(target);
+      }
+
+      // Remove all rules defined in path from cache.
+      parsedBuildFiles.removeAll(path);
+
+      // All targets have no longer been parsed and cached.
+      allBuildFilesParsed = false;
     }
 
-    // TODO(user): invalidate affected build files, rather than nuking all rules completely.
-    invalidateCache();
+    // Recursively invalidate dependents.
+    for (Path dependent : buildFileDependents.get(path)) {
+
+      if (!dependent.equals(path)) {
+        invalidateDependents(dependent);
+      }
+    }
+
+    // Dependencies will be repopulated when files are re-parsed.
+    buildFileDependents.removeAll(path);
+  }
+
+  /**
+   * Always use Files created from absolute paths as they are returned from buck.py and must be
+   * created from consistent paths to be looked up correctly in maps.
+   * @param path A File to normalize.
+   * @return An equivalent file constructed from a normalized, absolute path to the given File.
+   */
+  private Path normalize(Path path) {
+    return path.toAbsolutePath().normalize();
   }
 }

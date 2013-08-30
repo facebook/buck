@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -185,6 +186,20 @@ public class ProjectBuildFileParser implements AutoCloseable {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   public List<Map<String, Object>> getAllRules(String buildFile)
+      throws BuildFileParseException {
+    List<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile);
+
+    // Strip out the __includes meta rule, which is the last rule.
+    return Collections.unmodifiableList(result.subList(0, result.size() - 1));
+  }
+
+  /**
+   * Collect all rules from a particular build file, along with meta rules about the rules, for
+   * example which build files the rules depend on.
+   *
+   * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
+   */
+  public List<Map<String, Object>> getAllRulesAndMetaRules(String buildFile)
       throws BuildFileParseException {
     try {
       return getAllRulesInternal(Optional.of(buildFile));
