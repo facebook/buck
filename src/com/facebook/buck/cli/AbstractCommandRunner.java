@@ -77,7 +77,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   @Override
-  public final int runCommand(BuckConfig buckConfig, String[] args) throws IOException {
+  public final int runCommand(BuckConfig buckConfig, String[] args) throws Exception {
     ParserAndOptions<T> parserAndOptions = createParser(buckConfig);
     T options = parserAndOptions.options;
     CmdLineParser parser = parserAndOptions.parser;
@@ -115,7 +115,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   /**
    * @return the exit code this process should exit with
    */
-  public synchronized final int runCommandWithOptions(T options) throws IOException {
+  public synchronized final int runCommandWithOptions(T options) throws Exception {
     this.options = options;
     return runCommandWithOptionsInternal(options);
   }
@@ -124,8 +124,9 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    * Invoked by {@link #runCommandWithOptions(AbstractCommandOptions)} after {@code #options} has
    * been set.
    * @return the exit code this process should exit with
+   * @throws Exception 
    */
-  abstract int runCommandWithOptionsInternal(T options) throws IOException;
+  abstract int runCommandWithOptionsInternal(T options) throws Exception;
 
   /**
    * @return may be null

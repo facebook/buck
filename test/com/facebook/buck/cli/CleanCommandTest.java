@@ -34,8 +34,6 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
-import java.io.IOException;
-
 /**
  * Unit test for {@link CleanCommand}.
  */
@@ -46,7 +44,7 @@ public class CleanCommandTest extends EasyMockSupport {
   // exit code is 1 and that the appropriate error message is printed.
 
   @Test
-  public void testCleanCommandNoArguments() throws CmdLineException, IOException {
+  public void testCleanCommandNoArguments() throws CmdLineException, Exception {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
     ProjectFilesystem projectFilesystem = cleanCommand.getProjectFilesystem();
@@ -68,7 +66,7 @@ public class CleanCommandTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCleanCommandWithProjectArgument() throws CmdLineException, IOException {
+  public void testCleanCommandWithProjectArgument() throws CmdLineException, Exception {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
     ProjectFilesystem projectFilesystem = cleanCommand.getProjectFilesystem();

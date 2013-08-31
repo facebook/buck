@@ -30,7 +30,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 
 public class CachedTestIntegrationTest {
@@ -54,7 +53,7 @@ public class CachedTestIntegrationTest {
    * test reproduces that situation to ensure it does not happen again.
    */
   @Test
-  public void testPullingJarFromCacheDoesNotResultInReportingStaleTestResults() throws IOException {
+  public void testPullingJarFromCacheDoesNotResultInReportingStaleTestResults() throws Exception {
     final Charset charsetForTest = Charsets.UTF_8;
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "cached_test", tmp);

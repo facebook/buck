@@ -28,7 +28,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -84,39 +83,40 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
 
   /** Prints the expanded build rules from the specified build files to the console. */
   @Override
-  int runCommandWithOptionsInternal(AuditRulesOptions options) throws IOException {
+  int runCommandWithOptionsInternal(AuditRulesOptions options) throws Exception {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    ProjectBuildFileParser parser = new ProjectBuildFileParser(projectFilesystem,
+    try (ProjectBuildFileParser parser = new ProjectBuildFileParser(projectFilesystem,
         options.getBuckConfig().getDefaultIncludes(),
-        options.getBuckConfig().getPythonInterpreter());
-    PrintStream out = console.getStdOut();
-    for (String pathToBuildFile : options.getArguments()) {
-      // Print a comment with the path to the build file.
-      out.printf("# %s\n\n", pathToBuildFile);
+        options.getBuckConfig().getPythonInterpreter())) {
+      PrintStream out = console.getStdOut();
+      for (String pathToBuildFile : options.getArguments()) {
+        // Print a comment with the path to the build file.
+        out.printf("# %s\n\n", pathToBuildFile);
 
-      // Resolve the path specified by the user.
-      Path path = Paths.get(pathToBuildFile);
-      if (!path.isAbsolute()) {
-        Path root = projectFilesystem.getProjectRoot().toPath();
-        path = root.resolve(path);
-      }
+        // Resolve the path specified by the user.
+        Path path = Paths.get(pathToBuildFile);
+        if (!path.isAbsolute()) {
+          Path root = projectFilesystem.getProjectRoot().toPath();
+          path = root.resolve(path);
+        }
 
-      // Parse the rules from the build file.
-      List<Map<String, Object>> rawRules;
-      try {
-        rawRules = parser.getAllRules(path.toString());
-      } catch (BuildFileParseException e) {
-        throw new HumanReadableException(e);
-      }
+        // Parse the rules from the build file.
+        List<Map<String, Object>> rawRules;
+        try {
+          rawRules = parser.getAllRules(path.toString());
+        } catch (BuildFileParseException e) {
+          throw new HumanReadableException(e);
+        }
 
-      // Format and print the rules from the raw data, filtered by type.
-      final ImmutableSet<String> types = options.getTypes();
-      Predicate<String> includeType = new Predicate<String>() {
+        // Format and print the rules from the raw data, filtered by type.
+        final ImmutableSet<String> types = options.getTypes();
+        Predicate<String> includeType = new Predicate<String>() {
           @Override
           public boolean apply(String type) {
             return types.isEmpty() || types.contains(type);
           }};
-      printRulesToStdout(rawRules, includeType);
+          printRulesToStdout(rawRules, includeType);
+      }
     }
 
     return 0;

@@ -32,7 +32,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 
 public class NumThreadsIntegrationTest {
 
@@ -40,7 +39,7 @@ public class NumThreadsIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  public void testCommandLineNumThreadsArgOverridesBuckConfig() throws IOException {
+  public void testCommandLineNumThreadsArgOverridesBuckConfig() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "num_threads", tmp);
     workspace.setUp();
@@ -72,7 +71,7 @@ public class NumThreadsIntegrationTest {
   }
 
   @Test
-  public void testBuckProjectUsesNumThreadsInBuckConfigFile() throws IOException {
+  public void testBuckProjectUsesNumThreadsInBuckConfigFile() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "num_threads", tmp);
     workspace.setUp();

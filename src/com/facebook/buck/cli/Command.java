@@ -22,7 +22,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 
@@ -78,7 +77,7 @@ public enum Command {
 
   public int execute(String[] args,
       BuckConfig buckConfig,
-      CommandRunnerParams params) throws IOException {
+      CommandRunnerParams params) throws Exception {
       CommandRunner commandRunner;
       try {
         commandRunner = commandRunnerClass

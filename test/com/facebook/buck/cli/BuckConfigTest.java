@@ -399,7 +399,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testBuckPyIgnorePaths() throws IOException {
+  public void testBuckPyIgnorePaths() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "buck_py_ignore_paths", temporaryFolder);
     workspace.setUp();

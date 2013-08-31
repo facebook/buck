@@ -77,7 +77,7 @@ public class DaemonIntegrationTest {
           Main main = new Main(stdOut, firstThreadStdErr);
           int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(), "build", "//:sleep");
           assertEquals("Should return 0 when no command running.", 0, exitCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
           fail("Should not throw IOException");
           throw Throwables.propagate(e);
         }
@@ -90,7 +90,7 @@ public class DaemonIntegrationTest {
           Main main = new Main(stdOut, secondThreadStdErr);
           int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(), "targets");
           assertEquals("Should return 1 when command running.", Main.BUSY_EXIT_CODE, exitCode);
-        } catch (IOException e) {
+        } catch (Exception e) {
           fail("Should not throw IOException.");
           throw Throwables.propagate(e);
         }

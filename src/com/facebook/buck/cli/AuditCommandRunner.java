@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.IOException;
 import java.util.Map;
 
 public class AuditCommandRunner implements CommandRunner {
@@ -33,7 +32,7 @@ public class AuditCommandRunner implements CommandRunner {
   }
 
   @Override
-  public int runCommand(BuckConfig buckConfig, String[] args) throws IOException {
+  public int runCommand(BuckConfig buckConfig, String[] args) throws Exception {
     if (args.length == 0) {
       console.printBuildFailure("No audit command is given.");
       printUsage();

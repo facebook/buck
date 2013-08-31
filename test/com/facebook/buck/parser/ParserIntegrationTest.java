@@ -23,14 +23,12 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class ParserIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testParserFilesAreSandboxed() throws IOException {
+  public void testParserFilesAreSandboxed() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "parser_with_method_overrides", temporaryFolder);
     workspace.setUp();

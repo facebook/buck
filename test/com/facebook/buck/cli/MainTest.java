@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 
 public class MainTest {
@@ -58,7 +57,7 @@ public class MainTest {
   }
 
   @Test
-  public void testBuckNoArgs() throws IOException {
+  public void testBuckNoArgs() throws Exception {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
@@ -71,7 +70,7 @@ public class MainTest {
   }
 
   @Test
-  public void testBuckHelp() throws IOException {
+  public void testBuckHelp() throws Exception {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);

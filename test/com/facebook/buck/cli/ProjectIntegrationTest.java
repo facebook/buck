@@ -27,8 +27,6 @@ import com.google.common.base.Joiner;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 /**
  * Integration test for the {@code buck project} command.
  */
@@ -38,7 +36,7 @@ public class ProjectIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testBuckProject() throws IOException {
+  public void testBuckProject() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project1", temporaryFolder);
     workspace.setUp();
@@ -76,7 +74,7 @@ public class ProjectIntegrationTest {
    * from the version of JUnit checked into version control.)
    */
   @Test
-  public void testBuckProjectWithMultipleLibrariesInOneBuildFile() throws IOException {
+  public void testBuckProjectWithMultipleLibrariesInOneBuildFile() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "buck_project_multiple_libraries_in_one_build_file", temporaryFolder);
     workspace.setUp();

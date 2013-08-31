@@ -27,8 +27,6 @@ import com.google.common.base.Joiner;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 /**
  * Integration test for the {@code buck build} command with no arguments.
  */
@@ -38,7 +36,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testBuckBuildWithoutTarget() throws IOException {
+  public void testBuckBuildWithoutTarget() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_with_no_alias", temporaryFolder);
     workspace.setUp();
@@ -53,7 +51,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
   }
 
   @Test
-  public void testBuckBuildWithoutTargetWithSingleAliasConfigured() throws IOException {
+  public void testBuckBuildWithoutTargetWithSingleAliasConfigured() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_with_one_alias", temporaryFolder);
     workspace.setUp();
@@ -75,7 +73,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
    * are all displayed as targets in the order specified in .buckconfig.
    */
   @Test
-  public void testBuckBuildWithoutTargetWithUnderTenAliasesConfigured() throws IOException {
+  public void testBuckBuildWithoutTargetWithUnderTenAliasesConfigured() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_with_five_aliases", temporaryFolder);
     workspace.setUp();
@@ -99,7 +97,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
    * (based on the order specified in .buckconfig) are displayed as targets.
    */
   @Test
-  public void testBuckBuildWithoutTargetWithOverTenAliasesConfigured() throws IOException {
+  public void testBuckBuildWithoutTargetWithOverTenAliasesConfigured() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_with_fifteen_aliases", temporaryFolder);
     workspace.setUp();

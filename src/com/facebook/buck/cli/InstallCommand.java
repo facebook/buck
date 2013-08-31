@@ -49,7 +49,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
   }
 
   @Override
-  int runCommandWithOptionsInternal(InstallCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(InstallCommandOptions options) throws Exception {
     // Make sure that only one build target is specified.
     if (options.getArguments().size() != 1) {
       getStdErr().println("Must specify exactly one android_binary() or apk_genrule() rule.");

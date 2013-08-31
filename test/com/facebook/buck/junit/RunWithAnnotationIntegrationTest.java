@@ -35,7 +35,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import java.io.FileReader;
-import java.io.IOException;
 
 public class RunWithAnnotationIntegrationTest {
 
@@ -43,7 +42,7 @@ public class RunWithAnnotationIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testSimpleSuiteRun2TestCases() throws IOException {
+  public void testSimpleSuiteRun2TestCases() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "runwith", temporaryFolder);
     workspace.setUp();
@@ -54,7 +53,7 @@ public class RunWithAnnotationIntegrationTest {
   }
 
   @Test
-  public void testFailingSuiteRun3TestCasesWith1Failure() throws IOException {
+  public void testFailingSuiteRun3TestCasesWith1Failure() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "runwith", temporaryFolder);
     workspace.setUp();
@@ -66,7 +65,7 @@ public class RunWithAnnotationIntegrationTest {
   }
 
   @Test
-  public void testParametrizedTestRun4Cases() throws IOException {
+  public void testParametrizedTestRun4Cases() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "runwith", temporaryFolder);
     workspace.setUp();
