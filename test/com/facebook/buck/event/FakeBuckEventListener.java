@@ -25,7 +25,6 @@ public class FakeBuckEventListener {
   private final List<BuckEvent> events = Lists.newLinkedList();
 
   @Subscribe
-  @SuppressWarnings("unused")
   public void eventFired(BuckEvent event) {
     events.add(event);
   }

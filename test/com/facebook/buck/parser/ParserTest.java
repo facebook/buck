@@ -154,7 +154,6 @@ public class ParserTest extends EasyMockSupport {
    * appropriate message to help the user find the source of his error.
    */
   @Test
-  @SuppressWarnings("deprecation")
   public void testParseRawRulesWithBadDependency()
       throws NoSuchBuildTargetException, BuildFileParseException {
     String nonExistentBuildTarget = "//testdata/com/facebook/feed:util";
@@ -208,7 +207,6 @@ public class ParserTest extends EasyMockSupport {
    * parser.
    */
   @Test
-  @SuppressWarnings("deprecation")
   public void testCircularDependencyDetection()
       throws BuildFileParseException, NoSuchBuildTargetException {
     // Mock out objects that are not critical to parsing.

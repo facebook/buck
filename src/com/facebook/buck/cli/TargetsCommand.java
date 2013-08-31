@@ -178,7 +178,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   }
 
   @VisibleForTesting
-  @SuppressWarnings("deprecation")
   void printJsonForTargets(SortedMap<String, BuildRule> buildIndex,
       Iterable<String> defaultIncludes) throws BuildFileParseException {
     ImmutableList<String> includesCopy = ImmutableList.copyOf(defaultIncludes);
@@ -288,7 +287,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
    */
   @Nullable
   @VisibleForTesting
-  @SuppressWarnings("deprecation")
   String validateBuildTargetForFullyQualifiedTarget(
       String target, TargetsCommandOptions options) throws IOException {
     BuildTarget buildTarget;

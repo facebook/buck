@@ -59,7 +59,6 @@ public final class JUnitRunner {
 
   private final File outputDirectory;
   private final List<String> testClassNames;
-  @SuppressWarnings("unused")
   private final long defaultTestTimeoutMillis;
 
   public JUnitRunner(
