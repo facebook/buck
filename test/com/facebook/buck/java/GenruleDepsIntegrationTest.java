@@ -31,7 +31,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 
 public class GenruleDepsIntegrationTest {
@@ -41,7 +40,7 @@ public class GenruleDepsIntegrationTest {
 
   @Ignore("t2721181")
   @Test
-  public void testUpdatingJarBuildByGenruleAffectDependentRebuild() throws IOException {
+  public void testUpdatingJarBuildByGenruleAffectDependentRebuild() throws Exception {
     final Charset charsetForTest = Charsets.UTF_8;
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "genrule_test", tmp);

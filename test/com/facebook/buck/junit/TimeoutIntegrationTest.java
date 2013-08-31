@@ -55,7 +55,7 @@ public class TimeoutIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testThatTimeoutsInTestsWorkAsExpected() throws IOException {
+  public void testThatTimeoutsInTestsWorkAsExpected() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "timeouts", temporaryFolder);
     workspace.setUp();

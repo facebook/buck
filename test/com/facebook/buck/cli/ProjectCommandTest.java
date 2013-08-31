@@ -71,7 +71,7 @@ public class ProjectCommandTest {
 
   @Test
   public void testBasicProjectCommand()
-      throws IOException, NoSuchBuildTargetException, NoSuchMethodException {
+      throws Exception, NoSuchBuildTargetException, NoSuchMethodException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget javaLibraryTargetName = BuildTargetFactory.newInstance("//javasrc:java-library");

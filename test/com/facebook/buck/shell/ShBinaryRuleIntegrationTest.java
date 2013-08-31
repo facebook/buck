@@ -35,7 +35,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 public class ShBinaryRuleIntegrationTest {
@@ -44,7 +43,7 @@ public class ShBinaryRuleIntegrationTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testTrivialShBinaryRule() throws IOException {
+  public void testTrivialShBinaryRule() throws Exception {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -61,7 +60,7 @@ public class ShBinaryRuleIntegrationTest {
   }
 
   @Test
-  public void testShBinaryWithResources() throws IOException {
+  public void testShBinaryWithResources() throws Exception {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -81,7 +80,7 @@ public class ShBinaryRuleIntegrationTest {
   }
 
   @Test
-  public void testShBinaryCannotOverwriteResource() throws IOException {
+  public void testShBinaryCannotOverwriteResource() throws Exception {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

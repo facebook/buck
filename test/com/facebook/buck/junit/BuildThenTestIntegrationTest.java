@@ -29,8 +29,6 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class BuildThenTestIntegrationTest {
 
   @Rule
@@ -42,7 +40,7 @@ public class BuildThenTestIntegrationTest {
    * available.
    */
   @Test
-  public void testBuildThenTest() throws IOException {
+  public void testBuildThenTest() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "build_then_test", temporaryFolder);
     workspace.setUp();
@@ -72,7 +70,7 @@ public class BuildThenTestIntegrationTest {
    * Test should pass even when we run tests on non JUnit test classes
    */
   @Test
-  public void testRunningTestOnClassWithoutTestMethods() throws IOException {
+  public void testRunningTestOnClassWithoutTestMethods() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "build_then_test", temporaryFolder);
     workspace.setUp();

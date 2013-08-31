@@ -27,15 +27,13 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class CallFlowIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void testCallFlow() throws IOException {
+  public void testCallFlow() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "test_call_flow", temporaryFolder);
     workspace.setUp();

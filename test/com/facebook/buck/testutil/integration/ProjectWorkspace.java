@@ -137,7 +137,7 @@ public class ProjectWorkspace {
    *   {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
-  public ProcessResult runBuckCommand(String... args) throws IOException {
+  public ProcessResult runBuckCommand(String... args) throws Exception {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
     CapturingPrintStream stderr = new CapturingPrintStream();

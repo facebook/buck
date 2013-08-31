@@ -26,15 +26,13 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AuditRulesCommandIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  public void testBuckAuditRules() throws IOException {
+  public void testBuckAuditRules() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "audit_rules", tmp);
     workspace.setUp();

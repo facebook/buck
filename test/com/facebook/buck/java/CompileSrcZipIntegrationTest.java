@@ -24,15 +24,13 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class CompileSrcZipIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  public void testJavaLibraryRuleAcceptsZipFileOfJavaSourceCodeAsInput() throws IOException {
+  public void testJavaLibraryRuleAcceptsZipFileOfJavaSourceCodeAsInput() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "src_zip", tmp);
     workspace.setUp();

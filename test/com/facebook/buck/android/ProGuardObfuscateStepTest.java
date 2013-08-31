@@ -39,14 +39,15 @@ public class ProGuardObfuscateStepTest {
     ProGuardObfuscateStep.createEmptyZip(tmpFile);
 
     // Try to read it.
-    ZipFile zipFile = new ZipFile(tmpFile);
-    int totalSize = 0;
-    List<? extends ZipEntry> entries = Collections.list(zipFile.entries());
+    try (ZipFile zipFile = new ZipFile(tmpFile)) {
+      int totalSize = 0;
+      List<? extends ZipEntry> entries = Collections.list(zipFile.entries());
 
-    assertTrue("Expected either 0 or 1 entry", entries.size() <= 1);
-    for (ZipEntry entry : entries) {
-      totalSize += entry.getSize();
+      assertTrue("Expected either 0 or 1 entry", entries.size() <= 1);
+      for (ZipEntry entry : entries) {
+        totalSize += entry.getSize();
+      }
+      assertEquals("Zip file should have zero-length contents", 0, totalSize);
     }
-    assertEquals("Zip file should have zero-length contents", 0, totalSize);
   }
 }

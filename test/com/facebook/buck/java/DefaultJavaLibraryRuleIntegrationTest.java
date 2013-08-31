@@ -51,7 +51,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Test
-  public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi() throws IOException {
+  public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi() throws Exception {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "abi", tmp);
     workspace.setUp();
@@ -117,7 +117,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
   }
 
   @Test
-  public void testFileChangeThatDoesNotModifyAbiAvoidsRebuild() throws IOException {
+  public void testFileChangeThatDoesNotModifyAbiAvoidsRebuild() throws Exception {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "rulekey_changed_while_abi_stable", tmp);
     workspace.setUp();

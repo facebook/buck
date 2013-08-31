@@ -202,7 +202,7 @@ public final class Main {
    * @return an exit code or {@code null} if this is a process that should not exit
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public int runMainWithExitCode(File projectRoot, String... args) throws IOException {
+  public int runMainWithExitCode(File projectRoot, String... args) throws Exception {
     if (args.length == 0) {
       return usage();
     }
@@ -353,7 +353,7 @@ public final class Main {
   }
 
   @VisibleForTesting
-  int tryRunMainWithExitCode(File projectRoot, String... args) throws IOException {
+  int tryRunMainWithExitCode(File projectRoot, String... args) throws Exception {
     // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     if (!commandSemaphore.tryAcquire()) {
       return BUSY_EXIT_CODE;

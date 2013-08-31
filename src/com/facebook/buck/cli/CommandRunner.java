@@ -16,14 +16,13 @@
 
 package com.facebook.buck.cli;
 
-import java.io.IOException;
-
 public interface CommandRunner {
 
   /**
    * @param args the arguments passed to the command, not including the command name
    * @return the appropriate exit code for the command
+   * @throws Exception 
    */
-  public int runCommand(BuckConfig buckConfig, String[] args) throws IOException;
+  public int runCommand(BuckConfig buckConfig, String[] args) throws Exception;
 
 }

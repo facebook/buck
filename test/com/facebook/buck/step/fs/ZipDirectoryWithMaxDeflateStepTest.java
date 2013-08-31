@@ -65,23 +65,23 @@ public class ZipDirectoryWithMaxDeflateStepTest {
 
     assertTrue(outputApk.exists());
 
-    ZipFile resultZip = new ZipFile(outputApk.getAbsoluteFile());
-    ZipEntry storedFile = resultZip.getEntry("StoredFile");
-    assertEquals("StoredFile should have been STORED else Froyo will crash on launch.",
-        storedFile.getMethod(),
-        ZipEntry.STORED);
+    try (ZipFile resultZip = new ZipFile(outputApk.getAbsoluteFile())) {
+      ZipEntry storedFile = resultZip.getEntry("StoredFile");
+      assertEquals("StoredFile should have been STORED else Froyo will crash on launch.",
+          storedFile.getMethod(),
+          ZipEntry.STORED);
 
-    ZipEntry deflatedFile = resultZip.getEntry("subDir/DeflatedFile");
-    assertEquals(
-        "DeflatedFile should have been DEFLATED",
-        deflatedFile.getMethod(),
-        ZipEntry.DEFLATED);
+      ZipEntry deflatedFile = resultZip.getEntry("subDir/DeflatedFile");
+      assertEquals(
+          "DeflatedFile should have been DEFLATED",
+          deflatedFile.getMethod(),
+          ZipEntry.DEFLATED);
 
-    ZipEntry compressedFile = resultZip.getEntry("CompressedFile.xz");
-    assertEquals("CompressedFile.xz should have been STORED, it's already compressed",
-        compressedFile.getMethod(),
-        ZipEntry.STORED);
-
+      ZipEntry compressedFile = resultZip.getEntry("CompressedFile.xz");
+      assertEquals("CompressedFile.xz should have been STORED, it's already compressed",
+          compressedFile.getMethod(),
+          ZipEntry.STORED);
+    }
     EasyMock.verify(executionContext);
   }
 
