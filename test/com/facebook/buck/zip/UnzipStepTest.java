@@ -61,12 +61,13 @@ public class UnzipStepTest {
     File bin2 = new File(extractFolder.getAbsolutePath() + "/subdir/2.bin");
     assertTrue(bin2.exists());
     assertTrue(new File(extractFolder.getAbsolutePath() + "/emptydir").isDirectory());
-    FileInputStream input = new FileInputStream(bin2);
-    byte[] buffer = new byte[DUMMY_FILE_CONTENTS.length];
-    int bytesRead = input.read(buffer, 0, DUMMY_FILE_CONTENTS.length);
-    assertEquals(DUMMY_FILE_CONTENTS.length, bytesRead);
-    for (int i = 0; i < DUMMY_FILE_CONTENTS.length; i++) {
-      assertEquals(DUMMY_FILE_CONTENTS[i], buffer[i]);
+    try (FileInputStream input = new FileInputStream(bin2)) {
+      byte[] buffer = new byte[DUMMY_FILE_CONTENTS.length];
+      int bytesRead = input.read(buffer, 0, DUMMY_FILE_CONTENTS.length);
+      assertEquals(DUMMY_FILE_CONTENTS.length, bytesRead);
+      for (int i = 0; i < DUMMY_FILE_CONTENTS.length; i++) {
+        assertEquals(DUMMY_FILE_CONTENTS[i], buffer[i]);
+      }
     }
   }
 }

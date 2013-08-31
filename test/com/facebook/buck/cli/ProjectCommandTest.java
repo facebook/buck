@@ -70,8 +70,7 @@ public class ProjectCommandTest {
   private static final ArtifactCache artifactCache = new NoopArtifactCache();
 
   @Test
-  public void testBasicProjectCommand()
-      throws IOException, NoSuchBuildTargetException, NoSuchMethodException {
+  public void testBasicProjectCommand() throws Exception {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget javaLibraryTargetName = BuildTargetFactory.newInstance("//javasrc:java-library");
@@ -137,7 +136,7 @@ public class ProjectCommandTest {
   }
 
   private PartialGraph createGraphFromBuildRules(List<BuildRule> rules) {
-    MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
+    MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
     for (BuildRule rule : rules) {
       for (BuildRule dep : rule.getDeps()) {
         graph.addEdge(rule, dep);

@@ -233,11 +233,12 @@ public class SplitZipStep implements Step {
   }
 
   private static String findAnyClass(File jarFile) throws IOException {
-    ZipFile inZip = new ZipFile(jarFile);
-    for (ZipEntry entry : Collections.list(inZip.entries())) {
-      Matcher m = classFilePattern.matcher(entry.getName());
-      if (m.matches()) {
-        return m.group(1).replace('/', '.');
+    try (ZipFile inZip = new ZipFile(jarFile)) {
+      for (ZipEntry entry : Collections.list(inZip.entries())) {
+        Matcher m = classFilePattern.matcher(entry.getName());
+        if (m.matches()) {
+          return m.group(1).replace('/', '.');
+        }
       }
     }
     // TODO(user): It's possible for this to happen by chance, so we should handle it better.
