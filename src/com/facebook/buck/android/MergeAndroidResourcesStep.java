@@ -165,28 +165,29 @@ public class MergeAndroidResourcesStep implements Step {
 
       // Read the symbols file and parse each line as a Resource.
       Readable readable = filePathToReadable.apply(symbolsFile);
-      Scanner scanner = new Scanner(readable);
-      while (scanner.hasNext()) {
-        String line = scanner.nextLine();
-        Matcher matcher = TEXT_SYMBOLS_LINE.matcher(line);
-        boolean isMatch = matcher.matches();
-        Preconditions.checkState(isMatch, "Should be able to match '%s'.", line);
-        String idType = matcher.group(1);
-        String type = matcher.group(2);
-        String name = matcher.group(3);
-        String idValue = matcher.group(4);
+      try (Scanner scanner = new Scanner(readable)) {
+        while (scanner.hasNext()) {
+          String line = scanner.nextLine();
+          Matcher matcher = TEXT_SYMBOLS_LINE.matcher(line);
+          boolean isMatch = matcher.matches();
+          Preconditions.checkState(isMatch, "Should be able to match '%s'.", line);
+          String idType = matcher.group(1);
+          String type = matcher.group(2);
+          String name = matcher.group(3);
+          String idValue = matcher.group(4);
 
-        // We're only doing the remapping so Roboelectric is happy and it is already ignoring the
-        // id references found in the styleable section.  So let's do that as well so we don't have
-        // to get fancier than is needed.  That is, just re-enumerate all app-level resource ids
-        // and ignore everything else, allowing the styleable references to be messed up.
-        String idValueToUse = idValue;
-        if (reenumerate && idValue.startsWith("0x7f")) {
-          idValueToUse = String.format("0x%08x", enumerator.next());
+          // We're only doing the remapping so Roboelectric is happy and it is already ignoring the
+          // id references found in the styleable section.  So let's do that as well so we don't have
+          // to get fancier than is needed.  That is, just re-enumerate all app-level resource ids
+          // and ignore everything else, allowing the styleable references to be messed up.
+          String idValueToUse = idValue;
+          if (reenumerate && idValue.startsWith("0x7f")) {
+            idValueToUse = String.format("0x%08x", enumerator.next());
+          }
+
+          Resource resource = new Resource(idType, type, name, idValue, idValueToUse);
+          rDotJavaPackageToSymbolsFiles.put(packageName, resource);
         }
-
-        Resource resource = new Resource(idType, type, name, idValue, idValueToUse);
-        rDotJavaPackageToSymbolsFiles.put(packageName, resource);
       }
     }
     return rDotJavaPackageToSymbolsFiles;
