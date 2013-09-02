@@ -58,20 +58,28 @@ public class TestResultFormatter {
 
       for (TestResultSummary testResult : testCase.getTestResults()) {
         if (!testResult.isSuccess()) {
-          addTo.add(String.format("FAILURE %s: %s",
-              testResult.getTestName(),
-              testResult.getMessage()));
-          addTo.add(testResult.getStacktrace());
-
-          if (testResult.getStdOut() != null) {
-            addTo.add("====STANDARD OUT====", testResult.getStdOut());
-          }
-
-          if (testResult.getStdErr() != null) {
-            addTo.add("====STANDARD ERR====", testResult.getStdErr());
-          }
+          reportResultSummary(addTo, testResult);
         }
       }
+    }
+  }
+
+  public static void reportResultSummary(ImmutableList.Builder<String> addTo,
+                                         TestResultSummary testResult) {
+    addTo.add(String.format("FAILURE %s: %s",
+        testResult.getTestName(),
+        testResult.getMessage()));
+
+    if (testResult.getStacktrace() != null) {
+      addTo.add(testResult.getStacktrace());
+    }
+
+    if (testResult.getStdOut() != null) {
+      addTo.add("====STANDARD OUT====", testResult.getStdOut());
+    }
+
+    if (testResult.getStdErr() != null) {
+      addTo.add("====STANDARD ERR====", testResult.getStdErr());
     }
   }
 
