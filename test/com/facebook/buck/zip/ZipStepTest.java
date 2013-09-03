@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step.fs;
+package com.facebook.buck.zip;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;

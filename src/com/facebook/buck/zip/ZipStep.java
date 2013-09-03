@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step.fs;
+package com.facebook.buck.zip;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;

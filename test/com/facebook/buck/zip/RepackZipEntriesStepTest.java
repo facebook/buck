@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step.fs;
+package com.facebook.buck.zip;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
@@ -22,8 +22,10 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

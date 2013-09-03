@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.step.fs;
+package com.facebook.buck.zip;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,7 +35,7 @@ import java.util.zip.ZipFile;
 public class ZipDirectoryWithMaxDeflateStepTest {
   private File outputApk;
   private File emptyTempDir;
-  private final String zipDirectory = "testdata/com/facebook/buck/shell/zipdirectorytest";
+  private final String zipDirectory = "testdata/com/facebook/buck/zip/zipdirectorytest";
   private File emptyOutputDir;
 
   @Before

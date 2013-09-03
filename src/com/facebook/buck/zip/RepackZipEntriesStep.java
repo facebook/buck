@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.step.fs;
+package com.facebook.buck.zip;
 
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;

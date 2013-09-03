@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.step.fs;
+package com.facebook.buck.zip;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
