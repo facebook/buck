@@ -1,0 +1,13 @@
+# Both files were retrieved from asm-4.1-bin.zip, which was retrieved from
+# http://forge.ow2.org/projects/asm. The src.zip in asm-4.1.bin.zip was renamed
+# to asm-4.1-src.zip for our purposes.
+# The javadoc_url points to 4.0 because the 4.1 Javadoc is not online.
+prebuilt_jar(
+  name = 'asm',
+  binary_jar = 'asm-debug-all-4.1.jar',
+  source_jar = 'asm-4.1-src.zip',
+  javadoc_url = 'http://asm.ow2.org/asm40/javadoc/user/',
+  visibility = [
+    'PUBLIC',
+  ],
+)

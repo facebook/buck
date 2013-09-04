@@ -32,6 +32,7 @@
   </fileset>
 
   <fileset dir="${third-party.dir}" id="third-party.jars">
+    <include name="java/asm/asm-debug-all-4.1.jar" />
     <include name="java/astyanax/astyanax-cassandra-1.56.38.jar" />
     <include name="java/astyanax/astyanax-cassandra-1.56.38-javadoc.jar" />
     <include name="java/astyanax/astyanax-cassandra-1.56.38-sources.jar" />
