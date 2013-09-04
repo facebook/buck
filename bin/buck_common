@@ -86,6 +86,7 @@ if [ ! -e "build/buck.jar" ]; then
 
 fi
 
+
 # Get current buck version.
 BUCK_REPOSITORY_DIRTY=0
 BUCK_CURRENT_VERSION="N/A"
