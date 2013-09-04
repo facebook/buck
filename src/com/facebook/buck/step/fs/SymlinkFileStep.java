@@ -18,7 +18,6 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -60,10 +59,7 @@ public class SymlinkFileStep implements Step {
     Path targetPath = Paths.get(pathRelativizer.apply(target));
     Path sourcePath = Paths.get(pathRelativizer.apply(source));
     try {
-      if (targetPath.toFile().exists() && !targetPath.toFile().delete()) {
-        throw new HumanReadableException("Failed to delete symbolic link for %s",
-            targetPath.toAbsolutePath());
-      }
+      java.nio.file.Files.deleteIfExists(targetPath);
       context.getProjectFilesystem().createSymLink(sourcePath, targetPath);
       return 0;
     } catch (IOException e) {
