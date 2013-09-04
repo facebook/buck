@@ -106,7 +106,6 @@ public class FilterResourcesStepTest {
         scaleDest,
         context
     );
-    EasyMock.expectLastCall();
 
     EasyMock.expect(scaler.isAvailable(context)).andReturn(true);
     EasyMock.replay(scaler);

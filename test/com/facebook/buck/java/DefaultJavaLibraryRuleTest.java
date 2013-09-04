@@ -790,8 +790,7 @@ public class DefaultJavaLibraryRuleTest {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
 
     BuildContext context = EasyMock.createMock(BuildContext.class);
-    EasyMock.expect(context.getDependencyGraph()).andReturn(graph);
-    EasyMock.expectLastCall().anyTimes();
+    EasyMock.expect(context.getDependencyGraph()).andReturn(graph).anyTimes();
 
     EasyMock.expect(context.getBuildDependencies()).andReturn(buildDependencies).anyTimes();
 
