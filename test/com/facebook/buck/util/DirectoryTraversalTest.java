@@ -51,6 +51,9 @@ public class DirectoryTraversalTest {
     // - | b/c/b_c_file
     //   | b/d/
     // * | b/d/b_d_file
+    // * | loop/
+    // * | loop/1
+    // - | loop/1/upwards   symlinks to ../
     // * | file
     //
     // Only the files flagged by '*' should be visited, because the directories flagged by 'i' are
@@ -61,7 +64,9 @@ public class DirectoryTraversalTest {
         "file"
     );
     final ImmutableSet.Builder<String> visitedPaths = ImmutableSet.builder();
-    new DirectoryTraversal(temporaryFolder.getRoot(), ImmutableSet.<String>of("a", "b/c")) {
+    new DirectoryTraversal(
+        temporaryFolder.getRoot(),
+        ImmutableSet.of("a", "b/c", "loop", "loop/1")) {
       @Override
       public void visit(File file, String relativePath) {
         visitedPaths.add(relativePath);

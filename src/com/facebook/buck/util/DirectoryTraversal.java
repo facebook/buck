@@ -20,23 +20,24 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.EnumSet;
 
 /**
- * Traverses all files in a directory. This class <em>will</em> follow symlinks. Unfortunately,
- * Java 6 is not "symlink aware". In Java 7, this class could be replaced with
- * java.nio.file.Files.walkFileTree.
- * <p>
- * In the event where symlinks should be traversed, consider shelling out to Python and using
- * os.walk(), which provides the option to traverse symlinks.
+ * Traverses all files in a directory. This class <em>will</em> follow symlinks.
  */
 public abstract class DirectoryTraversal {
 
   private final File root;
   private final ImmutableSet<String> ignorePaths;
 
-  /** @param root must be a directory with no cyclic symlinks as children */
+  /** @param root must be a directory */
   public DirectoryTraversal(File root, ImmutableSet<String> ignorePaths) {
     this.root = Preconditions.checkNotNull(root);
     this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
@@ -50,36 +51,45 @@ public abstract class DirectoryTraversal {
     return root;
   }
 
-  private static class DirectoryWithRelativePath {
-    private final File directory;
-    private final String relativePath;
-    private DirectoryWithRelativePath(File directory, String relativePath) {
-      this.directory = directory;
-      this.relativePath = relativePath;
-    }
-  }
-
   public final void traverse() {
     Preconditions.checkState(root.isDirectory(), "Must be a directory: %s", root);
 
-    Deque<DirectoryWithRelativePath> directoriesToVisit =
-        new ArrayDeque<DirectoryWithRelativePath>();
-    directoriesToVisit.add(new DirectoryWithRelativePath(root, ""));
-    while (!directoriesToVisit.isEmpty()) {
-      DirectoryWithRelativePath directoryWithRelativePath = directoriesToVisit.pop();
-      String relativePath = directoryWithRelativePath.relativePath;
-      for (File entry : directoryWithRelativePath.directory.listFiles()) {
-        if (entry.isDirectory()) {
-          String directoryPath = relativePath + (relativePath.isEmpty() ? "" : "/")
-              + entry.getName();
-          if (!ignorePaths.contains(directoryPath)) {
-            directoriesToVisit.push(new DirectoryWithRelativePath(entry, directoryPath));
-          }
+    final Path rootPath = root.toPath();
+    FileVisitor<Path> visitor = new FileVisitor<Path>() {
+      @Override
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        if (ignorePaths.contains(rootPath.relativize(dir).toString())) {
+          return FileVisitResult.SKIP_SUBTREE;
         } else {
-          // We do not assert that entry.isFile() because it may be a symlink to a file.
-          visit(entry, relativePath + (relativePath.isEmpty() ? "" : "/") + entry.getName());
+          return FileVisitResult.CONTINUE;
         }
       }
+
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        visit(file.toFile(), rootPath.relativize(file).toString());
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        return FileVisitResult.CONTINUE;
+      }
+    };
+
+    try {
+      Files.walkFileTree(
+          rootPath, EnumSet.of(FileVisitOption.FOLLOW_LINKS), /* maxDepth */ Integer.MAX_VALUE,
+          visitor);
+    } catch (IOException e) {
+      // IOException is only thrown if it's thrown by the visitor functions.
+      // Our visitor should not throw.
+      throw new RuntimeException(e);
     }
   }
 
