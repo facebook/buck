@@ -23,13 +23,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -118,7 +118,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     } else {
       BuildTarget buildTarget = buildRuleParams.getBuildTarget();
       pathToTextSymbolsDir = String.format("%s/%s__%s_text_symbols__",
-          BuckConstant.BIN_DIR,
+          BuckConstant.GEN_DIR,
           buildTarget.getBasePathWithSlash(),
           buildTarget.getShortName());
       pathToTextSymbolsFile = pathToTextSymbolsDir + "/R.txt";
@@ -239,7 +239,9 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
 
     return super.appendToRuleKey(builder)
         .set("res", resFiles.build())
-        .set("assets", assetsFiles.build());
+        .set("rDotJavaPackage", rDotJavaPackage)
+        .set("assets", assetsFiles.build())
+        .set("manifestFile", manifestFile);
   }
 
   public static Builder newAndroidResourceRuleBuilder(AbstractBuildRuleBuilderParams params) {
