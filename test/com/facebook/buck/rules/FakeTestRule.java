@@ -57,6 +57,11 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
+  public Buildable getBuildable() {
+    return null;
+  }
+
+  @Override
   public BuildRuleType getType() {
     return type;
   }

@@ -225,7 +225,17 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         continue;
       }
 
-      String outputPath = ((Buildable)buildRule).getPathToOutputFile();
+      String outputPath;
+      Buildable buildable = buildRule.getBuildable();
+      if (buildable != null) {
+        outputPath = buildable.getPathToOutputFile();
+      } else if (BuildRuleType.PROJECT_CONFIG.equals(buildRule.getType())) {
+        // We know that project_config() rules are special.
+        outputPath = null;
+      } else {
+        throw new RuntimeException("No Buildable for " + buildRule.getFullyQualifiedName());
+      }
+
       if (outputPath != null) {
         targetRule.put("buck.output_file", outputPath);
       }

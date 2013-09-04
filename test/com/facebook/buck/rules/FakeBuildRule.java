@@ -56,6 +56,11 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
+  public Buildable getBuildable() {
+    return this;
+  }
+
+  @Override
   public BuildRuleType getType() {
     return type;
   }
