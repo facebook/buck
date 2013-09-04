@@ -124,8 +124,7 @@ else
 
     # Compute UID based on relevant portions of the output git tree.
     buck_version_uid_input=`mktemp "${TMPDIR}/buck-version-uid-input.XXXXXX"` || exit 1
-    git ls-tree --full-tree ${git_tree_out} bin build.xml config lib third-party \
-      > ${buck_version_uid_input} || exit 1
+    git ls-tree --full-tree ${git_tree_out} > ${buck_version_uid_input} || exit 1
     BUCK_VERSION_UID=`git hash-object ${buck_version_uid_input}` || exit 1
     rm -f "${buck_version_uid_input}"
   else
