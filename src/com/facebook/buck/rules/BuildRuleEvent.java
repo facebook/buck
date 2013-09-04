@@ -22,6 +22,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.io.IOException;
+
 /**
  * Base class for events about build rules.
  */
@@ -107,10 +109,18 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
 
     @Override
     public String toString() {
-      return String.format("BuildRuleFinished(%s): %s %s",
+      RuleKey ruleKey;
+      try {
+        ruleKey = getBuildRule().getRuleKey();
+      } catch (IOException e) {
+        throw new RuntimeException("RuleKey should already be computed if this is built.", e);
+      }
+
+      return String.format("BuildRuleFinished(%s): %s %s %s",
           getBuildRule(),
           getStatus(),
-          getCacheResult());
+          getCacheResult(),
+          ruleKey);
     }
 
     @Override
