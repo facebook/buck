@@ -12,6 +12,7 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/step:step',
@@ -26,7 +27,9 @@ java_test(
   name = 'rules',
   srcs = glob(['*Test.java']),
   source_under_test = [
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:types',
   ],
   deps = [
     '//lib:easymock',
@@ -42,6 +45,7 @@ java_test(
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/shell:rules',

@@ -15,6 +15,7 @@ java_library(
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util/environment:environment',
@@ -29,6 +30,7 @@ java_library(
     '//lib:guava',
     '//lib:ddmlib',
     '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
   ],
   visibility = [
@@ -70,6 +72,7 @@ java_test(
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/parser:project',
     '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/step:step',

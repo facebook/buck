@@ -203,7 +203,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
+    super.appendToRuleKey(builder)
         .set("manifest", manifest)
         .set("target", target)
         .set("packageType", packageType.toString())
@@ -212,9 +212,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
         .set("compressResources", compressResources)
         .set("primaryDexSubstrings", primaryDexSubstrings)
-        .set("outputGenDirectory", outputGenDirectory)
-        .set("resourceFilter", resourceFilter.getDescription());
-   }
+        .set("resourceFilter", resourceFilter.getDescription())
+        .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString());
+    return dexSplitMode.appendToRuleKey("dexSplitMode", builder);
+  }
 
   public ImmutableSortedSet<BuildRule> getBuildRulesToExcludeFromDex() {
     return buildRulesToExcludeFromDex;

@@ -14,6 +14,7 @@ java_library(
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
@@ -70,6 +71,7 @@ java_library(
   srcs = RULES_SRCS,
   deps = [
     ':r',
+    ':split_dex',
     ':steps',
     '//lib:guava',
     '//lib:jsr305',
@@ -77,6 +79,7 @@ java_library(
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/shell:rules',
@@ -92,11 +95,30 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
+SPLIT_DEX_SRCS = [
+  'DexSplitMode.java',
+  'DexStore.java',
+]
+
+java_library(
+  name = 'split_dex',
+  srcs = SPLIT_DEX_SRCS,
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/rules:build_rule',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_library(
   name = 'steps',
-  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + R_DOT_JAVA_SRCS + RULES_SRCS),
+  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + R_DOT_JAVA_SRCS + RULES_SRCS + SPLIT_DEX_SRCS),
   deps = [
     ':exceptions',
+    ':split_dex',
     '//lib:guava',
     '//lib:jsr305',
     '//lib:sdklib',

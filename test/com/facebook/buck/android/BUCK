@@ -8,6 +8,7 @@ java_test(
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:r',
     '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/android:split_dex',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
@@ -15,6 +16,7 @@ java_test(
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/shell:rules',
@@ -36,6 +38,7 @@ java_test(
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:r',
     '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/android:split_dex',
     '//src/com/facebook/buck/android:steps',
   ],
 )

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Preconditions;
 
@@ -47,5 +48,12 @@ class DexSplitMode {
   ZipSplitter.DexSplitStrategy getDexSplitStrategy() {
     Preconditions.checkState(isShouldSplitDex());
     return dexSplitStrategy;
+  }
+
+  public RuleKey.Builder appendToRuleKey(String prefix, RuleKey.Builder builder) {
+    builder.set(prefix + ".shouldSplitDex", shouldSplitDex);
+    builder.set(prefix + ".dexStore", dexStore.name());
+    builder.set(prefix + ".dexSplitStrategy", dexSplitStrategy.name());
+    return builder;
   }
 }

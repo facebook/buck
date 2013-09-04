@@ -18,6 +18,7 @@ java_test(
     '//src/com/facebook/buck/parser:support',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/parser:project',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/util:constants',
@@ -43,6 +44,7 @@ java_library(
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
   ],
   visibility = [
