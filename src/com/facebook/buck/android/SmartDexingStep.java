@@ -15,6 +15,10 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.dalvik.ClasspathTraversal;
+import com.facebook.buck.dalvik.ClasspathTraverser;
+import com.facebook.buck.dalvik.DefaultClasspathTraverser;
+import com.facebook.buck.dalvik.FileLike;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -25,10 +29,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.zip.ZipStep;
-import com.facebook.buck.util.ClasspathTraversal;
-import com.facebook.buck.util.ClasspathTraverser;
-import com.facebook.buck.util.DefaultClasspathTraverser;
-import com.facebook.buck.util.FileLike;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;

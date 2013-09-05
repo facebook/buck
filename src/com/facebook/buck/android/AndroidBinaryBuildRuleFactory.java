@@ -16,13 +16,13 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Optional;
 
 import java.util.List;

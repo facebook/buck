@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.dalvik;
 
 import com.google.common.hash.HashCode;
 

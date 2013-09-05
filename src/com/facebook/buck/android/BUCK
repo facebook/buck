@@ -75,6 +75,7 @@ java_library(
     ':steps',
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
@@ -105,6 +106,7 @@ java_library(
   srcs = SPLIT_DEX_SRCS,
   deps = [
     '//lib:guava',
+    '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/rules:build_rule',
   ],
@@ -122,6 +124,7 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//lib:sdklib',
+    '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/shell:steps',

@@ -14,12 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.dalvik;
 
 import java.io.IOException;
 
-public interface ClasspathTraverser {
+/**
+ * @see ClasspathTraversal
+ */
+public class DefaultClasspathTraverser implements ClasspathTraverser {
 
-  public void traverse(ClasspathTraversal traversal) throws IOException;
+  public DefaultClasspathTraverser() { }
+
+  @Override
+  public void traverse(ClasspathTraversal traversal) throws IOException {
+    traversal.traverse();
+  }
 
 }

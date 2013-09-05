@@ -12,6 +12,8 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
     '//third-party/java/asm:asm',
   ],
   visibility = [

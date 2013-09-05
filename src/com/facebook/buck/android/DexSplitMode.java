@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.ZipSplitter;
 import com.google.common.base.Preconditions;
 
 /**

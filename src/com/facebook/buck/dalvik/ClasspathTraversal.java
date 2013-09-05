@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.dalvik;
 
+import com.facebook.buck.util.DirectoryTraversal;
+import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashCodes;

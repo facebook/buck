@@ -14,23 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.dalvik;
 
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
+import com.google.common.base.Preconditions;
+import com.google.common.io.InputSupplier;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-abstract class AbstractFileLike implements FileLike {
-  @Override
-  public HashCode fastHash() throws IOException {
-    // Default non-fast implementation.
-    return ByteStreams.hash(new FileLikeInputSupplier(this), Hashing.sha1());
+public class FileLikeInputSupplier implements InputSupplier<InputStream> {
+  private final FileLike fileLike;
+
+  public FileLikeInputSupplier(FileLike fileLike) {
+    this.fileLike = Preconditions.checkNotNull(fileLike);
   }
 
   @Override
-  public String toString() {
-    return getRelativePath() + " (in " + getContainer() + ")";
+  public InputStream getInput() throws IOException {
+    return fileLike.getInput();
   }
 }
