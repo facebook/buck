@@ -123,6 +123,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     args.add("-printseeds").add(proguardDirectory + "/seeds.txt");
     args.add("-printusage").add(proguardDirectory + "/usage.txt");
     args.add("-printmapping").add(proguardDirectory + "/mapping.txt");
+    args.add("-printconfiguration").add(proguardDirectory + "/configuration.txt");
 
     return args.build();
   }
