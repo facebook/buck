@@ -36,6 +36,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -86,21 +88,28 @@ public class NdkLibraryTest {
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
-    File projectRoot = createMock(File.class);
-    expect(executionContext.getProjectDirectoryRoot()).andReturn(projectRoot);
-    expect(projectRoot.getAbsolutePath()).andReturn("/foo");
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    Function<String, String> pathTransform = new Function<String, String>() {
+      @Override
+      public String apply(String pathRelativeTo) {
+        return "/foo/" + pathRelativeTo;
+      }
+    };
+    expect(executionContext.getProjectFilesystem()).andReturn(projectFilesystem);
+    expect(projectFilesystem.getPathRelativizer()).andReturn(pathTransform);
     File ndkDir = createMock(File.class);
     expect(executionContext.getNdkRoot()).andReturn(Optional.of(ndkDir));
     expect(ndkDir.getAbsolutePath()).andReturn("/ndk-r8b");
 
-    replay(executionContext, projectRoot, ndkDir);
+    replay(executionContext, projectFilesystem, ndkDir);
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(
             String.format(
               "/ndk-r8b/ndk-build -j %d -C %s/ flag1 flag2 " +
               "APP_PROJECT_PATH=/foo/%s/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
-              "NDK_OUT=/foo/%s/%s/%s/",
+              "NDK_OUT=/foo/%s/%s/%s/ " +
+              "NDK_LIBS_OUT=/foo/%s/%s/%s/libs/",
               Runtime.getRuntime().availableProcessors(),
               basePath,
               BuckConstant.BIN_DIR,
@@ -109,10 +118,13 @@ public class NdkLibraryTest {
               basePath,
               BuckConstant.BIN_DIR,
               basePath,
+              "__libbase",
+              BuckConstant.BIN_DIR,
+              basePath,
               "__libbase")
         ),
         steps.subList(0, 1),
         executionContext);
-    verify(executionContext, projectRoot);
+    verify(executionContext, projectFilesystem);
   }
 }

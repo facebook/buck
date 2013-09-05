@@ -19,6 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -30,17 +32,20 @@ public class NdkBuildStep extends ShellStep {
   private final String makefileDirectory;
   private final String makefilePath;
   private final String buildArtifactsDirectory;
+  private final String binDirectory;
   private final ImmutableList<String> flags;
   private final int maxJobCount;
 
   public NdkBuildStep(
       String makefileDirectory,
       String buildArtifactsDirectory,
+      String binDirectory,
       Iterable<String> flags) {
     this.makefileDirectory = Preconditions.checkNotNull(makefileDirectory);
     Preconditions.checkArgument(makefileDirectory.endsWith("/"));
     this.makefilePath = this.makefileDirectory + "Android.mk";
     this.buildArtifactsDirectory = Preconditions.checkNotNull(buildArtifactsDirectory);
+    this.binDirectory = Preconditions.checkNotNull(binDirectory);
     this.flags = ImmutableList.copyOf(flags);
     this.maxJobCount = Runtime.getRuntime().availableProcessors();
   }
@@ -73,11 +78,14 @@ public class NdkBuildStep extends ShellStep {
         this.makefileDirectory);
 
     builder.addAll(this.flags);
-    String rootPath = context.getProjectDirectoryRoot().getAbsolutePath() + "/";
+
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
     builder.add(
-        "APP_PROJECT_PATH=" + rootPath + this.buildArtifactsDirectory,
-        "APP_BUILD_SCRIPT=" + rootPath + this.makefilePath,
-        "NDK_OUT=" + rootPath + this.buildArtifactsDirectory);
+        "APP_PROJECT_PATH=" + pathRelativizer.apply(this.buildArtifactsDirectory),
+        "APP_BUILD_SCRIPT=" + pathRelativizer.apply(this.makefilePath),
+        "NDK_OUT=" + pathRelativizer.apply(this.buildArtifactsDirectory),
+        "NDK_LIBS_OUT=" + pathRelativizer.apply(this.binDirectory));
 
     return builder.build();
   }

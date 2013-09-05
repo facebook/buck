@@ -112,11 +112,11 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    Step nkdBuildStep = new NdkBuildStep(makefileDirectory, buildArtifactsDirectory + "/", flags);
-
     // .so files are written to the libs/ subdirectory of the output directory.
     // All of them should be recorded via the BuildableContext.
     String binDirectory = buildArtifactsDirectory + "/libs/";
+    Step nkdBuildStep = new NdkBuildStep(makefileDirectory, buildArtifactsDirectory + "/", binDirectory, flags);
+
     Function<String, String> artifactPathTransform = new Function<String, String>() {
       @Override
       public String apply(String pathRelativeTo) {
