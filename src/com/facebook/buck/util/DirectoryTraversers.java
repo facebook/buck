@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
+import java.io.IOException;
 
 public class DirectoryTraversers {
 
@@ -40,7 +41,7 @@ public class DirectoryTraversers {
    * @return a set of all files in paths, sorted alphabetically
    */
   public ImmutableSortedSet<String> findFiles(ImmutableSet<String> paths,
-      DirectoryTraverser traverser) {
+      DirectoryTraverser traverser) throws IOException {
     final ImmutableSortedSet.Builder<String> allFiles = ImmutableSortedSet.naturalOrder();
     for (String pathToDirectory : paths) {
       final String directoryPathWithTrailingSlash =

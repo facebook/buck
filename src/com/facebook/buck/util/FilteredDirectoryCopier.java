@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.google.common.base.Predicate;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 public interface FilteredDirectoryCopier {
@@ -29,7 +30,7 @@ public interface FilteredDirectoryCopier {
    * @param pred predicate to test against
    */
   public abstract void copyDirs(Map<String, String> sourcesToDestinations,
-      Predicate<File> pred);
+      Predicate<File> pred) throws IOException;
 
   /**
    * Creates a filtered copy of a directory.
@@ -40,6 +41,6 @@ public interface FilteredDirectoryCopier {
   public abstract void copyDir(
       String srcDir,
       String destDir,
-      Predicate<File> pred);
+      Predicate<File> pred) throws IOException;
 
 }

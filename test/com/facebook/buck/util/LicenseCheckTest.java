@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 public class LicenseCheckTest {
 
   @Test
-  public void ensureAllSrcFilesHaveTheApacheLicense() {
+  public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {
     new JavaCopyrightTraversal(new File("src")).traverse();
     new JavaCopyrightTraversal(new File("test")).traverse();
   }

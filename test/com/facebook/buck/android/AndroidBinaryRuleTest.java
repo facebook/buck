@@ -61,6 +61,7 @@ import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -152,7 +153,7 @@ public class AndroidBinaryRuleTest {
    * directory.
    */
   @Test
-  public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() {
+  public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, neither with an assets directory.
@@ -208,7 +209,7 @@ public class AndroidBinaryRuleTest {
    * directory.
    */
   @Test
-  public void testCreateAllAssetsDirectoryWithOneAssetsDirectory() {
+  public void testCreateAllAssetsDirectoryWithOneAssetsDirectory() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, one of which has an assets directory.
@@ -246,7 +247,7 @@ public class AndroidBinaryRuleTest {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
-      public void traverse(DirectoryTraversal traversal) {
+      public void traverse(DirectoryTraversal traversal) throws IOException {
         String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
         if ("java/src/com/facebook/base/assets2".equals(rootPath)) {
           traversal.visit(
@@ -280,7 +281,7 @@ public class AndroidBinaryRuleTest {
    * directory.
    */
   @Test
-  public void testCreateAllAssetsDirectoryWithMultipleAssetsDirectories() {
+  public void testCreateAllAssetsDirectoryWithMultipleAssetsDirectories() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     // Two android_library deps, each with an assets directory.
@@ -323,7 +324,7 @@ public class AndroidBinaryRuleTest {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
-      public void traverse(DirectoryTraversal traversal) {
+      public void traverse(DirectoryTraversal traversal) throws IOException {
         String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
         if ("java/src/com/facebook/base/assets1".equals(rootPath)) {
           traversal.visit(

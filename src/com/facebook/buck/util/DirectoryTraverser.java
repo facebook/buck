@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import java.io.IOException;
+
 public interface DirectoryTraverser {
 
   /**
@@ -25,6 +27,6 @@ public interface DirectoryTraverser {
    * though this extra level of abstraction makes it possible to inject different behavior for unit
    * tests.
    */
-  public void traverse(DirectoryTraversal traversal);
+  public void traverse(DirectoryTraversal traversal) throws IOException;
 
 }

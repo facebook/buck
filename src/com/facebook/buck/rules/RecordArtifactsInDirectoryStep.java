@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Not all build rules know the paths of the output files that their steps will generate. Such rules
@@ -66,33 +65,27 @@ public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
     final File binDir = projectFilesystem.getFileForRelativePath(binDirectory);
     ImmutableSet<String> ignorePaths = ImmutableSet.of();
 
-    final AtomicBoolean isSuccess = new AtomicBoolean(true);
-    new DirectoryTraversal(binDir, ignorePaths) {
-
+    DirectoryTraversal traversal = new DirectoryTraversal(binDir, ignorePaths) {
       @Override
-      public void visit(File file, String relativePath) {
-        // Once there has been an IOException, ignore the rest of the traversal.
-        if (!isSuccess.get()) {
-          return;
-        }
-
+      public void visit(File file, String relativePath) throws IOException {
         String source = new File(binDir, relativePath).getPath();
         String target = genDirectory + "/" + relativePath;
-        try {
-          projectFilesystem.createParentDirs(target);
-          projectFilesystem.copyFile(source, target);
-        } catch (IOException e) {
-          isSuccess.set(false);
-          e.printStackTrace(context.getStdErr());
-        }
+        projectFilesystem.createParentDirs(target);
+        projectFilesystem.copyFile(source, target);
 
         String artifactPath = artifactPathTransform.apply(relativePath);
         buildableContext.recordArtifact(artifactPath);
       }
+    };
 
-    }.traverse();
+    try {
+      traversal.traverse();
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
 
-    return isSuccess.get() ? 0 : 1;
+    return 0;
   }
 
 }

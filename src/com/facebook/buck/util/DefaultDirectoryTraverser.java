@@ -16,12 +16,14 @@
 
 package com.facebook.buck.util;
 
+import java.io.IOException;
+
 public class DefaultDirectoryTraverser implements DirectoryTraverser {
 
   public DefaultDirectoryTraverser() {}
 
   @Override
-  public void traverse(DirectoryTraversal traversal) {
+  public void traverse(DirectoryTraversal traversal) throws IOException {
     traversal.traverse();
   }
 

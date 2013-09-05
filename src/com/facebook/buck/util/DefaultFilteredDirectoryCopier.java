@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -48,7 +47,7 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
 
   @Override
   public void copyDirs(Map<String, String> sourcesToDestinations,
-      Predicate<File> pred) {
+      Predicate<File> pred) throws IOException {
     for (Map.Entry<String, String> e : sourcesToDestinations.entrySet()) {
       copyDir(e.getKey(), e.getValue(), pred);
     }
@@ -58,31 +57,23 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
   public void copyDir(
       String srcDir,
       String destDir,
-      final Predicate<File> pred) {
+      final Predicate<File> pred) throws IOException {
     final File dest = new File(destDir);
 
     // Remove existing contents if any.
     if (dest.exists()) {
-      try {
-        MoreFiles.rmdir(dest.getAbsolutePath());
-      } catch (IOException e) {
-        throw Throwables.propagate(e);
-      }
+      MoreFiles.rmdir(dest.getAbsolutePath());
     }
     dest.mkdirs();
 
     // Copy filtered contents.
     new DirectoryTraversal(new File(srcDir)) {
       @Override
-      public void visit(File srcFile, String relativePath) {
+      public void visit(File srcFile, String relativePath) throws IOException {
         if (pred.apply(srcFile)) {
-          try {
-            File destFile = new File(dest, relativePath);
-            Files.createParentDirs(destFile);
-            Files.copy(srcFile, destFile);
-          } catch (IOException e) {
-            throw Throwables.propagate(e);
-          }
+          File destFile = new File(dest, relativePath);
+          Files.createParentDirs(destFile);
+          Files.copy(srcFile, destFile);
         }
       }
     }.traverse();

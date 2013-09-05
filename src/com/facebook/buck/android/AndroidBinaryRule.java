@@ -50,8 +50,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.zip.RepackZipEntriesStep;
-import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
@@ -60,6 +58,8 @@ import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ZipSplitter;
+import com.facebook.buck.zip.RepackZipEntriesStep;
+import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -399,11 +399,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         // not exist at the time this Command is created because the previous Commands have not run
         // yet.
         ImmutableList.Builder<Step> commands = ImmutableList.builder();
-        createAllAssetsDirectory(
-            transitiveDependencies.assetsDirectories,
-            extraAssets,
-            commands,
-            new DefaultDirectoryTraverser());
+        try {
+          createAllAssetsDirectory(
+              transitiveDependencies.assetsDirectories,
+              extraAssets,
+              commands,
+              new DefaultDirectoryTraverser());
+        } catch (IOException e) {
+          e.printStackTrace(context.getStdErr());
+          return 1;
+        }
+
         for (Step command : commands.build()) {
           int exitCode = command.execute(context);
           if (exitCode != 0) {
@@ -546,7 +552,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<String> assetsDirectories,
       ImmutableMap<String, File> extraAssets,
       ImmutableList.Builder<Step> commands,
-      DirectoryTraverser traverser) {
+      DirectoryTraverser traverser) throws IOException {
     if (assetsDirectories.isEmpty() && extraAssets.isEmpty()) {
       return Optional.absent();
     }

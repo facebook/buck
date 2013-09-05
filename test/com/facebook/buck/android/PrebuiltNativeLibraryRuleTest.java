@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 
 public class PrebuiltNativeLibraryRuleTest {
 
@@ -37,7 +39,7 @@ public class PrebuiltNativeLibraryRuleTest {
     // we are testing.
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
-      public void traverse(DirectoryTraversal traversal) {
+      public void traverse(DirectoryTraversal traversal) throws IOException {
         String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
         if ("java/src/com/facebook/base/libs".equals(rootPath)) {
           traversal.visit(null, "armeabi/foo.so");

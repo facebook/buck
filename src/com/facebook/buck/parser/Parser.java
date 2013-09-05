@@ -39,15 +39,16 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.io.InputSupplier;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -119,14 +120,14 @@ public class Parser {
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
    * TODO(user): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
    */
-  private static class BuildFileTreeCache implements Supplier<BuildFileTree> {
-    private final Supplier<BuildFileTree> supplier;
+  private static class BuildFileTreeCache implements InputSupplier<BuildFileTree> {
+    private final InputSupplier<BuildFileTree> supplier;
     private @Nullable BuildFileTree buildFileTree;
 
     /**
      * @param buildFileTreeSupplier each call to get() must reconstruct the tree from disk.
      */
-    public BuildFileTreeCache(Supplier<BuildFileTree> buildFileTreeSupplier) {
+    public BuildFileTreeCache(InputSupplier<BuildFileTree> buildFileTreeSupplier) {
       this.supplier = Preconditions.checkNotNull(buildFileTreeSupplier);
     }
 
@@ -141,9 +142,9 @@ public class Parser {
      * @return the cached BuildFileTree, or a new lazily constructed BuildFileTree.
      */
     @Override
-    public BuildFileTree get() {
+    public BuildFileTree getInput() throws IOException {
       if (buildFileTree == null) {
-        buildFileTree = supplier.get();
+        buildFileTree = supplier.getInput();
       }
       return buildFileTree;
     }
@@ -158,9 +159,9 @@ public class Parser {
         buildRuleTypes,
         console,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
-        new Supplier<BuildFileTree>() {
+        new InputSupplier<BuildFileTree>() {
           @Override
-          public BuildFileTree get() {
+          public BuildFileTree getInput() throws IOException {
             return BuildFileTree.constructBuildFileTree(projectFilesystem);
           }
         },
@@ -170,13 +171,14 @@ public class Parser {
   }
 
   /**
-   * @param buildFileTreeSupplier each call to get() must reconstruct the build file tree from disk.
+   * @param buildFileTreeSupplier each call to getInput() must reconstruct the build file tree from
+   *     disk.
    */
   @VisibleForTesting
   Parser(ProjectFilesystem projectFilesystem,
          KnownBuildRuleTypes buildRuleTypes,
          Console console,
-         Supplier<BuildFileTree> buildFileTreeSupplier,
+         InputSupplier<BuildFileTree> buildFileTreeSupplier,
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
          ProjectBuildFileParserFactory buildFileParserFactory) {
@@ -261,7 +263,7 @@ public class Parser {
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus)
-      throws BuildFileParseException, NoSuchBuildTargetException {
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
     eventBus.post(ParseEvent.started(buildTargets));
@@ -332,6 +334,8 @@ public class Parser {
                 deps.add(buildTargetForDep);
               } catch (NoSuchBuildTargetException | BuildFileParseException e ) {
                 throw new HumanReadableException(e);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
               }
             }
 
@@ -378,7 +382,7 @@ public class Parser {
       BuildTarget buildTarget,
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser)
-          throws BuildFileParseException, NoSuchBuildTargetException {
+          throws BuildFileParseException, NoSuchBuildTargetException, IOException {
     if (isCacheComplete(defaultIncludes)) {
       // In this case, all of the build rules should have been loaded into the knownBuildTargets
       // Map before this method was invoked. Therefore, there should not be any more build files to
@@ -407,7 +411,7 @@ public class Parser {
   public List<Map<String, Object>> parseBuildFile(
       File buildFile,
       Iterable<String> defaultIncludes)
-      throws BuildFileParseException, NoSuchBuildTargetException {
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
     ProjectBuildFileParser projectBuildFileParser =
         buildFileParserFactory.createParser(defaultIncludes);
 
@@ -423,7 +427,7 @@ public class Parser {
       File buildFile,
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser)
-          throws BuildFileParseException, NoSuchBuildTargetException {
+          throws BuildFileParseException, NoSuchBuildTargetException, IOException {
     Preconditions.checkNotNull(buildFile);
     Preconditions.checkNotNull(defaultIncludes);
     Preconditions.checkNotNull(buildFileParser);
@@ -446,7 +450,7 @@ public class Parser {
    */
   @VisibleForTesting
   void parseRawRulesInternal(Iterable<Map<String, Object>> rules,
-      @Nullable File source) throws NoSuchBuildTargetException {
+      @Nullable File source) throws NoSuchBuildTargetException, IOException {
     for (Map<String, Object> map : rules) {
 
       if (isMetaRule(map)) {
@@ -466,7 +470,7 @@ public class Parser {
       BuildRuleBuilder<?> buildRuleBuilder = factory.newInstance(new BuildRuleFactoryParams(
           map,
           projectFilesystem,
-          buildFileTreeCache.get(),
+          buildFileTreeCache.getInput(),
           buildTargetParser,
           target));
       Object existingRule = knownBuildTargets.put(target, buildRuleBuilder);
@@ -570,7 +574,7 @@ public class Parser {
   public List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
                                                      Iterable<String> includes,
                                                      @Nullable RawRulePredicate filter)
-      throws BuildFileParseException, NoSuchBuildTargetException {
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
     Preconditions.checkNotNull(filesystem);
     Preconditions.checkNotNull(includes);
     if (!projectFilesystem.getProjectRoot().equals(filesystem.getProjectRoot())) {
@@ -605,8 +609,7 @@ public class Parser {
    * build rules if required.
    */
   @Subscribe
-  public synchronized void onFileSystemChange(WatchEvent<?> event) {
-
+  public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Parser watched event %s %s\n", event.kind(),
           createContextString(event));
@@ -627,7 +630,7 @@ public class Parser {
         // Added or removed files can affect globs, so invalidate the package build file.
         // TODO(user): avoid invalidating build files when backup files are added or removed.
         String packageBuildFilePath =
-            buildFileTreeCache.get().getBasePathOfAncestorTarget(
+            buildFileTreeCache.getInput().getBasePathOfAncestorTarget(
                 projectFilesystem.getProjectRoot().toPath().relativize(path).toString());
         invalidateDependents(
             projectFilesystem.getFileForRelativePath(

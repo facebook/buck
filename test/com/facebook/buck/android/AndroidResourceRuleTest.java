@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 
 public class AndroidResourceRuleTest {
 
@@ -49,7 +51,7 @@ public class AndroidResourceRuleTest {
     // we are testing.
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
-      public void traverse(DirectoryTraversal traversal) {
+      public void traverse(DirectoryTraversal traversal) throws IOException {
         String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
         if ("java/src/com/facebook/base/res".equals(rootPath)) {
           traversal.visit(null, "drawable/E.xml");

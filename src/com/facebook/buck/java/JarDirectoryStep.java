@@ -243,7 +243,7 @@ public class JarDirectoryStep implements Step {
   private void addFilesInDirectoryToJar(File directory,
       final JarOutputStream jar,
       final Set<String> alreadyAddedEntries,
-      final BuckEventBus eventBus) {
+      final BuckEventBus eventBus) throws IOException {
     new DirectoryTraversal(directory) {
 
       @Override

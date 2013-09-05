@@ -30,6 +30,7 @@ java_library(
   srcs = [
     'ArtifactCache.java',
     'Buildable.java',
+    'Buildables.java',
     'BuildableContext.java',
     'BuildableProperties.java',
     'BuildContext.java',

@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -53,7 +54,7 @@ public class PartialGraph {
       ProjectFilesystem projectFilesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws NoSuchBuildTargetException, BuildFileParseException {
+      BuckEventBus eventBus) throws NoSuchBuildTargetException, BuildFileParseException, IOException {
     return createPartialGraph(RawRulePredicates.alwaysTrue(),
         projectFilesystem,
         includes,
@@ -66,7 +67,7 @@ public class PartialGraph {
       ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
-      BuckEventBus eventBus) throws NoSuchBuildTargetException, BuildFileParseException {
+      BuckEventBus eventBus) throws NoSuchBuildTargetException, BuildFileParseException, IOException {
 
     Preconditions.checkNotNull(parser);
 

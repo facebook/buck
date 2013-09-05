@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -126,11 +127,11 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   }
 
   private void addResContents(ImmutableSortedSet.Builder<String> files) {
-    addInputsToSortedSet(res, files, directoryTraverser);
+    Buildables.addInputsToSortedSet(res, files, directoryTraverser);
   }
 
   private void addAssetsContents(ImmutableSortedSet.Builder<String> files) {
-    addInputsToSortedSet(assets, files, directoryTraverser);
+    Buildables.addInputsToSortedSet(assets, files, directoryTraverser);
   }
 
   @Override

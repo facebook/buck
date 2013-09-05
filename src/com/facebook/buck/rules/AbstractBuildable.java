@@ -16,13 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.DirectoryTraversers;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -43,20 +37,6 @@ public abstract class AbstractBuildable implements Buildable {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder;
-  }
-
-  /**
-   * Helper function for subclasses to create their lists of files for caching.
-   */
-  protected static void addInputsToSortedSet(@Nullable String pathToDirectory,
-      ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes,
-      DirectoryTraverser traverser) {
-    if (pathToDirectory == null) {
-      return;
-    }
-    Set<String> files = DirectoryTraversers.getInstance().findFiles(
-        ImmutableSet.of(pathToDirectory), traverser);
-    inputsToConsiderForCachingPurposes.addAll(files);
   }
 
   protected static abstract class Builder extends AbstractBuildRuleBuilder<AbstractCachingBuildRule> {

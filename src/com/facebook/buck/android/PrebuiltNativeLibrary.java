@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
@@ -86,7 +87,9 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
     ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes = ImmutableSortedSet
         .naturalOrder();
 
-    addInputsToSortedSet(getLibraryPath(), inputsToConsiderForCachingPurposes, directoryTraverser);
+    Buildables.addInputsToSortedSet(getLibraryPath(),
+        inputsToConsiderForCachingPurposes,
+        directoryTraverser);
 
     return inputsToConsiderForCachingPurposes.build();
   }

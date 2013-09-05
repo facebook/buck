@@ -203,7 +203,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
+  public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException, IOException {
     final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String outputFile = "buck-out/gen/test/outputFile";
 

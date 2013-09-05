@@ -21,8 +21,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.DirectoryTraversers;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -30,8 +28,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -42,7 +38,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -511,19 +506,5 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     boolean isSuccess() {
       return status == BuildRuleStatus.SUCCESS;
     }
-  }
-
-  /**
-   * Helper function for subclasses to create their lists of files for caching.
-   */
-  protected static void addInputsToSortedSet(@Nullable String pathToDirectory,
-      ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes,
-      DirectoryTraverser traverser) {
-    if (pathToDirectory == null) {
-      return;
-    }
-    Set<String> files = DirectoryTraversers.getInstance().findFiles(
-        ImmutableSet.of(pathToDirectory), traverser);
-    inputsToConsiderForCachingPurposes.addAll(files);
   }
 }

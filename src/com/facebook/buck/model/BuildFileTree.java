@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -107,7 +108,8 @@ public class BuildFileTree {
     }
   }
 
-  public static BuildFileTree constructBuildFileTree(ProjectFilesystem filesystem) {
+  public static BuildFileTree constructBuildFileTree(ProjectFilesystem filesystem)
+      throws IOException {
     File root = filesystem.getProjectRoot();
 
     final Set<String> targets = Sets.newHashSet();

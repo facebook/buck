@@ -180,14 +180,14 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   @VisibleForTesting
   @SuppressWarnings("deprecation")
   void printJsonForTargets(SortedMap<String, BuildRule> buildIndex,
-      Iterable<String> defaultIncludes) throws BuildFileParseException {
+      Iterable<String> defaultIncludes) throws BuildFileParseException, IOException {
     ImmutableList<String> includesCopy = ImmutableList.copyOf(defaultIncludes);
     printJsonForTargetsInternal(buildIndex, includesCopy);
   }
 
   private void printJsonForTargetsInternal(
       SortedMap<String, BuildRule> buildIndex,
-      ImmutableList<String> defaultIncludes) throws BuildFileParseException {
+      ImmutableList<String> defaultIncludes) throws BuildFileParseException, IOException {
     // Print the JSON representation of the build rule for the specified target(s).
     getStdOut().println("[");
 

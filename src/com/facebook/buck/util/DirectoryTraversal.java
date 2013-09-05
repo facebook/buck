@@ -51,7 +51,7 @@ public abstract class DirectoryTraversal {
     return root;
   }
 
-  public final void traverse() {
+  public final void traverse() throws IOException {
     Preconditions.checkState(root.isDirectory(), "Must be a directory: %s", root);
 
     final Path rootPath = root.toPath();
@@ -82,24 +82,18 @@ public abstract class DirectoryTraversal {
       }
     };
 
-    try {
-      Files.walkFileTree(
-          rootPath, EnumSet.of(FileVisitOption.FOLLOW_LINKS), /* maxDepth */ Integer.MAX_VALUE,
-          visitor);
-    } catch (IOException e) {
-      // IOException is only thrown if it's thrown by the visitor functions.
-      // Our visitor should not throw.
-      throw new RuntimeException(e);
-    }
+    Files.walkFileTree(
+        rootPath, EnumSet.of(FileVisitOption.FOLLOW_LINKS), /* maxDepth */ Integer.MAX_VALUE,
+        visitor);
   }
 
   /**
    * @param file an ordinary file (not a directory)
    * @param relativePath a path such as "foo.txt" or "foo/bar.txt"
    */
-  public abstract void visit(File file, String relativePath);
+  public abstract void visit(File file, String relativePath) throws IOException;
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     File directory = new File(args[0]);
     new DirectoryTraversal(directory) {
 

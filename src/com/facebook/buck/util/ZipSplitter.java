@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -216,9 +215,6 @@ public class ZipSplitter {
           newSecondaryOutOnNextEntry = true;
         }
       }
-    } catch (RuntimeException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e);
     } finally {
       primaryOut.close();
       if (currentSecondaryOut != null) {

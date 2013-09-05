@@ -118,8 +118,18 @@ public class FilterResourcesStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
+    try {
+      return doExecute(context);
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+  }
+
+  private int doExecute(ExecutionContext context) throws IOException {
     // Get list of candidate drawables.
     Set<String> drawables = drawableFinder.findDrawables(originalToFiltered.keySet());
+
     // Create a filter that removes drawables not of desired density.
     Predicate<File> densityFilter = Filters.createImageDensityFilter(drawables, resourceFilter);
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
@@ -128,12 +138,7 @@ public class FilterResourcesStep implements Step {
 
     // If an ImageScaler was specified, but only if it is available, try to apply it.
     if ((imageScaler != null) && imageScaler.isAvailable(context)) {
-      try {
-        scaleUnmatchedDrawables(context);
-      } catch (IOException | HumanReadableException e) {
-        context.getConsole().printErrorText("Error while scaling drawables: " + e);
-        return 1;
-      }
+      scaleUnmatchedDrawables(context);
     }
 
     return 0;
@@ -208,7 +213,7 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface DrawableFinder {
-    public Set<String> findDrawables(Iterable<String> dirs);
+    public Set<String> findDrawables(Iterable<String> dirs) throws IOException;
   }
 
   public static class DefaultDrawableFinder implements DrawableFinder {
@@ -220,7 +225,7 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public Set<String> findDrawables(Iterable<String> dirs) {
+    public Set<String> findDrawables(Iterable<String> dirs) throws IOException {
       final ImmutableSet.Builder<String> drawableBuilder = ImmutableSet.builder();
       for (String dir : dirs) {
         new DirectoryTraversal(new File(dir)) {

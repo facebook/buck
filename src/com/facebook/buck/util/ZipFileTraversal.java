@@ -32,7 +32,7 @@ public abstract class ZipFileTraversal {
     this.file = Preconditions.checkNotNull(file);
   }
 
-  public abstract void visit(ZipFile zipFile, ZipEntry zipEntry);
+  public abstract void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException;
 
   public final void traverse() throws IOException {
     zipFile = new ZipFile(file);

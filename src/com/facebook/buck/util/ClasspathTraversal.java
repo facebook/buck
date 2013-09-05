@@ -44,7 +44,7 @@ public abstract class ClasspathTraversal {
     this.paths = Preconditions.checkNotNull(paths);
   }
 
-  public abstract void visit(FileLike fileLike);
+  public abstract void visit(FileLike fileLike) throws IOException;
 
   public final void traverse() throws IOException {
     for (File path : paths) {
@@ -77,7 +77,7 @@ public abstract class ClasspathTraversal {
     public void traverse(final ClasspathTraversal traversal) throws IOException {
       ZipFileTraversal impl = new ZipFileTraversal(file) {
         @Override
-        public void visit(ZipFile zipFile, ZipEntry zipEntry) {
+        public void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException {
           traversal.visit(new FileLikeInZip(file, zipFile, zipEntry));
         }
       };
@@ -133,7 +133,7 @@ public abstract class ClasspathTraversal {
     public void traverse(final ClasspathTraversal traversal) throws IOException {
       DirectoryTraversal impl = new DirectoryTraversal(file) {
         @Override
-        public void visit(File file, String relativePath) {
+        public void visit(File file, String relativePath) throws IOException {
           traversal.visit(new FileLikeInDirectory(file, relativePath));
         }
       };

@@ -149,7 +149,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   @VisibleForTesting
   PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)
-      throws BuildFileParseException, NoSuchBuildTargetException {
+      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
     return PartialGraph.createPartialGraph(
         rulePredicate,
         getProjectFilesystem(),
