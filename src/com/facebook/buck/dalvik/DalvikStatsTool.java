@@ -202,6 +202,11 @@ public class DalvikStatsTool {
         // Interfaces don't have vtables.
         // This might undercount annotations, but they are mostly small.
         isInterface = true;
+        // Our binding annotations (which is most of our annotations) seem to require 24 bytes
+        // of LinearAlloc.  Not sure why, but we'd better charge them for it.
+        if ((access & (Opcodes.ACC_ANNOTATION)) != 0) {
+          footprint += 24;
+        }
       } else {
         // Some parent classes have big vtable footprints.  We try to estimate the parent vtable
         // size based on the name of the class and parent class.  This seems to work reasonably
@@ -218,6 +223,14 @@ public class DalvikStatsTool {
             }
           }
         }
+
+        // Anonymous classes that implement interfaces seem to be bigger (iftable, maybe?)
+        if (name.contains("$") && interfaces != null && interfaces.length != 0) {
+          vtablePenalty += 52;
+        }
+
+        // TODO(user): Maybe punish other classes for implementing interfaces as well?
+
         footprint += vtablePenalty;
       }
     }
