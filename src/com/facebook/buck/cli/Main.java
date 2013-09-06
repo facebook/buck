@@ -33,6 +33,7 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
@@ -232,7 +233,9 @@ public final class Main {
     }
 
     Clock clock = new DefaultClock();
-    final BuckEventBus buildEventBus = new BuckEventBus(clock);
+    final BuckEventBus buildEventBus = new BuckEventBus(
+        clock,
+         /* buildId */ MoreStrings.createRandomString());
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0], console);

@@ -20,7 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public interface BuckEvent {
   @VisibleForTesting
-  void configure(long timestamp, long nanoTime, long threadId);
+  void configure(long timestamp, long nanoTime, long threadId, String buildId);
 
   long getTimestamp();
 
@@ -29,6 +29,11 @@ public interface BuckEvent {
   String toLogMessage();
 
   long getThreadId();
+
+  /**
+   * @return an identifier that distinguishes the build with which this event is associated.
+   */
+  String getBuildId();
 
   /**
    * @return Whether or not this event is a pair of another event.  Events that are pairs if they

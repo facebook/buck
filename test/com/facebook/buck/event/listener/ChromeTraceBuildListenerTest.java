@@ -85,7 +85,8 @@ public class ChromeTraceBuildListenerTest {
 
     ImmutableList<BuildTarget> buildTargets = ImmutableList.of(target);
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock,
+        "ChromeTraceBuildListenerTestBuildId");
     Supplier<Long> threadIdSupplier = BuckEventBusFactory.getThreadIdSupplierFor(eventBus);
     EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     eventBus.register(listener);
@@ -99,7 +100,8 @@ public class ChromeTraceBuildListenerTest {
     BuckEvent stepFinished = StepEvent.finished(step, "I'm a Fake Step!", 0);
     stepFinished.configure(fakeClock.currentTimeMillis(),
         fakeClock.nanoTime(),
-        threadIdSupplier.get());
+        threadIdSupplier.get(),
+        eventBus.getBuildId());
 
 
     BuckEvent ruleFinished = BuildRuleEvent.finished(
@@ -109,7 +111,8 @@ public class ChromeTraceBuildListenerTest {
         Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY));
     ruleFinished.configure(fakeClock.currentTimeMillis(),
         fakeClock.nanoTime(),
-        threadIdSupplier.get());
+        threadIdSupplier.get(),
+        eventBus.getBuildId());
 
     rawEventBus.post(ruleFinished);
     rawEventBus.post(stepFinished);

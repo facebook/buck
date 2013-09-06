@@ -34,7 +34,7 @@ public class TestEventConfigerator {
       long timestamp,
       long nanotime,
       long threadid) {
-    event.configure(timestamp, nanotime, threadid);
+    event.configure(timestamp, nanotime, threadid, BuckEventBusFactory.BUILD_ID_FOR_TEST);
     return event;
   }
 
@@ -44,7 +44,8 @@ public class TestEventConfigerator {
       long threadid) {
     event.configure(timeUnit.toMillis(time),
         timeUnit.toNanos(time),
-        threadid);
+        threadid,
+        BuckEventBusFactory.BUILD_ID_FOR_TEST);
     return event;
   }
 }

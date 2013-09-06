@@ -18,6 +18,7 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -30,15 +31,23 @@ import com.google.common.util.concurrent.MoreExecutors;
  */
 public class BuckEventBusFactory {
 
+  public static String BUILD_ID_FOR_TEST = "CAFEBABE";
+
   /** Utility class: do not instantiate. */
   private BuckEventBusFactory() {}
 
+  @VisibleForTesting
   public static BuckEventBus newInstance() {
-    return newInstance(new DefaultClock());
+    return newInstance(new DefaultClock(), BUILD_ID_FOR_TEST);
   }
 
+  @VisibleForTesting
   public static BuckEventBus newInstance(Clock clock) {
-    return new BuckEventBus(clock, MoreExecutors.sameThreadExecutor());
+    return newInstance(clock, BUILD_ID_FOR_TEST);
+  }
+
+  public static BuckEventBus newInstance(Clock clock, String buildId) {
+    return new BuckEventBus(clock, MoreExecutors.sameThreadExecutor(), buildId);
   }
 
   public static EventBus getEventBusFor(BuckEventBus buckEventBus) {

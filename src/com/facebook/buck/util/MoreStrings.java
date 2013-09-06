@@ -18,7 +18,16 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 
+import java.util.Random;
+
 public final class MoreStrings {
+
+  private static String RANDOM_STRING_CHARSET =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890";
+
+  private static int LENGTH_OF_RANDOM_STRING = 8;
+
+  private static Random insecureRandom = new Random();
 
   /** Utility class: do not instantiate. */
   private MoreStrings() {}
@@ -71,4 +80,13 @@ public final class MoreStrings {
       
       return levenshteinDist[arr1.length][arr2.length];
     }
+
+  public static String createRandomString() {
+    char[] chars = new char[LENGTH_OF_RANDOM_STRING];
+    int maxIndex = RANDOM_STRING_CHARSET.length();
+    for (int i = 0; i < LENGTH_OF_RANDOM_STRING; i++) {
+      chars[i] = RANDOM_STRING_CHARSET.charAt(insecureRandom.nextInt(maxIndex));
+    }
+    return new String(chars);
+  }
 }

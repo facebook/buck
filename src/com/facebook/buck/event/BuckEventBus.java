@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
  * Thin wrapper around guava event bus.
  */
 public class BuckEventBus {
+
   private static Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER = new Supplier<Long>() {
     @Override
     public Long get() {
@@ -39,21 +40,24 @@ public class BuckEventBus {
   private final ExecutorService executorService;
   private final AsyncEventBus eventBus;
   private final Supplier<Long> threadIdSupplier;
+  private final String buildId;
 
-  public BuckEventBus(Clock clock) {
-    this(clock, MoreExecutors.newSingleThreadExecutor());
+
+  public BuckEventBus(Clock clock, String buildId) {
+    this(clock, MoreExecutors.newSingleThreadExecutor(), buildId);
   }
 
   @VisibleForTesting
-  BuckEventBus(Clock clock, ExecutorService executorService) {
+  BuckEventBus(Clock clock, ExecutorService executorService, String buildId) {
     this.clock = Preconditions.checkNotNull(clock);
     this.executorService = Preconditions.checkNotNull(executorService);
     this.eventBus = new AsyncEventBus("buck-build-events", executorService);
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
+    this.buildId = Preconditions.checkNotNull(buildId);
   }
 
   public void post(BuckEvent event) {
-    event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get());
+    event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get(), buildId);
     eventBus.post(event);
   }
 
@@ -80,5 +84,16 @@ public class BuckEventBus {
   @VisibleForTesting
   Supplier<Long> getThreadIdSupplier() {
     return threadIdSupplier;
+  }
+
+  /**
+   * An id that every event posted to this event bus will share. For long-running processes, like
+   * the daemon, the build id makes it possible to distinguish when events come from different
+   * invocations of Buck.
+   * <p>
+   * In practice, this should be a short string, because it may be sent over the wire frequently.
+   */
+  public String getBuildId() {
+    return buildId;
   }
 }
