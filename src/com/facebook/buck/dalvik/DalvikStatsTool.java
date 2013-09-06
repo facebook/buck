@@ -45,12 +45,13 @@ import javax.annotation.Nullable;
 public class DalvikStatsTool {
 
   // Reasonable defaults based on dreiss's observations.
-  private static final ImmutableMap<Pattern, Integer> PENALTIES = ImmutableMap.of(
-      Pattern.compile("Layout$"), 1500,
-      Pattern.compile("View$"), 1500,
-      Pattern.compile("ViewGroup$"), 1800,
-      Pattern.compile("Activity$"), 1100
-  );
+  private static final ImmutableMap<Pattern, Integer> PENALTIES =
+      ImmutableMap.<Pattern, Integer>builder()
+          .put(Pattern.compile("Layout$"), 1500)
+          .put(Pattern.compile("View$"), 1500)
+          .put(Pattern.compile("ViewGroup$"), 1800)
+          .put(Pattern.compile("Activity$"), 1100)
+          .build();
 
   // DX translates MULTIANEWARRAY into a method call that matches this (owner,name,desc)
   private static final String MULTIARRAY_OWNER = Type.getType(Array.class).getInternalName();
