@@ -161,6 +161,7 @@ ${BUCK_DIRECTORY}/lib/jsr305.jar:\
 ${BUCK_DIRECTORY}/lib/sdklib.jar:\
 ${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
 ${BUCK_DIRECTORY}/lib/sdklib.jar:\
+${BUCK_DIRECTORY}/third-party/java/asm/asm-debug-all-4.1.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-cassandra-1.56.38.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-core-1.56.38.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-thrift-1.56.38.jar:\

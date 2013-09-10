@@ -66,8 +66,8 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     boolean useSplitDex = params.getBooleanAttribute("use_split_dex");
 
     ZipSplitter.DexSplitStrategy dexSplitStrategy = params.getBooleanAttribute("minimize_primary_dex_size")
-            ? ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
-            : ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
+        ? ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
+        : ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
 
     // dex_compression
     DexStore dexStore =
@@ -75,10 +75,14 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
             DexStore.XZ :
             DexStore.JAR;
 
+    // use_linear_alloc_split_dex
+    boolean useLinearAllocSplitDex = params.getBooleanAttribute("use_linear_alloc_split_dex");
+
     builder.setDexSplitMode(new DexSplitMode(
         useSplitDex,
         dexSplitStrategy,
-        dexStore));
+        dexStore,
+        useLinearAllocSplitDex));
 
     // use_android_proguard_config_with_optimizations
     boolean useAndroidProguardConfigWithOptimizations =

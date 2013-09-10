@@ -68,7 +68,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         new DexSplitMode(
             /* shouldSplitDex */ false,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-            DexStore.JAR),
+            DexStore.JAR,
+            /* useLinearAllocSplitDex */ false),
         apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.isCompressResources(),

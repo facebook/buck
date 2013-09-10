@@ -38,7 +38,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-public class ZipSplitterTest {
+public class DefaultZipSplitterTest {
 
   @Rule
   public TemporaryFolder tmpDir = new TemporaryFolder();
@@ -109,7 +109,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testBigLimit() throws IOException {
-    ZipSplitter.splitZip(Collections.singleton(testInZip),
+    DefaultZipSplitter.splitZip(Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -117,7 +117,9 @@ public class ZipSplitterTest {
         999 /* hard limit */,
         processor,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(primaryZipContains("primary"));
     assertTrue(primaryZipContains("secondary-1"));
     assertTrue(primaryZipContains("secondary-2"));
@@ -127,7 +129,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testMediumLimit() throws IOException {
-    ZipSplitter.splitZip(Collections.singleton(testInZip),
+    DefaultZipSplitter.splitZip(Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -135,7 +137,9 @@ public class ZipSplitterTest {
         12 /* hard limit */,
         processor,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(primaryZipContains("primary"));
     assertTrue(primaryZipContains("secondary-3"));
     assertTrue(primaryZipContains("secondary-4"));
@@ -145,7 +149,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testSmallLimit() throws IOException {
-    ZipSplitter.splitZip(Collections.singleton(testInZip),
+    DefaultZipSplitter.splitZip(Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -153,7 +157,9 @@ public class ZipSplitterTest {
         8 /* hard limit */,
         processor,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(primaryZipContains("primary"));
     assertTrue(primaryZipContains("secondary-4"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
@@ -163,7 +169,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testBigLimitMinimizePrimaryZip() throws IOException {
-    ZipSplitter.splitZip(
+    DefaultZipSplitter.splitZip(
         Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
@@ -172,7 +178,9 @@ public class ZipSplitterTest {
         999,
         processor,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(primaryZipContains("primary"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
     assertTrue(nthSecondaryZipContains(1, "secondary-2"));
@@ -182,7 +190,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testMediumLimitMinimizePrimaryZip() throws IOException {
-    ZipSplitter.splitZip(
+    DefaultZipSplitter.splitZip(
         Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
@@ -191,7 +199,9 @@ public class ZipSplitterTest {
         12,
         processor,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(primaryZipContains("primary"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
     assertTrue(nthSecondaryZipContains(1, "secondary-2"));
@@ -201,7 +211,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testSmallLimitMinimizePrimaryZip() throws IOException {
-    ZipSplitter.splitZip(
+    DefaultZipSplitter.splitZip(
         Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
@@ -210,7 +220,9 @@ public class ZipSplitterTest {
         8,
         processor,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(primaryZipContains("primary"));
     assertTrue(nthSecondaryZipContains(1, "secondary-1"));
     assertTrue(nthSecondaryZipContains(1, "secondary-2"));
@@ -220,7 +232,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testSoftLimit() throws IOException {
-    ZipSplitter.splitZip(testInZips,
+    DefaultZipSplitter.splitZip(testInZips,
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -228,7 +240,9 @@ public class ZipSplitterTest {
         12 /* hard limit */,
         processor,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(primaryZipContains("primary-a-1"));
     assertTrue(primaryZipContains("primary-a-2"));
     assertTrue(primaryZipContains("primary-a-3"));
@@ -244,7 +258,7 @@ public class ZipSplitterTest {
 
   @Test
   public void testCanary() throws IOException {
-    ZipSplitter.splitZip(
+    DefaultZipSplitter.splitZip(
         Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
@@ -253,7 +267,9 @@ public class ZipSplitterTest {
         80,
         processor,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
-        ZipSplitter.CanaryStrategy.INCLUDE_CANARIES);
+        ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
+        tmpDir.newFolder("report"))
+        .execute();
     assertTrue(nthSecondaryZipContains(1, "secondary/dex01/Canary.class"));
     assertTrue(nthSecondaryZipContains(2, "secondary/dex02/Canary.class"));
     assertTrue(nthSecondaryZipContains(3, "secondary/dex03/Canary.class"));

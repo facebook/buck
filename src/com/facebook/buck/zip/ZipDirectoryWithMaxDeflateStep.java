@@ -77,7 +77,9 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     File inputDirectory = new File(inputDirectoryPath);
-    Preconditions.checkState(inputDirectory.exists() && inputDirectory.isDirectory());
+    Preconditions.checkState(inputDirectory.exists() && inputDirectory.isDirectory(),
+        "%s must be a directory.",
+        inputDirectoryPath);
 
     Closer closer = Closer.create();
     try {

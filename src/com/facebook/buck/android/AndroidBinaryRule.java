@@ -804,7 +804,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       String magicSecondaryDexSubdir = "assets/secondary-program-dex-jars";
 
       // Intermediate directory holding the primary split-zip jar.
-      String splitZipDir = getBinPath("__split_zip__/%s");
+      String splitZipDir = getBinPath("__%s_split_zip__");
       commands.add(new MakeCleanDirectoryStep(splitZipDir));
       String primaryJarPath = splitZipDir + "/primary.jar";
 
@@ -817,12 +817,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // important because SmartDexingCommand will try to dx every entry in this directory.  It
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
-      String secondaryZipDir = getBinPath("__secondary_zip__/%s");
+      String secondaryZipDir = getBinPath("__%s_secondary_zip__");
       commands.add(new MakeCleanDirectoryStep(secondaryZipDir));
 
       // Run the split-zip command which is responsible for dividing the large set of input
       // classpaths into a more compact set of jar files such that no one jar file when dexed will
       // yield a dex artifact too large for dexopt or the dx method limit to handle.
+      String zipSplitReportDir = getBinPath("__%s_split_zip_report__");
+      commands.add(new MakeCleanDirectoryStep(zipSplitReportDir));
       SplitZipStep splitZipCommand = new SplitZipStep(
           classpathEntriesToDex,
           secondaryJarMeta,
@@ -831,12 +833,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           "secondary-%d.jar",
           primaryDexSubstrings,
           dexSplitMode.getDexSplitStrategy(),
-          dexSplitMode.getDexStore());
+          dexSplitMode.getDexStore(),
+          zipSplitReportDir,
+          dexSplitMode.useLinearAllocSplitDex());
       commands.add(splitZipCommand);
 
       // Add the secondary dex directory that has yet to be created, but will be by the
       // smart dexing command.  Smart dex will handle "cleaning" this directory properly.
-      String secondaryDexParentDir = getBinPath("__secondary_dex__/%s/");
+      String secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
       secondaryDexDir = Optional.of(secondaryDexParentDir + magicSecondaryDexSubdir);
       commands.add(new MkdirStep(secondaryDexDir.get()));
 
@@ -856,7 +860,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
-    String successDir = getBinPath("__smart_dex__/%s/.success");
+    String successDir = getBinPath("__%s_smart_dex__/.success");
     commands.add(new MkdirStep(successDir));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if
@@ -924,9 +928,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
     private Set<BuildTarget> buildRulesToExcludeFromDex = Sets.newHashSet();
     private DexSplitMode dexSplitMode = new DexSplitMode(
-            /* shouldSplitDex */ false,
-            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-            DexStore.JAR);
+        /* shouldSplitDex */ false,
+        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+        DexStore.JAR,
+        /* useLinearAllocSplitDex */ false);
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private boolean compressResources = false;

@@ -161,6 +161,8 @@ public abstract class ClasspathTraversal {
     private final String relativePath;
 
     public FileLikeInDirectory(File file, String relativePath) {
+      // Currently, the only instances of FileLikeInDirectory appear to be the .class files
+      // generated from an R.java in Android. The only exception is in unit tests.
       this.file = Preconditions.checkNotNull(file);
       this.relativePath = Preconditions.checkNotNull(relativePath);
     }

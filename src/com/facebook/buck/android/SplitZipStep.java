@@ -16,10 +16,14 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.dalvik.DefaultZipSplitterFactory;
+import com.facebook.buck.dalvik.LinearAllocAwareZipSplitterFactory;
 import com.facebook.buck.dalvik.ZipSplitter;
+import com.facebook.buck.dalvik.ZipSplitterFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -56,6 +60,11 @@ public class SplitZipStep implements Step {
    */
   private static final int ZIP_SIZE_HARD_LIMIT = ZIP_SIZE_SOFT_LIMIT + (2 * 1024 * 1024);
 
+  /**
+   * We have 5MB of linear alloc, 1MB of which is taken up by the framework, so that leaves 4MB.
+   */
+  private static final int LINEAR_ALLOC_LIMIT = 4 * 1024 * 1024;
+
   @VisibleForTesting
   static final Pattern classFilePattern = Pattern.compile("^([\\w/$]+)\\.class");
 
@@ -68,6 +77,8 @@ public class SplitZipStep implements Step {
   private final Predicate<String> requiredInPrimaryZip;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
   private final DexStore dexStore;
+  private final String pathToReportDir;
+  private final boolean useLinearAllocSplitDex;
 
   /**
    * @param inputPathsToSplit Input paths that would otherwise have been passed to a single dx --dex
@@ -91,7 +102,9 @@ public class SplitZipStep implements Step {
       String secondaryJarPattern,
       Set<String> primaryDexSubstrings,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
-      DexStore dexStore) {
+      DexStore dexStore,
+      String pathToReportDir,
+      boolean useLinearAllocSplitDex) {
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
     this.secondaryJarMetaPath = Preconditions.checkNotNull(secondaryJarMetaPath);
     this.primaryJarPath = Preconditions.checkNotNull(primaryJarPath);
@@ -100,6 +113,8 @@ public class SplitZipStep implements Step {
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.dexStore = Preconditions.checkNotNull(dexStore);
+    this.pathToReportDir = Preconditions.checkNotNull(pathToReportDir);
+    this.useLinearAllocSplitDex = useLinearAllocSplitDex;
 
     this.requiredInPrimaryZip = new Predicate<String>() {
       @Override
@@ -124,17 +139,26 @@ public class SplitZipStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try {
+      ZipSplitterFactory zipSplitterFactory;
+      if (useLinearAllocSplitDex) {
+        zipSplitterFactory = new LinearAllocAwareZipSplitterFactory(LINEAR_ALLOC_LIMIT);
+      } else {
+        zipSplitterFactory = new DefaultZipSplitterFactory(ZIP_SIZE_SOFT_LIMIT,
+            ZIP_SIZE_HARD_LIMIT);
+      }
+
+      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       File primaryJarFile = new File(primaryJarPath);
-      Collection<File> secondaryZips = ZipSplitter.splitZip(
+      Collection<File> secondaryZips = zipSplitterFactory.newInstance(
           ImmutableSet.copyOf(Paths.transformPathToFile(inputPathsToSplit)),
           primaryJarFile,
           new File(secondaryJarDir),
           secondaryJarPattern,
-          ZIP_SIZE_SOFT_LIMIT,
-          ZIP_SIZE_HARD_LIMIT,
           requiredInPrimaryZip,
           dexSplitStrategy,
-          ZipSplitter.CanaryStrategy.INCLUDE_CANARIES);
+          ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
+          projectFilesystem.getFileForRelativePath(pathToReportDir))
+          .execute();
 
       BufferedWriter secondaryMetaInfoWriter = Files.newWriter(new File(secondaryJarMetaPath),
           Charsets.UTF_8);

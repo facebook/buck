@@ -373,6 +373,7 @@ def android_binary(
       package_type='debug',
       no_dx=[],
       use_split_dex=False,
+      use_linear_alloc_split_dex=False,
       minimize_primary_dex_size=False,
       dex_compression='jar',
       use_android_proguard_config_with_optimizations=False,
@@ -395,6 +396,7 @@ def android_binary(
     'package_type' : package_type,
     'no_dx' : no_dx,
     'use_split_dex': use_split_dex,
+    'use_linear_alloc_split_dex': use_linear_alloc_split_dex,
     'minimize_primary_dex_size': minimize_primary_dex_size,
     'dex_compression': dex_compression,
     'use_android_proguard_config_with_optimizations':

@@ -27,14 +27,17 @@ class DexSplitMode {
   private final boolean shouldSplitDex;
   private final DexStore dexStore;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
+  private final boolean useLinearAllocSplitDex;
 
   public DexSplitMode(
       boolean shouldSplitDex,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
-      DexStore dexStore) {
+      DexStore dexStore,
+      boolean useLinearAllocSplitDex) {
     this.shouldSplitDex = shouldSplitDex;
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.dexStore = Preconditions.checkNotNull(dexStore);
+    this.useLinearAllocSplitDex = useLinearAllocSplitDex;
   }
 
   public DexStore getDexStore() {
@@ -50,10 +53,15 @@ class DexSplitMode {
     return dexSplitStrategy;
   }
 
+  public boolean useLinearAllocSplitDex() {
+    return useLinearAllocSplitDex;
+  }
+
   public RuleKey.Builder appendToRuleKey(String prefix, RuleKey.Builder builder) {
     builder.set(prefix + ".shouldSplitDex", shouldSplitDex);
     builder.set(prefix + ".dexStore", dexStore.name());
     builder.set(prefix + ".dexSplitStrategy", dexSplitStrategy.name());
+    builder.set(prefix + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
     return builder;
   }
 }

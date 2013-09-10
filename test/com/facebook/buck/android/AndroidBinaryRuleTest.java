@@ -515,7 +515,8 @@ public class AndroidBinaryRuleTest {
         .setDexSplitMode(new DexSplitMode(
             /* shouldSplitDex */ true,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-            DexStore.JAR)));
+            DexStore.JAR,
+            /* useLinearAllocSplitDex */ false)));
 
     Set<String> classpath = Sets.newHashSet();
     ImmutableSet.Builder<String> secondaryDexDirectories = ImmutableSet.builder();
