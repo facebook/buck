@@ -141,7 +141,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
             TestResultSummary.class);
         TestCaseSummary testCaseSummary = new TestCaseSummary(
             getFullyQualifiedName(), ImmutableList.of(testResultSummary));
-        return new TestResults(contacts, ImmutableList.of(testCaseSummary));
+        return new TestResults(getBuildTarget(), ImmutableList.of(testCaseSummary), contacts);
       }
 
     };

@@ -16,12 +16,15 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -30,18 +33,26 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class TestResults {
 
-  private static final TestResults EMPTY_TEST_RESULTS = new TestResults(
-      null, ImmutableList.<TestCaseSummary>of());
-
-  private final ImmutableSet<String> contacts;
+  private final BuildTarget source;
   private final ImmutableList<TestCaseSummary> testCases;
-  private final List<TestCaseSummary> failures;
+  private final ImmutableList<TestCaseSummary> failures;
   private final int failureCount;
+  private final ImmutableSet<String> contacts;
+
+  @VisibleForTesting
+  public TestResults(List<TestCaseSummary> testCases) {
+    this(/* source */ null, testCases, /* contacts */ ImmutableSet.<String>of());
+  }
+
+  // TODO(mbolin): Require source to be non-null once D963189 is submitted.
 
   @Beta
-  public TestResults(ImmutableSet<String> contacts, List<TestCaseSummary> testCases) {
-    this.contacts = contacts;
+  public TestResults(@Nullable BuildTarget source,
+      List<TestCaseSummary> testCases,
+      ImmutableSet<String> contacts) {
+    this.source = source;
     this.testCases = ImmutableList.copyOf(testCases);
+    this.contacts = ImmutableSet.copyOf(contacts);
 
     int failureCount = 0;
     ImmutableList.Builder<TestCaseSummary> failures = ImmutableList.builder();
@@ -55,8 +66,8 @@ public class TestResults {
     this.failureCount = failureCount;
   }
 
-  public static TestResults getEmptyTestResults() {
-    return EMPTY_TEST_RESULTS;
+  public BuildTarget getBuildTarget() {
+    return source;
   }
 
   public boolean isSuccess() {
@@ -65,6 +76,10 @@ public class TestResults {
 
   public int getFailureCount() {
     return failureCount;
+  }
+
+  public ImmutableList<TestCaseSummary> getFailures() {
+    return failures;
   }
 
   public ImmutableList<TestCaseSummary> getTestCases() {

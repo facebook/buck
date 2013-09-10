@@ -322,7 +322,7 @@ public class TestCommandTest {
     TestCaseSummary testCase = new TestCaseSummary("TestCase", resultList);
     List<TestCaseSummary> testCases = ImmutableList.of(testCase);
 
-    TestResults testResults = new TestResults(ImmutableSet.<String>of(), testCases);
+    TestResults testResults = new TestResults(testCases);
     List<TestResults> testResultsList = ImmutableList.of(testResults);
 
     // Call the XML generation method with our test data.

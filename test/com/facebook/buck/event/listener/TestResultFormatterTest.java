@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -99,7 +100,7 @@ public class TestResultFormatterTest {
   public void allTestsPassingShouldBeAcknowledged() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
+    TestResults results = new TestResults(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.of(results));
@@ -111,19 +112,26 @@ public class TestResultFormatterTest {
   public void shouldReportTheNumberOfFailingTests() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest, failingTest));
-    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
+    TestResults results = new TestResults(
+        BuildTargetFactory.newInstance("//foo:bar"),
+        ImmutableList.of(summary),
+        /* contacts */ ImmutableSet.<String>of());
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.of(results));
 
-    assertEquals("TESTS FAILED: 1 Failures", toString(builder));
+    String expectedOutput = Joiner.on('\n').join(
+        "TESTS FAILED: 1 Failures",
+        "Failed target: //foo:bar",
+        "FAIL com.example.FooTest");
+    assertEquals(expectedOutput, toString(builder));
   }
 
   @Test
   public void shouldReportMinimalInformationForAPassingTest() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
-    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
+    TestResults results = new TestResults(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);
@@ -136,7 +144,7 @@ public class TestResultFormatterTest {
   public void shouldOutputStackTraceStdOutAndStdErrOfFailingTest() {
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
-    TestResults results = new TestResults(ImmutableSet.<String>of(), ImmutableList.of(summary));
+    TestResults results = new TestResults(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.reportResult(builder, results);

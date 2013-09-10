@@ -22,7 +22,9 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ListMultimap;
 
 import java.util.List;
 
@@ -86,11 +88,14 @@ public class TestResultFormatter {
   public void runComplete(ImmutableList.Builder<String> addTo, List<TestResults> completedResults) {
     // Print whether each test succeeded or failed.
     boolean isAllTestsPassed = true;
+    ListMultimap<TestResults, TestCaseSummary> failingTests = ArrayListMultimap.create();
+
     int numFailures = 0;
     for (TestResults summary : completedResults) {
       if (!summary.isSuccess()) {
         isAllTestsPassed = false;
         numFailures += summary.getFailureCount();
+        failingTests.putAll(summary, summary.getFailures());
       }
     }
 
@@ -102,6 +107,12 @@ public class TestResultFormatter {
     } else {
       addTo.add(ansi.asHighlightedFailureText(
           String.format("TESTS FAILED: %d Failures", numFailures)));
+      for (TestResults results : failingTests.keySet()) {
+        addTo.add("Failed target: " + results.getBuildTarget().getFullyQualifiedName());
+        for (TestCaseSummary summary : failingTests.get(results)) {
+          addTo.add(summary.toString());
+        }
+      }
     }
   }
 }

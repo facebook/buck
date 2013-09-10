@@ -258,7 +258,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         // were run by its deps. In this case, return an empty TestResults.
         Set<String> testClassNames = getClassNamesForSources(context);
         if (testClassNames.isEmpty()) {
-          return TestResults.getEmptyTestResults();
+          return new TestResults(getBuildTarget(), ImmutableList.<TestCaseSummary>of(), contacts);
         }
 
         List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
@@ -270,7 +270,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
           summaries.add(summary);
         }
 
-        return new TestResults(contacts, summaries);
+        return new TestResults(getBuildTarget(), summaries, contacts);
       }
 
     };
