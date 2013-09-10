@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.HashCodes;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -71,7 +70,7 @@ public class RuleKey {
    *     {@link com.google.common.hash.HashCode#toString()}.
    */
   public RuleKey(String hashString) {
-    this(HashCodes.fromBytes(hashStringToBytes(hashString)));
+    this(HashCode.fromBytes(hashStringToBytes(hashString)));
   }
 
   private static byte[] hashStringToBytes(String hashString) {

@@ -9,15 +9,15 @@
       <root url="jar://$PROJECT_DIR$/lib/ini4j-0.5.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/ddmlib-r21.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/sdklib.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/guava-14.0.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-4.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jetty/jetty-all-9.0.4.v20130625.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jetty/servlet-api.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/guava-15.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/lib/guava-14.0.1-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-4.1-src.zip!/" />
+      <root url="jar://$PROJECT_DIR$/lib/guava-15.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

@@ -34,8 +34,8 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'guava',
-  binary_jar = 'guava-14.0.1.jar',
-  source_jar = 'guava-14.0.1-sources.jar',
+  binary_jar = 'guava-15.0.jar',
+  source_jar = 'guava-15.0-sources.jar',
   visibility = [
     'PUBLIC',
   ],

@@ -381,7 +381,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       if (!abiKey.isPresent()) {
         return Optional.absent();
       }
-      hasher.putString(abiKey.get().getHash());
+      hasher.putUnencodedChars(abiKey.get().getHash());
     }
 
     return Optional.of(new Sha1HashCode(hasher.hash().toString()));
