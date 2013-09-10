@@ -23,7 +23,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.hash.HashCodes;
+import com.google.common.hash.HashCode;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 
@@ -128,6 +128,6 @@ public class ClasspathTraversalTest {
     assertEquals(1, entries.size());
     FileLike entry = Iterables.getFirst(entries, null);
     assertEquals("CRC of input text should equal FileLike#fastHash",
-        HashCodes.fromLong(contentsCrc32), entry.fastHash());
+        HashCode.fromLong(contentsCrc32), entry.fastHash());
   }
 }

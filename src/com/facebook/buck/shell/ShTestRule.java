@@ -18,12 +18,12 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestRule;
@@ -86,6 +86,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
     return labels;
   }
 
+  @Override
   public ImmutableSet<String> getContacts() {
     return ImmutableSet.<String>of();
   }

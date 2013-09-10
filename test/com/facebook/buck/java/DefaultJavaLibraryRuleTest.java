@@ -593,8 +593,8 @@ public class DefaultJavaLibraryRuleTest {
         "getAbiKeyForDeps() should be the same for both rules because they have the same deps.",
         commonNoExport.getAbiKeyForDeps(),
         commonWithExport.getAbiKeyForDeps());
-    String expectedAbiKeyForDepsHash = Hashing.sha1().newHasher().putString(tinyLibAbiKeyHash)
-        .hash().toString();
+    String expectedAbiKeyForDepsHash = Hashing.sha1().newHasher()
+        .putUnencodedChars(tinyLibAbiKeyHash).hash().toString();
     String observedAbiKeyForDepsHash = commonNoExport.getAbiKeyForDeps().get().getHash();
     assertEquals(expectedAbiKeyForDepsHash, observedAbiKeyForDepsHash);
 
@@ -626,8 +626,8 @@ public class DefaultJavaLibraryRuleTest {
         consumerNoExport.getAbiKeyForDeps(),
         not(equalTo(consumerWithExport.getAbiKeyForDeps())));
     String expectedAbiKeyNoDepsHashForConsumerWithExport = Hashing.sha1().newHasher()
-        .putString(commonWithExportAbiKeyHash)
-        .putString(tinyLibAbiKeyHash)
+        .putUnencodedChars(commonWithExportAbiKeyHash)
+        .putUnencodedChars(tinyLibAbiKeyHash)
         .hash()
         .toString();
     String observedAbiKeyNoDepsHashForConsumerWithExport = consumerWithExport.getAbiKeyForDeps()

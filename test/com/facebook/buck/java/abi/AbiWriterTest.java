@@ -610,7 +610,7 @@ public class AbiWriterTest {
   private String hashWithGuava(SortedSet<String> summaries) {
     Hasher hasher = Hashing.sha1().newHasher();
     for (String summary : summaries) {
-      hasher.putString(summary);
+      hasher.putUnencodedChars(summary);
     }
     return hasher.hash().toString();
   }
