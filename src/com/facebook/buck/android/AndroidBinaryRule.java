@@ -142,6 +142,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final Optional<SourcePath> proguardConfig;
   private final boolean compressResources;
   private final ImmutableSet<String> primaryDexSubstrings;
+  private final long linearAllocHardLimit;
 
   /**
    * File that whitelists the class files that should be in the primary dex.
@@ -178,6 +179,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Optional<SourcePath> proguardConfig,
       boolean compressResources,
       Set<String> primaryDexSubstrings,
+      long linearAllocHardLimit,
       Optional<SourcePath> primaryDexClassesFile,
       FilterResourcesStep.ResourceFilter resourceFilter,
       Set<TargetCpuType> cpuFilters) {
@@ -192,6 +194,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.compressResources = compressResources;
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
+    this.linearAllocHardLimit = linearAllocHardLimit;
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.outputGenDirectory = String.format("%s/%s",
         BuckConstant.GEN_DIR,
@@ -228,6 +231,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
         .set("compressResources", compressResources)
         .set("primaryDexSubstrings", primaryDexSubstrings)
+        .set("linearAllocHardLimit", linearAllocHardLimit)
         .set("primaryDexClassesFile", primaryDexClassesFile.transform(SourcePath.TO_REFERENCE))
         .set("resourceFilter", resourceFilter.getDescription())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString());
@@ -855,7 +859,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           dexSplitMode.getDexSplitStrategy(),
           dexSplitMode.getDexStore(),
           zipSplitReportDir,
-          dexSplitMode.useLinearAllocSplitDex());
+          dexSplitMode.useLinearAllocSplitDex(),
+          linearAllocHardLimit);
       commands.add(splitZipCommand);
 
       // Add the secondary dex directory that has yet to be created, but will be by the
@@ -929,7 +934,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return primaryDexSubstrings;
   }
 
-  Optional<SourcePath> getPrimaryDexManifest() {
+  long getLinearAllocHardLimit() {
+    return linearAllocHardLimit;
+  }
+
+  Optional<SourcePath> getPrimaryDexClassesFile() {
     return primaryDexClassesFile;
   }
 
@@ -960,6 +969,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private boolean compressResources = false;
     private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
+    private long linearAllocHardLimit = 0;
     private Optional<SourcePath> primaryDexClassesFile = Optional.absent();
     private FilterResourcesStep.ResourceFilter resourceFilter =
         new FilterResourcesStep.ResourceFilter(ImmutableList.<String>of());
@@ -999,6 +1009,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           proguardConfig,
           compressResources,
           primaryDexSubstrings.build(),
+          linearAllocHardLimit,
           primaryDexClassesFile,
           resourceFilter,
           cpuFilters.build());
@@ -1074,6 +1085,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     public Builder addPrimaryDexSubstrings(Iterable<String> primaryDexSubstrings) {
       this.primaryDexSubstrings.addAll(primaryDexSubstrings);
+      return this;
+    }
+
+    public Builder setLinearAllocHardLimit(long linearAllocHardLimit) {
+      this.linearAllocHardLimit = linearAllocHardLimit;
       return this;
     }
 

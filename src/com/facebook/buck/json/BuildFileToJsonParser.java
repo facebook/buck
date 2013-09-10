@@ -155,6 +155,12 @@ public class BuildFileToJsonParser {
         currentFieldName = null;
         break;
 
+      case VALUE_NUMBER_INT:
+        Preconditions.checkState(currentArray == null, "Unexpected int in JSON array");
+        currentObject.put(currentFieldName, parser.getLongValue());
+        currentFieldName = null;
+        break;
+
       case VALUE_NULL:
         if (currentArray == null) {
           currentObject.put(currentFieldName, null);

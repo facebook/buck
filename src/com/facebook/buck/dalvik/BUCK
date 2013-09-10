@@ -1,3 +1,15 @@
+java_library(
+  name = 'linearalloc_estimator',
+  srcs = [
+    'LinearAllocEstimator.java',  
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//third-party/java/asm:asm',
+  ],
+)
+
 java_binary(
   name = 'cli_linearalloc_estimator',
   main_class = 'com.facebook.buck.dalvik.LinearAllocEstimator',
@@ -8,13 +20,29 @@ java_binary(
 
 java_library(
   name = 'dalvik',
-  srcs = glob(['*.java']),
+  srcs = [
+    'AbstractFileLike.java',
+    'AbstractZipSplitter.java',
+    'ClasspathTraversal.java',
+    'ClasspathTraverser.java',
+    'DefaultClasspathTraverser.java',
+    'DefaultZipSplitterFactory.java',
+    'DefaultZipSplitter.java',
+    'FileLikeInputSupplier.java',
+    'FileLike.java',
+    'LinearAllocAwareZipSplitterFactory.java',
+    'LinearAllocAwareZipSplitter.java',
+    'ZipOutputStreamHelper.java',
+    'ZipSplitterFactory.java',
+    'ZipSplitter.java',
+  ],
   deps = [
+    ':linearalloc_estimator',
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
-    '//third-party/java/asm:asm',
   ],
   visibility = [
     'PUBLIC',

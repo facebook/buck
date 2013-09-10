@@ -101,6 +101,10 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     List<String> primaryDexSubstrings = params.getOptionalListAttribute("primary_dex_substrings");
     builder.addPrimaryDexSubstrings(primaryDexSubstrings);
 
+    // linear_alloc_hard_limit
+    long linearAllocHardLimit = params.getRequiredLongAttribute("linear_alloc_hard_limit");
+    builder.setLinearAllocHardLimit(linearAllocHardLimit);
+
     // primary_dex_classes_file
     Optional<SourcePath> primaryDexClassesFile = params.getOptionalSourcePath(
         "primary_dex_classes_file", builder);

@@ -255,6 +255,15 @@ public class RuleKey {
       return feed((b ? "t" : "f").getBytes()).separate();
     }
 
+    private Builder setVal(long value) {
+      if (logElms != null) {
+        logElms.add(String.format("long(\"%s\"):", value));
+      }
+      hasher.putLong(value);
+      separate();
+      return this;
+    }
+
     private Builder setVal(@Nullable RuleKey ruleKey) {
       if (ruleKey != null) {
         if (logElms != null) {
@@ -278,6 +287,10 @@ public class RuleKey {
     }
 
     public Builder set(String key, boolean val) {
+      return setKey(key).setVal(val);
+    }
+
+    public Builder set(String key, long val) {
       return setKey(key).setVal(val);
     }
 

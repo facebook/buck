@@ -17,6 +17,8 @@
 package com.facebook.buck.json;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.ImmutableList;
@@ -48,6 +50,20 @@ public class BuildFileToJsonParserTest {
                     "src/com/facebook/buck/Bar.java",
                     "src/com/facebook/buck/Foo.java"))),
         tokens);
+  }
+
+  @Test
+  public void testParseLong() throws IOException {
+    String json = "{\"thing\": 27}";
+    BuildFileToJsonParser parser = new BuildFileToJsonParser(json);
+    List<Map<String, Object>> rules = parser.nextRules();
+
+    assertEquals(1, rules.size());
+    Map<String, Object> rule = rules.get(0);
+    Object value = rule.get("thing");
+    assertTrue(value instanceof Long);
+    assertEquals(27L, rule.get("thing"));
+    assertNotEquals(27, rule.get("thing"));
   }
 
   @Test

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
 
 import java.io.File;
@@ -61,6 +62,9 @@ public class LinearAllocAwareZipSplitter extends AbstractZipSplitter {
         dexSplitStrategy,
         canaryStrategy,
         reportDir);
+    if (linearAllocLimit <= 0) {
+      throw new HumanReadableException("linear_alloc_hard_limit must be greater than zero.");
+    }
   }
 
   public static LinearAllocAwareZipSplitter splitZip(

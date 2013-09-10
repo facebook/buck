@@ -313,6 +313,18 @@ public final class BuildRuleFactoryParams {
     return resolveFilePathRelativeToBuildFileDirectoryTransform;
   }
 
+  public long getRequiredLongAttribute(String attributeName) {
+    Object value = instance.get(attributeName);
+    if (value != null && value instanceof Long) {
+      return (Long)value;
+    } else {
+      throw new RuntimeException(String.format("Expected a long for %s in %s but was %s",
+          attributeName,
+          target.getBuildFile().getPath(),
+          value));
+    }
+  }
+
   /** If a boolean attribute has not been specified, then it always defaults to false. */
   public boolean getBooleanAttribute(String attributeName) {
     Object value = instance.get(attributeName);

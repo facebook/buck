@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.DefaultZipSplitterFactory;
+import com.facebook.buck.dalvik.LinearAllocAwareZipSplitter;
 import com.facebook.buck.dalvik.LinearAllocAwareZipSplitterFactory;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;
@@ -64,11 +65,6 @@ public class SplitZipStep implements Step {
    */
   private static final int ZIP_SIZE_HARD_LIMIT = ZIP_SIZE_SOFT_LIMIT + (2 * 1024 * 1024);
 
-  /**
-   * We have 5MB of linear alloc, 1MB of which is taken up by the framework, so that leaves 4MB.
-   */
-  private static final int LINEAR_ALLOC_LIMIT = 4 * 1024 * 1024;
-
   @VisibleForTesting
   static final Pattern classFilePattern = Pattern.compile("^([\\w/$]+)\\.class");
 
@@ -83,6 +79,7 @@ public class SplitZipStep implements Step {
   private final DexStore dexStore;
   private final String pathToReportDir;
   private final boolean useLinearAllocSplitDex;
+  private final long linearAllocHardLimit;
 
   /**
    * @param inputPathsToSplit Input paths that would otherwise have been passed to a single dx --dex
@@ -97,6 +94,8 @@ public class SplitZipStep implements Step {
    * @param primaryDexSubstrings Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output).
+   * @param useLinearAllocSplitDex If true, {@link LinearAllocAwareZipSplitter} will be used. Also,
+   *     {@code linearAllocHardLimit} must have a positive value in this case.
    */
   public SplitZipStep(
       Set<String> inputPathsToSplit,
@@ -109,7 +108,8 @@ public class SplitZipStep implements Step {
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
       String pathToReportDir,
-      boolean useLinearAllocSplitDex) {
+      boolean useLinearAllocSplitDex,
+      long linearAllocHardLimit) {
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
     this.secondaryJarMetaPath = Preconditions.checkNotNull(secondaryJarMetaPath);
     this.primaryJarPath = Preconditions.checkNotNull(primaryJarPath);
@@ -121,6 +121,7 @@ public class SplitZipStep implements Step {
     this.dexStore = Preconditions.checkNotNull(dexStore);
     this.pathToReportDir = Preconditions.checkNotNull(pathToReportDir);
     this.useLinearAllocSplitDex = useLinearAllocSplitDex;
+    this.linearAllocHardLimit = linearAllocHardLimit;
   }
 
   @Override
@@ -130,7 +131,7 @@ public class SplitZipStep implements Step {
 
       ZipSplitterFactory zipSplitterFactory;
       if (useLinearAllocSplitDex) {
-        zipSplitterFactory = new LinearAllocAwareZipSplitterFactory(LINEAR_ALLOC_LIMIT);
+        zipSplitterFactory = new LinearAllocAwareZipSplitterFactory(linearAllocHardLimit);
       } else {
         zipSplitterFactory = new DefaultZipSplitterFactory(ZIP_SIZE_SOFT_LIMIT,
             ZIP_SIZE_HARD_LIMIT);

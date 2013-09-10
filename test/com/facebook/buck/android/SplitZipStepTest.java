@@ -106,7 +106,8 @@ public class SplitZipStepTest {
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         DexStore.JAR,
         /* pathToReportDir */ "",
-        /* useLinearAllocSplitDex */ true);
+        /* useLinearAllocSplitDex */ true,
+        /* linearAllocHardLimit */ 4 * 1024 * 1024);
     List<String> linesInManifestFile = ImmutableList.of(
         "com/google/common/collect/ImmutableSortedSet.class",
         "  com/google/common/collect/ImmutableSet.class",
