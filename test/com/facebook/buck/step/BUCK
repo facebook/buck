@@ -2,9 +2,15 @@ java_library(
   name = 'testutil',
   srcs = [
     'FakeStep.java',
+    'TestExecutionContext.java',
   ],
   deps = [
+    '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util/environment:environment',
+    '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
   ],
   visibility = [
     '//test/...',

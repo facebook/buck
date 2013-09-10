@@ -19,12 +19,10 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
@@ -50,11 +48,8 @@ public class JarDirectoryStepTest {
         ImmutableSet.of(first.getName(), second.getName()),
         "com.example.Main",
         /* manifest file */ null);
-    ExecutionContext context = ExecutionContext.builder()
+    ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(zipup))
-        .setConsole(new TestConsole())
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
         .build();
 
     int returnCode = step.execute(context);
@@ -80,11 +75,9 @@ public class JarDirectoryStepTest {
         ImmutableSet.of(first.getName(), second.getName()),
         "com.example.Main",
         /* manifest file */ null);
-    ExecutionContext context = ExecutionContext.builder()
+
+    ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(zipup))
-        .setConsole(new TestConsole())
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
         .build();
 
     int returnCode = step.execute(context);

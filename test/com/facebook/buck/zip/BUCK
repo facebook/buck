@@ -10,6 +10,7 @@ java_test(
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/zip:steps',
+    '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
   ],
 )

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.io.ByteStreams;
@@ -63,11 +64,13 @@ public class XzStepTest {
         /* keep */ false,
         XZ.CHECK_CRC32);
 
-    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
     ProjectFilesystem fs = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(context.getProjectFilesystem()).andReturn(fs);
     EasyMock.expect(fs.deleteFileAtPath(sourceFile.getPath())).andReturn(true);
-    EasyMock.replay(fs, context);
+    EasyMock.replay(fs);
+
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(fs)
+        .build();
 
     assertEquals(0, step.execute(context));
 
@@ -84,6 +87,6 @@ public class XzStepTest {
         ByteStreams.equal(decompressed, original)
     );
 
-    EasyMock.verify(fs, context);
+    EasyMock.verify(fs);
   }
 }

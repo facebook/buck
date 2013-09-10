@@ -19,13 +19,11 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -122,11 +120,8 @@ public class JavacInMemoryStepTest {
   }
 
   private ExecutionContext createExecutionContext() {
-    return ExecutionContext.builder()
+    return TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
-        .setConsole(new TestConsole())
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
         .build();
   }
 }

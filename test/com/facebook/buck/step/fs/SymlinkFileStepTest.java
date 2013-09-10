@@ -15,17 +15,12 @@
  */
 package com.facebook.buck.step.fs;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
@@ -48,11 +43,8 @@ public class SymlinkFileStepTest {
 
   @Test
   public void testSymlinkFiles() throws IOException {
-    ExecutionContext context = ExecutionContext.builder()
-        .setConsole(new TestConsole())
+    ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(tmpDir.getRoot()))
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setPlatform(Platform.detect())
         .build();
 
     File source = tmpDir.newFile();
@@ -96,9 +88,9 @@ public class SymlinkFileStepTest {
 
     // Create an ExecutionContext to return the ProjectFilesystem.
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
-    replay(executionContext);
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(projectFilesystem)
+        .build();
 
     tmpDir.newFile("dummy");
     SymlinkFileStep symlinkStep = new SymlinkFileStep(
@@ -108,7 +100,5 @@ public class SymlinkFileStepTest {
     assertEquals(0, exitCode);
     assertTrue(java.nio.file.Files.isSymbolicLink(symlink));
     assertTrue(symlink.toFile().exists());
-
-    verify(executionContext);
   }
 }

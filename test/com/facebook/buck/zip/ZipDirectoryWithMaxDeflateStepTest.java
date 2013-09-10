@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
@@ -93,13 +94,10 @@ public class ZipDirectoryWithMaxDeflateStepTest {
     ZipDirectoryWithMaxDeflateStep zipCommand = new ZipDirectoryWithMaxDeflateStep(
         emptyTempDir.getAbsolutePath(), emptyOutput.getAbsolutePath(), 128);
 
-    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.replay(executionContext);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     zipCommand.execute(executionContext);
 
     assertFalse(emptyOutput.exists());
-
-    EasyMock.verify(executionContext);
   }
 }
