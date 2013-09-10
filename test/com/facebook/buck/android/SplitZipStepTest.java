@@ -17,13 +17,21 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.dalvik.ZipSplitter;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 
+import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -35,6 +43,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -80,6 +90,64 @@ public class SplitZipStepTest {
     assertEquals(SmartDexingStep.transformInputToDexOutput(outJar.getName(), DexStore.JAR), data[0]);
     assertTrue(String.format("Unexpected class: %s", data[2]),
         fileToClassName.values().contains(data[2]));
+  }
+
+  @Test
+  public void testRequiredInPrimaryZipPredicate() throws IOException {
+    Path primaryDexClassesFile = Paths.get("the/manifest.txt");
+    SplitZipStep splitZipStep = new SplitZipStep(
+        /* inputPathsToSplit */ ImmutableSet.<String>of(),
+        /* secondaryJarMetaPath */ "",
+        /* primaryJarPath */ "",
+        /* secondaryJarDir */ "",
+        /* secondaryJarPattern */ "",
+        /* primaryDexSubstrings */ ImmutableSet.of("List"),
+        Optional.of(primaryDexClassesFile),
+        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+        DexStore.JAR,
+        /* pathToReportDir */ "",
+        /* useLinearAllocSplitDex */ true);
+    List<String> linesInManifestFile = ImmutableList.of(
+        "com/google/common/collect/ImmutableSortedSet.class",
+        "  com/google/common/collect/ImmutableSet.class",
+        "# com/google/common/collect/ImmutableMap.class"
+        );
+
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
+        .andReturn(linesInManifestFile);
+    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
+    EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem);
+    EasyMock.replay(projectFilesystem, context);
+
+    Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
+        .createRequiredInPrimaryZipPredicate(context);
+    assertTrue(
+        "All non-.class files should be accepted.",
+        requiredInPrimaryZipPredicate.apply("apples.txt"));
+    assertTrue(
+        "com/google/common/collect/ImmutableSortedSet.class is listed in the manifest verbatim.",
+        requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableSortedSet.class"));
+    assertTrue(
+        "com/google/common/collect/ImmutableSet.class is in the manifest with whitespace.",
+        requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableSet.class"));
+    assertFalse(
+        "com/google/common/collect/ImmutableSet.class cannot have whitespace as param.",
+        requiredInPrimaryZipPredicate.apply("  com/google/common/collect/ImmutableSet.class"));
+    assertFalse(
+        "com/google/common/collect/ImmutableMap.class is commented out.",
+        requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableMap.class"));
+    assertFalse(
+        "com/google/common/collect/Iterables.class is not even mentioned.",
+        requiredInPrimaryZipPredicate.apply("com/google/common/collect/Iterables.class"));
+    assertTrue(
+        "java/awt/List.class matches the substring 'List'.",
+        requiredInPrimaryZipPredicate.apply("java/awt/List.class"));
+    assertFalse(
+        "Substring matching is case-sensitive.",
+        requiredInPrimaryZipPredicate.apply("shiny/Glistener.class"));
+
+    EasyMock.verify(projectFilesystem, context);
   }
 
   @Test

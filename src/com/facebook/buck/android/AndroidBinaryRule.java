@@ -61,6 +61,7 @@ import com.facebook.buck.util.Paths;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -72,6 +73,7 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -140,6 +142,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final Optional<SourcePath> proguardConfig;
   private final boolean compressResources;
   private final ImmutableSet<String> primaryDexSubstrings;
+
+  /**
+   * File that whitelists the class files that should be in the primary dex.
+   * <p>
+   * Values in this file must match JAR entries exactly, so they should contain path separators.
+   * For example:
+   * <pre>
+   * com/google/common/collect/ImmutableSet.class
+   * </pre>
+   */
+  private final Optional<SourcePath> primaryDexClassesFile;
+
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
@@ -164,6 +178,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Optional<SourcePath> proguardConfig,
       boolean compressResources,
       Set<String> primaryDexSubstrings,
+      Optional<SourcePath> primaryDexClassesFile,
       FilterResourcesStep.ResourceFilter resourceFilter,
       Set<TargetCpuType> cpuFilters) {
     super(buildRuleParams);
@@ -177,6 +192,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.compressResources = compressResources;
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
+    this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.outputGenDirectory = String.format("%s/%s",
         BuckConstant.GEN_DIR,
         getBuildTarget().getBasePathWithSlash());
@@ -212,6 +228,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
         .set("compressResources", compressResources)
         .set("primaryDexSubstrings", primaryDexSubstrings)
+        .set("primaryDexClassesFile", primaryDexClassesFile.transform(SourcePath.TO_REFERENCE))
         .set("resourceFilter", resourceFilter.getDescription())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString());
     return dexSplitMode.appendToRuleKey("dexSplitMode", builder);
@@ -388,7 +405,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         dexTransitiveDependencies.classpathEntriesToDex,
         secondaryDexDirectories,
         commands,
-        dexFile);
+        dexFile,
+        context.getSourcePathResolver());
 
     // Copy the transitive closure of files in assets to a single directory, if any.
     final ImmutableMap<String, File> extraAssets = extraAssetsBuilder.build();
@@ -793,7 +811,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<String> classpathEntriesToDex,
       ImmutableSet.Builder<String> secondaryDexDirectories,
       ImmutableList.Builder<Step> commands,
-      String primaryDexPath) {
+      String primaryDexPath,
+      Function<SourcePath, Path> sourcePathResolver) {
     final Set<String> primaryInputsToDex;
     final Optional<String> secondaryDexDir;
     final Optional<String> secondaryInputsDir;
@@ -832,6 +851,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           secondaryZipDir,
           "secondary-%d.jar",
           primaryDexSubstrings,
+          primaryDexClassesFile.transform(sourcePathResolver),
           dexSplitMode.getDexSplitStrategy(),
           dexSplitMode.getDexStore(),
           zipSplitReportDir,
@@ -909,6 +929,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return primaryDexSubstrings;
   }
 
+  Optional<SourcePath> getPrimaryDexManifest() {
+    return primaryDexClassesFile;
+  }
+
   @Override
   public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
@@ -936,6 +960,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private boolean compressResources = false;
     private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
+    private Optional<SourcePath> primaryDexClassesFile = Optional.absent();
     private FilterResourcesStep.ResourceFilter resourceFilter =
         new FilterResourcesStep.ResourceFilter(ImmutableList.<String>of());
     private ImmutableSet.Builder<TargetCpuType> cpuFilters = ImmutableSet.builder();
@@ -974,6 +999,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           proguardConfig,
           compressResources,
           primaryDexSubstrings.build(),
+          primaryDexClassesFile,
           resourceFilter,
           cpuFilters.build());
     }
@@ -1048,6 +1074,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     public Builder addPrimaryDexSubstrings(Iterable<String> primaryDexSubstrings) {
       this.primaryDexSubstrings.addAll(primaryDexSubstrings);
+      return this;
+    }
+
+    public Builder setPrimaryDexClassesFile(Optional<SourcePath> primaryDexClassesFile) {
+      this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
       return this;
     }
 

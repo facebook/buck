@@ -62,6 +62,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -522,7 +523,16 @@ public class AndroidBinaryRuleTest {
     ImmutableSet.Builder<String> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
     String primaryDexPath = BIN_DIR + "/.dex/classes.dex";
-    splitDexRule.addDexingCommands(classpath, secondaryDexDirectories, commandsBuilder, primaryDexPath);
+    splitDexRule.addDexingCommands(classpath,
+        secondaryDexDirectories,
+        commandsBuilder,
+        primaryDexPath,
+        /* sourcePathResolver */ new Function<SourcePath, Path>() {
+          @Override
+          public Path apply(SourcePath input) {
+            throw new UnsupportedOperationException("This resolver should not be used.");
+          }
+        });
 
     assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +
         "secondary zips)", 2, secondaryDexDirectories.build().size());

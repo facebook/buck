@@ -101,6 +101,11 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     List<String> primaryDexSubstrings = params.getOptionalListAttribute("primary_dex_substrings");
     builder.addPrimaryDexSubstrings(primaryDexSubstrings);
 
+    // primary_dex_classes_file
+    Optional<SourcePath> primaryDexClassesFile = params.getOptionalSourcePath(
+        "primary_dex_classes_file", builder);
+    builder.setPrimaryDexClassesFile(primaryDexClassesFile);
+
     // resource_filter
     List<String> resourceFilter = params.getOptionalListAttribute("resource_filter");
     builder.setResourceFilter(new FilterResourcesStep.ResourceFilter(resourceFilter));

@@ -26,9 +26,12 @@ import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -36,6 +39,7 @@ import com.google.common.io.Files;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -74,7 +78,7 @@ public class SplitZipStep implements Step {
   private final String secondaryJarDir;
   private final String secondaryJarPattern;
   private final ImmutableSet<String> primaryDexSubstrings;
-  private final Predicate<String> requiredInPrimaryZip;
+  private final Optional<Path> primaryDexClassesFile;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
   private final DexStore dexStore;
   private final String pathToReportDir;
@@ -101,6 +105,7 @@ public class SplitZipStep implements Step {
       String secondaryJarDir,
       String secondaryJarPattern,
       Set<String> primaryDexSubstrings,
+      Optional<Path> primaryDexClassesFile,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
       String pathToReportDir,
@@ -111,34 +116,18 @@ public class SplitZipStep implements Step {
     this.secondaryJarDir = Preconditions.checkNotNull(secondaryJarDir);
     this.secondaryJarPattern = Preconditions.checkNotNull(secondaryJarPattern);
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
+    this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.dexStore = Preconditions.checkNotNull(dexStore);
     this.pathToReportDir = Preconditions.checkNotNull(pathToReportDir);
     this.useLinearAllocSplitDex = useLinearAllocSplitDex;
-
-    this.requiredInPrimaryZip = new Predicate<String>() {
-      @Override
-      public boolean apply(String name) {
-        // This is a bit of a hack.  DX automatically strips non-class assets from the primary
-        // dex (because the output is classes.dex, which cannot contain assets), but not from
-        // secondary dex jars (because the output is a jar that can contain assets), so we put
-        // all assets in the primary jar to ensure that they get dropped.
-        if (!name.endsWith(".class")) {
-          return true;
-        }
-        for (String substr : SplitZipStep.this.primaryDexSubstrings) {
-          if (name.contains(substr)) {
-            return true;
-          }
-        }
-        return false;
-      }
-    };
   }
 
   @Override
   public int execute(ExecutionContext context) {
     try {
+      Predicate<String> requiredInPrimaryZip = createRequiredInPrimaryZipPredicate(context);
+
       ZipSplitterFactory zipSplitterFactory;
       if (useLinearAllocSplitDex) {
         zipSplitterFactory = new LinearAllocAwareZipSplitterFactory(LINEAR_ALLOC_LIMIT);
@@ -173,6 +162,58 @@ public class SplitZipStep implements Step {
       e.printStackTrace(context.getStdErr());
       return 1;
     }
+  }
+
+  @VisibleForTesting
+  Predicate<String> createRequiredInPrimaryZipPredicate(ExecutionContext context)
+      throws IOException {
+    final ImmutableSet<String> classNames;
+    if (primaryDexClassesFile.isPresent()) {
+      Path manifest = primaryDexClassesFile.get();
+      classNames = FluentIterable
+          .from(context.getProjectFilesystem().readLines(manifest))
+          .transform(new Function<String, String>() {
+            @Override
+            public String apply(String line) {
+              // Blank lines should be ignored.
+              return line.trim();
+            }
+          })
+          .filter(new Predicate<String>() {
+            @Override
+            public boolean apply(String line) {
+              // Allow users to use # to comment out a line.
+              return !line.isEmpty() && !(line.charAt(0) == '#');
+            }
+          })
+          .toSet();
+    } else {
+      classNames = ImmutableSet.of();
+    }
+
+    return new Predicate<String>() {
+      @Override
+      public boolean apply(String name) {
+        // This is a bit of a hack.  DX automatically strips non-class assets from the primary
+        // dex (because the output is classes.dex, which cannot contain assets), but not from
+        // secondary dex jars (because the output is a jar that can contain assets), so we put
+        // all assets in the primary jar to ensure that they get dropped.
+        if (!name.endsWith(".class")) {
+          return true;
+        }
+
+        if (classNames.contains(name)) {
+          return true;
+        }
+
+        for (String substr : SplitZipStep.this.primaryDexSubstrings) {
+          if (name.contains(substr)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    };
   }
 
   @VisibleForTesting

@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -230,6 +231,11 @@ public class ProjectFilesystem {
       // Because the file is not even guaranteed to exist, swallow the IOException.
       return Optional.absent();
     }
+  }
+
+  public List<String> readLines(Path pathRelativeToProjectRoot) throws IOException {
+    File file = getFileForRelativePath(pathRelativeToProjectRoot);
+    return Files.readLines(file, Charsets.UTF_8);
   }
 
   public Optional<File> getFileIfExists(String path) {
