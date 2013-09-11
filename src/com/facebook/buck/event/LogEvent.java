@@ -47,6 +47,10 @@ public class LogEvent extends AbstractBuckEvent {
     return new LogEvent(level, String.format(message, args));
   }
 
+  public static LogEvent fine(String message, Object... args) {
+    return LogEvent.create(Level.FINE, message, args);
+  }
+
   public static LogEvent info(String message, Object... args) {
     return LogEvent.create(Level.INFO, message, args);
   }

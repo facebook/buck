@@ -49,9 +49,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CassandraArtifactCache implements ArtifactCache {
+
+  /**
+   * If the user is offline, then we do not want to print every connection failure that occurs.
+   * However, in practice, it appears that some connection failures can be intermittent, so we
+   * should print enough to provide a signal of how flaky the connection is.
+   */
+  private static final int MAX_CONNECTION_FAILURE_REPORTS = 10;
+
   private static final String poolName = "ArtifactCachePool";
   private static final String clusterName = "BuckCacheCluster";
   private static final String keyspaceName = "Buck";
@@ -92,7 +100,7 @@ public class CassandraArtifactCache implements ArtifactCache {
   }
 
   private final Future<KeyspaceAndTtl> keyspaceAndTtlFuture;
-  private final AtomicBoolean isKeyspaceAndTtlFutureAKnownFailure;
+  private final AtomicInteger numConnectionExceptionReports;
   private final boolean doStore;
   private final BuckEventBus buckEventBus;
 
@@ -100,7 +108,7 @@ public class CassandraArtifactCache implements ArtifactCache {
       throws ConnectionException {
     this.doStore = doStore;
     this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
-    this.isKeyspaceAndTtlFutureAKnownFailure = new AtomicBoolean(false);
+    this.numConnectionExceptionReports = new AtomicInteger(0);
 
     final AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(clusterName)
@@ -125,9 +133,14 @@ public class CassandraArtifactCache implements ArtifactCache {
       public KeyspaceAndTtl call() throws ConnectionException {
         context.start();
         Keyspace keyspace = context.getClient();
-        verifyMagic(keyspace);
-        int ttl = getTtl(keyspace);
-        return new KeyspaceAndTtl(keyspace, ttl);
+        try {
+          verifyMagic(keyspace);
+          int ttl = getTtl(keyspace);
+          return new KeyspaceAndTtl(keyspace, ttl);
+        } catch (ConnectionException e) {
+          reportConnectionFailure("Attempting to get keyspace and ttl from server.", e);
+          throw e;
+        }
       }
     });
   }
@@ -153,24 +166,14 @@ public class CassandraArtifactCache implements ArtifactCache {
    *    otherwise Optional.absent().  This method will block until connection finishes.
    */
   private Optional<KeyspaceAndTtl> getKeyspaceAndTtl() {
-    // If we know that things are failing. return right away and assume the failure has already
-    // been reported to the user.
-    if (isKeyspaceAndTtlFutureAKnownFailure.get()) {
-      return Optional.absent();
-    }
-
-    // If available, return the value in the Future. In the event of a failure, Optional.absent()
-    // will be returned.
     try {
       return Optional.of(keyspaceAndTtlFuture.get());
-    } catch (InterruptedException | ExecutionException e) {
-      // There are probably multiple threads waiting on keyspaceAndTtlFuture at the start of the
-      // build, so check the flag again before deciding to print.
-      if (!isKeyspaceAndTtlFutureAKnownFailure.getAndSet(true)) {
-        buckEventBus.post(ThrowableLogEvent.create(e, "Connecting to cassandra failed."));
-      }
-      return Optional.absent();
+    } catch (ExecutionException | InterruptedException e) {
+      buckEventBus.post(ThrowableLogEvent.create(e,
+          "Unexpected error when fetching keyspace and ttl: %s.",
+          e.getMessage()));
     }
+    return Optional.absent();
   }
 
   private static int getTtl(Keyspace keyspace) throws ConnectionException {
@@ -179,12 +182,12 @@ public class CassandraArtifactCache implements ArtifactCache {
         .execute();
     Column<String> column = result.getResult().getColumnByName(configurationColumnName);
     if (column == null) {
-      throw new HumanReadableException("Artifact cache schema malformation");
+      throw new HumanReadableException("Artifact cache schema malformation.");
     }
     try {
       return Integer.parseInt(column.getStringValue());
     } catch (NumberFormatException e) {
-      throw new HumanReadableException("Artifact cache ttl malformation: \"%s\"",
+      throw new HumanReadableException("Artifact cache ttl malformation: \"%s\".",
           column.getStringValue());
     }
   }
@@ -208,7 +211,7 @@ public class CassandraArtifactCache implements ArtifactCache {
           .getKey(ruleKey.toString())
           .execute();
     } catch (ConnectionException e) {
-      buckEventBus.post(ThrowableLogEvent.create(e, "Cassandra cache connection failure."));
+      reportConnectionFailure("Attempting to fetch " + ruleKey + ".", e);
       return false;
     }
 
@@ -234,7 +237,7 @@ public class CassandraArtifactCache implements ArtifactCache {
           output.getPath()));
     }
 
-    buckEventBus.post(LogEvent.info("Artifact fetch(%s, %s) cache %s",
+    buckEventBus.post(LogEvent.fine("Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
         (success ? "hit" : "miss")));
@@ -260,11 +263,22 @@ public class CassandraArtifactCache implements ArtifactCache {
           .setDefaultTtl(ttl)
           .putColumn(artifactColumnName, Files.toByteArray(output));
       mutationBatch.executeAsync();
-    } catch (IOException | ConnectionException | OutOfMemoryError e) {
+    } catch (ConnectionException e) {
+      reportConnectionFailure("Attempting to store " + ruleKey + ".", e);
+    } catch (IOException | OutOfMemoryError e) {
       buckEventBus.post(ThrowableLogEvent.create(e,
           "Artifact store(%s, %s) error: %s",
           ruleKey,
           output.getPath()));
+    }
+  }
+
+  private void reportConnectionFailure(String context, ConnectionException exception) {
+    if (numConnectionExceptionReports.incrementAndGet() < MAX_CONNECTION_FAILURE_REPORTS) {
+      buckEventBus.post(ThrowableLogEvent.create(exception,
+          "%s Connecting to cassandra failed: %s.",
+          context,
+          exception.getMessage()));
     }
   }
 }
