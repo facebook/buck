@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -29,7 +31,6 @@ import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -476,7 +477,7 @@ class BuckConfig {
     }
   }
 
-  public ArtifactCache createArtifactCache(Console console) {
+  public ArtifactCache createArtifactCache(BuckEventBus buckEventBus) {
     String cacheMode = getValue("cache", "mode").or("");
     if (cacheMode.isEmpty()) {
       return new NoopArtifactCache();
@@ -490,7 +491,7 @@ class BuckConfig {
           builder.add(createDirArtifactCache());
           break;
         case cassandra:
-          ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(console);
+          ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(buckEventBus);
           if (cassandraArtifactCache != null) {
             builder.add(cassandraArtifactCache);
           }
@@ -529,7 +530,7 @@ class BuckConfig {
   }
 
   @Nullable
-  private ArtifactCache createCassandraArtifactCache(Console console) {
+  private ArtifactCache createCassandraArtifactCache(BuckEventBus buckEventBus) {
     // cache.cassandra_mode
     String cacheCassandraMode = getValue("cache", "cassandra_mode").or(DEFAULT_CASSANDRA_MODE);
     final boolean doStore;
@@ -544,10 +545,9 @@ class BuckConfig {
     int port = Integer.parseInt(getValue("cache", "port").or(DEFAULT_CASSANDRA_PORT));
 
     try {
-      return new CassandraArtifactCache(cacheHosts, port, doStore);
+      return new CassandraArtifactCache(cacheHosts, port, doStore, buckEventBus);
     } catch (ConnectionException e) {
-      console.getStdErr().println(String.format("Cassandra cache connection failure: %s",
-          e.getMessage()));
+      buckEventBus.post(ThrowableLogEvent.create(e, "Cassandra cache connection failure."));
       return null;
     }
   }

@@ -16,8 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.netflix.astyanax.AstyanaxContext;
@@ -45,10 +49,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CassandraArtifactCache implements ArtifactCache {
-  private static final Logger logger = Logger.getLogger(CassandraArtifactCache.class.getName());
   private static final String poolName = "ArtifactCachePool";
   private static final String clusterName = "BuckCacheCluster";
   private static final String keyspaceName = "Buck";
@@ -89,11 +92,15 @@ public class CassandraArtifactCache implements ArtifactCache {
   }
 
   private final Future<KeyspaceAndTtl> keyspaceAndTtlFuture;
+  private final AtomicBoolean isKeyspaceAndTtlFutureAKnownFailure;
   private final boolean doStore;
+  private final BuckEventBus buckEventBus;
 
-  public CassandraArtifactCache(String hosts, int port, boolean doStore)
+  public CassandraArtifactCache(String hosts, int port, boolean doStore, BuckEventBus buckEventBus)
       throws ConnectionException {
     this.doStore = doStore;
+    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
+    this.isKeyspaceAndTtlFutureAKnownFailure = new AtomicBoolean(false);
 
     final AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(clusterName)
@@ -146,13 +153,24 @@ public class CassandraArtifactCache implements ArtifactCache {
    *    otherwise Optional.absent().  This method will block until connection finishes.
    */
   private Optional<KeyspaceAndTtl> getKeyspaceAndTtl() {
+    // If we know that things are failing. return right away and assume the failure has already
+    // been reported to the user.
+    if (isKeyspaceAndTtlFutureAKnownFailure.get()) {
+      return Optional.absent();
+    }
+
+    // If available, return the value in the Future. In the event of a failure, Optional.absent()
+    // will be returned.
     try {
       return Optional.of(keyspaceAndTtlFuture.get());
     } catch (InterruptedException | ExecutionException e) {
-      // TODO (je) Fire an event that Cassandra is failing.
-      logger.warning(String.format("Connecting to cassandra failed"));
+      // There are probably multiple threads waiting on keyspaceAndTtlFuture at the start of the
+      // build, so check the flag again before deciding to print.
+      if (!isKeyspaceAndTtlFutureAKnownFailure.getAndSet(true)) {
+        buckEventBus.post(ThrowableLogEvent.create(e, "Connecting to cassandra failed."));
+      }
+      return Optional.absent();
     }
-    return Optional.absent();
   }
 
   private static int getTtl(Keyspace keyspace) throws ConnectionException {
@@ -178,14 +196,24 @@ public class CassandraArtifactCache implements ArtifactCache {
       // Connecting to Cassandra failed, return false
       return false;
     }
-    boolean success = false;
+
+    // Execute the query to Cassandra.
+    OperationResult<ColumnList<String>> result;
+    int ttl;
     try {
       Keyspace keyspace = keyspaceAndTtl.get().getKeyspace();
-      int ttl = keyspaceAndTtl.get().getTtl();
+      ttl = keyspaceAndTtl.get().getTtl();
 
-      OperationResult<ColumnList<String>> result = keyspace.prepareQuery(CF_ARTIFACT)
+      result = keyspace.prepareQuery(CF_ARTIFACT)
           .getKey(ruleKey.toString())
           .execute();
+    } catch (ConnectionException e) {
+      buckEventBus.post(ThrowableLogEvent.create(e, "Cassandra cache connection failure."));
+      return false;
+    }
+
+    boolean success = false;
+    try {
       Column<String> column = result.getResult().getColumnByName(artifactColumnName);
       if (column != null) {
         byte[] artifact = column.getByteArrayValue();
@@ -199,13 +227,14 @@ public class CassandraArtifactCache implements ArtifactCache {
         }
         success = true;
       }
-    } catch (Exception e) {
-      logger.warning(String.format("Artifact fetch(%s, %s) error: %s",
+    } catch (IOException e) {
+      buckEventBus.post(ThrowableLogEvent.create(e,
+          "Artifact was fetched but could not be written: %s at %s.",
           ruleKey,
-          output.getPath(),
-          e.getMessage()));
+          output.getPath()));
     }
-    logger.info(String.format("Artifact fetch(%s, %s) cache %s",
+
+    buckEventBus.post(LogEvent.info("Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
         (success ? "hit" : "miss")));
@@ -225,17 +254,17 @@ public class CassandraArtifactCache implements ArtifactCache {
     try {
       Keyspace keyspace = keyspaceAndTtl.get().getKeyspace();
       int ttl = keyspaceAndTtl.get().getTtl();
-      MutationBatch m = keyspace.prepareMutationBatch();
+      MutationBatch mutationBatch = keyspace.prepareMutationBatch();
 
-      m.withRow(CF_ARTIFACT, ruleKey.toString())
+      mutationBatch.withRow(CF_ARTIFACT, ruleKey.toString())
           .setDefaultTtl(ttl)
           .putColumn(artifactColumnName, Files.toByteArray(output));
-      m.executeAsync();
+      mutationBatch.executeAsync();
     } catch (IOException | ConnectionException | OutOfMemoryError e) {
-      logger.warning(String.format("Artifact store(%s, %s) error: %s",
+      buckEventBus.post(ThrowableLogEvent.create(e,
+          "Artifact store(%s, %s) error: %s",
           ruleKey,
-          output.getPath(),
-          e.getMessage()));
+          output.getPath()));
     }
   }
 }
