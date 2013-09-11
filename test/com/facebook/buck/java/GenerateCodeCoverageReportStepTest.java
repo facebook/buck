@@ -45,7 +45,7 @@ public class GenerateCodeCoverageReportStepTest {
 
     shellCommandBuilder.add(
         "java",
-        "-Xmx256M",
+        "-Xmx1024M",
         "-classpath", JUnitStep.PATH_TO_EMMA_JAR,
         "emma", "report",
         String.format("-D%s=%s",

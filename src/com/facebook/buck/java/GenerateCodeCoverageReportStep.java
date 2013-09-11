@@ -70,7 +70,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     //   at com.vladium.emma.Processor.run(Processor.java:54)
     //   at com.vladium.emma.report.reportCommand.run(reportCommand.java:130)
     //   ... 1 more
-    args.add("-Xmx256M");
+    args.add("-Xmx1024M");
 
     args.add("-classpath", JUnitStep.PATH_TO_EMMA_JAR);
 
