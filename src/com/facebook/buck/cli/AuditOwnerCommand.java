@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -86,7 +86,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
@@ -154,13 +154,13 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
         if (rule.getType() == BuildRuleType.PROJECT_CONFIG) {
           continue;
         }
-        File ruleBuck = rule.getBuildTarget().getBuildFile();
         try {
+          File ruleBuck = rule.getBuildTarget().getBuildFile(projectFilesystem);
           if (buck.getCanonicalFile().equals(ruleBuck.getCanonicalFile())) {
             owners.put(rule, InputRule.inputPathAsInputRule(nonExistentFile, pathRelativizer));
           }
-        } catch (IOException ex) {
-          throw Throwables.propagate(ex);
+        } catch (IOException | BuildTargetException e) {
+          throw Throwables.propagate(e);
         }
       }
     }

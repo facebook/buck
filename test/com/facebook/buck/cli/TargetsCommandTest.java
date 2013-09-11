@@ -49,7 +49,6 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -86,18 +85,15 @@ public class TargetsCommandTest {
   private TestConsole console;
   private TargetsCommand targetsCommand;
 
-  private SortedMap<String, BuildRule> buildBuildTargets(String buildFile,
-                                                         String outputFile,
-                                                         String name) {
-     return buildBuildTargets(buildFile, outputFile, name, "//");
+  private SortedMap<String, BuildRule> buildBuildTargets(String outputFile, String name) {
+    return buildBuildTargets(outputFile, name, "//");
   }
 
-  private SortedMap<String, BuildRule> buildBuildTargets(String buildFile,
-      String outputFile,
+  private SortedMap<String, BuildRule> buildBuildTargets(String outputFile,
       String name,
       String baseName) {
     SortedMap<String, BuildRule> buildRules = Maps.newTreeMap();
-    BuildTarget buildTarget = new BuildTarget(new File(buildFile), baseName, name);
+    BuildTarget buildTarget = new BuildTarget(baseName, name);
     FakeBuildRule buildRule = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY,
         buildTarget,
         ImmutableSortedSet.<BuildRule>of(),
@@ -132,17 +128,14 @@ public class TargetsCommandTest {
 
   @Test
   public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
-    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
     final String outputFile = "buck-out/gen/test/outputFile";
     JsonFactory jsonFactory = new JsonFactory();
     ObjectMapper mapper = new ObjectMapper();
 
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(testBuckFile1,
-        outputFile,
-        "test-library",
-        "//testdata/com/facebook/buck/cli");
+    SortedMap<String, BuildRule> buildRules = buildBuildTargets(
+        outputFile, "test-library", "//testdata/com/facebook/buck/cli");
 
     targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
     String observedOutput = console.getTextWrittenToStdOut();
@@ -162,13 +155,10 @@ public class TargetsCommandTest {
 
   @Test
   public void testNormalOutputForBuildTarget() throws IOException {
-    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String outputFile = "buck-out/gen/test/outputFile";
 
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(testBuckFile1,
-        outputFile,
-        "test-library");
+    SortedMap<String, BuildRule> buildRules = buildBuildTargets(outputFile, "test-library");
 
     targetsCommand.printTargetsList(buildRules, /* showOutput */ false);
     String observedOutput = console.getTextWrittenToStdOut();
@@ -183,11 +173,10 @@ public class TargetsCommandTest {
 
   @Test
   public void testNormalOutputForBuildTargetWithOutput() throws IOException {
-    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     final String outputFile = "buck-out/gen/test/outputFile";
 
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(testBuckFile1,
+    SortedMap<String, BuildRule> buildRules = buildBuildTargets(
         outputFile,
         "test-library");
 
@@ -204,17 +193,14 @@ public class TargetsCommandTest {
 
   @Test
   public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException, IOException {
-    final String testBuckFile1 = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
-    final String outputFile = "buck-out/gen/test/outputFile";
-
     // nonexistent target should not exist.
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(testBuckFile1,
-        outputFile, "nonexistent");
+    final String outputFile = "buck-out/gen/test/outputFile";
+    SortedMap<String, BuildRule> buildRules = buildBuildTargets(outputFile, "nonexistent");
     targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);
-    assertEquals("BUILD FAILED: unable to find rule for target //:nonexistent\n",
+    assertEquals("unable to find rule for target //:nonexistent\n",
         console.getTextWrittenToStdErr());
   }
 
@@ -222,11 +208,10 @@ public class TargetsCommandTest {
   public void testValidateBuildTargetForNonAliasTarget()
       throws IOException, NoSuchBuildTargetException {
     // Set up the test buck file, parser, config, options.
-    final String testBuckFile = testDataPath(BuckConstant.BUILD_RULES_FILE_NAME);
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.expect(parser.parse("//:test-library", ParseContext.fullyQualified()))
         .andReturn(new BuildTarget(
-            new File(testBuckFile), "//testdata/com/facebook/buck/cli", "test-library"))
+            "//testdata/com/facebook/buck/cli", "test-library"))
         .anyTimes();
     EasyMock.expect(parser.parse("//:", ParseContext.fullyQualified()))
         .andThrow(new BuildTargetParseException(
@@ -237,7 +222,7 @@ public class TargetsCommandTest {
         .anyTimes();
     EasyMock.expect(parser.parse("//:test-libarry", ParseContext.fullyQualified()))
         .andReturn(new BuildTarget(
-            new File(testBuckFile), "//testdata/com/facebook/buck/cli", "test-libarry"))
+            "//testdata/com/facebook/buck/cli", "test-libarry"))
         .anyTimes();
     EasyMock.replay(parser);
     Reader reader = new StringReader("");

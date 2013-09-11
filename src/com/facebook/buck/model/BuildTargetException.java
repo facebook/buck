@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,21 +16,13 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 
+@SuppressWarnings("serial")
+public abstract class BuildTargetException extends Exception
+    implements ExceptionWithHumanReadableMessage  {
 
-/**
- * Exposes some {@link com.facebook.buck.model.BuildTarget} logic that is only visible for testing.
- */
-public class BuildTargetFactory {
-
-  private BuildTargetFactory() {
-    // Utility class
-  }
-
-  public static BuildTarget newInstance(String fullyQualifiedName) {
-    String[] parts = fullyQualifiedName.split(":");
-    Preconditions.checkArgument(parts.length == 2);
-    return new BuildTarget(parts[0], parts[1]);
+  public BuildTargetException(String message) {
+    super(message);
   }
 }

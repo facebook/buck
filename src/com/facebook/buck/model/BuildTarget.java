@@ -16,50 +16,25 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Paths;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
 public final class BuildTarget implements Comparable<BuildTarget> {
 
-  @VisibleForTesting
   public static final String BUILD_TARGET_PREFIX = "//";
 
-  private final File buildFile;
   private final String baseName;
   private final String shortName;
   private final String fullyQualifiedName;
 
-  /**
-   * Reserved for special internal targets such as {@link BuildTarget#ANDROID_SDK}, as well as
-   * fake targets for testing.
-   */
-  @VisibleForTesting
-  BuildTarget(String baseName, String shortName) {
-    this(baseName, shortName, null /* buildFile */);
-  }
-
-  /**
-    * Reserved for testing: normal constructor precondition checks are omitted.
-    */
-    @VisibleForTesting
-        BuildTarget(String baseName, String shortName, File buildFile) {
-      this.buildFile = buildFile;
-      this.baseName = Preconditions.checkNotNull(baseName);
-      this.shortName = Preconditions.checkNotNull(shortName);
-      this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
-    }
-
-  public BuildTarget(File buildFile, String baseName, String shortName) {
-    Preconditions.checkNotNull(buildFile);
-    Preconditions.checkArgument(buildFile.isFile(), "%s must be a file", buildFile);
-    this.buildFile = buildFile;
-
+  public BuildTarget(String baseName, String shortName) {
     Preconditions.checkNotNull(baseName);
     Preconditions.checkArgument(baseName.startsWith(BUILD_TARGET_PREFIX),
         "baseName must start with // but was %s",
@@ -70,12 +45,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
       baseName = Paths.normalizePathSeparator(baseName);
     }
 
-    String parentDirectoryName = Paths.normalizePathSeparator(buildFile.getParentFile().getAbsolutePath());
-    String basePath = baseName.substring(BUILD_TARGET_PREFIX.length());
-    Preconditions.checkArgument(parentDirectoryName.endsWith(basePath),
-        "file path %s did not end with %s for %s:%s", parentDirectoryName, basePath, baseName, shortName);
     this.baseName = baseName;
-
     this.shortName = Preconditions.checkNotNull(shortName);
     this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
   }
@@ -88,7 +58,6 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   private BuildTarget(File inputFile, String relativePath) {
     Preconditions.checkNotNull(inputFile);
     Preconditions.checkNotNull(relativePath);
-    this.buildFile = null;
     this.baseName = String.format("//%s", relativePath);
     this.shortName = inputFile.getName();
     this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
@@ -103,17 +72,35 @@ public final class BuildTarget implements Comparable<BuildTarget> {
 
   /**
    * The build file in which this rule was defined.
+   * @throws MissingBuildFileException if the build file for the target does not exist.
    */
-  @Nullable
-  public File getBuildFile() {
-    return buildFile;
+  public File getBuildFile(ProjectFilesystem projectFilesystem) throws MissingBuildFileException {
+    String pathToBuildFile = getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME;
+    File buildFile = projectFilesystem.getFileForRelativePath(pathToBuildFile);
+    if (buildFile.isFile()) {
+      return buildFile;
+    } else {
+      throw new MissingBuildFileException(this);
+    }
   }
 
-  /**
-   * The directory that contains the corresponding build file.
-   */
-  public File getBuildFileDirectory() {
-    return buildFile.getParentFile();
+  @SuppressWarnings("serial")
+  public static class MissingBuildFileException extends BuildTargetException {
+
+    private MissingBuildFileException(BuildTarget buildTarget) {
+      super(String.format("No build file at %s when resolving target %s.",
+          buildTarget.getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME,
+          buildTarget.getFullyQualifiedName()));
+    }
+
+    @Override
+    public String getHumanReadableErrorMessage() {
+      return getMessage();
+    }
+  }
+
+  public Path getBuildFilePath() {
+    return java.nio.file.Paths.get(getBaseNameWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME);
   }
 
   /**
@@ -184,14 +171,12 @@ public final class BuildTarget implements Comparable<BuildTarget> {
       return false;
     }
     BuildTarget that = (BuildTarget)o;
-    return Objects.equal(this.buildFile, that.buildFile)
-        && Objects.equal(this.baseName, that.baseName)
-        && Objects.equal(this.shortName, that.shortName);
+    return this.fullyQualifiedName.equals(that.fullyQualifiedName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(buildFile, baseName, shortName);
+    return fullyQualifiedName.hashCode();
   }
 
   /** @return {@link #getFullyQualifiedName()} */

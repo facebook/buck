@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.util.List;
 
 public class BuildTargetParser {
@@ -116,7 +115,6 @@ public class BuildTargetParser {
       }
     }
 
-    File buildFile = projectFilesystem.getFileForRelativePath(buildFilePath);
-    return new BuildTarget(buildFile, baseName, shortName);
+    return new BuildTarget(baseName, shortName);
   }
 }

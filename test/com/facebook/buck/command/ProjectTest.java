@@ -744,7 +744,7 @@ public class ProjectTest {
   private static BuildRule getRuleById(String id, PartialGraph graph) {
     String[] parts = id.split(":");
     BuildRule rule = graph.getDependencyGraph().findBuildRuleByTarget(
-        BuildTargetFactory.newInstance(parts[0], parts[1]));
+        new BuildTarget(parts[0], parts[1]));
     Preconditions.checkNotNull(rule, "No rule for %s", id);
     return rule;
   }

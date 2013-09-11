@@ -297,7 +297,7 @@ public final class BuildRuleFactoryParams {
       } else {
         throw new RuntimeException(String.format("Expected a string for %s in %s but was %s",
             attributeName,
-            target.getBuildFile().getPath(),
+            target.getBuildFilePath(),
             value));
       }
     } else {
@@ -320,7 +320,7 @@ public final class BuildRuleFactoryParams {
     } else {
       throw new RuntimeException(String.format("Expected a long for %s in %s but was %s",
           attributeName,
-          target.getBuildFile().getPath(),
+          target.getBuildFilePath(),
           value));
     }
   }
@@ -350,7 +350,7 @@ public final class BuildRuleFactoryParams {
       } else {
         throw new RuntimeException(String.format("Expected an array for %s in %s but was %s",
             attributeName,
-            target.getBuildFile().getPath(),
+            target.getBuildFilePath(),
             value));
       }
     } else {

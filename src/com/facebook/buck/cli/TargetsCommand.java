@@ -20,6 +20,7 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
@@ -100,7 +101,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
@@ -197,12 +198,12 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       String key = keySetIterator.next();
       BuildRule buildRule = buildIndex.get(key);
       BuildTarget buildTarget = buildRule.getBuildTarget();
-      File buildFile = buildTarget.getBuildFile();
 
       List<Map<String, Object>> rules;
       try {
+        File buildFile = buildTarget.getBuildFile(getProjectFilesystem());
         rules = getParser().parseBuildFile(buildFile, defaultIncludes);
-      } catch (NoSuchBuildTargetException e) {
+      } catch (BuildTargetException e) {
         console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
         continue;
@@ -219,7 +220,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
 
       if (targetRule == null) {
-        console.printBuildFailure(
+        console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
         continue;
       }
@@ -312,9 +313,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     Parser parser = getParser();
     try {
       ruleObjects = parser.parseBuildFile(
-          buildTarget.getBuildFile(),
+          buildTarget.getBuildFile(getProjectFilesystem()),
           options.getDefaultIncludes());
-    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       // TODO: this doesn't smell right!
       return null;
     }

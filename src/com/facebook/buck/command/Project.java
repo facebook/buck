@@ -257,7 +257,7 @@ public class Project {
       if (dep == null) {
         throw new HumanReadableException("You must define a project_config() in %s " +
             "containing %s. The project_config() in %s transitively depends on it.",
-            module.target.getBuildFile(),
+            module.target.getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME,
             dependency.getTargetName(),
             module.target.getFullyQualifiedName());
       }

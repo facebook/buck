@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.FakeJavaLibraryRule;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -85,7 +85,7 @@ public class AbstractDependencyVisitorTest {
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     FakeJavaLibraryRule rule = new FakeJavaLibraryRule(
         BuildRuleType.JAVA_LIBRARY,
-        BuildTargetFactory.newInstance(BUILD_RULE_BASE_NAME, name),
+        new BuildTarget(BUILD_RULE_BASE_NAME, name),
         ImmutableSortedSet.copyOf(deps),
         visibilityPatterns);
     return rule;

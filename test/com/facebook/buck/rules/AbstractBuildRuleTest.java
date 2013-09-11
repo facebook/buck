@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
@@ -41,14 +40,10 @@ import javax.annotation.Nullable;
 
 public class AbstractBuildRuleTest {
 
-  private static final BuildTarget orcaTarget = BuildTargetFactory.newInstance(
-      "//src/com/facebook/orca", "orca");
-  private static final BuildTarget publicTarget = BuildTargetFactory.newInstance(
-      "//src/com/facebook/for", "everyone");
-  private static final BuildTarget nonPublicTarget1 = BuildTargetFactory.newInstance(
-      "//src/com/facebook/something1", "nonPublic");
-  private static final BuildTarget nonPublicTarget2 = BuildTargetFactory.newInstance(
-      "//src/com/facebook/something2", "nonPublic");
+  private static final BuildTarget orcaTarget = new BuildTarget("//src/com/facebook/orca", "orca");
+  private static final BuildTarget publicTarget = new BuildTarget("//src/com/facebook/for", "everyone");
+  private static final BuildTarget nonPublicTarget1 = new BuildTarget("//src/com/facebook/something1", "nonPublic");
+  private static final BuildTarget nonPublicTarget2 = new BuildTarget("//src/com/facebook/something2", "nonPublic");
 
   private static final ImmutableSet<BuildRule> noDeps = ImmutableSet.of();
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
@@ -158,15 +153,11 @@ public class AbstractBuildRuleTest {
 
   @Test
   public void testVisibilityForDirectory() {
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//lib", "lib");
-    BuildTarget targetInSpecifiedDirectory = BuildTargetFactory.newInstance(
-        "//src/com/facebook", "test");
-    BuildTarget targetUnderSpecifiedDirectory = BuildTargetFactory.newInstance(
-        "//src/com/facebook/buck", "test");
-    BuildTarget targetInOtherDirectory = BuildTargetFactory.newInstance(
-        "//src/com/instagram", "test");
-    BuildTarget targetInParentDirectory = BuildTargetFactory.newInstance(
-        "//", "test");
+    BuildTarget libTarget = new BuildTarget("//lib", "lib");
+    BuildTarget targetInSpecifiedDirectory = new BuildTarget("//src/com/facebook", "test");
+    BuildTarget targetUnderSpecifiedDirectory = new BuildTarget("//src/com/facebook/buck", "test");
+    BuildTarget targetInOtherDirectory = new BuildTarget("//src/com/instagram", "test");
+    BuildTarget targetInParentDirectory = new BuildTarget("//", "test");
 
     // Build rule that visible to targets in or under directory src/come/facebook
     BuildRule directoryBuildRule = createRule(libTarget,

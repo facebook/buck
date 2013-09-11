@@ -137,8 +137,7 @@ public class GenruleTest {
         .andStubReturn(BuildTargetFactory.newInstance("//java/com/facebook/util:util"));
     EasyMock.replay(parser);
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//src/com/facebook/katana", "katana_manifest");
+    BuildTarget buildTarget = new BuildTarget("//src/com/facebook/katana", "katana_manifest");
     BuildRuleFactoryParams params = NonCheckingBuildRuleFactoryParams.
         createNonCheckingBuildRuleFactoryParams(
             instance,

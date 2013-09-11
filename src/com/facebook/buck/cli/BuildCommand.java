@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
@@ -91,7 +92,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       dependencyGraph = getParser().parseBuildFilesForTargets(buildTargets,
           options.getDefaultIncludes(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }

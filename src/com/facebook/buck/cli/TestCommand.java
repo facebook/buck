@@ -26,7 +26,7 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildContext;
@@ -105,7 +105,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     if (options.isRunAllTests()) {
       try {
         return runAllTests(options);
-      } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+      } catch (BuildTargetException | BuildFileParseException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;
       }
@@ -256,7 +256,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   private int runAllTests(TestCommandOptions options) throws IOException,
-      NoSuchBuildTargetException, BuildFileParseException {
+      BuildTargetException, BuildFileParseException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
     // The first step is to parse all of the build files. This will populate the parser and find all

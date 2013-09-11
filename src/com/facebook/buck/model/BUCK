@@ -1,4 +1,5 @@
-java_library(name = 'model',
+java_library(
+  name = 'model',
   srcs = glob(['*.java']),
   deps = [
     '//src/com/facebook/buck/util:constants',

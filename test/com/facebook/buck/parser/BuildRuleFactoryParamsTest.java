@@ -204,7 +204,6 @@ public class BuildRuleFactoryParamsTest {
     DefaultJavaLibraryRule.Builder builder = createMock(DefaultJavaLibraryRule.Builder.class);
     expect(builder.addDep(
         new BuildTarget(
-            filesystem.getFileForRelativePath("src/com/facebook/BUCK"),
             "//src/com/facebook",
             "A")
         )).andReturn(builder);
@@ -256,7 +255,6 @@ public class BuildRuleFactoryParamsTest {
     DefaultJavaLibraryRule.Builder builder = createMock(DefaultJavaLibraryRule.Builder.class);
     expect(builder.addDep(
         new BuildTarget(
-            filesystem.getFileForRelativePath("src/com/facebook/BUCK"),
             "//src/com/facebook",
             "works")
         )).andReturn(builder);

@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 
 public class PrebuiltJarRuleTest {
@@ -41,7 +40,7 @@ public class PrebuiltJarRuleTest {
   @Before
   public void setUp() {
     BuildRuleParams buildRuleParams = new BuildRuleParams(
-        new BuildTarget(new File("lib/BUCK"), "//lib", "junit"),
+        new BuildTarget("//lib", "junit"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* visibilityPatterns */ ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
         /* pathRelativizer */ Functions.<String>identity());

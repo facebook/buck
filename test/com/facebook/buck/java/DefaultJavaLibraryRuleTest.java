@@ -129,8 +129,7 @@ public class DefaultJavaLibraryRuleTest {
     // android/java/BUILD
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//android/java", "resources", new File("android/java/BUILD"));
+    BuildTarget buildTarget = new BuildTarget("//android/java", "resources");
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule =new DefaultJavaLibraryRule(
@@ -169,8 +168,7 @@ public class DefaultJavaLibraryRuleTest {
     // android/java/src/BUILD
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//android/java/src", "resources", new File("android/java/src/BUILD"));
+    BuildTarget buildTarget = new BuildTarget("//android/java/src", "resources");
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
@@ -210,10 +208,7 @@ public class DefaultJavaLibraryRuleTest {
     // android/java/src/com/facebook/BUILD
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//android/java/src/com/facebook",
-        "resources",
-        new File("android/java/src/com/facebook/BUILD"));
+    BuildTarget buildTarget = new BuildTarget("//android/java/src/com/facebook", "resources");
     ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(

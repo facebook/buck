@@ -19,11 +19,10 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
+import com.facebook.buck.model.BuildTargetException;
 
 @SuppressWarnings("serial")
-public class NoSuchBuildTargetException extends Exception
-    implements ExceptionWithHumanReadableMessage {
+public class NoSuchBuildTargetException extends BuildTargetException {
 
   private NoSuchBuildTargetException(String message) {
     super(message);

@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
@@ -66,7 +66,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
       dependencyGraph = parser.parseBuildFilesForTargets(ImmutableList.of(buildTarget),
           options.getDefaultIncludes(),
           getBuckEventBus());
-    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }

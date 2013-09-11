@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -114,7 +115,7 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
       public BuildTarget apply(String buildTargetName) {
         try {
           return params.resolveBuildTarget(buildTargetName);
-        } catch (NoSuchBuildTargetException e) {
+        } catch (BuildTargetException e) {
           throw new HumanReadableException(e);
         }
       }

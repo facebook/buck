@@ -124,8 +124,7 @@ public class ApkGenruleTest {
         .andStubReturn(BuildTargetFactory.newInstance("//:fb4a"));
     EasyMock.replay(parser);
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//src/com/facebook", "sign_fb4a");
+    BuildTarget buildTarget = new BuildTarget("//src/com/facebook", "sign_fb4a");
     BuildRuleFactoryParams params = NonCheckingBuildRuleFactoryParams.
         createNonCheckingBuildRuleFactoryParams(
             instance,

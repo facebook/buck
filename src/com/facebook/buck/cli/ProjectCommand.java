@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildRuleType;
@@ -68,7 +68,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     try {
       partialGraph = createPartialGraph(predicate, options);
-    } catch (NoSuchBuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
 
@@ -149,7 +149,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   @VisibleForTesting
   PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)
-      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException {
     return PartialGraph.createPartialGraph(
         rulePredicate,
         getProjectFilesystem(),

@@ -69,8 +69,7 @@ public class AndroidResourceRuleTest {
 
     // Create an android_library rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//java/src/com/facebook/base", "res");
+    BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
     BuildRuleParams buildRuleParams = new BuildRuleParams(
         buildTarget,
         ImmutableSortedSet.<BuildRule>of() /* deps */,

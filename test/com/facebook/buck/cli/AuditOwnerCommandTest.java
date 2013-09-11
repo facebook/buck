@@ -381,7 +381,7 @@ public class AuditOwnerCommandTest {
             filesystem.getPathRelativizer());
 
     // Build rule that owns all inputs
-    BuildTarget target = BuildTargetFactory.newInstance("//base/name", "name");
+    BuildTarget target = new BuildTarget("//base/name", "name");
     BuildRule ownerRule = new StubBuildRule(target, inputs);
 
     // Create graph

@@ -28,7 +28,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -78,8 +77,7 @@ import javax.annotation.Nullable;
  */
 public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
-  private static final BuildTarget buildTarget = BuildTargetFactory.newInstance(
-      "//src/com/facebook/orca", "orca");
+  private static final BuildTarget buildTarget = new BuildTarget("//src/com/facebook/orca", "orca");
 
   @Rule
   public TemporaryFolder tmp = new DebuggableTemporaryFolder();

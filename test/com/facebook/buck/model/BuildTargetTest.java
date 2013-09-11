@@ -61,7 +61,6 @@ public class BuildTargetTest {
     File buildFile = new File(folder.newFolder("com", "microsoft", "windows"), "buck");
     assertTrue(buildFile.createNewFile());
     BuildTarget rootTargetWithBackslash = new BuildTarget(
-        buildFile,
         "//com\\microsoft\\windows",
         "something");
     assertEquals("//com/microsoft/windows", rootTargetWithBackslash.getBaseName());

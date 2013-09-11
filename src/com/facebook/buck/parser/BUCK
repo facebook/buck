@@ -1,11 +1,10 @@
-PARSER_SRCS = [
-  'Parser.java',
-  'PartialGraph.java',
-  'ParseEvent.java',
-]
 java_library(
   name = 'parser',
-  srcs = PARSER_SRCS,
+  srcs = [
+    'Parser.java',
+    'PartialGraph.java',
+    'ParseEvent.java',
+  ],
   deps = [
     ':project',
     ':support',
@@ -27,15 +26,14 @@ java_library(
   ],
 )
 
-# TODO(simons): Find a proper home for these.
-PROJECT_SRCS = [
-  'ProjectConfigRuleFactory.java',
-  'RawRulePredicate.java',
-  'RawRulePredicates.java',
-]
 java_library(
   name = 'project',
-  srcs = PROJECT_SRCS,
+  # TODO(simons): Find a proper home for these.
+  srcs = [
+    'ProjectConfigRuleFactory.java',
+    'RawRulePredicate.java',
+    'RawRulePredicates.java',
+  ],
   deps = [
     ':support',
     '//lib:guava',
@@ -48,7 +46,17 @@ java_library(
 
 java_library(
   name = 'support',
-  srcs = glob(['*.java'], excludes = PARSER_SRCS + PROJECT_SRCS),
+  srcs = [
+    'AbstractBuildRuleFactory.java',
+    'AbstractTestRuleFactory.java',
+    'BuildRuleFactory.java',
+    'BuildRuleFactoryParams.java',
+    'BuildTargetParseException.java',
+    'BuildTargetParser.java',
+    'BuildTargetPatternParser.java',
+    'NoSuchBuildTargetException.java',
+    'ParseContext.java',
+  ],
   deps = [
     '//lib:guava',
     '//lib:jsr305',

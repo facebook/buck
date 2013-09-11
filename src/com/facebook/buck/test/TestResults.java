@@ -19,12 +19,12 @@ package com.facebook.buck.test;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -32,6 +32,8 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public class TestResults {
+
+  private static final BuildTarget DUMMY_TARGET_FOR_TESTING = new BuildTarget("//foo/bar", "baz");
 
   private final BuildTarget source;
   private final ImmutableList<TestCaseSummary> testCases;
@@ -41,16 +43,14 @@ public class TestResults {
 
   @VisibleForTesting
   public TestResults(List<TestCaseSummary> testCases) {
-    this(/* source */ null, testCases, /* contacts */ ImmutableSet.<String>of());
+    this(DUMMY_TARGET_FOR_TESTING, testCases, /* contacts */ ImmutableSet.<String>of());
   }
 
-  // TODO(mbolin): Require source to be non-null once D963189 is submitted.
-
   @Beta
-  public TestResults(@Nullable BuildTarget source,
+  public TestResults(BuildTarget source,
       List<TestCaseSummary> testCases,
       ImmutableSet<String> contacts) {
-    this.source = source;
+    this.source = Preconditions.checkNotNull(source);
     this.testCases = ImmutableList.copyOf(testCases);
     this.contacts = ImmutableSet.copyOf(contacts);
 
