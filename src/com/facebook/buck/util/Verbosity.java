@@ -33,6 +33,9 @@ public enum Verbosity {
   /** Print the command being executed, but do not print its output. */
   COMMANDS,
 
+  /** Commands plus the output from some select commands of intereset. */
+  COMMANDS_AND_SPECIAL_OUTPUT,
+
   /** Print the command being executed followed by its output. */
   COMMANDS_AND_OUTPUT,
 
@@ -49,6 +52,10 @@ public enum Verbosity {
 
   public boolean shouldPrintCommand() {
     return this.ordinal() >= COMMANDS.ordinal();
+  }
+
+  public boolean shouldPrintSelectCommandOutput() {
+    return this.ordinal() >= COMMANDS_AND_SPECIAL_OUTPUT.ordinal();
   }
 
   public boolean shouldPrintOutput() {

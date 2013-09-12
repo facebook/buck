@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +49,11 @@ public class DxStep extends ShellStep {
     builder.add(androidPlatformTarget.getDxExecutable().getAbsolutePath());
     builder.add("--dex");
 
+    // --statistics flag, if appropriate.
+    if (context.getVerbosity().shouldPrintSelectCommandOutput()) {
+      builder.add("--statistics");
+    }
+
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       builder.add("--verbose");
@@ -59,6 +65,16 @@ public class DxStep extends ShellStep {
     }
 
     return builder.build();
+  }
+
+  @Override
+  protected boolean shouldPrintStderr(Verbosity verbosity) {
+    return verbosity.shouldPrintSelectCommandOutput();
+  }
+
+  @Override
+  protected boolean shouldPrintStdout(Verbosity verbosity) {
+    return verbosity.shouldPrintSelectCommandOutput();
   }
 
   @Override
