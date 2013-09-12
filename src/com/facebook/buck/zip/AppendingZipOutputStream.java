@@ -29,7 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 
 /**
- * A drop-in replacement for (@link java.util.zip.ZipOutStream} that supports the ability to set a
+ * A drop-in replacement for (@link java.util.zip.ZipOutStream} that supports the ability to set a
  * compression level and allows multiple entries with the same name.
  *
  * <a href="https://users.cs.jmu.edu/buchhofp/forensics/formats/pkzip.html">
