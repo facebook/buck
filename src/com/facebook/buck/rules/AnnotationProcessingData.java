@@ -13,9 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.model;
+package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.io.IOException;
 
 import javax.annotation.Nullable;
 
@@ -39,6 +41,11 @@ public interface AnnotationProcessingData {
     @Override
     public ImmutableSortedSet<String> getParameters() {
       return ImmutableSortedSet.of();
+    }
+
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+      return builder;
     }
 
     @Override
@@ -73,6 +80,11 @@ public interface AnnotationProcessingData {
    * The set of parameters to pass to annotation processing (via javac -A).
    */
   public ImmutableSortedSet<String> getParameters();
+
+  /**
+   * Contributes state to builder.
+   */
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException;
 
   /**
    * Controls whether compilation happens along with annotation processing:

@@ -15,18 +15,21 @@
  */
 package com.facebook.buck.java;
 
-import com.facebook.buck.model.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -47,6 +50,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       ImmutableSet.<String>of(),
       ImmutableSet.<String>of(),
       ImmutableSet.<String>of(),
+      ImmutableSortedSet.<BuildRule>of(),
       false);
 
   @Nullable
@@ -54,6 +58,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   private final ImmutableSortedSet<String> searchPathElements;
   private final ImmutableSortedSet<String> names;
   private final ImmutableSortedSet<String> parameters;
+  private final ImmutableSortedSet<BuildRule> rules;
   private final boolean processOnly;
 
   private AnnotationProcessingParams(
@@ -61,11 +66,13 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       Set<String> searchPathElements,
       Set<String> names,
       Set<String> parameters,
+      Set<BuildRule> rules,
       boolean processOnly) {
     this.ownerTarget = ownerTarget;
     this.searchPathElements = ImmutableSortedSet.copyOf(searchPathElements);
     this.names = ImmutableSortedSet.copyOf(names);
     this.parameters = ImmutableSortedSet.copyOf(parameters);
+    this.rules = ImmutableSortedSet.copyOf(rules);
     this.processOnly = processOnly;
   }
 
@@ -97,6 +104,26 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   }
 
   @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+    if (!isEmpty()) {
+      // searchPathElements is not needed here since it comes from rules, which is appended below.
+      String owner = (ownerTarget == null) ? null : ownerTarget.getFullyQualifiedName();
+      builder.set("owner", owner)
+          .set("names", names)
+          .set("parameters", parameters)
+          .set("processOnly", processOnly);
+
+      ImmutableList.Builder<String> ruleKeyStrings = ImmutableList.builder();
+      for (BuildRule rule : rules) {
+        ruleKeyStrings.add(rule.getRuleKey().toString());
+      }
+      builder.set("annotationProcessorRuleKeys", ruleKeyStrings.build());
+    }
+
+    return builder;
+  }
+
+  @Override
   public boolean getProcessOnly() {
     return processOnly;
   }
@@ -112,6 +139,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   }
 
   public static class Builder {
+    @Nullable
     private BuildTarget ownerTarget;
     private Set<BuildTarget> targets = Sets.newHashSet();
     private Set<String> names = Sets.newHashSet();
@@ -151,10 +179,13 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
       }
 
       Set<String> searchPathElements = Sets.newHashSet();
+      ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
 
       for (BuildTarget target : targets) {
         BuildRule rule = ruleResolver.get(target);
         String type = rule.getType().getName();
+
+        rules.add(rule);
 
         // We're using raw strings here to avoid circular dependencies.
         // TODO(simons): don't use raw strings.
@@ -180,6 +211,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
           searchPathElements,
           names,
           parameters,
+          rules.build(),
           processOnly);
     }
   }

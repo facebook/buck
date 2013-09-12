@@ -28,7 +28,7 @@ import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
-import com.facebook.buck.model.AnnotationProcessingData;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;

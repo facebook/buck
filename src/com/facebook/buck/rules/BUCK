@@ -28,6 +28,7 @@ java_library(
 java_library(
   name = 'build_rule',
   srcs = [
+    'AnnotationProcessingData.java',
     'ArtifactCache.java',
     'Buildable.java',
     'Buildables.java',

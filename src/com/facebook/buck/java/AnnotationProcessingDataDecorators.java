@@ -16,7 +16,7 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.model.AnnotationProcessingData;
+import com.facebook.buck.rules.AnnotationProcessingData;
 
 /**
  * Utilities for dealing with {@link AnnotationProcessingDataDecorator}s.

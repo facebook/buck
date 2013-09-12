@@ -23,7 +23,7 @@ import com.facebook.buck.android.HasAndroidResourceDeps;
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
-import com.facebook.buck.model.AnnotationProcessingData;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;

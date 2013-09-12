@@ -17,12 +17,14 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.java.abi.AbiWriterProtocol;
-import com.facebook.buck.model.AnnotationProcessingData;
+import com.facebook.buck.rules.AnnotationProcessingData;
+import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.annotation.Nullable;
 
@@ -76,6 +78,13 @@ public class AbiWritingAnnotationProcessingDataDecorator
             .addAll(delegate.getParameters())
             .add(AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE + "=" + outputFile.getAbsolutePath())
             .build();
+      }
+
+      @Override
+      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
+        // We don't need to add any local state here since all RuleKeys change whenever
+        // buck changes.
+        return delegate.appendToRuleKey(builder);
       }
 
       @Override
