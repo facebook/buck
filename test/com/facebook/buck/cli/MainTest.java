@@ -92,6 +92,7 @@ public class MainTest {
         "available commands:",
         "  audit      lists the inputs for the specified target",
         "  build      builds the specified target",
+        "  cache      makes calls to the artifact cache",
         "  clean      deletes any generated files",
         "  install    builds and installs an APK",
         "  project    generates project configuration files for an IDE",

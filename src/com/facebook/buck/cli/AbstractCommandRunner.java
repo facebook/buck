@@ -99,11 +99,6 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     }
   }
 
-  public final void printUsage(BuckConfig buckConfig) {
-    CmdLineParser parser = createParser(buckConfig).parser;
-    printUsage(parser);
-  }
-
   public final void printUsage(CmdLineParser parser) {
     String intro = getUsageIntro();
     if (intro != null) {

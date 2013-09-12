@@ -34,6 +34,9 @@ public enum Command {
   BUILD(
       "builds the specified target",
       BuildCommand.class),
+  CACHE(
+      "makes calls to the artifact cache",
+      CacheCommand.class),
   CLEAN(
       "deletes any generated files",
       CleanCommand.class),

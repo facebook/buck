@@ -535,8 +535,12 @@ class BuckConfig {
     }
   }
 
+  /**
+   * Clients should use {@link #createArtifactCache(BuckEventBus)} unless it is expected that the
+   * user has defined a {@code cassandra} cache, and that it should be used exclusively.
+   */
   @Nullable
-  private ArtifactCache createCassandraArtifactCache(BuckEventBus buckEventBus) {
+  CassandraArtifactCache createCassandraArtifactCache(BuckEventBus buckEventBus) {
     // cache.cassandra_mode
     String cacheCassandraMode = getValue("cache", "cassandra_mode").or(DEFAULT_CASSANDRA_MODE);
     final boolean doStore;
