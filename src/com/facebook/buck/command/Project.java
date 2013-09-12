@@ -933,15 +933,10 @@ public class Project {
           ExecutionContext context) {
         return args;
       }
-
-      @Override
-      protected boolean shouldRecordStdout() {
-        return true;
-      }
     };
 
     int exitCode = command.execute(executionContext);
-    return new ExitCodeAndStdOut(exitCode, command.getStdOut());
+    return new ExitCodeAndStdOut(exitCode, command.getStdout());
   }
 
   private static class ExitCodeAndStdOut {

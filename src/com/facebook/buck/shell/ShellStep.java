@@ -46,11 +46,18 @@ public abstract class ShellStep implements Step {
   protected final File workingDirectory;
 
   /**
-   * This is set if {@link #shouldRecordStdout()} returns {@code true} when the command is
+   * This is set if {@link #shouldPrintStdout(Verbosity)} returns {@code true} when the command is
    * executed.
    */
   @Nullable
-  private String stdOut;
+  private String stdout;
+
+  /**
+   * This is set if {@link #shouldPrintStderr(Verbosity)} returns {@code true} when the command is
+   * executed.
+   */
+  @Nullable
+  private String stderr;
 
   private long startTime = 0L;
   private long endTime = 0L;
@@ -72,14 +79,6 @@ public abstract class ShellStep implements Step {
   @VisibleForTesting
   public File getWorkingDirectory() {
     return workingDirectory;
-  }
-
-  /**
-   * @return whether stdout should be recorded when this command is executed. If this returns
-   *     {@code true}, then the stdout will be available via {@link #getStdOut()}.
-   */
-  protected boolean shouldRecordStdout() {
-    return false;
   }
 
   @Override
@@ -115,16 +114,17 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   int interactWithProcess(ExecutionContext context, Process process) {
-    boolean shouldRecordStdOut = shouldRecordStdout();
-    boolean shouldPrintStdErr = shouldPrintStdErr(context);
+    Verbosity verbosity = context.getVerbosity();
+    boolean shouldPrintStdOut = shouldPrintStdout(verbosity);
+    boolean shouldPrintStdErr = shouldPrintStderr(verbosity);
+
     ProcessExecutor executor = context.getProcessExecutor();
     ProcessExecutor.Result result = executor.execute(process,
-        shouldRecordStdOut,
+        shouldPrintStdOut,
         shouldPrintStdErr,
         context.getVerbosity() == Verbosity.SILENT);
-    if (shouldRecordStdOut) {
-      this.stdOut = result.getStdOut();
-    }
+    this.stdout = result.getStdout();
+    this.stderr = result.getStderr();
     return result.getExitCode();
   }
 
@@ -181,15 +181,6 @@ public abstract class ShellStep implements Step {
   }
 
   /**
-   * @return whether the stderr of the shell command, when executed, should be printed to the stderr
-   *     of the specified {@link ExecutionContext}. If {@code false}, stderr will only be printed on
-   *     error and only if verbosity is set to standard information.
-   */
-  protected boolean shouldPrintStdErr(ExecutionContext context) {
-    return context.getVerbosity().shouldPrintOutput();
-  }
-
-  /**
    * Returns the environment variables to include when running this {@link ShellStep}.
    * <p>
    * By default, this method returns an empty map.
@@ -200,16 +191,39 @@ public abstract class ShellStep implements Step {
   }
 
   /**
-   * @return the stdout of this ShellCommand or throws an exception if the stdout was not recorded
+   * @param verbosity is provided in case that affects what should be printed.
+   * @return whether the stdout of the shell command, when executed, should be printed to the stderr
+   *     of the specified {@link ExecutionContext}. If {@code false}, stdout will only be printed on
+   *     error and only if verbosity is set to standard information.
    */
-  public final String getStdOut() {
-    Preconditions.checkNotNull(this.stdOut, "stdout was not set: " +
-    		"shouldRecordStdout() must return true and execute() must have been invoked");
-    return this.stdOut;
+  protected boolean shouldPrintStdout(Verbosity verbosity) {
+    return false;
   }
 
-  @VisibleForTesting
-  final void setStdOut(String stdOut) {
-    this.stdOut = stdOut;
+  /**
+   * @return the stdout of this ShellCommand or throws an exception if the stdout was not recorded
+   */
+  public final String getStdout() {
+    Preconditions.checkNotNull(this.stdout, "stdout was not set: " +
+        "shouldPrintStdout() must return false and execute() must have been invoked");
+    return this.stdout;
+  }
+
+  /**
+   * @return whether the stderr of the shell command, when executed, should be printed to the stderr
+   *     of the specified {@link ExecutionContext}. If {@code false}, stderr will only be printed on
+   *     error and only if verbosity is set to standard information.
+   */
+  protected boolean shouldPrintStderr(Verbosity verbosity) {
+    return verbosity.shouldPrintOutput();
+  }
+
+  /**
+   * @return the stderr of this ShellCommand or throws an exception if the stderr was not recorded
+   */
+  public final String getStderr() {
+    Preconditions.checkNotNull(this.stderr, "stderr was not set: " +
+        "shouldPrintStdErr() must return false and execute() must have been invoked");
+    return this.stderr;
   }
 }

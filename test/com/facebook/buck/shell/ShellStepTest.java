@@ -129,8 +129,8 @@ public class ShellStepTest extends EasyMockSupport {
         /* shouldRecordStdOut */ false);
   }
 
-  private static ShellStep createCommand(boolean shouldPrintStdErr, boolean shouldRecordStdOut) {
-    return createCommand(ENV, ARGS, null, shouldPrintStdErr, shouldRecordStdOut);
+  private static ShellStep createCommand(boolean shouldPrintStdErr, boolean shouldPrintStdOut) {
+    return createCommand(ENV, ARGS, null, shouldPrintStdErr, shouldPrintStdOut);
   }
 
   private static ShellStep createCommand(
@@ -138,7 +138,7 @@ public class ShellStepTest extends EasyMockSupport {
       final ImmutableList<String> cmd,
       File workingDirectory,
       final boolean shouldPrintStdErr,
-      final boolean shouldRecordStdOut) {
+      final boolean shouldPrintStdOut) {
     return new ShellStep(workingDirectory) {
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -154,12 +154,12 @@ public class ShellStepTest extends EasyMockSupport {
         return cmd;
       }
       @Override
-      protected boolean shouldPrintStdErr(ExecutionContext context) {
+      protected boolean shouldPrintStderr(Verbosity verbosity) {
         return shouldPrintStdErr;
       }
       @Override
-      protected boolean shouldRecordStdout() {
-        return shouldRecordStdOut;
+      protected boolean shouldPrintStdout(Verbosity verbosity) {
+        return shouldPrintStdOut;
       }
     };
   }
@@ -195,7 +195,7 @@ public class ShellStepTest extends EasyMockSupport {
 
   @Test
   public void testStdErrPrintedOnErrorIfNotSilentEvenIfNotShouldPrintStdErr() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldRecordStdout*/ false);
+    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
     Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.STANDARD_INFORMATION);
     command.interactWithProcess(context, process);
@@ -204,7 +204,7 @@ public class ShellStepTest extends EasyMockSupport {
 
   @Test
   public void testStdErrNotPrintedOnErrorIfSilentAndNotShouldPrintStdErr() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldRecordStdout*/ false);
+    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
     Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.SILENT);
     command.interactWithProcess(context, process);
@@ -213,7 +213,7 @@ public class ShellStepTest extends EasyMockSupport {
 
   @Test
   public void testStdErrPrintedOnErrorIfShouldPrintStdErrEvenIfSilent() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ true, /*shouldRecordStdout*/ false);
+    ShellStep command = createCommand(/*shouldPrintStdErr*/ true, /*shouldPrintStdOut*/ false);
     Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.SILENT);
     command.interactWithProcess(context, process);
@@ -222,7 +222,7 @@ public class ShellStepTest extends EasyMockSupport {
 
   @Test
   public void testStdErrNotPrintedOnSuccessIfNotShouldPrintStdErr() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldRecordStdout*/ false);
+    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
     Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.STANDARD_INFORMATION);
     command.interactWithProcess(context, process);
@@ -231,7 +231,7 @@ public class ShellStepTest extends EasyMockSupport {
 
   @Test
   public void testStdErrPrintedOnSuccessIfShouldPrintStdErrEvenIfSilent() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ true, /*shouldRecordStdout*/ false);
+    ShellStep command = createCommand(/*shouldPrintStdErr*/ true, /*shouldPrintStdOut*/ false);
     Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.SILENT);
     command.interactWithProcess(context, process);
@@ -239,17 +239,8 @@ public class ShellStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testOuputRecordedButNotPrintedIfShouldRecordStdoutEvenIfVerbose() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldRecordStdout*/ true);
-    Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
-    prepareContextForOutput(Verbosity.ALL);
-    command.interactWithProcess(context, process);
-    assertEquals(OUTPUT_MSG, command.getStdOut());
-  }
-
-  @Test
   public void testStdOutNotPrintedIfNotShouldRecordStdoutEvenIfVerbose() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldRecordStdout*/ false);
+    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
     Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     prepareContextForOutput(Verbosity.ALL);
     command.interactWithProcess(context, process);

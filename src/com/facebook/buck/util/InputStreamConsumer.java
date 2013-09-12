@@ -29,27 +29,22 @@ public final class InputStreamConsumer implements Runnable {
 
   private final BufferedReader inputReader;
   private final PrintStream printStream;
-  private final boolean shouldRedirectInputStreamToPrintStream;
   private final Ansi ansi;
   private boolean hasWrittenOutputToPrintStream = false;
 
   public InputStreamConsumer(InputStream inputStream,
       PrintStream printStream,
-      boolean shouldRedirectInputStreamToPrintStream,
       Ansi ansi) {
     this(new InputStreamReader(inputStream),
         printStream,
-        shouldRedirectInputStreamToPrintStream,
         ansi);
   }
 
   public InputStreamConsumer(Reader reader,
       PrintStream printStream,
-      boolean shouldRedirectInputStreamToPrintStream,
       Ansi ansi) {
     this.inputReader = new BufferedReader(reader);
     this.printStream = Preconditions.checkNotNull(printStream);
-    this.shouldRedirectInputStreamToPrintStream = shouldRedirectInputStreamToPrintStream;
     this.ansi = Preconditions.checkNotNull(ansi);
   }
 
@@ -58,13 +53,11 @@ public final class InputStreamConsumer implements Runnable {
     String line;
     try {
       while ((line = inputReader.readLine()) != null) {
-        if (shouldRedirectInputStreamToPrintStream) {
-          if (!hasWrittenOutputToPrintStream) {
-            hasWrittenOutputToPrintStream = true;
-            printStream.print(ansi.getHighlightedWarningSequence());
-          }
-          printStream.println(line);
+        if (!hasWrittenOutputToPrintStream) {
+          printStream.print(ansi.getHighlightedWarningSequence());
+          hasWrittenOutputToPrintStream = true;
         }
+        printStream.println(line);
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

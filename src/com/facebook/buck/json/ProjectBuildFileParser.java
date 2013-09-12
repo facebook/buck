@@ -123,7 +123,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     Thread stderrConsumer = new Thread(new InputStreamConsumer(stderr,
         System.err,
-        true /* shouldRedirect */,
         new Ansi(Platform.detect())));
     stderrConsumer.start();
 

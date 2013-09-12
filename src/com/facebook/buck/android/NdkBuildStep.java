@@ -20,6 +20,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -56,8 +57,8 @@ public class NdkBuildStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStdErr(ExecutionContext context) {
-    return context.getVerbosity().shouldPrintStandardInformation();
+  protected boolean shouldPrintStderr(Verbosity verbosity) {
+    return verbosity.shouldPrintStandardInformation();
   }
 
   @Override

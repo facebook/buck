@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -81,8 +82,15 @@ public class RunShTestAndRecordResultStep implements Step {
         }
 
         @Override
-        protected boolean shouldRecordStdout() {
-          return true;
+        protected boolean shouldPrintStderr(Verbosity verbosity) {
+          // Do not stream this output because we want to capture it.
+          return false;
+        }
+
+        @Override
+        protected boolean shouldPrintStdout(Verbosity verbosity) {
+          // Do not stream this output because we want to capture it.
+          return false;
         }
       };
       int exitCode = test.execute(context);
@@ -95,8 +103,8 @@ public class RunShTestAndRecordResultStep implements Step {
           test.getDuration(),
           /* message */ null,
           /* stacktrace */ null,
-          test.getStdOut(),
-          /* stderr */ null);
+          test.getStdout(),
+          test.getStderr());
     }
 
     ObjectMapper mapper = new ObjectMapper();

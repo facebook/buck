@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -72,8 +73,8 @@ public class AidlStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStdErr(ExecutionContext context) {
-    return context.getVerbosity().shouldPrintStandardInformation();
+  protected boolean shouldPrintStderr(Verbosity verbosity) {
+    return verbosity.shouldPrintStandardInformation();
   }
 
   @Override

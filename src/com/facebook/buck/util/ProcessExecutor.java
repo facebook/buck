@@ -49,7 +49,7 @@ public class ProcessExecutor {
    */
   public Result execute(Process process) {
     return execute(process,
-        /* shouldRecordStdOut */ false,
+        /* shouldPrintStdOut */ false,
         /* shouldPrintStdErr */ false,
         /* isSilent */ false);
   }
@@ -57,25 +57,26 @@ public class ProcessExecutor {
   /**
    * Executes the specified process.
    * @param process The {@code Process} to execute.
-   * @param shouldRecordStdOut If {@code true}, then {@link Result#getStdOut()} will be non-null in
-   *     the returned value because it was recorded.
+   * @param shouldPrintStdOut If {@code true}, then the stdout of the process will be written
+   *     directly to the stdout passed to the constructor of this executor. If {@code false}, then
+   *     the stdout of the process will be made available via {@link Result#getStdout()}.
    * @param shouldPrintStdErr If {@code true}, then the stderr of the process will be written
-   *     directly to the stderr passed to the constructor of this executor.
+   *     directly to the stderr passed to the constructor of this executor. If {@code false}, then
+   *     the stderr of the process will be made available via {@link Result#getStderr()}.
    */
   public Result execute(
       Process process,
-      boolean shouldRecordStdOut,
+      boolean shouldPrintStdOut,
       boolean shouldPrintStdErr,
       boolean isSilent) {
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     @SuppressWarnings("resource")
-    PrintStream stdOutToWriteTo = shouldRecordStdOut ?
-        new CapturingPrintStream() : stdOutStream;
+    PrintStream stdOutToWriteTo = shouldPrintStdOut ?
+        stdOutStream : new CapturingPrintStream();
     InputStreamConsumer stdOut = new InputStreamConsumer(
         process.getInputStream(),
         stdOutToWriteTo,
-        shouldRecordStdOut,
         ansi);
 
     @SuppressWarnings("resource")
@@ -84,7 +85,6 @@ public class ProcessExecutor {
     InputStreamConsumer stdErr = new InputStreamConsumer(
         process.getErrorStream(),
         stdErrToWriteTo,
-        /* shouldRedirectInputStreamToPrintStream */ true,
         ansi);
 
     // Consume the streams so they do not deadlock.
@@ -99,32 +99,40 @@ public class ProcessExecutor {
       stdOutConsumer.join();
       stdErrConsumer.join();
     } catch (InterruptedException e) {
-      // Buck was killed while waiting for the consumers to finish.  This means either the user
-      // killed the process or a step failed causing us to kill all other running steps.  Neither of
+      // Buck was killed while waiting for the consumers to finish. This means either the user
+      // killed the process or a step failed causing us to kill all other running steps. Neither of
       // these is an exceptional situation.
-      return new Result(1, "");
+      return new Result(1, /* stdout */ null, /* stderr */ null);
     }
 
-    // If stdout was captured, then wait until its InputStreamConsumer has finished and get the
-    // contents of the stdout PrintStream as a string.
-    String stdOutText;
-    if (shouldRecordStdOut) {
-      CapturingPrintStream capturingPrintStream = (CapturingPrintStream)stdOutToWriteTo;
-      stdOutText = capturingPrintStream.getContentsAsString(Charsets.US_ASCII);
-    } else {
-      stdOutText = null;
-    }
+    String stdoutText = getDataIfNotPrinted(stdOutToWriteTo, shouldPrintStdOut);
+    String stderrText = getDataIfNotPrinted(stdErrToWriteTo, shouldPrintStdErr);
 
     // Report the exit code of the Process.
     int exitCode = process.exitValue();
 
-    // If the command has failed and we're not being explicitly quiet, ensure stderr gets printed.
-    if (exitCode != 0 && !shouldPrintStdErr && !isSilent) {
-      CapturingPrintStream capturingPrintStream = (CapturingPrintStream) stdErrToWriteTo;
-      stdErrStream.print(capturingPrintStream.getContentsAsString(Charsets.US_ASCII));
+    // If the command has failed and we're not being explicitly quiet, ensure everything gets
+    // printed.
+    if (exitCode != 0 && !isSilent) {
+      if (!shouldPrintStdOut) {
+        stdOutStream.print(stdoutText);
+      }
+      if (!shouldPrintStdErr) {
+        stdErrStream.print(stderrText);
+      }
     }
 
-    return new Result(exitCode, stdOutText);
+    return new Result(exitCode, stdoutText, stderrText);
+  }
+
+  @Nullable
+  private static String getDataIfNotPrinted(PrintStream printStream, boolean shouldPrint) {
+    if (!shouldPrint) {
+      CapturingPrintStream capturingPrintStream = (CapturingPrintStream)printStream;
+      return capturingPrintStream.getContentsAsString(Charsets.US_ASCII);
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -132,11 +140,13 @@ public class ProcessExecutor {
    */
   public static class Result {
     private final int exitCode;
-    @Nullable private final String stdOut;
+    @Nullable private final String stdout;
+    @Nullable private final String stderr;
 
-    public Result(int exitCode, @Nullable String stdOut) {
+    public Result(int exitCode, @Nullable String stdOut, @Nullable String stderr) {
       this.exitCode = exitCode;
-      this.stdOut = stdOut;
+      this.stdout = stdOut;
+      this.stderr = stderr;
     }
 
     public int getExitCode() {
@@ -144,8 +154,13 @@ public class ProcessExecutor {
     }
 
     @Nullable
-    public String getStdOut() {
-      return stdOut;
+    public String getStdout() {
+      return stdout;
+    }
+
+    @Nullable
+    public String getStderr() {
+      return stderr;
     }
   }
 }

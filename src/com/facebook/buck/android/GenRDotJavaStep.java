@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -138,8 +139,8 @@ public class GenRDotJavaStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStdErr(ExecutionContext context) {
+  protected boolean shouldPrintStderr(Verbosity verbosity) {
     // Print out errors about missing resource dependecies.
-    return context.getVerbosity().shouldPrintStandardInformation();
+    return verbosity.shouldPrintStandardInformation();
   }
 }

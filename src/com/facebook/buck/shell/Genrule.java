@@ -40,6 +40,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -399,7 +400,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     }
 
     @Override
-    protected boolean shouldPrintStdErr(ExecutionContext context) {
+    protected boolean shouldPrintStderr(Verbosity verbosity) {
       return true;
     }
 
