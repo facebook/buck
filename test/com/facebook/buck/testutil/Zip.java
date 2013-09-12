@@ -104,6 +104,12 @@ public class Zip implements AutoCloseable {
     return contents.build();
   }
 
+  public byte[] readFully(String fileName) throws IOException {
+    Path resolved = root.resolve(fileName);
+
+    return Files.readAllBytes(resolved);
+  }
+
   @Override
   public void close() throws IOException {
     fs.close();

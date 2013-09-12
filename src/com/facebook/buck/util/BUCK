@@ -44,6 +44,7 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/zip:stream',
   ],
   visibility = [ 'PUBLIC' ],
 )
@@ -72,6 +73,7 @@ java_library(
     ':io',
     '//lib:guava',
     '//lib:jsr305',
+    '//src/com/facebook/buck/zip:stream',
   ],
   visibility = [
     'PUBLIC',

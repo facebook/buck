@@ -623,7 +623,7 @@ public class ProjectTest {
     assertEquals(1, projectWithModules1.modules.size());
     Module moduleNoJavaSource = projectWithModules1.modules.get(0);
     assertListEquals(
-        "Only source folder should be gen/ when setSrcRoots(null) is specified.",
+        "Only source tmp should be gen/ when setSrcRoots(null) is specified.",
         ImmutableList.of(SourceFolder.GEN),
         moduleNoJavaSource.sourceFolders);
 
@@ -650,7 +650,7 @@ public class ProjectTest {
     assertEquals(1, projectWithModules2.modules.size());
     Module moduleWithPackagePrefix = projectWithModules2.modules.get(0);
     assertListEquals(
-        "The current directory should be a source folder with a package prefix " +
+        "The current directory should be a source tmp with a package prefix " +
             "as well as the gen/ directory.",
         ImmutableList.of(
             new SourceFolder("file://$MODULE_DIR$", false /* isTestSource */, "com.example.base"),

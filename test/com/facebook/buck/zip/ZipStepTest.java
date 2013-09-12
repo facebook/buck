@@ -16,99 +16,164 @@
 
 package com.facebook.buck.zip;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.Verbosity;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 
+import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class ZipStepTest {
 
-  private final String zipFile = new File("/path/to/file.zip").getAbsolutePath();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void testGetShellCommandInternalOnZipCommandWithSpecifiedDirectory() {
-    final int compressionLevel = ZipStep.DEFAULT_COMPRESSION_LEVEL;
+  public void shouldCreateANewZipFileFromScratch() throws IOException {
+    File parent = tmp.newFolder("zipstep");
+    File out = new File(parent, "output.zip");
 
-    final File directory = new File("/some/other/path");
+    File toZip = tmp.newFolder("zipdir");
+    Files.touch(new File(toZip, "file1.txt"));
+    Files.touch(new File(toZip, "file2.txt"));
+    Files.touch(new File(toZip, "file3.txt"));
 
-    ExecutionContext context = createMock(ExecutionContext.class);
-    // This will trigger having the -q argument.
-    expect(context.getVerbosity()).andReturn(Verbosity.STANDARD_INFORMATION);
-    replay(context);
+    ZipStep step = new ZipStep(out.getAbsolutePath(),
+        ImmutableSet.<String>of(),
+        false,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        toZip);
+    step.execute(TestExecutionContext.newInstance());
 
-    List<String> expectedShellCommand = new ImmutableList.Builder<String>()
-        .add("zip")
-        .add("-q")
-        .add("-X")
-        .add("-r")
-        .add("-" + compressionLevel)
-        .add(zipFile)
-        .add("-i*")
-        .add(".")
-        .build();
-
-    ZipStep command = new ZipStep(new File(zipFile), directory);
-
-    // Assert that the command has been constructed with the right arguments.
-    MoreAsserts.assertListEquals(expectedShellCommand,
-        command.getShellCommand(context));
-
-    // Assert that the desired directory is saved with the ZipCommand as a working directory.
-    assertEquals(directory, command.getWorkingDirectory());
-
-    verify(context);
+    try (Zip zip = new Zip(out, false)) {
+      assertEquals(ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zip.getFileNames());
+    }
   }
 
   @Test
-  public void testGetShellCommandInternalOnZipCommandWithSpecifiedPaths() {
-    final Set<String> paths = ImmutableSet.of("a/path", "another.path");
-    final int compressionLevel = 7;
-    final File workingDirectory = new File("/some/other/path");
+  public void willOnlyIncludeEntriesInThePathsArgumentIfAnyAreSet() throws IOException {
+    File parent = tmp.newFolder("zipstep");
+    File out = new File(parent, "output.zip");
 
-    ExecutionContext context = createMock(ExecutionContext.class);
-    expect(context.getVerbosity()).andReturn(Verbosity.SILENT);
-    replay(context);
+    File toZip = tmp.newFolder("zipdir");
+    Files.touch(new File(toZip, "file1.txt"));
+    Files.touch(new File(toZip, "file2.txt"));
+    Files.touch(new File(toZip, "file3.txt"));
 
-    List<String> expectedShellCommand = new ImmutableList.Builder<String>()
-        .add("zip")
-        .add("-u")
-        .add("-qq")
-        .add("-X")
-        .add("-r")
-        .add("-" + compressionLevel)
-        .add("-j")
-        .add(zipFile)
-        .addAll(paths)
-        .build();
+    ZipStep step = new ZipStep(out.getAbsolutePath(),
+        ImmutableSet.of("file2.txt"),
+        false,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        toZip);
+    step.execute(TestExecutionContext.newInstance());
 
-    ZipStep command = new ZipStep(
-        ZipStep.Mode.UPDATE,
-        zipFile,
-        paths,
+    try (Zip zip = new Zip(out, false)) {
+      assertEquals(ImmutableSet.of("file2.txt"), zip.getFileNames());
+    }
+  }
+
+  @Test
+  public void willRecurseIntoSubdirectories() throws IOException {
+    File parent = tmp.newFolder("zipstep");
+    File out = new File(parent, "output.zip");
+
+    File toZip = tmp.newFolder("zipdir");
+    Files.touch(new File(toZip, "file1.txt"));
+    assertTrue(new File(toZip, "child").mkdir());
+    Files.touch(new File(toZip, "child/file2.txt"));
+
+    ZipStep step = new ZipStep(out.getAbsolutePath(),
+        ImmutableSet.<String>of(),
+        false,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        toZip);
+    step.execute(TestExecutionContext.newInstance());
+
+    try (Zip zip = new Zip(out, false)) {
+      assertEquals(ImmutableSet.of("file1.txt", "child/file2.txt"), zip.getFileNames());
+    }
+  }
+
+  @Test
+  public void mustIncludeTheContentsOfFilesThatAreSymlinked() throws IOException {
+    // Symlinks on Windows are _hard_. Let's go shopping.
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    File parent = tmp.newFolder("zipstep");
+    File out = new File(parent, "output.zip");
+    File target = new File(parent, "target");
+    Files.write("example content", target, UTF_8);
+
+    File toZip = tmp.newFolder("zipdir");
+    Path path = toZip.toPath().resolve("file.txt");
+    java.nio.file.Files.createSymbolicLink(path, target.toPath());
+
+    ZipStep step = new ZipStep(out.getAbsolutePath(),
+        ImmutableSet.<String>of(),
+        false,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        toZip);
+    step.execute(TestExecutionContext.newInstance());
+
+    try (Zip zip = new Zip(out, false)) {
+      assertEquals(ImmutableSet.of("file.txt"), zip.getFileNames());
+      byte[] contents = zip.readFully("file.txt");
+
+      assertArrayEquals("example content".getBytes(), contents);
+    }
+  }
+
+  @Test
+  public void overwritingAnExistingZipFileIsAnError() throws IOException {
+    File parent = tmp.newFolder();
+    File out = new File(parent, "output.zip");
+
+    try (Zip zip = new Zip(out, true)) {
+      zip.add("file1.txt", "");
+    }
+
+    File toZip = tmp.newFolder();
+
+    ZipStep step = new ZipStep(out.getAbsolutePath(),
+        ImmutableSet.<String>of(),
+        false,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        toZip);
+    int result = step.execute(TestExecutionContext.newInstance());
+
+    assertEquals(1, result);
+  }
+
+  @Test
+  public void shouldBeAbleToJunkPaths() throws IOException {
+    File parent = tmp.newFolder();
+    File out = new File(parent, "output.zip");
+
+    File toZip = tmp.newFolder();
+    assertTrue(new File(toZip, "child").mkdir());
+    Files.touch(new File(toZip, "child/file1.txt"));
+
+    ZipStep step = new ZipStep(out.getAbsolutePath(),
+        ImmutableSet.<String>of(),
         true,
-        compressionLevel,
-        workingDirectory);
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        toZip);
+    step.execute(TestExecutionContext.newInstance());
 
-    // Assert that the command has been constructed with the right arguments.
-    MoreAsserts.assertListEquals(expectedShellCommand,
-        command.getShellCommand(context));
-
-    // Assert that the desired working directory is saved with the command.
-    assertEquals(workingDirectory, command.getWorkingDirectory());
-
-    verify(context);
+    try (Zip zip = new Zip(out, false)) {
+      assertEquals(ImmutableSet.of("file1.txt"), zip.getFileNames());
+    }
   }
 }

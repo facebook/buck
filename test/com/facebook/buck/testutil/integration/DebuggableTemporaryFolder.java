@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * Subclass of {@link TemporaryFolder} that optionally keeps the contents of the folder around after
+ * Subclass of {@link TemporaryFolder} that optionally keeps the contents of the tmp around after
  * the test has finished. This is often useful when debugging a failed integration test.
  * <p>
  * Here is an example of how to create a {@link DebuggableTemporaryFolder} that will not delete

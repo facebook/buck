@@ -21,6 +21,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Functions;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -32,12 +34,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public final class ProGuardObfuscateStep extends ShellStep {
 
@@ -160,7 +160,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   @VisibleForTesting
   static void createEmptyZip(File file) throws IOException {
     Files.createParentDirs(file);
-    ZipOutputStream out = new ZipOutputStream(new FileOutputStream(file));
+    CustomZipOutputStream out = ZipOutputStreams.newOutputStream(file);
     // Sun's java 6 runtime doesn't allow us to create a truly empty zip, but this should be enough
     // to pass through dx/split-zip without any issue.
     // ...and Sun's java 7 runtime doesn't let us use an empty string for the zip entry name.

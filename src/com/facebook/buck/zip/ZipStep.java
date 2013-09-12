@@ -16,64 +16,37 @@
 
 package com.facebook.buck.zip;
 
-import com.facebook.buck.shell.ShellStep;
+import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
+import static java.util.logging.Level.SEVERE;
+
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.DirectoryTraversal;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Set;
 
 /**
- * A {@link com.facebook.buck.step.Step} that creates or updates a ZIP archive using {@code zip}.
- *
- * @see <a href="http://www.info-zip.org/mans/zip.html">ZIP</a>
+ * A {@link com.facebook.buck.step.Step} that creates a ZIP archive..
  */
-public class ZipStep extends ShellStep {
+public class ZipStep implements Step {
 
   public static final int MIN_COMPRESSION_LEVEL = 0;
   public static final int DEFAULT_COMPRESSION_LEVEL = 6;
   public static final int MAX_COMPRESSION_LEVEL = 9;
 
-  /**
-   * These map to {@code zip} 'command modes' (as seen in man page).
-   * @see <a href="http://www.info-zip.org/mans/zip.html">ZIP</a>
-   */
-  public static enum Mode {
-    /**
-     * Update existing entries and add new files.
-     * If the archive does not exist create it. This is the default mode.
-     */
-    ADD(""),
-    /**
-     * Update existing entries if newer on the file system and add new files.
-     * If the archive does not exist issue warning then create a new archive.
-     */
-    UPDATE("-u"),
-    /**
-     * Update existing entries of an archive if newer on the file system.
-     * Does not add new files to the archive.
-     */
-    FRESHEN("-f"),
-    /**
-     * Select entries in an existing archive and delete them.
-     */
-    DELETE("-d");
-
-    public final String arg;
-
-    private Mode(String arg) {
-      this.arg = arg;
-    }
-  }
-
-  private final Mode mode;
   private final String absolutePathToZipFile;
   private final ImmutableSet<String> paths;
   private final boolean junkPaths;
   private final int compressionLevel;
+  private final File baseDir;
 
 
   /**
@@ -84,103 +57,114 @@ public class ZipStep extends ShellStep {
    * an archive containing just the file. If you were in {@code /} and added
    * {@code dir/file.txt}, you would get an archive containing the file within a directory.
    *
-   * @param mode one of {@link ZipStep.Mode#ADD}, {@link ZipStep.Mode#UPDATE UPDATE},
-   *    {@link ZipStep.Mode#FRESHEN FRESHEN} or {@link ZipStep.Mode#DELETE DELETE}, as in the
-   *    {@code zip} command.
-   * @param absolutePathToZipFile path to archive to create or update
+   *
+   * @param absolutePathToZipFile path to archive to create.
    * @param paths a set of files and/or directories to work on. The entire working directory is
    *    assumed if this set is empty.
    * @param junkPaths if {@code true}, the relative paths of added archive entries are discarded,
    *    i.e. they are all placed in the root of the archive.
    * @param compressionLevel between 0 (store) and 9.
-   * @param workingDirectory working directory for {@code zip} command.
+   * @param baseDir working directory for {@code zip} command.
    *    If {@code null}, project directory root is used instead.
-   *
-   * @see <a href="http://www.info-zip.org/mans/zip.html">ZIP</a>
    */
   public ZipStep(
-      Mode mode,
       String absolutePathToZipFile,
       Set<String> paths,
       boolean junkPaths,
       int compressionLevel,
-      File workingDirectory) {
-    super(workingDirectory);
+      File baseDir) {
     Preconditions.checkArgument(compressionLevel >= MIN_COMPRESSION_LEVEL &&
         compressionLevel <= MAX_COMPRESSION_LEVEL, "compressionLevel out of bounds.");
-    this.mode = mode;
     this.absolutePathToZipFile = Preconditions.checkNotNull(absolutePathToZipFile);
     this.paths = ImmutableSet.copyOf(Preconditions.checkNotNull(paths));
     this.junkPaths = junkPaths;
     this.compressionLevel = compressionLevel;
+    this.baseDir = Preconditions.checkNotNull(baseDir);
   }
 
-  /**
-   * Create a {@link ZipStep} that adds an entire directory to an archive. The files directly in
-   * the directory will appear in the root of the archive. Default compression level is assumed.
-   *
-   * @param zipFile file to archive to create or update
-   * @param directoryToAdd directory to add to the archive
-   *
-   * @see #ZipStep(Mode, String, Set, boolean, int, File)
-   */
-  public ZipStep(File zipFile, File directoryToAdd) {
-    this(
-        Mode.ADD,
-        zipFile.getAbsolutePath(),
-        ImmutableSet.<String>of() /* pathsToAdd */,
-        false /* junkPaths */,
-        DEFAULT_COMPRESSION_LEVEL /* compressionLevel */,
-        Preconditions.checkNotNull(directoryToAdd));
+
+  @Override
+  public int execute(ExecutionContext context) {
+    File original = new File(absolutePathToZipFile);
+    if (original.exists()) {
+      context.getBuckEventBus().post(
+          LogEvent.create(SEVERE, "Attempting to overwrite an existing zip: %s", original)
+      );
+      return 1;
+    }
+
+    try (
+      BufferedOutputStream baseOut = new BufferedOutputStream(new FileOutputStream(absolutePathToZipFile));
+      CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING);
+    ) {
+      DirectoryTraversal traversal = new DirectoryTraversal(baseDir) {
+
+        @Override
+        public void visit(File file, String relativePath) throws IOException {
+          if (!paths.isEmpty() && !paths.contains(relativePath)) {
+            return;
+          }
+
+          String name = junkPaths ? file.getName() : relativePath;
+          if (file.isDirectory()) {
+            // Lame.
+            name += "/";
+          }
+
+          CustomZipEntry entry = new CustomZipEntry(name);
+          entry.setTime(file.lastModified());
+          entry.setSize(file.length());
+          entry.setCompressionLevel(compressionLevel);
+
+          out.putNextEntry(entry);
+          Files.copy(file.toPath(), out);
+          out.closeEntry();
+        }
+      };
+
+      traversal.traverse();
+
+      return 0;
+    } catch (IOException e) {
+      return 1;
+    }
+
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("zip");
-
-    // What to do?
-    if (mode != Mode.ADD) {
-      args.add(mode.arg);
-    }
-
-    Verbosity verbosity = context.getVerbosity();
-    if (!verbosity.shouldUseVerbosityFlagIfAvailable()) {
-      if (verbosity.shouldPrintStandardInformation()) {
-        args.add("-q");
-      } else {
-        args.add("-qq");
-      }
-    }
+  public String getDescription(ExecutionContext context) {
+    StringBuilder args = new StringBuilder("zip ");
 
     // Don't add extra fields, neither do the Android tools.
-    args.add("-X");
+    args.append("-X ");
 
     // recurse
-    args.add("-r");
+    args.append("-r ");
 
     // compression level
-    args.add("-" + compressionLevel);
+    args.append("-").append(compressionLevel).append(" ");
 
     // unk paths
     if (junkPaths) {
-      args.add("-j");
+      args.append("-j ");
     }
 
     // destination archive
-    args.add(absolutePathToZipFile);
+    args.append(absolutePathToZipFile).append(" ");
 
     // files to add to archive
     if (paths.isEmpty()) {
       // Add the contents of workingDirectory to archive.
-      args.add("-i*");
-      args.add(".");
+      args.append("-i* ");
+      args.append(". ");
     } else {
       // Add specified paths, relative to workingDirectory.
-      args.addAll(paths);
+      for (String path : paths) {
+        args.append(path).append(" ");
+      }
     }
 
-    return args.build();
+    return args.toString();
   }
 
   @Override

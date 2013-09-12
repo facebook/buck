@@ -16,86 +16,87 @@
 
 package com.facebook.buck.zip;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
+import com.google.common.io.Resources;
 
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.util.Iterator;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class RepackZipEntriesStepTest {
 
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
+  private File parent;
+  private File zipFile;
+
+  @Before
+  public void buildSampleZipFile() throws IOException {
+    parent = tmp.newFolder("foo");
+    zipFile = new File(parent, "example.zip");
+
+    // Turns out that the zip filesystem generates slightly different output from the output stream.
+    // Since we've modeled our outputstreams after the zip output stream, be compatible with that.
+    try (ZipOutputStream stream = new ZipOutputStream(new FileOutputStream(zipFile))) {
+      ZipEntry entry = new ZipEntry("file");
+      stream.putNextEntry(entry);
+      String packageName = getClass().getPackage().getName().replace(".", "/");
+      URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
+      stream.write(Resources.toByteArray(sample));
+    }
+  }
+
   @Test
-  public void testProvidesAppropriateSubCommands() {
-    final String inApk = "source.apk";
-    final String outApk = "dest.apk";
-    final int compressionLevel = 8;
-    final ImmutableSet<String> entries = ImmutableSet.of("resources.arsc");
-    File dir = new File("/tmp/mydir");
+  public void shouldLeaveZipAloneIfEntriesToCompressIsEmpty() throws IOException {
+    File out = new File(parent, "output.zip");
+    RepackZipEntriesStep step = new RepackZipEntriesStep(
+        zipFile.getAbsolutePath(),
+        out.getAbsolutePath(),
+        ImmutableSet.<String>of());
+    step.execute(TestExecutionContext.newInstance());
 
-    ExecutionContext context = createMock(ExecutionContext.class);
-    expect(context.getVerbosity()).andReturn(Verbosity.ALL).times(2);
-    replay(context);
+    byte[] expected = Files.readAllBytes(zipFile.toPath());
+    byte[] actual = Files.readAllBytes(out.toPath());
+    assertArrayEquals(expected, actual);
+  }
 
-    String unzipExpected = Joiner.on(" ").join(new ImmutableList.Builder<String>()
-        .add("unzip")
-        .add("-o")
-        .add("-d").add(dir.getAbsolutePath())
-        .add(inApk)
-        .addAll(entries)
-        .build());
+  @Test
+  public void repackWithHigherCompressionResultsInFewerBytes() throws IOException {
+    File out = new File(parent, "output.zip");
+    RepackZipEntriesStep step = new RepackZipEntriesStep(
+        zipFile.getAbsolutePath(),
+        out.getAbsolutePath(),
+        ImmutableSet.of("file"));
+    step.execute(TestExecutionContext.newInstance());
 
-    ImmutableList<String> zipExpected = new ImmutableList.Builder<String>()
-        .add("zip")
-        .add("-X")
-        .add("-r")
-        .add("-"+compressionLevel)
-        .add(new File(outApk).getAbsolutePath())
-        .addAll(entries)
-        .build();
+    assertTrue(out.length() < zipFile.length());
+  }
 
-    RepackZipEntriesStep command = new RepackZipEntriesStep(
-        inApk,
-        outApk,
-        entries,
-        compressionLevel,
-        dir);
+  @Test
+  public void justStoringEntriesLeadsToMoreBytesInOuputZip() throws IOException {
+    File out = new File(parent, "output.zip");
+    RepackZipEntriesStep step = new RepackZipEntriesStep(
+        zipFile.getAbsolutePath(),
+        out.getAbsolutePath(),
+        ImmutableSet.of("file"),
+        ZipStep.MIN_COMPRESSION_LEVEL);
+    step.execute(TestExecutionContext.newInstance());
 
-    // Go over the subcommands.
-    Iterator<Step> iter = Iterators.filter(command.iterator(), Step.class);
+    byte[] expected = Files.readAllBytes(zipFile.toPath());
+    byte[] actual = Files.readAllBytes(out.toPath());
 
-    // First entries are unzipped.
-    UnzipStep unzipStep = (UnzipStep) iter.next();
-    assertEquals(unzipExpected, unzipStep.getDescription(context));
-
-    // A copy of the archive would be created.
-    CopyStep copyStep = (CopyStep) iter.next();
-
-    assertEquals(inApk, copyStep.getSource());
-    assertEquals(outApk, copyStep.getDestination());
-    assertFalse(copyStep.isRecursive());
-
-    // And then the entries would be zipped back in.
-    ZipStep zipStep = (ZipStep) iter.next();
-    assertEquals(zipExpected, zipStep.getShellCommand(context));
-
-    //ShellStep zipCommand = iter.next();
-    assertEquals(zipStep.getWorkingDirectory().getAbsolutePath(), dir.getAbsolutePath());
-
-    verify(context);
+    assertTrue(expected.length < actual.length);
   }
 }

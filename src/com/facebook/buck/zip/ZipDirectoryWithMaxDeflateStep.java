@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Command to zip up a directory while respecting a file size limit to be deflated.
@@ -88,8 +87,8 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
       ImmutableMap<File, ZipEntry> zipEntries = zipEntriesBuilder.build();
 
       if (!zipEntries.isEmpty()) {
-        ZipOutputStream outputStream = closer.register(
-            new ZipOutputStream(new BufferedOutputStream(
+        CustomZipOutputStream outputStream = closer.register(
+            ZipOutputStreams.newOutputStream(new BufferedOutputStream(
                 new FileOutputStream(outputZipPath))));
 
         for (Map.Entry<File, ZipEntry> zipEntry : zipEntries.entrySet()) {

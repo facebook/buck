@@ -73,7 +73,7 @@ public class SmartDexingStep implements Step {
   private final DexStore dexStore;
   private ListeningExecutorService dxExecutor;
 
-  /** Lazily initialized.  See {@link InputResolver#createOutputToInputs()}. */
+  /** Lazily initialized.  See {@link InputResolver#createOutputToInputs(DexStore)}. */
   private Multimap<File, File> outputToInputs;
 
   /**
@@ -433,8 +433,7 @@ public class SmartDexingStep implements Step {
             tempDexJarOutput,
             repackedJar,
             ImmutableSet.of("classes.dex"),
-            ZipStep.MIN_COMPRESSION_LEVEL,
-            /* workingDirectory */ null
+            ZipStep.MIN_COMPRESSION_LEVEL
         ));
         steps.add(new RmStep(tempDexJarOutput, true));
         steps.add(new XzStep(repackedJar));

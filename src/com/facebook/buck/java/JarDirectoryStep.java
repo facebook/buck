@@ -16,28 +16,29 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
+
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -46,7 +47,6 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -136,23 +136,16 @@ public class JarDirectoryStep implements Step {
     // Write the manifest, as appropriate.
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     if (manifestFile != null) {
-      FileInputStream manifestStream = new FileInputStream(
-          filesystem.getFileForRelativePath(manifestFile));
-      boolean readSuccessfully = false;
-      try {
+      try (FileInputStream manifestStream = new FileInputStream(
+          filesystem.getFileForRelativePath(manifestFile))) {
         manifest.read(manifestStream);
-        readSuccessfully = true;
-      } finally {
-        Closeables.close(manifestStream, !readSuccessfully);
       }
-
-    } else {
-      manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
     }
 
-    try (JarOutputStream outputFile = new JarOutputStream(
-        new BufferedOutputStream(new FileOutputStream(
-        filesystem.getFileForRelativePath(pathToOutputFile))))) {
+    manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+
+    try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
+        filesystem.getFileForRelativePath(pathToOutputFile), APPEND_TO_ZIP)) {
 
       Set<String> alreadyAddedEntries = Sets.newHashSet();
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
@@ -192,7 +185,7 @@ public class JarDirectoryStep implements Step {
    * @param alreadyAddedEntries is used to avoid duplicate entries.
    */
   private void copyZipEntriesToJar(File file,
-      final JarOutputStream jar,
+      final CustomZipOutputStream jar,
       Manifest manifest,
       Set<String> alreadyAddedEntries,
       BuckEventBus eventBus) throws IOException {
@@ -207,11 +200,16 @@ public class JarDirectoryStep implements Step {
         continue;
       }
 
-      // The same directory entry cannot be added more than once.
-      if (!alreadyAddedEntries.add(entryName)) {
+      // We're in the process of merging a bunch of different jar files. These typically contain
+      // just ".class" files and the manifest, but they can also include things like license files
+      // from third party libraries and config files. We should include those license files within
+      // the jar we're creating. Extracting them is left as an exercise for the consumer of the jar.
+      // Because we don't know which files are important, the only ones we skip are duplicate class
+      // files.
+      if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
         // Duplicate entries. Skip.
         eventBus.post(LogEvent.create(
-            Level.FINE, "Duplicate found when adding file to jar: %s", entryName));
+            Level.INFO, "Duplicate found when adding file to jar: %s", entryName));
         continue;
       }
 
@@ -241,7 +239,7 @@ public class JarDirectoryStep implements Step {
    * @param jar is the file being written.
    */
   private void addFilesInDirectoryToJar(File directory,
-      final JarOutputStream jar,
+      final CustomZipOutputStream jar,
       final Set<String> alreadyAddedEntries,
       final BuckEventBus eventBus) throws IOException {
     new DirectoryTraversal(directory) {
@@ -252,18 +250,16 @@ public class JarDirectoryStep implements Step {
         String entryName = entry.getName();
         entry.setTime(file.lastModified());
         try {
-          if (alreadyAddedEntries.contains(entryName)) {
+          // We expect there to be many duplicate entries for things like directories. Creating
+          // those repeatedly would be lame, so don't do that.
+          if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
             eventBus.post(LogEvent.create(
-                Level.FINE, "Duplicate found when adding directory to jar: %s", relativePath));
+                Level.INFO, "Duplicate found when adding directory to jar: %s", relativePath));
             return;
           }
           jar.putNextEntry(entry);
           Files.copy(file, jar);
           jar.closeEntry();
-
-          if (entryName.endsWith("/")) {
-            alreadyAddedEntries.add(entryName);
-          }
         } catch (IOException e) {
           Throwables.propagate(e);
         }
@@ -298,4 +294,7 @@ public class JarDirectoryStep implements Step {
     }
   }
 
+  private boolean isDuplicateAllowed(String name) {
+    return !name.endsWith(".class") && !name.endsWith("/");
+  }
 }

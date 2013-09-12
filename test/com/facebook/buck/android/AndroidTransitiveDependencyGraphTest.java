@@ -115,7 +115,7 @@ public class AndroidTransitiveDependencyGraphTest {
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
             "resources need to be extracted and repacked in the APK. If this is done, then code in " +
-            "the guava-10.0.1.dex.1.jar in the APK's assets/ folder may try to load the resource " +
+            "the guava-10.0.1.dex.1.jar in the APK's assets/ tmp may try to load the resource " +
             "from the APK as a ZipFileEntry rather than as a resource within guava-10.0.1.dex.1.jar. " +
             "Loading a resource in this way could take substantially longer. Specifically, this was " +
             "observed to take over one second longer to load the resource in fb4a. Because the " +

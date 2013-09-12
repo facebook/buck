@@ -1,16 +1,28 @@
 java_test(
   name = 'zip',
   srcs = glob(['*.java']),
+  resources = [
+    # The sample bytes are a class file. We use the ".properties" extension so that IJ will copy
+    # the file to the output dir when compiling, allowing us to test in the IDE.
+    'sample-bytes.properties',
+  ],
   deps = [
     '//lib:easymock',
     '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
     '//lib:junit',
-    '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/zip:stream',
     '//src/com/facebook/buck/zip:steps',
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
+  ],
+  source_under_test = [
+    '//src/com/facebook/buck/zip:steps',
+    '//src/com/facebook/buck/zip:stream',
   ],
 )

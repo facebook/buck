@@ -17,6 +17,8 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -26,9 +28,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitor;
@@ -40,7 +40,6 @@ import java.nio.file.WatchEvent;
 import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * An injectable service for interacting with the filesystem.
@@ -299,9 +298,7 @@ public class ProjectFilesystem {
    */
   public void createZip(Iterable<Path> pathsToIncludeInZip, File out) throws IOException {
     Preconditions.checkState(!Iterables.isEmpty(pathsToIncludeInZip));
-    try (ZipOutputStream zip = new ZipOutputStream(
-        new BufferedOutputStream(
-            new FileOutputStream(out)))) {
+    try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
         ZipEntry entry = new ZipEntry(path.toString());
         zip.putNextEntry(entry);

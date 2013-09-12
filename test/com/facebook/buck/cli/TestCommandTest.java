@@ -84,7 +84,7 @@ public class TestCommandTest {
   }
 
   /**
-   * If the source paths specified are all generated files, then our path to source folder
+   * If the source paths specified are all generated files, then our path to source tmp
    * should be absent.
    */
   @Test
@@ -117,7 +117,7 @@ public class TestCommandTest {
 
   /**
    * If the source paths specified are all for non-generated files then we should return
-   * the correct source folder corresponding to a non-generated source path.
+   * the correct source tmp corresponding to a non-generated source path.
    */
   @Test
   public void testNonGeneratedSourceFile() {
@@ -157,15 +157,15 @@ public class TestCommandTest {
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
         javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
 
-    assertEquals("All non-generated source files are under one source folder.",
+    assertEquals("All non-generated source files are under one source tmp.",
         ImmutableSet.of("package/src/"), result);
 
     verify(mocks);
   }
 
   /**
-   * If the source paths specified are from the new unified source folder then we should return
-   * the correct source folder corresponding to the unified source path.
+   * If the source paths specified are from the new unified source tmp then we should return
+   * the correct source tmp corresponding to the unified source path.
    */
   @Test
   public void testUnifiedSourceFile() {
@@ -190,7 +190,7 @@ public class TestCommandTest {
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
         javaLibraryRule, Optional.of(defaultJavaPackageFinder), projectFilesystem);
 
-    assertEquals("All non-generated source files are under one source folder.",
+    assertEquals("All non-generated source files are under one source tmp.",
         ImmutableSet.of("java/"), result);
 
     verify(mocks);
@@ -198,7 +198,7 @@ public class TestCommandTest {
 
   /**
    * If the source paths specified contains one source path to a non-generated file then
-   * we should return the correct source folder corresponding to that non-generated source path.
+   * we should return the correct source tmp corresponding to that non-generated source path.
    * Especially when the generated file comes first in the ordered set.
    */
   @Test

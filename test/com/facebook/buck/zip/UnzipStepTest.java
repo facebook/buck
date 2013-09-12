@@ -41,7 +41,7 @@ public class UnzipStepTest {
 
   @Before
   public void setUp() throws Exception {
-    zipFile = new File(tmpFolder.getRoot(), "folder.zip");
+    zipFile = new File(tmpFolder.getRoot(), "tmp.zip");
     try (Zip zip = new Zip(zipFile, true)) {
       zip.add("1.bin", DUMMY_FILE_CONTENTS);
       zip.add("subdir/2.bin", DUMMY_FILE_CONTENTS);
