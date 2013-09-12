@@ -24,7 +24,7 @@ source "${BUCK_BIN_DIRECTORY}/buck_common"
 BUCK_CLIENT="${BUCK_DIRECTORY}/build/ng"
 if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
 
-  echo "Using buckd."
+  echo "Using buckd." 1>&2
 
   BUCKD_PORT=`cat ${BUCKD_DIR}/buckd.port`
 
@@ -39,7 +39,7 @@ if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCK_CLIENT" ]; then
       exit $BUCKD_STATUS
   fi
 
-  echo "Daemon is busy, starting new buck process."
+  echo "Daemon is busy, starting new buck process." 1>&2
 
 fi
 
