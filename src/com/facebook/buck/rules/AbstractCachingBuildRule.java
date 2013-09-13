@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -442,7 +443,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
         // In the wild, we have seen some inexplicable failures during this step. For now, we try to
         // give the user as much information as we can to debug the issue, but return false so that
         // Buck will fall back on doing a local build.
-        buildContext.logBuildInfo(
+        buildContext.getEventBus().post(LogEvent.warning(
             "Failed to unzip the artifact for %s at %s.\n" +
             "The rule will be built locally, but here is the output of the failed unzip call:\n" +
             "Exit code: %s\n" +
@@ -452,7 +453,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
             zipFile.getAbsolutePath(),
             exitCode,
             result.getStdout(),
-            result.getStderr());
+            result.getStderr()));
         return false;
       }
     } catch (IOException e) {
