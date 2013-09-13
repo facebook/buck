@@ -22,7 +22,10 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 
 import java.util.Iterator;
 import java.util.List;
@@ -159,6 +162,30 @@ public final class MoreAsserts {
     if (observedIter.hasNext()) {
       failWith(userMessage,"Extra observed command: " + observedIter.next());
     }
+  }
+
+  /**
+   * Invokes the {@link Step#getDescription(ExecutionContext)} method on each of the observed steps
+   * to create a list of strings and compares it to the expected value.
+   */
+  public static void assertSteps(
+      String userMessage,
+      List<String> expectedStepDescriptions,
+      List<Step> observedSteps,
+      final ExecutionContext executionContext) {
+    ImmutableList<String> commands = FluentIterable
+        .from(observedSteps)
+        .transform(new Function<Step, String>() {
+          @Override
+          public String apply(Step step) {
+            return step.getDescription(executionContext);
+          }
+        })
+        .toList();
+    assertListEquals(
+        userMessage,
+        expectedStepDescriptions,
+        commands);
   }
 
   private static String prefixWithUserMessage(@Nullable String userMessage, String message) {

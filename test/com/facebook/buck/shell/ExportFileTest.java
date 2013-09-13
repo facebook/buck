@@ -32,9 +32,9 @@ import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -72,40 +72,54 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
-    ExportFile rule = new ExportFile(
-        params, Optional.<String>absent(), Optional.<String>absent());
+    ExportFile exportFile = new ExportFile(
+        params, /* src */ Optional.<String>absent(), /* out */ Optional.<String>absent());
 
-    List<Step> steps = rule.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
-    MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
-        "example.html",
-        BuckConstant.GEN_DIR + "/example.html");
-    assertEquals(ImmutableList.of(expected), steps);
+    MoreAsserts.assertSteps(
+        "The output directory should be created and then the file should be copied there.",
+        ImmutableList.of(
+            "mkdir -p buck-out/gen",
+            "cp example.html buck-out/gen/example.html"),
+        steps,
+        TestExecutionContext.newInstance());
+    assertEquals("buck-out/gen/example.html", exportFile.getPathToOutputFile());
   }
 
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
-    ExportFile rule = new ExportFile(
-        params, Optional.<String>absent(), Optional.of("fish"));
+    ExportFile exportFile = new ExportFile(
+        params, /* src */ Optional.<String>absent(), /* out */ Optional.of("fish"));
 
-    List<Step> steps = rule.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
-    MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
-        "example.html",
-        BuckConstant.GEN_DIR + "/fish");
-    assertEquals(ImmutableList.of(expected), steps);
+    MoreAsserts.assertSteps(
+        "The output directory should be created and then the file should be copied there.",
+        ImmutableList.of(
+            "mkdir -p buck-out/gen",
+            "cp example.html buck-out/gen/fish"),
+        steps,
+        TestExecutionContext.newInstance());
+    assertEquals("buck-out/gen/fish", exportFile.getPathToOutputFile());
   }
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
-    ExportFile rule = new ExportFile(params, Optional.of("chips"), Optional.of("fish"));
+    ExportFile exportFile = new ExportFile(params,
+        /* src */ Optional.of("chips"),
+        /* out */ Optional.of("fish"));
 
-    List<Step> steps = rule.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
-    MkdirAndSymlinkFileStep expected = new MkdirAndSymlinkFileStep(
-        "chips",
-        BuckConstant.GEN_DIR + "/fish");
-    assertEquals(ImmutableList.of(expected), steps);
+    MoreAsserts.assertSteps(
+        "The output directory should be created and then the file should be copied there.",
+        ImmutableList.of(
+            "mkdir -p buck-out/gen",
+            "cp chips buck-out/gen/fish"),
+        steps,
+        TestExecutionContext.newInstance());
+    assertEquals("buck-out/gen/fish", exportFile.getPathToOutputFile());
   }
 
   private BuildContext getBuildContext(File root) {

@@ -24,7 +24,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -112,8 +113,11 @@ public class ExportFile extends AbstractBuildable {
       throws IOException {
     String pathToOutputFile = out.get();
 
+    // This file is copied rather than symlinked so that when it is included in an archive zip and
+    // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
-        .add(new MkdirAndSymlinkFileStep(src, pathToOutputFile));
+        .add(new MkdirStep(new File(pathToOutputFile).getParent()))
+        .add(new CopyStep(src, pathToOutputFile));
 
     return builder.build();
   }

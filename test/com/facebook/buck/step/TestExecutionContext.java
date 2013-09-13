@@ -20,8 +20,11 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public class TestExecutionContext {
 
@@ -38,7 +41,17 @@ public class TestExecutionContext {
   }
 
   public static ExecutionContext newInstance() {
-    return newBuilder().build();
+    return newBuilder()
+    .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
+      @Override
+      public Path resolve(Path path) {
+        return path;
+      }
+      @Override
+      public Function<String, String> getPathRelativizer() {
+        return Functions.identity();
+      }
+    })
+    .build();
   }
-
 }
