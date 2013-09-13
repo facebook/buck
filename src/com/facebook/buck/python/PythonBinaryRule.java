@@ -20,9 +20,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -30,19 +27,21 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public class PythonBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule {
@@ -73,16 +72,17 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
 
   @Override
   public String getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
-    String pythonPath = Joiner.on(':').join(Iterables.transform(getPythonPathEntries(),
-        pathRelativizer));
+    String pythonPath = Joiner.on(':').join(
+        Iterables.transform(
+            getPythonPathEntries(),
+            projectFilesystem.getAbsolutifier()));
     return String.format("PYTHONPATH=%s python %s",
         pythonPath,
-        pathRelativizer.apply(main));
+        projectFilesystem.getPathRelativizer().apply(main));
   }
 
-  private ImmutableSet<String> getPythonPathEntries() {
-    final ImmutableSet.Builder<String> entries = ImmutableSet.builder();
+  private ImmutableSet<Path> getPythonPathEntries() {
+    final ImmutableSet.Builder<Path> entries = ImmutableSet.builder();
 
     final PythonBinaryRule pythonBinaryRule = this;
     new AbstractDependencyVisitor(this) {
@@ -93,10 +93,8 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
         if (buildable instanceof PythonLibrary) {
           PythonLibrary pythonLibrary = (PythonLibrary) buildable;
 
-          Optional<String> pythonPathEntry = pythonLibrary.getPythonPathDirectory();
-          if (pythonPathEntry.isPresent()) {
-            entries.add(pythonPathEntry.get());
-          }
+          Path pythonPathEntry = pythonLibrary.getPythonPathDirectory();
+          entries.add(pythonPathEntry);
           return true;
         }
 

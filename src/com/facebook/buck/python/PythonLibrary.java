@@ -21,24 +21,26 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -48,18 +50,18 @@ public class PythonLibrary extends AbstractBuildable {
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<String> srcs;
-  private final Optional<String> pythonPathDirectory;
+  private final Path pythonPathDirectory;
 
   protected PythonLibrary(BuildRuleParams buildRuleParams,
                           ImmutableSortedSet<String> srcs) {
+    Preconditions.checkArgument(!srcs.isEmpty(),
+        "Must specify srcs for %s.",
+        buildRuleParams.getBuildTarget());
+
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.srcs = ImmutableSortedSet.copyOf(srcs);
 
-    if (srcs.isEmpty()) {
-      this.pythonPathDirectory = Optional.absent();
-    } else {
-      this.pythonPathDirectory = Optional.of(getPathToPythonPathDirectory());
-    }
+    this.pythonPathDirectory = getPathToPythonPathDirectory();
   }
 
   @Nullable
@@ -70,16 +72,18 @@ public class PythonLibrary extends AbstractBuildable {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder
-        .set("srcs", srcs)
-        .set("pythonPathDirectory", pythonPathDirectory);
+    return builder.set("srcs", srcs);
   }
 
-  private String getPathToPythonPathDirectory() {
-    return String.format("%s/%s/__pylib_%s/",
-        BuckConstant.BIN_DIR,
+  private Path getPathToPythonPathDirectory() {
+    return Paths.get(
+        BuckConstant.GEN_DIR,
         buildTarget.getBasePath(),
-        buildTarget.getShortName());
+        getPathUnderGenDirectory());
+  }
+
+  private String getPathUnderGenDirectory() {
+    return "__pylib_" + buildTarget.getShortName();
   }
 
   public ImmutableSortedSet<String> getPythonSrcs() {
@@ -91,25 +95,28 @@ public class PythonLibrary extends AbstractBuildable {
     return srcs;
   }
 
-  public Optional<String> getPythonPathDirectory() {
+  public Path getPythonPathDirectory() {
     return pythonPathDirectory;
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    // Symlink all of the sources to a generated directory so that the generated directory can be
-    // included as a $PYTHONPATH element.
+    // Copy all of the sources to a generated directory so that the generated directory can be
+    // included as a $PYTHONPATH element. Symlinks would be more efficient, but we need to include
+    // this structure in the artifact, which is not guaranteed to be zip-friendly.
     // TODO(mbolin): Do not flatten the directory structure when creating the symlinks, as directory
     // structure is significant in Python when __init__.py is used.
-    if (!srcs.isEmpty()) {
-      commands.add(new MakeCleanDirectoryStep(getPathToPythonPathDirectory()));
-      File pythonPathDirectory = new File(getPathToPythonPathDirectory());
-      for (String src : srcs) {
-        File target = new File(pythonPathDirectory, new File(src).getName());
-        commands.add(new SymlinkFileStep(src, target.getPath()));
-      }
+    commands.add(new MakeCleanDirectoryStep(pythonPathDirectory));
+    for (String src : srcs) {
+      String srcName = new File(src).getName();
+      Path target = pythonPathDirectory.resolve(srcName);
+      commands.add(new CopyStep(src, target.toString()));
+
+      Path pathToArtifact = Paths.get(getPathUnderGenDirectory(), srcName);
+      buildableContext.recordArtifact(pathToArtifact.toString());
     }
 
     return commands.build();

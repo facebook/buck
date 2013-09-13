@@ -36,6 +36,7 @@ import com.google.common.io.InputSupplier;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -276,6 +277,10 @@ public class RuleKey {
 
     public Builder set(String key, @Nullable File val) throws IOException {
       return setKey(key).setVal(val);
+    }
+
+    public Builder set(String key, @Nullable Path path) throws IOException {
+      return set(key, path == null ? null : path.toFile());
     }
 
     public Builder set(String key, @Nullable String val) {

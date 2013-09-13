@@ -61,6 +61,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -169,7 +170,7 @@ public class ApkGenruleTest {
         ImmutableList.of(
             "rm",
             "-f",
-            "./" + apkGenrule.getPathToOutputFile()),
+            apkGenrule.getPathToOutputFile()),
         rmCommand.getShellCommand(executionContext));
 
     Step secondStep = steps.get(1);
@@ -177,7 +178,7 @@ public class ApkGenruleTest {
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        Paths.get("./" + GEN_DIR + "/src/com/facebook/"),
+        Paths.get(GEN_DIR + "/src/com/facebook/"),
         mkdirCommand.getPath(executionContext));
 
     Step thirdStep = steps.get(2);
@@ -234,6 +235,11 @@ public class ApkGenruleTest {
           @Override
           public Function<String, String> getPathRelativizer() {
             return Functions.identity();
+          }
+
+          @Override
+          public Path resolve(Path path) {
+            return path;
           }
         })
         .setEventBus(BuckEventBusFactory.newInstance())

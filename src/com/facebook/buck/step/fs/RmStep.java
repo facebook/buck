@@ -91,7 +91,7 @@ public class RmStep implements Step {
       }
     } else {
       // Delete a single file
-      File file = projectFilesystem.resolve(patternToDelete).toAbsolutePath().toFile();
+      File file = projectFilesystem.resolve(patternToDelete).toFile();
       if (!file.delete() && !shouldForceDeletion) {
         return 1;
       }

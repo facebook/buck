@@ -51,7 +51,13 @@ public class ProjectFilesystem {
 
   private final File projectRoot;
   private final Path pathToRoot;
+
+  // Over time, we hope to replace our uses of String with Path, as appropriate. When that happens,
+  // the Function<String, String> can go away, as Function<Path, Path> should be used exclusively.
+
+  private final Function<Path, Path> pathAbsolutifier;
   private final Function<String, String> pathRelativizer;
+
   private final ImmutableSet<String> ignorePaths;
 
   /**
@@ -66,10 +72,16 @@ public class ProjectFilesystem {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     this.pathToRoot = projectRoot.toPath();
     Preconditions.checkArgument(projectRoot.isDirectory());
+    this.pathAbsolutifier = new Function<Path, Path>() {
+      @Override
+      public Path apply(Path path) {
+        return resolve(path);
+      }
+    };
     this.pathRelativizer = new Function<String, String>() {
       @Override
       public String apply(String relativePath) {
-        return ProjectFilesystem.this.getFileForRelativePath(relativePath).getAbsolutePath();
+        return getFileForRelativePath(relativePath).getAbsolutePath();
       }
     };
     this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
@@ -83,9 +95,18 @@ public class ProjectFilesystem {
     return pathToRoot;
   }
 
-  /** @return the specified {@code path} resolved against {@link #getRootPath()}. */
+  /**
+   * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
+   */
   public Path resolve(Path path) {
-    return pathToRoot.resolve(path);
+    return pathToRoot.resolve(path).toAbsolutePath();
+  }
+
+  /**
+   * @return A {@link Function} that applies {@link #resolve(Path)} to its parameter.
+   */
+  public Function<Path, Path> getAbsolutifier() {
+    return pathAbsolutifier;
   }
 
   public File getProjectRoot() {

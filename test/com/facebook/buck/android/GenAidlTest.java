@@ -88,7 +88,12 @@ public class GenAidlTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
     expect(executionContext.getProjectFilesystem()).andReturn(
-        new ProjectFilesystem(new File(".")))
+        new ProjectFilesystem(new File(".")) {
+          @Override
+          public Path resolve(Path path) {
+            return path;
+          }
+        })
         .times(2);
     replay(androidPlatformTarget,
         aidlExecutable,
@@ -96,7 +101,6 @@ public class GenAidlTest {
         executionContext);
 
     Path outputDirectory = Paths.get(
-        ".",
         BuckConstant.BIN_DIR,
         "/java/com/example/base/.IWhateverService.aidl");
     MkdirStep mkdirStep = (MkdirStep) steps.get(0);
