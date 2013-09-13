@@ -35,6 +35,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -354,6 +355,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .setEventBus(BuckEventBusFactory.newInstance())
+        .setConsole(new TestConsole())
         .build();
 
     // Build the rule!

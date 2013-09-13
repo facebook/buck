@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -152,6 +153,13 @@ public class BuildContext {
       RuleKey ruleKey,
       RuleKey ruleKeyWithoutDeps) {
     return new BuildInfoRecorder(buildTarget, projectFilesystem, ruleKey, ruleKeyWithoutDeps);
+  }
+
+  /**
+   * This should be used exclusively for unzipping artifacts.
+   */
+  ProcessExecutor createProcessExecutorForUnzippingArtifact() {
+    return new ProcessExecutor(console);
   }
 
   public void logBuildInfo(String format, Object... args) {

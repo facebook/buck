@@ -21,6 +21,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -359,7 +360,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     boolean fromCache = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
         buildInfoRecorder,
         context.getArtifactCache(),
-        context.getProjectRoot());
+        context.getProjectRoot(),
+        context);
 
     // Run the steps to build this rule since it was not found in the cache.
     if (fromCache) {
@@ -390,7 +392,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
   private boolean tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
       BuildInfoRecorder buildInfoRecorder,
       ArtifactCache artifactCache,
-      Path projectRoot) {
+      Path projectRoot,
+      BuildContext buildContext) {
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
     // that we are creating a zip-based FileSystem.
     File zipFile;
@@ -427,14 +430,32 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
         "unzip", "-o", "-qq", zipFile.getAbsolutePath());
     processBuilder.directory(projectRoot.toFile());
 
-    // TODO(mbolin): In the failure cases, try to clean up or warn the user?
     try {
+      ProcessExecutor executor = buildContext.createProcessExecutorForUnzippingArtifact();
       Process process = processBuilder.start();
-      int exitCode = process.waitFor();
+      ProcessExecutor.Result result = executor.execute(process,
+          /* shouldPrintStdOut */ false,
+          /* shouldPrintStdErr */ false,
+          /* isSilent */ false);
+      int exitCode = result.getExitCode();
       if (exitCode != 0) {
-        throw new RuntimeException("Failed to unzip " + zipFile);
+        // In the wild, we have seen some inexplicable failures during this step. For now, we try to
+        // give the user as much information as we can to debug the issue, but return false so that
+        // Buck will fall back on doing a local build.
+        buildContext.logBuildInfo(
+            "Failed to unzip the artifact for %s at %s.\n" +
+            "The rule will be built locally, but here is the output of the failed unzip call:\n" +
+            "Exit code: %s\n" +
+            "STDOUT:\n%s\n" +
+            "STDERR:\n%s\n",
+            getBuildTarget(),
+            zipFile.getAbsolutePath(),
+            exitCode,
+            result.getStdout(),
+            result.getStderr());
+        return false;
       }
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       return false;
     }
 
