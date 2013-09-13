@@ -333,7 +333,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .readFileIfItExists(
             Paths.get("buck-out/bin/src/com/facebook/orca/.orca/metadata/RULE_KEY")))
         .andReturn(Optional.<String>absent());
-    expect(projectFilesystem.getProjectRoot()).andReturn(tmp.getRoot());
+    expect(projectFilesystem.getRootPath()).andReturn(tmp.getRoot().toPath());
 
     // Simulate successfully fetching the output file from the ArtifactCache.
     ArtifactCache artifactCache = createMock(ArtifactCache.class);

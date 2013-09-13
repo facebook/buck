@@ -620,7 +620,7 @@ public class Parser {
         // TODO(user): avoid invalidating build files when backup files are added or removed.
         String packageBuildFilePath =
             buildFileTreeCache.getInput().getBasePathOfAncestorTarget(
-                projectFilesystem.getProjectRoot().toPath().relativize(path).toString());
+                projectFilesystem.getRootPath().relativize(path).toString());
         invalidateDependents(
             projectFilesystem.getFileForRelativePath(
                 packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());

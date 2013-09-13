@@ -20,23 +20,30 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Preconditions;
+
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Command that runs equivalent command of {@code mkdir -p} on the specified directory.
  */
 public class MkdirStep implements Step {
 
-  private final String pathRelativeToProjectRoot;
+  private final Path pathRelativeToProjectRoot;
 
   public MkdirStep(String pathRelativeToProjectRoot) {
+    this(Paths.get(pathRelativeToProjectRoot));
+  }
+
+  public MkdirStep(Path pathRelativeToProjectRoot) {
     this.pathRelativeToProjectRoot = Preconditions.checkNotNull(pathRelativeToProjectRoot);
   }
 
   @Override
   public int execute(ExecutionContext context) {
     synchronized(MkdirStep.class) {
-      File directory = new File(getPath(context));
+      File directory = getPath(context).toFile();
       if (directory.exists()) {
         return 0;
       }
@@ -59,7 +66,7 @@ public class MkdirStep implements Step {
    * Get the path of the directory to make.
    * @return Path of the directory to make.
    */
-  public String getPath(ExecutionContext context) {
-    return context.getProjectFilesystem().getPathRelativizer().apply(pathRelativeToProjectRoot);
+  public Path getPath(ExecutionContext context) {
+    return context.getProjectFilesystem().resolve(pathRelativeToProjectRoot);
   }
 }

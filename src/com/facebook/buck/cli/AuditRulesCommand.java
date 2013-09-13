@@ -97,7 +97,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
       // Resolve the path specified by the user.
       Path path = Paths.get(pathToBuildFile);
       if (!path.isAbsolute()) {
-        Path root = projectFilesystem.getProjectRoot().toPath();
+        Path root = projectFilesystem.getRootPath();
         path = root.resolve(path);
       }
 

@@ -78,7 +78,7 @@ public class BuildContext {
   }
 
   public Path getProjectRoot() {
-    return getProjectFilesystem().getProjectRoot().toPath();
+    return getProjectFilesystem().getRootPath();
   }
 
   public StepRunner getStepRunner() {

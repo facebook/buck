@@ -33,11 +33,11 @@ import org.easymock.Capture;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -64,7 +64,7 @@ public class ProjectFilesystemWatcherTest {
     key = createNiceMock(WatchKey.class);
     event = createNiceMock(WatchEvent.class);
 
-    expect(filesystem.getProjectRoot()).andReturn(new File("/"));
+    expect(filesystem.getRootPath()).andReturn(Paths.get("/"));
     visitor = new Capture<>();
     filesystem.walkFileTree(anyObject(Path.class), capture(visitor));
     expect(path.normalize()).andReturn(path);

@@ -38,14 +38,14 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -88,24 +88,21 @@ public class GenAidlTest {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
     expect(executionContext.getProjectFilesystem()).andReturn(
-        new ProjectFilesystem(new File(".")) {
-          @Override
-          public Function<String, String> getPathRelativizer() {
-            return Functions.identity();
-          }
-        }
-    );
+        new ProjectFilesystem(new File(".")))
+        .times(2);
     replay(androidPlatformTarget,
         aidlExecutable,
         frameworkIdlFile,
         executionContext);
 
-    String outputDirectory = BuckConstant.BIN_DIR +
-        "/java/com/example/base/.IWhateverService.aidl";
+    Path outputDirectory = Paths.get(
+        ".",
+        BuckConstant.BIN_DIR,
+        "/java/com/example/base/.IWhateverService.aidl");
     MkdirStep mkdirStep = (MkdirStep) steps.get(0);
     assertEquals("gen_aidl() should make a directory at " + outputDirectory,
-        mkdirStep.getPath(executionContext),
-        outputDirectory);
+        outputDirectory,
+        mkdirStep.getPath(executionContext));
 
     ShellStep aidlStep = (ShellStep) steps.get(1);
     assertEquals(

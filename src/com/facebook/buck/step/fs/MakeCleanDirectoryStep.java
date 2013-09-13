@@ -21,6 +21,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 /**
  * Deletes the directory, if it exists, before creating it.
  * {@link MakeCleanDirectoryStep} is preferable to {@link MkdirStep} if the directory may
@@ -40,6 +42,13 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
         new RmStep(pathRelativeToProjectRoot, true /* shouldForceDeletion */, true /* shouldRecurse */),
         new MkdirStep(pathRelativeToProjectRoot)));
     this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
+  }
+
+  public MakeCleanDirectoryStep(Path pathRelativeToProjectRoot) {
+    super(ImmutableList.of(
+        new RmStep(pathRelativeToProjectRoot, true /* shouldForceDeletion */, true /* shouldRecurse */),
+        new MkdirStep(pathRelativeToProjectRoot)));
+    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot.toString();
   }
 
   @VisibleForTesting

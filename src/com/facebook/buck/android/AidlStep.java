@@ -19,23 +19,25 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 public class AidlStep extends ShellStep {
 
   private final String aidlFilePath;
   private final Set<String> importDirectoryPaths;
-  private final String destinationDirectory;
+  private final Path destinationDirectory;
 
   public AidlStep(
       String aidlFilePath,
       Set<String> importDirectoryPaths,
-      String destinationDirectory) {
+      Path destinationDirectory) {
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = Preconditions.checkNotNull(destinationDirectory);
@@ -48,6 +50,7 @@ public class AidlStep extends ShellStep {
     // The arguments passed to aidl are based off of what I observed when running Ant in verbose
     // mode.
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     args.add(androidPlatformTarget.getAidlExecutable().getAbsolutePath());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and
@@ -65,7 +68,7 @@ public class AidlStep extends ShellStep {
     }
 
     // base output folder for generated files
-    args.add("-o" + destinationDirectory);
+    args.add("-o" + projectFilesystem.resolve(destinationDirectory));
 
     args.add(aidlFilePath);
 

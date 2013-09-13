@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -110,10 +112,10 @@ public class GenAidl extends AbstractBuildable {
       throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    String outputDirectory = String.format("%s/%s.%s.aidl",
+    Path outputDirectory = Paths.get(
         BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        buildTarget.getBasePath(),
+        "." + buildTarget.getShortName() + ".aidl");
     commands.add(new MkdirStep(outputDirectory));
 
     AidlStep command = new AidlStep(aidlFilePath,
@@ -128,7 +130,7 @@ public class GenAidl extends AbstractBuildable {
     Function<String, String> artifactPathTransform = Functions.identity();
     commands.add(new RecordArtifactsInDirectoryStep(
         buildableContext,
-        outputDirectory,
+        outputDirectory.toString(),
         genDirectory,
         artifactPathTransform));
 

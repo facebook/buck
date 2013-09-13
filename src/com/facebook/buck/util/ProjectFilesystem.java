@@ -50,6 +50,7 @@ public class ProjectFilesystem {
   // Migrate from String to Path.
 
   private final File projectRoot;
+  private final Path pathToRoot;
   private final Function<String, String> pathRelativizer;
   private final ImmutableSet<String> ignorePaths;
 
@@ -63,6 +64,7 @@ public class ProjectFilesystem {
    */
   public ProjectFilesystem(File projectRoot, ImmutableSet<String> ignorePaths) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
+    this.pathToRoot = projectRoot.toPath();
     Preconditions.checkArgument(projectRoot.isDirectory());
     this.pathRelativizer = new Function<String, String>() {
       @Override
@@ -75,6 +77,15 @@ public class ProjectFilesystem {
 
   public ProjectFilesystem(File projectRoot) {
     this(projectRoot, ImmutableSet.<String>of());
+  }
+
+  public Path getRootPath() {
+    return pathToRoot;
+  }
+
+  /** @return the specified {@code path} resolved against {@link #getRootPath()}. */
+  public Path resolve(Path path) {
+    return pathToRoot.resolve(path);
   }
 
   public File getProjectRoot() {

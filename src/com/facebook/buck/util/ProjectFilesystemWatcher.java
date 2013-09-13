@@ -56,7 +56,7 @@ public class ProjectFilesystemWatcher implements Closeable {
     this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
     this.watchService = Preconditions.checkNotNull(watchService);
     this.keys = Maps.newHashMap();
-    registerAll(filesystem.getProjectRoot().toPath());
+    registerAll(filesystem.getRootPath());
   }
 
   /** Post filesystem events to eventBus */

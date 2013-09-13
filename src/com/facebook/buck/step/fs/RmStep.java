@@ -16,19 +16,21 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Function;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class RmStep implements Step {
 
-  private final String patternToDelete;
+  private final Path patternToDelete;
   private final boolean shouldForceDeletion;
   private final boolean shouldRecurse;
 
@@ -39,6 +41,12 @@ public class RmStep implements Step {
   public RmStep(String patternToDelete,
                 boolean shouldForceDeletion,
                 boolean shouldRecurse) {
+    this(Paths.get(patternToDelete), shouldForceDeletion, shouldRecurse);
+  }
+
+  public RmStep(Path patternToDelete,
+      boolean shouldForceDeletion,
+      boolean shouldRecurse) {
     this.patternToDelete = Preconditions.checkNotNull(patternToDelete);
     this.shouldForceDeletion = shouldForceDeletion;
     this.shouldRecurse = shouldRecurse;
@@ -56,8 +64,8 @@ public class RmStep implements Step {
       args.add("-f");
     }
 
-    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
-    args.add(pathRelativizer.apply(patternToDelete));
+    Path absolutePath = context.getProjectFilesystem().resolve(patternToDelete);
+    args.add(absolutePath.toString());
 
     return args.build();
   }
@@ -69,11 +77,11 @@ public class RmStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (shouldRecurse) {
       // Delete a folder recursively
       try {
-        context.getProjectFilesystem().rmdir(patternToDelete);
+        projectFilesystem.rmdir(patternToDelete.toString());
       } catch (IOException e) {
         if (shouldForceDeletion) {
           return 0;
@@ -83,7 +91,7 @@ public class RmStep implements Step {
       }
     } else {
       // Delete a single file
-      File file = new File(pathRelativizer.apply(patternToDelete));
+      File file = projectFilesystem.resolve(patternToDelete).toAbsolutePath().toFile();
       if (!file.delete() && !shouldForceDeletion) {
         return 1;
       }
