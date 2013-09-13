@@ -209,7 +209,7 @@ public class JarDirectoryStep implements Step {
       if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
         // Duplicate entries. Skip.
         eventBus.post(LogEvent.create(
-            Level.INFO, "Duplicate found when adding file to jar: %s", entryName));
+            determineSeverity(entry), "Duplicate found when adding file to jar: %s", entryName));
         continue;
       }
 
@@ -218,6 +218,10 @@ public class JarDirectoryStep implements Step {
       ByteStreams.copy(inputStream, jar);
       jar.closeEntry();
     }
+  }
+
+  private Level determineSeverity(ZipEntry entry) {
+    return entry.isDirectory() ? Level.FINE : Level.INFO;
   }
 
   private Manifest readManifest(ZipFile zip, ZipEntry manifestMfEntry) throws IOException {
@@ -253,9 +257,12 @@ public class JarDirectoryStep implements Step {
           // We expect there to be many duplicate entries for things like directories. Creating
           // those repeatedly would be lame, so don't do that.
           if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
-            eventBus.post(LogEvent.create(
-                Level.INFO, "Duplicate found when adding directory to jar: %s", relativePath));
-            return;
+            if (!entryName.endsWith("/")) {
+              eventBus.post(LogEvent.create(
+                  determineSeverity(entry),
+                  "Duplicate found when adding directory to jar: %s", relativePath));
+            }
+              return;
           }
           jar.putNextEntry(entry);
           Files.copy(file, jar);
