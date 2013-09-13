@@ -34,18 +34,18 @@ public class LoggingArtifactCacheDecorator {
   public final ArtifactCache decorate(final ArtifactCache delegate) {
     return new ArtifactCache() {
       @Override
-      public boolean fetch(RuleKey ruleKey, File output) {
+      public CacheResult fetch(RuleKey ruleKey, File output) {
         eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH));
-        boolean isSuccess = delegate.fetch(ruleKey, output);
-        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH, isSuccess));
-        return isSuccess;
+        CacheResult fetchResult = delegate.fetch(ruleKey, output);
+        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH, fetchResult));
+        return fetchResult;
       }
 
       @Override
       public void store(RuleKey ruleKey, File output) {
         eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.STORE));
         delegate.store(ruleKey, output);
-        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.STORE, true));
+        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.STORE));
       }
     };
   }

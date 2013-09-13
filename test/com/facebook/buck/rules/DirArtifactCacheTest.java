@@ -51,7 +51,7 @@ public class DirArtifactCacheTest {
     InputRule inputRuleX = new InputRuleForTest(fileX);
     RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
 
-    assertFalse(dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
   }
 
   @Test
@@ -68,12 +68,12 @@ public class DirArtifactCacheTest {
     dirArtifactCache.store(ruleKeyX, fileX);
 
     // Test that artifact overwrite works.
-    assertTrue(dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
     assertEquals(inputRuleX, new InputRuleForTest(fileX));
 
     // Test that artifact creation works.
     assertTrue(fileX.delete());
-    assertTrue(dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
     assertEquals(inputRuleX, new InputRuleForTest(fileX));
   }
 
@@ -91,7 +91,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
 
-    assertTrue(dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
     assertEquals(inputRuleX, new InputRuleForTest(fileX));
   }
 
@@ -119,9 +119,9 @@ public class DirArtifactCacheTest {
     RuleKey ruleKeyY = RuleKey.builder(inputRuleY).build();
     RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ).build();
 
-    assertFalse(dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertFalse(dirArtifactCache.fetch(ruleKeyY, fileY));
-    assertFalse(dirArtifactCache.fetch(ruleKeyZ, fileZ));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));
+    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ));
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyY, fileY);
@@ -131,9 +131,9 @@ public class DirArtifactCacheTest {
     assertTrue(fileY.delete());
     assertTrue(fileZ.delete());
 
-    assertTrue(dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertTrue(dirArtifactCache.fetch(ruleKeyY, fileY));
-    assertTrue(dirArtifactCache.fetch(ruleKeyZ, fileZ));
+    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyY, fileY));
+    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyZ, fileZ));
 
     assertEquals(inputRuleX, new InputRuleForTest(fileX));
     assertEquals(inputRuleY, new InputRuleForTest(fileY));

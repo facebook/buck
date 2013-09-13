@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.Console;
@@ -105,7 +106,7 @@ public class CacheCommandTest extends EasyMockSupport {
         cassandra.fetch(
             eq(new RuleKey(ruleKeyHash)),
             capture(new Capture<File>())))
-        .andReturn(true);
+        .andReturn(CacheResult.CASSANDRA_HIT);
     Capture<BuckEventBus> buckEventBus = new Capture<>();
     expect(buckConfig.createCassandraArtifactCache(capture(buckEventBus))).andReturn(cassandra);
 
@@ -140,7 +141,7 @@ public class CacheCommandTest extends EasyMockSupport {
         cassandra.fetch(
             eq(new RuleKey(ruleKeyHash)),
             capture(new Capture<File>())))
-        .andReturn(false);
+        .andReturn(CacheResult.MISS);
     Capture<BuckEventBus> buckEventBus = new Capture<>();
     expect(buckConfig.createCassandraArtifactCache(capture(buckEventBus))).andReturn(cassandra);
 

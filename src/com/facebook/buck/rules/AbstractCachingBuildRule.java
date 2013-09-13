@@ -308,7 +308,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // If the RuleKeys match, then there is nothing to build.
     if (ruleKey.equals(cachedRuleKey.orNull())) {
       context.logBuildInfo("[UNCHANGED %s]", getFullyQualifiedName());
-      return new BuildResult(BuildRuleSuccess.Type.MATCHING_RULE_KEY, CacheResult.HIT);
+      return new BuildResult(BuildRuleSuccess.Type.MATCHING_RULE_KEY,
+          CacheResult.LOCAL_KEY_UNCHANGED_HIT);
     }
 
     // Deciding whether we need to rebuild is tricky business. We want to rebuild as little as
@@ -351,22 +352,22 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
               AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
               cachedAbiKeyForDeps.get().getHash());
           return new BuildResult(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-              CacheResult.HIT);
+              CacheResult.LOCAL_KEY_UNCHANGED_HIT);
         }
       }
     }
 
     // Before deciding to build, check the ArtifactCache.
     // The fetched file is now a ZIP file, so it needs to be unzipped.
-    boolean fromCache = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+    CacheResult cacheResult = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
         buildInfoRecorder,
         context.getArtifactCache(),
         context.getProjectRoot(),
         context);
 
     // Run the steps to build this rule since it was not found in the cache.
-    if (fromCache) {
-      return new BuildResult(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, CacheResult.HIT);
+    if (cacheResult.isSuccess()) {
+      return new BuildResult(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, cacheResult);
     }
 
     // The only remaining option is to build locally.
@@ -390,7 +391,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     return new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY, CacheResult.MISS);
   }
 
-  private boolean tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+  private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
       BuildInfoRecorder buildInfoRecorder,
       ArtifactCache artifactCache,
       Path projectRoot,
@@ -407,9 +408,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from Cassandra into the on-disk cache and unzip it from
     // there.
-    boolean isSuccessfulFetch = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
-    if (!isSuccessfulFetch) {
-      return false;
+    CacheResult cacheResult = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
+    if (!cacheResult.isSuccess()) {
+      return cacheResult;
     }
 
     // We unzip the file in the root of the project directory.
@@ -454,16 +455,16 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
             exitCode,
             result.getStdout(),
             result.getStderr()));
-        return false;
+        return CacheResult.MISS;
       }
     } catch (IOException e) {
-      return false;
+      return CacheResult.MISS;
     }
 
     // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
     // around for debugging purposes.
     zipFile.delete();
-    return true;
+    return cacheResult;
   }
 
   /**

@@ -270,8 +270,7 @@ public final class Main {
             buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
             ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
                 .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
-            buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT,
-                /* success */ true));
+            buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT));
             return artifactCache;
           }
         }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.io.Files;
@@ -60,10 +61,10 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
       // Do the fetch.
       RuleKey ruleKey = new RuleKey(arg);
       File artifact = new File(tmpDir, arg);
-      boolean success = cassandra.fetch(ruleKey, artifact);
+      CacheResult success = cassandra.fetch(ruleKey, artifact);
 
       // Display the result.
-      if (success) {
+      if (success.isSuccess()) {
         console.printSuccess(String.format(
             "Successfully downloaded artifact with id %s at %s.",
             ruleKey,

@@ -17,8 +17,6 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 
@@ -41,8 +39,8 @@ public class MultiArtifactCacheTest {
     }
 
     @Override
-    public boolean fetch(RuleKey ruleKey, File output) {
-      return ruleKey.equals(storeKey);
+    public CacheResult fetch(RuleKey ruleKey, File output) {
+      return ruleKey.equals(storeKey) ? CacheResult.LOCAL_KEY_UNCHANGED_HIT : CacheResult.MISS;
     }
 
     @Override
@@ -59,17 +57,20 @@ public class MultiArtifactCacheTest {
         (ArtifactCache) dummyArtifactCache1,
         dummyArtifactCache2));
 
-    assertFalse("Fetch should fail",
+    assertEquals("Fetch should fail",
+        CacheResult.MISS,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile));
 
     dummyArtifactCache1.store(dummyRuleKey, dummyFile);
-    assertTrue("Fetch should succeed after store",
+    assertEquals("Fetch should succeed after store",
+        CacheResult.LOCAL_KEY_UNCHANGED_HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile));
 
     dummyArtifactCache1.reset();
     dummyArtifactCache2.reset();
     dummyArtifactCache2.store(dummyRuleKey, dummyFile);
-    assertTrue("Fetch should succeed after store",
+    assertEquals("Fetch should succeed after store",
+        CacheResult.LOCAL_KEY_UNCHANGED_HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile));
   }
 

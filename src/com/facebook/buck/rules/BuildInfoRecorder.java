@@ -130,7 +130,7 @@ public class BuildInfoRecorder {
    * Fetches the artifact associated with the {@link #buildTarget} for this class and writes it to
    * the specified {@code outputFile}.
    */
-  public boolean fetchArtifactForBuildable(File outputFile, ArtifactCache artifactCache) {
+  public CacheResult fetchArtifactForBuildable(File outputFile, ArtifactCache artifactCache) {
     Preconditions.checkNotNull(outputFile);
     return artifactCache.fetch(ruleKey, outputFile);
   }

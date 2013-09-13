@@ -25,9 +25,9 @@ public interface ArtifactCache {
    *
    * @param ruleKey cache fetch key
    * @param output path to store artifact to
-   * @return true on fetch success, false otherwise.
+   * @return whether it was a {@link CacheResult#MISS} (indicating a failure) or some type of hit.
    */
-  public boolean fetch(RuleKey ruleKey, File output);
+  public CacheResult fetch(RuleKey ruleKey, File output);
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched

@@ -21,6 +21,9 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+
+import javax.annotation.Nullable;
 
 /**
  * Base class for events about build rules.
@@ -71,8 +74,13 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     return new Started(operation);
   }
 
-  public static Finished finished(Operation operation, boolean success) {
-    return new Finished(operation, success);
+  public static Finished finished(Operation operation) {
+    return new Finished(operation);
+  }
+
+  public static Finished finished(Operation operation, CacheResult cacheResult) {
+    Preconditions.checkNotNull(cacheResult);
+    return new Finished(operation, cacheResult);
   }
 
   public static class Started extends ArtifactCacheEvent {
@@ -88,15 +96,31 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   }
 
   public static class Finished extends ArtifactCacheEvent {
-    private final boolean success;
+    /** {@code null} iff {@link #getOperation()} is not {@link Operation#FETCH}. */
+    @Nullable
+    private final CacheResult cacheResult;
 
-    protected Finished(Operation operation, boolean success) {
+    protected Finished(Operation operation) {
+      this(operation, /* cacheResult */ null);
+    }
+
+    protected Finished(Operation operation, @Nullable CacheResult cacheResult) {
       super(operation);
-      this.success = success;
+      Preconditions.checkArgument(
+          (operation.equals(Operation.FETCH) && cacheResult != null) ||
+          (!operation.equals(Operation.FETCH) && cacheResult == null),
+          "For FETCH operations, cacheResult must be non-null. " +
+          "For non-FETCH operations, cacheResult must be null.");
+      this.cacheResult = cacheResult;
     }
 
     public boolean isSuccess() {
-      return success;
+      return cacheResult == null || cacheResult.isSuccess();
+    }
+
+    @Nullable
+    public CacheResult getCacheResult() {
+      return cacheResult;
     }
 
     @Override
@@ -112,12 +136,12 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
       }
 
       Finished that = (Finished) o;
-      return isSuccess() == that.isSuccess();
+      return Objects.equal(this.cacheResult, that.cacheResult);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getOperation(), isSuccess());
+      return Objects.hashCode(getOperation(), cacheResult);
     }
   }
 

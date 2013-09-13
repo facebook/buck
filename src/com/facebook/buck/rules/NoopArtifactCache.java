@@ -21,9 +21,9 @@ import java.io.File;
 public class NoopArtifactCache implements ArtifactCache {
 
   @Override
-  public boolean fetch(RuleKey ruleKey, File output) {
+  public CacheResult fetch(RuleKey ruleKey, File output) {
     // Do nothing.
-    return false;
+    return CacheResult.MISS;
   }
 
   @Override

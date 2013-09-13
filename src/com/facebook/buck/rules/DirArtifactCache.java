@@ -38,14 +38,14 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public boolean fetch(RuleKey ruleKey, File output) {
-    boolean success = false;
+  public CacheResult fetch(RuleKey ruleKey, File output) {
+    CacheResult success = CacheResult.MISS;
     File cacheEntry = new File(cacheDir, ruleKey.toString());
     if (cacheEntry.exists()) {
       try {
         Files.createParentDirs(output);
         Files.copy(cacheEntry, output);
-        success = true;
+        success = CacheResult.DIR_HIT;
       } catch (IOException e) {
         logger.warning(String.format("Artifact fetch(%s, %s) error: %s",
             ruleKey,
@@ -56,7 +56,7 @@ public class DirArtifactCache implements ArtifactCache {
     logger.info(String.format("Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
-        (success ? "hit" : "miss")));
+        (success.isSuccess() ? "hit" : "miss")));
     return success;
   }
 

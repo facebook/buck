@@ -39,9 +39,10 @@ public class MultiArtifactCache implements ArtifactCache {
    * artifact to one or more of the other encapsulated ArtifactCaches as a side effect.
    */
   @Override
-  public boolean fetch(RuleKey ruleKey, File output) {
+  public CacheResult fetch(RuleKey ruleKey, File output) {
     for (ArtifactCache artifactCache : artifactCaches) {
-      if (artifactCache.fetch(ruleKey, output)) {
+      CacheResult cacheResult = artifactCache.fetch(ruleKey, output);
+      if (cacheResult.isSuccess()) {
         // Success; terminate search for a cached artifact, and propagate artifact to caches
         // earlier in the search order so that subsequent searches terminate earlier.
         for (ArtifactCache priorArtifactCache : artifactCaches) {
@@ -50,10 +51,10 @@ public class MultiArtifactCache implements ArtifactCache {
           }
           priorArtifactCache.store(ruleKey, output);
         }
-        return true;
+        return cacheResult;
       }
     }
-    return false;
+    return CacheResult.MISS;
   }
 
   /**

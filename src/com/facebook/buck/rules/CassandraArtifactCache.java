@@ -193,11 +193,11 @@ public class CassandraArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public boolean fetch(RuleKey ruleKey, File output) {
+  public CacheResult fetch(RuleKey ruleKey, File output) {
     Optional<KeyspaceAndTtl> keyspaceAndTtl = getKeyspaceAndTtl();
     if (!keyspaceAndTtl.isPresent()) {
       // Connecting to Cassandra failed, return false
-      return false;
+      return CacheResult.MISS;
     }
 
     // Execute the query to Cassandra.
@@ -212,10 +212,10 @@ public class CassandraArtifactCache implements ArtifactCache {
           .execute();
     } catch (ConnectionException e) {
       reportConnectionFailure("Attempting to fetch " + ruleKey + ".", e);
-      return false;
+      return CacheResult.MISS;
     }
 
-    boolean success = false;
+    CacheResult success = CacheResult.MISS;
     try {
       Column<String> column = result.getResult().getColumnByName(artifactColumnName);
       if (column != null) {
@@ -228,7 +228,7 @@ public class CassandraArtifactCache implements ArtifactCache {
           // to reset the TTL.
           store(ruleKey, output);
         }
-        success = true;
+        success = CacheResult.CASSANDRA_HIT;
       }
     } catch (IOException e) {
       buckEventBus.post(ThrowableLogEvent.create(e,
@@ -240,7 +240,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     buckEventBus.post(LogEvent.fine("Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
-        (success ? "hit" : "miss")));
+        (success.isSuccess() ? "hit" : "miss")));
     return success;
   }
 

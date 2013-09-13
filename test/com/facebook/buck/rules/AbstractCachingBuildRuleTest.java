@@ -185,7 +185,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     expect(buildInfoRecorder.fetchArtifactForBuildable(
             capture(new Capture<File>()),
             eq(artifactCache)))
-        .andReturn(false);
+        .andReturn(CacheResult.MISS);
 
     // Set the requisite expectations to build the rule.
     expect(context.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());
@@ -303,7 +303,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     assertEquals(events.get(1),
         configureTestEvent(BuildRuleEvent.finished(buildRule,
             BuildRuleStatus.SUCCESS,
-            CacheResult.HIT,
+            CacheResult.LOCAL_KEY_UNCHANGED_HIT,
             Optional.of(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS)),
             buckEventBus));
 
@@ -346,7 +346,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         artifactCache.fetch(
             eq(cachingRule.getRuleKey()),
             capture(new CaptureThatWritesAZipFile(desiredZipEntries))))
-        .andReturn(true);
+        .andReturn(CacheResult.DIR_HIT);
 
     BuildContext buildContext = BuildContext.builder()
         .setDependencyGraph(RuleMap.createGraphFromSingleRule(cachingRule))
