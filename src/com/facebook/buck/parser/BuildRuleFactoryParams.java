@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -142,6 +143,12 @@ public final class BuildRuleFactoryParams {
     } else {
       String fullPath = resolvePathAgainstBuildTargetBase(path);
       File file = filesystem.getFileForRelativePath(fullPath);
+
+      // TODO(mbolin): Eliminate this temporary exemption for symbolic links.
+      if (Files.isSymbolicLink(file.toPath())) {
+        return fullPath;
+      }
+
       if (!ignoreFileExistenceChecks && !file.isFile()) {
         throw new RuntimeException("Not an ordinary file: " + fullPath);
       }
