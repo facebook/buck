@@ -7,7 +7,7 @@ Buck documentation is written using
 [Closure Templates](https://developers.google.com/closure/templates/).
 Documentation can be developed locally by running the following command:
 
-    ./docs/soyweb.sh
+    ./docs/soyweb-local.sh
 
 and then navigating to <http://localhost:9811/> in the browser. The typical
 edit/refresh style of web development applies for editing these docs.
@@ -27,8 +27,9 @@ using [GitHub Pages](http://pages.github.com/).
 Therefore, to publish this documentation, you must commit it on the
 `gh-pages` branch of the GitHub repository by running:
 
+    ./docs/soyweb-prod.sh &
     ./docs/publish.sh
-
+    fuser -k -n tcp 9814
 
 Creating a New Article
 ======================

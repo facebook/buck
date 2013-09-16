@@ -5,7 +5,7 @@
 #
 #     ./docs/soy2html.sh <output-dir>
 #
-# Caller must be sure that soyweb.sh is already running.
+# Caller must be sure that soyweb-prod.sh is already running.
 #
 # After running this script, you may want to run the following to
 # share a preview of the docs internally:

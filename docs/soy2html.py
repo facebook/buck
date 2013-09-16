@@ -13,7 +13,7 @@
 # and then navigating to http://localhost:8000/.
 #
 # When this script is run, soyweb should already be running locally on port
-# 9811.
+# 9814 via ./docs/soyweb-prod.sh.
 
 import os
 import sys
@@ -41,7 +41,7 @@ def main(output_dir):
         # Construct the URL where the .soy file is being served.
         soy_file = file_name
         html_file = root + '/' + soy_file[:-len('.soy')] + '.html'
-        url = 'http://localhost:9811/' + html_file
+        url = 'http://localhost:9814/' + html_file
 
         # Fetch url and copy its contents to output_dir.
         req = urllib2.Request(url)

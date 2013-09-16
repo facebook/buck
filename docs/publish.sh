@@ -5,7 +5,7 @@
 #
 #   ./docs/publish.sh
 #
-# Caller must be sure that soyweb.sh is already running and that caller
+# Caller must be sure that soyweb-prod.sh is already running and that caller
 # has the appropriate credentials configured to push to the GitHub repo.
 
 set -e
