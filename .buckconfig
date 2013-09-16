@@ -16,6 +16,15 @@
       test/com/facebook/buck/junit/testdata, \
       test/com/facebook/buck/parser/testdata, \
       test/com/facebook/buck/shell/testdata,
+
+    # Common temp file patterns:
+    # .*\.swp$ (vim)
+    # ^#.*#$, .*~$ (emacs)
+    # .*___jb_bak___$, .*___jb_old___$ (intellij idea)
+    temp_files = \
+      .*\.swp$, \
+      ^#.*#$, .*~$, \
+      .*___jb_bak___$, .*___jb_old___$,
 [test]
     # Maximum timeout of 1 minute per test.
     timeout = 60000

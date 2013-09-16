@@ -24,7 +24,11 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.regex.Pattern;
 
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to create a
@@ -40,6 +44,7 @@ class CommandRunnerParams {
   private final BuckEventBus eventBus;
   private final Platform platform;
 
+  @VisibleForTesting
   public CommandRunnerParams(
       Console console,
       ProjectFilesystem projectFilesystem,
@@ -53,7 +58,11 @@ class CommandRunnerParams {
         buildRuleTypes,
         artifactCacheFactory,
         eventBus,
-        new Parser(projectFilesystem, buildRuleTypes, console, pythonInterpreter),
+        new Parser(projectFilesystem,
+            buildRuleTypes,
+            console,
+            pythonInterpreter,
+            ImmutableSet.<Pattern>of() /* Temp file patterns */),
         platform);
   }
 

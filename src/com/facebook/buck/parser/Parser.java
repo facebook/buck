@@ -40,7 +40,10 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -57,6 +60,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -77,6 +81,7 @@ public class Parser {
    * The build files that have been parsed and whose build rules are in {@link #knownBuildTargets}.
    */
   private final ListMultimap<Path, Map<String, Object>> parsedBuildFiles;
+  private final ImmutableSet<Pattern> tempFilePatterns;
 
   /**
    * True if all build files have been parsed and so all rules are in {@link #knownBuildTargets}.
@@ -155,7 +160,8 @@ public class Parser {
   public Parser(final ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
       Console console,
-      String pythonInterpreter) {
+      String pythonInterpreter,
+      ImmutableSet<Pattern> tempFilePatterns) {
     this(projectFilesystem,
         buildRuleTypes,
         console,
@@ -168,7 +174,8 @@ public class Parser {
         },
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
-        new DefaultProjectBuildFileParserFactory(projectFilesystem, pythonInterpreter));
+        new DefaultProjectBuildFileParserFactory(projectFilesystem, pythonInterpreter),
+        tempFilePatterns);
   }
 
   /**
@@ -182,7 +189,8 @@ public class Parser {
          InputSupplier<BuildFileTree> buildFileTreeSupplier,
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
-         ProjectBuildFileParserFactory buildFileParserFactory) {
+         ProjectBuildFileParserFactory buildFileParserFactory,
+         ImmutableSet<Pattern> tempFilePatterns) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.console = Preconditions.checkNotNull(console);
@@ -193,6 +201,7 @@ public class Parser {
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
     this.parsedBuildFiles = ArrayListMultimap.create();
     this.buildFileDependents = ArrayListMultimap.create();
+    this.tempFilePatterns = tempFilePatterns;
   }
 
   public BuildTargetParser getBuildTargetParser() {
@@ -613,17 +622,13 @@ public class Parser {
 
           // If a build file has been added or removed, reconstruct the build file tree.
           buildFileTreeCache.invalidate();
-
         }
 
-        // Added or removed files can affect globs, so invalidate the package build file.
-        // TODO(user): avoid invalidating build files when backup files are added or removed.
-        String packageBuildFilePath =
-            buildFileTreeCache.getInput().getBasePathOfAncestorTarget(
-                projectFilesystem.getRootPath().relativize(path).toString());
-        invalidateDependents(
-            projectFilesystem.getFileForRelativePath(
-                packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());
+        // Added or removed files can affect globs, so invalidate the package build file
+        // "containing" {@code path} unless its filename matches a temp file pattern.
+        if (!isTempFile(path)) {
+          invalidateContainingBuildFile(path);
+        }
       }
 
       // Invalidate the raw rules and targets dependent on this file.
@@ -635,6 +640,35 @@ public class Parser {
       buildFileTreeCache.invalidate();
       invalidateCache();
     }
+  }
+
+  /**
+   * @param path The {@link Path} to test.
+   * @return true if {@code path} is a temporary or backup file.
+   */
+  private boolean isTempFile(Path path) {
+    final String fileName = path.getFileName().toString();
+    Predicate<Pattern> patternMatches = new Predicate<Pattern>() {
+      @Override
+      public boolean apply(Pattern pattern) {
+        return pattern.matcher(fileName).matches();
+      }
+    };
+    return Iterators.any(tempFilePatterns.iterator(), patternMatches);
+  }
+
+  /**
+   * Finds the build file responsible for the given {@link Path} and invalidates
+   * all of the cached rules dependent on it.
+   * @param path A {@link Path} "contained" within the build file to find and invalidate.
+   */
+  private void invalidateContainingBuildFile(Path path) throws IOException {
+    String packageBuildFilePath =
+        buildFileTreeCache.getInput().getBasePathOfAncestorTarget(
+            projectFilesystem.getProjectRoot().toPath().relativize(path).toString());
+    invalidateDependents(
+        projectFilesystem.getFileForRelativePath(
+            packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());
   }
 
   private boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {

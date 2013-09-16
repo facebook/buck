@@ -76,6 +76,7 @@ import java.nio.file.WatchEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class ParserTest extends EasyMockSupport {
 
@@ -89,6 +90,7 @@ public class ParserTest extends EasyMockSupport {
 
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
+  private ImmutableSet<Pattern> tempFilePatterns = ImmutableSet.of(Pattern.compile(".*\\.swp$"));
 
   @Before
   public void setUp() throws IOException {
@@ -180,7 +182,8 @@ public class ParserTest extends EasyMockSupport {
         buildFileTreeSupplier,
         buildTargetParser,
         knownBuildTargets,
-        buildFileParserFactory);
+        buildFileParserFactory,
+        tempFilePatterns);
   }
 
   /**
@@ -203,7 +206,8 @@ public class ParserTest extends EasyMockSupport {
         new ProjectFilesystem(new File(".")),
         new KnownBuildRuleTypes(),
         new TestConsole(),
-        BuckTestConstant.PYTHON_INTERPRETER);
+        BuckTestConstant.PYTHON_INTERPRETER,
+        tempFilePatterns);
 
     parser.parseRawRulesInternal(ruleObjects);
     RawRulePredicate predicate = alwaysTrue();
@@ -241,7 +245,7 @@ public class ParserTest extends EasyMockSupport {
    */
   @Test
   public void testCircularDependencyDetection()
-      throws BuildFileParseException, NoSuchBuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException {
     // Mock out objects that are not critical to parsing.
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
@@ -790,6 +794,73 @@ public class ParserTest extends EasyMockSupport {
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+
+  @Test
+  public void whenNotifiedOfContainedTempFileAddThenCachedRulesAreNotInvalidated()
+      throws BuildFileParseException, BuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("java/com/facebook/MumbleSwp.Java.swp"),
+        StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should not have invalidated cache.", 1, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfContainedTempFileChangeThenCachedRulesAreNotInvalidated()
+      throws BuildFileParseException, BuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("java/com/facebook/MumbleSwp.Java.swp"),
+        StandardWatchEventKinds.ENTRY_MODIFY);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should not have invalidated cache.", 1, buildFileParserFactory.calls);
+  }
+
+  @Test
+  public void whenNotifiedOfContainedTempFileDeleteThenCachedRulesAreNotInvalidated()
+      throws BuildFileParseException, BuildTargetException, IOException {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem);
+    Parser parser = createParser(emptyBuildTargets());
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createEvent(tempDir.newFile("java/com/facebook/MumbleSwp.Java.swp"),
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should not have invalidated cache.", 1, buildFileParserFactory.calls);
   }
 
   @Test

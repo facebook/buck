@@ -225,6 +225,18 @@ about source control systems.
   ignore = .git
 </pre>{/literal}
 
+This section may also define a <code>temp_files</code> property that
+specifies a comma-separated list of <code>java.util.regex.Pattern</code> regular
+expressions which match temporary and backup files which should be ignored by Buck
+daemon filesystem monitoring. Setting this property to match any temporary files
+created by your IDE or editor will avoid unnecessary cache invalidation when using
+the Buck daemon.
+
+{literal}<pre>
+[project]
+  temp_files = .*~$,.*swp$
+</pre>{/literal}
+
 A <code>post_process</code> property can reference a script that should be
 executed after the project files are generated. Because <code>buck project</code> is
 currently based on heuristics, the IntelliJ project that it generates may not be

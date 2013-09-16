@@ -331,6 +331,21 @@ class BuckConfig {
     })).build();
   }
 
+  public ImmutableSet<Pattern> getTempFilePatterns() {
+    final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
+    final String TEMP_FILES_KEY = "temp_files";
+    ImmutableSet.Builder<Pattern> builder = ImmutableSet.builder();
+    if (projectConfig.containsKey(TEMP_FILES_KEY)) {
+      for (String regex : Splitter.on(',')
+          .omitEmptyStrings()
+          .trimResults()
+          .split(projectConfig.get(TEMP_FILES_KEY))) {
+        builder.add(Pattern.compile(regex));
+      }
+    }
+    return builder.build();
+  }
+
   @Nullable
   public String getBuildTargetForAlias(String alias) {
     Preconditions.checkNotNull(alias);

@@ -104,7 +104,8 @@ public final class Main {
       this.parser = new Parser(projectFilesystem,
           new KnownBuildRuleTypes(),
           console,
-          config.getPythonInterpreter());
+          config.getPythonInterpreter(),
+          config.getTempFilePatterns());
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
@@ -234,7 +235,8 @@ public final class Main {
       parser = new Parser(projectFilesystem,
           knownBuildRuleTypes,
           console,
-          config.getPythonInterpreter());
+          config.getPythonInterpreter(),
+          config.getTempFilePatterns());
     }
 
     Clock clock = new DefaultClock();
