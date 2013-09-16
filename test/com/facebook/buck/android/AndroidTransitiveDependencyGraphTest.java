@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -91,13 +92,14 @@ public class AndroidTransitiveDependencyGraphTest {
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties"));
+        .setProperties("keystore/debug.keystore.properties")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     AndroidBinaryRule binaryRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .addDep(libraryRule.getBuildTarget())
-        .addDep(manifestRule.getBuildTarget())
+        .addClasspathDep(libraryRule.getBuildTarget())
+        .addClasspathDep(manifestRule.getBuildTarget())
         .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setManifest("java/src/com/facebook/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
@@ -144,5 +146,53 @@ public class AndroidTransitiveDependencyGraphTest {
         ImmutableSet.of(((NativeLibraryBuildable)prebuiltNativeLibraryBuild.getBuildable())
             .getLibraryPath()),
         transitiveDeps.nativeLibAssetsDirectories);
+  }
+
+  /**
+   * If the keystore rule depends on an android_library, and an android_binary uses that keystore,
+   * the keystore's android_library should not contribute to the classpath of the android_binary.
+   */
+  @Test
+  public void testGraphForAndroidBinaryExcludesKeystoreDeps() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget androidLibraryKeystoreTarget = new BuildTarget("//java/com/keystore/base", "base");
+    ruleResolver.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(androidLibraryKeystoreTarget)
+        .addSrc("java/com/facebook/keystore/Base.java")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+
+    BuildTarget keystoreTarget = new BuildTarget("//keystore", "debug");
+    ruleResolver.buildAndAddToIndex(
+        Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(keystoreTarget)
+        .setStore("keystore/debug.keystore")
+        .setProperties("keystore/debug.keystore.properties")
+        .addDep(androidLibraryKeystoreTarget)
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+
+    BuildTarget androidLibraryTarget = new BuildTarget("//java/com/facebook/base", "base");
+    ruleResolver.buildAndAddToIndex(
+        AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(androidLibraryTarget)
+        .addSrc("java/com/facebook/base/Base.java")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
+
+    AndroidBinaryRule androidBinaryRule = ruleResolver.buildAndAddToIndex(
+        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(new BuildTarget("//apps/sample", "app"))
+        .setManifest("apps/sample/AndroidManifest.xml")
+        .setTarget("Google Inc.:Google APIs:16")
+        .setKeystore(keystoreTarget)
+        .addClasspathDep(androidLibraryTarget));
+
+    DependencyGraph dependencyGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
+    AndroidDexTransitiveDependencies androidTransitiveDeps = androidBinaryRule
+        .findDexTransitiveDependencies(dependencyGraph);
+    assertEquals(
+        "Classpath entries should include facebook/base but not keystore/base.",
+        ImmutableSet.of(BuckConstant.GEN_DIR + "/java/com/facebook/base/lib__base__output/base.jar"),
+        androidTransitiveDeps.classpathEntriesToDex);
   }
 }

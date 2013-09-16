@@ -176,13 +176,14 @@ public class ProjectTest {
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties"));
+        .setProperties("keystore/debug.keystore.properties")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // android_binary //foo:app
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:app"))
-        .addDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
+        .addClasspathDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
         .setManifest("foo/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget)
@@ -198,7 +199,7 @@ public class ProjectTest {
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
-        .addDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
+        .addClasspathDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
             .setManifest("foo/AndroidManifest.xml")
             .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystoreTarget));

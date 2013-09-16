@@ -16,10 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
 import java.util.Queue;
 import java.util.Set;
 
@@ -36,14 +37,13 @@ public abstract class AbstractDependencyVisitor {
   }
 
   public AbstractDependencyVisitor(BuildRule initialRule, boolean excludeRoot) {
-    Preconditions.checkNotNull(initialRule);
-    this.toExplore = Lists.newLinkedList();
-    if (excludeRoot) {
-      this.toExplore.addAll(initialRule.getDeps());
-    } else {
-      this.toExplore.add(initialRule);
-    }
-    this.explored = Sets.newHashSet();
+    this(excludeRoot ? initialRule.getDeps() : ImmutableSet.of(initialRule));
+  }
+
+  public AbstractDependencyVisitor(Collection<BuildRule> initialDeps) {
+    toExplore = Lists.newLinkedList();
+    toExplore.addAll(initialDeps);
+    explored = Sets.newHashSet();
   }
 
   public final void start() {

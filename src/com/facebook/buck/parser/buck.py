@@ -393,8 +393,6 @@ def android_binary(
       deps=[],
       visibility=[],
       build_env=None):
-  # Always include the keystore as a dep, as it should be built before this rule.
-  deps = deps + [keystore]
   add_rule({
     'type' : 'android_binary',
     'name' : name,
@@ -416,7 +414,9 @@ def android_binary(
     'linear_alloc_hard_limit' : linear_alloc_hard_limit,
     'resource_filter' : resource_filter,
     'cpu_filters' : cpu_filters,
-    'deps' : deps,
+    'classpath_deps' : deps,
+    # Always include the keystore as a dep, as it should be built before this rule.
+    'deps' : deps + [keystore],
     'visibility' : visibility,
   }, build_env)
 
@@ -434,6 +434,7 @@ def android_instrumentation_apk(
     'name' : name,
     'manifest' : manifest,
     'apk' : apk,
+    'classpath_deps' : deps,
     'deps' : deps + [ apk ],
     'visibility' : visibility,
   }, build_env)

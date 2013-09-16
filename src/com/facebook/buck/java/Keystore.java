@@ -36,11 +36,12 @@ import javax.annotation.Nullable;
 
 public class Keystore extends AbstractBuildable {
 
+  private final BuildTarget buildTarget;
   private final String pathToStore;
   private final String pathToProperties;
 
-  protected Keystore(String store,
-                     String properties) {
+  protected Keystore(BuildTarget buildTarget, String store, String properties) {
+    this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.pathToStore = Preconditions.checkNotNull(store);
     this.pathToProperties = Preconditions.checkNotNull(properties);
   }
@@ -63,6 +64,10 @@ public class Keystore extends AbstractBuildable {
         .set("properties", pathToProperties);
   }
 
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
+
   public String getPathToStore() {
     return pathToStore;
   }
@@ -72,7 +77,8 @@ public class Keystore extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     // Nothing to build: this is like a glorified export_deps() rule.
     return ImmutableList.of();
   }
@@ -103,7 +109,7 @@ public class Keystore extends AbstractBuildable {
 
     @Override
     protected Keystore newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new Keystore(pathToStore, pathToProperties);
+      return new Keystore(params.getBuildTarget(), pathToStore, pathToProperties);
     }
 
     public Builder setStore(String pathToStore) {

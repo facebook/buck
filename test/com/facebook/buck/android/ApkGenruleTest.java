@@ -93,7 +93,8 @@ public class ApkGenruleTest {
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties"));
+        .setProperties("keystore/debug.keystore.properties")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())

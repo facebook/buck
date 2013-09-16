@@ -64,6 +64,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -134,6 +135,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   private final String manifest;
   private final String target;
+  private final ImmutableSortedSet<BuildRule> classpathDeps;
   private final Keystore keystore;
   private final PackageType packageType;
   private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
@@ -171,6 +173,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       BuildRuleParams buildRuleParams,
       String manifest,
       String target,
+      ImmutableSortedSet<BuildRule> classpathDeps,
       Keystore keystore,
       PackageType packageType,
       Set<BuildRule> buildRulesToExcludeFromDex,
@@ -186,6 +189,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
+    this.classpathDeps = ImmutableSortedSet.copyOf(classpathDeps);
     this.keystore = Preconditions.checkNotNull(keystore);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
@@ -201,8 +205,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         getBuildTarget().getBasePathWithSlash());
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
-    this.transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(this);
+    this.transitiveDependencyGraph = new AndroidTransitiveDependencyGraph(this);
   }
 
   @Override
@@ -225,6 +228,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     super.appendToRuleKey(builder)
         .set("manifest", manifest)
         .set("target", target)
+        .set("keystore", keystore.getBuildTarget().getFullyQualifiedName())
+        .setRuleNames("classpathDeps", classpathDeps)
         .set("packageType", packageType.toString())
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
@@ -942,10 +947,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return primaryDexClassesFile;
   }
 
+  public ImmutableSortedSet<BuildRule> getClasspathDeps() {
+    return classpathDeps;
+  }
+
   @Override
   public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
-    return Classpaths.getClasspathEntries(getDeps());
+    return Classpaths.getClasspathEntries(classpathDeps);
   }
 
   public static Builder newAndroidBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
@@ -957,6 +966,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     private String manifest;
     private String target;
+
+    /** This should always be a subset of {@link #getDeps()}. */
+    private ImmutableSet.Builder<BuildTarget> classpathDeps = ImmutableSet.builder();
+
     private BuildTarget keystoreTarget;
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
     private Set<BuildTarget> buildRulesToExcludeFromDex = Sets.newHashSet();
@@ -999,6 +1012,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           createBuildRuleParams(ruleResolver),
           manifest,
           target,
+          getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()),
           (Keystore)keystore,
           packageType,
           getBuildTargetsAsBuildRules(ruleResolver,
@@ -1043,8 +1057,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       return this;
     }
 
+    public Builder addClasspathDep(BuildTarget classpathDep) {
+      this.classpathDeps.add(classpathDep);
+      addDep(classpathDep);
+      return this;
+    }
+
     public Builder setKeystore(BuildTarget keystoreTarget) {
       this.keystoreTarget = keystoreTarget;
+      addDep(keystoreTarget);
       return this;
     }
 

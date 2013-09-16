@@ -126,8 +126,8 @@ public class AuditClasspathCommandTest {
         .setManifest("AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreBuildTarget)
-        .addDep(BuildTargetFactory.newInstance("//:test-android-library"))
-        .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
+        .addClasspathDep(BuildTargetFactory.newInstance("//:test-android-library"))
+        .addClasspathDep(BuildTargetFactory.newInstance("//:test-java-library")));
     ruleResolver.buildAndAddToIndex(
         JavaTestRule.newJavaTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:project-tests"))

@@ -42,5 +42,11 @@ public class AndroidInstrumentationApkRuleFactory
     String apk = params.getRequiredStringAttribute("apk");
     BuildTarget buildTarget = params.resolveBuildTarget(apk);
     builder.setApk(buildTarget);
+
+    // classpath_deps
+    for (String classpathDep : params.getOptionalListAttribute("classpath_deps")) {
+      BuildTarget classpathDepTarget = params.resolveBuildTarget(classpathDep);
+      builder.addClasspathDep(classpathDepTarget);
+    }
   }
 }

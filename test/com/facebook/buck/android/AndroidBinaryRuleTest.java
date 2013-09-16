@@ -30,6 +30,7 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -97,8 +98,8 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(binaryBuildTarget)
-        .addDep(libraryOne.getBuildTarget())
-        .addDep(libraryTwo.getBuildTarget())
+        .addClasspathDep(libraryOne.getBuildTarget())
+        .addClasspathDep(libraryTwo.getBuildTarget())
         .addBuildRuleToExcludeFromDex(
             BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo"))
         .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
@@ -177,8 +178,8 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(binaryBuildTarget)
-        .addDep(libraryOne.getBuildTarget())
-        .addDep(libraryTwo.getBuildTarget())
+        .addClasspathDep(libraryOne.getBuildTarget())
+        .addClasspathDep(libraryTwo.getBuildTarget())
         .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
@@ -236,8 +237,8 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(binaryBuildTarget)
-        .addDep(libraryOne.getBuildTarget())
-        .addDep(libraryTwo.getBuildTarget())
+        .addClasspathDep(libraryOne.getBuildTarget())
+        .addClasspathDep(libraryTwo.getBuildTarget())
         .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
@@ -306,8 +307,8 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(binaryBuildTarget)
-        .addDep(libraryOne.getBuildTarget())
-        .addDep(libraryTwo.getBuildTarget())
+        .addClasspathDep(libraryOne.getBuildTarget())
+        .addClasspathDep(libraryTwo.getBuildTarget())
         .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
@@ -620,7 +621,8 @@ public class AndroidBinaryRuleTest {
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties"));
+        .setProperties("keystore/debug.keystore.properties")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
     return keystoreTarget;
   }
 }

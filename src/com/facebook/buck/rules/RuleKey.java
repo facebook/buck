@@ -22,6 +22,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -345,6 +346,22 @@ public class RuleKey {
         }
       }
       return separate();
+    }
+
+    /**
+     * @param val The fully qualified name (not the {@link RuleKey}) of each rule in this collection
+     *     will contribute to the {@link RuleKey} being built by this builder.
+     */
+    public Builder setRuleNames(String key, ImmutableSortedSet<? extends BuildRule> val) {
+      return set(key, FluentIterable
+            .from(val)
+            .transform(new Function<BuildRule, String>() {
+              @Override
+              public String apply(BuildRule buildRule) {
+                return buildRule.getFullyQualifiedName();
+              }
+            })
+            .toList());
     }
 
     public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val)

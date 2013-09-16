@@ -50,6 +50,12 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     BuildTarget keystore = params.getRequiredBuildTarget("keystore");
     builder.setKeystore(keystore);
 
+    // classpath_deps
+    for (String classpathDep : params.getOptionalListAttribute("classpath_deps")) {
+      BuildTarget classpathDepTarget = params.resolveBuildTarget(classpathDep);
+      builder.addClasspathDep(classpathDepTarget);
+    }
+
     // package_type
     // Note that it is not required for the user to supply this attribute, but buck.py should
     // supply 'debug' if the user has not supplied a value.

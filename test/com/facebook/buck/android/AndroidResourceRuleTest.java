@@ -167,7 +167,8 @@ public class AndroidResourceRuleTest {
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
         .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties"));
+        .setProperties("keystore/debug.keystore.properties")
+        .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
     AndroidBinaryRule e = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:e"))

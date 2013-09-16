@@ -29,8 +29,10 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 
@@ -50,19 +52,22 @@ import java.io.IOException;
 public class AndroidInstrumentationApk extends AndroidBinaryRule {
 
   private final AndroidBinaryRule apkUnderTest;
+  private final ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk;
 
   private AndroidInstrumentationApk(BuildRuleParams buildRuleParams,
       String manifest,
-      AndroidBinaryRule apkUnderTest) {
+      AndroidBinaryRule apkUnderTest,
+      ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk) {
     super(buildRuleParams,
         manifest,
         apkUnderTest.getTarget(),
+        classpathDepsForInstrumentationApk,
         apkUnderTest.getKeystore(),
         PackageType.INSTRUMENTED,
         // Do not include the classes that will already be in the classes.dex of the APK under test.
         ImmutableSet.<BuildRule>builder()
             .addAll(apkUnderTest.getBuildRulesToExcludeFromDex())
-            .addAll(Classpaths.getClasspathEntries(apkUnderTest.getDeps()).keySet())
+            .addAll(Classpaths.getClasspathEntries(apkUnderTest.getClasspathDeps()).keySet())
             .build(),
         // Do not split the test apk even if the tested apk is split
         new DexSplitMode(
@@ -79,6 +84,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         apkUnderTest.getResourceFilter(),
         apkUnderTest.getCpuFilters());
     this.apkUnderTest = apkUnderTest;
+    this.classpathDepsForInstrumentationApk = Preconditions.checkNotNull(
+        classpathDepsForInstrumentationApk);
   }
 
   @Override
@@ -89,7 +96,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
-        .set("apkUnderTest", apkUnderTest);
+        .set("apkUnderTest", apkUnderTest)
+        .setRuleNames("classpathDepsForInstrumentationApk", classpathDepsForInstrumentationApk);
   }
 
   @Override
@@ -121,6 +129,9 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
     private String manifest = null;
     private BuildTarget apk = null;
 
+    /** This should always be a subset of {@link #getDeps()}. */
+    private ImmutableSet.Builder<BuildTarget> classpathDeps = ImmutableSet.builder();
+
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
     }
@@ -142,7 +153,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
 
       return new AndroidInstrumentationApk(createBuildRuleParams(ruleResolver),
           manifest,
-          underlyingApk);
+          underlyingApk,
+          getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()));
     }
 
     public Builder setManifest(String manifest) {
@@ -152,6 +164,12 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
 
     public Builder setApk(BuildTarget apk) {
       this.apk = apk;
+      return this;
+    }
+
+    public Builder addClasspathDep(BuildTarget classpathDep) {
+      this.classpathDeps.add(classpathDep);
+      addDep(classpathDep);
       return this;
     }
   }

@@ -42,7 +42,14 @@ public interface BuildRule extends Comparable<BuildRule> {
   public Buildable getBuildable();
 
   /**
-   * @return the value of the "deps" attribute for this build rule
+   * @return the set of rules that must be built before this rule. Normally, this matches the value
+   *     of the {@code deps} argument for this build rule in the build file in which it was defined.
+   *     <p>
+   *     However, there are special cases where other arguments pull in implicit dependencies (e.g.,
+   *     the {@code keystore} argument in {@code android_binary}). In these cases, the implicit
+   *     dependencies are also included in the set returned by this method. The value of the
+   *     original {@code deps} argument, as defined in the build file, must be accessed via a
+   *     custom getter provided by the build rule.
    */
   public ImmutableSortedSet<BuildRule> getDeps();
 
