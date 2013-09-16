@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * Not all build rules know the paths of the output files that their steps will generate. Such rules
@@ -37,9 +38,9 @@ import java.io.IOException;
 public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
 
   private final BuildableContext buildableContext;
-  private final String binDirectory;
+  private final Path binDirectory;
   private final String genDirectory;
-  private final Function<String, String> artifactPathTransform;
+  private final Function<String, Path> artifactPathTransform;
 
   /**
    * @param buildableContext Interface through which the outputs to include in the artifact should
@@ -49,9 +50,9 @@ public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
    *     "buck-out/gen/build/target/path" (note there should not be a trailing slash).
    */
   public RecordArtifactsInDirectoryStep(BuildableContext buildableContext,
-      String binDirectory,
+      Path binDirectory,
       String genDirectory,
-      Function<String, String> artifactPathTransform) {
+      Function<String, Path> artifactPathTransform) {
     super("recording artifacts in " + binDirectory);
     this.buildableContext = Preconditions.checkNotNull(buildableContext);
     this.binDirectory = Preconditions.checkNotNull(binDirectory);
@@ -73,7 +74,7 @@ public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
         projectFilesystem.createParentDirs(target);
         projectFilesystem.copyFile(source, target);
 
-        String artifactPath = artifactPathTransform.apply(relativePath);
+        Path artifactPath = artifactPathTransform.apply(relativePath);
         buildableContext.recordArtifact(artifactPath);
       }
     };

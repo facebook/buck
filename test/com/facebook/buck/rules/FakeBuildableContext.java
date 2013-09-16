@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public class FakeBuildableContext implements BuildableContext {
 
   private final Map<String, String> metadata = Maps.newHashMap();
 
-  private final Set<String> artifacts = Sets.newHashSet();
+  private final Set<Path> artifacts = Sets.newHashSet();
 
   @Override
   public void addMetadata(String key, String value) {
@@ -44,7 +45,7 @@ public class FakeBuildableContext implements BuildableContext {
   }
 
   @Override
-  public void recordArtifact(String pathToArtifact) {
+  public void recordArtifact(Path pathToArtifact) {
     artifacts.add(pathToArtifact);
   }
 }

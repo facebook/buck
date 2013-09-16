@@ -45,6 +45,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -97,6 +99,8 @@ public class NdkLibraryTest {
     };
     expect(executionContext.getProjectFilesystem()).andReturn(projectFilesystem);
     expect(projectFilesystem.getPathRelativizer()).andReturn(pathTransform);
+    Path binDir = Paths.get(BuckConstant.BIN_DIR, "java/src/com/facebook/base/__libbase/libs");
+    expect(projectFilesystem.resolve(binDir)).andReturn(Paths.get("/foo/" + binDir));
     File ndkDir = createMock(File.class);
     expect(executionContext.getNdkRoot()).andReturn(Optional.of(ndkDir));
     expect(ndkDir.getAbsolutePath()).andReturn("/ndk-r8b");
@@ -109,7 +113,7 @@ public class NdkLibraryTest {
               "/ndk-r8b/ndk-build -j %d -C %s/ flag1 flag2 " +
               "APP_PROJECT_PATH=/foo/%s/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
               "NDK_OUT=/foo/%s/%s/%s/ " +
-              "NDK_LIBS_OUT=/foo/%s/%s/%s/libs/",
+              "NDK_LIBS_OUT=/foo/%s/%s/%s/libs",
               Runtime.getRuntime().availableProcessors(),
               basePath,
               BuckConstant.BIN_DIR,

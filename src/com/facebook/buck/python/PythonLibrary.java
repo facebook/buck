@@ -116,7 +116,7 @@ public class PythonLibrary extends AbstractBuildable {
       commands.add(new CopyStep(src, target.toString()));
 
       Path pathToArtifact = Paths.get(getPathUnderGenDirectory(), srcName);
-      buildableContext.recordArtifact(pathToArtifact.toString());
+      buildableContext.recordArtifact(pathToArtifact);
     }
 
     return commands.build();

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import java.nio.file.Path;
+
 
 /**
  * Context object that is specific to an individual {@link Buildable}.
@@ -37,8 +39,7 @@ public interface BuildableContext {
   public void addMetadata(String key, String value);
 
   /**
-   * @see BuildInfoRecorder#recordArtifact(String)
+   * @see BuildInfoRecorder#recordArtifact(Path)
    */
-  // TODO(mbolin): A Path would be a more appropriate parameter type.
-  public void recordArtifact(String pathToArtifact);
+  public void recordArtifact(Path pathToArtifact);
 }

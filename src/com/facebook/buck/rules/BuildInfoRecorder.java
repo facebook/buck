@@ -140,9 +140,10 @@ public class BuildInfoRecorder {
    *     generated files are to be written. The caller should not be concerned with the location
    *     of this directory.
    */
-  public void recordArtifact(String pathToArtifact) {
+  public void recordArtifact(Path pathToArtifact) {
     Preconditions.checkNotNull(pathToArtifact);
-    Path fullPath = Paths.get(BuckConstant.GEN_DIR, buildTarget.getBasePath(), pathToArtifact);
+    Path fullPath = Paths.get(BuckConstant.GEN_DIR, buildTarget.getBasePath(),
+        pathToArtifact.toString());
     pathsToOutputFiles.add(fullPath);
   }
 }

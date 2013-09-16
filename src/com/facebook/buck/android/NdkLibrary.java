@@ -41,6 +41,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -114,13 +116,16 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
       throws IOException {
     // .so files are written to the libs/ subdirectory of the output directory.
     // All of them should be recorded via the BuildableContext.
-    String binDirectory = buildArtifactsDirectory + "/libs/";
-    Step nkdBuildStep = new NdkBuildStep(makefileDirectory, buildArtifactsDirectory + "/", binDirectory, flags);
+    Path binDirectory = Paths.get(buildArtifactsDirectory, "libs");
+    Step nkdBuildStep = new NdkBuildStep(makefileDirectory,
+        buildArtifactsDirectory + "/",
+        binDirectory,
+        flags);
 
-    Function<String, String> artifactPathTransform = new Function<String, String>() {
+    Function<String, Path> artifactPathTransform = new Function<String, Path>() {
       @Override
-      public String apply(String pathRelativeTo) {
-        return lastPathComponent + "/" + pathRelativeTo;
+      public Path apply(String pathRelativeTo) {
+        return Paths.get(lastPathComponent, pathRelativeTo);
       }
     };
     Step recordStep = new RecordArtifactsInDirectoryStep(

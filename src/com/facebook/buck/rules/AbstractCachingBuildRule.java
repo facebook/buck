@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -385,7 +386,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     String pathToOutputFile = buildable.getPathToOutputFile();
     if (pathToOutputFile != null && pathToOutputFile.startsWith(BuckConstant.GEN_DIR)) {
       String prefix = BuckConstant.GEN_DIR + '/' + getBuildTarget().getBasePathWithSlash();
-      buildInfoRecorder.recordArtifact(pathToOutputFile.substring(prefix.length()));
+      Path pathToArtifact = Paths.get(pathToOutputFile.substring(prefix.length()));
+      buildInfoRecorder.recordArtifact(pathToArtifact);
     }
 
     return new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY, CacheResult.MISS);

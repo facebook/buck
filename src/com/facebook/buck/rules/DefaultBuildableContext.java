@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import java.nio.file.Path;
+
 public class DefaultBuildableContext implements BuildableContext {
 
   @SuppressWarnings("unused") // This will be used soon, I swear!
@@ -33,7 +35,7 @@ public class DefaultBuildableContext implements BuildableContext {
   }
 
   @Override
-  public void recordArtifact(String pathToArtifact) {
+  public void recordArtifact(Path pathToArtifact) {
     recorder.recordArtifact(pathToArtifact);
   }
 }

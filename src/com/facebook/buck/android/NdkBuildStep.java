@@ -27,20 +27,21 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public class NdkBuildStep extends ShellStep {
 
   private final String makefileDirectory;
   private final String makefilePath;
   private final String buildArtifactsDirectory;
-  private final String binDirectory;
+  private final Path binDirectory;
   private final ImmutableList<String> flags;
   private final int maxJobCount;
 
   public NdkBuildStep(
       String makefileDirectory,
       String buildArtifactsDirectory,
-      String binDirectory,
+      Path binDirectory,
       Iterable<String> flags) {
     this.makefileDirectory = Preconditions.checkNotNull(makefileDirectory);
     Preconditions.checkArgument(makefileDirectory.endsWith("/"));
@@ -86,7 +87,7 @@ public class NdkBuildStep extends ShellStep {
         "APP_PROJECT_PATH=" + pathRelativizer.apply(this.buildArtifactsDirectory),
         "APP_BUILD_SCRIPT=" + pathRelativizer.apply(this.makefilePath),
         "NDK_OUT=" + pathRelativizer.apply(this.buildArtifactsDirectory),
-        "NDK_LIBS_OUT=" + pathRelativizer.apply(this.binDirectory));
+        "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory));
 
     return builder.build();
   }
