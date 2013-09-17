@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION;
+import static java.util.jar.Attributes.Name.MANIFEST_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -23,15 +25,21 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Set;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 public class JarDirectoryStepTest {
 
@@ -89,6 +97,52 @@ public class JarDirectoryStepTest {
     // The three below plus the manifest.
     assertZipFileCountIs(4, zip);
     assertZipContains(zip, "dir/example.txt", "dir/root1file.txt", "dir/root2file.txt");
+  }
+
+  @Test
+  public void entriesFromTheGivenManifestShouldOverrideThoseInTheJars() throws IOException {
+    String expected = "1.4";
+    // Write the manifest, setting the implementation version
+    File tmp = folder.newFolder();
+
+    Manifest manifest = new Manifest();
+    manifest.getMainAttributes().putValue(MANIFEST_VERSION.toString(), "1.0");
+    manifest.getMainAttributes().putValue(IMPLEMENTATION_VERSION.toString(), expected);
+    File manifestFile = new File(tmp, "manifest");
+    try (FileOutputStream fos = new FileOutputStream(manifestFile)) {
+      manifest.write(fos);
+    }
+
+    // Write another manifest, setting the implementation version to something else
+    manifest = new Manifest();
+    manifest.getMainAttributes().putValue(MANIFEST_VERSION.toString(), "1.0");
+    manifest.getMainAttributes().putValue(IMPLEMENTATION_VERSION.toString(), "1.0");
+
+    File input = new File(tmp, "input.jar");
+    try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(input)) {
+      ZipEntry entry = new ZipEntry("META-INF/MANIFEST.MF");
+      out.putNextEntry(entry);
+      manifest.write(out);
+    }
+
+    File output = new File(tmp, "output.jar");
+    JarDirectoryStep step = new JarDirectoryStep(
+        "output.jar",
+        ImmutableSet.of("input.jar"),
+        /* main class */ null,
+        "manifest");
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new ProjectFilesystem(tmp))
+        .build();
+    assertEquals(0, step.execute(context));
+
+    try (Zip zip = new Zip(output, false)) {
+      byte[] rawManifest = zip.readFully("META-INF/MANIFEST.MF");
+      manifest = new Manifest(new ByteArrayInputStream(rawManifest));
+      String version = manifest.getMainAttributes().getValue(IMPLEMENTATION_VERSION);
+
+      assertEquals(expected, version);
+    }
   }
 
   private File createZip(File zipFile, String... fileNames) throws IOException {

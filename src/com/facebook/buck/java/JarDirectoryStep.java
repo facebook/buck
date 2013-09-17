@@ -131,17 +131,10 @@ public class JarDirectoryStep implements Step {
   }
 
   private void createJarFile(ExecutionContext context) throws IOException {
-    Manifest manifest = new Manifest();
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
 
     // Write the manifest, as appropriate.
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
-    if (manifestFile != null) {
-      try (FileInputStream manifestStream = new FileInputStream(
-          filesystem.getFileForRelativePath(manifestFile))) {
-        manifest.read(manifestStream);
-      }
-    }
-
+    Manifest manifest = new Manifest();
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
     try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
@@ -162,6 +155,16 @@ public class JarDirectoryStep implements Step {
           addFilesInDirectoryToJar(file, outputFile, alreadyAddedEntries, context.getBuckEventBus());
         } else {
           throw new IllegalStateException("Must be a file or directory: " + file);
+        }
+      }
+
+      // Read the user supplied manifest file, allowing it to overwrite existing entries in the
+      // uber manifest we've built.
+      if (manifestFile != null) {
+        try (FileInputStream manifestStream = new FileInputStream(
+            filesystem.getFileForRelativePath(manifestFile))) {
+          Manifest userSupplied = new Manifest(manifestStream);
+          merge(manifest, userSupplied);
         }
       }
 
