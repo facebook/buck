@@ -234,7 +234,7 @@ the Buck daemon.
 
 {literal}<pre>
 [project]
-  temp_files = .*~$,.*swp$
+  temp_files = ^#.*#$, .*~$, .*\.swp$
 </pre>{/literal}
 
 A <code>post_process</code> property can reference a script that should be
