@@ -42,6 +42,7 @@ java_library(
     'GenerateShellScriptStep.java',
     'RunShTestAndRecordResultStep.java',
     'ShellStep.java',
+    'SymlinkFilesIntoDirectoryStep.java',
   ],
   deps = [
     '//lib:guava',
