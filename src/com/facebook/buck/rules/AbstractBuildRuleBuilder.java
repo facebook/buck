@@ -72,6 +72,11 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     return getBuildTargetsAsBuildRules(ruleResolver, getDeps(), false /* allowNonExistentRule */);
   }
 
+  protected ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(
+      BuildRuleResolver ruleResolver, Iterable<BuildTarget> buildTargets) {
+    return getBuildTargetsAsBuildRules(ruleResolver, buildTargets, /* allowNonExistentRule */ false);
+  }
+
   @VisibleForTesting
   protected ImmutableSortedSet<BuildRule> getBuildTargetsAsBuildRules(
       BuildRuleResolver ruleResolver,

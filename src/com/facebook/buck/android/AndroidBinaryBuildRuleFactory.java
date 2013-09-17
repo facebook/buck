@@ -120,11 +120,21 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     List<String> resourceFilter = params.getOptionalListAttribute("resource_filter");
     builder.setResourceFilter(new FilterResourcesStep.ResourceFilter(resourceFilter));
 
-    // CPU ABI
+    // cpu_filters
     List<String> cpuFilters = params.getOptionalListAttribute("cpu_filters");
     for (String filter: cpuFilters) {
       builder.addCpuFilter(filter);
     }
+
+    // preprocess_java_classes_deps
+    for (String dep : params.getOptionalListAttribute("preprocess_java_classes_deps")) {
+      BuildTarget buildTarget = params.resolveBuildTarget(dep);
+      builder.addPreprocessJavaClassesDep(buildTarget);
+    }
+
+    // preprocess_java_classes_bash
+    builder.setPreprocessJavaClassesBash(params.getOptionalStringAttribute(
+        "preprocess_java_classes_bash"));
   }
 
 }

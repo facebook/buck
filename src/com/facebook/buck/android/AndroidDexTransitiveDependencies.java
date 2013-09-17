@@ -15,9 +15,7 @@
  */
 package com.facebook.buck.android;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import java.util.Set;
 
@@ -28,12 +26,7 @@ import java.util.Set;
  * .class files to exclude from the DEX.
  */
 public class AndroidDexTransitiveDependencies {
-  // TODO(devjasta): these fields should not be immutable; we should expect that these values
-  // will all be transformed by various commands (and we shouldn't need to keep checking back to
-  // get the latest values of them to observe those transformations).  There's a much richer
-  // rule-based design that should be implemented though, so in the absence of that it's probably
-  // best to keep this code as narrowly defined as possible.
-  public ImmutableSet<String> classpathEntriesToDex;
+  public final ImmutableSet<String> classpathEntriesToDex;
   public final ImmutableSet<String> noDxClasspathEntries;
   public final ImmutableSet<String> pathsToThirdPartyJars;
 
@@ -43,13 +36,5 @@ public class AndroidDexTransitiveDependencies {
     this.classpathEntriesToDex = ImmutableSet.copyOf(pathsToDex);
     this.pathsToThirdPartyJars = ImmutableSet.copyOf(pathsToThirdPartyJars);
     this.noDxClasspathEntries = ImmutableSet.copyOf(noDxClasspathEntries);
-  }
-
-  public void applyClasspathTransformation(InputTransformation transformation) {
-    classpathEntriesToDex = ImmutableSet.copyOf(
-        Iterables.transform(classpathEntriesToDex, transformation));
-  }
-
-  public interface InputTransformation extends Function<String, String> {
   }
 }

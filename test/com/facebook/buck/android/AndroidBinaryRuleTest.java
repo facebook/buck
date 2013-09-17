@@ -118,7 +118,7 @@ public class AndroidBinaryRuleTest {
     replay(context);
     androidBinary.addProguardCommands(
         context,
-        dexTransitiveDependencies,
+        dexTransitiveDependencies.classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
         ImmutableSet.<String>of());

@@ -390,6 +390,8 @@ def android_binary(
       linear_alloc_hard_limit=4 * 1024 * 1024,
       resource_filter=None,
       cpu_filters=[],
+      preprocess_java_classes_deps=[],
+      preprocess_java_classes_bash=None,
       deps=[],
       visibility=[],
       build_env=None):
@@ -414,9 +416,11 @@ def android_binary(
     'linear_alloc_hard_limit' : linear_alloc_hard_limit,
     'resource_filter' : resource_filter,
     'cpu_filters' : cpu_filters,
+    'preprocess_java_classes_deps' : preprocess_java_classes_deps,
+    'preprocess_java_classes_bash' : preprocess_java_classes_bash,
     'classpath_deps' : deps,
     # Always include the keystore as a dep, as it should be built before this rule.
-    'deps' : deps + [keystore],
+    'deps' : deps + [keystore] + preprocess_java_classes_deps,
     'visibility' : visibility,
   }, build_env)
 

@@ -69,7 +69,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   private final CommandString commandString;
   private final ImmutableSortedSet<BuildRule> depsToSubstituteInCommandString;
 
-  AbstractGenruleStep(BuildRule buildRule,
+  public AbstractGenruleStep(BuildRule buildRule,
       CommandString commandString,
       Set<BuildRule> depsToSubstituteInCommandString) {
     this.buildRule = Preconditions.checkNotNull(buildRule);

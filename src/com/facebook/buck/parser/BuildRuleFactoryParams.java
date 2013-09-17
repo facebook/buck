@@ -272,18 +272,33 @@ public final class BuildRuleFactoryParams {
 
   public BuildTarget getRequiredBuildTarget(String attributeName) {
     String buildTarget = getRequiredStringAttribute(attributeName);
-    try {
-      return resolveBuildTarget(buildTarget);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException("Couldn't resolve build target for %s=%s in %s.",
-          attributeName,
-          buildTarget,
-          this.target.getFullyQualifiedName());
+    return resolveBuildTargetWithHumanReadableException(buildTarget, attributeName);
+  }
+
+  public Optional<BuildTarget> getOptionalBuildTarget(String attributeName) {
+    Optional<String> value = getOptionalStringAttribute(attributeName);
+    if (value.isPresent()) {
+      BuildTarget target = resolveBuildTargetWithHumanReadableException(value.get(), attributeName);
+      return Optional.of(target);
+    } else {
+      return Optional.absent();
     }
   }
 
   public BuildTarget resolveBuildTarget(String target) throws NoSuchBuildTargetException {
     return buildTargetParser.parse(target, buildFileParseContext);
+  }
+
+  private BuildTarget resolveBuildTargetWithHumanReadableException(String buildTarget,
+      String attributeNameForContext) {
+    try {
+      return resolveBuildTarget(buildTarget);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException("Couldn't resolve build target for %s=%s in %s.",
+          attributeNameForContext,
+          buildTarget,
+          this.target.getFullyQualifiedName());
+    }
   }
 
   public String getRequiredStringAttribute(String attributeName) {
