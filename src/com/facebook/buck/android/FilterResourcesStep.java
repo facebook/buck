@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
@@ -26,12 +28,15 @@ import com.facebook.buck.util.Filters;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,86 +61,108 @@ public class FilterResourcesStep implements Step {
       "hdpi", 240.0,
       "xhdpi", 320.0);
 
-  private static final Pattern DRAWABLE_PATH_PATTERN = Pattern.compile(
+  @VisibleForTesting
+  static final Pattern DRAWABLE_PATH_PATTERN = Pattern.compile(
       ".*drawable.*/.*(png|jpg|jpeg|gif)", Pattern.CASE_INSENSITIVE);
 
-  private final File baseDestination;
-  private final String resourceFilter;
+  @VisibleForTesting
+  static final Pattern NON_ENGLISH_STRING_PATH = Pattern.compile(
+      "(\\b|.*/)res/values-.+/strings.xml", Pattern.CASE_INSENSITIVE);
+
+  private final ImmutableBiMap<String, String> inResDirToOutResDirMap;
+  private final boolean filterDrawables;
+  private final boolean filterStrings;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
+  @Nullable
+  private final String resourceFilter;
+  @Nullable
   private final DrawableFinder drawableFinder;
-  private final ImmutableBiMap<String, String> originalToFiltered;
   @Nullable
   private final ImageScaler imageScaler;
+  private final ImmutableSet.Builder<String> nonEnglishStringFilesBuilder;
 
   /**
    * Creates a command that filters a specified set of directories.
-   * @param resDirectories set of {@code res} directories to filter
-   * @param baseDestination destination directory, where copies of these directories will be placed
-   *     (will be created if necessary)
+   * @param inResDirToOutResDirMap set of {@code res} directories to filter
+   * @param filterDrawables whether to filter drawables (images)
+   * @param filterStrings whether to filter non-english strings
+   * @param filteredDirectoryCopier refer {@link FilteredDirectoryCopier}
+   *
    * @param resourceFilter filtering to perform (currently based on density; allowed values are
-   *     {@code "mdpi"}, {@code "hdpi"} and {@code "xhdpi"})
+   *     {@code "mdpi"}, {@code "hdpi"} and {@code "xhdpi"}). Only applicable if filterDrawables
+   *     is true
+   * @param drawableFinder refer {@link DrawableFinder}. Only applicable if filterDrawables is true.
    * @param imageScaler if not null, use the {@link ImageScaler} to downscale higher-density
    *     drawables for which we weren't able to find an image file of the proper density (as opposed
-   *     to allowing Android to do it at runtime)
+   *     to allowing Android to do it at runtime). Only applicable if filterDrawables. is true.
    */
-  public FilterResourcesStep(
-      Set<String> resDirectories,
-      File baseDestination,
-      String resourceFilter,
+  @VisibleForTesting
+  FilterResourcesStep(
+      ImmutableBiMap<String, String> inResDirToOutResDirMap,
+      boolean filterDrawables,
+      boolean filterStrings,
       FilteredDirectoryCopier filteredDirectoryCopier,
-      DrawableFinder drawableFinder,
+      @Nullable String resourceFilter,
+      @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
-    this.baseDestination = Preconditions.checkNotNull(baseDestination);
-    this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+
+    Preconditions.checkArgument(filterDrawables || filterStrings);
+    Preconditions.checkArgument(!filterDrawables ||
+        (resourceFilter != null && drawableFinder != null));
+    this.inResDirToOutResDirMap = Preconditions.checkNotNull(inResDirToOutResDirMap);
+    this.filterDrawables = filterDrawables;
+    this.filterStrings = filterStrings;
     this.filteredDirectoryCopier = Preconditions.checkNotNull(filteredDirectoryCopier);
-    this.drawableFinder = Preconditions.checkNotNull(drawableFinder);
-    this.originalToFiltered = assignDestinations(
-        Preconditions.checkNotNull(resDirectories),
-        Preconditions.checkNotNull(baseDestination));
+
+    this.resourceFilter = resourceFilter;
+    this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
-  }
-
-  private static ImmutableBiMap<String, String> assignDestinations(Set<String> sources, File base) {
-    ImmutableBiMap.Builder<String, String> builder = ImmutableBiMap.builder();
-    int count = 0;
-    for (String source : sources) {
-      builder.put(source, new File(base, String.valueOf(count++)).getPath());
-    }
-    return builder.build();
-  }
-
-  /**
-   * Returns drop-in set of resource directories for the rest of the build (e.g. {@code aapt}).
-   * @return set of directories which, after running {@link #execute(ExecutionContext)},
-   *     will contain filtered copies of the resource directories passed on construction.
-   */
-  public ImmutableSet<String> getFilteredResourceDirectories() {
-    // getFilteredResourceDirectories() yields matching destination directories in the same order
-    // as the sources, which is relevant to aapt. Adding
-    //   return new TreeSet<String>(destinations);
-    // here would yield a broken app
-    return originalToFiltered.values();
+    this.nonEnglishStringFilesBuilder = ImmutableSet.builder();
   }
 
   @Override
   public int execute(ExecutionContext context) {
     try {
       return doExecute(context);
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
+    } catch (Exception e) {
+      context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+          "There was an error filtering resources."));
       return 1;
     }
   }
 
-  private int doExecute(ExecutionContext context) throws IOException {
-    // Get list of candidate drawables.
-    Set<String> drawables = drawableFinder.findDrawables(originalToFiltered.keySet());
+  /**
+   * @return If {@code filterStrings} is true, set containing absolute file paths to non-english
+   * string files, matching NON_ENGLISH_STRING_PATH regex; else empty set.
+   */
+  public ImmutableSet<String> getNonEnglishStringFiles() {
+    return nonEnglishStringFilesBuilder.build();
+  }
 
-    // Create a filter that removes drawables not of desired density.
-    Predicate<File> densityFilter = Filters.createImageDensityFilter(drawables, resourceFilter);
+  private int doExecute(ExecutionContext context) throws IOException {
+    List<Predicate<File>> filePredicates = Lists.newArrayList();
+    if (filterDrawables) {
+      Set<String> drawables = drawableFinder.findDrawables(inResDirToOutResDirMap.keySet());
+      filePredicates.add(Filters.createImageDensityFilter(drawables, resourceFilter));
+    }
+
+    if (filterStrings) {
+      filePredicates.add(new Predicate<File>() {
+        @Override
+        public boolean apply(File input) {
+          String inputPath = input.getAbsolutePath();
+          if (NON_ENGLISH_STRING_PATH.matcher(inputPath).matches()) {
+            nonEnglishStringFilesBuilder.add(inputPath);
+            return false;
+          }
+          return true;
+        }
+      });
+    }
+
+
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
-    filteredDirectoryCopier.copyDirs(originalToFiltered,
-        densityFilter);
+    filteredDirectoryCopier.copyDirs(inResDirToOutResDirMap, Predicates.and(filePredicates));
 
     // If an ImageScaler was specified, but only if it is available, try to apply it.
     if ((imageScaler != null) && imageScaler.isAvailable(context)) {
@@ -152,10 +179,7 @@ public class FilterResourcesStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format(
-        "Filtering %d resource directories into: %s",
-        originalToFiltered.size(),
-        baseDestination);
+    return "Filtering drawable and string resources.";
   }
 
   /**
@@ -169,7 +193,7 @@ public class FilterResourcesStep implements Step {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
 
     // Go over all the images that remain after filtering.
-    for (String drawable : drawableFinder.findDrawables(getFilteredResourceDirectories())) {
+    for (String drawable : drawableFinder.findDrawables(inResDirToOutResDirMap.values())) {
       File drawableFile = filesystem.getFileForRelativePath(drawable);
 
       if (drawable.endsWith(".9.png")) {
@@ -317,4 +341,43 @@ public class FilterResourcesStep implements Step {
     }
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+
+    private ImmutableBiMap<String, String> inResDirToOutResDirMap;
+    private ResourceFilter resourceFilter;
+    private boolean filterStrings = false;
+
+    private Builder() {
+    }
+
+    public Builder setInResToOutResDirMap(ImmutableBiMap<String, String> inResDirToOutResDirMap) {
+      this.inResDirToOutResDirMap = inResDirToOutResDirMap;
+      return this;
+    }
+
+    public Builder setResourceFilter(ResourceFilter resourceFilter) {
+      this.resourceFilter = resourceFilter;
+      return this;
+    }
+
+    public Builder enableStringsFilter() {
+      this.filterStrings = true;
+      return this;
+    }
+
+    public FilterResourcesStep build() {
+      return new FilterResourcesStep(
+          inResDirToOutResDirMap,
+          resourceFilter.isEnabled(),
+          filterStrings,
+          DefaultFilteredDirectoryCopier.getInstance(),
+          resourceFilter.getDensity(),
+          DefaultDrawableFinder.getInstance(),
+          resourceFilter.shouldDownscale() ? ImageMagickScaler.getInstance() : null);
+    }
+  }
 }

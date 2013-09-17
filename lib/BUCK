@@ -109,6 +109,8 @@ prebuilt_jar(
   name = 'jackson-databind',
   binary_jar = 'jackson-databind-2.0.5.jar',
   visibility = [
+    '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/event/listener:listener',

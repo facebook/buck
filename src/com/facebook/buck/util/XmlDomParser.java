@@ -23,8 +23,10 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,7 +35,15 @@ import javax.xml.parsers.ParserConfigurationException;
 public class XmlDomParser {
 
   public static Document parse(File xml) throws IOException {
-    return parse(new InputSource(Files.newInputStreamSupplier(xml).getInput()), false);
+    return parse(Files.newInputStreamSupplier(xml).getInput());
+  }
+
+  public static Document parse(String xmlContents) throws IOException {
+    return parse(new ByteArrayInputStream(xmlContents.getBytes()));
+  }
+
+  public static Document parse(InputStream stream) throws IOException {
+    return parse(new InputSource(stream), /* namespaceAware */ false);
   }
 
   public static Document parse(InputSource xml, boolean namespaceAware) throws IOException {

@@ -5,6 +5,8 @@ java_test(
     '//lib:easymock',
     '//lib:guava',
     '//lib:junit',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:r',
     '//src/com/facebook/buck/android:rules',

@@ -50,12 +50,12 @@ import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
-import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
@@ -67,6 +67,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -274,6 +275,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return this.compressResources;
   }
 
+  public boolean isStoreStringsAsAssets() {
+    // TODO(natthu): introduce another parameter to AndroidBinaryRule and replace this with
+    // isCompressResources() && this.isStoreStringsAsAssets;
+    return false;
+  }
+
+  public boolean requiresResourceFilter() {
+    return resourceFilter.isEnabled() || isStoreStringsAsAssets();
+  }
+
   public FilterResourcesStep.ResourceFilter getResourceFilter() {
     return this.resourceFilter;
   }
@@ -331,10 +342,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
   }
 
-  public DexSplitMode getDexSplitMode() {
-    return dexSplitMode;
-  }
-
   /** The APK at this path is the final one that points to an APK that a user should install. */
   @Override
   public String getApkPath() {
@@ -361,6 +368,51 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return inputs.build();
   }
 
+  /**
+   * Sets up filtering of resources, images/drawables and strings in particular, based on build
+   * rule parameters {@code resourceFilter} and {@code isStoreStringsAsAssets}.
+   *
+   * {@link com.facebook.buck.android.FilterResourcesStep.ResourceFilter} {@code resourceFilter}
+   * determines which drawables end up in the APK (based on density - mdpi, hdpi etc), and also
+   * whether higher density drawables get scaled down to the specified density (if not present).
+   *
+   * {@code isStoreStringsAsAssets} determines whether non-english string resources are packaged
+   * separately as assets (and not bundled together into the {@code resources.arsc} file).
+   *
+   * @return The set of resource directories that will eventually contain filtered resources.
+   */
+  private Set<String> getFilteredResourceDirectories(
+      ImmutableList.Builder<Step> commands,
+      Set<String> resourceDirectories) {
+    ImmutableBiMap.Builder<String, String> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
+    String resDestinationBasePath = getBinPath("__filtered__%s__");
+    int count = 0;
+    for (String resDir : resourceDirectories) {
+      filteredResourcesDirMapBuilder.put(resDir,
+          java.nio.file.Paths.get(resDestinationBasePath, String.valueOf(count++)).toString());
+    }
+
+    ImmutableBiMap<String, String> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
+    FilterResourcesStep.Builder filterResourcesStepBuilder = FilterResourcesStep.builder()
+        .setInResToOutResDirMap(resSourceToDestDirMap)
+        .setResourceFilter(resourceFilter);
+
+    if (isStoreStringsAsAssets()) {
+      filterResourcesStepBuilder.enableStringsFilter();
+    }
+
+    FilterResourcesStep filterResourcesStep = filterResourcesStepBuilder.build();
+    commands.add(filterResourcesStep);
+
+    if (isStoreStringsAsAssets()) {
+      Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
+      commands.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
+      commands.add(new CompileStringsStep(filterResourcesStep, tmpStringsDirPath));
+    }
+
+    return resSourceToDestDirMap.values();
+  }
+
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -380,20 +432,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     Set<String> resDirectories = transitiveDependencies.resDirectories;
     Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
 
-
-    FilterResourcesStep.ResourceFilter resourceFilter = getResourceFilter();
-    // If resource filtering was requested (currently only by dpi).
-    if (resourceFilter.isEnabled()) {
-      FilterResourcesStep filterResourcesCommand = new FilterResourcesStep(
-          resDirectories,
-          new File(getBinPath("__filtered__%s__")),
-          resourceFilter.getDensity(),
-          DefaultFilteredDirectoryCopier.getInstance(),
-          FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-          resourceFilter.shouldDownscale() ? FilterResourcesStep.ImageMagickScaler.getInstance() : null
-      );
-      commands.add(filterResourcesCommand);
-      resDirectories = filterResourcesCommand.getFilteredResourceDirectories();
+    if (requiresResourceFilter()) {
+      resDirectories = getFilteredResourceDirectories(commands, resDirectories);
     }
 
     // Extract the resources from third-party jars.
@@ -547,7 +587,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     Optional<String> assetsDirectory;
     if (transitiveDependencies.assetsDirectories.isEmpty() && extraAssets.isEmpty()
-        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
+        && !isStoreStringsAsAssets()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
@@ -559,6 +600,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
         copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, commands);
       }
+    }
+
+    if (isStoreStringsAsAssets()) {
+      Path stringAssetsDir = java.nio.file.Paths.get(assetsDirectory.get()).resolve("strings");
+      commands.add(new MakeCleanDirectoryStep(stringAssetsDir));
+      commands.add(new CopyStep(
+          getPathForTmpStringAssetsDirectory(),
+          stringAssetsDir,
+          /* shouldRecurse */ true));
     }
 
     commands.add(new MkdirStep(outputGenDirectory));
@@ -727,8 +777,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   @VisibleForTesting
   String getPathToAllAssetsDirectory() {
-    String format = "__assets_%s__";
-    return getBinPath(format);
+    return getBinPath("__assets_%s__");
+  }
+
+  private Path getPathForTmpStringAssetsDirectory() {
+    return java.nio.file.Paths.get(getBinPath("__strings_%s__"));
   }
 
   /**
