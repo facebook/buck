@@ -40,7 +40,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.Genrule.Builder;
-import com.facebook.buck.shell.Genrule.GenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -263,7 +262,7 @@ public class GenruleTest {
 
   @Test
   public void testBuildTargetPattern() {
-    Pattern buildTargetPattern = Genrule.BUILD_TARGET_PATTERN;
+    Pattern buildTargetPattern = AbstractGenruleStep.BUILD_TARGET_PATTERN;
     assertTrue(buildTargetPattern.matcher("$(exe //first-party/orca/orcaapp:manifest)").find());
     assertFalse(buildTargetPattern.matcher("\\$(exe //first-party/orca/orcaapp:manifest)").find());
     assertFalse(buildTargetPattern.matcher("$(exe first-party/orca/orcaapp:manifest)").find());
@@ -275,7 +274,7 @@ public class GenruleTest {
 
   @Test
   public void testLocationBuildTargetPattern() {
-    Pattern buildTargetPattern = Genrule.BUILD_TARGET_PATTERN;
+    Pattern buildTargetPattern = AbstractGenruleStep.BUILD_TARGET_PATTERN;
     assertTrue(buildTargetPattern.matcher("$(location //first-party/orca/orcaapp:manifest)").find());
     assertFalse(buildTargetPattern.matcher("\\$(location //first-party/orca/orcaapp:manifest)").find());
     assertFalse(buildTargetPattern.matcher("$(location first-party/orca/orcaapp:manifest)").find());
@@ -297,7 +296,7 @@ public class GenruleTest {
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
-    GenruleStep genruleStep = rule.createGenruleStep();
+    AbstractGenruleStep genruleStep = rule.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
@@ -322,7 +321,7 @@ public class GenruleTest {
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
-    GenruleStep genruleStep = rule.createGenruleStep();
+    AbstractGenruleStep genruleStep = rule.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
@@ -353,7 +352,7 @@ public class GenruleTest {
     Set<? extends BuildRule> deps = ImmutableSet.of(javaBinary);
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
-    GenruleStep genruleStep = rule.createGenruleStep();
+    AbstractGenruleStep genruleStep = rule.createGenruleStep();
 
     // Interpolate the build target in the genrule cmd string.
     String transformedString = genruleStep.replaceMatches(filesystem, originalCmd);
@@ -378,7 +377,7 @@ public class GenruleTest {
     String contextBasePath = "java/com/facebook/util";
 
     Genrule rule = createGenrule(ruleResolver, originalCmd, contextBasePath, deps);
-    GenruleStep genruleStep = rule.createGenruleStep();
+    AbstractGenruleStep genruleStep = rule.createGenruleStep();
 
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
 

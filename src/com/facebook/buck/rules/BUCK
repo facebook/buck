@@ -30,6 +30,7 @@ java_library(
   srcs = [
     'AnnotationProcessingData.java',
     'ArtifactCache.java',
+    'BinaryBuildRule.java',
     'Buildable.java',
     'Buildables.java',
     'BuildableContext.java',
@@ -81,7 +82,6 @@ java_library(
     'AbstractDependencyVisitor.java',
     'AbstractSourcePath.java',
     'ArtifactCacheEvent.java',
-    'BinaryBuildRule.java',
     'Builder.java',
     'BuildEvent.java',
     'BuildRuleBuilder.java',

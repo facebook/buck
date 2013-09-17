@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -30,6 +29,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -39,9 +39,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -59,8 +56,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
@@ -258,8 +253,15 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   }
 
   @VisibleForTesting
-  GenruleStep createGenruleStep() {
-    return new GenruleStep();
+  AbstractGenruleStep createGenruleStep() {
+    return new AbstractGenruleStep(this, new CommandString(cmd, bash, cmdExe), getDeps()) {
+      @Override
+      protected void addEnvironmentVariables(
+          ExecutionContext context,
+          ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
+        Genrule.this.addEnvironmentVariables(context, environmentVariablesBuilder);
+      }
+    };
   }
 
   @Override
@@ -322,175 +324,6 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     }
   }
 
-  /**
-   * Matches either a relative or fully-qualified build target wrapped in <tt>${}</tt>, unless the
-   * <code>$</code> is preceded by a backslash.
-   *
-   * Given the input: $(exe //foo:bar), capturing groups are
-   * 1: $(exe //foo:bar)
-   * 2: exe
-   * 3: //foo:bar
-   * 4: //foo
-   * 5: :bar
-   * If we match against $(location :bar), the capturing groups are:
-   * 1: $(location :bar)
-   * 2: location
-   * 3: :bar
-   * 4: null
-   * 5: :bar
-   */
-  @VisibleForTesting
-  static final Pattern BUILD_TARGET_PATTERN = Pattern.compile(
-      // We want a negative lookbehind to ensure we don't have a '\$', which is why this starts off
-      // in such an interesting way.
-      "(?<!\\\\)(\\$\\((exe|location)\\s+((\\/\\/[^:]*)?(:[^\\)]+))\\))"
-  );
-
-  @VisibleForTesting
-  class GenruleStep extends ShellStep {
-
-    private GenruleStep() {}
-
-    @Override
-    public String getShortName() {
-      return "genrule";
-    }
-
-    @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      // The priority sequence is
-      //   "cmd.exe /c winCommand" (Windows Only)
-      //   "/bin/bash -c shCommand" (Non-windows Only)
-      //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
-      String command;
-      if (context.getPlatform() == Platform.WINDOWS) {
-        String commandInUse;
-        if (cmdExe.isPresent()) {
-          commandInUse = cmdExe.get();
-        } else if (cmd.isPresent()) {
-          commandInUse = cmd.get();
-        } else {
-          throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
-              getFullyQualifiedName());
-        }
-        command = replaceMatches(context.getProjectFilesystem(), commandInUse);
-        return ImmutableList.of("cmd.exe", "/c", command);
-      } else {
-        String commandInUse;
-        if (bash.isPresent()) {
-          commandInUse = bash.get();
-        } else if (cmd.isPresent()) {
-          commandInUse = cmd.get();
-        } else {
-          throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",
-              getFullyQualifiedName());
-        }
-        command = replaceMatches(context.getProjectFilesystem(), commandInUse);
-        return ImmutableList.of("/bin/bash", "-c", command);
-      }
-    }
-
-    @Override
-    public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-      ImmutableMap.Builder<String, String> environmentVariablesBuilder = ImmutableMap.builder();
-
-      addEnvironmentVariables(context, environmentVariablesBuilder);
-
-      return environmentVariablesBuilder.build();
-    }
-
-    @Override
-    protected boolean shouldPrintStderr(Verbosity verbosity) {
-      return true;
-    }
-
-    /**
-     * @return the cmd with binary and location build targets interpolated as either commands or the
-     * location of the outputs of those targets.
-     */
-    @VisibleForTesting
-    String replaceMatches(ProjectFilesystem filesystem, String command) {
-      Matcher matcher = BUILD_TARGET_PATTERN.matcher(command);
-      StringBuffer buffer = new StringBuffer();
-      Map<String, BuildRule> fullyQualifiedNameToBuildRule = null;
-      while (matcher.find()) {
-        if (fullyQualifiedNameToBuildRule == null) {
-          fullyQualifiedNameToBuildRule = Maps.newHashMap();
-          for (BuildRule dep : getDeps()) {
-            fullyQualifiedNameToBuildRule.put(dep.getFullyQualifiedName(), dep);
-          }
-        }
-
-        String buildTarget = matcher.group(3);
-        String base = matcher.group(4);
-        if (base == null) {
-          // This is a relative build target, so make it fully qualified.
-          buildTarget = String.format("//%s%s", getBuildTarget().getBasePath(), buildTarget);
-        }
-        BuildRule matchingRule = fullyQualifiedNameToBuildRule.get(buildTarget);
-        if (matchingRule == null) {
-          throw new HumanReadableException("No dep named %s for %s %s, cmd was %s",
-              buildTarget, getType().getName(), getFullyQualifiedName(), command);
-        }
-
-        String replacement;
-        Buildable matchingBuildable = matchingRule.getBuildable();
-        switch (matcher.group(2)) {
-          case "exe":
-            replacement = getExecutableReplacementFrom(filesystem, command, matchingBuildable);
-            break;
-
-          case "location":
-            replacement = getLocationReplacementFrom(filesystem, matchingBuildable);
-            break;
-
-          default:
-            throw new HumanReadableException("Unable to determine replacement for '%s' in target %s",
-                matcher.group(2), getFullyQualifiedName());
-        }
-
-        // `replacement` may contain Windows style directory separator backslash (\), which will be
-        // considered as escape character. Escape them.
-        matcher.appendReplacement(buffer, replacement.replace("\\", "\\\\"));
-      }
-      matcher.appendTail(buffer);
-      return buffer.toString();
-    }
-
-    private String getLocationReplacementFrom(ProjectFilesystem filesystem, Buildable matchingRule) {
-      return filesystem.getPathRelativizer().apply(matchingRule.getPathToOutputFile());
-    }
-
-    /**
-     * A build rule can be executable in one of two ways: either by being a file with the executable
-     * bit set, or by the rule being a {@link com.facebook.buck.rules.BinaryBuildRule}.
-     *
-     * @param filesystem The project file system to resolve files with.
-     * @param cmd The command being executed.
-     * @param matchingRule The BuildRule which may or may not be an executable.
-     * @return A string which can be inserted to cause matchingRule to be executed.
-     */
-    private String getExecutableReplacementFrom(
-        ProjectFilesystem filesystem,
-        String cmd,
-        Buildable matchingRule) {
-      if (matchingRule instanceof BinaryBuildRule) {
-        return ((BinaryBuildRule) matchingRule).getExecutableCommand(filesystem);
-      }
-
-      File output = filesystem.getFileForRelativePath(matchingRule.getPathToOutputFile());
-      if (output != null && output.exists() && output.canExecute()) {
-        return output.getAbsolutePath();
-      }
-
-      throw new HumanReadableException(
-          "%s must correspond to a binary rule or file in %s for %s %s",
-          matchingRule,
-          cmd,
-          getType().getName(),
-          getFullyQualifiedName());
-    }
-  }
 
   public static Builder newGenruleBuilder(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
