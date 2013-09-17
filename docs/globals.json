@@ -4,7 +4,7 @@
   "GITHUB_URL" : "https://www.github.com/facebook/buck/",
 
   // The value must always end with a forward slash.
-  "GUAVA_URL" : "http://docs.guava-libraries.googlecode.com/git-history/v14.0/javadoc/",
+  "GUAVA_BASE_URL" : "http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/",
 
   // The value must always end with a forward slash.
   "GEN_DIR" : "buck-out/gen/",
