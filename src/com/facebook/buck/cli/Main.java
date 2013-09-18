@@ -121,9 +121,12 @@ public final class Main {
     }
 
     private Optional<WebServer> createWebServer(BuckConfig config, Console console) {
-      // Only enable the web httpserver if it specified in .buckconfig.
-      // The presence of a port number is sufficient.
-      Optional<String> serverPort = config.getValue("httpserver", "port");
+      // Enable the web httpserver if it is given by command line parameter or specified in
+      // .buckconfig. The presence of a port number is sufficient.
+      Optional<String> serverPort = Optional.fromNullable(System.getProperty("buck.httpserver.port"));
+      if (!serverPort.isPresent()) {
+        serverPort = config.getValue("httpserver", "port");
+      }
       Optional<WebServer> webServer;
       if (serverPort.isPresent()) {
         String rawPort = serverPort.get();
