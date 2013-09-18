@@ -39,5 +39,4 @@ public interface ZipSplitter {
    * @return Secondary output zip files.
    */
   public Collection<File> execute() throws IOException;
-
 }

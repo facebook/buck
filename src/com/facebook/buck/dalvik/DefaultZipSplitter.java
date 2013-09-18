@@ -22,12 +22,22 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
-public class DefaultZipSplitter extends AbstractZipSplitter {
+public class DefaultZipSplitter implements ZipSplitter {
 
+  private final Set<File> inFiles;
+  private final File outPrimary;
+  private final Predicate<String> requiredInPrimaryZip;
+  private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
+  private final File reportDir;
+  private final MySecondaryDexHelper secondaryDexWriter;
   private final long zipSizeSoftLimit;
+  private final long zipSizeHardLimit;
+
+  private DefaultZipOutputStreamHelper primaryOut;
   private long remainingSize;
 
   /**
@@ -44,16 +54,14 @@ public class DefaultZipSplitter extends AbstractZipSplitter {
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
-    super(inFiles,
-        outPrimary,
-        outSecondaryDir,
-        secondaryPattern,
-        zipSizeHardLimit,
-        requiredInPrimaryZip,
-        dexSplitStrategy,
-        canaryStrategy,
-        reportDir);
+    this.inFiles = ImmutableSet.copyOf(inFiles);
+    this.outPrimary = Preconditions.checkNotNull(outPrimary);
+    this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
+    this.dexSplitStrategy = dexSplitStrategy;
+    this.secondaryDexWriter = new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
+    this.reportDir = reportDir;
     this.zipSizeSoftLimit = zipSizeSoftLimit;
+    this.zipSizeHardLimit = zipSizeHardLimit;
   }
 
   public static DefaultZipSplitter splitZip(
@@ -101,9 +109,8 @@ public class DefaultZipSplitter extends AbstractZipSplitter {
       }
     });
 
-    currentSecondaryIndex = 0;
     primaryOut = newZipOutput(outPrimary);
-    currentSecondaryOut = null;
+    secondaryDexWriter.reset();
 
     try {
       for (File inFile : inFiles) {
@@ -116,19 +123,19 @@ public class DefaultZipSplitter extends AbstractZipSplitter {
 
         // The soft limit was tripped (and not the hard limit).  Flag that the next non-zero length
         // entry should create a new zip.
+        DefaultZipOutputStreamHelper currentSecondaryOut =
+            secondaryDexWriter.getCurrentOutput();
         if (currentSecondaryOut != null &&
             currentSecondaryOut.getCurrentSize() >= zipSizeSoftLimit) {
-          newSecondaryOutOnNextEntry = true;
+          secondaryDexWriter.finishCurrentZipFile();
         }
       }
     } finally {
       primaryOut.close();
-      if (currentSecondaryOut != null) {
-        currentSecondaryOut.close();
-      }
+      secondaryDexWriter.close();
     }
 
-    return secondaryFiles.build();
+    return secondaryDexWriter.getFiles();
   }
 
   private void processEntry(FileLike entry) throws IOException {
@@ -141,7 +148,7 @@ public class DefaultZipSplitter extends AbstractZipSplitter {
           "Single entry larger than limit: " + entry);
     }
 
-    ZipOutputStreamHelper targetOut;
+    DefaultZipOutputStreamHelper targetOut;
 
     // An entry is placed in the primary zip if either of the following is true:
     //
@@ -162,21 +169,29 @@ public class DefaultZipSplitter extends AbstractZipSplitter {
       }
       targetOut = primaryOut;
     } else {
-      targetOut = getSecondaryZipToWriteTo(entry);
+      targetOut = secondaryDexWriter.getOutputToWriteTo(entry);
     }
 
     targetOut.putEntry(entry);
     remainingSize -= entrySize;
   }
 
-  @Override
-  protected ZipOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
-    return new ZipOutputStreamHelper(file, zipSizeHardLimit, reportDir) {
-      @Override
-      long getSize(FileLike fileLike) {
-        return fileLike.getSize();
-      }
-    };
+  private DefaultZipOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
+    return new DefaultZipOutputStreamHelper(file, zipSizeHardLimit, reportDir);
   }
 
+  private class MySecondaryDexHelper extends SecondaryDexHelper<DefaultZipOutputStreamHelper> {
+
+    MySecondaryDexHelper(
+        File outSecondaryDir,
+        String secondaryPattern,
+        CanaryStrategy canaryStrategy) {
+      super(outSecondaryDir, secondaryPattern, canaryStrategy);
+    }
+
+    @Override
+    protected DefaultZipOutputStreamHelper newZipOutput(File file) throws IOException {
+      return DefaultZipSplitter.this.newZipOutput(file);
+    }
+  }
 }

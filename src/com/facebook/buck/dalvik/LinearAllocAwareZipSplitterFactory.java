@@ -44,9 +44,7 @@ public class LinearAllocAwareZipSplitterFactory implements ZipSplitterFactory {
         secondaryPattern,
         linearAllocLimit,
         requiredInPrimaryZip,
-        dexSplitStrategy,
         canaryStrategy,
         reportDir);
   }
-
 }

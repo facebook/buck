@@ -17,7 +17,9 @@
 package com.facebook.buck.dalvik;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,7 +40,16 @@ import java.util.Set;
  *        zips as space allows. This is a simple, greedy algorithm.
  * </ul>
  */
-public class LinearAllocAwareZipSplitter extends AbstractZipSplitter {
+public class LinearAllocAwareZipSplitter implements ZipSplitter {
+
+  private final Set<File> inFiles;
+  private final File outPrimary;
+  private final Predicate<String> requiredInPrimaryZip;
+  private final File reportDir;
+  private final long linearAllocLimit;
+
+  private final MySecondaryDexHelper secondaryDexWriter;
+  private LinearAllocAwareOutputStreamHelper primaryOut;
 
   /**
    * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate, DexSplitStrategy, CanaryStrategy, File)
@@ -50,21 +61,17 @@ public class LinearAllocAwareZipSplitter extends AbstractZipSplitter {
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
-      ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
-    super(inFiles,
-        outPrimary,
-        outSecondaryDir,
-        secondaryPattern,
-        linearAllocLimit,
-        requiredInPrimaryZip,
-        dexSplitStrategy,
-        canaryStrategy,
-        reportDir);
     if (linearAllocLimit <= 0) {
       throw new HumanReadableException("linear_alloc_hard_limit must be greater than zero.");
     }
+    this.inFiles = ImmutableSet.copyOf(inFiles);
+    this.outPrimary = Preconditions.checkNotNull(outPrimary);
+    this.secondaryDexWriter = new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
+    this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
+    this.reportDir = reportDir;
+    this.linearAllocLimit = linearAllocLimit;
   }
 
   public static LinearAllocAwareZipSplitter splitZip(
@@ -74,7 +81,6 @@ public class LinearAllocAwareZipSplitter extends AbstractZipSplitter {
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
-      ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
     return new LinearAllocAwareZipSplitter(
@@ -84,7 +90,6 @@ public class LinearAllocAwareZipSplitter extends AbstractZipSplitter {
         secondaryPattern,
         linearAllocLimit,
         requiredInPrimaryZip,
-        dexSplitStrategy,
         canaryStrategy,
         reportDir);
   }
@@ -95,6 +100,7 @@ public class LinearAllocAwareZipSplitter extends AbstractZipSplitter {
 
     // Start out by writing the primary zip and recording which entries were added to it.
     primaryOut = newZipOutput(outPrimary);
+    secondaryDexWriter.reset();
 
     // Iterate over all of the inFiles and add all entries that match the requiredInPrimaryZip
     // predicate.
@@ -121,44 +127,34 @@ public class LinearAllocAwareZipSplitter extends AbstractZipSplitter {
         if (primaryOut.canPutEntry(entry)) {
           primaryOut.putEntry(entry);
         } else {
-          getSecondaryZipToWriteTo(entry).putEntry(entry);
+          secondaryDexWriter.getOutputToWriteTo(entry).putEntry(entry);
         }
       }
     });
 
     primaryOut.close();
-    if (currentSecondaryOut != null) {
-      currentSecondaryOut.close();
-    }
-
-    return secondaryFiles.build();
+    secondaryDexWriter.close();
+    return secondaryDexWriter.getFiles();
   }
 
-  /**
-   * Returns the estimated size of the {@code fileLike} in terms of how it affects linear alloc.
-   */
-  private static long getLinearAllocSizeEstimate(FileLike fileLike) {
-    String name = fileLike.getRelativePath();
-    if (!name.endsWith(".class")) {
-      // Probably something like a pom.properties file in a JAR: this does not contribute
-      // to the linear alloc size, so return zero.
-      return 0;
+  private LinearAllocAwareOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
+    return new LinearAllocAwareOutputStreamHelper(file, linearAllocLimit, reportDir);
+  }
+
+  private class MySecondaryDexHelper
+      extends SecondaryDexHelper<LinearAllocAwareOutputStreamHelper> {
+
+    MySecondaryDexHelper(
+        File outSecondaryDir,
+        String secondaryPattern,
+        CanaryStrategy canaryStrategy) {
+      super(outSecondaryDir, secondaryPattern, canaryStrategy);
     }
 
-    try {
-      return LinearAllocEstimator.estimateLinearAllocFootprint(fileLike.getInput());
-    } catch (IOException e) {
-      throw new RuntimeException(String.format("Error calculating size for %s.", name), e);
+    @Override
+    protected LinearAllocAwareOutputStreamHelper newZipOutput(File file) throws IOException {
+      return LinearAllocAwareZipSplitter.this.newZipOutput(file);
     }
   }
 
-  @Override
-  protected ZipOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
-    return new ZipOutputStreamHelper(file, zipSizeHardLimit, reportDir) {
-      @Override
-      long getSize(FileLike fileLike) {
-        return getLinearAllocSizeEstimate(fileLike);
-      }
-    };
-  }
 }
