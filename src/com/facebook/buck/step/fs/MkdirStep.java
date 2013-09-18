@@ -16,12 +16,13 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Preconditions;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -42,13 +43,15 @@ public class MkdirStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    synchronized(MkdirStep.class) {
-      File directory = getPath(context).toFile();
-      if (directory.exists()) {
-        return 0;
-      }
-      return directory.mkdirs() ? 0 : -1;
+    try {
+      context.getProjectFilesystem().mkdirs(pathRelativeToProjectRoot);
+    } catch (IOException e) {
+      context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+          "Cannot make directories: %s",
+          pathRelativeToProjectRoot));
+      return 1;
     }
+    return 0;
   }
 
   @Override

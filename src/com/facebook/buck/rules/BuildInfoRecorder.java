@@ -79,7 +79,7 @@ public class BuildInfoRecorder {
    */
   public void writeMetadataToDisk() throws IOException {
     projectFilesystem.rmdir(pathToMetadataDirectory.toString());
-    projectFilesystem.mkdirs(pathToMetadataDirectory.toString());
+    projectFilesystem.mkdirs(pathToMetadataDirectory);
 
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
       projectFilesystem.writeContentsToPath(

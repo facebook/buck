@@ -55,9 +55,8 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testMkdirsCanCreateNestedFolders() {
-    boolean isSuccess = filesystem.mkdirs("foo/bar/baz");
-    assertTrue("Should be able to create nested folders.", isSuccess);
+  public void testMkdirsCanCreateNestedFolders() throws IOException {
+    filesystem.mkdirs(new File("foo/bar/baz").toPath());
     assertTrue(new File(tmp.getRoot(), "foo/bar/baz").isDirectory());
   }
 
