@@ -419,6 +419,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // to reflect that.
       final String preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
       final String preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
+      commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesInDir));
+      commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       commands.add(new SymlinkFilesIntoDirectoryStep(
           java.nio.file.Paths.get("."),
           dexTransitiveDependencies.classpathEntriesToDex,
