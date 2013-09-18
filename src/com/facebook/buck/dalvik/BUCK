@@ -31,6 +31,7 @@ java_library(
     'DalvikAwareOutputStreamHelper.java',
     'DalvikAwareZipSplitterFactory.java',
     'DalvikAwareZipSplitter.java',
+    'DalvikStatsCache.java',
     'DefaultClasspathTraverser.java',
     'DefaultZipOutputStreamHelper.java',
     'DefaultZipSplitterFactory.java',

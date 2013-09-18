@@ -43,24 +43,27 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private final Set<String> entryNames = Sets.newHashSet();
   private final long linearAllocLimit;
   private final File reportFile;
+  private final DalvikStatsCache dalvikStatsCache;
 
   private final Set<DalvikStatsTool.MethodReference> currentMethodReferences = Sets.newHashSet();
   private long currentLinearAllocSize;
 
-    DalvikAwareOutputStreamHelper(
-        File outputFile,
-        long linearAllocLimit,
-        File reportDir)
+  DalvikAwareOutputStreamHelper(
+      File outputFile,
+      long linearAllocLimit,
+      File reportDir,
+      DalvikStatsCache dalvikStatsCache)
       throws FileNotFoundException {
     this.outStream = new ZipOutputStream(
-        new BufferedOutputStream(
-            new FileOutputStream(outputFile)));
+      new BufferedOutputStream(
+          new FileOutputStream(outputFile)));
     this.linearAllocLimit = linearAllocLimit;
     this.reportFile = new File(reportDir, outputFile.getName() + ".txt");
+    this.dalvikStatsCache = dalvikStatsCache;
   }
 
   private boolean isEntryTooBig(FileLike entry) {
-    DalvikStatsTool.Stats stats = getStats(entry);
+    DalvikStatsTool.Stats stats = dalvikStatsCache.getStats(entry);
     if (currentLinearAllocSize + stats.estimatedLinearAllocSize > linearAllocLimit) {
       return true;
     }
@@ -94,7 +97,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       }
 
       // Make sure FileLike#getSize didn't lie (or we forgot to call canPutEntry).
-      DalvikStatsTool.Stats stats = getStats(fileLike);
+      DalvikStatsTool.Stats stats = dalvikStatsCache.getStats(fileLike);
       Preconditions.checkState(!isEntryTooBig(fileLike),
           "Putting entry %s (%s) exceeded maximum size of %s",
           name, stats.estimatedLinearAllocSize, linearAllocLimit);

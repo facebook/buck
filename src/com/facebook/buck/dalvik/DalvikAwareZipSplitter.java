@@ -47,6 +47,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final Predicate<String> requiredInPrimaryZip;
   private final File reportDir;
   private final long linearAllocLimit;
+  private final DalvikStatsCache dalvikStatsCache;
 
   private final MySecondaryDexHelper secondaryDexWriter;
   private DalvikAwareOutputStreamHelper primaryOut;
@@ -72,6 +73,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
     this.reportDir = reportDir;
     this.linearAllocLimit = linearAllocLimit;
+    this.dalvikStatsCache = new DalvikStatsCache();
   }
 
   public static DalvikAwareZipSplitter splitZip(
@@ -138,7 +140,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   }
 
   private DalvikAwareOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
-    return new DalvikAwareOutputStreamHelper(file, linearAllocLimit, reportDir);
+    return new DalvikAwareOutputStreamHelper(file, linearAllocLimit, reportDir, dalvikStatsCache);
   }
 
   private class MySecondaryDexHelper
