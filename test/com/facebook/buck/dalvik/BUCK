@@ -3,12 +3,12 @@ java_test(
   srcs = glob(['*.java']),
   source_under_test = [
     '//src/com/facebook/buck/dalvik:dalvik',
-    '//src/com/facebook/buck/dalvik:linearalloc_estimator',
+    '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
   ],
   deps = [
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/dalvik:dalvik',
-    '//src/com/facebook/buck/dalvik:linearalloc_estimator',
+    '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
   ],
 )

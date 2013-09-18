@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Alternative to {@link DefaultZipSplitter} that uses estimates from {@link LinearAllocEstimator}
+ * Alternative to {@link DefaultZipSplitter} that uses estimates from {@link DalvikStatsTool}
  * to determine how many classes to pack into a dex.
  * <p>
  * It does two passes through the .class files:

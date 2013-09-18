@@ -37,9 +37,9 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 /**
- * Estimates stats about dalvik classes.
+ * Tool to get stats about dalvik classes.
  */
-public class LinearAllocEstimator {
+public class DalvikStatsTool {
 
   // TODO(user): This class needs a unit test.
 
@@ -157,24 +157,24 @@ public class LinearAllocEstimator {
       ImmutableMap<Pattern, Integer> penalties) throws IOException {
     // SKIP_FRAMES was required to avoid an exception in ClassReader when running on proguard
     // output. We don't need to visit frames so this isn't an issue.
-    EstimatorClassVisitor estimatorVisitor = new EstimatorClassVisitor(penalties);
-    new ClassReader(rawClass).accept(estimatorVisitor, ClassReader.SKIP_FRAMES);
+    StatsClassVisitor statsVisitor = new StatsClassVisitor(penalties);
+    new ClassReader(rawClass).accept(statsVisitor, ClassReader.SKIP_FRAMES);
     return new Stats(
-        estimatorVisitor.footprint,
-        estimatorVisitor.methodReferenceBuilder.build());
+        statsVisitor.footprint,
+        statsVisitor.methodReferenceBuilder.build());
   }
 
-  private static class EstimatorClassVisitor extends ClassVisitor {
+  private static class StatsClassVisitor extends ClassVisitor {
 
     private final ImmutableMap<Pattern, Integer> penalties;
-    private final MethodVisitor methodVisitor = new EstimatorMethodVisitor();
+    private final MethodVisitor methodVisitor = new StatsMethodVisitor();
     private int footprint;
     private boolean isInterface;
     private ImmutableSet.Builder<MethodReference> methodReferenceBuilder;
 
     private String className;
 
-    private EstimatorClassVisitor(Map<Pattern, Integer> penalties) {
+    private StatsClassVisitor(Map<Pattern, Integer> penalties) {
       super(Opcodes.ASM4);
       this.penalties = ImmutableMap.copyOf(penalties);
       this.methodReferenceBuilder = ImmutableSet.builder();
@@ -254,9 +254,9 @@ public class LinearAllocEstimator {
       }
     }
 
-    private class EstimatorMethodVisitor extends MethodVisitor {
+    private class StatsMethodVisitor extends MethodVisitor {
 
-      public EstimatorMethodVisitor() {
+      public StatsMethodVisitor() {
         super(Opcodes.ASM4);
       }
 

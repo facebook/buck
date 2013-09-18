@@ -40,9 +40,9 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 /**
- * Tests for {@link LinearAllocEstimator}.
+ * Tests for {@link DalvikStatsTool}.
  */
-public class LinearAllocEstimatorTest {
+public class DalvikStatsToolTest {
 
   private static final String TEST_CLASS = createSource(
     "package test;",
@@ -102,7 +102,7 @@ public class LinearAllocEstimatorTest {
   public void testSimpleClass() throws Exception {
     File classFile = new File(outputDir, "test/TestClass.class");
     InputStream inputStream = new FileInputStream(classFile);
-    LinearAllocEstimator.Stats stats = LinearAllocEstimator.getEstimate(inputStream);
+    DalvikStatsTool.Stats stats = DalvikStatsTool.getEstimate(inputStream);
     assertMethodReferences(
         stats.methodReferences,
         "test/TestClass.<init>:()V",
@@ -119,7 +119,7 @@ public class LinearAllocEstimatorTest {
   public void testClassWithInner() throws Exception {
     File classFileOuter = new File(outputDir, "test/TestClassWithInner.class");
     InputStream inputStreamOuter = new FileInputStream(classFileOuter);
-    LinearAllocEstimator.Stats statsOuter = LinearAllocEstimator.getEstimate(inputStreamOuter);
+    DalvikStatsTool.Stats statsOuter = DalvikStatsTool.getEstimate(inputStreamOuter);
     assertMethodReferences(
         statsOuter.methodReferences,
         "test/TestClassWithInner.<init>:()V",
@@ -133,7 +133,7 @@ public class LinearAllocEstimatorTest {
 
     File classFileInner = new File(outputDir, "test/TestClassWithInner$1.class");
     InputStream inputStreamInner = new FileInputStream(classFileInner);
-    LinearAllocEstimator.Stats statsInner = LinearAllocEstimator.getEstimate(inputStreamInner);
+    DalvikStatsTool.Stats statsInner = DalvikStatsTool.getEstimate(inputStreamInner);
     assertMethodReferences(
         statsInner.methodReferences,
         "test/TestClassWithInner$1.toString:()Ljava/lang/String;",
@@ -177,7 +177,7 @@ public class LinearAllocEstimatorTest {
   }
 
   private static void assertMethodReferences(
-      Set<LinearAllocEstimator.MethodReference> references,
+      Set<DalvikStatsTool.MethodReference> references,
       String... methods) {
     Set<String> actual = Sets.newHashSet(
         Iterables.transform(references, Functions.toStringFunction()));

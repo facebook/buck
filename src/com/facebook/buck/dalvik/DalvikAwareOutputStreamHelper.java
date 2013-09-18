@@ -44,8 +44,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private final long linearAllocLimit;
   private final File reportFile;
 
-  private final Set<LinearAllocEstimator.MethodReference> currentMethodReferences =
-      Sets.newHashSet();
+  private final Set<DalvikStatsTool.MethodReference> currentMethodReferences = Sets.newHashSet();
   private long currentLinearAllocSize;
 
     DalvikAwareOutputStreamHelper(
@@ -61,7 +60,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   }
 
   private boolean isEntryTooBig(FileLike entry) {
-    LinearAllocEstimator.Stats stats = getStats(entry);
+    DalvikStatsTool.Stats stats = getStats(entry);
     if (currentLinearAllocSize + stats.estimatedLinearAllocSize > linearAllocLimit) {
       return true;
     }
@@ -95,7 +94,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       }
 
       // Make sure FileLike#getSize didn't lie (or we forgot to call canPutEntry).
-      LinearAllocEstimator.Stats stats = getStats(fileLike);
+      DalvikStatsTool.Stats stats = getStats(fileLike);
       Preconditions.checkState(!isEntryTooBig(fileLike),
           "Putting entry %s (%s) exceeded maximum size of %s",
           name, stats.estimatedLinearAllocSize, linearAllocLimit);
@@ -109,16 +108,16 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
     }
   }
 
-  private LinearAllocEstimator.Stats getStats(FileLike entry) {
+  private DalvikStatsTool.Stats getStats(FileLike entry) {
     String name = entry.getRelativePath();
     if (!name.endsWith(".class")) {
       // Probably something like a pom.properties file in a JAR: this does not contribute
       // to the linear alloc size, so return zero.
-      return LinearAllocEstimator.Stats.ZERO;
+      return DalvikStatsTool.Stats.ZERO;
     }
 
     try {
-      return LinearAllocEstimator.getEstimate(entry.getInput());
+      return DalvikStatsTool.getEstimate(entry.getInput());
     } catch (IOException | RuntimeException e) {
       throw new RuntimeException(String.format("Error calculating size for %s.", name), e);
     }

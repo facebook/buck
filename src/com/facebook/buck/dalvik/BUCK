@@ -1,7 +1,7 @@
 java_library(
-  name = 'linearalloc_estimator',
+  name = 'dalvik_stats_tool',
   srcs = [
-    'LinearAllocEstimator.java',  
+    'DalvikStatsTool.java',
   ],
   deps = [
     '//lib:guava',
@@ -14,8 +14,8 @@ java_library(
 )
 
 java_binary(
-  name = 'cli_linearalloc_estimator',
-  main_class = 'com.facebook.buck.dalvik.LinearAllocEstimator',
+  name = 'cli_dalvik_stats_tool',
+  main_class = 'com.facebook.buck.dalvik.DalvikStatsTool',
   deps = [
     ':dalvik',
   ],
@@ -43,7 +43,7 @@ java_library(
     'ZipSplitter.java',
   ],
   deps = [
-    ':linearalloc_estimator',
+    ':dalvik_stats_tool',
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/util:exceptions',
