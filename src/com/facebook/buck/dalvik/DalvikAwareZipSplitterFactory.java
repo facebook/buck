@@ -21,11 +21,11 @@ import com.google.common.base.Predicate;
 import java.io.File;
 import java.util.Set;
 
-public class LinearAllocAwareZipSplitterFactory implements ZipSplitterFactory {
+public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
 
   private final long linearAllocLimit;
 
-  public LinearAllocAwareZipSplitterFactory(long linearAllocLimit) {
+  public DalvikAwareZipSplitterFactory(long linearAllocLimit) {
     this.linearAllocLimit = linearAllocLimit;
   }
 
@@ -38,7 +38,7 @@ public class LinearAllocAwareZipSplitterFactory implements ZipSplitterFactory {
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
-    return LinearAllocAwareZipSplitter.splitZip(inFiles,
+    return DalvikAwareZipSplitter.splitZip(inFiles,
         outPrimary,
         outSecondaryDir,
         secondaryPattern,

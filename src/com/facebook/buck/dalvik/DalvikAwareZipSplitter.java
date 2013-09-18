@@ -40,7 +40,7 @@ import java.util.Set;
  *        zips as space allows. This is a simple, greedy algorithm.
  * </ul>
  */
-public class LinearAllocAwareZipSplitter implements ZipSplitter {
+public class DalvikAwareZipSplitter implements ZipSplitter {
 
   private final Set<File> inFiles;
   private final File outPrimary;
@@ -49,12 +49,12 @@ public class LinearAllocAwareZipSplitter implements ZipSplitter {
   private final long linearAllocLimit;
 
   private final MySecondaryDexHelper secondaryDexWriter;
-  private LinearAllocAwareOutputStreamHelper primaryOut;
+  private DalvikAwareOutputStreamHelper primaryOut;
 
   /**
    * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate, DexSplitStrategy, CanaryStrategy, File)
    */
-  private LinearAllocAwareZipSplitter(
+  private DalvikAwareZipSplitter(
       Set<File> inFiles,
       File outPrimary,
       File outSecondaryDir,
@@ -74,7 +74,7 @@ public class LinearAllocAwareZipSplitter implements ZipSplitter {
     this.linearAllocLimit = linearAllocLimit;
   }
 
-  public static LinearAllocAwareZipSplitter splitZip(
+  public static DalvikAwareZipSplitter splitZip(
       Set<File> inFiles,
       File outPrimary,
       File outSecondaryDir,
@@ -83,7 +83,7 @@ public class LinearAllocAwareZipSplitter implements ZipSplitter {
       Predicate<String> requiredInPrimaryZip,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
-    return new LinearAllocAwareZipSplitter(
+    return new DalvikAwareZipSplitter(
         inFiles,
         outPrimary,
         outSecondaryDir,
@@ -137,12 +137,12 @@ public class LinearAllocAwareZipSplitter implements ZipSplitter {
     return secondaryDexWriter.getFiles();
   }
 
-  private LinearAllocAwareOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
-    return new LinearAllocAwareOutputStreamHelper(file, linearAllocLimit, reportDir);
+  private DalvikAwareOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
+    return new DalvikAwareOutputStreamHelper(file, linearAllocLimit, reportDir);
   }
 
   private class MySecondaryDexHelper
-      extends SecondaryDexHelper<LinearAllocAwareOutputStreamHelper> {
+      extends SecondaryDexHelper<DalvikAwareOutputStreamHelper> {
 
     MySecondaryDexHelper(
         File outSecondaryDir,
@@ -152,9 +152,8 @@ public class LinearAllocAwareZipSplitter implements ZipSplitter {
     }
 
     @Override
-    protected LinearAllocAwareOutputStreamHelper newZipOutput(File file) throws IOException {
-      return LinearAllocAwareZipSplitter.this.newZipOutput(file);
+    protected DalvikAwareOutputStreamHelper newZipOutput(File file) throws IOException {
+      return DalvikAwareZipSplitter.this.newZipOutput(file);
     }
   }
-
 }

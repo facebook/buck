@@ -33,9 +33,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Helper to write a Zip file used by {@link LinearAllocAwareZipSplitter}.
+ * Helper to write a Zip file used by {@link DalvikAwareZipSplitter}.
  */
-class LinearAllocAwareOutputStreamHelper implements ZipOutputStreamHelper {
+public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
   private final ZipOutputStream outStream;
   private final Set<String> entryNames = Sets.newHashSet();
@@ -44,7 +44,7 @@ class LinearAllocAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
   private long currentLinearAllocSize;
 
-    LinearAllocAwareOutputStreamHelper(
+    DalvikAwareOutputStreamHelper(
         File outputFile,
         long linearAllocLimit,
         File reportDir)

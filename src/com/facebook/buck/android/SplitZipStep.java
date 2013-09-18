@@ -16,9 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.dalvik.DalvikAwareZipSplitterFactory;
 import com.facebook.buck.dalvik.DefaultZipSplitterFactory;
-import com.facebook.buck.dalvik.LinearAllocAwareZipSplitter;
-import com.facebook.buck.dalvik.LinearAllocAwareZipSplitterFactory;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;
 import com.facebook.buck.step.ExecutionContext;
@@ -94,7 +93,7 @@ public class SplitZipStep implements Step {
    * @param primaryDexSubstrings Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output).
-   * @param useLinearAllocSplitDex If true, {@link LinearAllocAwareZipSplitter} will be used. Also,
+   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter} will be used. Also,
    *     {@code linearAllocHardLimit} must have a positive value in this case.
    */
   public SplitZipStep(
@@ -131,7 +130,7 @@ public class SplitZipStep implements Step {
 
       ZipSplitterFactory zipSplitterFactory;
       if (useLinearAllocSplitDex) {
-        zipSplitterFactory = new LinearAllocAwareZipSplitterFactory(linearAllocHardLimit);
+        zipSplitterFactory = new DalvikAwareZipSplitterFactory(linearAllocHardLimit);
       } else {
         zipSplitterFactory = new DefaultZipSplitterFactory(ZIP_SIZE_SOFT_LIMIT,
             ZIP_SIZE_HARD_LIMIT);
