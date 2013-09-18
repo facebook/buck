@@ -30,16 +30,32 @@ public class CustomZipEntry extends ZipEntry {
 
   public CustomZipEntry(ZipEntry other) {
     super(other);
+    setDefaultMethodIfMethodUnset();
   }
 
   public CustomZipEntry(String name) {
     super(name);
+    setDefaultMethodIfMethodUnset();
+  }
+
+  private void setDefaultMethodIfMethodUnset() {
+    if (getMethod() == -1) {
+      setMethod(DEFLATED);
+    }
   }
 
   public void setCompressionLevel(int compressionLevel) {
     Preconditions.checkArgument(
         compressionLevel >= NO_COMPRESSION && compressionLevel <= BEST_COMPRESSION);
     this.compressionLevel = compressionLevel;
+
+    // We need to update the underlying method declared
+    setMethod(compressionLevel == NO_COMPRESSION ? STORED : DEFLATED);
+
+    // Reset the various fields that need to be updated.
+    setCrc(0);
+    setSize(0);
+    setCompressedSize(0);
   }
 
   public int getCompressionLevel() {

@@ -49,6 +49,7 @@ import java.nio.file.Files;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
@@ -343,8 +344,12 @@ public class ZipOutputStreamTest {
 
       entry = new CustomZipEntry("stored");
       entry.setCompressionLevel(NO_COMPRESSION);
+      byte[] bytes = "stored".getBytes();
+      entry.setSize(bytes.length);
+      entry.setCrc(Hashing.crc32().hashBytes(bytes).padToLong());
       out.putNextEntry(entry);
-      out.write("stored".getBytes());
+
+      out.write(bytes);
 
       entry = new CustomZipEntry("best");
       entry.setCompressionLevel(BEST_COMPRESSION);
@@ -360,13 +365,28 @@ public class ZipOutputStreamTest {
       assertNotEquals(entry.getCompressedSize(), entry.getSize());
 
       entry = in.getNextEntry();
+      ByteStreams.copy(in, ByteStreams.nullOutputStream());
       assertEquals("stored", entry.getName());
       assertEquals(entry.getCompressedSize(), entry.getSize());
 
       entry = in.getNextEntry();
+      ByteStreams.copy(in, ByteStreams.nullOutputStream());
       assertEquals("best", entry.getName());
       ByteStreams.copy(in, ByteStreams.nullOutputStream());
       assertThat(entry.getCompressedSize(), lessThan(defaultCompressedSize));
     }
+  }
+
+  @Test
+  public void shouldChangeMethodWhenCompressionLevelIsChanged() {
+    CustomZipEntry entry = new CustomZipEntry("cake");
+    assertEquals(ZipEntry.DEFLATED, entry.getMethod());
+    assertEquals(Deflater.DEFAULT_COMPRESSION, entry.getCompressionLevel());
+
+    entry.setCompressionLevel(NO_COMPRESSION);
+    assertEquals(ZipEntry.STORED, entry.getMethod());
+
+    entry.setCompressionLevel(BEST_COMPRESSION);
+    assertEquals(ZipEntry.DEFLATED, entry.getMethod());
   }
 }

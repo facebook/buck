@@ -76,10 +76,6 @@ class EntryAccounting {
       entry.setTime(clock.currentTimeMillis());
     }
 
-    if (method == Method.DEFLATE) {
-      flags |= DATA_DESCRIPTOR_FLAG;
-    }
-
     if (entry instanceof CustomZipEntry) {
       deflater.setLevel(((CustomZipEntry) entry).getCompressionLevel());
     }
@@ -160,6 +156,35 @@ class EntryAccounting {
   }
 
   public long writeLocalFileHeader(OutputStream out) throws IOException {
+    if (method == Method.DEFLATE) {
+      flags |= DATA_DESCRIPTOR_FLAG;
+
+      // See http://www.pkware.com/documents/casestudies/APPNOTE.TXT (section 4.4.4)
+      // Essentially, we're about to set bits 1 and 2 to indicate to tools such as zipinfo which
+      // level of compression we're using. If we've not set a compression level, then we're using
+      // the default one, which is right. It turns out. For your viewing pleasure:
+      //
+      // +----------+-------+-------+
+      // | Level    | Bit 1 | Bit 2 |
+      // +----------+-------+-------+
+      // | Fastest  |   0   |   1   |
+      // | Normal   |   0   |   0   |
+      // | Best     |   1   |   0   |
+      // +----------+-------+-------+
+      if (entry instanceof CustomZipEntry) {
+        int level = ((CustomZipEntry) entry).getCompressionLevel();
+        switch (level) {
+          case Deflater.BEST_COMPRESSION:
+            flags |= (1 << 1);
+            break;
+
+          case Deflater.BEST_SPEED:
+            flags |= (1 << 2);
+            break;
+        }
+      }
+    }
+
     try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
       ByteIo.writeInt(stream, ZipEntry.LOCSIG);
 

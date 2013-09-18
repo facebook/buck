@@ -21,12 +21,16 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -89,8 +93,24 @@ public class RepackZipEntriesStep implements Step {
         if (entries.contains(customEntry.getName())) {
           customEntry.setCompressionLevel(compressionLevel);
         }
+
+        InputStream toUse;
+        // If we're using STORED files, we must pre-calculate the CRC.
+        if (customEntry.getMethod() == ZipEntry.STORED) {
+          try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            ByteStreams.copy(in, bos);
+            byte[] bytes = bos.toByteArray();
+            customEntry.setCrc(Hashing.crc32().hashBytes(bytes).padToLong());
+            customEntry.setSize(bytes.length);
+            customEntry.setCompressedSize(bytes.length);
+            toUse = new ByteArrayInputStream(bytes);
+          }
+        } else {
+          toUse = in;
+        }
+
         out.putNextEntry(customEntry);
-        ByteStreams.copy(in, out);
+        ByteStreams.copy(toUse, out);
         out.closeEntry();
       }
 
