@@ -9,5 +9,6 @@ java_test(
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/dalvik:dalvik',
+    '//src/com/facebook/buck/dalvik:linearalloc_estimator',
   ],
 )

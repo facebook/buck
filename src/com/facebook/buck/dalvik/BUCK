@@ -8,6 +8,9 @@ java_library(
     '//lib:jsr305',
     '//third-party/java/asm:asm',
   ],
+  visibility = [
+    'PUBLIC',
+  ],
 )
 
 java_binary(

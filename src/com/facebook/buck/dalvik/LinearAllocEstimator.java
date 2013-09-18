@@ -17,6 +17,7 @@
 package com.facebook.buck.dalvik;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -28,12 +29,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 
+/**
+ * Estimates stats about dalvik classes.
+ */
 public class LinearAllocEstimator {
 
   // TODO(user): This class needs a unit test.
@@ -46,6 +51,69 @@ public class LinearAllocEstimator {
       Pattern.compile("Activity$"), 1100
   );
 
+  public static class MethodReference {
+
+    public final String className;
+    public final String methodName;
+    public final String methodDesc;
+
+
+    public MethodReference(String className, String methodName, String methodDesc) {
+      this.className = className;
+      this.methodName = methodName;
+      this.methodDesc = methodDesc;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      MethodReference that = (MethodReference) o;
+
+      if (className != null ? !className.equals(that.className) : that.className != null)
+        return false;
+      if (methodDesc != null ? !methodDesc.equals(that.methodDesc) : that.methodDesc != null)
+        return false;
+      if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = className != null ? className.hashCode() : 0;
+      result = 31 * result + (methodName != null ? methodName.hashCode() : 0);
+      result = 31 * result + (methodDesc != null ? methodDesc.hashCode() : 0);
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      return className + "." + methodName + ":" + methodDesc;
+    }
+  }
+
+  /**
+   * Stats about a java class.
+   */
+  public static class Stats {
+
+    public static final Stats ZERO = new Stats(0, ImmutableSet.<MethodReference>of());
+
+    /** Estimated bytes the class will contribute to Dalvik linear alloc. */
+    public final int estimatedLinearAllocSize;
+
+    /** Methods referenced by the class. */
+    public final ImmutableSet<MethodReference> methodReferences;
+
+    public Stats(int estimatedLinearAllocSize, Set<MethodReference> methodReferences) {
+      this.estimatedLinearAllocSize = estimatedLinearAllocSize;
+      this.methodReferences = ImmutableSet.copyOf(methodReferences);
+    }
+  }
+
   /**
    * CLI wrapper to run against every class in a set of JARs.
    */
@@ -57,47 +125,59 @@ public class LinearAllocEstimator {
           continue;
         }
         InputStream rawClass = inJar.getInputStream(entry);
-        int footprint = estimateLinearAllocFootprint(rawClass, PENALTIES);
+        int footprint = getEstimate(rawClass, PENALTIES).estimatedLinearAllocSize;
         System.out.println(footprint + "\t" + entry.getName().replace(".class", ""));
       }
     }
-  }
-
-  public static int estimateLinearAllocFootprint(InputStream rawClass) throws IOException {
-    return estimateLinearAllocFootprint(rawClass, PENALTIES);
   }
 
   /**
    * Estimates the footprint that a given class will have in the LinearAlloc buffer
    * of Android's Dalvik VM.
    *
+   * @param rawClass Raw bytes of the Java class to analyze.
+   * @return the estimate
+   */
+  public static Stats getEstimate(InputStream rawClass) throws IOException {
+    return getEstimate(rawClass, PENALTIES);
+  }
+
+  /**
+   * Estimates the footprint that a given class will have in the LinearAlloc buffer
+   * of Android's Dalvik VM.
    *
    * @param rawClass Raw bytes of the Java class to analyze.
    * @param penalties Map from regex patterns to run against the internal name of the class and
    *                  its parent to a "penalty" to apply to the footprint, representing the size
    *                  of the vtable of the parent class.
-   * @return Estimated footprint in bytes.
+   * @return the estimate
    */
-  public static int estimateLinearAllocFootprint(
+  private static Stats getEstimate(
       InputStream rawClass,
       ImmutableMap<Pattern, Integer> penalties) throws IOException {
-    EstimatorVisitor estimatorVisitor = new EstimatorVisitor(penalties);
-    new ClassReader(rawClass).accept(estimatorVisitor, 0);
-    return estimatorVisitor.getFootprint();
+    // SKIP_FRAMES was required to avoid an exception in ClassReader when running on proguard
+    // output. We don't need to visit frames so this isn't an issue.
+    EstimatorClassVisitor estimatorVisitor = new EstimatorClassVisitor(penalties);
+    new ClassReader(rawClass).accept(estimatorVisitor, ClassReader.SKIP_FRAMES);
+    return new Stats(
+        estimatorVisitor.footprint,
+        estimatorVisitor.methodReferenceBuilder.build());
   }
 
-  private static class EstimatorVisitor extends ClassVisitor {
+  private static class EstimatorClassVisitor extends ClassVisitor {
+
     private final ImmutableMap<Pattern, Integer> penalties;
+    private final MethodVisitor methodVisitor = new EstimatorMethodVisitor();
     private int footprint;
     private boolean isInterface;
+    private ImmutableSet.Builder<MethodReference> methodReferenceBuilder;
 
-    private EstimatorVisitor(Map<Pattern, Integer> penalties) {
+    private String className;
+
+    private EstimatorClassVisitor(Map<Pattern, Integer> penalties) {
       super(Opcodes.ASM4);
       this.penalties = ImmutableMap.copyOf(penalties);
-    }
-
-    public int getFootprint() {
-      return footprint;
+      this.methodReferenceBuilder = ImmutableSet.builder();
     }
 
     @Override
@@ -109,6 +189,7 @@ public class LinearAllocEstimator {
         String superName,
         String[] interfaces) {
 
+      this.className = name;
       if ((access & (Opcodes.ACC_INTERFACE)) != 0) {
         // Interfaces don't have vtables.
         // This might undercount annotations, but they are mostly small.
@@ -131,7 +212,6 @@ public class LinearAllocEstimator {
         }
         footprint += vtablePenalty;
       }
-
     }
 
     @Override
@@ -162,8 +242,29 @@ public class LinearAllocEstimator {
           footprint += 4;
         }
       }
+      methodReferenceBuilder.add(new MethodReference(className, name, desc));
+      return methodVisitor;
+    }
 
-      return null;
+    @Override
+    public void visitOuterClass(String owner, String name, String desc) {
+      super.visitOuterClass(owner, name, desc);
+      if (name != null) {
+        methodReferenceBuilder.add(new MethodReference(className, name, desc));
+      }
+    }
+
+    private class EstimatorMethodVisitor extends MethodVisitor {
+
+      public EstimatorMethodVisitor() {
+        super(Opcodes.ASM4);
+      }
+
+      @Override
+      public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+        super.visitMethodInsn(opcode, owner, name, desc);
+        methodReferenceBuilder.add(new MethodReference(owner, name, desc));
+      }
     }
   }
 }

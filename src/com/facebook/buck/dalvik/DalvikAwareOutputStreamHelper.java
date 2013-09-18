@@ -37,11 +37,15 @@ import java.util.zip.ZipOutputStream;
  */
 public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
+  private static final int MAX_METHOD_REFERENCES = 64 * 1024;
+
   private final ZipOutputStream outStream;
   private final Set<String> entryNames = Sets.newHashSet();
   private final long linearAllocLimit;
   private final File reportFile;
 
+  private final Set<LinearAllocEstimator.MethodReference> currentMethodReferences =
+      Sets.newHashSet();
   private long currentLinearAllocSize;
 
     DalvikAwareOutputStreamHelper(
@@ -57,7 +61,15 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   }
 
   private boolean isEntryTooBig(FileLike entry) {
-    return (currentLinearAllocSize + getLinearAllocSize(entry) > linearAllocLimit);
+    LinearAllocEstimator.Stats stats = getStats(entry);
+    if (currentLinearAllocSize + stats.estimatedLinearAllocSize > linearAllocLimit) {
+      return true;
+    }
+    int newReferences = Sets.difference(stats.methodReferences, currentMethodReferences).size();
+    if (currentMethodReferences.size() + newReferences > MAX_METHOD_REFERENCES) {
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -83,14 +95,32 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       }
 
       // Make sure FileLike#getSize didn't lie (or we forgot to call canPutEntry).
-      long entryLinearAllocSize = getLinearAllocSize(fileLike);
+      LinearAllocEstimator.Stats stats = getStats(fileLike);
       Preconditions.checkState(!isEntryTooBig(fileLike),
           "Putting entry %s (%s) exceeded maximum size of %s",
-          name, entryLinearAllocSize, linearAllocLimit);
-      currentLinearAllocSize += entryLinearAllocSize;
-
-      String report = String.format("%s %s\n", entryLinearAllocSize, name);
+          name, stats.estimatedLinearAllocSize, linearAllocLimit);
+      currentLinearAllocSize += stats.estimatedLinearAllocSize;
+      currentMethodReferences.addAll(stats.methodReferences);
+      String report = String.format(
+          "%d %d %s\n",
+          stats.estimatedLinearAllocSize, stats.methodReferences.size(), name
+      );
       Files.append(report, reportFile, Charsets.UTF_8);
+    }
+  }
+
+  private LinearAllocEstimator.Stats getStats(FileLike entry) {
+    String name = entry.getRelativePath();
+    if (!name.endsWith(".class")) {
+      // Probably something like a pom.properties file in a JAR: this does not contribute
+      // to the linear alloc size, so return zero.
+      return LinearAllocEstimator.Stats.ZERO;
+    }
+
+    try {
+      return LinearAllocEstimator.getEstimate(entry.getInput());
+    } catch (IOException | RuntimeException e) {
+      throw new RuntimeException(String.format("Error calculating size for %s.", name), e);
     }
   }
 
@@ -98,20 +128,4 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   public void close() throws IOException {
     outStream.close();
   }
-
-  private long getLinearAllocSize(FileLike fileLike) {
-    String name = fileLike.getRelativePath();
-    if (!name.endsWith(".class")) {
-      // Probably something like a pom.properties file in a JAR: this does not contribute
-      // to the linear alloc size, so return zero.
-      return 0;
-    }
-
-    try {
-      return LinearAllocEstimator.estimateLinearAllocFootprint(fileLike.getInput());
-    } catch (IOException e) {
-      throw new RuntimeException(String.format("Error calculating size for %s.", name), e);
-    }
-  }
-
 }
