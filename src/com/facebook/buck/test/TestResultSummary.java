@@ -18,11 +18,13 @@ package com.facebook.buck.test;
 
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestResultSummary {
 
   private String testCaseName;

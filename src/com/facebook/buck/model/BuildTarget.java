@@ -19,6 +19,8 @@ package com.facebook.buck.model;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
@@ -26,6 +28,9 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class BuildTarget implements Comparable<BuildTarget> {
 
   public static final String BUILD_TARGET_PREFIX = "//";
@@ -107,6 +112,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "guava-latest".
    */
+  @JsonProperty("shortName")
   public String getShortName() {
     return shortName;
   }
@@ -115,6 +121,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava".
    */
+  @JsonProperty("baseName")
   public String getBaseName() {
     return baseName;
   }

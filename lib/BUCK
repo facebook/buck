@@ -88,6 +88,11 @@ prebuilt_jar(
   visibility = [
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/command:command',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/test:test',
     '//test/...',
   ],
 )
@@ -107,6 +112,9 @@ prebuilt_jar(
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/httpserver:httpserver',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',
     '//test/...',

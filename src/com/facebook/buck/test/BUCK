@@ -8,6 +8,8 @@ java_library(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//lib:jackson-annotations',
+    '//lib:jackson-core',
   ],
   visibility = ['PUBLIC'],
 )

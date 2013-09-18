@@ -22,6 +22,7 @@ import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
+import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.ArtifactCacheEvent;
@@ -96,11 +97,14 @@ public final class Main {
     private final EventBus fileEventBus;
     private final ProjectFilesystemWatcher filesystemWatcher;
     private final BuckConfig config;
+    private final Optional<WebServer> webServer;
+    private final Console console;
 
     public Daemon(ProjectFilesystem projectFilesystem,
                   BuckConfig config,
                   Console console) throws IOException {
-      this.config = config;
+      this.config = Preconditions.checkNotNull(config);
+      this.console = Preconditions.checkNotNull(console);
       this.parser = new Parser(projectFilesystem,
           new KnownBuildRuleTypes(),
           console,
@@ -113,6 +117,31 @@ public final class Main {
           config.getIgnorePaths(),
           FileSystems.getDefault().newWatchService());
       fileEventBus.register(parser);
+      webServer = createWebServer(config, console);
+    }
+
+    private Optional<WebServer> createWebServer(BuckConfig config, Console console) {
+      // Only enable the web httpserver if it specified in .buckconfig.
+      // The presence of a port number is sufficient.
+      Optional<String> serverPort = config.getValue("httpserver", "port");
+      Optional<WebServer> webServer;
+      if (serverPort.isPresent()) {
+        String rawPort = serverPort.get();
+        try {
+          int port = Integer.parseInt(rawPort, 10);
+          webServer = Optional.of(new WebServer(port));
+        } catch (NumberFormatException e) {
+          console.printErrorText(String.format("Could not parse port for httpserver: %s.", rawPort));
+          webServer = Optional.absent();
+        }
+      } else {
+        webServer = Optional.absent();
+      }
+      return webServer;
+    }
+
+    public Optional<WebServer> getWebServer() {
+      return webServer;
     }
 
     private Parser getParser() {
@@ -123,6 +152,19 @@ public final class Main {
       filesystemWatcher.postEvents();
     }
 
+    /** @return true if the web server was started successfully. */
+    private boolean initWebServer() {
+      if (webServer.isPresent()) {
+        try {
+          webServer.get().start();
+          return true;
+        } catch (WebServer.WebServerException e) {
+          e.printStackTrace(console.getStdErr());
+        }
+      }
+      return false;
+    }
+
     public BuckConfig getConfig() {
       return config;
     }
@@ -130,6 +172,17 @@ public final class Main {
     @Override
     public void close() throws IOException {
       filesystemWatcher.close();
+      shutdownWebServer();
+    }
+
+    private void shutdownWebServer() {
+      if (webServer.isPresent()) {
+        try {
+          webServer.get().stop();
+        } catch (WebServer.WebServerException e) {
+          e.printStackTrace(console.getStdErr());
+        }
+      }
     }
   }
 
@@ -227,11 +280,15 @@ public final class Main {
 
     // Create or get and invalidate cached command parameters.
     Parser parser;
+    Optional<Daemon> daemonOptional;
     if (isDaemon()) {
       Daemon daemon = getDaemon(projectFilesystem, config, console);
       daemon.watchFileSystem();
+      daemon.initWebServer();
+      daemonOptional = Optional.of(daemon);
       parser = daemon.getParser();
     } else {
+      daemonOptional = Optional.absent();
       parser = new Parser(projectFilesystem,
           knownBuildRuleTypes,
           console,
@@ -247,12 +304,17 @@ public final class Main {
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0], console);
     if (command.isPresent()) {
+      Optional<WebServer> webServerOptional = Optional.absent();
+      if (daemonOptional.isPresent()) {
+        webServerOptional = daemonOptional.get().getWebServer();
+      }
       ImmutableList<BuckEventListener> eventListeners =
           addEventListeners(buildEventBus,
               clock,
               projectFilesystem,
               console,
-              config);
+              config,
+              webServerOptional);
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
@@ -367,13 +429,18 @@ public final class Main {
                                                              Clock clock,
                                                              ProjectFilesystem projectFilesystem,
                                                              Console console,
-                                                             BuckConfig config) {
+                                                             BuckConfig config,
+                                                             Optional<WebServer> webServer) {
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
 
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
             .add(new ChromeTraceBuildListener(projectFilesystem));
+
+    if (webServer.isPresent()) {
+      eventListenersBuilder.add(webServer.get().createListener());
+    }
 
     if (console.getAnsi().isAnsiTerminal()) {
       SuperConsoleEventBusListener superConsole =

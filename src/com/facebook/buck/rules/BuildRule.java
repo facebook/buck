@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -26,14 +28,19 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
 public interface BuildRule extends Comparable<BuildRule> {
 
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
 
   public BuildTarget getBuildTarget();
 
+  @JsonProperty("name")
   public String getFullyQualifiedName();
 
+  @JsonProperty("type")
   public BuildRuleType getType();
 
   public BuildableProperties getProperties();

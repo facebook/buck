@@ -54,6 +54,8 @@ java_library(
   ],
   deps = [
     '//lib:guava',
+    '//lib:jackson-annotations',
+    '//lib:jackson-core',
     '//lib:jsr305',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/event:event',
@@ -113,6 +115,9 @@ java_library(
   deps = [
     ':build_rule',
     '//lib:guava',
+    '//lib:jackson-annotations',
+    '//lib:jackson-core',
+    '//lib:jackson-databind',
     '//lib:jsr305',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:steps',

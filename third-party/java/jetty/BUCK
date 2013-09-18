@@ -15,4 +15,7 @@ java_library(
     ':jetty-all',
     ':servlet-api',
   ],
+  visibility = [
+    '//src/com/facebook/buck/httpserver:httpserver',
+  ],
 )

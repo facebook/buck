@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.DependencyGraph;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -43,6 +44,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
   }
 
   @Override
+  @JsonIgnore
   public String getCategory() {
     return "parse";
   }
@@ -83,7 +85,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "ParseStarted";
     }
   }
@@ -98,10 +100,11 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "ParseFinished";
     }
 
+    @JsonIgnore
     public Optional<DependencyGraph> getGraph() {
       return graph;
     }

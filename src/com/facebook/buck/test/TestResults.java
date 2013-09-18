@@ -17,6 +17,7 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.model.BuildTarget;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -66,6 +67,7 @@ public class TestResults {
     this.failureCount = failureCount;
   }
 
+  @JsonIgnore
   public BuildTarget getBuildTarget() {
     return source;
   }
@@ -78,6 +80,7 @@ public class TestResults {
     return failureCount;
   }
 
+  @JsonIgnore
   public ImmutableList<TestCaseSummary> getFailures() {
     return failures;
   }
@@ -86,6 +89,7 @@ public class TestResults {
     return testCases;
   }
 
+  @JsonIgnore
   public ImmutableSet<String> getContacts() {
     return contacts;
   }

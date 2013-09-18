@@ -9,6 +9,8 @@ java_library(
     ':project',
     ':support',
     '//lib:guava',
+    '//lib:jackson-annotations',
+    '//lib:jackson-core',
     '//lib:jsr305',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/json:json',

@@ -119,6 +119,8 @@ set BUCK_JAVA_CLASSPATH=^
 %BUCK_DIRECTORY%\third-party\java\astyanax\log4j-1.2.16.jar;^
 %BUCK_DIRECTORY%\third-party\java\astyanax\slf4j-api-1.7.2.jar;^
 %BUCK_DIRECTORY%\third-party\java\astyanax\slf4j-log4j12-1.7.2.jar;^
+%BUCK_DIRECTORY%\third-party\java\jetty\jetty-all-9.0.4.v20130625.jar;^
+%BUCK_DIRECTORY%\third-party\java\jetty\servlet-api.jar;^
 %BUCK_DIRECTORY%\third-party\java\xz-java-1.3\xz-1.3.jar
 
 "%JAVA%" ^

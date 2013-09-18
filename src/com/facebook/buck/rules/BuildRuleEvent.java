@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -75,7 +76,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "BuildRuleStarted";
     }
   }
@@ -103,6 +104,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
       return cacheResult;
     }
 
+    @JsonIgnore
     public Optional<BuildRuleSuccess.Type> getSuccessType() {
       return successType;
     }
@@ -144,7 +146,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "BuildRuleFinished";
     }
   }

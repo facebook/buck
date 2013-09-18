@@ -57,7 +57,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "AwaitingResults";
     }
 
@@ -82,7 +82,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "ResultsAvailable";
     }
 
