@@ -146,9 +146,10 @@ public class EventSerializationTest {
         ImmutableList.<TestResults>of(generateFakeTestResults()));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
-    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"success\"" +
-        ":false,\"time\":0}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
+    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\",\"" +
+        "results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\":" +
+        "null,\"success\":false,\"time\":0,\"message\":null,\"stacktrace\":null,\"stdOut\":null," +
+        "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
         "\"failureCount\":1,\"success\":false}],\"type\":\"RunComplete\"}", message);
   }
 
@@ -168,8 +169,9 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"success\":" +
-        "false,\"time\":0}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
+        "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\"" +
+        ":null,\"success\":false,\"time\":0,\"message\":null,\"stacktrace\":null,\"stdOut\":null," +
+        "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
         "\"failureCount\":1,\"success\":false},\"type\":\"ResultsAvailable\"}", message);
   }
 
