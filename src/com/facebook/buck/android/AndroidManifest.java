@@ -17,14 +17,15 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
@@ -35,8 +36,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * {@link AndroidManifestRule} is a build rule that can generate an Android manifest from a skeleton
- * manifest and the library manifests from its dependencies.
+ * {@link AndroidManifest} is a {@link Buildable} that can generate an Android manifest from a
+ * skeleton manifest and the library manifests from its dependencies.
  * <pre>
  * android_manifest(
  *   name = 'my_manifest',
@@ -60,34 +61,33 @@ import java.util.List;
  * )
  * </pre>
  */
-public class AndroidManifestRule extends DoNotUseAbstractBuildable {
+public class AndroidManifest extends AbstractBuildable {
 
+  private final BuildTarget buildTarget;
   private final String skeletonFile;
-  private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
-  protected AndroidManifestRule(BuildRuleParams buildRuleParams, String skeletonFile) {
-    super(buildRuleParams);
+  protected AndroidManifest(BuildTarget buildTarget, String skeletonFile) {
+    this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
-    this.transitiveDependencyGraph = new AndroidTransitiveDependencyGraph(this);
-  }
-
-  @Override
-  public BuildRuleType getType() {
-    return BuildRuleType.ANDROID_MANIFEST;
   }
 
   @Override
   public List<String> getInputsToCompareToOutput() {
-    ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
-    // manifestFile is an *output*, so it should be omitted here.
-    inputsToConsiderForCachingPurposes.add(skeletonFile);
-    return inputsToConsiderForCachingPurposes.build();
+    return ImmutableList.of(skeletonFile);
+  }
+
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
-    ImmutableList<HasAndroidResourceDeps> depsWithAndroidResources = getAndroidResourceDeps(
-        context.getDependencyGraph());
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
+    DependencyGraph graph = context.getDependencyGraph();
+    ImmutableList<HasAndroidResourceDeps> depsWithAndroidResources = getAndroidResourceDeps(graph);
+
+    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
+        AndroidTransitiveDependencyGraph.createForAndroidManifest(this, graph);
     AndroidTransitiveDependencies transitiveDependencies =
         transitiveDependencyGraph.findDependencies(depsWithAndroidResources);
 
@@ -102,7 +102,7 @@ public class AndroidManifestRule extends DoNotUseAbstractBuildable {
 
   @Override
   public String getPathToOutputFile() {
-    BuildTarget target = getBuildTarget();
+    BuildTarget target = buildTarget;
     return String.format("%s/%sAndroidManifest__%s__.xml",
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
@@ -115,14 +115,15 @@ public class AndroidManifestRule extends DoNotUseAbstractBuildable {
    */
   private ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(
       DependencyGraph graph) {
-    return UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
+    BuildRule self = graph.findBuildRuleByTarget(buildTarget);
+    return UberRDotJavaUtil.getAndroidResourceDeps(self, graph);
   }
 
   public static Builder newManifestMergeRuleBuilder(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
-  public static class Builder extends AbstractBuildRuleBuilder<AndroidManifestRule> {
+  public static class Builder extends AbstractBuildable.Builder {
 
     protected String skeletonFile;
 
@@ -131,14 +132,14 @@ public class AndroidManifestRule extends DoNotUseAbstractBuildable {
     }
 
     @Override
-    public AndroidManifestRule build(BuildRuleResolver ruleResolver) {
-      return new AndroidManifestRule(createBuildRuleParams(ruleResolver), skeletonFile);
+    public AndroidManifest newBuildable(BuildRuleParams buildRuleParams,
+        BuildRuleResolver ruleResolver) {
+      return new AndroidManifest(buildRuleParams.getBuildTarget(), skeletonFile);
     }
 
     @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
+    public BuildRuleType getType() {
+      return BuildRuleType.ANDROID_MANIFEST;
     }
 
     public Builder setSkeletonFile(String skeletonFile) {

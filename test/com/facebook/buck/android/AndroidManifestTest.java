@@ -19,13 +19,17 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -40,23 +44,22 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Unit test for {@link AndroidManifestRule}.
+ * Unit test for {@link AndroidManifest}.
  */
-public class AndroidManifestRuleTest {
+public class AndroidManifestTest {
 
   /**
    * Tests the following methods:
    * <ul>
-   *   <li>{@link AndroidManifestRule#getType()}
    *   <li>{@link Buildable#getInputsToCompareToOutput()}
-   *   <li>{@link AndroidManifestRule#getPathToOutputFile()}
+   *   <li>{@link AndroidManifest#getPathToOutputFile()}
    * </ul>
    */
   @Test
   public void testSimpleObserverMethods() {
-    AndroidManifestRule androidManifestRule = createSimpleAndroidManifestRule();
+    BuildRule buildRule = createSimpleAndroidManifestRule();
+    AndroidManifest androidManifestRule = (AndroidManifest) buildRule.getBuildable();
 
-    assertEquals("android_manifest", androidManifestRule.getType().getName());
     assertEquals(
         ImmutableList.of("java/com/example/AndroidManifestSkeleton.xml"),
         androidManifestRule.getInputsToCompareToOutput());
@@ -67,11 +70,12 @@ public class AndroidManifestRuleTest {
 
   @Test
   public void testBuildInternal() throws IOException {
-    AndroidManifestRule androidManifestRule = createSimpleAndroidManifestRule();
+    BuildRule buildRule = createSimpleAndroidManifestRule();
+    AndroidManifest androidManifestRule = (AndroidManifest)buildRule.getBuildable();
 
-    // This is a simple dependency graph because our only rule has no deps.
+    // This is a simple dependency graph because our only build rule has no deps.
     MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
-    graph.addNode(androidManifestRule);
+    graph.addNode(buildRule);
     DependencyGraph dependencyGraph = new DependencyGraph(graph);
 
     // Mock out a BuildContext whose DependencyGraph will be traversed.
@@ -91,11 +95,30 @@ public class AndroidManifestRuleTest {
     EasyMock.verify(buildContext);
   }
 
-  private AndroidManifestRule createSimpleAndroidManifestRule() {
-    return AndroidManifestRule.newManifestMergeRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example:manifest"))
+  @Test
+  public void testGetTypeMethodOfBuilder() {
+    AndroidManifest.Builder builder = AndroidManifest.newManifestMergeRuleBuilder(
+        new FakeAbstractBuildRuleBuilderParams());
+    assertEquals("android_manifest", builder.getType().getName());
+  }
+
+  private BuildRule createSimpleAndroidManifestRule() {
+    // First, create the AndroidManifest object.
+    BuildRuleParams buildRuleParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
+        new BuildTarget("//java/com/example", "manifest"));
+    AndroidManifest.Builder builder = AndroidManifest.newManifestMergeRuleBuilder(
+        new FakeAbstractBuildRuleBuilderParams());
+    final AndroidManifest androidManifest = builder
         .setSkeletonFile("java/com/example/AndroidManifestSkeleton.xml")
-        .build(new BuildRuleResolver());
+        .newBuildable(buildRuleParams, new BuildRuleResolver());
+
+    // Then create a BuildRule whose Buildable is the AndroidManifest.
+    return new FakeBuildRule(BuildRuleType.ANDROID_MANIFEST, buildRuleParams) {
+      @Override
+      public Buildable getBuildable() {
+        return androidManifest;
+      }
+    };
   }
 
   // TODO(user): Add another unit test that passes in a non-trivial DependencyGraph and verify that

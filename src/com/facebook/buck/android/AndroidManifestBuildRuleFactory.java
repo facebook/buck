@@ -19,15 +19,15 @@ import com.facebook.buck.parser.AbstractBuildRuleFactory;
 import com.facebook.buck.parser.BuildRuleFactoryParams;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
-public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory<AndroidManifestRule.Builder> {
+public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory<AndroidManifest.Builder> {
 
   @Override
-  public AndroidManifestRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return AndroidManifestRule.newManifestMergeRuleBuilder(params);
+  public AndroidManifest.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
+    return AndroidManifest.newManifestMergeRuleBuilder(params);
   }
 
   @Override
-  protected void amendBuilder(AndroidManifestRule.Builder builder, BuildRuleFactoryParams params) {
+  protected void amendBuilder(AndroidManifest.Builder builder, BuildRuleFactoryParams params) {
     // skeleton file
     String skeletonFile = params.getRequiredStringAttribute("skeleton");
     String skeletonPath = params.resolveFilePathRelativeToBuildFileDirectory(skeletonFile);

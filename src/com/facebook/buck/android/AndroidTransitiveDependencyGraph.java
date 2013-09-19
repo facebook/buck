@@ -26,9 +26,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,38 +45,27 @@ public class AndroidTransitiveDependencyGraph {
   private final BuildTarget buildTargetForTheRootOfTheTraversal;
 
   public AndroidTransitiveDependencyGraph(final AndroidBinaryRule buildRule) {
-    this(new Supplier<ImmutableSortedSet<BuildRule>> () {
-
-      @Override
-      public ImmutableSortedSet<BuildRule> get() {
-        // Because AndroidBinaryRule#getDeps() includes items such as its keystore, we use
-        // AndroidBinaryRule#getClasspathDeps() instead to ensure we only traverse the rules that
-        // the user specified as the "deps" argument in the build file.
-        return buildRule.getClasspathDeps();
-      }
-
-    }, buildRule.getBuildTarget());
-  }
-
-  public AndroidTransitiveDependencyGraph(final AndroidManifestRule buildRule) {
-    this(new Supplier<ImmutableSortedSet<BuildRule>> () {
-
-      @Override
-      public ImmutableSortedSet<BuildRule> get() {
-        return buildRule.getDeps();
-      }
-
-    }, buildRule.getBuildTarget());
+    // Because AndroidBinaryRule#getDeps() includes items such as its keystore, we use
+    // AndroidBinaryRule#getClasspathDeps() instead to ensure we only traverse the rules that
+    // the user specified as the "deps" argument in the build file.
+    this(buildRule.getClasspathDeps(), buildRule.getBuildTarget());
   }
 
   /**
    * As we move towards a world designed around {@link Buildable}s rather than {@link BuildRule}s,
    * we will likely need to specify the {@link BuildTarget} independently.
    */
-  private AndroidTransitiveDependencyGraph(Supplier<ImmutableSortedSet<BuildRule>> buildRule,
+  private AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps,
       BuildTarget buildTarget) {
-    this.rulesToTraverseForTransitiveDeps = Preconditions.checkNotNull(buildRule);
+    this.rulesToTraverseForTransitiveDeps = Suppliers.ofInstance(Preconditions.checkNotNull(deps));
     this.buildTargetForTheRootOfTheTraversal = Preconditions.checkNotNull(buildTarget);
+  }
+
+  public static AndroidTransitiveDependencyGraph createForAndroidManifest(
+      AndroidManifest androidManifest, DependencyGraph graph) {
+    BuildTarget buildTarget = androidManifest.getBuildTarget();
+    BuildRule rule = graph.findBuildRuleByTarget(buildTarget);
+    return new AndroidTransitiveDependencyGraph(rule.getDeps(), buildTarget);
   }
 
   public AndroidDexTransitiveDependencies findDexDependencies(
