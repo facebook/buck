@@ -28,7 +28,9 @@
 
 
     <project-components>
-
+        <component>
+            <implementation-class>com.facebook.buck.plugin.intellij.BuckPluginComponent</implementation-class>
+        </component>
     </project-components>
 
     <actions>
