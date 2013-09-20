@@ -109,7 +109,7 @@ public class BuckRunner {
       int exitCode;
       Future<String> stdoutFuture = readStream(process.getInputStream());
       Future<String> stderrFuture = readStream(process.getErrorStream());
-      process.destroy();
+      exitCode = process.waitFor();
       stdout = stdoutFuture.get();
       stderr = stderrFuture.get();
       return exitCode;
