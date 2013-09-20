@@ -51,6 +51,9 @@ public final class Ansi {
 
   private static final String ERASE_IN_LINE = "\u001B[%dK";
 
+  private static final String STOP_WRAPPING = "\u001B[?7l";
+  private static final String RESUME_WRAPPING = "\u001B[?7h";
+
   private final boolean isAnsiTerminal;
 
   private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
@@ -128,6 +131,14 @@ public final class Ansi {
   public String asHighlightedSuccessText(String text) {
     if (isAnsiTerminal) {
       return HIGHLIGHTED_SUCCESS_SEQUENCE + text + RESET;
+    } else {
+      return text;
+    }
+  }
+
+  public String asNoWrap(String text) {
+    if (isAnsiTerminal) {
+      return STOP_WRAPPING + text + RESUME_WRAPPING;
     } else {
       return text;
     }
