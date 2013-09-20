@@ -340,10 +340,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
       if (ruleKeyNoDeps.equals(cachedRuleKeyNoDeps.orNull())) {
         // The RuleKey for the definition of this build rule and its input files has not changed.
         // Therefore, if the ABI of its deps has not changed, there is nothing to rebuild.
-        Optional<Sha1HashCode> abiKeyForDeps = abiRule.getAbiKeyForDeps();
+        Sha1HashCode abiKeyForDeps = abiRule.getAbiKeyForDeps();
         Optional<Sha1HashCode> cachedAbiKeyForDeps = onDiskBuildInfo.getHash(
             AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
-        if (abiKeyForDeps.isPresent() && abiKeyForDeps.equals(cachedAbiKeyForDeps)) {
+        if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
           // Re-copy the ABI metadata.
           // TODO(mbolin): This seems really bad: there could be other metadata to copy, too?
           buildInfoRecorder.addMetadata(

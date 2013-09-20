@@ -23,12 +23,12 @@ import com.facebook.buck.android.HasAndroidResourceDeps;
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
@@ -362,7 +362,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * lacks an ABI key, then returns {@link Optional#absent()}.
    */
   @Override
-  public Optional<Sha1HashCode> getAbiKeyForDeps() throws IOException {
+  public Sha1HashCode getAbiKeyForDeps() throws IOException {
     SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {
@@ -377,14 +377,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         continue;
       }
 
-      Optional<Sha1HashCode> abiKey = ruleWithAbiToConsider.getAbiKey();
-      if (!abiKey.isPresent()) {
-        return Optional.absent();
-      }
-      hasher.putUnencodedChars(abiKey.get().getHash());
+      Sha1HashCode abiKey = ruleWithAbiToConsider.getAbiKey();
+      hasher.putUnencodedChars(abiKey.getHash());
     }
 
-    return Optional.of(new Sha1HashCode(hasher.hash().toString()));
+    return new Sha1HashCode(hasher.hash().toString());
   }
 
   @Override
@@ -571,7 +568,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     });
 
     buildableContext.addMetadata(ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-        getAbiKeyForDeps().get().getHash());
+        getAbiKeyForDeps().getHash());
   }
 
   /**
@@ -681,10 +678,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public Optional<Sha1HashCode> getAbiKey() {
+  public Sha1HashCode getAbiKey() {
     Preconditions.checkState(isRuleBuilt(),
         "%s must be built before its ABI key can be returned.", this);
-    return Optional.fromNullable(abiKeySupplier == null ? null : abiKeySupplier.get());
+    return abiKeySupplier.get();
   }
 
   private void setAbiKey(Supplier<Sha1HashCode> abiKeySupplier) {

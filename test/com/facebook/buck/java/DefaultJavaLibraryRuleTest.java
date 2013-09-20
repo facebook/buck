@@ -31,11 +31,11 @@ import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
@@ -590,7 +590,7 @@ public class DefaultJavaLibraryRuleTest {
         commonWithExport.getAbiKeyForDeps());
     String expectedAbiKeyForDepsHash = Hashing.sha1().newHasher()
         .putUnencodedChars(tinyLibAbiKeyHash).hash().toString();
-    String observedAbiKeyForDepsHash = commonNoExport.getAbiKeyForDeps().get().getHash();
+    String observedAbiKeyForDepsHash = commonNoExport.getAbiKeyForDeps().getHash();
     assertEquals(expectedAbiKeyForDepsHash, observedAbiKeyForDepsHash);
 
     // Create a BuildRuleResolver populated with the three build rules we created thus far.
@@ -613,8 +613,8 @@ public class DefaultJavaLibraryRuleTest {
     // Verify getAbiKeyForDeps() for the two //:consumer_XXX rules.
     assertEquals(
         "The ABI of the deps of //:consumer_no_export should be the empty ABI.",
-        consumerNoExport.getAbiKeyForDeps(),
-        Optional.of(new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY)));
+        new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY),
+        consumerNoExport.getAbiKeyForDeps());
     assertThat(
         "Although //:consumer_no_export and //:consumer_with_export have the same deps, " +
         "the ABIs of their deps will differ because of the use of export_deps=True.",
@@ -626,7 +626,7 @@ public class DefaultJavaLibraryRuleTest {
         .hash()
         .toString();
     String observedAbiKeyNoDepsHashForConsumerWithExport = consumerWithExport.getAbiKeyForDeps()
-        .get().getHash();
+        .getHash();
     assertEquals(
         "By hardcoding the ABI keys for the deps, we made getAbiKeyForDeps() a predictable value.",
         expectedAbiKeyNoDepsHashForConsumerWithExport,
@@ -652,11 +652,11 @@ public class DefaultJavaLibraryRuleTest {
         JavacOptions.builder().build()
         ) {
       @Override
-      public Optional<Sha1HashCode> getAbiKey() {
+      public Sha1HashCode getAbiKey() {
         if (abiHash == null) {
           return super.getAbiKey();
         } else {
-          return Optional.of(new Sha1HashCode(abiHash));
+          return new Sha1HashCode(abiHash);
         }
       }
     };

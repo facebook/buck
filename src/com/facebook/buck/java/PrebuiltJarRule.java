@@ -18,18 +18,18 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
@@ -122,8 +122,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public Optional<Sha1HashCode> getAbiKey() throws IOException {
-    return Optional.of(new Sha1HashCode(getRuleKey().toString()));
+  public Sha1HashCode getAbiKey() throws IOException {
+    return new Sha1HashCode(getRuleKey().toString());
   }
 
   @Override

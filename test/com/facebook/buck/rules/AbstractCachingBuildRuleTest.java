@@ -511,8 +511,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public Optional<Sha1HashCode> getAbiKeyForDeps() {
-      return Optional.of(new Sha1HashCode(ABI_KEY_FOR_DEPS_HASH));
+    public Sha1HashCode getAbiKeyForDeps() {
+      return new Sha1HashCode(ABI_KEY_FOR_DEPS_HASH);
     }
   }
 
