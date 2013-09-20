@@ -22,6 +22,7 @@ import com.facebook.buck.android.FilterResourcesStep.ImageScaler;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
+import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
@@ -55,7 +56,8 @@ public class FilterResourcesStepTest {
   private final String scaleDest = getFile(first, "mdpi", "other.png");
 
   private String getFile(String dir, String qualifier, String filename) {
-    return new File(dir, String.format("drawable-%s/%s", qualifier, filename)).getPath();
+    return Paths.normalizePathSeparator(
+        new File(dir, String.format("drawable-%s/%s", qualifier, filename)).getPath());
   }
 
   @Test
