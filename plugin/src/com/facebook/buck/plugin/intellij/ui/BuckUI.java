@@ -28,18 +28,25 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 
+import java.awt.*;
+
 public class BuckUI {
 
   public static final String BUCK_TOOL_WINDOW_ID = "Buck";
+  public static final String BUCK_MESSAGE_WINDOW_ID = "Message";
 
   private BuckPluginComponent component;
   private ToolWindow toolWindow;
+  private ToolWindow messageWindow;
   private BuckTargetsPanel buckTargetsPanel;
+  private BuckProgressPanel buckProgressPanel;
 
   public BuckUI(BuckPluginComponent component) {
     this.component = Preconditions.checkNotNull(component);
     createToolWindow();
+    createMessageWindow();
     createTargetsPanel();
+    createProgressPanel();
   }
 
   private void createToolWindow() {
@@ -51,6 +58,15 @@ public class BuckUI {
     toolWindow.setIcon(AllIcons.Debugger.Threads);
   }
 
+  private void createMessageWindow() {
+    ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(component.getProject());
+    messageWindow = toolWindowManager.registerToolWindow(BUCK_MESSAGE_WINDOW_ID,
+        true, /* canClose */
+        ToolWindowAnchor.BOTTOM
+    );
+    messageWindow.setIcon(AllIcons.Ant.Message);
+  }
+
   private void createTargetsPanel() {
     buckTargetsPanel = new BuckTargetsPanel(component);
     Content content = ContentFactory.SERVICE.getInstance().createContent(
@@ -59,6 +75,29 @@ public class BuckUI {
         false /* isLockable */
     );
     toolWindow.getContentManager().addContent(content);
+  }
+
+  private void createProgressPanel() {
+    buckProgressPanel = new BuckProgressPanel();
+    Content content = ContentFactory.SERVICE.getInstance().createContent(
+        buckProgressPanel.getPanel(),
+        buckProgressPanel.DISPLAY_NAME,
+        false /* isLockable */
+    );
+    messageWindow.getContentManager().addContent(content);
+  }
+
+  public BuckProgressPanel getProgressPanel() {
+    return buckProgressPanel;
+  }
+
+  public void showMessageWindow() {
+    EventQueue.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        messageWindow.show(null);
+      }
+    });
   }
 
   public void showErrorMessage(String message) {

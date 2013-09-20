@@ -16,6 +16,7 @@
 
 package com.facebook.buck.plugin.intellij.commands.event;
 
+import com.facebook.buck.plugin.intellij.ui.ProgressNode;
 import com.google.common.base.Preconditions;
 
 public class RuleEnd extends Event {
@@ -45,5 +46,17 @@ public class RuleEnd extends Event {
 
   public boolean isCached() {
     return cached;
+  }
+
+  public void updateTreeNode(ProgressNode node) {
+    if (isSuccessful()) {
+      node.setType(isCached() ? ProgressNode.Type.BUILT_CACHED : ProgressNode.Type.BUILT);
+    } else {
+      node.setType(ProgressNode.Type.BUILD_ERROR);
+    }
+    node.setName(String.format("[%s ms] %s %s",
+        getTimestamp() - node.getEvent().getTimestamp(),
+        getName(),
+        isCached() ? "(From cache)" : ""));
   }
 }

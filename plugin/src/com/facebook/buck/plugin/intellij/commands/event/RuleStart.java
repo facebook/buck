@@ -16,6 +16,7 @@
 
 package com.facebook.buck.plugin.intellij.commands.event;
 
+import com.facebook.buck.plugin.intellij.ui.ProgressNode;
 import com.google.common.base.Preconditions;
 
 public class RuleStart extends Event {
@@ -36,4 +37,9 @@ public class RuleStart extends Event {
     return getThreadId() == ruleEnd.getThreadId() && getBuildId().equals(ruleEnd.getBuildId())
         && getName().equals(ruleEnd.getName());
   }
+
+  public ProgressNode createTreeNode() {
+    return new ProgressNode(ProgressNode.Type.BUILDING, getName(), this);
+  }
+
 }

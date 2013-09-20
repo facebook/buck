@@ -22,6 +22,8 @@ import com.facebook.buck.plugin.intellij.commands.CleanCommand;
 import com.facebook.buck.plugin.intellij.commands.SocketClient.BuckPluginEventListener;
 import com.facebook.buck.plugin.intellij.commands.TargetsCommand;
 import com.facebook.buck.plugin.intellij.commands.event.Event;
+import com.facebook.buck.plugin.intellij.commands.event.RuleEnd;
+import com.facebook.buck.plugin.intellij.commands.event.RuleStart;
 import com.facebook.buck.plugin.intellij.ui.BuckUI;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -121,7 +123,7 @@ public class BuckPluginComponent implements ProjectComponent {
           BackgroundFromStartOption.getInstance()) {
         public void run(ProgressIndicator progressIndicator) {
           CleanCommand.clean(buckRunner);
-          // TODO(user) Clear built targets on UI
+          buckUI.getProgressPanel().clear();
         }
       };
       task.queue();
@@ -142,7 +144,8 @@ public class BuckPluginComponent implements ProjectComponent {
           true, /* canBeCanceled */
           BackgroundFromStartOption.getInstance()) {
         public void run(ProgressIndicator progressIndicator) {
-          // TODO (carbokuo) Update UI
+          buckUI.getProgressPanel().clear();
+          buckUI.showMessageWindow();
           BuildCommand.build(buckRunner, target);
         }
       };
@@ -156,6 +159,11 @@ public class BuckPluginComponent implements ProjectComponent {
 
     @Override
     public void onEvent(Event event) {
+      if (event instanceof RuleStart) {
+        buckUI.getProgressPanel().startRule((RuleStart) event);
+      } else if (event instanceof RuleEnd) {
+        buckUI.getProgressPanel().endRule((RuleEnd) event);
+      }
     }
   }
 
