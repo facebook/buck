@@ -17,6 +17,7 @@
 package com.facebook.buck.plugin.intellij;
 
 import com.facebook.buck.plugin.intellij.commands.BuckRunner;
+import com.facebook.buck.plugin.intellij.commands.CleanCommand;
 import com.facebook.buck.plugin.intellij.commands.SocketClient.BuckPluginEventListener;
 import com.facebook.buck.plugin.intellij.commands.TargetsCommand;
 import com.facebook.buck.plugin.intellij.commands.event.Event;
@@ -93,6 +94,22 @@ public class BuckPluginComponent implements ProjectComponent {
       public void run(ProgressIndicator progressIndicator) {
         ImmutableList<BuckTarget> targets = TargetsCommand.getTargets(buckRunner.get());
         // TODO(user) Refresh UI to show targets
+      }
+    };
+    task.queue();
+  }
+
+  public void clean() {
+    if (!checkBuckRunner()) {
+      return;
+    }
+    Task.Backgroundable task = new Task.Backgroundable(project,
+        "Cleaning",
+        true, /* canBeCanceled */
+        BackgroundFromStartOption.getInstance()) {
+      public void run(ProgressIndicator progressIndicator) {
+        CleanCommand.clean(buckRunner.get());
+        // TODO(user) Clear built targets on UI
       }
     };
     task.queue();
