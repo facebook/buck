@@ -93,12 +93,12 @@ public class BuckTargetsPanel {
                                                     boolean cellHasFocus) {
         BuckTarget target = (BuckTarget) value;
         Component renderer = super.getListCellRendererComponent(list,
-            target.getName(),
+            target.getFullName(),
             index,
             isSelected,
             cellHasFocus
         );
-        ((JComponent) renderer).setToolTipText(target.getDescription());
+        ((JComponent) renderer).setToolTipText(target.getFullName());
         return renderer;
       }
     });
