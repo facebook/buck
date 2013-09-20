@@ -28,9 +28,19 @@ import java.io.File;
  */
 public class MultiArtifactCache implements ArtifactCache {
   private final ImmutableList<ArtifactCache> artifactCaches;
+  private final boolean isStoreSupported;
 
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = Preconditions.checkNotNull(artifactCaches);
+
+    boolean isStoreSupported = false;
+    for (ArtifactCache artifactCache : artifactCaches) {
+      if (artifactCache.isStoreSupported()) {
+        isStoreSupported = true;
+        break;
+      }
+    }
+    this.isStoreSupported = isStoreSupported;
   }
 
   /**
@@ -65,5 +75,11 @@ public class MultiArtifactCache implements ArtifactCache {
     for (ArtifactCache artifactCache : artifactCaches) {
       artifactCache.store(ruleKey, output);
     }
+  }
+
+  /** @return {@code true} if there is at least one ArtifactCache that supports storing. */
+  @Override
+  public boolean isStoreSupported() {
+    return isStoreSupported;
   }
 }

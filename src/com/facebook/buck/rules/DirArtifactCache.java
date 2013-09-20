@@ -81,4 +81,10 @@ public class DirArtifactCache implements ArtifactCache {
       }
     }
   }
+
+  /** @return {@code true}: storing artifacts is always supported by this class. */
+  @Override
+  public boolean isStoreSupported() {
+    return true;
+  }
 }

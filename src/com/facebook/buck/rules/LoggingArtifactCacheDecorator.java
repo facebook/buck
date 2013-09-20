@@ -47,6 +47,11 @@ public class LoggingArtifactCacheDecorator {
         delegate.store(ruleKey, output);
         eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.STORE));
       }
+
+      @Override
+      public boolean isStoreSupported() {
+        return delegate.isStoreSupported();
+      }
     };
   }
 }

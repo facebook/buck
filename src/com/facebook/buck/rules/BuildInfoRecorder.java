@@ -99,8 +99,12 @@ public class BuildInfoRecorder {
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
   public void performUploadToArtifactCache(ArtifactCache artifactCache, BuckEventBus eventBus) {
-    // TODO(mbolin): Skip all of this if caching is disabled. Although artifactCache.store() will be
-    // a noop, building up the zip is wasted I/O.
+    // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
+    // building up the zip is wasted I/O.
+    if (!artifactCache.isStoreSupported()) {
+      return;
+    }
+
     ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.<Path>builder()
         .addAll(Iterables.transform(metadataToWrite.keySet(),
             new Function<String, Path>() {

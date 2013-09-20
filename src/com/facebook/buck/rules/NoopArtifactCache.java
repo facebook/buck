@@ -30,4 +30,10 @@ public class NoopArtifactCache implements ArtifactCache {
   public void store(RuleKey ruleKey, File output) {
     // Do nothing.
   }
+
+  /** @return {@code false}: storing artifacts is never supported by this class. */
+  @Override
+  public boolean isStoreSupported() {
+    return false;
+  }
 }
