@@ -147,16 +147,16 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .putByte(RuleKey.Builder.SEPARATOR)
 
         .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("deps".getBytes())
+        .putBytes("buck.inputs".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("19d2558a6bd3a34fb3f95412de9da27ed32fe208".getBytes())
+        .putBytes("ae8c0f860a0ecad94ecede79b69460434eddbfbc".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
         .putByte(RuleKey.Builder.SEPARATOR)
 
         .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("buck.inputs".getBytes())
+        .putBytes("deps".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("ae8c0f860a0ecad94ecede79b69460434eddbfbc".getBytes())
+        .putBytes("19d2558a6bd3a34fb3f95412de9da27ed32fe208".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
         .putByte(RuleKey.Builder.SEPARATOR)
 

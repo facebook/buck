@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -113,36 +114,14 @@ public class RuleKey {
   }
 
   /**
-   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
-   * arguments.
+   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
    */
   public static Builder builder(BuildRule rule) throws IOException {
-    return builder(rule, /* includeDeps */ true);
-  }
-
-  /**
-   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
-   * arguments <em>except</em> for its <code>deps</doe>.
-   */
-  public static Builder builderWithoutDeps(BuildRule rule) throws IOException {
-    return builder(rule, /* includeDeps */ false);
-  }
-
-  private static Builder builder(BuildRule rule, boolean includeDeps) throws IOException {
-    Builder builder = new Builder()
+    Builder builder = new Builder(rule)
         .set("name", rule.getFullyQualifiedName())
 
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .set("buck.type", rule.getType().getName());
-
-    if (includeDeps) {
-      builder.setKey("deps");
-      // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
-      for (BuildRule buildRule : rule.getDeps()) {
-        builder.setVal(buildRule.getRuleKey());
-      }
-    }
-    builder.separate();
 
     return builder;
   }
@@ -158,13 +137,15 @@ public class RuleKey {
 
     private static final Logger logger = Logger.getLogger(Builder.class.getName());
 
+    private final BuildRule rule;
     private final Hasher hasher;
     @Nullable private List<String> logElms;
 
-    private Builder() {
-      hasher = Hashing.sha1().newHasher();
+    private Builder(BuildRule rule) {
+      this.rule = Preconditions.checkNotNull(rule);
+      this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
       if (logger.isLoggable(Level.INFO)) {
-        logElms = Lists.newArrayList();
+        this.logElms = Lists.newArrayList();
       }
       setBuckVersionUID();
     }
@@ -356,12 +337,41 @@ public class RuleKey {
       return separate();
     }
 
-    public RuleKey build() {
-      RuleKey ruleKey = new RuleKey(hasher.hash());
-      if (logElms != null) {
-        logger.info(String.format("RuleKey %s=%s", ruleKey, Joiner.on("").join(logElms)));
+    public static class RuleKeyPair {
+      private final RuleKey totalRuleKey;
+      private final RuleKey ruleKeyWithoutDeps;
+
+      private RuleKeyPair(RuleKey totalRuleKey, RuleKey ruleKeyWithoutDeps) {
+        this.totalRuleKey = Preconditions.checkNotNull(totalRuleKey);
+        this.ruleKeyWithoutDeps = Preconditions.checkNotNull(ruleKeyWithoutDeps);
       }
-      return ruleKey;
+
+      public RuleKey getTotalRuleKey() {
+        return totalRuleKey;
+      }
+
+      public RuleKey getRuleKeyWithoutDeps() {
+        return ruleKeyWithoutDeps;
+      }
+    }
+
+    public RuleKeyPair build() throws IOException {
+      RuleKey ruleKeyWithoutDeps = new RuleKey(hasher.hash());
+
+      // Now introduce the deps into the RuleKey.
+      setKey("deps");
+      // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
+      for (BuildRule buildRule : rule.getDeps()) {
+        setVal(buildRule.getRuleKey());
+      }
+      separate();
+      RuleKey totalRuleKey = new RuleKey(hasher.hash());
+
+      if (logElms != null) {
+        logger.info(String.format("RuleKey %s=%s", ruleKeyWithoutDeps, Joiner.on("").join(logElms)));
+      }
+
+      return new RuleKeyPair(totalRuleKey, ruleKeyWithoutDeps);
     }
   }
 }

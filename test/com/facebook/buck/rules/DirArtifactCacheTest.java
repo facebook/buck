@@ -49,7 +49,7 @@ public class DirArtifactCacheTest {
 
     Files.write("x", fileX, Charsets.UTF_8);
     InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
 
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
   }
@@ -63,7 +63,7 @@ public class DirArtifactCacheTest {
 
     Files.write("x", fileX, Charsets.UTF_8);
     InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
 
     dirArtifactCache.store(ruleKeyX, fileX);
 
@@ -86,7 +86,7 @@ public class DirArtifactCacheTest {
 
     Files.write("x", fileX, Charsets.UTF_8);
     InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
@@ -115,9 +115,9 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
 
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build();
-    RuleKey ruleKeyY = RuleKey.builder(inputRuleY).build();
-    RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ).build();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
+    RuleKey ruleKeyY = RuleKey.builder(inputRuleY).build().getTotalRuleKey();
+    RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ).build().getTotalRuleKey();
 
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));

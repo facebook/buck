@@ -141,7 +141,7 @@ public class InputRule implements BuildRule {
   @Override
   public RuleKey getRuleKey() throws IOException {
     if (this.ruleKey == null) {
-      ruleKey = RuleKey.builder(this).set("inputFile", inputFile).build();
+      ruleKey = RuleKey.builder(this).set("inputFile", inputFile).build().getTotalRuleKey();
     }
     return ruleKey;
   }
