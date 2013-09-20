@@ -22,6 +22,7 @@ import com.facebook.buck.plugin.intellij.commands.CleanCommand;
 import com.facebook.buck.plugin.intellij.commands.SocketClient.BuckPluginEventListener;
 import com.facebook.buck.plugin.intellij.commands.TargetsCommand;
 import com.facebook.buck.plugin.intellij.commands.event.Event;
+import com.facebook.buck.plugin.intellij.ui.BuckUI;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -36,6 +37,7 @@ public class BuckPluginComponent implements ProjectComponent {
   private final Project project;
   private final EventListener listener;
   private Optional<BuckRunner> buckRunner;
+  private BuckUI buckUI;
 
   public BuckPluginComponent(Project project) {
     this.project = Preconditions.checkNotNull(project);
@@ -45,6 +47,7 @@ public class BuckPluginComponent implements ProjectComponent {
 
   @Override
   public void projectOpened() {
+    buckUI = new BuckUI(this);
     if (buckRunner.isPresent()) {
       buckRunner.get().launchBuckd();
     }
@@ -67,6 +70,10 @@ public class BuckPluginComponent implements ProjectComponent {
     return "BuckComponent";
   }
 
+  public Project getProject() {
+    return project;
+  }
+
   public void setBuckDirectory(Optional<String> buckDirectory) {
     Preconditions.checkNotNull(buckDirectory);
     try {
@@ -84,7 +91,7 @@ public class BuckPluginComponent implements ProjectComponent {
   }
 
   private void reportBuckNotPresent() {
-    // TODO(user) Show error message to UI
+    buckUI.showErrorMessage("Buck not found");
   }
 
   public void refreshTargetsList() {
@@ -96,7 +103,7 @@ public class BuckPluginComponent implements ProjectComponent {
           BackgroundFromStartOption.getInstance()) {
         public void run(ProgressIndicator progressIndicator) {
           ImmutableList<BuckTarget> targets = TargetsCommand.getTargets(buckRunner);
-          // TODO(user) Refresh UI to show targets
+          buckUI.updateTargets(targets);
         }
       };
       task.queue();
