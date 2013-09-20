@@ -18,11 +18,16 @@ package com.facebook.buck.plugin.intellij;
 
 import com.facebook.buck.plugin.intellij.commands.BuckRunner;
 import com.facebook.buck.plugin.intellij.commands.SocketClient.BuckPluginEventListener;
+import com.facebook.buck.plugin.intellij.commands.TargetsCommand;
 import com.facebook.buck.plugin.intellij.commands.event.Event;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vcs.changes.BackgroundFromStartOption;
 
 public class BuckPluginComponent implements ProjectComponent {
 
@@ -67,6 +72,30 @@ public class BuckPluginComponent implements ProjectComponent {
     } catch (BuckRunner.BuckNotFound buckNotFound) {
       buckRunner = Optional.absent();
     }
+  }
+
+  private boolean checkBuckRunner() {
+    if (buckRunner.isPresent()) {
+      return true;
+    }
+    // TODO(user) Show error message to UI
+    return false;
+  }
+
+  public void refreshTargetsList() {
+    if (!checkBuckRunner()) {
+      return;
+    }
+    Task.Backgroundable task = new Task.Backgroundable(project,
+        "Retrieving targets",
+        true, /* canBeCanceled */
+        BackgroundFromStartOption.getInstance()) {
+      public void run(ProgressIndicator progressIndicator) {
+        ImmutableList<BuckTarget> targets = TargetsCommand.getTargets(buckRunner.get());
+        // TODO(user) Refresh UI to show targets
+      }
+    };
+    task.queue();
   }
 
   private class EventListener implements BuckPluginEventListener {
