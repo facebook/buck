@@ -17,6 +17,7 @@
 package com.facebook.buck.plugin.intellij;
 
 import com.facebook.buck.plugin.intellij.commands.BuckRunner;
+import com.facebook.buck.plugin.intellij.commands.BuildCommand;
 import com.facebook.buck.plugin.intellij.commands.CleanCommand;
 import com.facebook.buck.plugin.intellij.commands.SocketClient.BuckPluginEventListener;
 import com.facebook.buck.plugin.intellij.commands.TargetsCommand;
@@ -75,44 +76,73 @@ public class BuckPluginComponent implements ProjectComponent {
     }
   }
 
-  private boolean checkBuckRunner() {
+  private BuckRunner getBuckRunner() throws NoBuckRunnerException {
     if (buckRunner.isPresent()) {
-      return true;
+      return buckRunner.get();
     }
+    throw new NoBuckRunnerException();
+  }
+
+  private void reportBuckNotPresent() {
     // TODO(user) Show error message to UI
-    return false;
   }
 
   public void refreshTargetsList() {
-    if (!checkBuckRunner()) {
-      return;
+    try {
+      final BuckRunner buckRunner = getBuckRunner();
+      Task.Backgroundable task = new Task.Backgroundable(project,
+          "Retrieving targets",
+          true, /* canBeCanceled */
+          BackgroundFromStartOption.getInstance()) {
+        public void run(ProgressIndicator progressIndicator) {
+          ImmutableList<BuckTarget> targets = TargetsCommand.getTargets(buckRunner);
+          // TODO(user) Refresh UI to show targets
+        }
+      };
+      task.queue();
+    } catch (NoBuckRunnerException e) {
+      reportBuckNotPresent();
     }
-    Task.Backgroundable task = new Task.Backgroundable(project,
-        "Retrieving targets",
-        true, /* canBeCanceled */
-        BackgroundFromStartOption.getInstance()) {
-      public void run(ProgressIndicator progressIndicator) {
-        ImmutableList<BuckTarget> targets = TargetsCommand.getTargets(buckRunner.get());
-        // TODO(user) Refresh UI to show targets
-      }
-    };
-    task.queue();
   }
 
   public void clean() {
-    if (!checkBuckRunner()) {
-      return;
+    try {
+      final BuckRunner buckRunner = getBuckRunner();
+      Task.Backgroundable task = new Task.Backgroundable(project,
+          "Cleaning",
+          true, /* canBeCanceled */
+          BackgroundFromStartOption.getInstance()) {
+        public void run(ProgressIndicator progressIndicator) {
+          CleanCommand.clean(buckRunner);
+          // TODO(user) Clear built targets on UI
+        }
+      };
+      task.queue();
+    } catch (NoBuckRunnerException e) {
+      reportBuckNotPresent();
     }
-    Task.Backgroundable task = new Task.Backgroundable(project,
-        "Cleaning",
-        true, /* canBeCanceled */
-        BackgroundFromStartOption.getInstance()) {
-      public void run(ProgressIndicator progressIndicator) {
-        CleanCommand.clean(buckRunner.get());
-        // TODO(user) Clear built targets on UI
-      }
-    };
-    task.queue();
+  }
+
+  /**
+   * Build a specified target in a background thread, showing a indicator in status bar.
+   * @param target Specified target to build
+   */
+  public void buildTarget(final BuckTarget target) {
+    try {
+      final BuckRunner buckRunner = getBuckRunner();
+      Task.Backgroundable task = new Task.Backgroundable(project,
+          "Building",
+          true, /* canBeCanceled */
+          BackgroundFromStartOption.getInstance()) {
+        public void run(ProgressIndicator progressIndicator) {
+          // TODO (carbokuo) Update UI
+          BuildCommand.build(buckRunner, target);
+        }
+      };
+      task.queue();
+    } catch (NoBuckRunnerException e) {
+      reportBuckNotPresent();
+    }
   }
 
   private class EventListener implements BuckPluginEventListener {
@@ -120,5 +150,8 @@ public class BuckPluginComponent implements ProjectComponent {
     @Override
     public void onEvent(Event event) {
     }
+  }
+
+  private class NoBuckRunnerException extends Exception {
   }
 }
