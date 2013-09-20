@@ -36,18 +36,22 @@ import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
+import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 
 public class BuckTargetsPanel {
 
   public static String DISPLAY_NAME = "Targets";
 
-  private BuckPluginComponent component;
+  private final BuckPluginComponent component;
   private JPanel targetsPanel;
   private JList targetsList;
   private JButton refreshTargetsButton;
   private JToolBar toolBar;
   private JButton cleanButton;
+  private JScrollPane scrollPane;
 
   public BuckTargetsPanel(BuckPluginComponent component) {
     this.component = Preconditions.checkNotNull(component);
@@ -58,6 +62,25 @@ public class BuckTargetsPanel {
   }
 
   private void createUIComponents() {
+    targetsPanel = new JPanel();
+    targetsPanel.addAncestorListener(new AncestorListener() {
+      @Override
+      public void ancestorAdded(AncestorEvent event) {
+        // If targets have never been fetched, then fetch targets.
+        if (component.getTargets() == null) {
+          component.refreshTargetsList();
+        }
+      }
+
+      @Override
+      public void ancestorRemoved(AncestorEvent event) {
+      }
+
+      @Override
+      public void ancestorMoved(AncestorEvent event) {
+      }
+    });
+
     targetsList = Preconditions.checkNotNull(createTargetsList());
 
     refreshTargetsButton = createToolbarIcon();
@@ -117,12 +140,11 @@ public class BuckTargetsPanel {
     return targetsList;
   }
 
-  public void updateTargets(final ImmutableList<BuckTarget> targets) {
-    Preconditions.checkNotNull(targets);
+  public void updateTargets() {
     EventQueue.invokeLater(new Runnable() {
       @Override
       public void run() {
-        targetsList.setModel(new TargetsListModel(targets));
+        targetsList.setModel(new TargetsListModel(component.getTargets()));
       }
     });
   }

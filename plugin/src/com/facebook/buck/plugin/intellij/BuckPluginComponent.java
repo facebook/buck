@@ -34,16 +34,22 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.BackgroundFromStartOption;
 
+import javax.annotation.Nullable;
+
 public class BuckPluginComponent implements ProjectComponent {
 
   private final Project project;
   private final EventListener listener;
   private Optional<BuckRunner> buckRunner;
   private BuckUI buckUI;
+  @Nullable
+  private ImmutableList<BuckTarget> targets;
+  private boolean targetFetching;
 
   public BuckPluginComponent(Project project) {
     this.project = Preconditions.checkNotNull(project);
     this.listener = new EventListener();
+    targets = null;
     setBuckDirectory(Optional.<String>absent());
   }
 
@@ -98,14 +104,19 @@ public class BuckPluginComponent implements ProjectComponent {
 
   public void refreshTargetsList() {
     try {
+      if (targetFetching) {
+        return;
+      }
+      targetFetching = true;
       final BuckRunner buckRunner = getBuckRunner();
       Task.Backgroundable task = new Task.Backgroundable(project,
           "Retrieving targets",
           true, /* canBeCanceled */
           BackgroundFromStartOption.getInstance()) {
         public void run(ProgressIndicator progressIndicator) {
-          ImmutableList<BuckTarget> targets = TargetsCommand.getTargets(buckRunner);
-          buckUI.updateTargets(targets);
+          targets = TargetsCommand.getTargets(buckRunner);
+          buckUI.updateTargets();
+          targetFetching = false;
         }
       };
       task.queue();
@@ -153,6 +164,10 @@ public class BuckPluginComponent implements ProjectComponent {
     } catch (NoBuckRunnerException e) {
       reportBuckNotPresent();
     }
+  }
+
+  public ImmutableList<BuckTarget> getTargets() {
+    return targets;
   }
 
   private class EventListener implements BuckPluginEventListener {

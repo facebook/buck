@@ -105,8 +105,7 @@ public class BuckUI {
     Messages.showErrorDialog(message, "Buck");
   }
 
-  public void updateTargets(ImmutableList<BuckTarget> targets) {
-    Preconditions.checkNotNull(targets);
-    buckTargetsPanel.updateTargets(targets);
+  public void updateTargets() {
+    buckTargetsPanel.updateTargets();
   }
 }
