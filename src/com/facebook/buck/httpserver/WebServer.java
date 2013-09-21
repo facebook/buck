@@ -86,6 +86,7 @@ public class WebServer {
     }
   }
 
+  @SuppressWarnings("serial")
   public class WebServerException extends Exception {
 
     public WebServerException(String message, Exception clause) {
