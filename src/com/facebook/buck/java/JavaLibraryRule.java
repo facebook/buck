@@ -23,8 +23,6 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
-
 public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntries {
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
@@ -60,5 +58,5 @@ public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntri
    * Because the ABI is computed as part of the build process, this rule cannot be invoked until
    * after this rule is built.
    */
-  public Sha1HashCode getAbiKey() throws IOException;
+  public Sha1HashCode getAbiKey();
 }

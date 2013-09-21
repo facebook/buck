@@ -362,7 +362,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * lacks an ABI key, then returns {@link Optional#absent()}.
    */
   @Override
-  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+  public Sha1HashCode getAbiKeyForDeps() {
     SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {

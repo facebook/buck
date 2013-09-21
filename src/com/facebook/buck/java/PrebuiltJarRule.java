@@ -18,8 +18,10 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
@@ -30,8 +32,11 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -40,9 +45,18 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * A rule that establishes a pre-compiled JAR file as a dependency.
@@ -60,6 +74,13 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
+
+  /**
+   * This will be set either by executing the build steps, or by
+   * {@link #initializeFromDisk(OnDiskBuildInfo)}.
+   */
+  @Nullable
+  private Sha1HashCode abiKey;
 
   PrebuiltJarRule(BuildRuleParams buildRuleParams,
       String classesJar,
@@ -122,8 +143,22 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public Sha1HashCode getAbiKey() throws IOException {
-    return new Sha1HashCode(getRuleKey().toString());
+  public Sha1HashCode getAbiKey() {
+    Preconditions.checkNotNull(abiKey,
+        "%s must be built before its ABI key can be returned.",
+        this);
+    return abiKey;
+  }
+
+  @Override
+  public void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
+    if (abiKeyHash.isPresent()) {
+      abiKey = abiKeyHash.get();
+    } else {
+      throw new IllegalStateException(String.format(
+          "Should not be initializing %s from disk if the ABI key is not written.", this));
+    }
   }
 
   @Override
@@ -154,7 +189,40 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    return ImmutableList.of();
+    // Create a step to compute the ABI key.
+    Step calculateAbiStep = new CalculateAbiStep(buildableContext);
+    return ImmutableList.of(calculateAbiStep);
+  }
+
+  private class CalculateAbiStep extends AbstractExecutionStep {
+
+    private final BuildableContext buildableContext;
+
+    private CalculateAbiStep(BuildableContext buildableContext) {
+      super("calculate ABI for " + binaryJar);
+      this.buildableContext = Preconditions.checkNotNull(buildableContext);
+    }
+
+    @Override
+    public int execute(ExecutionContext context) {
+      File jarFile = context.getProjectFilesystem().getFileForRelativePath(binaryJar);
+      InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(jarFile);
+      HashCode fileSha1;
+      try {
+        fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
+      } catch (IOException e) {
+        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+            "Failed to calculate ABI for %s.",
+            binaryJar));
+        return 1;
+      }
+
+      abiKey = new Sha1HashCode(fileSha1.toString());
+      buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
+
+      return 0;
+    }
+
   }
 
   @Override

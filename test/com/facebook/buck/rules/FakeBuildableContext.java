@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -47,5 +48,9 @@ public class FakeBuildableContext implements BuildableContext {
   @Override
   public void recordArtifact(Path pathToArtifact) {
     artifacts.add(pathToArtifact);
+  }
+
+  public ImmutableMap<String, String> getRecordedMetadata() {
+    return ImmutableMap.copyOf(metadata);
   }
 }
