@@ -185,7 +185,10 @@ public class Parser {
         },
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
-        new DefaultProjectBuildFileParserFactory(projectFilesystem, pythonInterpreter),
+        new DefaultProjectBuildFileParserFactory(
+            projectFilesystem,
+            pythonInterpreter,
+            buildRuleTypes.getAllDescriptions()),
         tempFilePatterns,
         ruleKeyBuilderFactory);
   }
@@ -480,6 +483,7 @@ public class Parser {
 
       BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
       BuildTarget target = parseBuildTargetFromRawRule(map);
+
       BuildRuleFactory<?> factory = buildRuleTypes.getFactory(buildRuleType);
       if (factory == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
@@ -490,13 +494,15 @@ public class Parser {
       BuildFileTree buildFileTree;
       buildFileTree = buildFileTreeCache.getInput();
 
-      BuildRuleBuilder<?> buildRuleBuilder = factory.newInstance(new BuildRuleFactoryParams(
+      BuildRuleBuilder<?> buildRuleBuilder;
+      BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
           map,
           projectFilesystem,
           buildFileTree,
           buildTargetParser,
           target,
-          ruleKeyBuilderFactory));
+          ruleKeyBuilderFactory);
+      buildRuleBuilder = factory.newInstance(factoryParams);
       Object existingRule = knownBuildTargets.put(target, buildRuleBuilder);
       if (existingRule != null) {
         throw new RuntimeException("Duplicate definition for " + target.getFullyQualifiedName());

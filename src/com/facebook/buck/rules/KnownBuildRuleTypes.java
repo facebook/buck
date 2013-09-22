@@ -41,15 +41,19 @@ import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A registry of all the build rules types understood by Buck.
  */
 public class KnownBuildRuleTypes {
 
+  private final Set<Description<?>> descriptions = Sets.newConcurrentHashSet();
   private Map<BuildRuleType, BuildRuleFactory<?>> factories = Maps.newConcurrentMap();
   private Map<String, BuildRuleType> types = Maps.newConcurrentMap();
 
@@ -86,6 +90,15 @@ public class KnownBuildRuleTypes {
     factories.put(type, factory);
   }
 
+  public void register(Description<?> description) {
+    Preconditions.checkNotNull(description);
+    BuildRuleType type = description.getBuildRuleType();
+    types.put(type.getName(), type);
+    factories.put(type, new DescribedRuleFactory<>(description));
+    descriptions.add(description);
+  }
+
+
   public BuildRuleType getBuildRuleType(String named) {
     BuildRuleType type = types.get(named);
     if (type == null) {
@@ -101,5 +114,9 @@ public class KnownBuildRuleTypes {
           "Unable to find factory for build rule type: " + buildRuleType);
     }
     return factory;
+  }
+
+  public ImmutableSet<Description<?>> getAllDescriptions() {
+    return ImmutableSet.copyOf(descriptions);
   }
 }

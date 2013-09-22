@@ -63,5 +63,7 @@ java_library(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
   ],
-  visibility = ['PUBLIC'],
+  visibility = [
+    'PUBLIC',
+  ],
 )

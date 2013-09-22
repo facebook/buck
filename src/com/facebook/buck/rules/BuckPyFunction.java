@@ -27,7 +27,7 @@ import java.util.SortedSet;
  * Used to generate a function for use within buck.py for the rule described by a
  * {@link Description}.
  */
-class BuckPyFunction {
+public class BuckPyFunction {
 
   private final ConstructorArgMarshaller argMarshaller;
 
@@ -35,7 +35,7 @@ class BuckPyFunction {
     this.argMarshaller = Preconditions.checkNotNull(argMarshaller);
   }
 
-  String toPythonFunction(BuildRuleType type, Object dto) {
+  public String toPythonFunction(BuildRuleType type, Object dto) {
     Preconditions.checkNotNull(type);
     Preconditions.checkNotNull(dto);
 

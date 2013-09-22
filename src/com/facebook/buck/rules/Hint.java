@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
 
 /**
  * Represents hints given when deal with the value returned by
- * {@link Description#getConstructorArg()}.
+ * {@link Description#createUnpopulatedConstructorArg()}.
  */
 @Retention(RUNTIME)
 @Target({FIELD, METHOD})

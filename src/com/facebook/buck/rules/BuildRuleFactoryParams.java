@@ -408,4 +408,12 @@ public final class BuildRuleFactoryParams {
       return null;
     }
   }
+
+  public Function<String, Path> getPathRelativizer() {
+    return abstractBuildRuleFactoryParams.getPathRelativizer();
+  }
+
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+    return abstractBuildRuleFactoryParams.getRuleKeyBuilderFactory();
+  }
 }

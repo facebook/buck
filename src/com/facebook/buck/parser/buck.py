@@ -684,8 +684,9 @@ def export_file(name, src=None, out=None, visibility=[], build_env=None):
     'name' : name,
     'src' : src,
     'out' : out,
-    'visibility': visibility,
+    'visibility' : visibility,
   }, build_env)
+
 
 @provide_for_build
 def include_defs(name, build_env=None):
@@ -867,10 +868,3 @@ def main():
     # offer an iterator.
     for build_file in iter(sys.stdin.readline, ''):
       buildFileProcessor.process(build_file.rstrip())
-
-
-if __name__ == '__main__':
-  try:
-    main()
-  except KeyboardInterrupt:
-    print >> sys.stderr, "Killed by User"

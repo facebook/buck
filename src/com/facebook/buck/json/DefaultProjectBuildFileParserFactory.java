@@ -16,21 +16,31 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final ProjectFilesystem projectFilesystem;
   private final String pythonInterpreter;
+  private final ImmutableSet<Description<?>> descriptions;
 
-  public DefaultProjectBuildFileParserFactory(ProjectFilesystem projectFilesystem,
-                                              String pythonInterpreter) {
+  public DefaultProjectBuildFileParserFactory(
+      ProjectFilesystem projectFilesystem,
+      String pythonInterpreter,
+      ImmutableSet<Description<?>> descriptions) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
+    this.descriptions = Preconditions.checkNotNull(descriptions);
   }
 
   @Override
   public ProjectBuildFileParser createParser(Iterable<String> commonIncludes) {
-    return new ProjectBuildFileParser(projectFilesystem, commonIncludes, pythonInterpreter);
+    return new ProjectBuildFileParser(
+        projectFilesystem,
+        commonIncludes,
+        pythonInterpreter,
+        descriptions);
   }
 }

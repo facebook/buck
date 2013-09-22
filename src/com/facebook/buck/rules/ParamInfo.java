@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 
 /**
  * Parameter information derived from the object returned by
- * {@link Description#getConstructorArg()}.
+ * {@link Description#createUnpopulatedConstructorArg()}.
  */
 // DO NOT EXPOSE OUT OF PACKAGE.
 class ParamInfo implements Comparable<ParamInfo> {

@@ -40,6 +40,7 @@ public interface Buildable {
    * {@link com.facebook.buck.shell.Genrule}), the order of the inputs is significant and in these
    * cases the inputs may be ordered in any way the rule feels most appropriate.
    */
+  // TODO(simons): Use the Description's constructor arg to generate these.
   public Iterable<String> getInputsToCompareToOutput();
 
   /**
@@ -48,6 +49,7 @@ public interface Buildable {
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException;
 
+  // TODO(simons): Base this on the Description constructor arg, but allow optional updates.
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException;
 
   /**

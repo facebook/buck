@@ -21,10 +21,12 @@ import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class BuildTargetPatternParser {
 
+  @VisibleForTesting
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
