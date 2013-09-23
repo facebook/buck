@@ -19,11 +19,11 @@ package com.facebook.buck.plugin.intellij.ui;
 import com.facebook.buck.plugin.intellij.commands.event.RuleEnd;
 import com.facebook.buck.plugin.intellij.commands.event.RuleStart;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.tree.TreeUtil;
 
 import java.awt.EventQueue;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -112,7 +112,7 @@ public class BuckProgressPanel {
   private void createUIComponents() {
     createModel();
     tree = new Tree(treeModel);
-    items = new ArrayList<>();
+    items = Lists.newArrayList();
     scrollPane = MessageTreeRenderer.install(tree);
   }
 

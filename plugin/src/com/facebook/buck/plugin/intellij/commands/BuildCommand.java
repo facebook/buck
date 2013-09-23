@@ -26,7 +26,7 @@ public class BuildCommand {
   private BuildCommand() {}
 
   public static void build(BuckRunner buckRunner, BuckTarget target) {
-    int exitCode = buckRunner.execute("build", target.getFullName());
+    int exitCode = buckRunner.executeAndListenToWebsocket("build", target.getFullName());
     if (exitCode != 0) {
       LOG.error(buckRunner.getStderr());
       return;

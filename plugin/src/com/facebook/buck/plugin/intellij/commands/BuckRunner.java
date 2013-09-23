@@ -79,10 +79,14 @@ public class BuckRunner {
         .add(buckPath)
         .addAll(ImmutableList.copyOf(args))
         .build();
+    return execute(command, ImmutableMap.<String, String>of());
+  }
+
+  public int executeAndListenToWebsocket(String... args) {
     if (socket.isPresent()) {
       socket.get().start();
     }
-    int exitCode = execute(command, ImmutableMap.<String, String>of());
+    int exitCode = execute(args);
     if (socket.isPresent()) {
       socket.get().stop();
     }
@@ -113,7 +117,11 @@ public class BuckRunner {
       stdout = stdoutFuture.get();
       stderr = stderrFuture.get();
       return exitCode;
-    } catch (IOException | ExecutionException | InterruptedException e) {
+    } catch (IOException e) {
+      LOG.error(e);
+    } catch (ExecutionException e) {
+      LOG.error(e);
+    } catch (InterruptedException e) {
       LOG.error(e);
     }
     return -1;
@@ -180,7 +188,8 @@ public class BuckRunner {
     return executorService.submit(new Callable<String>() {
       @Override
       public String call() throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        try {
           StringBuilder output = new StringBuilder();
           char[] buffer = new char[64];
           int bytesRead;
@@ -190,6 +199,8 @@ public class BuckRunner {
           String outputString = output.toString();
           // Unify line separators
           return outputString.replace("\r\n", "\n");
+        } finally {
+          reader.close();
         }
       }
     });

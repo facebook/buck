@@ -35,17 +35,16 @@ public class EventFactory {
     int timestamp = object.get("timestamp").getAsInt();
     String buildId = object.get("buildId").getAsString();
     int threadId = object.get("threadId").getAsInt();
-    switch (type) {
-      case RULE_START:
-        String name = object.get("buildRule").getAsJsonObject().get("name").getAsString();
-        return new RuleStart(timestamp, buildId, threadId, name);
-      case RULE_END:
-        name = object.get("buildRule").getAsJsonObject().get("name").getAsString();
-        String status = object.get("status").getAsString();
-        String cache = object.get("cacheResult").getAsString();
-        return new RuleEnd(timestamp, buildId, threadId, name, status, cache.equals("HIT"));
-      default:
-        LOG.warn("Unhandled message: " + object.toString());
+    if (type.equals(RULE_START)) {
+      String name = object.get("buildRule").getAsJsonObject().get("name").getAsString();
+      return new RuleStart(timestamp, buildId, threadId, name);
+    } else if (type.equals(RULE_END)) {
+      String name = object.get("buildRule").getAsJsonObject().get("name").getAsString();
+      String status = object.get("status").getAsString();
+      String cache = object.get("cacheResult").getAsString();
+      return new RuleEnd(timestamp, buildId, threadId, name, status, cache.equals("HIT"));
+    } else {
+      LOG.warn("Unhandled message: " + object.toString());
     }
     return null;
   }

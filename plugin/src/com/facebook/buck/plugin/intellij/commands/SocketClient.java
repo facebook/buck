@@ -21,17 +21,13 @@ import com.facebook.buck.plugin.intellij.commands.event.EventFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.openapi.diagnostic.Logger;
 
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.drafts.Draft;
+import org.java_websocket.drafts.Draft_17;
+import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,8 +39,6 @@ public class SocketClient {
   private final BuckPluginEventListener listener;
   private final URI echoUri;
   private WebSocketClient client;
-  private ClientUpgradeRequest request;
-  private DefaultWebSocket socket;
 
   SocketClient(int port, BuckPluginEventListener listener) {
     String address = "ws://localhost:" + port + "/comet/echo";
@@ -57,27 +51,26 @@ public class SocketClient {
   }
 
   public void start() {
+    client = new DefaultWebSocketClient(echoUri, new Draft_17());
     try {
-      client = new WebSocketClient();
-      request = new ClientUpgradeRequest();
-      socket = new DefaultWebSocket();
-      client.start();
-      client.connect(socket, echoUri, request);
-    } catch (Exception e) {
+      client.connectBlocking();
+    } catch (InterruptedException e) {
       LOG.error(e);
     }
   }
 
   public void stop() {
-    try {
-      client.stop();
-    } catch (Exception e) {
-      LOG.error(e);
-    }
+    client.close();
   }
 
-  private void dispatch(JsonObject object) {
-    Event event = EventFactory.factory(object);
+  private void dispatch(String message) {
+    JsonParser parser = new JsonParser();
+    JsonElement json = parser.parse(message);
+    if (!json.isJsonObject()) {
+      LOG.error(String.format("Invalid JSON object: %s", json.toString()));
+      return;
+    }
+    Event event = EventFactory.factory(json.getAsJsonObject());
     if (event != null) {
       listener.onEvent(event);
     }
@@ -87,27 +80,30 @@ public class SocketClient {
     public void onEvent(Event event);
   }
 
-  @WebSocket
-  // This class must be public because WebSocketClient from Jetty need to read the annotations of
-  // this class and dispatch messages received using reflection.
-  public class DefaultWebSocket {
+  private class DefaultWebSocketClient extends WebSocketClient {
 
-    public DefaultWebSocket() {
+    public DefaultWebSocketClient(URI echoUri, Draft draft) {
+      super(echoUri, draft);
     }
 
-    @OnWebSocketClose
-    public void onClose(int statusCode, String reason) {
+    @Override
+    public void onMessage(String message) {
+      dispatch(message);
     }
 
-    @OnWebSocketConnect
-    public void onConnect(Session session) {
+    @Override
+    public void onError(Exception e) {
+      LOG.error(e);
     }
 
-    @OnWebSocketMessage
-    public void onMessage(String msg) {
-      JsonParser parser = new JsonParser();
-      JsonElement json = parser.parse(msg);
-      dispatch(json.getAsJsonObject());
+    @Override
+    public void onOpen(ServerHandshake handshake) {
+      LOG.info(String.format("Websocket opened: %s", handshake.toString()));
+    }
+
+    @Override
+    public void onClose(int code, String reason, boolean remote) {
+      LOG.info(String.format("Websocket closed: %d %s", code, reason));
     }
   }
 }

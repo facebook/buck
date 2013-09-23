@@ -66,7 +66,9 @@ public class TargetsCommand {
         builder.add(new BuckTarget(type, name, basePath, srcBuilder.build()));
       }
       return builder.build();
-    } catch (IOException | RuntimeException e) {
+    } catch (IOException e) {
+      LOG.error(e);
+    } catch (RuntimeException e) {
       LOG.error(e);
     }
     return ImmutableList.of();
