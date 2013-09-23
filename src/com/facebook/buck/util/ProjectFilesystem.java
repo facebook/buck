@@ -192,29 +192,12 @@ public class ProjectFilesystem {
 
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
-    Files.createParentDirs(file);
-  }
-
-  public void writeLinesToPath(Iterable<String> lines, String pathRelativeToProjectRoot)
-      throws IOException {
-    MoreFiles.writeLinesToFile(lines, getFileForRelativePath(pathRelativeToProjectRoot));
+    mkdirs(file.getParentFile().toPath());
   }
 
   public void writeContentsToPath(String contents, Path pathRelativeToProjectRoot)
       throws IOException {
     Files.write(contents, getFileForRelativePath(pathRelativeToProjectRoot), Charsets.UTF_8);
-  }
-
-  /**
-   * Reads a file and returns its contents if the file exists.
-   * <p>
-   * If the file does not exist, {@link Optional#absent()} will be returned.
-   * <p>
-   * If the file exists, but cannot be read, a {@link RuntimeException} will be thrown.
-   */
-  public Optional<String> readFileIfItExists(String pathRelativeToProjectRoot) {
-    File fileToRead = getFileForRelativePath(pathRelativeToProjectRoot);
-    return readFileIfItExists(fileToRead, pathRelativeToProjectRoot);
   }
 
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
@@ -267,15 +250,6 @@ public class ProjectFilesystem {
   public List<String> readLines(Path pathRelativeToProjectRoot) throws IOException {
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
     return Files.readLines(file, Charsets.UTF_8);
-  }
-
-  public Optional<File> getFileIfExists(String path) {
-    File file = new File(path);
-    if (file.exists()) {
-      return Optional.of(file);
-    } else {
-      return Optional.absent();
-    }
   }
 
   /**
