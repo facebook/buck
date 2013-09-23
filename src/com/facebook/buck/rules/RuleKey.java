@@ -72,19 +72,7 @@ public class RuleKey {
    *     {@link com.google.common.hash.HashCode#toString()}.
    */
   public RuleKey(String hashString) {
-    this(HashCode.fromBytes(hashStringToBytes(hashString)));
-  }
-
-  private static byte[] hashStringToBytes(String hashString) {
-    byte[] bytes = new byte[hashString.length() / 2];
-    for (int i = 0; i < hashString.length(); i += 2) {
-      char highOrderBits = hashString.charAt(i);
-      char lowOrderBits = hashString.charAt(i + 1);
-      bytes[i / 2] = (byte)
-          ((Byte.parseByte(String.valueOf(highOrderBits), 16) << 4) +
-          Byte.parseByte(String.valueOf(lowOrderBits), 16));
-    }
-    return bytes;
+    this(HashCode.fromString(hashString));
   }
 
   public HashCode getHashCode() {
@@ -122,10 +110,6 @@ public class RuleKey {
   @Override
   public int hashCode() {
     return this.getHashCode().hashCode();
-  }
-
-  public static Builder builder() {
-    return new Builder();
   }
 
   /**
@@ -175,21 +159,14 @@ public class RuleKey {
     private static final Logger logger = Logger.getLogger(Builder.class.getName());
 
     private final Hasher hasher;
-    private boolean idempotent;
     @Nullable private List<String> logElms;
 
     private Builder() {
       hasher = Hashing.sha1().newHasher();
-      idempotent = true;
       if (logger.isLoggable(Level.INFO)) {
         logElms = Lists.newArrayList();
       }
       setBuckVersionUID();
-    }
-
-    private Builder(String header) {
-      this();
-      setHeader(header);
     }
 
     private Builder feed(byte[] bytes) {
@@ -207,13 +184,6 @@ public class RuleKey {
         logElms.add(String.format("buckVersionUID(%s):", buckVersionUID));
       }
       feed(buckVersionUID.getBytes()).separate();
-    }
-
-    private void setHeader(String header) {
-      if (logElms != null) {
-        logElms.add(String.format("header(%s):", header));
-      }
-      feed(header.getBytes()).separate();
     }
 
     private Builder setKey(String sectionLabel) {
@@ -387,7 +357,7 @@ public class RuleKey {
     }
 
     public RuleKey build() {
-      RuleKey ruleKey = idempotent ? new RuleKey(hasher.hash()) : new RuleKey((HashCode)null);
+      RuleKey ruleKey = new RuleKey(hasher.hash());
       if (logElms != null) {
         logger.info(String.format("RuleKey %s=%s", ruleKey, Joiner.on("").join(logElms)));
       }
