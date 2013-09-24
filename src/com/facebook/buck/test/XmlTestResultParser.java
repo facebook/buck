@@ -17,21 +17,38 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.util.XmlDomParser;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 
 public class XmlTestResultParser {
 
-  public static TestCaseSummary parse(File xml) throws IOException {
-    Document doc = XmlDomParser.parse(xml);
+  public static TestCaseSummary parse(File xmlFile) throws IOException {
+    String xmlFileContents = Files.toString(xmlFile, Charsets.UTF_8);
+
+    try {
+      return doParse(xmlFileContents);
+    } catch (NumberFormatException e) {
+      // This is an attempt to track down an inexplicable error that we have observed in the wild.
+      String message = createDetailedExceptionMessage(xmlFile, xmlFileContents);
+      throw new RuntimeException(message, e);
+    }
+  }
+
+  private static TestCaseSummary doParse(String xml) throws IOException {
+    Document doc = XmlDomParser.parse(new InputSource(new StringReader(xml)),
+        /* namespaceAware */ false);
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testcase".equals(root.getTagName()));
     String testCaseName = root.getAttribute("name");
@@ -83,5 +100,11 @@ public class XmlTestResultParser {
     }
 
     return new TestCaseSummary(testCaseName, testResults);
+  }
+
+  private static String createDetailedExceptionMessage(File xmlFile, String xmlFileContents) {
+    String message = "Error parsing test result data in " + xmlFile.getAbsolutePath() + ".\n" +
+        "File contents:\n" + xmlFileContents;
+    return message;
   }
 }
