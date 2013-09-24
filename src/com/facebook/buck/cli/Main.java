@@ -272,7 +272,6 @@ public final class Main {
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
-  @SuppressWarnings("PMD.EmptyCatchBlock")
   public int runMainWithExitCode(File projectRoot, String... args) throws IOException {
     if (args.length == 0) {
       return usage();
@@ -287,19 +286,34 @@ public final class Main {
     BuckConfig config = createBuckConfig(projectFilesystem, platform);
     Verbosity verbosity = VerbosityParser.parse(args);
     final Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
-    KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
 
+    // Find and execute command.
+    Optional<Command> command = Command.getCommandForName(args[0], console);
+    if (command.isPresent()) {
+      return executeCommand(projectFilesystem, config, console, command, args);
+    } else {
+      int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
+      if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
+        return usage();
+      } else {
+        return exitCode;
+      }
+    }
+  }
+
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  private int executeCommand(ProjectFilesystem projectFilesystem, BuckConfig config,
+                             Console console, Optional<Command> command, String... args)
+      throws IOException {
     // Create or get and invalidate cached command parameters.
     Parser parser;
-    Optional<Daemon> daemonOptional;
+    Optional<WebServer> webServerOptional = Optional.absent();
+    KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
     if (isDaemon()) {
-      Daemon daemon = getDaemon(projectFilesystem, config, console);
-      daemon.watchFileSystem();
-      daemon.initWebServer();
-      daemonOptional = Optional.of(daemon);
+      Daemon daemon = initializeDaemon(projectFilesystem, config, console);
+      webServerOptional = Optional.of(daemon).get().getWebServer();
       parser = daemon.getParser();
     } else {
-      daemonOptional = Optional.absent();
       parser = new Parser(projectFilesystem,
           knownBuildRuleTypes,
           console,
@@ -311,78 +325,73 @@ public final class Main {
     Clock clock = new DefaultClock();
     final BuckEventBus buildEventBus = new BuckEventBus(
         clock,
-         /* buildId */ MoreStrings.createRandomString());
+       /* buildId */ MoreStrings.createRandomString());
 
-    // Find and execute command.
-    Optional<Command> command = Command.getCommandForName(args[0], console);
-    if (command.isPresent()) {
-      Optional<WebServer> webServerOptional = Optional.absent();
-      if (daemonOptional.isPresent()) {
-        webServerOptional = daemonOptional.get().getWebServer();
-      }
-      ImmutableList<BuckEventListener> eventListeners =
-          addEventListeners(buildEventBus,
-              clock,
-              projectFilesystem,
-              console,
-              config,
-              webServerOptional);
-      String[] remainingArgs = new String[args.length - 1];
-      System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
+    ImmutableList<BuckEventListener> eventListeners =
+        addEventListeners(buildEventBus,
+            clock,
+            projectFilesystem,
+            console,
+            config,
+            webServerOptional);
+    String[] remainingArgs = new String[args.length - 1];
+    System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
-      Command executingCommand = command.get();
-      String commandName = executingCommand.name().toLowerCase();
+    Command executingCommand = command.get();
+    String commandName = executingCommand.name().toLowerCase();
 
-      buildEventBus.post(CommandEvent.started(commandName, isDaemon()));
+    buildEventBus.post(CommandEvent.started(commandName, isDaemon()));
+    // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
+    // running commands such as `buck clean`.
+    ArtifactCacheFactory artifactCacheFactory = getArtifactCacheFactory(buildEventBus);
 
-      // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
-      // running commands such as `buck clean`.
-      ArtifactCacheFactory artifactCacheFactory = new ArtifactCacheFactory() {
-        @Override
-        public ArtifactCache newInstance(AbstractCommandOptions options) {
-          if (options.isNoCache()) {
-            return new NoopArtifactCache();
-          } else {
-            buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
-            ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
-                .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
-            buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT));
-            return artifactCache;
-          }
-        }
-      };
+    int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
+        console,
+        projectFilesystem,
+        new KnownBuildRuleTypes(),
+        artifactCacheFactory,
+        buildEventBus,
+        parser,
+        platform));
 
-      int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
-          console,
-          projectFilesystem,
-          new KnownBuildRuleTypes(),
-          artifactCacheFactory,
-          buildEventBus,
-          parser,
-          platform));
+    buildEventBus.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
 
-      buildEventBus.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
-
-      ExecutorService buildEventBusExecutor = buildEventBus.getExecutorService();
-      buildEventBusExecutor.shutdown();
-      try {
-        buildEventBusExecutor.awaitTermination(15, TimeUnit.SECONDS);
-      } catch (InterruptedException e) {
-        // Give the eventBus 15 seconds to finish dispatching all events, but if they should fail
-        // to finish in that amount of time just eat it, the end user doesn't care.
-      }
-      for (BuckEventListener eventListener : eventListeners) {
-        eventListener.outputTrace();
-      }
-      return exitCode;
-    } else {
-      int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
-      if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
-        return usage();
-      } else {
-        return exitCode;
-      }
+    ExecutorService buildEventBusExecutor = buildEventBus.getExecutorService();
+    buildEventBusExecutor.shutdown();
+    try {
+      buildEventBusExecutor.awaitTermination(15, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      // Give the eventBus 15 seconds to finish dispatching all events, but if they should fail
+      // to finish in that amount of time just eat it, the end user doesn't care.
     }
+    for (BuckEventListener eventListener : eventListeners) {
+      eventListener.outputTrace();
+    }
+    return exitCode;
+  }
+
+  private ArtifactCacheFactory getArtifactCacheFactory(final BuckEventBus buildEventBus) {
+    return new ArtifactCacheFactory() {
+      @Override
+      public ArtifactCache newInstance(AbstractCommandOptions options) {
+        if (options.isNoCache()) {
+          return new NoopArtifactCache();
+        } else {
+          buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
+          ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
+              .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
+          buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT));
+          return artifactCache;
+        }
+      }
+    };
+  }
+
+  private Daemon initializeDaemon(ProjectFilesystem projectFilesystem, BuckConfig config, Console console) throws IOException {
+    Daemon daemon = getDaemon(projectFilesystem, config, console);
+    daemon.watchFileSystem();
+    daemon.initWebServer();
+    return daemon;
   }
 
   private void loadListenersFromBuckConfig(
