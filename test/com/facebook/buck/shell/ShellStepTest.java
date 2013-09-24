@@ -176,14 +176,14 @@ public class ShellStepTest extends EasyMockSupport {
     ShellStep command = createCommand(ENV, ARGS, PATH);
     assertEquals(
         String.format("(cd '%s' && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')",
-            PATH.getAbsolutePath()),
+            PATH.getPath()),
         command.getDescription(context));
   }
 
   @Test
   public void testDescriptionWithPath() {
     ShellStep command = createCommand(ImmutableMap.<String,String>of(), ARGS, PATH);
-    assertEquals(String.format("(cd '%s' && bash -c 'echo $V1 $V2')", PATH.getAbsolutePath()),
+    assertEquals(String.format("(cd '%s' && bash -c 'echo $V1 $V2')", PATH.getPath()),
         command.getDescription(context));
   }
 
