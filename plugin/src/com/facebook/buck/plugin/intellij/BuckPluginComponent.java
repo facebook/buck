@@ -148,6 +148,7 @@ public class BuckPluginComponent implements ProjectComponent {
    * @param target Specified target to build
    */
   public void buildTarget(final BuckTarget target) {
+    Preconditions.checkNotNull(target);
     try {
       final BuckRunner buckRunner = getBuckRunner();
       Task.Backgroundable task = new Task.Backgroundable(project,

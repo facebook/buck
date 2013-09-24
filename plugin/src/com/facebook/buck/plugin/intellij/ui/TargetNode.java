@@ -18,32 +18,41 @@ package com.facebook.buck.plugin.intellij.ui;
 
 import com.facebook.buck.plugin.intellij.BuckTarget;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
-import javax.swing.AbstractListModel;
+import javax.annotation.Nullable;
+import javax.swing.tree.DefaultMutableTreeNode;
 
-public class TargetsListModel extends AbstractListModel {
+public class TargetNode extends DefaultMutableTreeNode {
 
-  private ImmutableList<BuckTarget> targets;
-
-  public TargetsListModel(ImmutableList<BuckTarget> targets) {
-    Preconditions.checkNotNull(targets);
-    setTargets(targets);
+  public enum Type {
+    DIRECTORY,
+    JAVA_LIBRARY,
+    JAVA_BINARY,
+    JAVA_TEST,
+    OTHER
   }
 
-  public void setTargets(ImmutableList<BuckTarget> targets) {
-    Preconditions.checkNotNull(targets);
-    this.targets = ImmutableList.copyOf(targets);
-    fireContentsChanged(this, 0 /* start index */ , this.targets.size() + 1 /* end index */);
+  private final BuckTarget target;
+
+  private final String name;
+  private final Type type;
+
+  public TargetNode(Type type, String name, @Nullable BuckTarget target) {
+    super();
+    this.name = Preconditions.checkNotNull(name);
+    this.type = Preconditions.checkNotNull(type);
+    this.target = target;
   }
 
-  @Override
-  public int getSize() {
-    return targets.size();
+  public Type getType() {
+    return type;
   }
 
-  @Override
-  public Object getElementAt(int index) {
-    return targets.get(index);
+  public String getName() {
+    return name;
+  }
+
+  public BuckTarget getTarget() {
+    return target;
   }
 }

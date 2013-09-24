@@ -16,6 +16,7 @@
 
 package com.facebook.buck.plugin.intellij;
 
+import com.facebook.buck.plugin.intellij.ui.TargetNode;
 import com.google.common.base.Preconditions;
 
 public class BuckTarget {
@@ -49,5 +50,19 @@ public class BuckTarget {
 
   public String getBasePath() {
     return basePath;
+  }
+
+  public TargetNode createTreeNode() {
+    TargetNode.Type nodeType;
+    if ("java_library".equals(type)) {
+      nodeType = TargetNode.Type.JAVA_LIBRARY;
+    } else if ("java_binary".equals(type)) {
+      nodeType = TargetNode.Type.JAVA_BINARY;
+    } else if ("java_test".equals(type)) {
+      nodeType = TargetNode.Type.JAVA_TEST;
+    } else {
+      nodeType = TargetNode.Type.OTHER;
+    }
+    return new TargetNode(nodeType, getFullName(), this);
   }
 }
