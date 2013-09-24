@@ -35,8 +35,6 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JToolBar;
-import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
@@ -49,9 +47,7 @@ public class BuckTargetsPanel {
   private JPanel targetsPanel;
   private JList targetsList;
   private JButton refreshTargetsButton;
-  private JToolBar toolBar;
   private JButton cleanButton;
-  private JScrollPane scrollPane;
 
   public BuckTargetsPanel(BuckPluginComponent component) {
     this.component = Preconditions.checkNotNull(component);
@@ -61,6 +57,7 @@ public class BuckTargetsPanel {
     return targetsPanel;
   }
 
+  @SuppressWarnings("unused")
   private void createUIComponents() {
     targetsPanel = new JPanel();
     targetsPanel.addAncestorListener(new AncestorListener() {

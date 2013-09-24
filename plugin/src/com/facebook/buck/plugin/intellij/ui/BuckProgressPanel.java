@@ -41,6 +41,7 @@ public class BuckProgressPanel {
 
   private JPanel panel;
   private JTree tree;
+  @SuppressWarnings("unused")
   private JScrollPane scrollPane;
   private DefaultTreeModel treeModel;
   private ProgressNode treeRoot;
@@ -109,6 +110,7 @@ public class BuckProgressPanel {
     throw new RuntimeException("Node of rule_start that matches rule_end not found!");
   }
 
+  @SuppressWarnings("unused")
   private void createUIComponents() {
     createModel();
     tree = new Tree(treeModel);

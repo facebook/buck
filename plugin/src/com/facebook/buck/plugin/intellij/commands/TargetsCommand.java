@@ -56,14 +56,7 @@ public class TargetsCommand {
         String basePath = target.get("buck.base_path").asText();
         String name = target.get("name").asText();
         String type = target.get("type").asText();
-        ImmutableList.Builder<String> srcBuilder = ImmutableList.builder();
-        JsonNode srcs = target.get("srcs");
-        if (srcs != null && srcs.isArray()) {
-          for (JsonNode src : srcs) {
-            srcBuilder.add(src.asText());
-          }
-        }
-        builder.add(new BuckTarget(type, name, basePath, srcBuilder.build()));
+        builder.add(new BuckTarget(type, name, basePath));
       }
       return builder.build();
     } catch (IOException e) {

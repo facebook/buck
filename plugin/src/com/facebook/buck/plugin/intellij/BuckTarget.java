@@ -17,20 +17,17 @@
 package com.facebook.buck.plugin.intellij;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 public class BuckTarget {
 
   private final String type;
   private final String name;
   private final String basePath;
-  private final ImmutableList<String> sources;
 
-  public BuckTarget(String type, String name, String basePath, ImmutableList<String> sources) {
+  public BuckTarget(String type, String name, String basePath) {
     this.type = Preconditions.checkNotNull(type);
     this.name = Preconditions.checkNotNull(name);
     this.basePath = Preconditions.checkNotNull(basePath);
-    this.sources = Preconditions.checkNotNull(sources);
   }
 
   public String getName() {

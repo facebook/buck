@@ -3,6 +3,7 @@
   <property name="src.dir" value="${basedir}/src" />
   <property name="aosp.src.dir" value="third-party/java/aosp/src" />
   <property name="test.dir" value="${basedir}/test" />
+  <property name="plugin.dir" value="${basedir}/plugin" />
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="third-party.dir" value="${basedir}/third-party" />
   <property name="build.dir" value="${basedir}/build" />
@@ -229,6 +230,9 @@
         <include name="**/*.java"/>
       </fileset>
       <fileset dir="${test.dir}">
+        <include name="**/*.java"/>
+      </fileset>
+      <fileset dir="${plugin.dir}">
         <include name="**/*.java"/>
       </fileset>
     </pmd>

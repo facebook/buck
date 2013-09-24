@@ -17,9 +17,7 @@
 package com.facebook.buck.plugin.intellij.ui;
 
 import com.facebook.buck.plugin.intellij.BuckPluginComponent;
-import com.facebook.buck.plugin.intellij.BuckTarget;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.wm.ToolWindow;
