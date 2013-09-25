@@ -223,7 +223,7 @@ public class ApkGenruleTest {
         .put("OUT", expectedApkOutput).build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
-        ImmutableList.of("/bin/bash", "-c", "python signer.py $APK key.properties > $OUT"),
+        ImmutableList.of("/bin/bash", "-e", "-c", "python signer.py $APK key.properties > $OUT"),
         genruleCommand.getShellCommand(executionContext));
 
     EasyMock.verify(parser);

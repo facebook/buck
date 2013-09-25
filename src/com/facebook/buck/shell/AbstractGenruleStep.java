@@ -103,7 +103,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     // The priority sequence is
     //   "cmd.exe /c winCommand" (Windows Only)
-    //   "/bin/bash -c shCommand" (Non-windows Only)
+    //   "/bin/bash -e -c shCommand" (Non-windows Only)
     //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
     String command;
     if (context.getPlatform() == Platform.WINDOWS) {
@@ -129,7 +129,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
             getFullyQualifiedName());
       }
       command = replaceMatches(context.getProjectFilesystem(), commandInUse);
-      return ImmutableList.of("/bin/bash", "-c", command);
+      return ImmutableList.of("/bin/bash", "-e", "-c", command);
     }
   }
 
