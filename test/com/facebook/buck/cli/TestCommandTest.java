@@ -275,11 +275,6 @@ public class TestCommandTest {
     return new DependencyGraph(graph);
   }
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> d80e841... Add "contacts" as an option to java_test()
   /**
    * Tests the --xml flag, ensuring that test result data is correctly
    * formatted.
@@ -394,10 +389,6 @@ public class TestCommandTest {
       (expectedStr.equals(firstChild.getNodeValue())));
   }
 
-<<<<<<< HEAD
-=======
->>>>>>> Add "contacts" as an option to java_test()
->>>>>>> d80e841... Add "contacts" as an option to java_test()
   @Test
   public void testGetCandidateRulesByIncludedLabels() throws CmdLineException {
     TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
