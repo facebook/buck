@@ -24,14 +24,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Closer;
 import com.google.common.io.Files;
 
 import java.io.BufferedWriter;
@@ -199,19 +197,12 @@ public class MergeAndroidResourcesStep implements Step {
   public static String generateJavaCodeForPackageAndResources(String packageName,
       SortedSet<Resource> resources) {
     StringBuilder b = new StringBuilder();
-    Closer closer = Closer.create();
-    PrintWriter writer = closer.register(new PrintWriter(CharStreams.asWriter(b)));
-    try {
+
+    try (PrintWriter writer = new PrintWriter(CharStreams.asWriter(b))) {
       writeJavaCodeForPackageAndResources(writer, packageName, resources);
     } catch (IOException e) {
       // Impossible.
       throw new RuntimeException(e);
-    } finally {
-      try {
-        closer.close();
-      } catch (IOException e) {
-        Throwables.propagate(e);
-      }
     }
     return b.toString();
   }

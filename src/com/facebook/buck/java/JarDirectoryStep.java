@@ -32,7 +32,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closer;
 import com.google.common.io.Files;
 
 import java.io.ByteArrayInputStream;
@@ -228,16 +227,13 @@ public class JarDirectoryStep implements Step {
   }
 
   private Manifest readManifest(ZipFile zip, ZipEntry manifestMfEntry) throws IOException {
-    Closer closer = Closer.create();
-    ByteArrayOutputStream output = closer.register(
-        new ByteArrayOutputStream((int) manifestMfEntry.getSize()));
-    InputStream stream = closer.register(zip.getInputStream(manifestMfEntry));
-    try {
+    try (
+        ByteArrayOutputStream output = new ByteArrayOutputStream((int) manifestMfEntry.getSize());
+        InputStream stream = zip.getInputStream(manifestMfEntry);
+    ) {
       ByteStreams.copy(stream, output);
       ByteArrayInputStream rawManifest = new ByteArrayInputStream(output.toByteArray());
       return new Manifest(rawManifest);
-    } finally {
-      closer.close();
     }
   }
 
