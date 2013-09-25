@@ -97,7 +97,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   synchronized void render() {
     ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
     String nextFrame = clearLastRender() + Joiner.on("\n").join(lines);
-    nextFrame = ansi.asNoWrap(nextFrame);
     lastNumLinesPrinted = lines.size();
 
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
@@ -108,6 +107,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         if (console.getStdOut().isDirty() || console.getStdErr().isDirty()) {
           renderScheduler.shutdown();
         } else if (!nextFrame.isEmpty()) {
+          nextFrame = ansi.asNoWrap(nextFrame);
           console.getStdErr().getRawStream().println(nextFrame);
         }
       }
