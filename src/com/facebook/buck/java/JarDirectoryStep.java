@@ -215,7 +215,12 @@ public class JarDirectoryStep implements Step {
         continue;
       }
 
-      jar.putNextEntry(entry);
+      // Reinitialize the compressed field to -1 as the ZipEntry(String) constructor would.
+      // See https://github.com/spearce/buck/commit/8338c1c3d4a546f577eed0c9941d9f1c2ba0a1b7.
+      ZipEntry newEntry = new ZipEntry(entry);
+      newEntry.setCompressedSize(-1);
+
+      jar.putNextEntry(newEntry);
       InputStream inputStream = zip.getInputStream(entry);
       ByteStreams.copy(inputStream, jar);
       jar.closeEntry();
