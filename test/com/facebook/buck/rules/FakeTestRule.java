@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,11 +40,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
                        ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this(type,
         labels,
-        new BuildRuleParams(
-            target,
-            deps,
-            visibilityPatterns,
-            /* pathRelativizer */ Functions.<String>identity()));
+        new FakeBuildRuleParams(target, deps, visibilityPatterns));
   }
 
   public FakeTestRule(BuildRuleType type,

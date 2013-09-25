@@ -23,14 +23,22 @@ import com.google.common.base.Preconditions;
 public class DefaultBuildRuleBuilderParams implements AbstractBuildRuleBuilderParams {
 
   private final Function<String, String> pathRelativizer;
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
-  public DefaultBuildRuleBuilderParams(ProjectFilesystem projectFilesystem) {
+  public DefaultBuildRuleBuilderParams(ProjectFilesystem projectFilesystem,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.pathRelativizer = Preconditions.checkNotNull(projectFilesystem).getPathRelativizer();
+    this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
   }
 
   @Override
   public Function<String, String> getPathRelativizer() {
     return pathRelativizer;
+  }
+
+  @Override
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+    return ruleKeyBuilderFactory;
   }
 
 }

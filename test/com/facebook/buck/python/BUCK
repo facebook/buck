@@ -13,5 +13,6 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:io',
     '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
   ],
 )

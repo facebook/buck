@@ -45,7 +45,9 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -66,7 +68,6 @@ import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -130,15 +131,9 @@ public class DefaultJavaLibraryRuleTest {
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = new BuildTarget("//android/java", "resources");
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
-    DefaultJavaLibraryRule javaRule =new DefaultJavaLibraryRule(
-        new BuildRuleParams(
-            buildTarget,
-            deps,
-            visibilityPatterns,
-            /* pathRelativizer */ Functions.<String>identity()),
-        ImmutableSet.<String>of() /* srcs */,
+    DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
+        new FakeBuildRuleParams(buildTarget),
+        /* srcs */ ImmutableSet.<String>of(),
         ImmutableSet.of(
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
@@ -169,15 +164,9 @@ public class DefaultJavaLibraryRuleTest {
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = new BuildTarget("//android/java/src", "resources");
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(
-            buildTarget,
-            deps,
-            visibilityPatterns,
-            /* pathRelativizer */ Functions.<String>identity()),
-        ImmutableSet.<String>of() /* srcs */,
+        new FakeBuildRuleParams(buildTarget),
+        /* srcs */ ImmutableSet.<String>of(),
         ImmutableSet.<SourcePath>of(
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
@@ -209,15 +198,9 @@ public class DefaultJavaLibraryRuleTest {
     // android/java/src/com/facebook/base/data.json
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = new BuildTarget("//android/java/src/com/facebook", "resources");
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
-    ImmutableSet<BuildTargetPattern> visibilityPatterns = ImmutableSet.of();
     DefaultJavaLibraryRule javaRule = new DefaultJavaLibraryRule(
-        new BuildRuleParams(
-            buildTarget,
-            deps,
-            visibilityPatterns,
-            /* pathRelativizer */ Functions.<String>identity()),
-        ImmutableSet.<String>of() /* srcs */,
+        new FakeBuildRuleParams(buildTarget),
+        /* srcs */ ImmutableSet.<String>of(),
         ImmutableSet.of(
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
@@ -258,7 +241,7 @@ public class DefaultJavaLibraryRuleTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(
-            new DefaultBuildRuleBuilderParams(projectFilesystem))
+            new DefaultBuildRuleBuilderParams(projectFilesystem, new FakeRuleKeyBuilderFactory()))
         .setBuildTarget(buildTarget)
         .addSrc(src));
 
@@ -640,11 +623,7 @@ public class DefaultJavaLibraryRuleTest {
       ImmutableSet<BuildRule> deps,
       boolean exportDeps) {
     return new DefaultJavaLibraryRule(
-        new BuildRuleParams(buildTarget,
-            /* deps */ ImmutableSortedSet.copyOf(deps),
-            /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-            /* pathRelativizer */ Functions.<String>identity()
-        ),
+        new FakeBuildRuleParams(buildTarget, ImmutableSortedSet.copyOf(deps)),
         srcs,
         /* resources */ ImmutableSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<String>absent(),
@@ -828,7 +807,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new PrebuiltJarRule(
-            createBuildRuleParams(target),
+            new FakeBuildRuleParams(target),
             "MyJar",
             Optional.<String>absent(),
             Optional.<String>absent());
@@ -838,7 +817,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new JavaBinaryRule(
-            createBuildRuleParams(target),
+            new FakeBuildRuleParams(target),
             "com.facebook.Main",
             null,
             null,
@@ -849,7 +828,7 @@ public class DefaultJavaLibraryRuleTest {
       @Override
       public BuildRule createRule(BuildTarget target) {
         return new DefaultJavaLibraryRule(
-            createBuildRuleParams(target),
+            new FakeBuildRuleParams(target),
             ImmutableSet.<String>of("MyClass.java"),
             ImmutableSet.<SourcePath>of(),
             Optional.of("MyProguardConfig"),
@@ -862,14 +841,6 @@ public class DefaultJavaLibraryRuleTest {
 
     private AnnotationProcessorTarget(String targetName) {
       this.targetName = targetName;
-    }
-
-    protected BuildRuleParams createBuildRuleParams(BuildTarget target) {
-      return new BuildRuleParams(
-          target,
-          ImmutableSortedSet.<BuildRule>of(),
-          ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-          /* pathRelativizer */ Functions.<String>identity());
     }
 
     public BuildTarget createTarget() {
@@ -944,7 +915,8 @@ public class DefaultJavaLibraryRuleTest {
               buildTarget,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
               /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-              projectFilesystem.getPathRelativizer()),
+              projectFilesystem.getPathRelativizer(),
+              new FakeRuleKeyBuilderFactory()),
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<String>absent(),

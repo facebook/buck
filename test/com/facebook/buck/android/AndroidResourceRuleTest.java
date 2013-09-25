@@ -27,14 +27,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.Paths;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -70,11 +69,9 @@ public class AndroidResourceRuleTest {
     // Create an android_library rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
-        ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        /* pathRelativizer */ Functions.<String>identity());
+        ImmutableSortedSet.<BuildRule>of());
     AndroidResourceRule androidResourceRule = new AndroidResourceRule(
         buildRuleParams,
         "java/src/com/facebook/base/res",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2012-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,19 +16,17 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.rules.RuleKey.Builder;
 
-public class BuildRuleParamsFactory {
+/**
+ * Basic implementation of {@link RuleKeyBuilderFactory} that does not inject any contextual
+ * information when creating a {@link RuleKey.Builder}.
+ */
+public class FakeRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
 
-  /** Utility class: do not instantiate. */
-  private BuildRuleParamsFactory() {}
-
-  /**
-   * @return a {@link BuildRuleParams} with no deps or visibility patterns, and a pathRelativizer
-   *     that returns the parameter it receives verbatim.
-   */
-  public static BuildRuleParams createTrivialBuildRuleParams(BuildTarget buildTarget) {
-    return new FakeBuildRuleParams(Preconditions.checkNotNull(buildTarget));
+  @Override
+  public Builder newInstance(BuildRule buildRule) {
+    return RuleKey.builder(buildRule);
   }
+
 }

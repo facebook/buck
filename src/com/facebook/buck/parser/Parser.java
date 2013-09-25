@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -107,6 +108,7 @@ public class Parser {
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final Console console;
 
   /**
@@ -161,7 +163,8 @@ public class Parser {
       KnownBuildRuleTypes buildRuleTypes,
       Console console,
       String pythonInterpreter,
-      ImmutableSet<Pattern> tempFilePatterns) {
+      ImmutableSet<Pattern> tempFilePatterns,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this(projectFilesystem,
         buildRuleTypes,
         console,
@@ -175,7 +178,8 @@ public class Parser {
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
         new DefaultProjectBuildFileParserFactory(projectFilesystem, pythonInterpreter),
-        tempFilePatterns);
+        tempFilePatterns,
+        ruleKeyBuilderFactory);
   }
 
   /**
@@ -190,7 +194,8 @@ public class Parser {
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
          ProjectBuildFileParserFactory buildFileParserFactory,
-         ImmutableSet<Pattern> tempFilePatterns) {
+         ImmutableSet<Pattern> tempFilePatterns,
+         RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.console = Preconditions.checkNotNull(console);
@@ -199,6 +204,7 @@ public class Parser {
     this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
+    this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
     this.parsedBuildFiles = ArrayListMultimap.create();
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
@@ -481,7 +487,8 @@ public class Parser {
           projectFilesystem,
           buildFileTree,
           buildTargetParser,
-          target));
+          target,
+          ruleKeyBuilderFactory));
       Object existingRule = knownBuildTargets.put(target, buildRuleBuilder);
       if (existingRule != null) {
         throw new RuntimeException("Duplicate definition for " + target.getFullyQualifiedName());

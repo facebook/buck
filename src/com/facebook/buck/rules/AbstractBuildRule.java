@@ -34,6 +34,7 @@ abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
@@ -41,6 +42,7 @@ abstract class AbstractBuildRule implements BuildRule {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.deps = buildRuleParams.getDeps();
     this.visibilityPatterns = buildRuleParams.getVisibilityPatterns();
+    this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
 
     for (BuildRule dep : this.deps) {
       if (!dep.isVisibleTo(buildTarget)) {
@@ -167,7 +169,7 @@ abstract class AbstractBuildRule implements BuildRule {
     if (ruleKeyPair == null) {
       synchronized (this) {
         if (ruleKeyPair == null) {
-          RuleKey.Builder builder = RuleKey.builder(this);
+          RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(this);
           appendToRuleKey(builder);
           ruleKeyPair = builder.build();
         }

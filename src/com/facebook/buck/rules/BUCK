@@ -108,6 +108,7 @@ java_library(
     'ProjectConfigRule.java',
     'RecordArtifactsInDirectoryStep.java',
     'ResourcesAttributeBuilder.java',
+    'RuleKeyBuilderFactory.java',
     'SourcePaths.java',
     'SrcsAttributeBuilder.java',
     'TestRule.java',

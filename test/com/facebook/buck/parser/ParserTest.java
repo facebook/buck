@@ -42,6 +42,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
@@ -183,7 +184,8 @@ public class ParserTest extends EasyMockSupport {
         buildTargetParser,
         knownBuildTargets,
         buildFileParserFactory,
-        tempFilePatterns);
+        tempFilePatterns,
+        new FakeRuleKeyBuilderFactory());
   }
 
   /**
@@ -207,7 +209,8 @@ public class ParserTest extends EasyMockSupport {
         new KnownBuildRuleTypes(),
         new TestConsole(),
         BuckTestConstant.PYTHON_INTERPRETER,
-        tempFilePatterns);
+        tempFilePatterns,
+        new FakeRuleKeyBuilderFactory());
 
     parser.parseRawRulesInternal(ruleObjects);
     RawRulePredicate predicate = alwaysTrue();

@@ -19,12 +19,16 @@ package com.facebook.buck.rules;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 
-public class FakeAbstractBuildRuleBuilderParams implements
-    AbstractBuildRuleBuilderParams {
+public class FakeAbstractBuildRuleBuilderParams implements AbstractBuildRuleBuilderParams {
 
   @Override
   public Function<String, String> getPathRelativizer() {
     return Functions.identity();
+  }
+
+  @Override
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+    return new FakeRuleKeyBuilderFactory();
   }
 
 }

@@ -38,9 +38,11 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   protected Set<BuildTargetPattern> visibilityPatterns = Sets.newHashSet();
 
   private final Function<String, String> pathRelativizer;
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   protected AbstractBuildRuleBuilder(AbstractBuildRuleBuilderParams params) {
     this.pathRelativizer = params.getPathRelativizer();
+    this.ruleKeyBuilderFactory = params.getRuleKeyBuilderFactory();
   }
 
   @Override
@@ -113,6 +115,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     return new BuildRuleParams(getBuildTarget(),
         getDepsAsBuildRules(ruleResolver),
         getVisibilityPatterns(),
-        pathRelativizer);
+        pathRelativizer,
+        ruleKeyBuilderFactory);
   }
 }

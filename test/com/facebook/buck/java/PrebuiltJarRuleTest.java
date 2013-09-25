@@ -20,21 +20,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -56,11 +52,7 @@ public class PrebuiltJarRuleTest {
 
   @Before
   public void setUp() {
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
-        new BuildTarget("//lib", "junit"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        /* pathRelativizer */ Functions.<String>identity());
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(new BuildTarget("//lib", "junit"));
     junitJarRule = new PrebuiltJarRule(buildRuleParams,
         PATH_TO_JUNIT_JAR,
         Optional.of("lib/junit-4.11-sources.jar"),

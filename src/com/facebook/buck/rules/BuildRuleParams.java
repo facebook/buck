@@ -34,15 +34,18 @@ public class BuildRuleParams {
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
   private final Function<String, String> pathRelativizer;
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   public BuildRuleParams(BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns,
-      Function<String, String> pathRelativizer) {
+      Function<String, String> pathRelativizer,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.deps = Preconditions.checkNotNull(deps);
     this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
     this.pathRelativizer = Preconditions.checkNotNull(pathRelativizer);
+    this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
   }
 
   public BuildTarget getBuildTarget() {
@@ -59,5 +62,9 @@ public class BuildRuleParams {
 
   public Function<String, String> getPathRelativizer() {
     return pathRelativizer;
+  }
+
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+    return ruleKeyBuilderFactory;
   }
 }

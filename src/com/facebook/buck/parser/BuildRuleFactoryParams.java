@@ -23,6 +23,7 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -67,12 +68,14 @@ public final class BuildRuleFactoryParams {
       ProjectFilesystem filesystem,
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
-      BuildTarget target) {
+      BuildTarget target,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this(instance,
         filesystem,
         buildFiles,
         buildTargetParser,
         target,
+        ruleKeyBuilderFactory,
         false /* ignoreFileExistenceChecks */);
   }
 
@@ -83,6 +86,7 @@ public final class BuildRuleFactoryParams {
       BuildFileTree buildFiles,
       BuildTargetParser buildTargetParser,
       BuildTarget target,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
       boolean ignoreFileExistenceChecks) {
     this.instance = instance;
     this.filesystem = filesystem;
@@ -101,7 +105,8 @@ public final class BuildRuleFactoryParams {
       }
     };
 
-    this.abstractBuildRuleFactoryParams = new DefaultBuildRuleBuilderParams(filesystem);
+    this.abstractBuildRuleFactoryParams = new DefaultBuildRuleBuilderParams(filesystem,
+        ruleKeyBuilderFactory);
   }
 
   /** This is package-private so that only AbstractBuildRuleFactory can access it. */

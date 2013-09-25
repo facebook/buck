@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.rules.BuildRuleSuccess.Type;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -192,11 +191,10 @@ public class AbstractBuildRuleTest {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
         sortedDeps,
-        visibilityPatterns,
-        /* pathRelativizer */ Functions.<String>identity());
+        visibilityPatterns);
     return new AbstractBuildRule(buildRuleParams) {
       @Override
       public BuildRuleType getType() {

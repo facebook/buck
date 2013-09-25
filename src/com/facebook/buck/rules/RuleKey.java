@@ -116,7 +116,7 @@ public class RuleKey {
   /**
    * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
    */
-  public static Builder builder(BuildRule rule) throws IOException {
+  public static Builder builder(BuildRule rule) {
     Builder builder = new Builder(rule)
         .set("name", rule.getFullyQualifiedName())
 
@@ -127,10 +127,6 @@ public class RuleKey {
   }
 
   public static class Builder {
-    private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
-
-    @VisibleForTesting
-    static final String buckVersionUID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
 
     @VisibleForTesting
     static final byte SEPARATOR = '\0';
@@ -147,7 +143,6 @@ public class RuleKey {
       if (logger.isLoggable(Level.INFO)) {
         this.logElms = Lists.newArrayList();
       }
-      setBuckVersionUID();
     }
 
     private Builder feed(byte[] bytes) {
@@ -158,13 +153,6 @@ public class RuleKey {
     private Builder separate() {
       hasher.putByte(SEPARATOR);
       return this;
-    }
-
-    private void setBuckVersionUID() {
-      if (logElms != null) {
-        logElms.add(String.format("buckVersionUID(%s):", buckVersionUID));
-      }
-      feed(buckVersionUID.getBytes()).separate();
     }
 
     private Builder setKey(String sectionLabel) {

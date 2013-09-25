@@ -16,19 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Preconditions;
+public interface RuleKeyBuilderFactory {
 
-public class BuildRuleParamsFactory {
-
-  /** Utility class: do not instantiate. */
-  private BuildRuleParamsFactory() {}
-
-  /**
-   * @return a {@link BuildRuleParams} with no deps or visibility patterns, and a pathRelativizer
-   *     that returns the parameter it receives verbatim.
-   */
-  public static BuildRuleParams createTrivialBuildRuleParams(BuildTarget buildTarget) {
-    return new FakeBuildRuleParams(Preconditions.checkNotNull(buildTarget));
-  }
+  public RuleKey.Builder newInstance(BuildRule buildRule);
 }

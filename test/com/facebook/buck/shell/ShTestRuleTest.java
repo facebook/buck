@@ -18,15 +18,11 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
@@ -44,7 +40,7 @@ public class ShTestRuleTest extends EasyMockSupport {
   @Test
   public void testHasTestResultFiles() {
     ShTestRule shTest = new ShTestRule(
-        createBuildRuleParams(),
+        new FakeBuildRuleParams(new BuildTarget("//test/com/example", "my_sh_test")),
         "run_test.sh",
         /* labels */ ImmutableSet.<String>of());
 
@@ -57,13 +53,5 @@ public class ShTestRuleTest extends EasyMockSupport {
 
     assertTrue("hasTestResultFiles() should return true if result.json exists.",
         shTest.hasTestResultFiles(executionContext));
-  }
-
-  private static BuildRuleParams createBuildRuleParams() {
-    return new BuildRuleParams(
-        BuildTargetFactory.newInstance("//test/com/example:my_sh_test"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        /* pathRelativizer */ Functions.<String>identity());
   }
 }

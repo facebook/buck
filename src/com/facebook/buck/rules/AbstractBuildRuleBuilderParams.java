@@ -34,4 +34,5 @@ public interface AbstractBuildRuleBuilderParams {
    */
   public Function<String, String> getPathRelativizer();
 
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory();
 }

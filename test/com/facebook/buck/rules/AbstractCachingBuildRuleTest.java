@@ -28,7 +28,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -39,7 +38,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.concurrent.MoreFutures;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -131,9 +129,6 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     resetAll();
 
     String expectedRuleKeyHash = Hashing.sha1().newHasher()
-        .putBytes(RuleKey.Builder.buckVersionUID.getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-
         .putByte(RuleKey.Builder.SEPARATOR)
         .putBytes("name".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
@@ -235,10 +230,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   @Test
   public void testAbiRuleCanAvoidRebuild()
       throws InterruptedException, ExecutionException, IOException {
-    BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
-        /* sortedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        /* pathRelativizer */ Functions.<String>identity());
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget);
     TestAbstractCachingBuildRule buildRule = new TestAbstractCachingBuildRule(buildRuleParams);
 
     // The EventBus should be updated with events indicating how the rule was built.
@@ -393,10 +385,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
-    BuildRuleParams buildRuleParams = new BuildRuleParams(buildTarget,
-        sortedDeps,
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        /* pathRelativizer */ Functions.<String>identity());
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget, sortedDeps);
     return new BuildableAbstractCachingBuildRule(buildRuleParams,
         inputRules,
         pathToOutputFile,

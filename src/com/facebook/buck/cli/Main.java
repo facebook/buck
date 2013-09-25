@@ -26,9 +26,13 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.ArtifactCacheEvent;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKey.Builder;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
@@ -79,6 +83,9 @@ public final class Main {
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
   private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
 
+  private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
+  private static final String BUCK_VERSION_UID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
+
   private final PrintStream stdOut;
   private final PrintStream stdErr;
 
@@ -109,7 +116,8 @@ public final class Main {
           new KnownBuildRuleTypes(),
           console,
           config.getPythonInterpreter(),
-          config.getTempFilePatterns());
+          config.getTempFilePatterns(),
+          createRuleKeyBuilderFactory(config));
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
@@ -296,7 +304,8 @@ public final class Main {
           knownBuildRuleTypes,
           console,
           config.getPythonInterpreter(),
-          config.getTempFilePatterns());
+          config.getTempFilePatterns(),
+          createRuleKeyBuilderFactory(config));
     }
 
     Clock clock = new DefaultClock();
@@ -485,6 +494,22 @@ public final class Main {
 
     ImmutableList<File> configFiles = configFileBuilder.build();
     return BuckConfig.createFromFiles(projectFilesystem, configFiles, platform);
+  }
+
+  /**
+   * @param buckConfig This is currently unused, but we plan to use this in the near future so that
+   *     global user configurations can be included when computing keys.
+   */
+  @SuppressWarnings("unused")
+  private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(BuckConfig buckConfig) {
+    return new RuleKeyBuilderFactory() {
+      @Override
+      public Builder newInstance(BuildRule buildRule) {
+        RuleKey.Builder builder = RuleKey.builder(buildRule);
+        builder.set("buckVersionUid", BUCK_VERSION_UID);
+        return builder;
+      }
+    };
   }
 
   @VisibleForTesting
