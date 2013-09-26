@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
+package com.facebook.buck.java.classes;
 
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ZipFileTraversal;

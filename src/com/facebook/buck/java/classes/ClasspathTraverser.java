@@ -14,23 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
-
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
+package com.facebook.buck.java.classes;
 
 import java.io.IOException;
 
-abstract class AbstractFileLike implements FileLike {
-  @Override
-  public HashCode fastHash() throws IOException {
-    // Default non-fast implementation.
-    return ByteStreams.hash(new FileLikeInputSupplier(this), Hashing.sha1());
-  }
+public interface ClasspathTraverser {
 
-  @Override
-  public String toString() {
-    return getRelativePath() + " (in " + getContainer() + ")";
-  }
+  public void traverse(ClasspathTraversal traversal) throws IOException;
+
 }

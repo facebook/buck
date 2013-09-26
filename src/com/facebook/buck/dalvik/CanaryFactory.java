@@ -16,6 +16,8 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.java.classes.AbstractFileLike;
+import com.facebook.buck.java.classes.FileLike;
 import com.google.common.base.Preconditions;
 
 import java.io.ByteArrayInputStream;

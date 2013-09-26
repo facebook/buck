@@ -14,12 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
+package com.facebook.buck.java.classes;
+
+import com.google.common.base.Preconditions;
+import com.google.common.io.InputSupplier;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-public interface ClasspathTraverser {
+public class FileLikeInputSupplier implements InputSupplier<InputStream> {
+  private final FileLike fileLike;
 
-  public void traverse(ClasspathTraversal traversal) throws IOException;
+  public FileLikeInputSupplier(FileLike fileLike) {
+    this.fileLike = Preconditions.checkNotNull(fileLike);
+  }
 
+  @Override
+  public InputStream getInput() throws IOException {
+    return fileLike.getInput();
+  }
 }

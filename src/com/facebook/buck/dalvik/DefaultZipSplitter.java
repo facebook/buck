@@ -16,15 +16,19 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.java.classes.ClasspathTraversal;
+import com.facebook.buck.java.classes.ClasspathTraverser;
+import com.facebook.buck.java.classes.DefaultClasspathTraverser;
+import com.facebook.buck.java.classes.FileLike;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
 
 public class DefaultZipSplitter implements ZipSplitter {
 
