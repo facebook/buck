@@ -447,8 +447,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getBuckEventBus().post(IndividualTestEvent.started(
             options.getArgumentsFormattedAsBuildTargets()));
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-        stepsBuilder.addAll(test.runTests(buildContext, executionContext));
-        stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
+        List<Step> testSteps = test.runTests(buildContext, executionContext);
+        if (!testSteps.isEmpty()) {
+          stepsBuilder.addAll(testSteps);
+          stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
+        }
         steps = stepsBuilder.build();
       } else {
         steps = ImmutableList.of();
