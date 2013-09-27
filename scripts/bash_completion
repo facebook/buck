@@ -17,7 +17,12 @@
 # Installing
 # ==========
 #
-# To install the completion, point to this file from your .bash_profile, like so:
+# To install the completion, copy this file to the appropriate folder for
+# your distribution, for example:
+#
+#     cp ~/path/to/bash_completion /etc/bash_completion.d/buck
+#
+# Alternatively you can invoke this file from your .bash_profile, like so:
 #
 #     . ~/path/to/bash_completion
 #
