@@ -433,15 +433,21 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     };
 
+    TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
+        executionContext.getProjectFilesystem());
     for (TestRule test : tests) {
       List<Step> steps;
 
       // Determine whether the test needs to be executed.
-      boolean isTestRunRequired = isTestRunRequiredForTest(test, executionContext);
+      boolean isTestRunRequired =
+          isTestRunRequiredForTest(test, executionContext, testRuleKeyFileHelper);
       if (isTestRunRequired) {
         getBuckEventBus().post(IndividualTestEvent.started(
             options.getArgumentsFormattedAsBuildTargets()));
-        steps = test.runTests(buildContext, executionContext);
+        ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+        stepsBuilder.addAll(test.runTests(buildContext, executionContext));
+        stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
+        steps = stepsBuilder.build();
       } else {
         steps = ImmutableList.of();
       }
@@ -505,7 +511,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @VisibleForTesting
-  static boolean isTestRunRequiredForTest(TestRule test, ExecutionContext executionContext) {
+  static boolean isTestRunRequiredForTest(
+      TestRule test,
+      ExecutionContext executionContext,
+      TestRuleKeyFileHelper testRuleKeyFileHelper)
+      throws IOException {
     boolean isTestRunRequired;
     BuildRuleSuccess.Type successType;
     if (executionContext.isDebugEnabled()) {
@@ -513,9 +523,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // hook up a debugger.
       isTestRunRequired = true;
     } else if (((successType = test.getBuildResultType()) != null)
-               && (successType == BuildRuleSuccess.Type.FETCHED_FROM_CACHE
-                      || successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY)
-               && test.hasTestResultFiles(executionContext)) {
+               && successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY
+               && test.hasTestResultFiles(executionContext)
+               && testRuleKeyFileHelper.isRuleKeyInDir(test)) {
       // If this build rule's artifacts (which includes the rule's output and its test result
       // files) are up to date, then no commands are necessary to run the tests. The test result
       // files will be read from the XML files in interpretTestResults().

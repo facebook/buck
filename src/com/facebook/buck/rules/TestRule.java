@@ -21,6 +21,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -62,4 +63,9 @@ public interface TestRule extends BuildRule {
    * @return The set of email addresses to act as contact points for this test.
    */
   public ImmutableSet<String> getContacts();
+
+  /**
+   * @return The relative path to the output directory of the test rule.
+   */
+  public Path getPathToTestOutputDirectory();
 }

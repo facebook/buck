@@ -227,6 +227,15 @@ public class ProjectFilesystem {
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    */
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
+    return readFirstLine(java.nio.file.Paths.get(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Attempts to read the first line of the file specified by the relative path. If the file does
+   * not exist, is empty, or encounters an error while being read, {@link Optional#absent()} is
+   * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
+   */
+  public Optional<String> readFirstLine(Path pathRelativeToProjectRoot) {
     Preconditions.checkNotNull(pathRelativeToProjectRoot);
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
     return readFirstLineFromFile(file);

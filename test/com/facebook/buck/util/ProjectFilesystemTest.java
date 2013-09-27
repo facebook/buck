@@ -31,6 +31,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /** Unit test for {@link ProjectFilesystem}. */
 public class ProjectFilesystemTest {
@@ -61,8 +62,13 @@ public class ProjectFilesystemTest {
   }
 
   @Test(expected = NullPointerException.class)
+  public void testReadFirstLineRejectsNullString() {
+    filesystem.readFirstLine(/* pathRelativeToProjectRoot */ (String) null);
+  }
+
+  @Test(expected = NullPointerException.class)
   public void testReadFirstLineRejectsNullPath() {
-    filesystem.readFirstLine(/* pathRelativeToProjectRoot */ null);
+    filesystem.readFirstLine(/* pathRelativeToProjectRoot */ (Path) null);
   }
 
   @Test

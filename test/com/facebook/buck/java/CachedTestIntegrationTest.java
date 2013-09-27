@@ -55,21 +55,17 @@ public class CachedTestIntegrationTest {
    */
   @Test
   public void testPullingJarFromCacheDoesNotResultInReportingStaleTestResults() throws IOException {
-    final Charset charsetForTest = Charsets.UTF_8;
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "cached_test", tmp);
     workspace.setUp();
+    CachedTestUtil testUtil = new CachedTestUtil(workspace);
 
     // The test should pass out of the box.
     ProcessResult result = workspace.runBuckCommand("test", "//:test");
     result.assertExitCode(0);
 
     // Edit the test so it should fail and then make sure that it fails.
-    File testFile = workspace.getFile("LameTest.java");
-    String originalJavaCode = Files.toString(testFile, charsetForTest);
-    String failingJavaCode = originalJavaCode.replace("String str = \"I am not null.\";",
-        "String str = null;");
-    Files.write(failingJavaCode, testFile, charsetForTest);
+    testUtil.makeTestFail();
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
     result2.assertExitCode(1);
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
@@ -77,12 +73,12 @@ public class CachedTestIntegrationTest {
         containsString("FAILURE testBasicAssertion"));
 
     // Restore the file to its previous state.
-    Files.write(originalJavaCode, testFile, charsetForTest);
+    testUtil.makeTestSucceed();
     ProcessResult result3 = workspace.runBuckCommand("test", "//:test");
     result3.assertExitCode(0);
 
     // Put the file back in the broken state and make sure the test fails.
-    Files.write(failingJavaCode, testFile, charsetForTest);
+    testUtil.makeTestFail();
     ProcessResult result4 = workspace.runBuckCommand("test", "//:test");
     result4.assertExitCode(1);
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
@@ -90,4 +86,71 @@ public class CachedTestIntegrationTest {
         containsString("FAILURE testBasicAssertion"));
   }
 
+  /**
+   * This is similar to {@link #testPullingJarFromCacheDoesNotResultInReportingStaleTestResults()}
+   * but this first builds the test and then runs it. It catches the corner case where the test run
+   * may have the jar read from disk, but the test results are still stale.
+   */
+  @Test
+  public void testRunningTestAfterBuildingWithCacheHitDoesNotReportStaleTests() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cached_test", tmp);
+    workspace.setUp();
+    CachedTestUtil testUtil = new CachedTestUtil(workspace);
+
+    // The test should pass out of the box.
+    ProcessResult result = workspace.runBuckCommand("test", "//:test");
+    result.assertExitCode(0);
+
+    // Edit the test so it should fail and then make sure that it fails.
+    testUtil.makeTestFail();
+    workspace.runBuckCommand("build", "//:test")
+        .assertExitCode("The test should build successfully, but will fail when executed.", 0);
+    ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
+    result2.assertExitCode(1);
+    assertThat("`buck test` should fail because testBasicAssertion() failed.",
+        result2.getStderr(),
+        containsString("FAILURE testBasicAssertion"));
+
+    // Restore the file to its previous state.
+    testUtil.makeTestSucceed();
+    workspace.runBuckCommand("build", "//:test")
+        .assertExitCode("The test should build successfully.", 0);
+    ProcessResult result3 = workspace.runBuckCommand("test", "//:test");
+    result3.assertExitCode(0);
+
+    // Put the file back in the broken state and make sure the test fails.
+    testUtil.makeTestFail();
+    workspace.runBuckCommand("build", "//:test")
+        .assertExitCode("The test should build successfully, but will fail when executed.", 0);
+    ProcessResult result4 = workspace.runBuckCommand("test", "//:test");
+    result4.assertExitCode(1);
+    assertThat("`buck test` should fail because testBasicAssertion() failed.",
+        result4.getStderr(),
+        containsString("FAILURE testBasicAssertion"));
+  }
+
+  private static class CachedTestUtil {
+
+    private static final String TEST_FILE = "LameTest.java";
+    private static final Charset CHARSET = Charsets.UTF_8;
+    private final String originalJavaCode;
+    private final File testFile;
+    private final String failingJavaCode;
+
+    CachedTestUtil(ProjectWorkspace workspace) throws IOException {
+      this.testFile = workspace.getFile(TEST_FILE);
+      this.originalJavaCode = Files.toString(testFile, CHARSET);
+      this.failingJavaCode = originalJavaCode.replace("String str = \"I am not null.\";",
+          "String str = null;");
+    }
+
+    public void makeTestFail() throws IOException {
+      Files.write(failingJavaCode, testFile, CHARSET);
+    }
+
+    public void makeTestSucceed() throws IOException {
+      Files.write(originalJavaCode, testFile, CHARSET);
+    }
+  }
 }

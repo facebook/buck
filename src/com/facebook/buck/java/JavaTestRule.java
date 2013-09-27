@@ -53,6 +53,8 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -157,7 +159,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    String pathToTestOutput = getPathToTestOutput();
+    Path pathToTestOutput = getPathToTestOutputDirectory();
     MakeCleanDirectoryStep mkdirClean = new MakeCleanDirectoryStep(pathToTestOutput);
     steps.add(mkdirClean);
 
@@ -181,7 +183,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         classpathEntries,
         testClassNames,
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
-        pathToTestOutput,
+        pathToTestOutput.toString(),
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled());
     steps.add(junit);
@@ -229,7 +231,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       return true;
     }
 
-    File outputDirectory = new File(getPathToTestOutput());
+    File outputDirectory = executionContext.getProjectFilesystem().getFileForRelativePath(
+        getPathToTestOutputDirectory());
     for (String testClass : testClassNames) {
       File testResultFile = new File(outputDirectory, testClass + ".xml");
       if (!testResultFile.isFile()) {
@@ -240,11 +243,13 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     return true;
   }
 
-  private String getPathToTestOutput() {
-    return String.format("%s/%s__java_test_%s_output__",
+  @Override
+  public Path getPathToTestOutputDirectory() {
+    return Paths.get(
         BuckConstant.GEN_DIR,
-        getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName());
+        getBuildTarget().getBaseNameWithSlash(),
+        String.format("__java_test_%s_output__", getBuildTarget().getShortName())
+    );
   }
 
   @Override
@@ -265,7 +270,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         ProjectFilesystem filesystem = context.getProjectFilesystem();
         for (String testClass : testClassNames) {
           File testResultFile = filesystem.getFileForRelativePath(
-              String.format("%s/%s.xml", getPathToTestOutput(), testClass));
+              getPathToTestOutputDirectory().resolve(String.format("%s.xml", testClass)));
           TestCaseSummary summary = XmlTestResultParser.parse(testResultFile);
           summaries.add(summary);
         }

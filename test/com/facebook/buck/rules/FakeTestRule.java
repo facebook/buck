@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -99,5 +100,10 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   @Override
   public ImmutableSet<String> getContacts() {
     return ImmutableSet.of();
+  }
+
+  @Override
+  public Path getPathToTestOutputDirectory() {
+    throw new UnsupportedOperationException("getPathToTestOutput() not supported in fake");
   }
 }

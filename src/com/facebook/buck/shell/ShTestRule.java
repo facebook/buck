@@ -43,6 +43,8 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -116,11 +118,13 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
     return ImmutableList.of(mkdirClean, runTest);
   }
 
-  private String getPathToTestOutputDirectory() {
-    return String.format("%s/%s/__sh_test_%s_output__",
+  @Override
+  public Path getPathToTestOutputDirectory() {
+    return Paths.get(
         BuckConstant.GEN_DIR,
         getBuildTarget().getBasePath(),
-        getBuildTarget().getShortName());
+        String.format("__java_test_%s_output__", getBuildTarget().getShortName())
+    );
   }
 
   @VisibleForTesting

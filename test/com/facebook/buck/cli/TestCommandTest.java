@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -65,6 +66,7 @@ import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
@@ -447,38 +449,47 @@ public class TestCommandTest {
   }
 
   @Test
-  public void testIsTestRunRequiredForTestInDebugMode() {
+  public void testIsTestRunRequiredForTestInDebugMode() throws IOException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(true);
+
     replay(executionContext);
 
-    assertTrue(TestCommand.isTestRunRequiredForTest(
-        createMock(TestRule.class),
-        executionContext));
+    assertTrue(
+        "In debug mode, test should always run regardless of any cached results since " +
+            "the user is expecting to hook up a debugger.",
+        TestCommand.isTestRunRequiredForTest(
+            createMock(TestRule.class),
+            executionContext,
+            createMock(TestRuleKeyFileHelper.class))
+    );
 
     verify(executionContext);
   }
 
   @Test
-  public void testIsTestRunRequiredForTestBuiltFromCacheIfHasTestResultFiles() {
+  public void testIsTestRunRequiredForTestBuiltFromCacheIfHasTestResultFiles() throws IOException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
     TestRule testRule = createMock(TestRule.class);
     expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.FETCHED_FROM_CACHE);
-    expect(testRule.hasTestResultFiles(executionContext)).andReturn(true);
 
     replay(executionContext, testRule);
 
-    assertFalse(TestCommand.isTestRunRequiredForTest(
-        testRule,
-        executionContext));
+    assertTrue(
+        "A cache hit updates the build artifact but not the test results. " +
+            "Therefore, the test should be re-run to ensure the test results are up to date.",
+        TestCommand.isTestRunRequiredForTest(
+            testRule,
+            executionContext,
+            createMock(TestRuleKeyFileHelper.class)));
 
     verify(executionContext, testRule);
   }
 
   @Test
-  public void testIsTestRunRequiredForTestBuiltLocally() {
+  public void testIsTestRunRequiredForTestBuiltLocally() throws IOException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
@@ -487,11 +498,36 @@ public class TestCommandTest {
 
     replay(executionContext, testRule);
 
-    assertTrue(TestCommand.isTestRunRequiredForTest(
-        testRule,
-        executionContext));
+    assertTrue(
+        "A test built locally should always run regardless of any cached result. ",
+        TestCommand.isTestRunRequiredForTest(
+            testRule,
+            executionContext,
+            createMock(TestRuleKeyFileHelper.class)));
 
     verify(executionContext, testRule);
+  }
+
+  @Test
+  public void testIsTestRunRequiredIfRuleKeyNotPresent() throws IOException {
+    ExecutionContext executionContext = createMock(ExecutionContext.class);
+    expect(executionContext.isDebugEnabled()).andReturn(false);
+
+    TestRule testRule = createNiceMock(TestRule.class);
+    expect(testRule.getBuildResultType()).andReturn(BuildRuleSuccess.Type.MATCHING_RULE_KEY);
+    expect(testRule.hasTestResultFiles(executionContext)).andReturn(true);
+
+    TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
+    expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
+
+    replay(executionContext, testRule, testRuleKeyFileHelper);
+
+    assertTrue(
+        "A cached build should run the tests if the test output directory\'s rule key is not " +
+            "present or does not matche the rule key for the test.",
+        TestCommand.isTestRunRequiredForTest(testRule, executionContext, testRuleKeyFileHelper));
+
+    verify(executionContext, testRule, testRuleKeyFileHelper);
   }
 
   @Test

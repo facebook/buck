@@ -25,17 +25,27 @@ import com.google.common.base.Suppliers;
 import com.google.common.io.Files;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class WriteFileStep implements Step {
 
   private final Supplier<String> content;
-  private final String outputPath;
+  private final Path outputPath;
 
   public WriteFileStep(String content, String outputPath) {
+    this(Suppliers.ofInstance(content), Paths.get(outputPath));
+  }
+
+  public WriteFileStep(String content, Path outputPath) {
     this(Suppliers.ofInstance(content), outputPath);
   }
 
   public WriteFileStep(Supplier<String> content, String outputPath) {
+    this(content, Paths.get(outputPath));
+  }
+
+  public WriteFileStep(Supplier<String> content, Path outputPath) {
     this.content = Preconditions.checkNotNull(content);
     this.outputPath = Preconditions.checkNotNull(outputPath);
   }
