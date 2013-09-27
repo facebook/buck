@@ -18,6 +18,7 @@ package com.facebook.buck.test;
 
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -28,12 +29,28 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class TestCaseSummary {
 
+  /**
+   * Transformation to annotate TestCaseSummary marking them as being read from cached results
+   */
+  public final static Function<TestCaseSummary, TestCaseSummary> TO_CACHED_TRANSFORMATION =
+      new Function<TestCaseSummary, TestCaseSummary>() {
+
+        @Override
+        public TestCaseSummary apply(TestCaseSummary summary) {
+          return new TestCaseSummary(summary, /* isCached */ true);
+        }
+      };
+
   private final String testCaseName;
   private final ImmutableList<TestResultSummary> testResults;
   private final boolean isSuccess;
   private final int failureCount;
   private final long totalTime;
+  private final boolean isCached;
 
+  /**
+   * Creates a TestCaseSummary which is assumed to be not read from cached results
+   */
   public TestCaseSummary(String testCaseName, List<TestResultSummary> testResults) {
     this.testCaseName = Preconditions.checkNotNull(testCaseName);
     this.testResults = ImmutableList.copyOf(testResults);
@@ -51,6 +68,18 @@ public class TestCaseSummary {
     this.isSuccess = isSuccess;
     this.failureCount = failureCount;
     this.totalTime = totalTime;
+    this.isCached = false;
+  }
+
+  /** Creates a copy of {@code summary} with the specified value of {@code isCached}. */
+  private TestCaseSummary(TestCaseSummary summary, boolean isCached) {
+    Preconditions.checkNotNull(summary);
+    this.testCaseName = summary.testCaseName;
+    this.testResults = summary.testResults;
+    this.isSuccess = summary.isSuccess;
+    this.failureCount = summary.failureCount;
+    this.totalTime = summary.totalTime;
+    this.isCached = isCached;
   }
 
   public boolean isSuccess() {
@@ -71,7 +100,8 @@ public class TestCaseSummary {
     String status = ansi.asHighlightedStatusText(isSuccess(), isSuccess() ? "PASS" : "FAIL");
     return String.format("%s %s %2d Passed  %2d Failed   %s",
         status,
-        TimeFormat.formatForConsole(totalTime, ansi),
+        !isCached ? TimeFormat.formatForConsole(totalTime, ansi)
+                  : ansi.asHighlightedStatusText(isSuccess(), "CACHED"),
         testResults.size() - failureCount,
         failureCount,
         testCaseName);

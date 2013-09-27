@@ -55,6 +55,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,6 +76,7 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -456,7 +458,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // because the rule is cached, but its results must still be processed.
       ListenableFuture<TestResults> testResults =
           stepRunner.runStepsAndYieldResult(steps,
-              test.interpretTestResults(executionContext),
+              getCachingStatusTransformingCallable(
+                  isTestRunRequired,
+                  test.interpretTestResults(executionContext)),
               test.getBuildTarget());
       Futures.addCallback(testResults, onTestFinishedCallback);
       results.add(testResults);
@@ -508,6 +512,27 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     });
 
     return failures ? 1 : 0;
+  }
+
+  private Callable<TestResults> getCachingStatusTransformingCallable(
+      boolean isTestRunRequired,
+      final Callable<TestResults> originalCallable) {
+    if (isTestRunRequired) {
+      return originalCallable;
+    }
+    return new Callable<TestResults>() {
+      public TestResults call() throws Exception {
+        TestResults originalTestResults = originalCallable.call();
+        ImmutableList<TestCaseSummary> cachedTestResults = FluentIterable
+            .from(originalTestResults.getTestCases())
+            .transform(TestCaseSummary.TO_CACHED_TRANSFORMATION)
+            .toList();
+        return new TestResults(
+            originalTestResults.getBuildTarget(),
+            cachedTestResults,
+            originalTestResults.getContacts());
+      }
+    };
   }
 
   @VisibleForTesting
