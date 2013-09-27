@@ -103,7 +103,6 @@ public class ProjectCommandTest {
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, javaLibraryRule, false);
     checkPredicate(projectConfigPredicate, EMPTY_PARSE_DATA, ruleConfig, true);
 
-
     BuildCommandOptions buildOptions = command.buildCommandOptions;
     MoreAsserts.assertContainsOne(
         buildOptions.getArguments(), javaLibraryTargetName.getFullyQualifiedName());
