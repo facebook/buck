@@ -79,7 +79,7 @@ public class SmartDexingStepTest {
 
     // Make sure that secondary-out/2.dex.jar came from secondary-in/2.jar.
     File secondaryOutFile = new File(secondaryOutDir,
-        SmartDexingStep.transformInputToDexOutput(secondaryInFile.getName(), DexStore.JAR));
+        SmartDexingStep.transformInputToDexOutput(secondaryInFile, DexStore.JAR));
     MoreAsserts.assertIterablesEquals(
         "Detected inconsistency with secondary output arguments",
         ImmutableSet.of(secondaryInFile),

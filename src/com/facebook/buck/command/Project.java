@@ -28,11 +28,11 @@ import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
@@ -76,6 +76,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -246,7 +247,6 @@ public class Project {
   @Nullable
   File writeProjectDotPropertiesFile(Module module, Map<String, Module> nameToModuleIndex)
       throws IOException {
-    String pathToImlFile = module.pathToImlFile;
     SortedSet<String> references = Sets.newTreeSet();
     for (DependentModule dependency : module.dependencies) {
       if (!dependency.isModule()) {
@@ -265,9 +265,13 @@ public class Project {
         continue;
       }
 
+      Path pathToImlFile = java.nio.file.Paths.get(module.pathToImlFile);
+      Path depPathToImlFile = java.nio.file.Paths.get(dep.pathToImlFile);
+
       String relativePath = Paths.computeRelativePath(
-          Paths.getParentPath(pathToImlFile),
-          Paths.getParentPath(dep.pathToImlFile));
+          pathToImlFile.getParent().toString(),
+          depPathToImlFile.getParent().toString()
+       );
 
       // Drop the trailing slash from the path, since that's what the Android tools appear to do
       // when generating project.properties.

@@ -73,6 +73,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
@@ -793,7 +794,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     Preconditions.checkArgument(classpathEntry.charAt(0) != '/',
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
-    String obfuscatedName = Paths.getBasename(classpathEntry, ".jar") + "-obfuscated.jar";
+    String obfuscatedName = Files.getNameWithoutExtension(classpathEntry) + "-obfuscated.jar";
     String dirName = Paths.normalizePathSeparator(new File(classpathEntry).getParent());
     String outputJar = getPathForProGuardDirectory() + "/" + dirName + "/" +
         obfuscatedName;

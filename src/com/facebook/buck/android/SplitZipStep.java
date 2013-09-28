@@ -222,8 +222,7 @@ public class SplitZipStep implements Step {
       Collection<File> jarFiles,
       DexStore dexStore) throws IOException {
     for (File secondary : jarFiles) {
-      String filename = SmartDexingStep.transformInputToDexOutput(
-           secondary.getName(), dexStore);
+      String filename = SmartDexingStep.transformInputToDexOutput(secondary, dexStore);
       String jarHash = hexSha1(secondary);
       String containedClass = findAnyClass(secondary);
       writer.write(String.format("%s %s %s",

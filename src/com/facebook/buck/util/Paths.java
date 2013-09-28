@@ -22,8 +22,6 @@ import com.google.common.collect.Iterables;
 
 import java.io.File;
 
-import javax.annotation.Nullable;
-
 public class Paths {
 
   private Paths() {}
@@ -73,43 +71,6 @@ public class Paths {
     }
 
     return Strings.repeat("../", directoryDepth) + to.substring(samePrefixIndex);
-  }
-
-  /**
-   * @return the path to the parent
-   */
-  public static String getParentPath(String pathToFile) {
-    Preconditions.checkNotNull(pathToFile);
-    Preconditions.checkArgument(!pathToFile.isEmpty(), "path cannot be the empty string");
-
-    if (pathToFile.endsWith("/")) {
-      pathToFile = pathToFile.substring(0, pathToFile.length() - 1);
-    }
-
-    int lastSlashIndex = pathToFile.lastIndexOf('/');
-    if (lastSlashIndex < 0) {
-      return "";
-    } else {
-      return pathToFile.substring(0, lastSlashIndex + 1);
-    }
-  }
-
-  /**
-   * Mimic the UNIX command basename.
-   * @param path Filesystem path
-   * @param suffix Optional suffix (use null to exclude) that will be stripped from the basename if
-   *     it is found.
-   * @return The file's name, with suffix removed if provided.
-   */
-  public static String getBasename(String path, @Nullable String suffix) {
-    Preconditions.checkNotNull(path);
-
-    String name = new File(path).getName();
-    if (suffix != null && name.endsWith(suffix)) {
-      return name.substring(0, name.length() - suffix.length());
-    } else {
-      return name;
-    }
   }
 
   public static Iterable<File> transformPathToFile(Iterable<String> paths) {

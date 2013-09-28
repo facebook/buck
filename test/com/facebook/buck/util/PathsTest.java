@@ -44,36 +44,6 @@ public class PathsTest {
   }
 
   @Test
-  public void testGetParentPath() {
-    assertEquals("", Paths.getParentPath("project.properties"));
-    assertEquals("foo/", Paths.getParentPath("foo/bar"));
-    assertEquals("foo/", Paths.getParentPath("foo/bar/"));
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetParentPathThrows() {
-    Paths.getParentPath("");
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void testGetBasenameThrows() {
-    Paths.getBasename(null, ".json");
-  }
-
-  @Test
-  public void testGetBasenameWithSuffix() {
-    assertEquals("bar", Paths.getBasename("bar.json", ".json"));
-    assertEquals("bar", Paths.getBasename("/foo/bar.json", ".json"));
-    assertEquals("bar.simple", Paths.getBasename("/foo/bar.simple", ".json"));
-  }
-
-  @Test
-  public void testGetBasenameWithoutSuffix() {
-    assertEquals("bar.json", Paths.getBasename("/foo/bar.json", null));
-    assertEquals("bar", Paths.getBasename("/foo/bar", ""));
-  }
-
-  @Test
   public void testNormalizePathSeparator() {
     assertEquals("C:/Windows/System32/drivers.dll",
         Paths.normalizePathSeparator("C:\\Windows\\System32\\drivers.dll"));

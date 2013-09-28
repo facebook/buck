@@ -248,11 +248,11 @@ public class SmartDexingStep implements Step {
   // This is a terrible shared kludge between SmartDexingCommand and SplitZipCommand.
   // SplitZipCommand writes the metadata.txt file assuming this will be the final filename
   // in the APK...
-  public static String transformInputToDexOutput(String filename, DexStore dexStore) {
+  public static String transformInputToDexOutput(File file, DexStore dexStore) {
     if (DexStore.XZ == dexStore) {
-      return Paths.getBasename(filename, ".jar") + ".dex.jar.xz";
+      return Files.getNameWithoutExtension(file.getName()) + ".dex.jar.xz";
     } else {
-      return Paths.getBasename(filename, ".jar") + ".dex.jar";
+      return Files.getNameWithoutExtension(file.getName()) + ".dex.jar";
     }
   }
 
@@ -298,7 +298,7 @@ public class SmartDexingStep implements Step {
         for (File secondaryInputFile : secondaryInputsDirFile.listFiles()) {
           // May be either directories or jar files, doesn't matter.
           File secondaryOutputFile = new File(secondaryOutputDirFile,
-              transformInputToDexOutput(secondaryInputFile.getName(), dexStore));
+              transformInputToDexOutput(secondaryInputFile, dexStore));
           map.put(secondaryOutputFile, secondaryInputFile);
         }
       }
