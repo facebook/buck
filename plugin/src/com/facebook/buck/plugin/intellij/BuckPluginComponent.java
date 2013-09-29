@@ -21,6 +21,7 @@ import com.facebook.buck.plugin.intellij.commands.BuildCommand;
 import com.facebook.buck.plugin.intellij.commands.CleanCommand;
 import com.facebook.buck.plugin.intellij.commands.SocketClient.BuckPluginEventListener;
 import com.facebook.buck.plugin.intellij.commands.TargetsCommand;
+import com.facebook.buck.plugin.intellij.commands.TestCommand;
 import com.facebook.buck.plugin.intellij.commands.event.Event;
 import com.facebook.buck.plugin.intellij.commands.event.RuleEnd;
 import com.facebook.buck.plugin.intellij.commands.event.RuleStart;
@@ -159,6 +160,45 @@ public class BuckPluginComponent implements ProjectComponent {
           buckUI.getProgressPanel().clear();
           buckUI.showMessageWindow();
           BuildCommand.build(buckRunner, target);
+        }
+      };
+      task.queue();
+    } catch (NoBuckRunnerException e) {
+      reportBuckNotPresent();
+    }
+  }
+
+  public void testTarget(final BuckTarget target) {
+    Preconditions.checkNotNull(target);
+    try {
+      final BuckRunner buckRunner = getBuckRunner();
+      Task.Backgroundable task = new Task.Backgroundable(project,
+          "Testing",
+          true, /* canBeCanceled */
+          BackgroundFromStartOption.getInstance()) {
+        public void run(ProgressIndicator progressIndicator) {
+          buckUI.getProgressPanel().clear();
+          buckUI.showMessageWindow();
+          TestCommand.runTest(buckRunner, Optional.of(target));
+        }
+      };
+      task.queue();
+    } catch (NoBuckRunnerException e) {
+      reportBuckNotPresent();
+    }
+  }
+
+  public void testAllTargets() {
+    try {
+      final BuckRunner buckRunner = getBuckRunner();
+      Task.Backgroundable task = new Task.Backgroundable(project,
+          "Testing",
+          true, /* canBeCanceled */
+          BackgroundFromStartOption.getInstance()) {
+        public void run(ProgressIndicator progressIndicator) {
+          buckUI.getProgressPanel().clear();
+          buckUI.showMessageWindow();
+          TestCommand.runTest(buckRunner, Optional.<BuckTarget>absent());
         }
       };
       task.queue();

@@ -34,6 +34,13 @@
               <text value="Clean"/>
             </properties>
           </component>
+          <component id="2a50e" class="javax.swing.JButton" binding="testAllButton" custom-create="true">
+            <constraints/>
+            <properties>
+              <text value="Test All"/>
+              <toolTipText value="Run all unit tests"/>
+            </properties>
+          </component>
         </children>
       </toolbar>
       <scrollpane id="8bbd6" binding="scrollPane" custom-create="true">

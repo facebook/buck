@@ -29,6 +29,7 @@ public class TargetNode extends DefaultMutableTreeNode {
     JAVA_LIBRARY,
     JAVA_BINARY,
     JAVA_TEST,
+    SH_TEST,
     OTHER
   }
 

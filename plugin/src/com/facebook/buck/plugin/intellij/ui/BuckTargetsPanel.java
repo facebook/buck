@@ -48,6 +48,7 @@ public class BuckTargetsPanel {
   private JPanel targetsPanel;
   private JButton refreshTargetsButton;
   private JButton cleanButton;
+  private JButton testAllButton;
   private JTree tree;
   @SuppressWarnings("unused")
   private JScrollPane scrollPane;
@@ -101,7 +102,12 @@ public class BuckTargetsPanel {
           TargetNode targetNode = (TargetNode) selected.getLastPathComponent();
           BuckTarget target = targetNode.getTarget();
           if (target != null) {
-            component.buildTarget(target);
+            if (targetNode.getType() == TargetNode.Type.JAVA_TEST ||
+                targetNode.getType() == TargetNode.Type.SH_TEST) {
+              component.testTarget(target);
+            } else {
+              component.buildTarget(target);
+            }
           }
         }
       }
@@ -122,6 +128,14 @@ public class BuckTargetsPanel {
       @Override
       public void actionPerformed(ActionEvent e) {
         component.clean();
+      }
+    });
+
+    testAllButton = createToolbarIcon();
+    testAllButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        component.testAllTargets();
       }
     });
   }

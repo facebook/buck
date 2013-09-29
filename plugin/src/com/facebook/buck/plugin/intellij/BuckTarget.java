@@ -60,6 +60,8 @@ public class BuckTarget {
       nodeType = TargetNode.Type.JAVA_BINARY;
     } else if ("java_test".equals(type)) {
       nodeType = TargetNode.Type.JAVA_TEST;
+    } else if ("sh_test".equals(type)) {
+      nodeType = TargetNode.Type.SH_TEST;
     } else {
       nodeType = TargetNode.Type.OTHER;
     }
