@@ -29,7 +29,11 @@ public class ProgressNode extends DefaultMutableTreeNode {
     BUILDING,
     BUILT,
     BUILT_CACHED,
-    BUILD_ERROR
+    BUILD_ERROR,
+    TEST_CASE_SUCCESS,
+    TEST_CASE_FAILURE,
+    TEST_RESULT_SUCCESS,
+    TEST_RESULT_FAILURE
   }
 
   private String name;

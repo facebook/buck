@@ -69,6 +69,22 @@ class MessageTreeRenderer extends MultilineTreeCellRenderer {
           prefix = "Error";
           icon = AllIcons.General.Error;
           break;
+        case TEST_CASE_SUCCESS:
+          prefix = "Test";
+          icon = AllIcons.Modules.TestRoot;
+          break;
+        case TEST_CASE_FAILURE:
+          prefix = "Test Failure";
+          icon = AllIcons.General.Error;
+          break;
+        case TEST_RESULT_SUCCESS:
+          prefix = "";
+          icon = AllIcons.Nodes.Advice;
+          break;
+        case TEST_RESULT_FAILURE:
+          prefix = "";
+          icon = AllIcons.General.Error;
+          break;
         default:
           icon = AllIcons.General.Error;
           prefix = "";

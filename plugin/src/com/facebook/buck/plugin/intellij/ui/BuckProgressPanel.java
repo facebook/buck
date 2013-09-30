@@ -18,7 +18,9 @@ package com.facebook.buck.plugin.intellij.ui;
 
 import com.facebook.buck.plugin.intellij.commands.event.RuleEnd;
 import com.facebook.buck.plugin.intellij.commands.event.RuleStart;
+import com.facebook.buck.plugin.intellij.commands.event.TestResultsAvailable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.tree.TreeUtil;
@@ -38,6 +40,7 @@ public class BuckProgressPanel {
   public static final String TREE_ROOT = "Buck";
   public static final String BUILDING_ROOT = "Building";
   public static final String BUILT_ROOT = "Built";
+  private static final String TEST_ROOT = "Test";
 
   private JPanel panel;
   private JTree tree;
@@ -47,9 +50,11 @@ public class BuckProgressPanel {
   private ProgressNode treeRoot;
   private ProgressNode buildingRoot;
   private ProgressNode builtRoot;
+  private ProgressNode testRoot;
   private TreePath rootPath;
   private TreePath buildingPath;
   private TreePath builtPath;
+  private TreePath testPath;
   private List<ProgressNode> items;
 
   public JPanel getPanel() {
@@ -97,6 +102,21 @@ public class BuckProgressPanel {
     });
   }
 
+  public void testResult(TestResultsAvailable event) {
+    Preconditions.checkNotNull(event);
+    final ImmutableList<ProgressNode> nodes = event.createTreeNodes();
+    EventQueue.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        for (ProgressNode node : nodes) {
+          treeModel.insertNodeInto(node, testRoot, testRoot.getChildCount());
+          expand();
+          scrollTo(node);
+        }
+      }
+    });
+  }
+
   private ProgressNode findBuildingNode(RuleEnd current) {
     Preconditions.checkNotNull(current);
     for (ProgressNode item : items) {
@@ -123,15 +143,17 @@ public class BuckProgressPanel {
     rootPath = new TreePath(treeRoot);
     treeModel = new DefaultTreeModel(treeRoot);
 
-    builtRoot = new ProgressNode(
-        ProgressNode.Type.DIRECTORY, BUILT_ROOT, null);
+    builtRoot = new ProgressNode(ProgressNode.Type.DIRECTORY, BUILT_ROOT, null);
     builtPath = new TreePath(builtRoot);
     treeModel.insertNodeInto(builtRoot, treeRoot, treeRoot.getChildCount());
 
-    buildingRoot = new ProgressNode(
-        ProgressNode.Type.DIRECTORY, BUILDING_ROOT, null);
+    buildingRoot = new ProgressNode(ProgressNode.Type.DIRECTORY, BUILDING_ROOT, null);
     buildingPath = new TreePath(buildingRoot);
     treeModel.insertNodeInto(buildingRoot, treeRoot, treeRoot.getChildCount());
+
+    testRoot = new ProgressNode(ProgressNode.Type.DIRECTORY, TEST_ROOT, null);
+    testPath = new TreePath(testRoot);
+    treeModel.insertNodeInto(testRoot, treeRoot, treeRoot.getChildCount());
   }
 
   private void expand() {
@@ -143,6 +165,9 @@ public class BuckProgressPanel {
     }
     if (!tree.hasBeenExpanded(builtPath)) {
       tree.expandPath(builtPath);
+    }
+    if (!tree.hasBeenExpanded(testPath)) {
+      tree.expandPath(testPath);
     }
   }
 

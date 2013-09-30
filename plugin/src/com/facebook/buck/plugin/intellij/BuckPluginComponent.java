@@ -25,6 +25,7 @@ import com.facebook.buck.plugin.intellij.commands.TestCommand;
 import com.facebook.buck.plugin.intellij.commands.event.Event;
 import com.facebook.buck.plugin.intellij.commands.event.RuleEnd;
 import com.facebook.buck.plugin.intellij.commands.event.RuleStart;
+import com.facebook.buck.plugin.intellij.commands.event.TestResultsAvailable;
 import com.facebook.buck.plugin.intellij.ui.BuckUI;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -219,6 +220,8 @@ public class BuckPluginComponent implements ProjectComponent {
         buckUI.getProgressPanel().startRule((RuleStart) event);
       } else if (event instanceof RuleEnd) {
         buckUI.getProgressPanel().endRule((RuleEnd) event);
+      } else if (event instanceof TestResultsAvailable) {
+        buckUI.getProgressPanel().testResult((TestResultsAvailable) event);
       }
     }
   }
