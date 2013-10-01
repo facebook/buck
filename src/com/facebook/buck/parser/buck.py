@@ -162,7 +162,7 @@ def glob(includes, excludes=[], build_env=None):
     if passes_glob_filter(path):
       paths.append(path)
 
-  for root, dirs, files in os.walk(search_base):
+  for root, dirs, files in os.walk(search_base, followlinks=True):
     if len(files) == 0:
       continue
     relative_root = relpath(root, search_base)
@@ -809,7 +809,8 @@ def main():
     ignore_paths = [os.path.abspath(os.path.join(project_root, d))
         for d in options.ignore_paths or []]
     build_files = []
-    for dirpath, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=False):
+    # TODO: (royw) Deal with recursive symlinks.
+    for dirpath, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=True):
       # Do not walk directories that contain generated/non-source files.
       # All modifications to dirnames must occur in-place.
       dirnames[:] = [d for d in dirnames if not (os.path.join(dirpath, d) in ignore_paths)]
