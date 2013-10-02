@@ -99,9 +99,11 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     Optional<SourcePath> proguardConfig = params.getOptionalSourcePath("proguard_config", builder);
     builder.setProguardConfig(proguardConfig);
 
-    // compress_resources
-    boolean compressResources = params.getBooleanAttribute("compress_resources");
-    builder.setCompressResources(compressResources);
+    // resource_compression
+    Optional<String> resourceCompression = params.getOptionalStringAttribute("resource_compression");
+    if (resourceCompression.isPresent()) {
+      builder.setResourceCompressionMode(resourceCompression.get());
+    }
 
     // primary_dex_substrings
     List<String> primaryDexSubstrings = params.getOptionalListAttribute("primary_dex_substrings");

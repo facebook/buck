@@ -394,7 +394,7 @@ def android_binary(
       dex_compression='jar',
       use_android_proguard_config_with_optimizations=False,
       proguard_config=None,
-      compress_resources=False,
+      resource_compression=None,
       primary_dex_substrings=None,
       primary_dex_classes_file=None,
       # By default, assume we have 5MB of linear alloc,
@@ -422,7 +422,7 @@ def android_binary(
     'use_android_proguard_config_with_optimizations':
         use_android_proguard_config_with_optimizations,
     'proguard_config' : proguard_config,
-    'compress_resources' : compress_resources,
+    'resource_compression' : resource_compression,
     'primary_dex_substrings' : primary_dex_substrings,
     'primary_dex_classes_file' : primary_dex_classes_file,
     'linear_alloc_hard_limit' : linear_alloc_hard_limit,

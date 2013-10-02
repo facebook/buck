@@ -135,7 +135,32 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     ARM,
     ARMV7,
     X86,
-    MIPS
+    MIPS,
+  }
+
+  static enum ResourceCompressionMode {
+    DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
+    ENABLED(/* isCompressResources */ true, /* isStoreStringsAsAssets */ false),
+    ENABLED_WITH_STRINGS_AS_ASSETS(
+      /* isCompressResources */ true,
+      /* isStoreStringsAsAssets */ true),
+    ;
+
+    private final boolean isCompressResources;
+    private final boolean isStoreStringsAsAssets;
+
+    private ResourceCompressionMode(boolean isCompressResources, boolean isStoreStringsAsAssets) {
+      this.isCompressResources = isCompressResources;
+      this.isStoreStringsAsAssets = isStoreStringsAsAssets;
+    }
+
+    public boolean isCompressResources() {
+      return isCompressResources;
+    }
+
+    public boolean isStoreStringsAsAssets() {
+      return isStoreStringsAsAssets;
+    }
   }
 
   private final String manifest;
@@ -147,7 +172,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private DexSplitMode dexSplitMode;
   private final boolean useAndroidProguardConfigWithOptimizations;
   private final Optional<SourcePath> proguardConfig;
-  private final boolean compressResources;
+  private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> primaryDexSubstrings;
   private final long linearAllocHardLimit;
 
@@ -187,7 +212,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       DexSplitMode dexSplitMode,
       boolean useAndroidProguardConfigWithOptimizations,
       Optional<SourcePath> proguardConfig,
-      boolean compressResources,
+      ResourceCompressionMode resourceCompressionMode,
       Set<String> primaryDexSubstrings,
       long linearAllocHardLimit,
       Optional<SourcePath> primaryDexClassesFile,
@@ -205,7 +230,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-    this.compressResources = compressResources;
+    this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
     this.linearAllocHardLimit = linearAllocHardLimit;
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
@@ -245,7 +270,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
         .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
-        .set("compressResources", compressResources)
+        .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("primaryDexSubstrings", primaryDexSubstrings)
         .set("linearAllocHardLimit", linearAllocHardLimit)
         .set("primaryDexClassesFile", primaryDexClassesFile.transform(SourcePath.TO_REFERENCE))
@@ -272,14 +297,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return packageType == PackageType.RELEASE;
   }
 
-  public boolean isCompressResources(){
-    return this.compressResources;
+  private boolean isCompressResources(){
+    return resourceCompressionMode.isCompressResources();
   }
 
-  public boolean isStoreStringsAsAssets() {
-    // TODO(user): introduce another parameter to AndroidBinaryRule and replace this with
-    // isCompressResources() && this.isStoreStringsAsAssets;
-    return false;
+  private boolean isStoreStringsAsAssets() {
+    return resourceCompressionMode.isStoreStringsAsAssets();
+  }
+
+  public ResourceCompressionMode getResourceCompressionMode() {
+    return resourceCompressionMode;
   }
 
   public boolean requiresResourceFilter() {
@@ -411,7 +438,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    *
    * @return The set of resource directories that will eventually contain filtered resources.
    */
-  private Set<String> getFilteredResourceDirectories(
+  @VisibleForTesting
+  Set<String> getFilteredResourceDirectories(
       ImmutableList.Builder<Step> commands,
       Set<String> resourceDirectories) {
     ImmutableBiMap.Builder<String, String> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
@@ -1128,7 +1156,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         /* useLinearAllocSplitDex */ false);
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<SourcePath> proguardConfig = Optional.absent();
-    private boolean compressResources = false;
+    private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
     private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
     private long linearAllocHardLimit = 0;
     private Optional<SourcePath> primaryDexClassesFile = Optional.absent();
@@ -1171,7 +1199,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           dexSplitMode,
           useAndroidProguardConfigWithOptimizations,
           proguardConfig,
-          compressResources,
+          resourceCompressionMode,
           primaryDexSubstrings.build(),
           linearAllocHardLimit,
           primaryDexClassesFile,
@@ -1251,11 +1279,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       return this;
     }
 
-    public Builder setCompressResources(boolean compressResources) {
-      this.compressResources = compressResources;
-      return this;
-    }
-
     public Builder addPrimaryDexSubstrings(Iterable<String> primaryDexSubstrings) {
       this.primaryDexSubstrings.addAll(primaryDexSubstrings);
       return this;
@@ -1273,6 +1296,20 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     public Builder setResourceFilter(ResourceFilter resourceFilter) {
       this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+      return this;
+    }
+
+    public Builder setResourceCompressionMode(String resourceCompressionMode) {
+      Preconditions.checkNotNull(resourceCompressionMode);
+      try {
+        this.resourceCompressionMode = ResourceCompressionMode.valueOf(
+            resourceCompressionMode.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new HumanReadableException(String.format(
+            "In %s, android_binary() was passed an invalid resource compression mode: %s",
+            buildTarget.getFullyQualifiedName(),
+            resourceCompressionMode));
+      }
       return this;
     }
 

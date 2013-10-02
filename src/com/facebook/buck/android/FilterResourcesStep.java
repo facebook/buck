@@ -182,6 +182,21 @@ public class FilterResourcesStep implements Step {
     return "Filtering drawable and string resources.";
   }
 
+  @VisibleForTesting
+  String getResourceFilter() {
+    return resourceFilter;
+  }
+
+  @VisibleForTesting
+  boolean isFilterStrings() {
+    return filterStrings;
+  }
+
+  @VisibleForTesting
+  ImmutableBiMap<String, String> getInResDirToOutResDirMap() {
+    return inResDirToOutResDirMap;
+  }
+
   /**
    * Looks through filtered drawables for files not of the target density and replaces them with
    * scaled versions.

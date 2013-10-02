@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.easymock.EasyMock.createMock;
@@ -54,6 +55,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -571,6 +573,47 @@ public class AndroidBinaryRuleTest {
                 "&& cp -R /path/to/source/armeabi /path/to/destination/armeabi",
             "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
                 "&& cp -R /path/to/source/x86 /path/to/destination/x86"));
+  }
+
+  @Test
+  public void testFilterResources() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
+        new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(BuildTargetFactory.newInstance("//:target"))
+        .setManifest("AndroidManifest.xml")
+        .setKeystore(addKeystoreRule(resolver))
+        .setTarget("Google Inc:Google APIs:16")
+        .setResourceFilter(new ResourceFilter(ImmutableList.<String>of("mdpi")))
+        .setResourceCompressionMode("enabled_with_strings_as_assets");
+
+    AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
+    ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
+    Set<String> resourceDirectories = ImmutableSet.of("one", "two");
+
+    Set<String> filteredResDirs = buildRule.getFilteredResourceDirectories(
+        commandsBuilder, resourceDirectories);
+
+    assertEquals(
+        ImmutableSet.of(
+            "buck-out/bin/__filtered__target__/0",
+            "buck-out/bin/__filtered__target__/1"),
+        filteredResDirs);
+
+    ImmutableList<Step> commands = commandsBuilder.build();
+    assertEquals(3, commands.size());
+
+    FilterResourcesStep resourcesStep = (FilterResourcesStep)commands.get(0);
+    MakeCleanDirectoryStep cleanDirectoryStep = (MakeCleanDirectoryStep)commands.get(1);
+
+    assertTrue(resourcesStep.isFilterStrings());
+    assertEquals("mdpi", resourcesStep.getResourceFilter());
+    assertEquals(ImmutableBiMap.of(
+        "one", "buck-out/bin/__filtered__target__/0",
+        "two", "buck-out/bin/__filtered__target__/1"),
+        resourcesStep.getInResDirToOutResDirMap());
+
+    assertEquals("buck-out/bin/__strings_target__", cleanDirectoryStep.getPath());
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
