@@ -59,6 +59,7 @@ import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
@@ -670,8 +671,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
       commands.add(new MkdirAndSymlinkFileStep(
-          Paths.normalizePathSeparator(entry.getValue().getPath()),
-          Paths.normalizePathSeparator(destinationDirectory + "/" + entry.getKey())));
+          MorePaths.newPathInstance(entry.getValue()).toString(),
+          MorePaths.newPathInstance(destinationDirectory + "/" + entry.getKey()).toString()));
     }
 
     return Optional.of(destination);
