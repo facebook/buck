@@ -16,9 +16,11 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -26,8 +28,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -40,6 +44,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -51,13 +57,23 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+/**
+ * Command used to compile java libraries with a variety of ways to handle dependencies.
+ * <p>
+ * If {@code buildDependencies} is set to {@link BuildDependencies#FIRST_ORDER_ONLY}, this class
+ * will invoke javac using {@code declaredClasspathEntries} for the classpath.
+ * If {@code buildDependencies} is set to {@link BuildDependencies#TRANSITIVE}, this class will
+ * invoke javac using {@code transitiveClasspathEntries} for the classpath.
+ * If {@code buildDependencies} is set to {@link BuildDependencies#WARN_ON_TRANSITIVE}, this class
+ * will first compile using {@code declaredClasspathEntries}, and should that fail fall back to
+ * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in
+ * the transitive classpath but not in the declared classpath.
+ */
 public class JavacInMemoryStep implements Step {
 
-  private final String pathToOutputDirectory;
+  private final String outputDirectory;
 
   private final Set<String> javaSourceFilePaths;
-
-  private final ImmutableSet<String> classpathEntries;
 
   private final JavacOptions javacOptions;
 
@@ -69,23 +85,68 @@ public class JavacInMemoryStep implements Step {
   @Nullable
   private Sha1HashCode abiKey;
 
+  private final ImmutableSet<String> transitiveClasspathEntries;
+
+  private final ImmutableSet<String> declaredClasspathEntries;
+
+  private final Optional<String> invokingRule;
+
+  private final BuildDependencies buildDependencies;
+
+  private final Optional<SuggestBuildRules> suggestBuildRules;
+
   /**
    * Will be {@code true} once {@link #buildWithClasspath(ExecutionContext, Set)} has been invoked.
    */
   private AtomicBoolean isExecuted = new AtomicBoolean(false);
 
+  private static final Pattern IMPORT_FAILURE =
+      Pattern.compile("import ([\\w\\.\\*]*);");
+
+  private static final Pattern PACKAGE_FAILURE =
+      Pattern.compile(".*?package ([\\w\\.\\*]*) does not exist");
+
+  private static final Pattern ACCESS_FAILURE =
+      Pattern.compile(".*?error: cannot access ([\\w\\.\\*]*)");
+
+  private static final Pattern CLASS_NOT_FOUND =
+      Pattern.compile(".*?class file for ([\\w\\.\\*]*) not found");
+
+  private static final Pattern CLASS_SYMBOL_NOT_FOUND =
+      Pattern.compile(".*?symbol:\\s*class\\s*([\\w\\.\\*]*)");
+
+  private static final ImmutableList<Pattern> MISSING_IMPORT_PATTERNS =
+      ImmutableList.of(IMPORT_FAILURE,
+          PACKAGE_FAILURE,
+          ACCESS_FAILURE,
+          CLASS_NOT_FOUND,
+          CLASS_SYMBOL_NOT_FOUND);
+
+  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+  public static interface SuggestBuildRules extends
+      Function<ImmutableSet<String>,ImmutableSet<String>> {}
+
   public JavacInMemoryStep(
-        String pathToOutputDirectory,
-        Set<String> javaSourceFilePaths,
-        Set<String> classpathEntries,
-        JavacOptions javacOptions,
-        Optional<String> pathToOutputAbiFile) {
-    Preconditions.checkNotNull(pathToOutputDirectory);
-    this.pathToOutputDirectory = pathToOutputDirectory;
+      String outputDirectory,
+      Set<String> javaSourceFilePaths,
+      Set<String> transitiveClasspathEntries,
+      Set<String> declaredClasspathEntries,
+      JavacOptions javacOptions,
+      Optional<String> pathToOutputAbiFile,
+      Optional<String> invokingRule,
+      BuildDependencies buildDependencies,
+      Optional<SuggestBuildRules> suggestBuildRules) {
+    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
-    this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
+    this.transitiveClasspathEntries = ImmutableSet.copyOf(transitiveClasspathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.pathToOutputAbiFile = Preconditions.checkNotNull(pathToOutputAbiFile);
+
+    this.declaredClasspathEntries = ImmutableSet.copyOf(declaredClasspathEntries);
+    this.invokingRule = Preconditions.checkNotNull(invokingRule);
+    this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
+    this.suggestBuildRules = Preconditions.checkNotNull(suggestBuildRules);
   }
 
   /**
@@ -97,7 +158,7 @@ public class JavacInMemoryStep implements Step {
    */
   @VisibleForTesting
   protected ImmutableList<String> getOptions(ExecutionContext context,
-      Set<String> buildClasspathEntries) {
+                                             Set<String> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     ProjectFilesystem filesystem = context.getProjectFilesystem();
@@ -119,7 +180,7 @@ public class JavacInMemoryStep implements Step {
 
     // Specify the output directory.
     Function<String, String> pathRelativizer = filesystem.getPathRelativizer();
-    builder.add("-d").add(pathRelativizer.apply(pathToOutputDirectory));
+    builder.add("-d").add(pathRelativizer.apply(outputDirectory));
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {
@@ -140,8 +201,80 @@ public class JavacInMemoryStep implements Step {
     }
   }
 
-  protected int executeBuild(ExecutionContext context) {
-    return buildWithClasspath(context, getClasspathEntries());
+  public int executeBuild(ExecutionContext context) {
+    // Build up the compilation task.
+    if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
+      return buildWithClasspath(context,
+          ImmutableSet.copyOf(declaredClasspathEntries));
+    } else if (buildDependencies == BuildDependencies.WARN_ON_TRANSITIVE) {
+      return tryBuildWithFirstOrderDeps(context);
+    } else {
+      return buildWithClasspath(context, getClasspathEntries());
+    }
+  }
+
+  private int tryBuildWithFirstOrderDeps(ExecutionContext context) {
+    CapturingPrintStream stdout = new CapturingPrintStream();
+    CapturingPrintStream stderr = new CapturingPrintStream();
+    ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr);
+
+    int declaredDepsResult = buildWithClasspath(firstOrderContext,
+        ImmutableSet.copyOf(declaredClasspathEntries));
+
+    String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
+    String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
+
+    if (declaredDepsResult != 0) {
+      int transitiveResult = buildWithClasspath(context, getClasspathEntries());
+      if (transitiveResult == 0) {
+        ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
+
+        context.getStdErr().println(String.format("Rule %s builds with its transitive " +
+            "dependencies but not with its first order dependencies.", invokingRule.or("")));
+        context.getStdErr().println("The following packages were missing:");
+        context.getStdErr().println(Joiner.on(LINE_SEPARATOR).join(failedImports));
+        if (suggestBuildRules.isPresent()) {
+          context.getStdErr().println("Try adding the following deps:");
+          context.getStdErr().println(Joiner.on(LINE_SEPARATOR)
+              .join(suggestBuildRules.get().apply(failedImports)));
+        }
+        context.getStdErr().println();
+        context.getStdErr().println();
+      }
+      return transitiveResult;
+    } else {
+      context.getStdOut().print(firstOrderStdout);
+      context.getStdErr().print(firstOrderStderr);
+    }
+
+    return declaredDepsResult;
+  }
+
+  @VisibleForTesting
+  static ImmutableSet<String> findFailedImports(String output) {
+    Iterable<String> lines = Splitter.on(LINE_SEPARATOR).split(output);
+    ImmutableSortedSet.Builder<String> failedImports = ImmutableSortedSet.naturalOrder();
+    for (String line : lines) {
+      for (Pattern missingImportPattern : MISSING_IMPORT_PATTERNS) {
+        Matcher lineMatch = missingImportPattern.matcher(line);
+        if (lineMatch.matches()) {
+          failedImports.add(lineMatch.group(1));
+          break;
+        }
+      }
+    }
+    return failedImports.build();
+  }
+
+  /**
+   * @return The classpath entries used to invoke javac.
+   */
+  protected ImmutableSet<String> getClasspathEntries() {
+    if (buildDependencies == BuildDependencies.TRANSITIVE) {
+      return transitiveClasspathEntries;
+    } else {
+      return declaredClasspathEntries;
+    }
   }
 
   protected int buildWithClasspath(ExecutionContext context, Set<String> buildClasspathEntries) {
@@ -209,7 +342,7 @@ public class JavacInMemoryStep implements Step {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ZipFile zipFile = new ZipFile(pathRelativizer.apply(path));
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            entries.hasMoreElements();
+             entries.hasMoreElements();
             ) {
           ZipEntry entry = entries.nextElement();
           if (!entry.getName().endsWith(".java")) {
@@ -238,15 +371,9 @@ public class JavacInMemoryStep implements Step {
     return "javac";
   }
 
-  public Set<String> getSrcs() {
+  @VisibleForTesting
+  Set<String> getSrcs() {
     return javaSourceFilePaths;
-  }
-
-  /**
-   * @return The classpath entries used to invoke javac.
-   */
-  protected ImmutableSet<String> getClasspathEntries() {
-    return classpathEntries;
   }
 
   /**

@@ -68,7 +68,6 @@ java_library(
 java_library(
   name = 'steps',
   srcs = [
-    'DependencyCheckingJavacStep.java',
     'GenerateCodeCoverageReportStep.java',
     'InstrumentStep.java',
     'JarDirectoryStep.java',

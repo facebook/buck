@@ -658,7 +658,7 @@ public class DefaultJavaLibraryRuleTest {
         libraryOne.getTransitiveClasspathEntries();
 
     assertEquals(
-        Optional.<DependencyCheckingJavacStep.SuggestBuildRules>absent(),
+        Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
         libraryOne.createSuggestBuildFunction(context,
             classpathEntries,
             classpathEntries,
@@ -711,7 +711,7 @@ public class DefaultJavaLibraryRuleTest {
         Iterables.getFirst(transitive.get(libraryOne), null), "com.facebook.Bar",
         Iterables.getFirst(transitive.get(libraryTwo), null), "com.facebook.Foo");
 
-    Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestFn =
+    Optional<JavacInMemoryStep.SuggestBuildRules> suggestFn =
         grandparent.createSuggestBuildFunction(context,
             transitive,
             /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibraryRule, String>of(),
@@ -933,7 +933,7 @@ public class DefaultJavaLibraryRuleTest {
         }
       }
       assertNotNull("Expected a JavacInMemoryCommand in command list", javac);
-      return (JavacInMemoryStep)javac;
+      return (JavacInMemoryStep) javac;
     }
   }
 }

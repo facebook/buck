@@ -284,7 +284,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       ImmutableSet<String> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildDependencies buildDependencies,
-      Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules,
+      Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRules,
       ImmutableList.Builder<Step> commands) {
     // Make sure that this directory exists because ABI information will be written here.
     Step mkdir = new MakeCleanDirectoryStep(getPathToAbiOutputDir());
@@ -292,7 +292,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
-      final JavacInMemoryStep javac = new DependencyCheckingJavacStep(
+      final JavacInMemoryStep javac = new JavacInMemoryStep(
           outputDirectory,
           getJavaSrcs(),
           transitiveClasspathEntries,
@@ -512,7 +512,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     String outputDirectory = getClassesDir(getBuildTarget());
     commands.add(new MakeCleanDirectoryStep(outputDirectory));
 
-    Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRule =
+    Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRule =
         createSuggestBuildFunction(context,
             transitiveClasspathEntries,
             declaredClasspathEntries,
@@ -616,7 +616,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    *    set of rules to suggest that the developer import to satisfy those imports.
    */
   @VisibleForTesting
-  Optional<DependencyCheckingJavacStep.SuggestBuildRules> createSuggestBuildFunction(
+  Optional<JavacInMemoryStep.SuggestBuildRules> createSuggestBuildFunction(
       BuildContext context,
       ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries,
       ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries,
@@ -637,8 +637,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
               }
             })).reverse();
 
-    DependencyCheckingJavacStep.SuggestBuildRules suggestBuildRuleFn =
-        new DependencyCheckingJavacStep.SuggestBuildRules() {
+    JavacInMemoryStep.SuggestBuildRules suggestBuildRuleFn =
+        new JavacInMemoryStep.SuggestBuildRules() {
       @Override
       public ImmutableSet<String> apply(ImmutableSet<String> failedImports) {
         ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
