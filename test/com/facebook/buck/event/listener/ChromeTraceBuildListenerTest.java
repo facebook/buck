@@ -46,8 +46,10 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,17 +61,61 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 
 public class ChromeTraceBuildListenerTest {
   @Rule
   public TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
+  public void testDeleteFiles() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+
+    String tracePath = String.format("%s/build.trace", BuckConstant.BUCK_TRACE_DIR);
+    File traceFile = new File(tmpDir.getRoot(), tracePath);
+    projectFilesystem.createParentDirs(tracePath);
+    traceFile.createNewFile();
+    traceFile.setLastModified(0);
+
+    for (int i = 0; i < 10; ++i) {
+      File oldResult = new File(tmpDir.getRoot(),
+          String.format("%s/build.100%d.trace", BuckConstant.BUCK_TRACE_DIR, i));
+      oldResult.createNewFile();
+      oldResult.setLastModified(TimeUnit.SECONDS.toMillis(i));
+    }
+
+    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem,
+        new IncrementingFakeClock(),
+        3);
+
+    listener.deleteOldTraces();
+
+    ImmutableList<String> files = FluentIterable.
+        from(Arrays.asList(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR))).
+        transform(new Function<File, String>() {
+          @Override
+          public String apply(File input) {
+            return input.getName();
+          }
+        }).toList();
+    assertEquals(4, files.size());
+    assertEquals(ImmutableSortedSet.of("build.trace",
+                                       "build.1009.trace",
+                                       "build.1008.trace",
+                                       "build.1007.trace"),
+        ImmutableSortedSet.copyOf(files));
+  }
+
+  @Test
   public void testBuildJson() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
-    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem);
+
+    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem,
+        new IncrementingFakeClock(),
+        42);
 
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
 
@@ -121,7 +167,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(CommandEvent.finished("party", true, 0));
     listener.outputTrace();
 
-    File resultFile = new File(tmpDir.getRoot(), BuckConstant.BIN_DIR + "/build.trace");
+    File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");
 
     ObjectMapper mapper = new ObjectMapper();
 

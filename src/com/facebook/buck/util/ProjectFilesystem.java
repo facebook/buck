@@ -293,7 +293,11 @@ public class ProjectFilesystem {
     java.nio.file.Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
   }
 
-  public void createSymLink(Path sourcePath, Path targetPath) throws IOException {
+  public void createSymLink(Path sourcePath, Path targetPath, boolean force)
+      throws IOException {
+    if (force) {
+      java.nio.file.Files.deleteIfExists(targetPath);
+    }
     if (Platform.detect() == Platform.WINDOWS) {
       if (isDirectory(sourcePath)) {
         // Creating symlinks to directories on Windows requires escalated privileges. We're just

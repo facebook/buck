@@ -420,6 +420,18 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testGetMaxTraces() throws IOException {
+    assertEquals(25, new FakeBuckConfig().getMaxTraces());
+
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[log]",
+        "max_traces = 42"));
+    BuckConfig config = createWithDefaultFilesystem(reader, null);
+    assertEquals(42, config.getMaxTraces());
+  }
+
+
+  @Test
   public void testOverride() throws IOException {
     Reader readerA = new StringReader(Joiner.on('\n').join(
         "[cache]",

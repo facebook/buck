@@ -448,7 +448,7 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(new ChromeTraceBuildListener(projectFilesystem));
+            .add(new ChromeTraceBuildListener(projectFilesystem, clock, config.getMaxTraces()));
 
     if (webServer.isPresent()) {
       eventListenersBuilder.add(webServer.get().createListener());

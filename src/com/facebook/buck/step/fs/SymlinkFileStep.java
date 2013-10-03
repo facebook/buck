@@ -59,8 +59,7 @@ public class SymlinkFileStep implements Step {
     Path targetPath = Paths.get(pathRelativizer.apply(target));
     Path sourcePath = Paths.get(pathRelativizer.apply(source));
     try {
-      java.nio.file.Files.deleteIfExists(targetPath);
-      context.getProjectFilesystem().createSymLink(sourcePath, targetPath);
+      context.getProjectFilesystem().createSymLink(sourcePath, targetPath, true);
       return 0;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());

@@ -87,6 +87,7 @@ class BuckConfig {
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
   private static final String DEFAULT_CASSANDRA_MODE = CassandraMode.readwrite.name();
+  private static final String DEFAULT_MAX_TRACES = "25";
 
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
@@ -429,6 +430,10 @@ class BuckConfig {
 
   public long getDefaultTestTimeoutMillis() {
     return Long.parseLong(getValue("test", "timeout").or("0"));
+  }
+
+  public int getMaxTraces() {
+    return Integer.parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
   }
 
   public ImmutableSet<String> getListenerJars() {
