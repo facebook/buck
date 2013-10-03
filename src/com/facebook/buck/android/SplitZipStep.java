@@ -186,6 +186,13 @@ public class SplitZipStep implements Step {
               return !line.isEmpty() && !(line.charAt(0) == '#');
             }
           })
+          .transform(new Function<String, String>() {
+            @Override
+            public String apply(String line) {
+              // Append a ".class" so the input file can just contain the internal class name.
+              return line + ".class";
+            }
+          })
           .toSet();
     } else {
       classNames = ImmutableSet.of();

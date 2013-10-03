@@ -109,9 +109,9 @@ public class SplitZipStepTest {
         /* useLinearAllocSplitDex */ true,
         /* linearAllocHardLimit */ 4 * 1024 * 1024);
     List<String> linesInManifestFile = ImmutableList.of(
-        "com/google/common/collect/ImmutableSortedSet.class",
-        "  com/google/common/collect/ImmutableSet.class",
-        "# com/google/common/collect/ImmutableMap.class"
+        "com/google/common/collect/ImmutableSortedSet",
+        "  com/google/common/collect/ImmutableSet",
+        "# com/google/common/collect/ImmutableMap"
         );
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
