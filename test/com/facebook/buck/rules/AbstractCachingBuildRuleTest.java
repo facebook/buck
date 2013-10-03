@@ -239,8 +239,6 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     buckEventBus.register(listener);
 
     BuildContext buildContext = createMock(BuildContext.class);
-    ArtifactCache artifactCache = createMock(ArtifactCache.class);
-    expect(buildContext.getArtifactCache()).andReturn(artifactCache);
 
     BuildInfoRecorder buildInfoRecorder = createMock(BuildInfoRecorder.class);
     expect(buildContext.createBuildInfoRecorder(
@@ -272,7 +270,6 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // These methods should be invoked after the rule is built locally.
     buildInfoRecorder.writeMetadataToDisk();
-    buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
     expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());

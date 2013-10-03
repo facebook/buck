@@ -60,7 +60,6 @@ public class BuildRuleSuccess {
      */
     MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS(
         Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING,
-        Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
         Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK
         ),
 
