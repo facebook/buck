@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class CopyStep implements Step {
 
@@ -38,6 +39,14 @@ public class CopyStep implements Step {
   }
 
   public CopyStep(String source, String destination) {
+    this(source, destination, false /* shouldRecurse */);
+  }
+
+  public CopyStep(Path source, Path destination, boolean shouldRecurse) {
+    this(source.toString(), destination.toString(), shouldRecurse);
+  }
+
+  public CopyStep(Path source, Path destination) {
     this(source, destination, false /* shouldRecurse */);
   }
 

@@ -27,6 +27,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class CopyStepTest {
 
   private ExecutionContext context;
@@ -40,6 +43,16 @@ public class CopyStepTest {
   @After
   public void tearDown() {
     EasyMock.verify(context);
+  }
+
+  @Test
+  public void testGetShellCommandInternalPath() {
+    Path source = Paths.get("path/to/source.txt");
+    Path destination = Paths.get("path/to/destination.txt");
+    CopyStep copyCommand = new CopyStep(source, destination);
+    assertEquals(source.toString(), copyCommand.getSource());
+    assertEquals(destination.toString(), copyCommand.getDestination());
+    assertFalse(copyCommand.isRecursive());
   }
 
   @Test
