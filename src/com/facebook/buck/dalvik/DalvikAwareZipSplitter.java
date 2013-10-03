@@ -52,6 +52,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final File reportDir;
   private final long linearAllocLimit;
   private final DalvikStatsCache dalvikStatsCache;
+  private final DexSplitStrategy dexSplitStrategy;
 
   private final MySecondaryDexHelper secondaryDexWriter;
   private DalvikAwareOutputStreamHelper primaryOut;
@@ -66,6 +67,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
+      DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
     if (linearAllocLimit <= 0) {
@@ -76,6 +78,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.secondaryDexWriter = new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
     this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
     this.reportDir = reportDir;
+    this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.linearAllocLimit = linearAllocLimit;
     this.dalvikStatsCache = new DalvikStatsCache();
   }
@@ -87,6 +90,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
+      DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
     return new DalvikAwareZipSplitter(
@@ -96,6 +100,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         secondaryPattern,
         linearAllocLimit,
         requiredInPrimaryZip,
+        dexSplitStrategy,
         canaryStrategy,
         reportDir);
   }
@@ -130,7 +135,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
         // Even if we have started writing a secondary dex, we still check if there is any leftover
         // room in the primary dex for the current entry in the traversal.
-        if (primaryOut.canPutEntry(entry)) {
+        if (dexSplitStrategy == DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE &&
+            primaryOut.canPutEntry(entry)) {
           primaryOut.putEntry(entry);
         } else {
           secondaryDexWriter.getOutputToWriteTo(entry).putEntry(entry);

@@ -44,6 +44,7 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
         secondaryPattern,
         linearAllocLimit,
         requiredInPrimaryZip,
+        dexSplitStrategy,
         canaryStrategy,
         reportDir);
   }
