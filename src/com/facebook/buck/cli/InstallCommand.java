@@ -16,8 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
+import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.rules.BuildRule;
@@ -32,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -212,13 +217,14 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     getBuckEventBus().post(InstallEvent.started(buildRule.getBuildTarget()));
 
     final File apk = new File(buildRule.getApkPath());
+    final boolean installViaSd = options.shouldInstallViaSd();
     boolean success = adbCall(options.adbOptions(),
         options.targetDeviceOptions(),
         context,
         new AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
-            return installApkOnDevice(device, apk);
+            return installApkOnDevice(device, apk, installViaSd);
           }
 
           @Override
@@ -237,7 +243,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
    */
   @VisibleForTesting
   @SuppressWarnings("PMD.PrematureDeclaration")
-  boolean installApkOnDevice(IDevice device, File apk) {
+  boolean installApkOnDevice(IDevice device, File apk, boolean installViaSd) {
     String name;
     if (device.isEmulator()) {
       name = device.getSerialNumber() + " (" + device.getAvdName() + ")";
@@ -251,7 +257,12 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
 
     getBuckEventBus().post(LogEvent.info("Installing apk on %s.", name));
     try {
-      String reason = device.installPackage(apk.getAbsolutePath(), true);
+      String reason = null;
+      if (installViaSd) {
+        reason = deviceInstallPackageViaSd(device, apk.getAbsolutePath());
+      } else {
+        reason = device.installPackage(apk.getAbsolutePath(), true);
+      }
       if (reason != null) {
         console.printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
         return false;
@@ -264,6 +275,41 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     }
   }
 
+  /**
+   * Installs apk on device, copying apk to external storage first.
+   */
+  private String deviceInstallPackageViaSd(IDevice device, String apk) {
+    try {
+      // Figure out where the SD card is mounted.
+      String externalStorage = deviceGetExternalStorage(device);
+      if (externalStorage == null) {
+        return "Cannot get external storage location.";
+      }
+      String remotePackage = String.format("%s/%s.apk", externalStorage, UUID.randomUUID());
+      // Copy APK to device
+      device.pushFile(apk, remotePackage);
+      // Install
+      String reason = device.installRemotePackage(remotePackage, true);
+      // Delete temporary file
+      device.removeRemotePackage(remotePackage);
+      return reason;
+    } catch (Throwable t) {
+      return String.valueOf(t.getMessage());
+    }
+  }
 
+  /**
+   * Retrieves external storage location (SD card) from device.
+   */
+  private String deviceGetExternalStorage(IDevice device) throws TimeoutException,
+          AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
+      CollectingOutputReceiver receiver = new CollectingOutputReceiver();
+      device.executeShellCommand("echo $EXTERNAL_STORAGE", receiver, GETPROP_TIMEOUT);
+      String value = receiver.getOutput().trim();
+      if (value.isEmpty()) {
+          return null;
+      }
+      return value;
+  }
 
 }

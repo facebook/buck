@@ -322,7 +322,7 @@ public class InstallCommandTest {
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
 
-    assertTrue(installCommand.installApkOnDevice(device, apk));
+    assertTrue(installCommand.installApkOnDevice(device, apk, false));
     assertEquals(apk.getAbsolutePath(), apkPath.get());
   }
 
@@ -385,7 +385,7 @@ public class InstallCommandTest {
     };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
-    assertFalse(installCommand.installApkOnDevice(device, apk));
+    assertFalse(installCommand.installApkOnDevice(device, apk, false));
   }
 
   /**
@@ -403,6 +403,6 @@ public class InstallCommandTest {
     };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
-    assertFalse(installCommand.installApkOnDevice(device, apk));
+    assertFalse(installCommand.installApkOnDevice(device, apk, false));
   }
 }

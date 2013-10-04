@@ -28,6 +28,8 @@ public class InstallCommandOptions extends BuildCommandOptions {
 
   @VisibleForTesting static final String RUN_LONG_ARG = "--run";
   @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
+  @VisibleForTesting static final String INSTALL_VIA_SD_LONG_ARG = "--via-sd";
+  @VisibleForTesting static final String INSTALL_VIA_SD_SHORT_ARG = "-S";
   @VisibleForTesting static final String ACTIVITY_LONG_ARG = "--activity";
   @VisibleForTesting static final String ACTIVITY_SHORT_ARG = "-a";
   @VisibleForTesting static final String UNINSTALL_LONG_ARG = "--uninstall";
@@ -55,6 +57,12 @@ public class InstallCommandOptions extends BuildCommandOptions {
   private boolean run = false;
 
   @Option(
+      name = INSTALL_VIA_SD_LONG_ARG,
+      aliases = { INSTALL_VIA_SD_SHORT_ARG },
+      usage = "Copy package to external storage (SD) instead of /data/local/tmp before installing.")
+  private boolean installViaSd = false;
+
+  @Option(
       name = ACTIVITY_LONG_ARG,
       aliases = { ACTIVITY_SHORT_ARG },
       metaVar = "<pkg/activity>",
@@ -80,6 +88,11 @@ public class InstallCommandOptions extends BuildCommandOptions {
   public boolean shouldStartActivity() {
     return (activity != null) || run;
   }
+
+  public boolean shouldInstallViaSd() {
+    return installViaSd;
+  }
+
 
   public @Nullable String getActivityToStart() {
     return activity;
