@@ -45,7 +45,6 @@ import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.AbstractGenruleStep;
-import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -64,6 +63,7 @@ import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -323,22 +323,51 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   }
 
-  // TODO(user): Replace the BashSteps in this class with Steps that are platform-agnostic.
-  // You'll need to do this as part of making it possible to build an APK on Windows using Buck.
-
   @VisibleForTesting
   void copyNativeLibrary(String sourceDir,
       String destinationDir,
       ImmutableList.Builder<Step> commands) {
+    Path sourceDirPath = Paths.get(sourceDir);
+    Path destinationDirPath = Paths.get(destinationDir);
+
     if (getCpuFilters().isEmpty()) {
-      commands.add(new BashStep(String.format("cp -R %s/* %s", sourceDir, destinationDir)));
+      commands.add(new CopyStep(sourceDirPath, destinationDirPath, true));
     } else {
       for (TargetCpuType cpuType: getCpuFilters()) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
-        String libsDirectory = sourceDir + "/" + abiDirectoryComponent.get();
-        commands.add(new BashStep(String.format(
-            "[ -d %s ] && cp -R %s %s || exit 0", libsDirectory, libsDirectory, destinationDir)));
+
+        final Path libSourceDir = sourceDirPath.resolve(abiDirectoryComponent.get());
+        Path libDestinationDir = destinationDirPath.resolve(abiDirectoryComponent.get());
+
+        final MkdirStep mkDirStep = new MkdirStep(libDestinationDir);
+        final CopyStep copyStep = new CopyStep(libSourceDir, libDestinationDir, true);
+        commands.add(new Step() {
+          @Override
+          public int execute(ExecutionContext context) {
+            if (!context.getProjectFilesystem().exists(libSourceDir.toString())) {
+              return 0;
+            }
+            if (mkDirStep.execute(context) == 0 && copyStep.execute(context) == 0) {
+              return 0;
+            }
+            return 1;
+          }
+
+          @Override
+          public String getShortName() {
+            return "copy_native_libraries";
+          }
+
+          @Override
+          public String getDescription(ExecutionContext context) {
+            ImmutableList.Builder<String> stringBuilder = ImmutableList.builder();
+            stringBuilder.add(String.format("[ -d %s ]", libSourceDir.toString()));
+            stringBuilder.add(mkDirStep.getDescription(context));
+            stringBuilder.add(copyStep.getDescription(context));
+            return Joiner.on(" && ").join(stringBuilder.build());
+          }
+        });
       }
     }
   }

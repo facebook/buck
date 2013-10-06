@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
@@ -38,7 +39,6 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -48,8 +48,8 @@ import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -64,15 +64,11 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
 public class AndroidBinaryRuleTest {
-
-  /**
-   * Directory where native libraries are expected to put their output.
-   */
-  final String nativeOutDir = "buck-out/bin/__native_zips__fbandroid_with_dash_debug_fbsign__/";
 
   @Test
   public void testAndroidBinaryNoDx() {
@@ -550,7 +546,7 @@ public class AndroidBinaryRuleTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "bash -c cp -R /path/to/source/* /path/to/destination/"));
+            "cp -R /path/to/source /path/to/destination"));
   }
 
   @Test
@@ -560,10 +556,8 @@ public class AndroidBinaryRuleTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "bash -c " +
-                "[ -d /path/to/source/armeabi-v7a ] && " +
-                "cp -R /path/to/source/armeabi-v7a /path/to/destination/ || " +
-                "exit 0"));
+            "[ -d /path/to/source/armeabi-v7a ] && mkdir -p /path/to/destination/armeabi-v7a " +
+                "&& cp -R /path/to/source/armeabi-v7a /path/to/destination/armeabi-v7a"));
   }
 
   @Test
@@ -573,17 +567,41 @@ public class AndroidBinaryRuleTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "bash -c [ -d /path/to/source/armeabi ] && " +
-                "cp -R /path/to/source/armeabi /path/to/destination/ || exit 0",
-            "bash -c [ -d /path/to/source/x86 ] && " +
-                "cp -R /path/to/source/x86 /path/to/destination/ || exit 0"));
+            "[ -d /path/to/source/armeabi ] && mkdir -p /path/to/destination/armeabi " +
+                "&& cp -R /path/to/source/armeabi /path/to/destination/armeabi",
+            "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
+                "&& cp -R /path/to/source/x86 /path/to/destination/x86"));
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
       ImmutableSet<String> cpuFilters,
       String sourceDir,
       String destinationDir,
-      ImmutableList<String> expectedShellCommands) {
+      ImmutableList<String> expectedCommandDescriptions) {
+
+    class FakeProjectFilesystem extends ProjectFilesystem {
+
+      public FakeProjectFilesystem() {
+        super(new File("."));
+      }
+
+      @Override
+      public Function<String, Path> getPathRelativizer() {
+        return new Function<String, Path>() {
+
+          @Override
+          public Path apply(String input) {
+            return Paths.get(input);
+          }
+        };
+      }
+
+      @Override
+      public Path resolve(Path path) {
+        return path;
+      }
+    }
+
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
         new FakeAbstractBuildRuleBuilderParams())
@@ -602,14 +620,14 @@ public class AndroidBinaryRuleTest {
 
     ImmutableList<Step> steps = commands.build();
 
-    assertEquals(steps.size(), expectedShellCommands.size());
+    assertEquals(steps.size(), expectedCommandDescriptions.size());
     ExecutionContext context = createMock(ExecutionContext.class);
+    expect(context.getProjectFilesystem()).andReturn(new FakeProjectFilesystem()).anyTimes();
     replay(context);
 
     for (int i = 0; i < steps.size(); ++i) {
-      Iterable<String> observedArgs = ((BashStep)steps.get(i)).getShellCommand(context);
-      String observedCommand = Joiner.on(' ').join(observedArgs);
-      assertEquals(expectedShellCommands.get(i), observedCommand);
+      String description = steps.get(i).getDescription(context);
+      assertEquals(expectedCommandDescriptions.get(i), description);
     }
 
     verify(context);
