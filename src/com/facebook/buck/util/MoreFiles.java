@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -43,9 +42,9 @@ public final class MoreFiles {
   /** Utility class: do not instantiate. */
   private MoreFiles() {}
 
-  public static void rmdir(String path) throws IOException {
+  public static void rmdir(Path path) throws IOException {
     try {
-      deleteRecursively(Paths.get(path));
+      deleteRecursively(path);
     } catch (NoSuchFileException e) {
       // Delete anyway even if the directory does not exist
       // This behavior is the same as rm -rf

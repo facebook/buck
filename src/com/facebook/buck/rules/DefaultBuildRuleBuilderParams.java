@@ -20,9 +20,11 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
+import java.nio.file.Path;
+
 public class DefaultBuildRuleBuilderParams implements AbstractBuildRuleBuilderParams {
 
-  private final Function<String, String> pathRelativizer;
+  private final Function<String, Path> pathRelativizer;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   public DefaultBuildRuleBuilderParams(ProjectFilesystem projectFilesystem,
@@ -32,7 +34,7 @@ public class DefaultBuildRuleBuilderParams implements AbstractBuildRuleBuilderPa
   }
 
   @Override
-  public Function<String, String> getPathRelativizer() {
+  public Function<String, Path> getPathRelativizer() {
     return pathRelativizer;
   }
 

@@ -45,6 +45,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -341,7 +342,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     public TargetsCommandPredicate(
         PartialGraph partialGraph,
-        Function<String, String> pathRelativizer,
+        Function<String, Path> pathRelativizer,
         ImmutableSet<BuildRuleType> buildRuleTypes,
         ImmutableSet<String> referencedFiles,
         ImmutableSet<BuildTarget> matchingBuildRules) {

@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -35,8 +37,8 @@ public class InstrumentStepTest {
   @Test
   public void testGetShellCommandInternal() {
     String mode = "overwrite";
-    Set<String> instrumentDirectories = ImmutableSet.of(
-        "root/directory1", "directory2");
+    Set<Path> instrumentDirectories = ImmutableSet.of(
+        Paths.get("root/directory1"), Paths.get("directory2"));
 
     ExecutionContext context = createMock(ExecutionContext.class);
     replay(context);

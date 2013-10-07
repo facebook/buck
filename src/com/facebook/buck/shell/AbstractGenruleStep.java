@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -188,7 +189,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
           break;
 
         case "location":
-          replacement = getLocationReplacementFrom(filesystem, matchingBuildable);
+          replacement = getLocationReplacementFrom(filesystem, matchingBuildable).toString();
           break;
 
         default:
@@ -204,7 +205,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     return buffer.toString();
   }
 
-  private String getLocationReplacementFrom(ProjectFilesystem filesystem, Buildable matchingRule) {
+  private Path getLocationReplacementFrom(ProjectFilesystem filesystem, Buildable matchingRule) {
     return filesystem.getPathRelativizer().apply(matchingRule.getPathToOutputFile());
   }
 

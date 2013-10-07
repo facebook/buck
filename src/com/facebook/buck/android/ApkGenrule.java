@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -65,7 +66,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
-      Function<String, String> relativeToAbsolutePathFunction,
+      Function<String, Path> relativeToAbsolutePathFunction,
       InstallableBuildRule apk) {
     super(buildRuleParams,
         srcs,
@@ -115,7 +116,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   @Override
   public String getPathToOutputFile() {
-    return pathToOutFile;
+    return pathToOutFile.toString();
   }
 
   public static Builder newApkGenruleBuilder(AbstractBuildRuleBuilderParams params) {

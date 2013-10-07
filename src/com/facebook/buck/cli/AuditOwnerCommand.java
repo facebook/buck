@@ -38,6 +38,7 @@ import com.google.common.collect.TreeMultimap;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Set;
 
@@ -105,7 +106,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     Set<String> nonFileInputs = Sets.newHashSet();
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
+    Function<String, Path> pathRelativizer = projectFilesystem.getPathRelativizer();
     for (String filePath : options.getArguments()) {
       File file = projectFilesystem.getFileForRelativePath(filePath);
       if (!file.exists()) {
@@ -146,7 +147,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       SetMultimap<BuildRule, InputRule> owners, Set<String> nonExistentFiles) {
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
+    Function<String, Path> pathRelativizer = projectFilesystem.getPathRelativizer();
     for (String nonExistentFile : nonExistentFiles) {
       File file = projectFilesystem.getFileForRelativePath(nonExistentFile);
       File buck = findBuckFileFor(file);

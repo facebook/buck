@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 
@@ -37,7 +38,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   protected Set<BuildTarget> deps = Sets.newHashSet();
   protected Set<BuildTargetPattern> visibilityPatterns = Sets.newHashSet();
 
-  private final Function<String, String> pathRelativizer;
+  private final Function<String, Path> pathRelativizer;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   protected AbstractBuildRuleBuilder(AbstractBuildRuleBuilderParams params) {

@@ -296,7 +296,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     CompiledClassFileFinder(JavaTestRule rule, ExecutionContext context) {
       Preconditions.checkState(rule.isRuleBuilt(),
           "Rule must be built so that the classes folder is available");
-      String outputPath;
+      Path outputPath;
       String relativeOutputPath = rule.getPathToOutputFile();
       if (relativeOutputPath != null) {
         outputPath = context.getProjectFilesystem().getPathRelativizer().apply(relativeOutputPath);
@@ -328,7 +328,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      * @param jarFile jar where the generated .class files were written
      */
     @VisibleForTesting
-    static Set<String> getClassNamesForSources(Set<String> sources, @Nullable String jarFile) {
+    static Set<String> getClassNamesForSources(Set<String> sources, @Nullable Path jarFile) {
       if (jarFile == null) {
         return ImmutableSet.of();
       }
@@ -344,7 +344,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       }
 
       final ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
-      ZipFileTraversal traversal = new ZipFileTraversal(new File(jarFile)) {
+      ZipFileTraversal traversal = new ZipFileTraversal(jarFile.toFile()) {
 
         @Override
         public void visit(ZipFile zipFile, ZipEntry zipEntry) {

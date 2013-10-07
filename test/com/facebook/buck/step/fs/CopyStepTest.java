@@ -50,15 +50,15 @@ public class CopyStepTest {
     Path source = Paths.get("path/to/source.txt");
     Path destination = Paths.get("path/to/destination.txt");
     CopyStep copyCommand = new CopyStep(source, destination);
-    assertEquals(source.toString(), copyCommand.getSource());
-    assertEquals(destination.toString(), copyCommand.getDestination());
+    assertEquals(source, copyCommand.getSource());
+    assertEquals(destination, copyCommand.getDestination());
     assertFalse(copyCommand.isRecursive());
   }
 
   @Test
   public void testGetShellCommandInternal() {
-    String source = "path/to/source.txt";
-    String destination = "path/to/destination.txt";
+    Path source = Paths.get("path/to/source.txt");
+    Path destination = Paths.get("path/to/destination.txt");
     CopyStep copyCommand = new CopyStep(source, destination);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
@@ -67,8 +67,8 @@ public class CopyStepTest {
 
   @Test
   public void testGetShellCommandInternalWithRecurse() {
-    String source = "path/to/source";
-    String destination = "path/to/destination";
+    Path source = Paths.get("path/to/source");
+    Path destination = Paths.get("path/to/destination");
     CopyStep copyCommand = new CopyStep(source, destination, /* shouldRecurse */ true);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
@@ -77,7 +77,7 @@ public class CopyStepTest {
 
   @Test
   public void testGetShortName() {
-    CopyStep copyCommand = new CopyStep("here", "there");
+    CopyStep copyCommand = new CopyStep(Paths.get("here"), Paths.get("there"));
     assertEquals("cp", copyCommand.getShortName());
   }
 

@@ -91,10 +91,10 @@ public class NdkLibraryTest {
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    Function<String, String> pathTransform = new Function<String, String>() {
+    Function<String, Path> pathTransform = new Function<String, Path>() {
       @Override
-      public String apply(String pathRelativeTo) {
-        return "/foo/" + pathRelativeTo;
+      public Path apply(String pathRelativeTo) {
+        return Paths.get("/foo/", pathRelativeTo);
       }
     };
     expect(executionContext.getProjectFilesystem()).andReturn(projectFilesystem);

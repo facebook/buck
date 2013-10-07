@@ -47,6 +47,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -57,7 +58,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -74,12 +74,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.SortedMap;
 
 public class TargetsCommandTest {
 
-  private static final Function<String, String> PATH_RELATIVIZER = Functions.identity();
+  private static final Function<String, Path> PATH_RELATIVIZER =
+      IdentityPathRelativizer.getIdentityRelativizer();
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
   private TestConsole console;

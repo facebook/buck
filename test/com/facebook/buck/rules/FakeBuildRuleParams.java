@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.google.common.base.Functions;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -38,7 +38,7 @@ public class FakeBuildRuleParams extends BuildRuleParams {
     super(buildTarget,
         deps,
         visibilityPatterns,
-        /* pathRelativizer */ Functions.<String>identity(),
+        /* pathRelativizer */ IdentityPathRelativizer.getIdentityRelativizer(),
         new FakeRuleKeyBuilderFactory());
   }
 

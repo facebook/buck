@@ -62,7 +62,7 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
 
     // Remove existing contents if any.
     if (dest.exists()) {
-      MoreFiles.rmdir(dest.getAbsolutePath());
+      MoreFiles.rmdir(java.nio.file.Paths.get(dest.getAbsolutePath()));
     }
     dest.mkdirs();
 

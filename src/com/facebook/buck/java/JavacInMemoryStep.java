@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -179,8 +180,8 @@ public class JavacInMemoryStep implements Step {
     }
 
     // Specify the output directory.
-    Function<String, String> pathRelativizer = filesystem.getPathRelativizer();
-    builder.add("-d").add(pathRelativizer.apply(outputDirectory));
+    Function<String, Path> pathRelativizer = filesystem.getPathRelativizer();
+    builder.add("-d").add(pathRelativizer.apply(outputDirectory).toString());
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {
@@ -330,17 +331,17 @@ public class JavacInMemoryStep implements Step {
 
   private Iterable<? extends JavaFileObject> createCompilationUnits(
       StandardJavaFileManager fileManager,
-      Function<String, String> pathRelativizer) throws IOException {
+      Function<String, Path> pathRelativizer) throws IOException {
     List<JavaFileObject> compilationUnits = Lists.newArrayList();
     for (String path : javaSourceFilePaths) {
       if (path.endsWith(".java")) {
         // For an ordinary .java file, create a corresponding JavaFileObject.
         Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
-            pathRelativizer.apply(path));
+            pathRelativizer.apply(path).toFile());
         compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
       } else if (path.endsWith(".src.zip")) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ZipFile zipFile = new ZipFile(pathRelativizer.apply(path));
+        ZipFile zipFile = new ZipFile(pathRelativizer.apply(path).toFile());
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
              entries.hasMoreElements();
             ) {

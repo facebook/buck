@@ -17,11 +17,11 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -48,8 +48,8 @@ public class TestExecutionContext {
         return path;
       }
       @Override
-      public Function<String, String> getPathRelativizer() {
-        return Functions.identity();
+      public Function<String, Path> getPathRelativizer() {
+        return IdentityPathRelativizer.getIdentityRelativizer();
       }
     })
     .build();

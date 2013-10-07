@@ -33,6 +33,7 @@ IO_SRCS = [
   'DirtyPrintStreamDecorator.java',
   'InputStreamConsumer.java',
   'MoreFiles.java',
+  'MorePaths.java',
   'ProcessExecutor.java',
   'ProjectFilesystem.java',
   'Verbosity.java',

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Preconditions;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,5 +46,13 @@ public final class MorePaths {
    */
   public static Path separatorsToUnix(Path path) {
     return separatorsToUnix(path.toString());
+  }
+
+  /**
+   * @param toMakeAbsolute The {@link Path} to act upon.
+   * @return The Path, made absolute and normalized.
+   */
+  public static Path absolutify(Path toMakeAbsolute) {
+    return Preconditions.checkNotNull(toMakeAbsolute).toAbsolutePath().normalize();
   }
 }

@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class SymlinkFileStep implements Step {
 
@@ -43,7 +42,7 @@ public class SymlinkFileStep implements Step {
 
   @Override
   public String getDescription (ExecutionContext context) {
-    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    Function<String, Path> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
     // Always symlink to an absolute path so the symlink is sure to be read correctly.
     return Joiner.on(" ").join(
         "ln",
@@ -55,9 +54,9 @@ public class SymlinkFileStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
-    Path targetPath = Paths.get(pathRelativizer.apply(target));
-    Path sourcePath = Paths.get(pathRelativizer.apply(source));
+    Function<String, Path> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    Path targetPath = pathRelativizer.apply(target);
+    Path sourcePath = pathRelativizer.apply(source);
     try {
       context.getProjectFilesystem().createSymLink(sourcePath, targetPath, true);
       return 0;

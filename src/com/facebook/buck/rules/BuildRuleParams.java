@@ -24,6 +24,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 /**
  * Standard set of parameters that is passed to all build rules.
  */
@@ -33,13 +35,13 @@ public class BuildRuleParams {
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
-  private final Function<String, String> pathRelativizer;
+  private final Function<String, Path> pathRelativizer;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   public BuildRuleParams(BuildTarget buildTarget,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns,
-      Function<String, String> pathRelativizer,
+      Function<String, Path> pathRelativizer,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.deps = Preconditions.checkNotNull(deps);
@@ -60,7 +62,7 @@ public class BuildRuleParams {
     return visibilityPatterns;
   }
 
-  public Function<String, String> getPathRelativizer() {
+  public Function<String, Path> getPathRelativizer() {
     return pathRelativizer;
   }
 

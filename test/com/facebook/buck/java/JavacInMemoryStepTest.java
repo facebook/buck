@@ -21,11 +21,11 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +35,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public class JavacInMemoryStepTest extends EasyMockSupport {
 
@@ -60,8 +61,8 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
           @Override
-          public Function<String, String> getPathRelativizer() {
-            return Functions.identity();
+          public Function<String, Path> getPathRelativizer() {
+            return IdentityPathRelativizer.getIdentityRelativizer();
           }
         })
         .setConsole(new TestConsole())

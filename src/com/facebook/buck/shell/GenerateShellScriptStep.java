@@ -68,7 +68,7 @@ public class GenerateShellScriptStep implements Step {
     lines.add("cd $BUCK_PROJECT_ROOT");
 
     // Symlink the resources to the $BUCK_PROJECT_ROOT directory.
-    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
+    Function<String, Path> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
     createSymlinkCommands(resources, pathRelativizer, lines);
 
     // Make everything in $BUCK_PROJECT_ROOT read-only.
@@ -99,7 +99,7 @@ public class GenerateShellScriptStep implements Step {
   }
 
   private void createSymlinkCommands(Iterable<Path> paths,
-      Function<String, String> pathRelativizer,
+      Function<String, Path> pathRelativizer,
       List<String> lines) {
     for (Path path : paths) {
       Preconditions.checkArgument(basePath.toString().isEmpty()

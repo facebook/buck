@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -34,7 +35,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -335,7 +335,8 @@ public class BuckConfigTest {
   @Test
   public void testIgnorePaths() throws IOException {
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getPathRelativizer()).andReturn(Functions.<String>identity())
+    EasyMock.expect(filesystem.getPathRelativizer())
+        .andReturn(IdentityPathRelativizer.getIdentityRelativizer())
         .times(2);
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.replay(filesystem, parser);
@@ -350,7 +351,7 @@ public class BuckConfigTest {
         BuckConstant.BUCK_OUTPUT_DIRECTORY,
         ".idea",
         System.getProperty(BuckConfig.BUCK_BUCKD_DIR_KEY, ".buckd"),
-        config.getCacheDir(),
+        config.getCacheDir().toString(),
         ".git",
         "foo",
         "bar",
@@ -364,7 +365,8 @@ public class BuckConfigTest {
   @Test
   public void testIgnorePathsWithRelativeCacheDir() throws IOException {
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getPathRelativizer()).andReturn(Functions.<String>identity());
+    EasyMock.expect(filesystem.getPathRelativizer())
+        .andReturn(IdentityPathRelativizer.getIdentityRelativizer());
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.replay(filesystem, parser);
 

@@ -32,7 +32,7 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.Beta;
@@ -61,6 +61,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -308,8 +310,8 @@ class BuckConfig {
 
     // Take care not to ignore absolute paths.
     String buckdDir = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
-    String cacheDir = getCacheDir();
-    for (String path : ImmutableList.of(buckdDir, cacheDir)) {
+    Path cacheDir = getCacheDir();
+    for (String path : ImmutableList.of(buckdDir, cacheDir.toString())) {
       if (!path.isEmpty() && path.charAt(0) != '/') {
         builder.add(path);
       }
@@ -327,7 +329,7 @@ class BuckConfig {
         new Function<String, String>() {
       @Override
       public String apply(String path) {
-        return Paths.normalizePathSeparator(new File(path).getPath());
+        return MorePaths.newPathInstance(path).toString();
       }
     })).build();
   }
@@ -537,17 +539,17 @@ class BuckConfig {
   }
 
   @VisibleForTesting
-  String getCacheDir() {
+  Path getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
     if (!cacheDir.isEmpty() && cacheDir.charAt(0) == '/') {
-      return cacheDir;
+      return Paths.get(cacheDir);
     }
     return projectFilesystem.getPathRelativizer().apply(cacheDir);
   }
 
   private ArtifactCache createDirArtifactCache() {
-    String cacheDir = getCacheDir();
-    File dir = new File(cacheDir);
+    Path cacheDir = getCacheDir();
+    File dir = cacheDir.toFile();
     try {
       return new DirArtifactCache(dir);
     } catch (IOException e) {

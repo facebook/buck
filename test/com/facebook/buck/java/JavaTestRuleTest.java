@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -36,7 +38,7 @@ public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSources() {
-    String classesFolder = "testdata/javatestrule/default.jar";
+    Path classesFolder = Paths.get("testdata/javatestrule/default.jar");
     Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
@@ -44,7 +46,7 @@ public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSourcesWithInnerClasses() {
-    String classesFolder = "testdata/javatestrule/case1.jar";
+    Path classesFolder = Paths.get("testdata/javatestrule/case1.jar");
     Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
@@ -52,7 +54,7 @@ public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSourcesWithMultipleTopLevelClasses() {
-    String classesFolder = "testdata/javatestrule/case2.jar";
+    Path classesFolder = Paths.get("testdata/javatestrule/case2.jar");
     Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
@@ -60,7 +62,7 @@ public class JavaTestRuleTest {
 
   @Test
   public void testGetClassNamesForSourcesWithImperfectHeuristic() {
-    String classesFolder = "testdata/javatestrule/case2fail.jar";
+    Path classesFolder = Paths.get("testdata/javatestrule/case2fail.jar");
     Set<String> sources = ImmutableSet.of(
         "src/com/facebook/feed/DummyTest.java",
         "src/com/facebook/nav/OtherDummyTest.java");

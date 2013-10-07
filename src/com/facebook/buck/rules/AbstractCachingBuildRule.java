@@ -69,7 +69,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
    */
   private final SettableFuture<BuildRuleSuccess> buildRuleResult;
 
-  private final Function<String, String> pathRelativizer;
+  private final Function<String, Path> pathRelativizer;
 
   /** @see Buildable#getInputsToCompareToOutput()  */
   private Iterable<InputRule> inputsToCompareToOutputs;

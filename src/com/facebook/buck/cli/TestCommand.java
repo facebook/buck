@@ -73,6 +73,7 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -147,7 +148,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    */
   private Step getInstrumentCommand(
       ImmutableSet<JavaLibraryRule> rulesUnderTest, ProjectFilesystem projectFilesystem) {
-    ImmutableSet.Builder<String> pathsToInstrumentedClasses = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> pathsToInstrumentedClasses = ImmutableSet.builder();
 
     // Add all JAR files produced by java libraries that we are testing to -instrpath.
     for (JavaLibraryRule path : rulesUnderTest) {

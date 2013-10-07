@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -60,7 +61,7 @@ public class InputRule implements BuildRule {
   }
 
   public static InputRule inputPathAsInputRule(String relativePath,
-      Function<String, String> pathRelativizer) {
+      Function<String, Path> pathRelativizer) {
     return Iterables.getOnlyElement(
         inputPathsAsInputRules(ImmutableList.of(relativePath), pathRelativizer));
   }
@@ -69,10 +70,10 @@ public class InputRule implements BuildRule {
    * Convert a set of input file paths to InputRules.
    */
   public static ImmutableSortedSet<InputRule> inputPathsAsInputRules(Iterable<String> paths,
-      Function<String, String> pathRelativizer) {
+      Function<String, Path> pathRelativizer) {
     ImmutableSortedSet.Builder<InputRule> builder = ImmutableSortedSet.naturalOrder();
     for (String path : paths) {
-      builder.add(new InputRule(new File(pathRelativizer.apply(path)), path));
+      builder.add(new InputRule(pathRelativizer.apply(path).toFile(), path));
     }
     return builder.build();
   }

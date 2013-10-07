@@ -34,8 +34,9 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -79,44 +80,43 @@ import javax.annotation.Nullable;
 // TODO(simons): Extend to also allow exporting a rule.
 public class ExportFile extends AbstractBuildable {
 
-  private final String src;
-  private final Supplier<String> out;
+  private final Path src;
+  private final Supplier<Path> out;
 
 
   @VisibleForTesting
-  ExportFile(final BuildRuleParams params, Optional<String> src, Optional<String> out) {
-    String shortName = params.getBuildTarget().getShortName();
+  ExportFile(final BuildRuleParams params, Optional<Path> src, Optional<Path> out) {
+    Path shortName = Paths.get(params.getBuildTarget().getShortName());
 
     this.src = src.or(shortName);
 
-    final String outName = out.or(shortName);
+    final Path outName = out.or(shortName);
 
-    this.out = Suppliers.memoize(new Supplier<String>() {
+    this.out = Suppliers.memoize(new Supplier<Path>() {
       @Override
-      public String get() {
-        String name = new File(outName).getName();
-        return String.format("%s/%s%s",
+      public Path get() {
+        Path name = outName.getFileName();
+        return Paths.get(
             BuckConstant.GEN_DIR,
-            params.getBuildTarget().getBasePathWithSlash(),
-            name);
+            params.getBuildTarget().getBasePathWithSlash()).resolve(name);
       }
     });
   }
 
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
-    return ImmutableSet.of(src);
+    return ImmutableSet.of(src.toString());
   }
 
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    String pathToOutputFile = out.get();
+    Path pathToOutputFile = out.get();
 
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
-        .add(new MkdirStep(new File(pathToOutputFile).getParent()))
+        .add(new MkdirStep(pathToOutputFile.getParent()))
         .add(new CopyStep(src, pathToOutputFile));
 
     return builder.build();
@@ -125,7 +125,7 @@ public class ExportFile extends AbstractBuildable {
   @Nullable
   @Override
   public String getPathToOutputFile() {
-    return out.get();
+    return out.get().toString();
   }
 
   public static Builder newExportFileBuilder(AbstractBuildRuleBuilderParams params) {
@@ -133,20 +133,21 @@ public class ExportFile extends AbstractBuildable {
   }
 
   public static class Builder extends AbstractBuildable.Builder {
-    private Optional<String> src;
-    private Optional<String> out;
+    private Optional<Path> src = Optional.absent();
+    private Optional<Path> out = Optional.absent();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
     }
 
     public Builder setSrc(Optional<String> src) {
-      this.src = src;
+      // TODO(simons): The plugin APIs make it easy to set Paths. Until that arrives, do this. Ugh.
+      this.src = src.isPresent() ? Optional.of(Paths.get(src.get())) : Optional.<Path>absent();
       return this;
     }
 
     public Builder setOut(Optional<String> out) {
-      this.out = out;
+      this.out = out.isPresent() ? Optional.of(Paths.get(out.get())) : Optional.<Path>absent();
       return this;
     }
 

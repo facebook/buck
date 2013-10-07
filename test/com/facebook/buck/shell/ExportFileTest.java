@@ -46,6 +46,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -65,7 +67,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
     ExportFile exportFile = new ExportFile(
-        params, /* src */ Optional.<String>absent(), /* out */ Optional.<String>absent());
+        params, /* src */ Optional.<Path>absent(), /* out */ Optional.<Path>absent());
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -82,7 +84,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
     ExportFile exportFile = new ExportFile(
-        params, /* src */ Optional.<String>absent(), /* out */ Optional.of("fish"));
+        params, /* src */ Optional.<Path>absent(), /* out */ Optional.of(Paths.get("fish")));
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -99,8 +101,8 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFile exportFile = new ExportFile(params,
-        /* src */ Optional.of("chips"),
-        /* out */ Optional.of("fish"));
+        /* src */ Optional.of(Paths.get("chips")),
+        /* out */ Optional.of(Paths.get("fish")));
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 

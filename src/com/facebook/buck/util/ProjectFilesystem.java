@@ -56,7 +56,7 @@ public class ProjectFilesystem {
   // the Function<String, String> can go away, as Function<Path, Path> should be used exclusively.
 
   private final Function<Path, Path> pathAbsolutifier;
-  private final Function<String, String> pathRelativizer;
+  private final Function<String, Path> pathRelativizer;
 
   private final ImmutableSet<String> ignorePaths;
 
@@ -78,10 +78,10 @@ public class ProjectFilesystem {
         return resolve(path);
       }
     };
-    this.pathRelativizer = new Function<String, String>() {
+    this.pathRelativizer = new Function<String, Path>() {
       @Override
-      public String apply(String relativePath) {
-        return getFileForRelativePath(relativePath).getAbsolutePath();
+      public Path apply(String relativePath) {
+        return MorePaths.absolutify(getFileForRelativePath(relativePath).toPath());
       }
     };
     this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
@@ -267,7 +267,7 @@ public class ProjectFilesystem {
    *     not extend {@link com.facebook.buck.shell.ShellStep} because they are not guaranteed to be
    *     run from the project root.
    */
-  public Function<String, String> getPathRelativizer() {
+  public Function<String, Path> getPathRelativizer() {
     return pathRelativizer;
   }
 
@@ -281,16 +281,18 @@ public class ProjectFilesystem {
         event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
   }
 
-  public void copyFolder(String source, String target) throws IOException {
-    Path targetPath = java.nio.file.Paths.get(pathRelativizer.apply(target));
-    Path sourcePath = java.nio.file.Paths.get(pathRelativizer.apply(source));
-    MoreFiles.copyRecursively(sourcePath, targetPath);
+  public void copyFolder(Path source, Path target) throws IOException {
+    MoreFiles.copyRecursively(source, target);
   }
 
   public void copyFile(String source, String target) throws IOException {
-    Path targetPath = java.nio.file.Paths.get(pathRelativizer.apply(target));
-    Path sourcePath = java.nio.file.Paths.get(pathRelativizer.apply(source));
+    Path targetPath = pathRelativizer.apply(target);
+    Path sourcePath = pathRelativizer.apply(source);
     java.nio.file.Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+  }
+
+  public void copyFile(Path source, Path target) throws IOException {
+    java.nio.file.Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
   }
 
   public void createSymLink(Path sourcePath, Path targetPath, boolean force)

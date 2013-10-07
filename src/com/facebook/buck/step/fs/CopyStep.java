@@ -18,7 +18,7 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Function;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -28,22 +28,14 @@ import java.nio.file.Path;
 
 public class CopyStep implements Step {
 
-  private final String source;
-  private final String destination;
+  private final Path source;
+  private final Path destination;
   private final boolean shouldRecurse;
 
-  public CopyStep(String source, String destination, boolean shouldRecurse) {
+  public CopyStep(Path source, Path destination, boolean shouldRecurse) {
     this.source = Preconditions.checkNotNull(source);
     this.destination = Preconditions.checkNotNull(destination);
     this.shouldRecurse = shouldRecurse;
-  }
-
-  public CopyStep(String source, String destination) {
-    this(source, destination, false /* shouldRecurse */);
-  }
-
-  public CopyStep(Path source, Path destination, boolean shouldRecurse) {
-    this(source.toString(), destination.toString(), shouldRecurse);
   }
 
   public CopyStep(Path source, Path destination) {
@@ -57,22 +49,23 @@ public class CopyStep implements Step {
 
   @Override
   public String getDescription (ExecutionContext context) {
-    Function<String, String> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("cp");
     if (shouldRecurse) {
       args.add("-R");
     }
-    args.add(pathRelativizer.apply(source));
-    args.add(pathRelativizer.apply(destination));
+    args.add(source.toString());
+    args.add(destination.toString());
     return Joiner.on(" ").join(args.build());
   }
 
-  public String getSource() {
+  @VisibleForTesting
+  Path getSource() {
     return source;
   }
 
-  public String getDestination() {
+  @VisibleForTesting
+  Path getDestination() {
     return destination;
   }
 

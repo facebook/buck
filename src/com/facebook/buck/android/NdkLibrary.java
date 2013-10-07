@@ -118,7 +118,7 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
     // All of them should be recorded via the BuildableContext.
     Path binDirectory = Paths.get(buildArtifactsDirectory, "libs");
     Step nkdBuildStep = new NdkBuildStep(makefileDirectory,
-        buildArtifactsDirectory + "/",
+        buildArtifactsDirectory,
         binDirectory,
         flags);
 
