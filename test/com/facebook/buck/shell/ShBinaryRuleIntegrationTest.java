@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -30,7 +31,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -46,7 +46,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testTrivialShBinaryRule() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "sh_binary_trivial", temporaryFolder);
     workspace.setUp();
@@ -63,7 +63,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryWithResources() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "sh_binary_with_resources", temporaryFolder);
     workspace.setUp();
@@ -83,7 +83,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryCannotOverwriteResource() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "sh_binary_with_overwrite_violation", temporaryFolder);
     workspace.setUp();

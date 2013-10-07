@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
@@ -27,7 +28,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -109,7 +109,7 @@ public class ZipStepTest {
   @Test
   public void mustIncludeTheContentsOfFilesThatAreSymlinked() throws IOException {
     // Symlinks on Windows are _hard_. Let's go shopping.
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     File parent = tmp.newFolder("zipstep");
     File out = new File(parent, "output.zip");
