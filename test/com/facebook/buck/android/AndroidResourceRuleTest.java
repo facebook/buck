@@ -32,7 +32,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -51,7 +51,7 @@ public class AndroidResourceRuleTest {
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
+        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
         if ("java/src/com/facebook/base/res".equals(rootPath)) {
           traversal.visit(null, "drawable/E.xml");
           traversal.visit(null, "drawable/A.xml");

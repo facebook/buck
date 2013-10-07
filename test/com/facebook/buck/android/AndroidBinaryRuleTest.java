@@ -485,11 +485,11 @@ public class AndroidBinaryRuleTest {
         .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16"));
 
-    String proguardDir = rule.getProguardOutputFromInputClasspath(
+    Path proguardDir = rule.getProguardOutputFromInputClasspath(
         BIN_DIR + "/first-party/orca/lib-base/lib__lib-base__classes");
     assertEquals(GEN_DIR + "/.proguard/fbandroid_with_dash_debug_fbsign/" +
         BIN_DIR + "/first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar",
-        proguardDir);
+        proguardDir.toString());
   }
 
   private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands) {

@@ -24,7 +24,7 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -234,7 +234,7 @@ public class FilterResourcesStep implements Step {
           public void visit(File file, String relativePath) {
             if (DRAWABLE_PATH_PATTERN.matcher(relativePath).matches()) {
               // The path is normalized so that the value can be matched against patterns.
-              drawableBuilder.add(Paths.normalizePathSeparator(file.getPath()));
+              drawableBuilder.add(MorePaths.newPathInstance(file).toString());
             }
           }
         }.traverse();

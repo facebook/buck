@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class PrebuiltNativeLibraryRuleTest {
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
+        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
         if ("java/src/com/facebook/base/libs".equals(rootPath)) {
           traversal.visit(null, "armeabi/foo.so");
           traversal.visit(null, "armeabi/libilbc-codec.so");

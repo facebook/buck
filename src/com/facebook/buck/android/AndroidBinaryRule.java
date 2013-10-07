@@ -60,7 +60,6 @@ import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -718,11 +717,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * @return path to directory (will not include trailing slash)
    */
   @VisibleForTesting
-  String getPathForProGuardDirectory() {
-    return String.format("%s/%s.proguard/%s",
+  Path getPathForProGuardDirectory() {
+    return MorePaths.newPathInstance(
+        String.format("%s/%s.proguard/%s",
         BuckConstant.GEN_DIR,
         getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName());
+        getBuildTarget().getShortName()));
   }
 
   @VisibleForTesting
@@ -790,15 +790,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @VisibleForTesting
-  String getProguardOutputFromInputClasspath(String classpathEntry) {
+  Path getProguardOutputFromInputClasspath(String classpathEntry) {
     // Hehe, this is so ridiculously fragile.
     Preconditions.checkArgument(classpathEntry.charAt(0) != '/',
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
     String obfuscatedName = Files.getNameWithoutExtension(classpathEntry) + "-obfuscated.jar";
-    String dirName = Paths.normalizePathSeparator(new File(classpathEntry).getParent());
-    String outputJar = getPathForProGuardDirectory() + "/" + dirName + "/" +
-        obfuscatedName;
+    Path dirName = MorePaths.newPathInstance(new File(classpathEntry).getParent());
+    Path outputJar = getPathForProGuardDirectory().resolve(dirName).resolve(obfuscatedName);
     return outputJar;
   }
 
@@ -824,7 +823,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
 
     // Clean out the directory for generated ProGuard files.
-    String proguardDirectory = getPathForProGuardDirectory();
+    Path proguardDirectory = getPathForProGuardDirectory();
     commands.add(new MakeCleanDirectoryStep(proguardDirectory));
 
     // Generate a file of ProGuard config options using aapt.
@@ -850,18 +849,19 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .toMap(new Function<String, String>() {
           @Override
           public String apply(String classpathEntry) {
-            return getProguardOutputFromInputClasspath(classpathEntry);
+            return getProguardOutputFromInputClasspath(classpathEntry).toString();
           }
         });
 
     // Run ProGuard on the classpath entries.
+    // TODO: ProGuardObfuscateStep's final argument should be a Path
     ProGuardObfuscateStep obfuscateCommand = new ProGuardObfuscateStep(
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
         useAndroidProguardConfigWithOptimizations,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
-        proguardDirectory);
+        proguardDirectory.toString());
     commands.add(obfuscateCommand);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
