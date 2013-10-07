@@ -525,6 +525,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       return originalCallable;
     }
     return new Callable<TestResults>() {
+      @Override
       public TestResults call() throws Exception {
         TestResults originalTestResults = originalCallable.call();
         ImmutableList<TestCaseSummary> cachedTestResults = FluentIterable
