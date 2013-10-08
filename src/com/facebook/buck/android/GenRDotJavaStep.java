@@ -35,7 +35,7 @@ import java.util.Set;
 public class GenRDotJavaStep extends ShellStep {
 
   private final Set<String> resDirectories;
-  private final String androidManifestPath;
+  private final File androidManifest;
   private final String genDirectoryPath;
   private final boolean isTempRDotJava;
   private final ImmutableSet<String> extraLibraryPackages;
@@ -79,7 +79,7 @@ public class GenRDotJavaStep extends ShellStep {
     // android_resource() rule in the codebase. This may turn out to be helpful when running the
     // Android linter because then the user will specify the min/max values of Android for a
     // library.
-    File androidManifest = new File(tmpDir, "AndroidManifest.xml");
+    this.androidManifest = new File(tmpDir, "AndroidManifest.xml");
     try {
       String xml = String.format(
           "<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='%s' />",
@@ -91,7 +91,6 @@ public class GenRDotJavaStep extends ShellStep {
     } catch (IOException e) {
       Throwables.propagate(e);
     }
-    this.androidManifestPath = androidManifest.getAbsolutePath();
 
     this.genDirectoryPath = Preconditions.checkNotNull(genDirectoryPath);
     this.isTempRDotJava = isTempRDotJava;
@@ -125,12 +124,21 @@ public class GenRDotJavaStep extends ShellStep {
     }
 
     // Add the remaining flags.
-    builder.add("-M").add(androidManifestPath);
+    builder.add("-M").add(androidManifest.getAbsolutePath());
     builder.add("-m").add("-J").add(genDirectoryPath);
     builder.add("--auto-add-overlay");
     builder.add("-I").add(androidPlatformTarget.getAndroidJar().getAbsolutePath());
 
     return builder.build();
+  }
+
+  @Override
+  protected void onProcessFinished(int exitCode) {
+    super.onProcessFinished(exitCode);
+
+    if (androidManifest.exists() && androidManifest.isFile()) {
+      androidManifest.delete();
+    }
   }
 
   @Override
