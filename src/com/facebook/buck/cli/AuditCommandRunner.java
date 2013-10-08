@@ -33,7 +33,7 @@ public class AuditCommandRunner implements CommandRunner {
   }
 
   @Override
-  public int runCommand(BuckConfig buckConfig, String[] args) throws IOException {
+  public int runCommand(BuckConfig buckConfig, String... args) throws IOException {
     if (args.length == 0) {
       console.printBuildFailure("No audit command is given.");
       printUsage();
