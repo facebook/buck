@@ -188,6 +188,9 @@
       <sysproperty key="buck.path_to_emma_jar" value="${buck.path_to_emma_jar}" />
       <sysproperty key="buck.path_to_buck_py" value="${buck.path_to_buck_py}" />
 
+      <!-- See DEFS for details on why this property is needed. -->
+      <sysproperty key="sun.zip.disableMemoryMapping" value="true" />
+
       <formatter type="plain" usefile="false" />
 
       <batchtest fork="yes">
