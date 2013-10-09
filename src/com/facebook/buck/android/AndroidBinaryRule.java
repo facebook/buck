@@ -276,7 +276,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   public boolean isStoreStringsAsAssets() {
-    // TODO(natthu): introduce another parameter to AndroidBinaryRule and replace this with
+    // TODO(user): introduce another parameter to AndroidBinaryRule and replace this with
     // isCompressResources() && this.isStoreStringsAsAssets;
     return false;
   }

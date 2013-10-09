@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,13 +17,17 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class MorePaths {
-  // Utility class: do not instantiate.
+public class MorePaths {
+
+  /** Utility class: do not instantiate. */
   private MorePaths() {}
 
   public static Path newPathInstance(String path) {
@@ -54,5 +58,51 @@ public final class MorePaths {
    */
   public static Path absolutify(Path toMakeAbsolute) {
     return Preconditions.checkNotNull(toMakeAbsolute).toAbsolutePath().normalize();
+  }
+
+  /**
+   * Creates a symlink at
+   * {@code projectFilesystem.getRootPath().resolve(pathToDesiredLinkUnderProjectRoot)} that
+   * points to {@code projectFilesystem.getRootPath().resolve(pathToExistingFileUnderProjectRoot)}
+   * using a relative symlink.
+   *
+   * @param pathToDesiredLinkUnderProjectRoot must reference a file, not a directory.
+   * @param pathToExistingFileUnderProjectRoot must reference a file, not a directory.
+   * @return the relative path from the new symlink that was created to the existing file.
+   */
+  public static Path createRelativeSymlink(
+      Path pathToDesiredLinkUnderProjectRoot,
+      Path pathToExistingFileUnderProjectRoot,
+      ProjectFilesystem projectFilesystem) throws IOException {
+    return createRelativeSymlink(pathToDesiredLinkUnderProjectRoot,
+        pathToExistingFileUnderProjectRoot,
+        projectFilesystem.getRootPath());
+  }
+
+  /**
+   * Creates a symlink at {@code pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot)} that
+   * points to {@code pathToProjectRoot.resolve(pathToExistingFileUnderProjectRoot)} using a
+   * relative symlink.
+   *
+   * @param pathToDesiredLinkUnderProjectRoot must reference a file, not a directory.
+   * @param pathToExistingFileUnderProjectRoot must reference a file, not a directory.
+   * @return the relative path from the new symlink that was created to the existing file.
+   */
+  public static Path createRelativeSymlink(
+      Path pathToDesiredLinkUnderProjectRoot,
+      Path pathToExistingFileUnderProjectRoot,
+      Path pathToProjectRoot) throws IOException {
+    Preconditions.checkArgument(!pathToDesiredLinkUnderProjectRoot.isAbsolute(),
+        "Path must be relative to project root: %s.",
+        pathToDesiredLinkUnderProjectRoot);
+    Preconditions.checkArgument(!pathToExistingFileUnderProjectRoot.isAbsolute(),
+        "Path must be relative to project root: %s.",
+        pathToExistingFileUnderProjectRoot);
+
+    Path parent = pathToDesiredLinkUnderProjectRoot.getParent();
+    String base = Strings.repeat("../", parent == null ? 0 : parent.getNameCount());
+    Path target = Paths.get(base, pathToExistingFileUnderProjectRoot.toString());
+    Files.createSymbolicLink(pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot), target);
+    return target;
   }
 }
