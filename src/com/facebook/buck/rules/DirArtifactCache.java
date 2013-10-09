@@ -16,11 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DirArtifactCache implements ArtifactCache {
@@ -30,11 +34,7 @@ public class DirArtifactCache implements ArtifactCache {
 
   public DirArtifactCache(File cacheDir) throws IOException {
     this.cacheDir = Preconditions.checkNotNull(cacheDir);
-    Files.createParentDirs(cacheDir);
-    if (!cacheDir.mkdir() && !cacheDir.exists()) {
-      throw new IOException(String.format("Failed to create cache directory: \"%s\"",
-          cacheDir.getPath()));
-    }
+    Files.createDirectories(cacheDir.toPath());
   }
 
   @Override
@@ -43,8 +43,8 @@ public class DirArtifactCache implements ArtifactCache {
     File cacheEntry = new File(cacheDir, ruleKey.toString());
     if (cacheEntry.exists()) {
       try {
-        Files.createParentDirs(output);
-        Files.copy(cacheEntry, output);
+        Files.createDirectories(output.toPath().getParent());
+        Files.copy(cacheEntry.toPath(), output.toPath(), REPLACE_EXISTING);
         success = CacheResult.DIR_HIT;
       } catch (IOException e) {
         logger.warning(String.format("Artifact fetch(%s, %s) error: %s",
@@ -63,21 +63,26 @@ public class DirArtifactCache implements ArtifactCache {
   @Override
   public void store(RuleKey ruleKey, File output) {
     File cacheEntry = new File(cacheDir, ruleKey.toString());
-    File tmpCacheEntry = null;
+    Path tmpCacheEntry = null;
     try {
       // Write to a temporary file and move the file to its final location atomically to protect
       // against partial artifacts (whether due to buck interruption or filesystem failure) posing
       // as valid artifacts during subsequent buck runs.
-      tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir);
-      Files.copy(output, tmpCacheEntry);
-      Files.move(tmpCacheEntry, cacheEntry);
+      tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir).toPath();
+      Files.copy(output.toPath(), tmpCacheEntry, REPLACE_EXISTING);
+      Files.move(tmpCacheEntry, cacheEntry.toPath());
     } catch (IOException e) {
       logger.warning(String.format("Artifact store(%s, %s) error: %s",
           ruleKey,
           output.getPath(),
           e.getMessage()));
       if (tmpCacheEntry != null) {
-        tmpCacheEntry.delete();
+        try {
+          Files.deleteIfExists(tmpCacheEntry);
+        } catch (IOException ignored) {
+          // Unable to delete a temporary file. Nothing sane to do.
+          logger.log(Level.INFO, "Unable to delete temp cache file", ignored);
+        }
       }
     }
   }

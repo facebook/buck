@@ -184,7 +184,8 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Resolves the relative path against the project root and then calls {@link File#mkdirs()}.
+   * Resolves the relative path against the project root and then calls
+   * {@link java.nio.file.Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
    */
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
     java.nio.file.Files.createDirectories(resolve(pathRelativeToProjectRoot));

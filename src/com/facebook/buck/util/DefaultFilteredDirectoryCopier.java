@@ -17,10 +17,11 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Predicate;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -58,22 +59,22 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
       String srcDir,
       String destDir,
       final Predicate<File> pred) throws IOException {
-    final File dest = new File(destDir);
+    final Path dest = MorePaths.absolutify(MorePaths.newPathInstance(destDir));
 
     // Remove existing contents if any.
-    if (dest.exists()) {
-      MoreFiles.rmdir(java.nio.file.Paths.get(dest.getAbsolutePath()));
+    if (dest.toFile().exists()) {
+      MoreFiles.rmdir(dest);
     }
-    dest.mkdirs();
+    Files.createDirectories(dest);
 
     // Copy filtered contents.
     new DirectoryTraversal(new File(srcDir)) {
       @Override
       public void visit(File srcFile, String relativePath) throws IOException {
         if (pred.apply(srcFile)) {
-          File destFile = new File(dest, relativePath);
-          Files.createParentDirs(destFile);
-          Files.copy(srcFile, destFile);
+          Path destPath = dest.resolve(relativePath);
+          Files.createDirectories(destPath.getParent());
+          Files.copy(srcFile.toPath(), destPath);
         }
       }
     }.traverse();
