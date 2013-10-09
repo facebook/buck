@@ -412,6 +412,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // there.
     CacheResult cacheResult = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
     if (!cacheResult.isSuccess()) {
+      zipFile.delete();
       return cacheResult;
     }
 
