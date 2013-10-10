@@ -22,7 +22,6 @@ import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -139,7 +138,9 @@ public class SplitZipStep implements Step {
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       File primaryJarFile = new File(primaryJarPath);
       Collection<File> secondaryZips = zipSplitterFactory.newInstance(
-          ImmutableSet.copyOf(Paths.transformPathToFile(inputPathsToSplit)),
+          FluentIterable.from(inputPathsToSplit)
+              .transform(context.getProjectFilesystem().getPathRelativizer())
+              .toSet(),
           primaryJarFile,
           new File(secondaryJarDir),
           secondaryJarPattern,

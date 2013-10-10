@@ -338,12 +338,24 @@ def android_resource(
     deps=[],
     visibility=[],
     build_env=None):
+  if res:
+    res_srcs = glob([res + '/**/*'], build_env=build_env)
+  else:
+    res_srcs = None
+
+  if assets:
+    assets_srcs = glob([assets + '/**/*'], build_env=build_env)
+  else:
+    assets_srcs = None
+
   add_rule({
     'type' : 'android_resource',
     'name' : name,
     'res' : res,
+    'res_srcs' : res_srcs,
     'package' : package,
     'assets' : assets,
+    'assets_srcs' : assets_srcs,
     'manifest' : manifest,
     'deps' : deps,
     'visibility' : visibility,

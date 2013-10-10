@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.CRC32;
@@ -47,7 +49,13 @@ public class ClasspathTraversalTest {
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
 
-  private static Collection<FileLike> traverse(Collection<File> paths) throws IOException {
+  private static Collection<FileLike> traverse(Collection<File> files) throws IOException {
+    Iterable<Path> paths = Iterables.transform(files, new Function<File, Path>() {
+      @Override
+      public Path apply(File file) {
+        return file.toPath();
+      }
+    });
     final ImmutableList.Builder<FileLike> completeList = ImmutableList.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
     traverser.traverse(new ClasspathTraversal(paths) {

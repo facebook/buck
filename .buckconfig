@@ -11,6 +11,7 @@
       .git, \
       .buckd, \
       build, \
+      src/com/facebook/buck/cli/quickstart, \
       test/com/facebook/buck/cli/testdata, \
       test/com/facebook/buck/java/testdata, \
       test/com/facebook/buck/junit/testdata, \

@@ -33,6 +33,7 @@ import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -51,6 +52,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -68,7 +70,7 @@ import javax.annotation.Nullable;
  */
 public class SmartDexingStep implements Step {
   private final InputResolver inputResolver;
-  private final String successDir;
+  private final Path successDir;
   private final Optional<Integer> numThreads;
   private final DexStore dexStore;
   private ListeningExecutorService dxExecutor;
@@ -96,7 +98,7 @@ public class SmartDexingStep implements Step {
       Set<String> primaryInputsToDex,
       Optional<String> secondaryOutputDir,
       Optional<String> secondaryInputsDir,
-      String successDir,
+      Path successDir,
       Optional<Integer> numThreads,
       DexStore dexStore) {
     this.inputResolver = new InputResolver(primaryOutputPath,
@@ -132,23 +134,25 @@ public class SmartDexingStep implements Step {
     return (int)(1.25 * Runtime.getRuntime().availableProcessors());
   }
 
-  private final Multimap<File, File> getOutputToInputsMultimap() {
+  private final Multimap<File, File> getOutputToInputsMultimap(
+      ProjectFilesystem projectFilesystem) {
     if (outputToInputs == null) {
-      outputToInputs = inputResolver.createOutputToInputs(dexStore);
+      outputToInputs = inputResolver.createOutputToInputs(dexStore, projectFilesystem);
     }
     return outputToInputs;
   }
 
   @Override
   public int execute(ExecutionContext context) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     try {
-      Multimap<File, File> outputToInputs = getOutputToInputsMultimap();
+      Multimap<File, File> outputToInputs = getOutputToInputsMultimap(projectFilesystem);
       runDxCommands(context, outputToInputs);
       if (inputResolver.hasSecondaryOutput()) {
         removeExtraneousSecondaryArtifacts(
-            inputResolver.getSecondaryOutputDir(),
+            inputResolver.getSecondaryOutputDir(projectFilesystem),
             outputToInputs.keySet(),
-            context.getProjectFilesystem());
+            projectFilesystem);
       }
       return 0;
     } catch (StepFailedException e) {
@@ -204,7 +208,7 @@ public class SmartDexingStep implements Step {
     b.append(getShortName());
     b.append(' ');
 
-    Multimap<File, File> outputToInputs = getOutputToInputsMultimap();
+    Multimap<File, File> outputToInputs = getOutputToInputsMultimap(context.getProjectFilesystem());
     for (File output : outputToInputs.keySet()) {
       b.append("-out ");
       b.append(output.getPath());
@@ -232,7 +236,7 @@ public class SmartDexingStep implements Step {
       pseudoRules.add(new DxPseudoRule(context,
           ImmutableSet.copyOf(Paths.transformFileToAbsolutePath(outputToInputs.get(outputFile))),
           outputFile.getPath(),
-          new File(successDir, outputFile.getName()).getPath()));
+          context.getProjectFilesystem().resolve(successDir.resolve(outputFile.getName()))));
     }
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -282,19 +286,20 @@ public class SmartDexingStep implements Step {
      * command.  This defines a set of rules where the keySet of the returned multimap is the
      * set of expected files to exist after smart dexing completes.
      */
-    public Multimap<File, File> createOutputToInputs(DexStore dexStore) {
+    public Multimap<File, File> createOutputToInputs(DexStore dexStore,
+        ProjectFilesystem projectFilesystem) {
       final ImmutableMultimap.Builder<File, File> map = ImmutableMultimap.builder();
 
       // Add the primary output.
-      File primaryOutputFile = new File(primaryOutputPath);
+      File primaryOutputFile = projectFilesystem.getFileForRelativePath(primaryOutputPath);
       for (String primaryInputToDex : primaryInputsToDex) {
-        map.put(primaryOutputFile, new File(primaryInputToDex));
+        map.put(primaryOutputFile, projectFilesystem.getFileForRelativePath(primaryInputToDex));
       }
 
       // Add all secondary outputs (one for each file in the secondary inputs dir).
       if (secondaryInputsDir.isPresent()) {
-        File secondaryOutputDirFile = new File(secondaryOutputDir.get());
-        File secondaryInputsDirFile = new File(secondaryInputsDir.get());
+        File secondaryOutputDirFile = projectFilesystem.getFileForRelativePath(secondaryOutputDir.get());
+        File secondaryInputsDirFile = projectFilesystem.getFileForRelativePath(secondaryInputsDir.get());
         for (File secondaryInputFile : secondaryInputsDirFile.listFiles()) {
           // May be either directories or jar files, doesn't matter.
           File secondaryOutputFile = new File(secondaryOutputDirFile,
@@ -310,8 +315,8 @@ public class SmartDexingStep implements Step {
       return secondaryOutputDir.isPresent();
     }
 
-    public File getSecondaryOutputDir() {
-      return new File(secondaryOutputDir.get());
+    public File getSecondaryOutputDir(ProjectFilesystem projectFilesystem) {
+      return projectFilesystem.getFileForRelativePath(secondaryOutputDir.get());
     }
   }
 
@@ -329,13 +334,13 @@ public class SmartDexingStep implements Step {
     private final ExecutionContext context;
     private final Set<String> srcs;
     private final String outputPath;
-    private final String outputHashPath;
+    private final Path outputHashPath;
     private String newInputsHash;
 
     public DxPseudoRule(ExecutionContext context,
         Set<String> srcs,
         String outputPath,
-        String outputHashPath) {
+        Path outputHashPath) {
       this.context = Preconditions.checkNotNull(context);
       this.srcs = ImmutableSet.copyOf(srcs);
       this.outputPath = Preconditions.checkNotNull(outputPath);
@@ -349,7 +354,7 @@ public class SmartDexingStep implements Step {
      */
     @Nullable
     private String getPreviousInputsHash() {
-      File outputHashFile = new File(outputHashPath);
+      File outputHashFile = outputHashPath.toFile();
       if (outputHashFile.exists()) {
         try {
           return Iterables.getFirst(
@@ -376,7 +381,13 @@ public class SmartDexingStep implements Step {
       // entry contents but change on disk due to entry metadata.
       ClasspathTraverser traverser = new DefaultClasspathTraverser();
       try {
-        traverser.traverse(new ClasspathTraversal(Paths.transformPathToFile(srcs)) {
+        traverser.traverse(new ClasspathTraversal(
+              Iterables.transform(srcs, new Function<String, Path>() {
+                @Override
+                public Path apply(String input) {
+                  return java.nio.file.Paths.get(input);
+                }
+              })) {
           @Override
           public void visit(FileLike fileLike) {
             try {
@@ -399,7 +410,7 @@ public class SmartDexingStep implements Step {
       newInputsHash = hashInputs();
 
       // Make sure the output dex file isn't newer than the output hash file.
-      long outputHashFileModTime = new File(outputHashPath).lastModified();
+      long outputHashFileModTime = outputHashPath.toFile().lastModified();
       long outputFileModTime = new File(outputPath).lastModified();
       if (outputFileModTime > outputHashFileModTime) {
         return false;

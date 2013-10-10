@@ -32,11 +32,4 @@ public final class Functions {
     }
   };
 
-  public static Function<String, File> PATH_TO_FILE = new Function<String, File>() {
-    @Override
-    public File apply(String path) {
-      return new File(path);
-    }
-  };
-
 }

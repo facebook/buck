@@ -121,8 +121,9 @@
            >
       <src path="${src.dir}" />
       <src path="${aosp.src.dir}" />
-      <exclude name="com/facebook/buck/junit/**" />
+      <exclude name="com/facebook/buck/cli/quickstart/**" />
       <exclude name="com/facebook/buck/java/abi/**" />
+      <exclude name="com/facebook/buck/junit/**" />
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
     </javac>

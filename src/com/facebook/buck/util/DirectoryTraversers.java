@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
@@ -35,24 +34,22 @@ public class DirectoryTraversers {
   /**
    * Aggregates a set of all paths to files in the specified directories. All file paths will be
    * relative to the project root.
-   * @param paths to directories to traverse. Each path must be relative to the project root, and
-   *     the directory may not contain symlinks to other directories.
+   * @param pathToDirectory path to directory to traverse. The directory may not contain symlinks to
+   *     other directories.
    * @param traverser
    * @return a set of all files in paths, sorted alphabetically
    */
-  public ImmutableSortedSet<String> findFiles(ImmutableSet<String> paths,
+  public ImmutableSortedSet<String> findFiles(final String pathToDirectory,
       DirectoryTraverser traverser) throws IOException {
     final ImmutableSortedSet.Builder<String> allFiles = ImmutableSortedSet.naturalOrder();
-    for (String pathToDirectory : paths) {
-      final String directoryPathWithTrailingSlash =
-          pathToDirectory.endsWith("/") ? pathToDirectory : pathToDirectory + '/';
-      traverser.traverse(new DirectoryTraversal(new File(pathToDirectory)) {
-        @Override
-        public void visit(File file, String relativePath) {
-          allFiles.add(directoryPathWithTrailingSlash + relativePath);
-        }
-      });
-    }
+
+    traverser.traverse(new DirectoryTraversal(new File(pathToDirectory)) {
+      @Override
+      public void visit(File file, String relativePath) {
+        allFiles.add(java.nio.file.Paths.get(pathToDirectory, relativePath).toString());
+      }
+    });
+
     return allFiles.build();
   }
 }

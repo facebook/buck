@@ -79,6 +79,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -389,7 +390,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     int count = 0;
     for (String resDir : resourceDirectories) {
       filteredResourcesDirMapBuilder.put(resDir,
-          java.nio.file.Paths.get(resDestinationBasePath, String.valueOf(count++)).toString());
+          Paths.get(resDestinationBasePath, String.valueOf(count++)).toString());
     }
 
     ImmutableBiMap<String, String> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
@@ -463,15 +464,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesInDir));
       commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       commands.add(new SymlinkFilesIntoDirectoryStep(
-          java.nio.file.Paths.get("."),
+          Paths.get("."),
           dexTransitiveDependencies.classpathEntriesToDex,
-          java.nio.file.Paths.get(preprocessJavaClassesInDir)
+          Paths.get(preprocessJavaClassesInDir)
           ));
       classpathEntriesToDex = FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
           .transform(new Function<String, String>() {
             @Override
             public String apply(String classpathEntry) {
-              return java.nio.file.Paths.get(preprocessJavaClassesOutDir, classpathEntry).toString();
+              return Paths.get(preprocessJavaClassesOutDir, classpathEntry).toString();
             }
           })
           .toSet();
@@ -603,7 +604,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
 
     if (isStoreStringsAsAssets()) {
-      Path stringAssetsDir = java.nio.file.Paths.get(assetsDirectory.get()).resolve("strings");
+      Path stringAssetsDir = Paths.get(assetsDirectory.get()).resolve("strings");
       commands.add(new MakeCleanDirectoryStep(stringAssetsDir));
       commands.add(new CopyStep(
           getPathForTmpStringAssetsDirectory(),
@@ -781,7 +782,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   private Path getPathForTmpStringAssetsDirectory() {
-    return java.nio.file.Paths.get(getBinPath("__strings_%s__"));
+    return Paths.get(getBinPath("__strings_%s__"));
   }
 
   /**
@@ -1008,7 +1009,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
-    String successDir = getBinPath("__%s_smart_dex__/.success");
+    Path successDir = Paths.get(getBinPath("__%s_smart_dex__/.success"));
     commands.add(new MkdirStep(successDir));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if

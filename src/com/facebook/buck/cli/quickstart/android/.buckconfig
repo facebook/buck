@@ -1,0 +1,2 @@
+[alias]
+    app = //apps/myapp:app

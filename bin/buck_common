@@ -194,6 +194,7 @@ BUCK_JAVA_ARGS="\
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
 -Dbuck.git_commit_timestamp=${BUCK_VERSION_TIMESTAMP} \
 -Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
+-Dbuck.quickstart_origin_dir=${BUCK_DIRECTORY}/src/com/facebook/buck/cli/quickstart/android \
 -Dbuck.version_uid=${BUCK_VERSION_UID} \
 -Dbuck.buckd_dir=${BUCKD_DIR} \
 -Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties \

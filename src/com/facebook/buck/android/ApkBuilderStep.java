@@ -23,6 +23,7 @@ import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -79,22 +80,24 @@ public class ApkBuilderStep implements Step {
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       output = context.getStdOut();
     }
+
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     try {
       ApkBuilder builder = new ApkBuilder(
-          new File(pathToOutputApkFile),
-          new File(resourceApk),
-          new File(dexFile),
+          projectFilesystem.getFileForRelativePath(pathToOutputApkFile),
+          projectFilesystem.getFileForRelativePath(resourceApk),
+          projectFilesystem.getFileForRelativePath(dexFile),
           /* storeOsPath */ null,
           output);
       builder.setDebugMode(debugMode);
       for (String nativeLibraryDirectory : nativeLibraryDirectories) {
-        builder.addNativeLibraries(new File(nativeLibraryDirectory));
+        builder.addNativeLibraries(projectFilesystem.getFileForRelativePath(nativeLibraryDirectory));
       }
       for (String assetDirectory : assetDirectories) {
-        builder.addSourceFolder(new File(assetDirectory));
+        builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));
       }
       for (String zipFile : zipFiles) {
-        File zipFileOnDisk = new File(zipFile);
+        File zipFileOnDisk = projectFilesystem.getFileForRelativePath(zipFile);
         if (zipFileOnDisk.exists() && zipFileOnDisk.isFile()) {
           builder.addZipFile(zipFileOnDisk);
         }

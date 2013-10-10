@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
@@ -46,7 +47,7 @@ import java.util.Set;
  */
 public class DalvikAwareZipSplitter implements ZipSplitter {
 
-  private final Set<File> inFiles;
+  private final Set<Path> inFiles;
   private final File outPrimary;
   private final Predicate<String> requiredInPrimaryZip;
   private final File reportDir;
@@ -61,7 +62,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
    * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate, DexSplitStrategy, CanaryStrategy, File)
    */
   private DalvikAwareZipSplitter(
-      Set<File> inFiles,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,
@@ -84,7 +85,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   }
 
   public static DalvikAwareZipSplitter splitZip(
-      Set<File> inFiles,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,

@@ -19,6 +19,7 @@ package com.facebook.buck.dalvik;
 import com.google.common.base.Predicate;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Set;
 
 public class DefaultZipSplitterFactory implements ZipSplitterFactory {
@@ -41,7 +42,7 @@ public class DefaultZipSplitterFactory implements ZipSplitterFactory {
   }
 
   @Override
-  public ZipSplitter newInstance(Set<File> inFiles,
+  public ZipSplitter newInstance(Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,

@@ -217,7 +217,9 @@ public final class BuildRuleFactoryParams {
 
     checkFullPath(fullPath);
 
-    if (!ignoreFileExistenceChecks && !new File(fullPath).isDirectory()) {
+    File file = filesystem.getFileForRelativePath(fullPath);
+
+    if (!ignoreFileExistenceChecks && !file.isDirectory()) {
       throw new RuntimeException("Not a directory: " + fullPath);
     }
 

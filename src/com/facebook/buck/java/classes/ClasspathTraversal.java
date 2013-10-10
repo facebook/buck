@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -39,17 +40,17 @@ import java.util.zip.ZipFile;
  * visit the single file foo.txt.
  */
 public abstract class ClasspathTraversal {
-  private final Iterable<File> paths;
+  private final Iterable<Path> paths;
 
-  public ClasspathTraversal(Iterable<File> paths) {
+  public ClasspathTraversal(Iterable<Path> paths) {
     this.paths = Preconditions.checkNotNull(paths);
   }
 
   public abstract void visit(FileLike fileLike) throws IOException;
 
   public final void traverse() throws IOException {
-    for (File path : paths) {
-      ClasspathTraverser adapter = createTraversalAdapter(path);
+    for (Path path : paths) {
+      ClasspathTraverser adapter = createTraversalAdapter(path.toFile());
       adapter.traverse(this);
     }
   }

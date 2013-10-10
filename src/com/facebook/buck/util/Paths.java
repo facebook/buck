@@ -73,10 +73,6 @@ public class Paths {
     return Strings.repeat("../", directoryDepth) + to.substring(samePrefixIndex);
   }
 
-  public static Iterable<File> transformPathToFile(Iterable<String> paths) {
-    return Iterables.transform(paths, Functions.PATH_TO_FILE);
-  }
-
   public static Iterable<String> transformFileToAbsolutePath(Iterable<File> files) {
     return Iterables.transform(files, Functions.FILE_TO_ABSOLUTE_PATH);
   }
