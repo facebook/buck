@@ -214,13 +214,7 @@ public class ApkGenruleTest {
     ShellStep genruleCommand = (ShellStep) seventhStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(new ImmutableMap.Builder<String, String>()
-        .put("SRCS", "/opt/local/fbandroid/src/com/facebook/signer.py " +
-            "/opt/local/fbandroid/src/com/facebook/key.properties")
         .put("APK", GEN_DIR + "/fb4a.apk")
-        .put("GEN_DIR", "/opt/local/fbandroid/" + GEN_DIR)
-        .put("DEPS", "")
-        .put("TMP", "/opt/local/fbandroid/" + relativePathToTmpDir)
-        .put("SRCDIR", "/opt/local/fbandroid/" + relativePathToSrcDir)
         .put("OUT", expectedApkOutput).build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(

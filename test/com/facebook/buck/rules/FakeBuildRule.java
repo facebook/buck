@@ -50,6 +50,10 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
     this.type = Preconditions.checkNotNull(type);
   }
 
+  public FakeBuildRule(BuildRuleType type, BuildTarget buildTarget) {
+    this(type, new FakeBuildRuleParams(buildTarget));
+  }
+
   @Override
   public Buildable getBuildable() {
     return this;

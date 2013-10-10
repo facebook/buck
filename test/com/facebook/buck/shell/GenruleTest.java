@@ -33,11 +33,13 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.Genrule.Builder;
 import com.facebook.buck.step.ExecutionContext;
@@ -218,25 +220,50 @@ public class GenruleTest {
     ShellStep genruleCommand = (ShellStep) sixthStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(ImmutableMap.<String, String>builder()
-        .put("SRCS",
-            getAbsolutePathInBase("/src/com/facebook/katana/convert_to_katana.py ").toString() +
-            getAbsolutePathInBase("/src/com/facebook/katana/AndroidManifest.xml").toString())
         .put("OUT",
             getAbsolutePathInBase(
                 GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString())
-        .put("GEN_DIR",
-            getAbsolutePathInBase(GEN_DIR).toString())
-        .put("DEPS",
-            "$GEN_DIR/java/com/facebook/util/lib__util__output/util.jar")
-        .put("TMP",
-            getAbsolutePathInBase(pathToTmpDir).toString())
-        .put("SRCDIR",
-            getAbsolutePathInBase(pathToSrcDir).toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
         ImmutableList.of("/bin/bash", "-e", "-c", "python convert_to_katana.py AndroidManifest.xml > $OUT"),
         genruleCommand.getShellCommand(executionContext));
+  }
+
+  @Test
+  public void testDepsEnvironmentVariableIsComplete() {
+    BuildTarget depTarget = new BuildTarget("//foo", "bar");
+    BuildRule dep = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY, depTarget) {
+      @Override
+      public String getPathToOutputFile() {
+        return "buck-out/gen/foo/bar.jar";
+      }
+    };
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(ImmutableMap.of(depTarget, dep));
+
+    AbstractBuildRuleBuilderParams params = new FakeAbstractBuildRuleBuilderParams();
+    Builder builder = Genrule.newGenruleBuilder(params);
+    builder.setBuildTarget(new BuildTarget("//foo", "baz"));
+    builder.setBash(Optional.of("cat $DEPS > $OUT"));
+    builder.setOut("deps.txt");
+    builder.addDep(depTarget);
+
+    Genrule genrule = builder.build(ruleResolver);
+    AbstractGenruleStep genruleStep = genrule.createGenruleStep();
+    ExecutionContext context = newEmptyExecutionContext(Platform.LINUX);
+    Map<String, String> environmentVariables = genruleStep.getEnvironmentVariables(context);
+    assertEquals(
+        "Make sure that the use of $DEPS pulls in $GEN_DIR, as well.",
+        ImmutableMap.of(
+            "DEPS", "$GEN_DIR/foo/bar.jar",
+            "GEN_DIR", "buck-out/gen",
+            "OUT", "buck-out/gen/foo/deps.txt"),
+        environmentVariables);
+
+    // Ensure that $GEN_DIR is declared before $DEPS.
+    List<String> keysInOrder = ImmutableList.copyOf(environmentVariables.keySet());
+    assertEquals("GEN_DIR", keysInOrder.get(1));
+    assertEquals("DEPS", keysInOrder.get(2));
   }
 
   private ExecutionContext newEmptyExecutionContext(Platform platform) {
