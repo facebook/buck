@@ -909,7 +909,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Run ProGuard on the classpath entries.
     // TODO: ProGuardObfuscateStep's final argument should be a Path
-    ProGuardObfuscateStep obfuscateCommand = new ProGuardObfuscateStep(
+    Step obfuscateCommand = ProGuardObfuscateStep.create(
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
         useAndroidProguardConfigWithOptimizations,

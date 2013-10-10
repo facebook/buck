@@ -133,8 +133,8 @@ public class AndroidBinaryRuleTest {
             ImmutableSet.<String>of(),
             "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt");
 
-    ProGuardObfuscateStep expectedObfuscation =
-        new ProGuardObfuscateStep(
+    Step expectedObfuscation =
+        ProGuardObfuscateStep.create(
           "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt",
           ImmutableSet.<String>of(),
           false,

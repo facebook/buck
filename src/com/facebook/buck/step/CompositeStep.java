@@ -18,6 +18,7 @@ package com.facebook.buck.step;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -73,4 +74,20 @@ public class CompositeStep implements Step, Iterable<Step> {
     return steps.iterator();
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    } else if (!(obj instanceof CompositeStep)) {
+      return false;
+    }
+
+    CompositeStep that = (CompositeStep) obj;
+    return Objects.equal(this.steps, that.steps);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(steps);
+  }
 }
