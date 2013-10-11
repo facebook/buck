@@ -42,7 +42,9 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.Paths;
@@ -939,7 +941,17 @@ public class Project {
       }
     };
 
-    int exitCode = command.execute(executionContext);
+    Console console = executionContext.getConsole();
+    Console childConsole = new Console(
+        console.getVerbosity(),
+        console.getStdOut(),
+        console.getStdErr(),
+        Ansi.withoutTty());
+    ExecutionContext childContext = ExecutionContext.builder()
+        .setExecutionContext(executionContext)
+        .setConsole(childConsole)
+        .build();
+    int exitCode = command.execute(childContext);
     return new ExitCodeAndStdOut(exitCode, command.getStdout());
   }
 
