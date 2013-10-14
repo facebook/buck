@@ -9,4 +9,5 @@ android_resource(
 
 project_config(
   src_target = ':res',
+  src_roots = None,
 )
