@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
@@ -262,6 +263,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildTargetException, BuildFileParseException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
+    // Create artifact cache to initialize Cassandra connection, if appropriate.
+    ArtifactCache artifactCache = getArtifactCache();
+
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
     RawRulePredicate predicate = new RawRulePredicate() {
@@ -295,7 +299,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Build build = options.createBuild(options.getBuckConfig(),
         graph,
         getProjectFilesystem(),
-        getArtifactCache(),
+        artifactCache,
         console,
         getBuckEventBus(),
         options.getTargetDeviceOptional(),
