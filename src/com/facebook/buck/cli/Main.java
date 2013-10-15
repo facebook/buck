@@ -465,6 +465,8 @@ public final class Main {
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
 
+
+
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 
     for (BuckEventListener eventListener : eventListeners) {
@@ -472,6 +474,7 @@ public final class Main {
     }
 
     JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+
     return eventListeners;
   }
 
