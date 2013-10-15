@@ -631,10 +631,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       nativeLibraryDirectories.add(libSubdirectory);
       commands.add(new MakeCleanDirectoryStep(libSubdirectory));
       for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
-        // TODO(mbolin): Verify whether this check is actually necessary. If not, remove it.
-        if (nativeLibDir.endsWith("/")) {
-          nativeLibDir = nativeLibDir.substring(0, nativeLibDir.length() - 1);
-        }
         copyNativeLibrary(nativeLibDir, libSubdirectory, commands);
       }
     }
