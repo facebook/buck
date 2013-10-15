@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -50,12 +51,13 @@ public class ClasspathTraversalTest {
   public TemporaryFolder tempDir = new TemporaryFolder();
 
   private static Collection<FileLike> traverse(Collection<File> files) throws IOException {
-    Iterable<Path> paths = Iterables.transform(files, new Function<File, Path>() {
+    Collection<Path> paths = FluentIterable.from(files)
+        .transform(new Function<File, Path>() {
       @Override
       public Path apply(File file) {
         return file.toPath();
       }
-    });
+    }).toList();
     final ImmutableList.Builder<FileLike> completeList = ImmutableList.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
     traverser.traverse(new ClasspathTraversal(paths) {

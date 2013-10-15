@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -42,7 +43,7 @@ import java.util.zip.ZipFile;
 public abstract class ClasspathTraversal {
   private final Iterable<Path> paths;
 
-  public ClasspathTraversal(Iterable<Path> paths) {
+  public ClasspathTraversal(Collection<Path> paths) {
     this.paths = Preconditions.checkNotNull(paths);
   }
 

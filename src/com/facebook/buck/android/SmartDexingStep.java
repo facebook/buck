@@ -38,6 +38,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +54,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -381,13 +383,14 @@ public class SmartDexingStep implements Step {
       // entry contents but change on disk due to entry metadata.
       ClasspathTraverser traverser = new DefaultClasspathTraverser();
       try {
-        traverser.traverse(new ClasspathTraversal(
-              Iterables.transform(srcs, new Function<String, Path>() {
+        Collection<Path> paths = FluentIterable.from(srcs)
+            .transform(new Function<String, Path>() {
                 @Override
                 public Path apply(String input) {
                   return java.nio.file.Paths.get(input);
                 }
-              })) {
+            }).toList();
+        traverser.traverse(new ClasspathTraversal(paths) {
           @Override
           public void visit(FileLike fileLike) {
             try {
