@@ -84,11 +84,10 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
     boolean hasValidOptions = false;
     try {
-
       parser.parseArgument(args);
       hasValidOptions = true;
     } catch (CmdLineException e) {
-      System.err.println(e.getMessage());
+      console.getStdErr().println(e.getMessage());
     }
 
     if (hasValidOptions && !options.showHelp()) {
