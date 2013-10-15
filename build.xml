@@ -52,6 +52,10 @@
     <include name="java/astyanax/slf4j-log4j12-1.7.2.jar" />
     <include name="java/jetty/jetty-all-9.0.4.v20130625.jar" />
     <include name="java/jetty/servlet-api.jar" />
+    <include name="java/neo4j/geronimo-jta_1.1_spec-1.1.1.jar"/>
+    <include name="java/neo4j/lucene-core-3.6.2.jar"/>
+    <include name="java/neo4j/neo4j-kernel-2.0.0-M05.jar"/>
+    <include name="java/neo4j/neo4j-lucene-index-2.0.0-M05.jar"/>
     <include name="java/xz-java-1.3/xz-1.3.jar" />
   </fileset>
 
@@ -126,6 +130,9 @@
       <exclude name="com/facebook/buck/junit/**" />
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
+      <!-- Suppress the warning from implicitly compiling files that are not
+           annotation processed. Not sure which files are the culprit -->
+      <compilerarg value="-implicit:class" />
     </javac>
   </target>
 

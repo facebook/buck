@@ -184,6 +184,13 @@ public class ProjectFilesystem {
   }
 
   /**
+   * Recursively delete everything under the specified path.
+   */
+  public void rmdir(Path pathRelativeToProjectRoot) throws IOException {
+    MoreFiles.rmdir(resolve(pathRelativeToProjectRoot));
+  }
+
+  /**
    * Resolves the relative path against the project root and then calls
    * {@link java.nio.file.Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
    */
