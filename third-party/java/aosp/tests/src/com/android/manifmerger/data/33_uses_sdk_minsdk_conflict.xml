@@ -1,0 +1,148 @@
+#
+# Test uses-sdk: it's an error for a library to require a minSdkVersion higher than the
+# one defined in the main manifest.
+#
+# Also a uses-sdk with a lack of minSdkVersion is equivalent to using version=1.
+#
+
+@fails
+
+@main
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <!-- This is the same as writing android:minSdkVersion="1" -->
+    <uses-sdk android:targetSdkVersion="14" />
+
+    <application />
+
+</manifest>
+
+
+@lib1
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib1">
+
+    <!-- The app can cope with API 1 but this library can only cope with API 4. -->
+    <uses-sdk android:minSdkVersion="4" />
+
+</manifest>
+
+
+@lib2
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib2">
+
+    <uses-sdk android:minSdkVersion="10" />
+
+</manifest>
+
+
+@lib3
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib3">
+
+    <uses-sdk android:minSdkVersion="11" />
+
+</manifest>
+
+
+@lib4_parsingError
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib4">
+
+    <!-- Parsing errors -->
+    <uses-sdk android:minSdkVersion="abcd" />
+
+</manifest>
+
+
+@lib5_parsingError
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib5">
+
+    <!-- Parsing errors -->
+    <uses-sdk android:minSdkVersion="123456789123456789" />
+
+</manifest>
+
+
+@lib6_parsingError
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib6">
+
+    <!-- Parsing errors -->
+    <uses-sdk android:minSdkVersion="0xFFFFFFFFFFFFFFFF" />
+
+</manifest>
+
+
+@lib7_parsingError
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib7">
+
+    <!-- Parsing errors -->
+    <uses-sdk android:minSdkVersion="InvalidMinSdk" android:targetSdkVersion="InvalidTargetSdk" />
+
+</manifest>
+
+
+@lib8_parsingCodename
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lib8">
+
+    <!-- Test code names -->
+    <uses-sdk android:minSdkVersion="ApiCodename1" android:targetSdkVersion="ApiCodename10" />
+
+</manifest>
+
+
+@result
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <!-- This is the same as writing android:minSdkVersion="1" -->
+    <uses-sdk android:targetSdkVersion="14" />
+
+    <application />
+
+</manifest>
+
+
+@errors
+
+E [ManifestMergerTest0_main.xml:4, ManifestMergerTest1_lib1.xml:4] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='4'
+Note: main manifest lacks a <uses-sdk android:minSdkVersion> declaration, which defaults to value 1.
+E [ManifestMergerTest0_main.xml:4, ManifestMergerTest2_lib2.xml:3] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='10'
+Note: main manifest lacks a <uses-sdk android:minSdkVersion> declaration, which defaults to value 1.
+E [ManifestMergerTest0_main.xml:4, ManifestMergerTest3_lib3.xml:3] Main manifest has <uses-sdk android:minSdkVersion='1'> but library uses minSdkVersion='11'
+Note: main manifest lacks a <uses-sdk android:minSdkVersion> declaration, which defaults to value 1.
+E [ManifestMergerTest4_lib4_parsingError.xml:4] Failed to parse <uses-sdk minSdkVersion='abcd'>: must be an integer number or codename.
+E [ManifestMergerTest5_lib5_parsingError.xml:4] Failed to parse <uses-sdk minSdkVersion='123456789123456789'>: must be an integer number or codename.
+E [ManifestMergerTest6_lib6_parsingError.xml:4] Failed to parse <uses-sdk minSdkVersion='0xFFFFFFFFFFFFFFFF'>: must be an integer number or codename.
+E [ManifestMergerTest7_lib7_parsingError.xml:4] Failed to parse <uses-sdk minSdkVersion='InvalidMinSdk'>: must be an integer number or codename.
+E [ManifestMergerTest7_lib7_parsingError.xml:4] Failed to parse <uses-sdk targetSdkVersion='InvalidTargetSdk'>: must be an integer number or codename.

@@ -143,6 +143,7 @@ prebuilt_jar(
   visibility = [
     '//src/com/facebook/buck/junit:junit',
     '//test/...',
+    '//third-party/java/aosp/...',
   ],
 )
 

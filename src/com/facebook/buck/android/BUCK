@@ -94,7 +94,7 @@ java_library(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/zip:steps',
-    '//third-party/java/aosp/src/com/android:aosp',
+    '//third-party/java/aosp:aosp',
   ],
   visibility = ['PUBLIC'],
 )
@@ -142,7 +142,7 @@ java_library(
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/zip:steps',
     '//src/com/facebook/buck/zip:stream',
-    '//third-party/java/aosp/src/com/android:aosp',
+    '//third-party/java/aosp:aosp',
   ],
   visibility = ['PUBLIC'],
 )
