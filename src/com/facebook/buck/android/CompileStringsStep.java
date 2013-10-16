@@ -25,11 +25,12 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -41,7 +42,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,6 +95,7 @@ public class CompileStringsStep implements Step {
   private final FilterResourcesStep filterResourcesStep;
   private final Path destinationDir;
   private final ObjectMapper objectMapper;
+  private final Map<String, String> regionSpecificToBaseLocaleMap;
 
   @VisibleForTesting
   CompileStringsStep(
@@ -103,6 +105,7 @@ public class CompileStringsStep implements Step {
     this.filterResourcesStep = Preconditions.checkNotNull(filterResourcesStep);
     this.destinationDir = Preconditions.checkNotNull(destinationDir);
     this.objectMapper = Preconditions.checkNotNull(mapper);
+    regionSpecificToBaseLocaleMap = Maps.newHashMap();
   }
 
   /**
@@ -121,15 +124,42 @@ public class CompileStringsStep implements Step {
   public int execute(ExecutionContext context) {
     ImmutableSet<String> filteredStringFiles = filterResourcesStep.getNonEnglishStringFiles();
     ImmutableMultimap<String, String> filesByLocale = groupFilesByLocale(filteredStringFiles);
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
 
+    Map<String, StringResources> resourcesByLocale = Maps.newHashMap();
     for (String locale : filesByLocale.keySet()) {
-      // TODO: Merge base locale resource with the country specific ones
-      // eg. es_ES = es_ES + es;
       try {
-        ImmutableMap<String, Object> resources = compileStringFiles(filesByLocale.get(locale));
+        resourcesByLocale.put(locale, compileStringFiles(filesByLocale.get(locale)));
+      } catch (IOException e) {
+        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+            "Error parsing string file for locale: %s", locale));
+        return 1;
+      }
+    }
+
+    // Merge region specific locale resources with the corresponding base locale resources.
+    //
+    // For example, if there are separate string resources in an android project for locale
+    // "es" and "es_US", when an application running on a device with locale set to "Spanish
+    // (United States)" requests for a string, the Android runtime first looks for the string in
+    // "es_US" set of resources, and if not found, returns the resource from the "es" set.
+    // We merge these because we want the individual string json files to be self contained for
+    // simplicity.
+    for (String regionSpecificLocale : regionSpecificToBaseLocaleMap.keySet()) {
+      String baseLocale = regionSpecificToBaseLocaleMap.get(regionSpecificLocale);
+      if (!resourcesByLocale.containsKey(baseLocale)) {
+        continue;
+      }
+
+      resourcesByLocale.put(regionSpecificLocale,
+          resourcesByLocale.get(regionSpecificLocale)
+              .getMergedResources(resourcesByLocale.get(baseLocale)));
+    }
+
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    for (String locale : filesByLocale.keySet()) {
+      try {
         File jsonFile = filesystem.getFileForRelativePath(destinationDir.resolve(locale + ".json"));
-        objectMapper.writeValue(jsonFile, resources);
+        objectMapper.writeValue(jsonFile, resourcesByLocale.get(locale).asMap());
       } catch (IOException e) {
         context.getBuckEventBus().post(ThrowableLogEvent.create(e,
             "Error creating json string file for locale: %s",
@@ -167,9 +197,13 @@ public class CompileStringsStep implements Step {
       if (!matcher.matches()) {
         continue;
       }
+
       String baseLocale = matcher.group(1);
       String country = matcher.group(2);
       String locale = country == null ? baseLocale : baseLocale + "_" + country;
+      if (country != null && !regionSpecificToBaseLocaleMap.containsKey(locale)) {
+        regionSpecificToBaseLocaleMap.put(locale, baseLocale);
+      }
 
       localeToFiles.put(locale, filepath);
     }
@@ -177,12 +211,12 @@ public class CompileStringsStep implements Step {
     return localeToFiles.build();
   }
 
-  private ImmutableMap<String, Object> compileStringFiles(Collection<String> filepaths)
+  private StringResources compileStringFiles(Collection<String> filepaths)
       throws IOException {
 
     Map<String, String> stringsMap = Maps.newHashMap();
-    Map<String, Map<String, String>> pluralsMap = Maps.newHashMap();
-    Map<String, List<String>> arraysMap = Maps.newHashMap();
+    Map<String, ImmutableMap<String, String>> pluralsMap = Maps.newHashMap();
+    Multimap<String, String> arraysMap = ArrayListMultimap.create();
 
     for (String stringFilePath : filepaths) {
       File stringFile = (Paths.get(stringFilePath)).toFile();
@@ -198,11 +232,7 @@ public class CompileStringsStep implements Step {
       scrapeStringArrayNodes(arrayNodes, arraysMap);
     }
 
-    ImmutableMap.Builder<String, Object> resourcesBuilder = ImmutableMap.builder();
-    resourcesBuilder.putAll(stringsMap);
-    resourcesBuilder.putAll(pluralsMap);
-    resourcesBuilder.putAll(arraysMap);
-    return resourcesBuilder.build();
+    return new StringResources(stringsMap, pluralsMap, arraysMap);
   }
 
 
@@ -231,7 +261,7 @@ public class CompileStringsStep implements Step {
   @VisibleForTesting
   void scrapePluralsNodes(
       NodeList pluralNodes,
-      Map<String, Map<String, String>> pluralsMap) {
+      Map<String, ImmutableMap<String, String>> pluralsMap) {
 
     for (int i = 0; i < pluralNodes.getLength(); ++i) {
       Node node = pluralNodes.item(i);
@@ -256,7 +286,7 @@ public class CompileStringsStep implements Step {
    * Similar to {@code scrapeStringNodes}, but for string array nodes.
    */
   @VisibleForTesting
-  void scrapeStringArrayNodes(NodeList arrayNodes, Map<String, List<String>> arraysMap) {
+  void scrapeStringArrayNodes(NodeList arrayNodes, Multimap<String, String> arraysMap) {
     for (int i = 0; i < arrayNodes.getLength(); ++i) {
       Node node = arrayNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
@@ -264,13 +294,11 @@ public class CompileStringsStep implements Step {
       if (arraysMap.containsKey(resourceName)) {
         continue;
       }
-      ImmutableList.Builder<String> arrayItemsBuilder = ImmutableList.builder();
 
       NodeList itemNodes = ((Element)node).getElementsByTagName("item");
       for (int j = 0; j < itemNodes.getLength(); ++j) {
-        arrayItemsBuilder.add(itemNodes.item(j).getTextContent());
+        arraysMap.put(resourceName, itemNodes.item(j).getTextContent());
       }
-      arraysMap.put(resourceName, arrayItemsBuilder.build());
     }
   }
 
@@ -282,5 +310,41 @@ public class CompileStringsStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return "Combine, parse string resource xml files into one json file per locale.";
+  }
+
+  @VisibleForTesting
+  static class StringResources {
+    public final Map<String, String> strings;
+    public final Map<String, ImmutableMap<String, String>> plurals;
+    public final Multimap<String, String> arrays;
+
+    public StringResources(
+        Map<String, String> strings,
+        Map<String, ImmutableMap<String, String>> plurals,
+        Multimap<String, String> arrays) {
+      this.strings = Preconditions.checkNotNull(strings);
+      this.plurals = Preconditions.checkNotNull(plurals);
+      this.arrays = Preconditions.checkNotNull(arrays);
+    }
+
+    public StringResources getMergedResources(StringResources otherResources) {
+      Map<String, String> stringsMap = new HashMap<>(otherResources.strings);
+      Map<String, ImmutableMap<String, String>> pluralsMap = new HashMap<>(otherResources.plurals);
+      Multimap<String, String> arraysMap = ArrayListMultimap.create(otherResources.arrays);
+
+      stringsMap.putAll(strings);
+      pluralsMap.putAll(plurals);
+      arraysMap.putAll(arrays);
+
+      return new StringResources(stringsMap, pluralsMap, arraysMap);
+    }
+
+    public ImmutableMap<String, Object> asMap() {
+      return ImmutableMap.<String, Object>builder()
+          .putAll(strings)
+          .putAll(plurals)
+          .putAll(arrays.asMap())
+          .build();
+    }
   }
 }

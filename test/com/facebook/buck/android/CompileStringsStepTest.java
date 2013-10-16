@@ -26,10 +26,11 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 import org.easymock.EasyMockSupport;
 import org.easymock.IAnswer;
@@ -41,7 +42,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
@@ -53,6 +53,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   private static final String FIRST_FILE = TESTDATA_DIR + "first/res/values-es/strings.xml";
   private static final String SECOND_FILE = TESTDATA_DIR + "second/res/values-es/strings.xml";
   private static final String THIRD_FILE = TESTDATA_DIR + "third/res/values-pt/strings.xml";
+  private static final String FOURTH_FILE = TESTDATA_DIR + "third/res/values-pt-rBR/strings.xml";
 
   @Test
   public void testStringFilePattern() {
@@ -151,7 +152,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList pluralsNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("plurals");
 
-    Map<String, Map<String, String>> pluralsMap = new HashMap<>();
+    Map<String, ImmutableMap<String, String>> pluralsMap = new HashMap<>();
     createNonExecutingStep().scrapePluralsNodes(pluralsNodes, pluralsMap);
 
     assertEquals(
@@ -187,15 +188,15 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList arrayNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("string-array");
 
-    Map<String, List<String>> arraysMap = new HashMap<>();
+    Multimap<String, String> arraysMap = ArrayListMultimap.create();
     createNonExecutingStep().scrapeStringArrayNodes(arrayNodes, arraysMap);
 
     assertEquals(
-        ImmutableMap.of(
-            "name1", ImmutableList.of("Value11", "Value12"),
-            "name2", ImmutableList.of("Value21"),
-            "name3", ImmutableList.of()
-        ),
+        ImmutableMultimap.builder()
+            .put("name1", "Value11")
+            .put("name1", "Value12")
+            .put("name2", "Value21")
+            .build(),
         arraysMap
     );
   }
@@ -222,7 +223,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
       public File answer() throws Throwable {
         return ((Path)getCurrentArguments()[0]).toFile();
       }
-    }).times(2);
+    }).times(3);
     expect(context.getProjectFilesystem()).andReturn(filesystem);
 
     ObjectMapper mapper = createMock(ObjectMapper.class);
@@ -242,13 +243,14 @@ public class CompileStringsStepTest extends EasyMockSupport {
       private ImmutableMap<String, Object> getMapFromArgs() {
         return (ImmutableMap<String, Object>) getCurrentArguments()[1];
       }
-    }).times(2);
+    }).times(3);
 
     FilterResourcesStep filterResourcesStep = createMock(FilterResourcesStep.class);
     expect(filterResourcesStep.getNonEnglishStringFiles()).andReturn(ImmutableSet.of(
         FIRST_FILE,
         SECOND_FILE,
-        THIRD_FILE));
+        THIRD_FILE,
+        FOURTH_FILE));
 
     replayAll();
     CompileStringsStep step = new CompileStringsStep(filterResourcesStep, destinationDir, mapper);
@@ -263,6 +265,10 @@ public class CompileStringsStepTest extends EasyMockSupport {
                 "name2_2", "Value22"),
             "pt.json", ImmutableMap.of(
                 "name3_1", "Value31",
+                "name3_2", "Value32",
+                "name3_3", "Value33"),
+            "pt_BR.json", ImmutableMap.of(
+                "name3_1", "Value311",
                 "name3_2", "Value32",
                 "name3_3", "Value33")
         ),
