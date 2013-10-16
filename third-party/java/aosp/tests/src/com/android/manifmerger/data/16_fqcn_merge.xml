@@ -115,11 +115,11 @@
 # from @lib3_alias
         <!-- These class name should be expanded. -->
         <activity android:name="com.example.lib3.LibActivity3" />
-        <activity-alias android:name="com.example.lib3.MyActivity"
-            android:targetActivity="com.example.app1.MainActivity" />
         <service  android:name="com.example.lib3.LibService3" />
         <receiver android:name="com.example.lib3.LibReceiver3" />
         <provider android:name="com.example.lib3.LibProvider3" />
+        <activity-alias android:name="com.example.lib3.MyActivity"
+                        android:targetActivity="com.example.app1.MainActivity" />
     </application>
 </manifest>
 
