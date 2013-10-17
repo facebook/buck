@@ -149,4 +149,17 @@ public class ManifestMergerTest extends ManifestMergerTestCase {
   public void test57_activity_alias() throws Exception {
     processTestFiles();
   }
+
+  public void test58_meta_data() throws Exception {
+    processTestFiles();
+  }
+
+  public void test59_meta_data_conflict() throws Exception {
+    processTestFiles();
+  }
+
+  public void test60_meta_data_dup() throws Exception {
+    processTestFiles();
+  }
 }
+

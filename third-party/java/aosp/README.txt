@@ -9,3 +9,5 @@ module.
 3) In the Android SDK's source code manifmerger, sdklib and utils are separate modules. These are
 copied into a single module which alters certain package paths. For example,
 com.android.SDKConstants becomes com.android.common.SDKConstants.
+4) Added support for re-ordering <activity-alias> so they always go after <activity> elements.
+5) Added support for merging <meta-data> elements of <application>.

@@ -56,7 +56,7 @@ import javax.xml.xpath.XPathExpressionException;
  *          except: application:agentBackup if defined, it must match.
  *          (these represent class names and we don't want a lib to assume their app or backup
  *           classes are being used when that will never be the case.)
- *      C- activity / activity-alias / service / receiver / provider
+ *      C- activity / activity-alias / service / receiver / provider / meta-data
  *          => Merge as-is. Error if exists in the destination (same {@code @name})
  *             unless the definitions are exactly the same.
  *             New elements are always merged at the end of the application element.
@@ -289,6 +289,11 @@ public class ManifestMerger {
     err |= !doNotMergeCheckEqual("/manifest/supports-gl-texture", libDoc);     //$NON-NLS-1$
 
     // Strategy C
+    err |= !mergeNewOrEqual(
+        "/manifest/application/meta-data",                              //$NON-NLS-1$
+        "name",                                                         //$NON-NLS-1$
+        libDoc,
+        true);
     err |= !mergeNewOrEqual(
         "/manifest/application/activity",                               //$NON-NLS-1$
         "name",                                                         //$NON-NLS-1$
