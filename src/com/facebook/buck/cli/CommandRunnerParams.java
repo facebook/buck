@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -70,7 +71,7 @@ class CommandRunnerParams {
             new RuleKeyBuilderFactory() {
               @Override
               public Builder newInstance(BuildRule buildRule) {
-                return RuleKey.builder(buildRule);
+                return RuleKey.builder(buildRule, new NullFileHashCache());
               }
             }),
         platform);

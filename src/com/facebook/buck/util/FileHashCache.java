@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,20 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.util;
 
-import com.facebook.buck.rules.RuleKey.Builder;
-import com.facebook.buck.util.NullFileHashCache;
+import com.google.common.hash.HashCode;
+import java.nio.file.Path;
 
-/**
- * Basic implementation of {@link RuleKeyBuilderFactory} that does not inject any contextual
- * information when creating a {@link RuleKey.Builder}.
+/*
+ * A cache which maps Paths to cached hashes of their contents,
+ * based on a simplified subset of the java.util.Map<Path, HashCode> interface.
  */
-public class FakeRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
+public interface FileHashCache {
+  boolean contains(Path path);
 
-  @Override
-  public Builder newInstance(BuildRule buildRule) {
-    return RuleKey.builder(buildRule, new NullFileHashCache());
-  }
+  HashCode get(Path path);
+
+  void put(Path path, HashCode fileSha1);
 
 }

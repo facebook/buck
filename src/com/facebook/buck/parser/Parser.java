@@ -598,18 +598,6 @@ public class Parser {
   }
 
   /**
-   * @param event the event to format.
-   * @return the formatted event context string.
-   */
-  private String createContextString(WatchEvent<?> event) {
-    if (projectFilesystem.isPathChangeEvent(event)) {
-      Path path = (Path) event.context();
-      return path.toAbsolutePath().normalize().toString();
-    }
-    return event.context().toString();
-  }
-
-  /**
    * Called when file change events are posted to the file change EventBus to invalidate cached
    * build rules if required.
    */
@@ -617,7 +605,7 @@ public class Parser {
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Parser watched event %s %s\n", event.kind(),
-          createContextString(event));
+          projectFilesystem.createContextString(event));
     }
 
     if (projectFilesystem.isPathChangeEvent(event)) {

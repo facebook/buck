@@ -37,6 +37,8 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ConcurrentMapFileHashCache;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -112,12 +114,13 @@ public final class Main {
                   Console console) throws IOException {
       this.config = Preconditions.checkNotNull(config);
       this.console = Preconditions.checkNotNull(console);
+      ConcurrentMapFileHashCache hashCache = new ConcurrentMapFileHashCache(projectFilesystem, console);
       this.parser = new Parser(projectFilesystem,
           new KnownBuildRuleTypes(),
           console,
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
-          createRuleKeyBuilderFactory(config));
+          createRuleKeyBuilderFactory(config, hashCache));
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
@@ -125,6 +128,7 @@ public final class Main {
           config.getIgnorePaths(),
           FileSystems.getDefault().newWatchService());
       fileEventBus.register(parser);
+      fileEventBus.register(hashCache);
       webServer = createWebServer(config, console);
     }
 
@@ -305,7 +309,8 @@ public final class Main {
           console,
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
-          createRuleKeyBuilderFactory(config));
+          createRuleKeyBuilderFactory(config,
+              new ConcurrentMapFileHashCache(projectFilesystem, console)));
     }
 
     Clock clock = new DefaultClock();
@@ -502,13 +507,14 @@ public final class Main {
   /**
    * @param buckConfig This is currently unused, but we plan to use this in the near future so that
    *     global user configurations can be included when computing keys.
+   * @param hashCache A cache of file content hashes, used to avoid reading and hashing input files.
    */
   @SuppressWarnings("unused")
-  private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(BuckConfig buckConfig) {
+  private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(BuckConfig buckConfig, final FileHashCache hashCache) {
     return new RuleKeyBuilderFactory() {
       @Override
       public Builder newInstance(BuildRule buildRule) {
-        RuleKey.Builder builder = RuleKey.builder(buildRule);
+        RuleKey.Builder builder = RuleKey.builder(buildRule, hashCache);
         builder.set("buckVersionUid", BUCK_VERSION_UID);
         return builder;
       }

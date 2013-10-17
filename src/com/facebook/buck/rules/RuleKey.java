@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -116,8 +117,8 @@ public class RuleKey {
   /**
    * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
    */
-  public static Builder builder(BuildRule rule) {
-    Builder builder = new Builder(rule)
+  public static Builder builder(BuildRule rule, FileHashCache hashCache) {
+    Builder builder = new Builder(rule, hashCache)
         .set("name", rule.getFullyQualifiedName())
 
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
@@ -135,11 +136,14 @@ public class RuleKey {
 
     private final BuildRule rule;
     private final Hasher hasher;
+    private final FileHashCache hashCache;
+
     @Nullable private List<String> logElms;
 
-    private Builder(BuildRule rule) {
+    private Builder(BuildRule rule, FileHashCache hashCache) {
       this.rule = Preconditions.checkNotNull(rule);
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
+      this.hashCache = Preconditions.checkNotNull(hashCache);
       if (logger.isLoggable(Level.INFO)) {
         this.logElms = Lists.newArrayList();
       }
@@ -163,12 +167,25 @@ public class RuleKey {
     }
 
     private Builder setVal(@Nullable File file) throws IOException {
+
       if (file != null) {
-        // Compute a separate SHA-1 for the file contents and feed that into messageDigest rather
-        // than the file contents, in order to avoid the overhead of escaping SEPARATOR in the file
-        // content.
-        InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
-        HashCode fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
+
+        Path path = file.toPath();
+        HashCode fileSha1 = null;
+
+        if (hashCache.contains(path)) {
+
+          // Use cached hash if possible, to avoid reading all input files on each build.
+          fileSha1 = hashCache.get(path);
+        } else {
+
+          // Compute a separate SHA-1 for the file contents and feed that into messageDigest rather
+          // than the file contents, in order to avoid the overhead of escaping SEPARATOR in the file
+          // content.
+          InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
+          fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
+          hashCache.put(path, fileSha1);
+        }
 
         if (logElms != null) {
           logElms.add(String.format("file(path=\"%s\", sha1=%s):", file.getPath(),
@@ -271,7 +288,7 @@ public class RuleKey {
       setKey(key);
       if (val != null) {
         for (InputRule inputRule : val) {
-          setVal(inputRule.getRuleKey());
+          setVal(inputRule.getRuleKey(hashCache));
         }
       }
       return separate();

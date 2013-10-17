@@ -337,4 +337,17 @@ public class ProjectFilesystem {
       }
     }
   }
+
+  /**
+   *
+   * @param event the event to format.
+   * @return the formatted event context string.
+   */
+  public String createContextString(WatchEvent<?> event) {
+    if (isPathChangeEvent(event)) {
+      Path path = (Path) event.context();
+      return path.toAbsolutePath().normalize().toString();
+    }
+    return event.context().toString();
+  }
 }

@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.util.FileHashCache;
+import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -41,6 +43,7 @@ import javax.annotation.Nullable;
 public class InputRule implements BuildRule {
 
   private static final BuildRuleSuccess.Type SUCCESS_TYPE = BuildRuleSuccess.Type.BY_DEFINITION;
+  private static final FileHashCache nullFileHashCache = new NullFileHashCache();
 
   private final File inputFile;
   private final BuildTarget buildTarget;
@@ -141,8 +144,15 @@ public class InputRule implements BuildRule {
 
   @Override
   public RuleKey getRuleKey() throws IOException {
+    return getRuleKey(nullFileHashCache);
+  }
+
+  public RuleKey getRuleKey(FileHashCache hashCache) throws IOException {
     if (this.ruleKey == null) {
-      ruleKey = RuleKey.builder(this).set("inputFile", inputFile).build().getTotalRuleKey();
+
+      // TODO(user, mbolin): avoid RuleKey.Builder/InputRule mutual dependence.
+      ruleKey = RuleKey.builder(this, hashCache)
+          .set("inputFile", inputFile).build().getTotalRuleKey();
     }
     return ruleKey;
   }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -49,7 +50,7 @@ public class DirArtifactCacheTest {
 
     Files.write("x", fileX, Charsets.UTF_8);
     InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, new NullFileHashCache()).build().getTotalRuleKey();
 
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
   }
@@ -63,7 +64,7 @@ public class DirArtifactCacheTest {
 
     Files.write("x", fileX, Charsets.UTF_8);
     InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, new NullFileHashCache()).build().getTotalRuleKey();
 
     dirArtifactCache.store(ruleKeyX, fileX);
 
@@ -86,7 +87,7 @@ public class DirArtifactCacheTest {
 
     Files.write("x", fileX, Charsets.UTF_8);
     InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, new NullFileHashCache()).build().getTotalRuleKey();
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
@@ -115,9 +116,10 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
 
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX).build().getTotalRuleKey();
-    RuleKey ruleKeyY = RuleKey.builder(inputRuleY).build().getTotalRuleKey();
-    RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ).build().getTotalRuleKey();
+    NullFileHashCache hashCache = new NullFileHashCache();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, hashCache).build().getTotalRuleKey();
+    RuleKey ruleKeyY = RuleKey.builder(inputRuleY, hashCache).build().getTotalRuleKey();
+    RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ, hashCache).build().getTotalRuleKey();
 
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.FileHashCache;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
@@ -34,7 +35,7 @@ public class FakeInputRule extends InputRule {
   }
 
   @Override
-  public RuleKey getRuleKey() {
+  public RuleKey getRuleKey(FileHashCache ignored) {
     return customRuleKey;
   }
 
