@@ -534,7 +534,7 @@ public final class Main {
 
   public static void main(String[] args) {
     Main main = new Main(System.out, System.err);
-    File projectRoot = new File(".");
+    File projectRoot = new File("").getAbsoluteFile();
     int exitCode = FAIL_EXIT_CODE;
     try {
       exitCode = main.tryRunMainWithExitCode(projectRoot, args);
