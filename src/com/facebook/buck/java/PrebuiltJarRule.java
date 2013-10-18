@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
@@ -217,9 +216,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
       try {
         fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
       } catch (IOException e) {
-        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
-            "Failed to calculate ABI for %s.",
-            binaryJar));
+        context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
         return 1;
       }
 

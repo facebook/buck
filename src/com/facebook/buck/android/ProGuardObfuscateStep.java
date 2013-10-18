@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.CompositeStep;
@@ -134,9 +133,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         try {
           createEmptyZip(outputJarFile);
         } catch (IOException e) {
-          context.getBuckEventBus().post(ThrowableLogEvent.create(e,
-              "Error creating empty zip file at: %s.",
-              outputJarFile));
+          context.logError(e, "Error creating empty zip file at: %s.", outputJarFile);
           return 1;
         }
       }
@@ -227,9 +224,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
             proGuardArguments,
             Paths.get(pathToProGuardCommandLineArgsFile));
       } catch (IOException e) {
-        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+        context.logError(e,
             "Error writing ProGuard arguments to file: %s.",
-            pathToProGuardCommandLineArgsFile));
+            pathToProGuardCommandLineArgsFile);
         return 1;
       }
 

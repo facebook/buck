@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -125,8 +124,7 @@ public class FilterResourcesStep implements Step {
     try {
       return doExecute(context);
     } catch (Exception e) {
-      context.getBuckEventBus().post(ThrowableLogEvent.create(e,
-          "There was an error filtering resources."));
+      context.logError(e, "There was an error filtering resources.");
       return 1;
     }
   }

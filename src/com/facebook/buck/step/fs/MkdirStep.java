@@ -16,7 +16,6 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -46,9 +45,7 @@ public class MkdirStep implements Step {
     try {
       context.getProjectFilesystem().mkdirs(pathRelativeToProjectRoot);
     } catch (IOException e) {
-      context.getBuckEventBus().post(ThrowableLogEvent.create(e,
-          "Cannot make directories: %s",
-          pathRelativeToProjectRoot));
+      context.logError(e, "Cannot make directories: %s", pathRelativeToProjectRoot);
       return 1;
     }
     return 0;

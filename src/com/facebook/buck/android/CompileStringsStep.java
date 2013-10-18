@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -130,8 +129,7 @@ public class CompileStringsStep implements Step {
       try {
         resourcesByLocale.put(locale, compileStringFiles(filesByLocale.get(locale)));
       } catch (IOException e) {
-        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
-            "Error parsing string file for locale: %s", locale));
+        context.logError(e, "Error parsing string file for locale: %s", locale);
         return 1;
       }
     }
@@ -161,9 +159,7 @@ public class CompileStringsStep implements Step {
         File jsonFile = filesystem.getFileForRelativePath(destinationDir.resolve(locale + ".json"));
         objectMapper.writeValue(jsonFile, resourcesByLocale.get(locale).asMap());
       } catch (IOException e) {
-        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
-            "Error creating json string file for locale: %s",
-            locale));
+        context.logError(e, "Error creating json string file for locale: %s", locale);
         return 1;
       }
     }

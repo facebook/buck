@@ -16,10 +16,8 @@
 
 package com.facebook.buck.zip;
 
-import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -33,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -116,8 +113,7 @@ public class RepackZipEntriesStep implements Step {
 
       return 0;
     } catch (IOException e) {
-      context.getBuckEventBus().post(LogEvent.create(
-          Level.SEVERE, "Unable to repack zip: %s", Throwables.getStackTraceAsString(e)));
+      context.logError(e, "Unable to repack zip");
       return 1;
     }
   }

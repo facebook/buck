@@ -17,7 +17,9 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.android.NoAndroidSdkException;
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -87,6 +89,14 @@ public class ExecutionContext {
         isDebugEnabled,
         eventBus,
         platform);
+  }
+
+  public void logError(Throwable error, String msg, Object... formatArgs) {
+    eventBus.post(ThrowableLogEvent.create(error, msg, formatArgs));
+  }
+
+  public void postEvent(BuckEvent event) {
+    eventBus.post(event);
   }
 
   public Verbosity getVerbosity() {

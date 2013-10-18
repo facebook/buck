@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -66,10 +65,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
         Files.createDirectories(link.getParent());
         Files.createSymbolicLink(link, target);
       } catch (IOException e) {
-        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
-            "Failed to create symlink from %s to %s.",
-            link,
-            target));
+        context.logError(e, "Failed to create symlink from %s to %s.", link, target);
         return 1;
       }
     }
