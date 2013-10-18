@@ -64,7 +64,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * High-level build file parsing machinery.  Primarily responsible for producing a
@@ -73,7 +72,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  * processes filesystem WatchEvents to invalidate the cache as files change. Expected to be used
  * from a single thread, so methods are not synchronized or thread safe.
  */
-@NotThreadSafe
 public class Parser {
 
   private final BuildTargetParser buildTargetParser;
@@ -250,7 +248,7 @@ public class Parser {
    * @param includes the files to include before executing the build file.
    * @return true if the cache was invalidated, false if the cache is still valid.
    */
-  private boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
+  private synchronized boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
     List<String> includesList = Lists.newArrayList(includes);
     if (!includesList.equals(this.cacheDefaultIncludes)) {
       invalidateCache();
@@ -260,7 +258,7 @@ public class Parser {
     return false;
   }
 
-  private void invalidateCache() {
+  private synchronized void invalidateCache() {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().println("Parser invalidating entire cache");
     }
@@ -461,7 +459,7 @@ public class Parser {
    * @param rules the raw rule objects to parse.
    */
   @VisibleForTesting
-  void parseRawRulesInternal(Iterable<Map<String, Object>> rules)
+  synchronized void parseRawRulesInternal(Iterable<Map<String, Object>> rules)
       throws BuildTargetException, IOException {
     for (Map<String, Object> map : rules) {
 
@@ -577,7 +575,7 @@ public class Parser {
    *     in the List returned by this method. If filter is null, then this method returns null.
    * @return The build targets in the project filtered by the given filter.
    */
-  public List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
+  public synchronized List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
                                                      Iterable<String> includes,
                                                      @Nullable RawRulePredicate filter)
       throws BuildFileParseException, BuildTargetException, IOException {
@@ -676,7 +674,7 @@ public class Parser {
    * targets and rules defined by files that transitively include {@code path} from the cache.
    * @param path The File that has changed.
    */
-  private void invalidateDependents(Path path) {
+  private synchronized void invalidateDependents(Path path) {
     // Normalize path to ensure it hashes equally with map keys.
     path = normalize(path);
 

@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.martiansoftware.nailgun.NGContext;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -62,7 +64,7 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new File("."));
+    int exitCode = main.runMainWithExitCode(new File("."), Optional.<NGContext>absent());
     assertEquals(1, exitCode);
     assertEquals(
         "When the user does not specify any arguments, the usage information should be displayed",
@@ -75,7 +77,7 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new File("."), "--help");
+    int exitCode = main.runMainWithExitCode(new File("."), Optional.<NGContext>absent(), "--help");
     assertEquals(1, exitCode);
     assertEquals("Users instinctively try running `buck --help`, so it should print usage info.",
         getUsageString(),

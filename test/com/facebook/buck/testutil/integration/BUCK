@@ -10,6 +10,7 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//lib:junit',
+    '//lib:nailgun',
   ],
   visibility = [
     'PUBLIC',

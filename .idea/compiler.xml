@@ -2,6 +2,11 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <option name="DEFAULT_COMPILER" value="Javac" />
+    <excludeFromCompile>
+      <directory url="file://$PROJECT_DIR$/buck-out/android" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/bin" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen" includeSubdirectories="true" />
+    </excludeFromCompile>
     <resourceExtensions />
     <wildcardResourcePatterns>
       <entry name="?*.properties" />

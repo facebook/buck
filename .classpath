@@ -17,6 +17,7 @@
 	<classpathentry kind="lib" path="lib/jackson-annotations-2.0.5.jar"/>
 	<classpathentry kind="lib" path="lib/jsr305.jar"/>
 	<classpathentry kind="lib" path="lib/junit-4.11.jar" sourcepath="lib/junit-4.11-sources.jar"/>
+	<classpathentry kind="lib" path="lib/nailgun-server-0.9.2-SNAPSHOT.jar" sourcepath="lib/nailgun-server-0.9.2-SNAPSHOT-sources.jar"/>
 	<classpathentry kind="lib" path="lib/objenesis-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/sdklib.jar"/>
 	<classpathentry kind="lib" path="third-party/java/asm/asm-debug-all-4.1.jar" sourcepath="third-party/java/asm/asm-4.1-src.zip"/>

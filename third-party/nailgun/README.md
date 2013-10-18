@@ -15,3 +15,7 @@ The client is built using make.  From the project directory,
 you will additionally need to "make ng.exe".
 
 For more information, see [the nailgun website](http://martiansoftware.com/nailgun/).
+
+Buck currently uses a fork of nailgun hosted at https://github.com/jimpurbrick/nailgun.
+This fork adds support for interrupting server processing when client disconnection is
+detected, changes which are currently being accepted in to the main nailgun repository.

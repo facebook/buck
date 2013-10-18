@@ -27,6 +27,7 @@
 	#include <netdb.h>
 	#include <netinet/in.h>
 	#include <sys/socket.h>
+        #include <sys/time.h>
 	#include <sys/types.h>
 #endif
 
@@ -92,7 +93,8 @@
 #define CHUNKTYPE_DIR 'D'
 #define CHUNKTYPE_CMD 'C'
 #define CHUNKTYPE_EXIT 'X'
-#define CHUNKTYPE_STARTINPUT 'S'
+#define CHUNKTYPE_SENDINPUT 'S'
+#define CHUNKTYPE_HEARTBEAT 'H'
 
 /*
    the following is required to compile for hp-ux
@@ -108,8 +110,8 @@ int nailgunsocket = 0;
 /* buffer used for receiving and writing nail output chunks */
 char buf[BUFSIZE];
 
-/* track whether or not we've been told to send stdin to server */
-int startedInput = 0;
+/* track whether server is ready to receive */
+int readyToSend = 0;
 
 /**
  * Clean up the application.
@@ -334,6 +336,7 @@ void processExit(char *buf, unsigned long len) {
  * @param len the number of bytes to send
  */
 void sendStdin(char *buf, unsigned int len) {
+  readyToSend = 0;
   sendHeader(len, CHUNKTYPE_STDIN);
   sendAll(nailgunsocket, buf, len);
 }
@@ -345,6 +348,12 @@ void processEof() {
   sendHeader(0, CHUNKTYPE_STDIN_EOF);
 }
 
+/**
+ * Sends a heartbeat chunk to let the server know the client is still alive.
+ */
+void sendHeartbeat() {
+  sendHeader(0, CHUNKTYPE_HEARTBEAT);
+}
 
 #ifdef WIN32
 /**
@@ -357,7 +366,7 @@ DWORD WINAPI processStdin (LPVOID lpParameter) {
   for (;;) {
     DWORD numberOfBytes = 0;
 
-    if (!ReadFile(NG_STDIN_FILENO, wbuf, BUFSIZE, &numberOfBytes, NULL)) {
+    if (readyToSend && !ReadFile(NG_STDIN_FILENO, wbuf, BUFSIZE, &numberOfBytes, NULL)) {
       if (numberOfBytes != 0) {
         handleError();
       }
@@ -464,13 +473,8 @@ void processnailgunstream() {
             break;
       case CHUNKTYPE_EXIT:   processExit(buf, len);
             break;
-      case CHUNKTYPE_STARTINPUT:
-            if (!startedInput) {
-                #ifdef WIN32
-                winStartInput();
-                #endif
-      		startedInput = 1;
-      	    }
+      case CHUNKTYPE_SENDINPUT:
+	    readyToSend = 1;
             break;
       default:  fprintf(stderr, "Unexpected chunk type %d ('%c')\n", chunkType, chunkType);
           cleanUpAndExit(NAILGUN_UNEXPECTED_CHUNKTYPE);
@@ -551,6 +555,8 @@ int main(int argc, char *argv[], char *env[]) {
   #ifndef WIN32
     fd_set readfds;
     int eof = 0;
+    struct timeval readtimeout;
+
   #endif
 
   #ifdef WIN32
@@ -696,24 +702,29 @@ int main(int argc, char *argv[], char *env[]) {
       FD_ZERO(&readfds);
 
       /* don't select on stdin if we've already reached its end */
-      if (startedInput && !eof) {
+      if (readyToSend && !eof) {
 	FD_SET(NG_STDIN_FILENO, &readfds);
       }
 
       FD_SET(nailgunsocket, &readfds);
-      if (select (nailgunsocket + 1, &readfds, NULL, NULL, NULL) == -1) {
-	perror("select");
+
+      memset(&readtimeout, '\0', sizeof(readtimeout));
+      readtimeout.tv_usec = 100000;
+      if(select (nailgunsocket + 1, &readfds, NULL, NULL, &readtimeout) == -1) {
+	  perror("select");
       }
 	  
       if (FD_ISSET(nailgunsocket, &readfds)) {
     #endif
-	processnailgunstream();
+      processnailgunstream();
     #ifndef WIN32
       } else if (FD_ISSET(NG_STDIN_FILENO, &readfds)) {
-	if (!processStdin()) {
-	  FD_CLR(NG_STDIN_FILENO, &readfds);
-	  eof = 1;
-	}
+        if (!processStdin()) {
+          FD_CLR(NG_STDIN_FILENO, &readfds);
+          eof = 1;
+        }
+      } else {
+        sendHeartbeat();
       }
     #endif
   }  

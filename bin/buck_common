@@ -152,14 +152,14 @@ PATH_TO_BUCK_PY="${BUCK_DIRECTORY}/$RELATIVE_PATH_TO_BUCK_PY"
 BUCK_JAVA_CLASSPATH="${BUCK_DIRECTORY}/src:\
 ${BUCK_DIRECTORY}/build/classes:\
 ${BUCK_DIRECTORY}/lib/args4j.jar:\
+${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
 ${BUCK_DIRECTORY}/lib/guava-15.0.jar:\
 ${BUCK_DIRECTORY}/lib/ini4j-0.5.2.jar:\
 ${BUCK_DIRECTORY}/lib/jackson-annotations-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jackson-core-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jackson-databind-2.0.5.jar:\
 ${BUCK_DIRECTORY}/lib/jsr305.jar:\
-${BUCK_DIRECTORY}/lib/sdklib.jar:\
-${BUCK_DIRECTORY}/lib/ddmlib-r21.jar:\
+${BUCK_DIRECTORY}/lib/nailgun-server-0.9.2-SNAPSHOT.jar:\
 ${BUCK_DIRECTORY}/lib/sdklib.jar:\
 ${BUCK_DIRECTORY}/third-party/java/asm/asm-debug-all-4.1.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/astyanax-cassandra-1.56.38.jar:\

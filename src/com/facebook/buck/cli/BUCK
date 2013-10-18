@@ -29,6 +29,7 @@ java_library(
     '//lib:jackson-core',
     '//lib:jackson-databind',
     '//lib:jsr305',
+    '//lib:nailgun',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/command:command',

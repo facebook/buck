@@ -68,6 +68,7 @@ java_test(
     '//lib:jackson-databind',
     '//lib:jsr305',
     '//lib:junit',
+    '//lib:nailgun',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:events',
