@@ -238,6 +238,10 @@ public class ProjectFilesystem {
     Files.write(contents, getFileForRelativePath(pathRelativeToProjectRoot), Charsets.UTF_8);
   }
 
+  public void writeBytesToPath(byte[] bytes, Path pathRelativeToProjectRoot) throws IOException {
+    Files.write(bytes, getFileForRelativePath(pathRelativeToProjectRoot));
+  }
+
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
     File fileToRead = getFileForRelativePath(pathRelativeToProjectRoot);
     return readFileIfItExists(fileToRead, pathRelativeToProjectRoot.toString());

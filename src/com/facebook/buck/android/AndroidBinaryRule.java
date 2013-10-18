@@ -442,7 +442,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   /**
    * Sets up filtering of resources, images/drawables and strings in particular, based on build
-   * rule parameters {@code resourceFilter} and {@code isStoreStringsAsAssets}.
+   * rule parameters {@link #resourceFilter} and {@link #isStoreStringsAsAssets}.
    *
    * {@link com.facebook.buck.android.FilterResourcesStep.ResourceFilter} {@code resourceFilter}
    * determines which drawables end up in the APK (based on density - mdpi, hdpi etc), and also
@@ -450,13 +450,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    *
    * {@code isStoreStringsAsAssets} determines whether non-english string resources are packaged
    * separately as assets (and not bundled together into the {@code resources.arsc} file).
-   *
-   * @return The set of resource directories that will eventually contain filtered resources.
    */
   @VisibleForTesting
-  Set<String> getFilteredResourceDirectories(
-      ImmutableList.Builder<Step> commands,
-      Set<String> resourceDirectories) {
+  FilterResourcesStep getFilterResourcesStep(Set<String> resourceDirectories) {
     ImmutableBiMap.Builder<String, String> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
     String resDestinationBasePath = getBinPath("__filtered__%s__");
     int count = 0;
@@ -474,16 +470,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       filterResourcesStepBuilder.enableStringsFilter();
     }
 
-    FilterResourcesStep filterResourcesStep = filterResourcesStepBuilder.build();
-    commands.add(filterResourcesStep);
-
-    if (isStoreStringsAsAssets()) {
-      Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
-      commands.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
-      commands.add(new CompileStringsStep(filterResourcesStep, tmpStringsDirPath));
-    }
-
-    return resSourceToDestDirMap.values();
+    return filterResourcesStepBuilder.build();
   }
 
   @Override
@@ -505,8 +492,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     Set<String> resDirectories = transitiveDependencies.resDirectories;
     Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
 
+    FilterResourcesStep filterResourcesStep = null;
     if (requiresResourceFilter()) {
-      resDirectories = getFilteredResourceDirectories(commands, resDirectories);
+      filterResourcesStep = getFilterResourcesStep(resDirectories);
+      commands.add(filterResourcesStep);
+      resDirectories = filterResourcesStep.getOutputResourceDirs();
     }
 
     // Extract the resources from third-party jars.
@@ -523,6 +513,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           rDotJavaPackages,
           getBuildTarget(),
           commands);
+
+      if (isStoreStringsAsAssets()) {
+        Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
+        commands.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
+        commands.add(new CompileStringsStep(
+            filterResourcesStep,
+            Paths.get(UberRDotJavaUtil.getPathToGeneratedRDotJavaSrcFiles(getBuildTarget())),
+            tmpStringsDirPath));
+      }
     }
 
     // Execute preprocess_java_classes_binary, if appropriate.

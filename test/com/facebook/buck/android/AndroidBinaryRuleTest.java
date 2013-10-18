@@ -55,7 +55,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -579,32 +578,15 @@ public class AndroidBinaryRuleTest {
         .setResourceCompressionMode("enabled_with_strings_as_assets");
 
     AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
-    ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
     Set<String> resourceDirectories = ImmutableSet.of("one", "two");
 
-    Set<String> filteredResDirs = buildRule.getFilteredResourceDirectories(
-        commandsBuilder, resourceDirectories);
+    FilterResourcesStep filterResourcesStep = buildRule.getFilterResourcesStep(resourceDirectories);
 
     assertEquals(
         ImmutableSet.of(
             "buck-out/bin/__filtered__target__/0",
             "buck-out/bin/__filtered__target__/1"),
-        filteredResDirs);
-
-    ImmutableList<Step> commands = commandsBuilder.build();
-    assertEquals(3, commands.size());
-
-    FilterResourcesStep resourcesStep = (FilterResourcesStep)commands.get(0);
-    MakeCleanDirectoryStep cleanDirectoryStep = (MakeCleanDirectoryStep)commands.get(1);
-
-    assertTrue(resourcesStep.isFilterStrings());
-    assertEquals("mdpi", resourcesStep.getResourceFilter());
-    assertEquals(ImmutableBiMap.of(
-        "one", "buck-out/bin/__filtered__target__/0",
-        "two", "buck-out/bin/__filtered__target__/1"),
-        resourcesStep.getInResDirToOutResDirMap());
-
-    assertEquals("buck-out/bin/__strings_target__", cleanDirectoryStep.getPath());
+        filterResourcesStep.getOutputResourceDirs());
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(

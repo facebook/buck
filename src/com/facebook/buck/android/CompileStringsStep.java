@@ -20,16 +20,14 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -41,15 +39,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * This {@link Step} takes in a {@link FilterResourcesStep} that provides a list of string resource
- * files (strings.xml), groups them by locales, and for each locale generates a json file with all
- * the string resources for that locale.
+ * files (strings.xml), groups them by locales, and for each locale generates a file with all the
+ * string resources for that locale.
  *
  * <p>A typical strings.xml file looks like:
  * <pre>
@@ -66,7 +65,7 @@ import java.util.regex.Pattern;
  *       <item>Default</item>
  *       <item>Verbose</item>
  *       <item>Debug</item>
- *     </string-array>
+ *     </stri (which is accepted, hurray!) and bump .buckversionng-array>
  *   </resources>
  *   }
  * </pre></p>
@@ -83,7 +82,7 @@ import java.util.regex.Pattern;
  *   <li> a map of plurals </li>
  *   <li> a list of strings </li>
  * </ol>
- * and dumps this map into the json file.</p>
+ * and dumps this map into the output file. See {@link StringResources} for the file format.</p>
  */
 public class CompileStringsStep implements Step {
 
@@ -91,21 +90,15 @@ public class CompileStringsStep implements Step {
   static final Pattern STRING_FILE_PATTERN = Pattern.compile(
       ".*res/values-([a-z]{2})(?:-r([A-Z]{2}))*/strings.xml");
 
-  private final FilterResourcesStep filterResourcesStep;
-  private final Path destinationDir;
-  private final ObjectMapper objectMapper;
-  private final Map<String, String> regionSpecificToBaseLocaleMap;
-
   @VisibleForTesting
-  CompileStringsStep(
-      FilterResourcesStep filterResourcesStep,
-      Path destinationDir,
-      ObjectMapper mapper) {
-    this.filterResourcesStep = Preconditions.checkNotNull(filterResourcesStep);
-    this.destinationDir = Preconditions.checkNotNull(destinationDir);
-    this.objectMapper = Preconditions.checkNotNull(mapper);
-    regionSpecificToBaseLocaleMap = Maps.newHashMap();
-  }
+  static final Pattern R_DOT_TXT_STRING_RESOURCE_PATTERN = Pattern.compile(
+      "^int (string|plurals|array) (\\w+) 0x([0-9a-f]+)$");
+
+  private final FilterResourcesStep filterResourcesStep;
+  private final Path rDotJavaSrcDir;
+  private final Path destinationDir;
+  private final Map<String, String> regionSpecificToBaseLocaleMap;
+  private final Map<String, Integer> resourceNameToIdMap;
 
   /**
    * Note: The ordering of files in the input list determines which resource value ends up in the
@@ -113,14 +106,31 @@ public class CompileStringsStep implements Step {
    * resource name - file that appears first in the list wins.
    *
    * @param filterResourcesStep {@link FilterResourcesStep} that filters non english string files.
+   * @param rDotJavaSrcDir Path to the directory where aapt generates R.txt file along with the
+   *     final R.java files per package.
    * @param destinationDir Output directory for the generated json files.
    */
-  public CompileStringsStep(FilterResourcesStep filterResourcesStep, Path destinationDir) {
-    this(filterResourcesStep, destinationDir, new ObjectMapper(new JsonFactory()));
+  public CompileStringsStep(
+      FilterResourcesStep filterResourcesStep,
+      Path rDotJavaSrcDir,
+      Path destinationDir) {
+    this.filterResourcesStep = Preconditions.checkNotNull(filterResourcesStep);
+    this.rDotJavaSrcDir = Preconditions.checkNotNull(rDotJavaSrcDir);
+    this.destinationDir = Preconditions.checkNotNull(destinationDir);
+    this.regionSpecificToBaseLocaleMap = Maps.newHashMap();
+    this.resourceNameToIdMap = Maps.newHashMap();
   }
 
   @Override
   public int execute(ExecutionContext context) {
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    try {
+      buildResourceNameToIdMap(filesystem);
+    } catch (IOException e) {
+      context.logError(e, "Failure parsing R.txt file.");
+      return 1;
+    }
+
     ImmutableSet<String> filteredStringFiles = filterResourcesStep.getNonEnglishStringFiles();
     ImmutableMultimap<String, String> filesByLocale = groupFilesByLocale(filteredStringFiles);
 
@@ -153,13 +163,12 @@ public class CompileStringsStep implements Step {
               .getMergedResources(resourcesByLocale.get(baseLocale)));
     }
 
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     for (String locale : filesByLocale.keySet()) {
       try {
-        File jsonFile = filesystem.getFileForRelativePath(destinationDir.resolve(locale + ".json"));
-        objectMapper.writeValue(jsonFile, resourcesByLocale.get(locale).asMap());
+        filesystem.writeBytesToPath(resourcesByLocale.get(locale).getBinaryFileContent(),
+            destinationDir.resolve(locale + ".fbstr"));
       } catch (IOException e) {
-        context.logError(e, "Error creating json string file for locale: %s", locale);
+        context.logError(e, "Error creating binary file for locale: %s", locale);
         return 1;
       }
     }
@@ -207,12 +216,29 @@ public class CompileStringsStep implements Step {
     return localeToFiles.build();
   }
 
+  /**
+   * Parses the R.txt file generated by aapt, looks for resources of type {@code string},
+   * {@code plurals} and {@code array}, and builds a map of resource names to their corresponding
+   * ids.
+   */
+  @VisibleForTesting
+  void buildResourceNameToIdMap(ProjectFilesystem filesystem)
+      throws IOException {
+    List<String> fileLines = filesystem.readLines(rDotJavaSrcDir.resolve("R.txt"));
+    for (String line : fileLines) {
+      Matcher matcher = R_DOT_TXT_STRING_RESOURCE_PATTERN.matcher(line);
+      if (!matcher.matches()) {
+        continue;
+      }
+      resourceNameToIdMap.put(matcher.group(2), Integer.parseInt(matcher.group(3), 16));
+    }
+  }
+
   private StringResources compileStringFiles(Collection<String> filepaths)
       throws IOException {
-
-    Map<String, String> stringsMap = Maps.newHashMap();
-    Map<String, ImmutableMap<String, String>> pluralsMap = Maps.newHashMap();
-    Multimap<String, String> arraysMap = ArrayListMultimap.create();
+    TreeMap<Integer, String> stringsMap = Maps.newTreeMap();
+    TreeMap<Integer, ImmutableMap<String, String>> pluralsMap = Maps.newTreeMap();
+    TreeMultimap<Integer, String> arraysMap = TreeMultimap.create();
 
     for (String stringFilePath : filepaths) {
       File stringFile = (Paths.get(stringFilePath)).toFile();
@@ -240,13 +266,17 @@ public class CompileStringsStep implements Step {
    * @param stringsMap Map from string resource name to its value.
    */
   @VisibleForTesting
-  void scrapeStringNodes(NodeList stringNodes, Map<String, String> stringsMap) {
+  void scrapeStringNodes(NodeList stringNodes, Map<Integer, String> stringsMap) {
     for (int i = 0; i < stringNodes.getLength(); ++i) {
       Node node = stringNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
+      if (!resourceNameToIdMap.containsKey(resourceName)) {
+        continue;
+      }
+      int resourceId = resourceNameToIdMap.get(resourceName);
       // Ignore a resource if it has already been found.
-      if (!stringsMap.containsKey(resourceName)) {
-        stringsMap.put(resourceName, node.getTextContent());
+      if (!stringsMap.containsKey(resourceId)) {
+        stringsMap.put(resourceId, node.getTextContent());
       }
     }
   }
@@ -257,13 +287,18 @@ public class CompileStringsStep implements Step {
   @VisibleForTesting
   void scrapePluralsNodes(
       NodeList pluralNodes,
-      Map<String, ImmutableMap<String, String>> pluralsMap) {
+      Map<Integer, ImmutableMap<String, String>> pluralsMap) {
 
     for (int i = 0; i < pluralNodes.getLength(); ++i) {
       Node node = pluralNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
+      if (!resourceNameToIdMap.containsKey(resourceName)) {
+        continue;
+      }
+      int resourceId = resourceNameToIdMap.get(resourceName);
+
       // Ignore a resource if it has already been found.
-      if (pluralsMap.containsKey(resourceName)) {
+      if (pluralsMap.containsKey(resourceId)) {
         continue;
       }
       ImmutableMap.Builder<String, String> quantityToStringBuilder = ImmutableMap.builder();
@@ -274,7 +309,7 @@ public class CompileStringsStep implements Step {
         String quantity = itemNode.getAttributes().getNamedItem("quantity").getNodeValue();
         quantityToStringBuilder.put(quantity, itemNode.getTextContent());
       }
-      pluralsMap.put(resourceName, quantityToStringBuilder.build());
+      pluralsMap.put(resourceId, quantityToStringBuilder.build());
     }
   }
 
@@ -282,20 +317,34 @@ public class CompileStringsStep implements Step {
    * Similar to {@code scrapeStringNodes}, but for string array nodes.
    */
   @VisibleForTesting
-  void scrapeStringArrayNodes(NodeList arrayNodes, Multimap<String, String> arraysMap) {
+  void scrapeStringArrayNodes(NodeList arrayNodes, Multimap<Integer, String> arraysMap) {
     for (int i = 0; i < arrayNodes.getLength(); ++i) {
       Node node = arrayNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
+      // Ignore a resource if R.txt does not contain an entry for it.
+      if (!resourceNameToIdMap.containsKey(resourceName)) {
+        continue;
+      }
+
+      int resourceId = resourceNameToIdMap.get(resourceName);
       // Ignore a resource if it has already been found.
-      if (arraysMap.containsKey(resourceName)) {
+      if (arraysMap.containsKey(resourceId)) {
         continue;
       }
 
       NodeList itemNodes = ((Element)node).getElementsByTagName("item");
       for (int j = 0; j < itemNodes.getLength(); ++j) {
-        arraysMap.put(resourceName, itemNodes.item(j).getTextContent());
+        arraysMap.put(resourceId, itemNodes.item(j).getTextContent());
       }
     }
+  }
+
+  /**
+   * Used in unit tests to inject the resource name to id map.
+   */
+  @VisibleForTesting
+  void addResourceNameToIdMap(Map<String, Integer> nameToIdMap) {
+    resourceNameToIdMap.putAll(nameToIdMap);
   }
 
   @Override
@@ -305,42 +354,6 @@ public class CompileStringsStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "Combine, parse string resource xml files into one json file per locale.";
-  }
-
-  @VisibleForTesting
-  static class StringResources {
-    public final Map<String, String> strings;
-    public final Map<String, ImmutableMap<String, String>> plurals;
-    public final Multimap<String, String> arrays;
-
-    public StringResources(
-        Map<String, String> strings,
-        Map<String, ImmutableMap<String, String>> plurals,
-        Multimap<String, String> arrays) {
-      this.strings = Preconditions.checkNotNull(strings);
-      this.plurals = Preconditions.checkNotNull(plurals);
-      this.arrays = Preconditions.checkNotNull(arrays);
-    }
-
-    public StringResources getMergedResources(StringResources otherResources) {
-      Map<String, String> stringsMap = new HashMap<>(otherResources.strings);
-      Map<String, ImmutableMap<String, String>> pluralsMap = new HashMap<>(otherResources.plurals);
-      Multimap<String, String> arraysMap = ArrayListMultimap.create(otherResources.arrays);
-
-      stringsMap.putAll(strings);
-      pluralsMap.putAll(plurals);
-      arraysMap.putAll(arrays);
-
-      return new StringResources(stringsMap, pluralsMap, arraysMap);
-    }
-
-    public ImmutableMap<String, Object> asMap() {
-      return ImmutableMap.<String, Object>builder()
-          .putAll(strings)
-          .putAll(plurals)
-          .putAll(arrays.asMap())
-          .build();
-    }
+    return "Combine, parse string resource xml files into one binary file per locale.";
   }
 }

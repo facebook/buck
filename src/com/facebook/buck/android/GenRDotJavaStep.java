@@ -42,6 +42,7 @@ public class GenRDotJavaStep extends ShellStep {
 
   /**
    * Creates a command that will run {@code aapt} for the purpose of generating {@code R.java}.
+   * Additionally, this command will generate the corresponding {@code R.txt} file.
    * @param resDirectories Directories of resource files. Will be specified with {@code -S} to
    *     {@code aapt}
    * @param genDirectoryPath Directory where {@code R.java} and potentially {@code R.txt} will be
@@ -51,13 +52,11 @@ public class GenRDotJavaStep extends ShellStep {
    *     {@code R.java} file. For this class, the client must specify the {@code package} directly
    *     rather than the path to {@code AndroidManifest.xml}. This precludes the need to keep a
    *     number of dummy {@code AndroidManifest.xml} files in the codebase.
-   * @param isTempRDotJava If true, this command is being run solely for the purpose of generating
-   *     {@code R.txt} (though {@code R.java} will still be generated as a side-effect). The values
-   *     of the resource values in the generated {@code R.java} will be meaningless.
+   * @param isTempRDotJava If true, the values of the resource values in the generated
+   *     {@code R.java} will be meaningless.
    *     <p>
    *     If false, this command will produce an {@code R.java} file with resource values designed to
-   *     match those in an .apk that includes the resources. In this case, no {@code R.txt} will be
-   *     generated.
+   *     match those in an .apk that includes the resources.
    * @param extraLibraryPackages
    */
   public GenRDotJavaStep(
@@ -114,8 +113,8 @@ public class GenRDotJavaStep extends ShellStep {
       builder.add("-S").add(res);
     }
 
+    builder.add("--output-text-symbols").add(genDirectoryPath);
     if (isTempRDotJava) {
-      builder.add("--output-text-symbols").add(genDirectoryPath);
       builder.add("--non-constant-id");
     }
 

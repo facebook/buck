@@ -137,6 +137,10 @@ public class FilterResourcesStep implements Step {
     return nonEnglishStringFilesBuilder.build();
   }
 
+  public ImmutableSet<String> getOutputResourceDirs() {
+    return inResDirToOutResDirMap.values();
+  }
+
   private int doExecute(ExecutionContext context) throws IOException {
     List<Predicate<File>> filePredicates = Lists.newArrayList();
     if (filterDrawables) {

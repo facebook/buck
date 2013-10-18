@@ -16,32 +16,31 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.getCurrentArguments;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
-import org.easymock.IAnswer;
 import org.junit.Test;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
@@ -82,6 +81,36 @@ public class CompileStringsStepTest extends EasyMockSupport {
   }
 
   @Test
+  public void testRDotTxtContentsPattern() {
+    testContentRegex("  int string r_name 0xdeadbeef", false, null, null, null);
+    testContentRegex("int string r_name 0xdeadbeef  ", false, null, null, null);
+    testContentRegex("int string r_name 0xdeadbeef", true, "string", "r_name", "deadbeef");
+    testContentRegex("int string r_name 0x", false, null, null, null);
+    testContentRegex("int array r_name 0xdead", true, "array", "r_name", "dead");
+    testContentRegex("int plurals r_name 0xdead", true, "plurals", "r_name", "dead");
+    testContentRegex("int plural r_name 0xdead", false, null, null, null);
+    testContentRegex("int plurals r name 0xdead", false, null, null, null);
+    testContentRegex("int[] string r_name 0xdead", false, null, null, null);
+  }
+
+  private void testContentRegex(
+      String input,
+      boolean matches,
+      String resourceType,
+      String resourceName,
+      String resourceId) {
+
+    Matcher matcher = CompileStringsStep.R_DOT_TXT_STRING_RESOURCE_PATTERN.matcher(input);
+    assertEquals(matches, matcher.matches());
+    if (!matches) {
+      return;
+    }
+    assertEquals("Resource type does not match.", resourceType, matcher.group(1));
+    assertEquals("Resource name does not match.", resourceName, matcher.group(2));
+    assertEquals("Resource id does not match.", resourceId, matcher.group(3));
+  }
+
+  @Test
   public void testGroupFilesByLocale() {
     ImmutableSet<String> files = ImmutableSet.of(
         "/project/dir/res/values-da/strings.xml",
@@ -106,7 +135,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
           .putAll("es", ImmutableSet.<String>of("/project/foreveralone/res/values-es/strings.xml"))
           .build();
 
-    assertEquals(expectedMap, groupedByLocale);
+    assertEquals("Incorrect grouping of files by locale.", expectedMap, groupedByLocale);
   }
 
   @Test
@@ -121,16 +150,24 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList stringNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("string");
 
-    Map<String, String> stringsMap = new HashMap<>();
-    createNonExecutingStep().scrapeStringNodes(stringNodes, stringsMap);
+    Map<Integer, String> stringsMap = Maps.newHashMap();
+    CompileStringsStep step = createNonExecutingStep();
+    step.addResourceNameToIdMap(ImmutableMap.of(
+        "name1", 1,
+        "name2", 2,
+        "name3", 3,
+        "name4", 4,
+        "name5", 5));
+    step.scrapeStringNodes(stringNodes, stringsMap);
 
     assertEquals(
+        "Incorrect map of resource id to string values.",
         ImmutableMap.of(
-            "name1", "Value1",
-            "name2", "Value with space",
-            "name3", "Value with \"quotes\"",
-            "name4", "",
-            "name5", "Value with %1$s"),
+            1, "Value1",
+            2, "Value with space",
+            3, "Value with \"quotes\"",
+            4, "",
+            5, "Value with %1$s"),
         stringsMap
     );
   }
@@ -152,19 +189,25 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList pluralsNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("plurals");
 
-    Map<String, ImmutableMap<String, String>> pluralsMap = new HashMap<>();
-    createNonExecutingStep().scrapePluralsNodes(pluralsNodes, pluralsMap);
+    Map<Integer, ImmutableMap<String, String>> pluralsMap = Maps.newHashMap();
+    CompileStringsStep step = createNonExecutingStep();
+    step.addResourceNameToIdMap(ImmutableMap.of(
+        "name1", 1,
+        "name2", 2,
+        "name3", 3));
+    step.scrapePluralsNodes(pluralsNodes, pluralsMap);
 
     assertEquals(
+        "Incorrect map of resource id to plural values.",
         ImmutableMap.of(
-            "name1", ImmutableMap.of(
+            1, ImmutableMap.of(
                 "zero", "%d people saw this",
                 "one", "%d person saw this",
                 "many", "%d people saw this"),
-            "name2", ImmutableMap.of(
+            2, ImmutableMap.of(
                 "zero", "%d people ate this",
                 "many", "%d people ate this"),
-            "name3", ImmutableMap.of()
+            3, ImmutableMap.of()
         ),
         pluralsMap
     );
@@ -188,14 +231,20 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList arrayNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("string-array");
 
-    Multimap<String, String> arraysMap = ArrayListMultimap.create();
-    createNonExecutingStep().scrapeStringArrayNodes(arrayNodes, arraysMap);
+    Multimap<Integer, String> arraysMap = ArrayListMultimap.create();
+    CompileStringsStep step = createNonExecutingStep();
+    step.addResourceNameToIdMap(ImmutableMap.of(
+        "name1", 1,
+        "name2", 2,
+        "name3", 3));
+    step.scrapeStringArrayNodes(arrayNodes, arraysMap);
 
     assertEquals(
+        "Incorrect map of resource id to string arrays.",
         ImmutableMultimap.builder()
-            .put("name1", "Value11")
-            .put("name1", "Value12")
-            .put("name2", "Value21")
+            .put(1, "Value11")
+            .put(1, "Value12")
+            .put(2, "Value21")
             .build(),
         arraysMap
     );
@@ -205,7 +254,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     return new CompileStringsStep(
         createMock(FilterResourcesStep.class),
         createMock(Path.class),
-        createMock(ObjectMapper.class));
+        createMock(Path.class));
   }
 
   private String createResourcesXml(String contents) {
@@ -215,35 +264,11 @@ public class CompileStringsStepTest extends EasyMockSupport {
   @Test
   public void testSuccessfulStepExecution() throws IOException {
     Path destinationDir = Paths.get("");
+    Path rDotJavaSrcDir = Paths.get("");
 
     ExecutionContext context = createMock(ExecutionContext.class);
-    ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);
-    expect(filesystem.getFileForRelativePath(anyObject(Path.class))).andAnswer(new IAnswer<File>() {
-      @Override
-      public File answer() throws Throwable {
-        return ((Path)getCurrentArguments()[0]).toFile();
-      }
-    }).times(3);
-    expect(context.getProjectFilesystem()).andReturn(filesystem);
-
-    ObjectMapper mapper = createMock(ObjectMapper.class);
-    mapper.writeValue(anyObject(File.class), anyObject());
-
-    final ImmutableMap.Builder<String, ImmutableMap<String, Object>> capturedResourcesBuilder =
-        ImmutableMap.builder();
-    expectLastCall().andAnswer(new IAnswer<Object>() {
-      @Override
-      public Object answer() throws Throwable {
-        File file = (File)getCurrentArguments()[0];
-        capturedResourcesBuilder.put(file.getName(), getMapFromArgs());
-        return null;
-      }
-
-      @SuppressWarnings("unchecked")
-      private ImmutableMap<String, Object> getMapFromArgs() {
-        return (ImmutableMap<String, Object>) getCurrentArguments()[1];
-      }
-    }).times(3);
+    FakeProjectFileSystem fileSystem = new FakeProjectFileSystem();
+    expect(context.getProjectFilesystem()).andStubReturn(fileSystem);
 
     FilterResourcesStep filterResourcesStep = createMock(FilterResourcesStep.class);
     expect(filterResourcesStep.getNonEnglishStringFiles()).andReturn(ImmutableSet.of(
@@ -253,27 +278,48 @@ public class CompileStringsStepTest extends EasyMockSupport {
         FOURTH_FILE));
 
     replayAll();
-    CompileStringsStep step = new CompileStringsStep(filterResourcesStep, destinationDir, mapper);
+    CompileStringsStep step = new CompileStringsStep(
+        filterResourcesStep,
+        rDotJavaSrcDir,
+        destinationDir);
     assertEquals(0, step.execute(context));
-    assertEquals(
-        ImmutableMap.of(
-            "es.json", ImmutableMap.of(
-                "name1_1", "Value11",
-                "name1_2", "Value12",
-                "name1_3", "Value13",
-                "name2_1", "Value21",
-                "name2_2", "Value22"),
-            "pt.json", ImmutableMap.of(
-                "name3_1", "Value31",
-                "name3_2", "Value32",
-                "name3_3", "Value33"),
-            "pt_BR.json", ImmutableMap.of(
-                "name3_1", "Value311",
-                "name3_2", "Value32",
-                "name3_3", "Value33")
-        ),
-        capturedResourcesBuilder.build());
+    Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
+    assertEquals("Incorrect number of string files written.", 3, fileContentsMap.size());
+    for (Map.Entry<String, byte[]> entry : fileContentsMap.entrySet()) {
+      File expectedFile = Paths.get(TESTDATA_DIR + entry.getKey()).toFile();
+      assertArrayEquals(Files.toByteArray(expectedFile), fileContentsMap.get(entry.getKey()));
+    }
 
     verifyAll();
+  }
+
+
+  private static class FakeProjectFileSystem extends ProjectFilesystem {
+
+    private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
+
+    public FakeProjectFileSystem() {
+      super(new File("."));
+    }
+
+    @Override
+    public File getFileForRelativePath(Path path) {
+      return path.toFile();
+    }
+
+    @Override
+    public List<String> readLines(Path path) throws IOException {
+      Path fullPath = Paths.get(TESTDATA_DIR).resolve(path);
+      return Files.readLines(fullPath.toFile(), Charset.defaultCharset());
+    }
+
+    @Override
+    public void writeBytesToPath(byte[] content, Path path) {
+      fileContentsMapBuilder.put(path.getFileName().toString(), content);
+    }
+
+    public Map<String, byte[]> getFileContents() {
+      return fileContentsMapBuilder.build();
+    }
   }
 }

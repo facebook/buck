@@ -78,10 +78,7 @@ public class UberRDotJavaUtil {
       BuildTarget buildTarget,
       ImmutableList.Builder<Step> commands) {
     // Create the path where the R.java files will be generated.
-    String rDotJavaSrc = String.format("%s/%s__%s_uber_rdotjava_src__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+    String rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles(buildTarget);
     commands.add(new MakeCleanDirectoryStep(rDotJavaSrc));
 
     // Generate the R.java files.
@@ -106,6 +103,13 @@ public class UberRDotJavaUtil {
     JavacInMemoryStep javac = createJavacInMemoryCommandForRDotJavaFiles(
         javaSourceFilePaths, rDotJavaBin);
     commands.add(javac);
+  }
+
+  public static String getPathToGeneratedRDotJavaSrcFiles(BuildTarget buildTarget) {
+    return String.format("%s/%s__%s_uber_rdotjava_src__",
+        BuckConstant.BIN_DIR,
+        buildTarget.getBasePathWithSlash(),
+        buildTarget.getShortName());
   }
 
   public static String getPathToCompiledRDotJavaFiles(BuildTarget buildTarget) {
