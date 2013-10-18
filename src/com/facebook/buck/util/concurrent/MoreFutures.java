@@ -64,21 +64,21 @@ public class MoreFutures {
    *     cancelled.
    */
   public static boolean isSuccess(ListenableFuture<?> future) {
-    if (future.isDone()) {
-      try {
-        future.get();
-        return true;
-      } catch (ExecutionException e) {
-        // The computation threw an exception, so it did not complete successfully.
-        return false;
-      } catch (CancellationException e) {
-        // The computation was cancelled, so it did not complete successfully.
-        return false;
-      } catch (InterruptedException e) {
-        throw new RuntimeException("Should not be possible to interrupt a resolved future.", e);
-      }
-    } else {
+    if (!future.isDone()) {
       return false;
+    }
+
+    try {
+      future.get();
+      return true;
+    } catch (ExecutionException e) {
+      // The computation threw an exception, so it did not complete successfully.
+      return false;
+    } catch (CancellationException e) {
+      // The computation was cancelled, so it did not complete successfully.
+      return false;
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Should not be possible to interrupt a resolved future.", e);
     }
   }
 
