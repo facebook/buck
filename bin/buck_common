@@ -33,11 +33,18 @@ if [ -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
   echo >&2 "::: '.nobuckcheck' file is present.  Not updating buck"
   echo >&2 ":::"
 elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
-  BUCK_REQUIRED_VERSION=`cat ${PROJECT_ROOT}/.buckversion`
+  BUCK_COMMIT_HASH_AND_BRANCH=`cat ${PROJECT_ROOT}/.buckversion`
+
+  BUCK_REQUIRED_VERSION=`echo ${BUCK_COMMIT_HASH_AND_BRANCH} | awk -F':' '{print $1}'`
+  BUCK_REQUIRED_BRANCH=`echo ${BUCK_COMMIT_HASH_AND_BRANCH} |  awk -F':' '{print $2}'`
 
   # If the hash is in not in the user's repository, do a `git fetch`.
   if ! git cat-file -e "$BUCK_REQUIRED_VERSION"; then
-    git fetch --all
+    if [ -e "${BUCK_REQUIRED_BRANCH}" ]; then
+      git fetch --all
+    else
+      git fetch origin $BUCK_REQUIRED_BRANCH
+    fi
   fi
 
 
