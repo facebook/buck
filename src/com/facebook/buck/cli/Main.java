@@ -25,7 +25,7 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.ArtifactCacheEvent;
+import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
@@ -380,10 +380,10 @@ public final class Main {
           if (options.isNoCache()) {
             return new NoopArtifactCache();
           } else {
-            buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
+            buildEventBus.post(ArtifactCacheConnectEvent.started());
             ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
                 .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
-            buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT));
+            buildEventBus.post(ArtifactCacheConnectEvent.finished());
             return artifactCache;
           }
         }

@@ -84,6 +84,7 @@ java_library(
     'AbstractCachingBuildRule.java',
     'AbstractDependencyVisitor.java',
     'AbstractSourcePath.java',
+    'ArtifactCacheConnectEvent.java',
     'ArtifactCacheEvent.java',
     'Builder.java',
     'BuildEvent.java',

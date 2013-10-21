@@ -35,17 +35,22 @@ public class LoggingArtifactCacheDecorator {
     return new ArtifactCache() {
       @Override
       public CacheResult fetch(RuleKey ruleKey, File output) {
-        eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH));
+        eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH,
+            ruleKey));
         CacheResult fetchResult = delegate.fetch(ruleKey, output);
-        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH, fetchResult));
+        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH,
+            ruleKey,
+            fetchResult));
         return fetchResult;
       }
 
       @Override
       public void store(RuleKey ruleKey, File output) {
-        eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.STORE));
+        eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.STORE,
+            ruleKey));
         delegate.store(ruleKey, output);
-        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.STORE));
+        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.STORE,
+            ruleKey));
       }
 
       @Override

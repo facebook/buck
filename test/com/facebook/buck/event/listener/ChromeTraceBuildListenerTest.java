@@ -29,6 +29,8 @@ import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.ArtifactCacheConnectEvent;
+import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -37,6 +39,7 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;
@@ -138,7 +141,14 @@ public class ChromeTraceBuildListenerTest {
     eventBus.register(listener);
 
     eventBus.post(CommandEvent.started("party", true));
+    eventBus.post(ArtifactCacheConnectEvent.started());
+    eventBus.post(ArtifactCacheConnectEvent.finished());
     eventBus.post(BuildEvent.started(buildTargets));
+    eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH,
+        new RuleKey("abc123")));
+    eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH,
+        new RuleKey("abc123"),
+        CacheResult.CASSANDRA_HIT));
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(step, "I'm a Fake Step!"));
 
@@ -175,23 +185,31 @@ public class ChromeTraceBuildListenerTest {
         resultFile,
         new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertEquals(8, resultMap.size());
+    assertEquals(12, resultMap.size());
     assertEquals("party", resultMap.get(0).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(0).getPhase());
-    assertEquals("build", resultMap.get(1).getName());
+    assertEquals("artifact_connect", resultMap.get(1).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(1).getPhase());
-    assertEquals("//fake:rule", resultMap.get(2).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(2).getPhase());
-    assertEquals("fakeStep", resultMap.get(3).getName());
+    assertEquals("artifact_connect", resultMap.get(2).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(2).getPhase());
+    assertEquals("build", resultMap.get(3).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(3).getPhase());
-    assertEquals("fakeStep", resultMap.get(4).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(4).getPhase());
-    assertEquals("//fake:rule", resultMap.get(5).getName());
+    assertEquals("artifact_fetch", resultMap.get(4).getName());
+    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(4).getPhase());
+    assertEquals("artifact_fetch", resultMap.get(5).getName());
     assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(5).getPhase());
-    assertEquals("build", resultMap.get(6).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(6).getPhase());
-    assertEquals("party", resultMap.get(7).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(7).getPhase());
+    assertEquals("//fake:rule", resultMap.get(6).getName());
+    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(6).getPhase());
+    assertEquals("fakeStep", resultMap.get(7).getName());
+    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(7).getPhase());
+    assertEquals("fakeStep", resultMap.get(8).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(8).getPhase());
+    assertEquals("//fake:rule", resultMap.get(9).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(9).getPhase());
+    assertEquals("build", resultMap.get(10).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(10).getPhase());
+    assertEquals("party", resultMap.get(11).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(11).getPhase());
 
     verify(context);
   }

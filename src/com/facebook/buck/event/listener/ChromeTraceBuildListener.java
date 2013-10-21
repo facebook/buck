@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -31,6 +32,7 @@ import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -296,17 +298,42 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.<String, String>of(
+            "rule_key", started.getRuleKey().toString()),
         started);
   }
 
   @Subscribe
   public void artifactFetchFinished(ArtifactCacheEvent.Finished finished) {
+    ImmutableMap.Builder<String, String> argumentsBuilder = ImmutableMap.<String, String>builder()
+        .put("success", Boolean.toString(finished.isSuccess()))
+        .put("rule_key", finished.getRuleKey().toString());
+    Optionals.putIfPresent(finished.getCacheResult().transform(Functions.toStringFunction()),
+        "cache_result",
+        argumentsBuilder);
+
     writeChromeTraceEvent("buck",
         finished.getCategory(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(
-            "success", Boolean.toString(finished.isSuccess())),
+        argumentsBuilder.build(),
+        finished);
+  }
+
+  @Subscribe
+  public void artifactConnectStarted(ArtifactCacheConnectEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "artifact_connect",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void artifactConnectFinished(ArtifactCacheConnectEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "artifact_connect",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(),
         finished);
   }
 
