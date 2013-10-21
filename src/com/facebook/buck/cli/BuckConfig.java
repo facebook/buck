@@ -506,12 +506,11 @@ class BuckConfig {
   }
 
   public ArtifactCache createArtifactCache(BuckEventBus buckEventBus) {
-    String cacheMode = getValue("cache", "mode").or("");
-    if (cacheMode.isEmpty()) {
+    ImmutableList<String> modes = getArtifactCacheModes();
+    if (modes.isEmpty()) {
       return new NoopArtifactCache();
     }
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
-    Iterable<String> modes = Splitter.on(',').trimResults().split(cacheMode);
     try {
       for (String mode : modes) {
         switch (ArtifactCacheNames.valueOf(mode)) {
@@ -527,7 +526,7 @@ class BuckConfig {
         }
       }
     } catch (IllegalArgumentException e) {
-      throw new HumanReadableException("Unusable cache.mode: '%s'", cacheMode);
+      throw new HumanReadableException("Unusable cache.mode: '%s'", modes.toString());
     }
     ImmutableList<ArtifactCache> artifactCaches = builder.build();
     if (artifactCaches.size() == 1) {
@@ -536,6 +535,11 @@ class BuckConfig {
     } else {
       return new MultiArtifactCache(artifactCaches);
     }
+  }
+
+  ImmutableList<String> getArtifactCacheModes() {
+    String cacheMode = getValue("cache", "mode").or("");
+    return ImmutableList.copyOf(Splitter.on(',').trimResults().omitEmptyStrings().split(cacheMode));
   }
 
   @VisibleForTesting
