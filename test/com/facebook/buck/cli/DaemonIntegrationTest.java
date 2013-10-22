@@ -156,39 +156,40 @@ public class DaemonIntegrationTest {
     Thread.currentThread().setName("Test");
     CapturingPrintStream serverLog = new CapturingPrintStream();
     NGContext context = new NGContext();
-    TestNGInputStream inputStream = new TestNGInputStream(
-        new DataInputStream(createHeartbeatStream(100)),
-        new DataOutputStream(new ByteArrayOutputStream(0)),
-        serverLog);
-    context.setArgs(new String[] {"targets"});
-    context.in = inputStream;
-    context.out = new CapturingPrintStream();
-    context.err = new CapturingPrintStream();
+    try (TestNGInputStream inputStream = new TestNGInputStream(
+            new DataInputStream(createHeartbeatStream(100)),
+            new DataOutputStream(new ByteArrayOutputStream(0)),
+            serverLog)) {
+      context.setArgs(new String[] {"targets"});
+      context.in = inputStream;
+      context.out = new CapturingPrintStream();
+      context.err = new CapturingPrintStream();
 
-    // NGSecurityManager is used to convert System.exit() calls in to NGExitExceptions.
-    SecurityManager originalSecurityManager = System.getSecurityManager();
+      // NGSecurityManager is used to convert System.exit() calls in to NGExitExceptions.
+      SecurityManager originalSecurityManager = System.getSecurityManager();
 
-    // Run command to register client listener.
-    try {
-      System.setSecurityManager(new NGSecurityManager(originalSecurityManager));
-      Main.nailMain(context);
-      fail("Should throw NGExitException.");
-    } catch (NGExitException e) {
-      assertEquals("Should exit with status 0.", SUCCESS_EXIT_CODE, e.getStatus());
-    } finally {
-      System.setSecurityManager(originalSecurityManager);
-    }
+      // Run command to register client listener.
+      try {
+        System.setSecurityManager(new NGSecurityManager(originalSecurityManager));
+        Main.nailMain(context);
+        fail("Should throw NGExitException.");
+      } catch (NGExitException e) {
+        assertEquals("Should exit with status 0.", SUCCESS_EXIT_CODE, e.getStatus());
+      } finally {
+        System.setSecurityManager(originalSecurityManager);
+      }
 
-    // Check listener was registered calls System.exit() with client disconnect exit code.
-    try {
-      System.setSecurityManager(new NGSecurityManager(originalSecurityManager));
-      assertNotNull("Should register client listener.", inputStream.listener);
-      inputStream.listener.clientDisconnected();
-      fail("Should throw NGExitException.");
-    } catch (NGExitException e) {
-      assertEquals("Should exit with status 3", Main.CLIENT_DISCONNECT_EXIT_CODE, e.getStatus());
-    } finally {
-      System.setSecurityManager(originalSecurityManager);
+      // Check listener was registered calls System.exit() with client disconnect exit code.
+      try {
+        System.setSecurityManager(new NGSecurityManager(originalSecurityManager));
+        assertNotNull("Should register client listener.", inputStream.listener);
+        inputStream.listener.clientDisconnected();
+        fail("Should throw NGExitException.");
+      } catch (NGExitException e) {
+        assertEquals("Should exit with status 3", Main.CLIENT_DISCONNECT_EXIT_CODE, e.getStatus());
+      } finally {
+        System.setSecurityManager(originalSecurityManager);
+      }
     }
   }
 }
