@@ -143,8 +143,7 @@ public final class BuildRuleFactoryParams {
       path = path.substring(GENFILE_PREFIX.length());
       return String.format("%s/%s",
           BuckConstant.GEN_DIR,
-          resolvePathAgainstBuildTargetBase(path),
-          path);
+          resolvePathAgainstBuildTargetBase(path));
     } else {
       String fullPath = resolvePathAgainstBuildTargetBase(path);
       File file = filesystem.getFileForRelativePath(fullPath);
