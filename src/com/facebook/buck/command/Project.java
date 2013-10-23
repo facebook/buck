@@ -47,7 +47,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -79,6 +78,7 @@ import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -267,19 +267,10 @@ public class Project {
         continue;
       }
 
-      Path pathToImlFile = java.nio.file.Paths.get(module.pathToImlFile);
-      Path depPathToImlFile = java.nio.file.Paths.get(dep.pathToImlFile);
+      Path pathToImlFile = Paths.get(module.pathToImlFile);
+      Path depPathToImlFile = Paths.get(dep.pathToImlFile);
 
-      String relativePath = Paths.computeRelativePath(
-          pathToImlFile.getParent().toString(),
-          depPathToImlFile.getParent().toString()
-       );
-
-      // Drop the trailing slash from the path, since that's what the Android tools appear to do
-      // when generating project.properties.
-      if (relativePath.endsWith("/")) {
-        relativePath = relativePath.substring(0, relativePath.length() - 1);
-      }
+      String relativePath = pathToImlFile.getParent().relativize(depPathToImlFile.getParent()).toString();
 
       // This is probably a self-reference. Ignore it.
       if (relativePath.isEmpty()) {
@@ -441,7 +432,7 @@ public class Project {
     // so that it will not disturb our glob() rules.
     // To specify the location of gen, Intellij requires the relative path from
     // the base path of current build target.
-    module.moduleGenPath = generateRelativeGenPath(basePathWithSlash);
+    module.moduleGenPath = generateRelativeGenPath(basePathWithSlash).toString();
 
     DependentModule jdkDependency;
     if (isAndroidRule) {
@@ -450,7 +441,7 @@ public class Project {
         NdkLibrary ndkLibrary = (NdkLibrary) projectRule.getBuildable();
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-        module.nativeLibs = Paths.computeRelativePath(relativePath, ndkLibrary.getLibraryPath());
+        module.nativeLibs = Paths.get(relativePath).relativize(Paths.get(ndkLibrary.getLibraryPath())).toString();
       } else if (projectRule instanceof AndroidResourceRule) {
         AndroidResourceRule androidResourceRule = (AndroidResourceRule)projectRule;
         module.resFolder = createRelativePath(androidResourceRule.getRes(), target);
@@ -467,8 +458,7 @@ public class Project {
 
         // getKeystore() returns a path relative to the project root, but an IntelliJ module
         // expects the path to the keystore to be relative to the module root.
-        module.keystorePath = Paths.computeRelativePath(relativePath,
-            keystoreProperties.getKeystore());
+        module.keystorePath = Paths.get(relativePath).relativize(Paths.get(keystoreProperties.getKeystore())).toString();
       } else {
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
@@ -489,7 +479,7 @@ public class Project {
               "indicating that it is relative to the root of the repository.",
               rootPrefix);
           manifestPath = manifestPath.substring(rootPrefix.length());
-          String relativePathToManifest = Paths.computeRelativePath(basePathWithSlash, manifestPath);
+          String relativePathToManifest = Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
           // IntelliJ requires that the path start with a slash to indicate that it is relative to
           // the module.
           module.androidManifest = "/" + relativePathToManifest;
@@ -521,7 +511,7 @@ public class Project {
       String annotationGenSrc = processingData.getGeneratedSourceFolderName();
       if (annotationGenSrc != null) {
         module.annotationGenPath =
-            "/" + Paths.computeRelativePath(basePathWithSlash, annotationGenSrc);
+            "/" + Paths.get(basePathWithSlash).relativize(Paths.get(annotationGenSrc)).toString();
         module.annotationGenIsForTest = !hasSourceFoldersForSrcRule;
       }
     }
@@ -568,14 +558,13 @@ public class Project {
    *
    * @return the relative path of gen from the base path of current module.
    */
-  static String generateRelativeGenPath(String basePathOfModuleWithSlash) {
-    return
-        "/"
-        + Paths.computeRelativePath(basePathOfModuleWithSlash, "")
-        + ANDROID_GEN_DIR
-        + "/"
-        + Paths.computeRelativePath("", basePathOfModuleWithSlash)
-        + "gen";
+  static Path generateRelativeGenPath(String basePathOfModuleWithSlash) {
+    return Paths.get(
+        "/",
+        Paths.get(basePathOfModuleWithSlash).relativize(Paths.get("")).toString(),
+        ANDROID_GEN_DIR,
+        Paths.get("").relativize(Paths.get(basePathOfModuleWithSlash)).toString(),
+        "gen");
   }
 
   private boolean addSourceFolders(Module module,

@@ -60,6 +60,7 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -223,8 +224,8 @@ public class ProjectTest {
   @Test
   public void testGenerateRelativeGenPath() {
     String basePathOfModuleWithSlash = "android_res/com/facebook/gifts/";
-    String expectedRelativePathToGen =
-        "/../../../../buck-out/android/android_res/com/facebook/gifts/gen";
+    Path expectedRelativePathToGen =
+        java.nio.file.Paths.get("/../../../../buck-out/android/android_res/com/facebook/gifts/gen");
     assertEquals(
         expectedRelativePathToGen, Project.generateRelativeGenPath(basePathOfModuleWithSlash));
   }

@@ -25,25 +25,6 @@ import org.junit.Test;
 public class PathsTest {
 
   @Test
-  public void testComputeRelativePath() {
-    assertEquals("foo/bar", Paths.computeRelativePath("", "foo/bar"));
-    assertEquals("foo/bar/", Paths.computeRelativePath("", "foo/bar/"));
-
-    assertEquals("../baz/", Paths.computeRelativePath("foo/bar/", "foo/baz/"));
-    assertEquals("../../../", Paths.computeRelativePath("a/b/c/d/e/", "a/b/"));
-    assertEquals("c/d/e/", Paths.computeRelativePath("a/b/", "a/b/c/d/e/"));
-    assertEquals("../../../1/2/3/", Paths.computeRelativePath("a/b/c/d/e/f/", "a/b/c/1/2/3/"));
-
-    assertEquals("foo/bar", Paths.computeRelativePath("/prefix/who/cares/",
-        "/prefix/who/cares/foo/bar"));
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testComputeRelativePathThrows() {
-    Paths.computeRelativePath("project.properties", "foo/bar.txt");
-  }
-
-  @Test
   public void testNormalizePathSeparator() {
     assertEquals("C:/Windows/System32/drivers.dll",
         Paths.normalizePathSeparator("C:\\Windows\\System32\\drivers.dll"));
