@@ -35,6 +35,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -327,11 +328,11 @@ class BuckConfig {
     // Normalize paths in order to eliminate trailing '/' characters and whatnot.
     return ImmutableSet.<String>builder().addAll(Iterables.transform(builder.build(),
         new Function<String, String>() {
-      @Override
-      public String apply(String path) {
-        return MorePaths.newPathInstance(path).toString();
-      }
-    })).build();
+          @Override
+          public String apply(String path) {
+            return MorePaths.newPathInstance(path).toString();
+          }
+        })).build();
   }
 
   public ImmutableSet<Pattern> getTempFilePatterns() {
@@ -515,7 +516,9 @@ class BuckConfig {
       for (String mode : modes) {
         switch (ArtifactCacheNames.valueOf(mode)) {
         case dir:
-          builder.add(createDirArtifactCache());
+          ArtifactCache dirArtifactCache = createDirArtifactCache();
+          buckEventBus.register(dirArtifactCache);
+          builder.add(dirArtifactCache);
           break;
         case cassandra:
           ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(buckEventBus);
@@ -551,11 +554,20 @@ class BuckConfig {
     return projectFilesystem.getPathRelativizer().apply(cacheDir);
   }
 
+  public Optional<Long> getCacheDirMaxSizeBytes() {
+    return getValue("cache", "dir_max_size").transform(new Function<String, Long>() {
+      @Override
+      public Long apply(String input) {
+        return SizeUnit.parseBytes(input);
+      }
+    });
+  }
+
   private ArtifactCache createDirArtifactCache() {
     Path cacheDir = getCacheDir();
     File dir = cacheDir.toFile();
     try {
-      return new DirArtifactCache(dir);
+      return new DirArtifactCache(dir, getCacheDirMaxSizeBytes());
     } catch (IOException e) {
       throw new HumanReadableException("Failure initializing artifact cache directory: %s", dir);
     }

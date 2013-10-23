@@ -18,22 +18,63 @@ package com.facebook.buck.rules;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.facebook.buck.util.collect.ArrayIterable;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DirArtifactCache implements ArtifactCache {
+  private class FileAccessedEntry {
+    public final File file;
+    public final FileTime lastAccessTime;
+
+    public File getFile() {
+      return file;
+    }
+
+    public FileTime getLastAccessTime() {
+      return lastAccessTime;
+    }
+
+    private FileAccessedEntry(File file, FileTime lastAccessTime) {
+      this.file = file;
+      this.lastAccessTime = lastAccessTime;
+    }
+  }
+
+
   private final static Logger logger = Logger.getLogger(DirArtifactCache.class.getName());
 
-  private final File cacheDir;
+  /**
+   * Sorts by the lastAccessTime in descending order (more recently accessed files are first).
+   */
+  private final static Comparator<FileAccessedEntry> SORT_BY_LAST_ACCESSED_TIME_DESC =
+      new Comparator<FileAccessedEntry>() {
+    @Override
+    public int compare(FileAccessedEntry a, FileAccessedEntry b) {
+      return b.getLastAccessTime().compareTo(a.getLastAccessTime());
+    }
+  };
 
-  public DirArtifactCache(File cacheDir) throws IOException {
+  private final File cacheDir;
+  private final Optional<Long> maxCacheSizeBytes;
+
+  public DirArtifactCache(File cacheDir, Optional<Long> maxCacheSizeBytes) throws IOException {
     this.cacheDir = Preconditions.checkNotNull(cacheDir);
+    this.maxCacheSizeBytes = Preconditions.checkNotNull(maxCacheSizeBytes);
     Files.createDirectories(cacheDir.toPath());
   }
 
@@ -91,5 +132,60 @@ public class DirArtifactCache implements ArtifactCache {
   @Override
   public boolean isStoreSupported() {
     return true;
+  }
+
+  @Subscribe
+  public synchronized void buildFinished(BuildEvent.Finished finished) {
+    deleteOldFiles();
+  }
+
+  /**
+   * Deletes files that haven't been accessed recently from the directory cache.
+   */
+  @VisibleForTesting
+  void deleteOldFiles() {
+    if (!maxCacheSizeBytes.isPresent()) {
+      return;
+    }
+    for (FileAccessedEntry fileAccessedEntry : findFilesToDelete()) {
+      try {
+        Files.deleteIfExists(fileAccessedEntry.getFile().toPath());
+      } catch (IOException e) {
+        // Eat any IOExceptions while attempting to clean up the cache directory.  If the file is
+        // now in use, we no longer want to delete it.
+        continue;
+      }
+    }
+  }
+
+  private Iterable<FileAccessedEntry> findFilesToDelete() {
+    Preconditions.checkState(maxCacheSizeBytes.isPresent());
+    long maxSizeBytes = maxCacheSizeBytes.get();
+
+    File[] artifacts = cacheDir.listFiles();
+    FileAccessedEntry[] fileAccessedEntries = new FileAccessedEntry[artifacts.length];
+    for (int i = 0; i < artifacts.length; ++i) {
+      FileTime lastAccess;
+      try {
+        lastAccess =
+            Files.readAttributes(artifacts[i].toPath(), BasicFileAttributes.class).lastAccessTime();
+      } catch (IOException e) {
+        lastAccess = FileTime.fromMillis(artifacts[i].lastModified());
+      }
+      fileAccessedEntries[i] = new FileAccessedEntry(artifacts[i], lastAccess);
+    }
+    Arrays.sort(fileAccessedEntries, SORT_BY_LAST_ACCESSED_TIME_DESC);
+
+    // Finds the first N from the list ordered by last access time who's combined size is less than
+    // maxCacheSizeBytes.
+    long currentSizeBytes = 0;
+    for (int i = 0; i < fileAccessedEntries.length; ++i) {
+      FileAccessedEntry file = fileAccessedEntries[i];
+      currentSizeBytes += file.getFile().length();
+      if (currentSizeBytes > maxSizeBytes) {
+        return ArrayIterable.of(fileAccessedEntries, i, fileAccessedEntries.length);
+      }
+    }
+    return ImmutableList.<FileAccessedEntry>of();
   }
 }
