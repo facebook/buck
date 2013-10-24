@@ -14,16 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.ResourcesAttributeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

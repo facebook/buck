@@ -33,8 +33,6 @@ import javax.annotation.Nullable;
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 public interface BuildRule extends Comparable<BuildRule> {
 
-  public static final String VISIBILITY_PUBLIC = "PUBLIC";
-
   public BuildTarget getBuildTarget();
 
   @JsonProperty("name")

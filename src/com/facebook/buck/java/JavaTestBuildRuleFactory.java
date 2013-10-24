@@ -17,8 +17,8 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.AbstractTestRuleFactory;
-import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.AbstractTestRuleFactory;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Function;

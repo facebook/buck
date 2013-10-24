@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
-import com.facebook.buck.rules.BuildRuleBuilder;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.annotations.Beta;
 
 /** Implementations should be stateless. */

@@ -13,14 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
+import static com.facebook.buck.parser.BuildTargetPatternParser.VISIBILITY_PUBLIC;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,7 +35,7 @@ public class AbstractBuildRuleFactoryTest {
   @Test
   public void testGetVisibilityTargets() throws NoSuchBuildTargetException {
     Map<String, ?> config = ImmutableMap.of(
-        "visibility" , ImmutableList.of(BuildRule.VISIBILITY_PUBLIC, "//...", "//com/facebook/...")
+        "visibility" , ImmutableList.of(VISIBILITY_PUBLIC, "//...", "//com/facebook/...")
     );
     BuildRuleFactoryParams params = NonCheckingBuildRuleFactoryParams.
         createNonCheckingBuildRuleFactoryParams(

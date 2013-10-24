@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;

@@ -32,7 +32,6 @@ import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.KeystoreBuildRuleFactory;
 import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
 import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
-import com.facebook.buck.parser.BuildRuleFactory;
 import com.facebook.buck.parser.ProjectConfigRuleFactory;
 import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
 import com.facebook.buck.python.PythonLibraryBuildRuleFactory;

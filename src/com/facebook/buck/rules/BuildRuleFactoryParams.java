@@ -14,17 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
-import com.facebook.buck.rules.FileSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;

@@ -13,10 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilder;
-import com.facebook.buck.rules.LabelsAttributeBuilder;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
