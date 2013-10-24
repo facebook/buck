@@ -128,12 +128,17 @@ public class DirArtifactCache implements ArtifactCache {
     }
   }
 
-  /** @return {@code true}: storing artifacts is always supported by this class. */
+  /**
+   * @return {@code true}: storing artifacts is always supported by this class.
+   */
   @Override
   public boolean isStoreSupported() {
     return true;
   }
 
+  /**
+   * @param finished Signals that the build has finished.
+   */
   @Subscribe
   public synchronized void buildFinished(BuildEvent.Finished finished) {
     deleteOldFiles();
