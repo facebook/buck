@@ -133,6 +133,23 @@ def pattern_to_regex(pattern):
   return re.compile(pattern)
 
 
+def symlink_aware_walk(base):
+  """ Recursive symlink aware version of `os.walk`.
+
+  Will not emit an entry for a directory it has previously visited.
+  """
+  visited_dirs = set()
+  for entry in os.walk(base, topdown=True, followlinks=True):
+    (root, dirs, _files) = entry
+    realdirpath = os.path.realpath(root)
+    if realdirpath in visited_dirs:
+      dirs[:] = []
+      continue
+    visited_dirs.add(realdirpath)
+    yield entry
+  raise StopIteration
+
+
 @provide_for_build
 def glob(includes, excludes=[], build_env=None):
   search_base = build_env['BUILD_FILE_DIRECTORY']
@@ -162,7 +179,7 @@ def glob(includes, excludes=[], build_env=None):
     if passes_glob_filter(path):
       paths.append(path)
 
-  for root, dirs, files in os.walk(search_base, followlinks=True):
+  for root, dirs, files in symlink_aware_walk(search_base):
     if len(files) == 0:
       continue
     relative_root = relpath(root, search_base)
@@ -821,8 +838,7 @@ def main():
     ignore_paths = [os.path.abspath(os.path.join(project_root, d))
         for d in options.ignore_paths or []]
     build_files = []
-    # TODO: (royw) Deal with recursive symlinks.
-    for dirpath, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=True):
+    for dirpath, dirnames, filenames in symlink_aware_walk(project_root):
       # Do not walk directories that contain generated/non-source files.
       # All modifications to dirnames must occur in-place.
       dirnames[:] = [d for d in dirnames if not (os.path.join(dirpath, d) in ignore_paths)]
