@@ -736,7 +736,7 @@ public class Project {
       private final LinkedHashSet<DependentModule> modulesToAdd = Sets.newLinkedHashSet();
 
       @Override
-      public boolean visit(BuildRule dep) {
+      public ImmutableSet<BuildRule> visit(BuildRule dep) {
         boolean depShouldExportDeps = dep.getExportDeps() || rule.getProperties().is(PACKAGING);
         boolean shouldVisitDeps = (dep.getProperties().is(LIBRARY) && (depShouldExportDeps))
             || (dep instanceof AndroidResourceRule)
@@ -786,7 +786,7 @@ public class Project {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
-          return shouldVisitDeps;
+          return maybeVisitAllDeps(dep, shouldVisitDeps);
         } else if (dep instanceof JavaLibraryRule) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
@@ -795,9 +795,9 @@ public class Project {
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getBuildable() instanceof GenAidl) {
           // This will likely be handled appropriately by the IDE's Android plugin.
-          return shouldVisitDeps;
+          return maybeVisitAllDeps(dep, shouldVisitDeps);
         } else {
-          return shouldVisitDeps;
+          return maybeVisitAllDeps(dep, shouldVisitDeps);
         }
 
         if (isForTests) {
@@ -821,7 +821,7 @@ public class Project {
           modulesToAdd.add(dependentModule);
         }
 
-        return shouldVisitDeps;
+        return maybeVisitAllDeps(dep, shouldVisitDeps);
       }
 
       @Override

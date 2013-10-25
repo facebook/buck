@@ -99,7 +99,7 @@ public class AndroidTransitiveDependencyGraph {
     // Visit all of the transitive dependencies to populate the above collections.
     new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps.get()) {
       @Override
-      public boolean visit(BuildRule rule) {
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
@@ -107,7 +107,7 @@ public class AndroidTransitiveDependencyGraph {
           PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule) rule;
           pathsToThirdPartyJarsBuilder.add(prebuiltJarRule.getBinaryJar());
         }
-        return rule.getProperties().is(LIBRARY);
+        return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
       }
     }.start();
 
@@ -161,7 +161,7 @@ public class AndroidTransitiveDependencyGraph {
     // Visit all of the transitive dependencies to populate the above collections.
     new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps.get()) {
       @Override
-      public boolean visit(BuildRule rule) {
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
         // well as the third-party jars that they depend on.
         // Update pathsToThirdPartyJars.
@@ -176,7 +176,7 @@ public class AndroidTransitiveDependencyGraph {
           // In the rare event that a PrebuiltNativeLibraryBuildRule has deps, it is likely another
           // NativeLibraryRule that will need to be included in the final APK, so traverse the deps.
           if (rule.getBuildable() instanceof PrebuiltNativeLibrary) {
-            return true;
+            return rule.getDeps();
           }
         } else if (rule instanceof AndroidResourceRule) {
           AndroidResourceRule androidRule = (AndroidResourceRule) rule;
@@ -197,7 +197,7 @@ public class AndroidTransitiveDependencyGraph {
             Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
           }
         }
-        return rule.getProperties().is(LIBRARY);
+        return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
       }
     }.start();
 

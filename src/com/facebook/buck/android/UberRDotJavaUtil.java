@@ -161,7 +161,7 @@ public class UberRDotJavaUtil {
     AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(buildRule) {
 
       @Override
-      public boolean visit(BuildRule rule) {
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
         if (rule instanceof HasAndroidResourceDeps) {
           HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
           if (androidResourceRule.getRes() != null) {
@@ -171,7 +171,7 @@ public class UberRDotJavaUtil {
 
         // Only certain types of rules should be considered as part of this traversal.
         BuildRuleType type = rule.getType();
-        return TRAVERSABLE_TYPES.contains(type);
+        return maybeVisitAllDeps(rule, TRAVERSABLE_TYPES.contains(type));
       }
 
     };

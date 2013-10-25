@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -53,14 +54,17 @@ public abstract class AbstractDependencyVisitor {
         continue;
       }
 
-      boolean shouldVisitDeps = visit(currentRule);
+      ImmutableSet<BuildRule> depsToVisit = visit(currentRule);
       explored.add(currentRule);
 
-      if (shouldVisitDeps) {
-        for (BuildRule dep : currentRule.getDeps()) {
-          if (!explored.contains(dep)) {
-            toExplore.add(dep);
-          }
+      for (BuildRule dep : depsToVisit) {
+        Preconditions.checkState(currentRule.getDeps().contains(dep),
+            "%s said that it should visit %s, but %s is not in its deps.",
+            currentRule,
+            dep,
+            dep);
+        if (!explored.contains(dep)) {
+          toExplore.add(dep);
         }
       }
     }
@@ -74,8 +78,16 @@ public abstract class AbstractDependencyVisitor {
   }
 
   /**
+   * To perform a full traversal of the {@code rule}'s transitive dependencies, this rule
+   * should return {@code rule.getDeps()}.
+   *
    * @param rule Visited build rule
-   * @return whether to traverse the deps of the current rule
+   * @return The set of children to visit after visiting this node.  This set must be a subset of
+   *    {@code rule.getDeps()}
    */
-  public abstract boolean visit(BuildRule rule);
+  public abstract ImmutableSet<BuildRule> visit(BuildRule rule);
+
+  public static ImmutableSet<BuildRule> maybeVisitAllDeps(BuildRule rule, boolean visitDeps) {
+    return visitDeps ? rule.getDeps() : ImmutableSet.<BuildRule>of();
+  }
 }

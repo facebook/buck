@@ -88,19 +88,19 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
     new AbstractDependencyVisitor(this) {
 
       @Override
-      public boolean visit(BuildRule rule) {
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
         Buildable buildable = rule.getBuildable();
         if (buildable instanceof PythonLibrary) {
           PythonLibrary pythonLibrary = (PythonLibrary) buildable;
 
           Path pythonPathEntry = pythonLibrary.getPythonPathDirectory();
           entries.add(pythonPathEntry);
-          return true;
+          return getDeps();
         }
 
         // AbstractDependencyVisitor will start from this (PythonBinaryRule) so make sure it
         // descends to its dependencies even though it is not a library rule.
-        return rule == pythonBinaryRule;
+        return maybeVisitAllDeps(rule, rule == pythonBinaryRule);
       }
 
     }.start();
