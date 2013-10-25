@@ -164,6 +164,13 @@ public class ProjectWorkspace {
     return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
   }
 
+  /**
+   * @return the specified path resolved against the root of this workspace.
+   */
+  public Path resolve(Path pathRelativeToWorkspaceRoot) {
+    return destPath.resolve(pathRelativeToWorkspaceRoot);
+  }
+
   /** The result of running {@code buck} from the command line. */
   public static class ProcessResult {
     private final int exitCode;
