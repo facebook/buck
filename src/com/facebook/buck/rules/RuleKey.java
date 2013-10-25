@@ -373,7 +373,7 @@ public class RuleKey {
       RuleKey totalRuleKey = new RuleKey(hasher.hash());
 
       if (logElms != null) {
-        logger.info(String.format("RuleKey %s=%s", ruleKeyWithoutDeps, Joiner.on("").join(logElms)));
+        logger.info(String.format("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms)));
       }
 
       return new RuleKeyPair(totalRuleKey, ruleKeyWithoutDeps);
