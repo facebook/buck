@@ -16,17 +16,9 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.collect.Iterables;
-
-import java.io.File;
-
 public class Paths {
 
   private Paths() {}
-
-  public static Iterable<String> transformFileToAbsolutePath(Iterable<File> files) {
-    return Iterables.transform(files, Functions.FILE_TO_ABSOLUTE_PATH);
-  }
 
   /**
    * Returns normalized path. On Windows \ will be replaced with /.

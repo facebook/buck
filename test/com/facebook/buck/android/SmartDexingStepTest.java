@@ -118,7 +118,7 @@ public class SmartDexingStepTest {
     Path outputHashFile = new File(tmpDir.getRoot(), "out.dex.hash").toPath();
     Files.write("dummy", outputHashFile.toFile(), Charsets.UTF_8);
 
-    DxPseudoRule rule = new DxPseudoRule(context, ImmutableSet.of(testIn.getPath()),
+    DxPseudoRule rule = new DxPseudoRule(context, ImmutableSet.of(testIn.toPath()),
         outputFile.getPath(), outputHashFile);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 

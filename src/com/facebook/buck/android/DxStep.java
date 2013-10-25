@@ -19,24 +19,26 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 public class DxStep extends ShellStep {
 
   private final String outputDexFile;
-  private final Set<String> filesToDex;
+  private final Set<Path> filesToDex;
 
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files
    */
-  public DxStep(String outputDexFile, Iterable<String> filesToDex) {
+  public DxStep(String outputDexFile, Iterable<Path> filesToDex) {
     this.outputDexFile = Preconditions.checkNotNull(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
   }
@@ -60,8 +62,9 @@ public class DxStep extends ShellStep {
     }
 
     builder.add("--output", outputDexFile);
-    for (String fileToDex : filesToDex) {
-      builder.add(fileToDex);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    for (Path fileToDex : filesToDex) {
+      builder.add(projectFilesystem.resolve(fileToDex).toString());
     }
 
     return builder.build();

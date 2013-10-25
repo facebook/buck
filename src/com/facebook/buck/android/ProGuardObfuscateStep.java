@@ -23,10 +23,10 @@ import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.Functions;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -267,7 +267,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
       // -libraryjars
       Iterable<String> bootclasspathPaths = Iterables.transform(
-          androidPlatformTarget.getBootclasspathEntries(), Functions.FILE_TO_ABSOLUTE_PATH);
+          androidPlatformTarget.getBootclasspathEntries(),
+          Functions.toStringFunction());
       Iterable<String> libraryJars = Iterables.concat(bootclasspathPaths,
           additionalLibraryJarsForProguard);
       args.add("-libraryjars").add(pathJoiner.join(libraryJars));

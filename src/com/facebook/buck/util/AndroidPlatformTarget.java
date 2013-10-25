@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -48,7 +49,7 @@ public class AndroidPlatformTarget {
 
   private final String name;
   private final File androidJar;
-  private final List<File> bootclasspathEntries;
+  private final List<Path> bootclasspathEntries;
   private final File aaptExecutable;
   private final File adbExecutable;
   private final File aidlExecutable;
@@ -62,7 +63,7 @@ public class AndroidPlatformTarget {
   private AndroidPlatformTarget(
       String name,
       File androidJar,
-      List<File> bootclasspathEntries,
+      List<Path> bootclasspathEntries,
       File aaptExecutable,
       File adbExecutable,
       File aidlExecutable,
@@ -99,7 +100,10 @@ public class AndroidPlatformTarget {
     return androidJar;
   }
 
-  public List<File> getBootclasspathEntries() {
+  /**
+   * @return bootclasspath entries as absolute {@link Path}s
+   */
+  public List<Path> getBootclasspathEntries() {
     return bootclasspathEntries;
   }
 
@@ -175,15 +179,15 @@ public class AndroidPlatformTarget {
    * Resolves all of the jarPaths against the androidSdkDir path.
    * @return a mutable list
    */
-  private static LinkedList<File> resolvePaths(final File androidSdkDir, Set<String> jarPaths) {
-    return Lists.newLinkedList(Iterables.transform(jarPaths, new Function<String, File>() {
+  private static LinkedList<Path> resolvePaths(final File androidSdkDir, Set<String> jarPaths) {
+    return Lists.newLinkedList(Iterables.transform(jarPaths, new Function<String, Path>() {
       @Override
-      public File apply(String jarPath) {
+      public Path apply(String jarPath) {
         File jar = new File(androidSdkDir, jarPath);
         if (!jar.isFile()) {
           throw new RuntimeException("File not found: " + jar.getAbsolutePath());
         }
-        return jar;
+        return jar.toPath();
       }
     }));
   }
@@ -199,12 +203,15 @@ public class AndroidPlatformTarget {
       File androidSdkDir,
       String platformDirectoryPath,
       Set<String> additionalJarPaths) {
+    if (!androidSdkDir.isAbsolute()) {
+      throw new HumanReadableException("Path to Android SDK must be absolute but was: %s.", androidSdkDir);
+    }
     File platformDirectory = new File(androidSdkDir, platformDirectoryPath);
     File androidJar = new File(platformDirectory, "android.jar");
-    LinkedList<File> bootclasspathEntries = resolvePaths(androidSdkDir, additionalJarPaths);
+    LinkedList<Path> bootclasspathEntries = resolvePaths(androidSdkDir, additionalJarPaths);
 
     // Make sure android.jar is at the front of the bootclasspath.
-    bootclasspathEntries.addFirst(androidJar);
+    bootclasspathEntries.addFirst(androidJar.toPath());
 
     File buildToolsDir = new File(androidSdkDir, "build-tools");
 

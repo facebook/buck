@@ -89,6 +89,8 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -778,9 +780,9 @@ public class DefaultJavaLibraryRuleTest {
                                           @Nullable String bootclasspath,
                                           @Nullable ProjectFilesystem projectFilesystem) {
     AndroidPlatformTarget platformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
-    ImmutableList<File> bootclasspathEntries = (bootclasspath == null)
-        ? ImmutableList.<File>of(new File("I am not used"))
-        : ImmutableList.of(new File(bootclasspath));
+    ImmutableList<Path> bootclasspathEntries = (bootclasspath == null)
+        ? ImmutableList.<Path>of(Paths.get("I am not used"))
+        : ImmutableList.of(Paths.get(bootclasspath));
     EasyMock.expect(platformTarget.getBootclasspathEntries()).andReturn(bootclasspathEntries)
         .anyTimes();
     replay(platformTarget);
