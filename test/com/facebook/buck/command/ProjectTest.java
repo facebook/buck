@@ -47,7 +47,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -838,7 +837,7 @@ public class ProjectTest {
       assertEquals("You must define a project_config() in example/child/BUCK containing " +
           "//example/parent:ex1. The project_config() in //example/child:config transitively " +
           "depends on it.",
-          Paths.normalizePathSeparator(e.getHumanReadableErrorMessage()));
+          e.getHumanReadableErrorMessage().replace("\\", "/"));
     }
   }
 }

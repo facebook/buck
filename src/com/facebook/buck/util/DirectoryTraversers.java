@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class DirectoryTraversers {
 
@@ -46,7 +47,7 @@ public class DirectoryTraversers {
     traverser.traverse(new DirectoryTraversal(new File(pathToDirectory)) {
       @Override
       public void visit(File file, String relativePath) {
-        allFiles.add(java.nio.file.Paths.get(pathToDirectory, relativePath).toString());
+        allFiles.add(Paths.get(pathToDirectory, relativePath).toString());
       }
     });
 

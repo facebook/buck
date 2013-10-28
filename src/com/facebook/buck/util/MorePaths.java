@@ -42,7 +42,10 @@ public class MorePaths {
    * @return The path using UNIX path separators.
    */
   public static Path separatorsToUnix(String path) {
-    return Paths.get(path.replace(File.separator, "/")).normalize();
+    if (!File.separator.equals("/")) {
+      path = path.replace(File.separator, "/");
+    }
+    return Paths.get(path).normalize();
   }
 
   /**

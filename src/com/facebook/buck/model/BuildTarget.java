@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -45,10 +44,8 @@ public final class BuildTarget implements Comparable<BuildTarget> {
         "baseName must start with // but was %s",
         baseName);
 
-    // On Windows, basePath may contain backslashes, which are not permitted by BuildTarget.
-    if (Paths.containsBackslash(baseName)) {
-      baseName = Paths.normalizePathSeparator(baseName);
-    }
+    // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
+    baseName = baseName.replace("\\", "/");
 
     this.baseName = baseName;
     this.shortName = Preconditions.checkNotNull(shortName);

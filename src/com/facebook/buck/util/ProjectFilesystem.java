@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -235,7 +236,7 @@ public class ProjectFilesystem {
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    */
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
-    return readFirstLine(java.nio.file.Paths.get(pathRelativeToProjectRoot));
+    return readFirstLine(Paths.get(pathRelativeToProjectRoot));
   }
 
   /**

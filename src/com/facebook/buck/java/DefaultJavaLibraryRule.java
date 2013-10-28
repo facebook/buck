@@ -52,7 +52,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -74,6 +74,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -715,9 +717,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         //
         // Therefore, some path-wrangling is required to produce the correct string.
 
-        String resource = Paths.normalizePathSeparator(rawResource.resolve(context).toString());
-        String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource);
-        String relativeSymlinkPath;
+        Path resource = MorePaths.separatorsToUnix(rawResource.resolve(context));
+        String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
+        Path relativeSymlinkPath;
 
 
         if (resource.startsWith(BuckConstant.BUCK_OUTPUT_DIRECTORY) ||
@@ -726,23 +728,23 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             resource.startsWith(BuckConstant.ANNOTATION_DIR)) {
           // Handle the case where we depend on the output of another BuildRule. In that case, just
           // grab the output and put in the same package as this target would be in.
-          relativeSymlinkPath = String.format(
-              "%s/%s", targetPackageDir, rawResource.resolve(context).getFileName());
+          relativeSymlinkPath = Paths.get(String.format(
+              "%s/%s", targetPackageDir, rawResource.resolve(context).getFileName()));
         } else if ("".equals(javaPackageAsPath)) {
           // In this case, the project root is acting as the default package, so the resource path
           // works fine.
           relativeSymlinkPath = resource;
         } else {
-          int lastIndex = resource.lastIndexOf(javaPackageAsPath);
+          int lastIndex = resource.toString().lastIndexOf(javaPackageAsPath);
           Preconditions.checkState(lastIndex >= 0,
               "Resource path %s must contain %s",
               resource,
               javaPackageAsPath);
 
-          relativeSymlinkPath = resource.substring(lastIndex);
+          relativeSymlinkPath = Paths.get(resource.toString().substring(lastIndex));
         }
-        String target = outputDirectory + '/' + relativeSymlinkPath;
-        MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource, target);
+        String target = Paths.get(outputDirectory).resolve(relativeSymlinkPath).toString();
+        MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource.toString(), target);
         commands.add(link);
       }
     }
