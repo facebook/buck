@@ -7,6 +7,7 @@ java_test(
   deps = [
     '//lib:guava',
     '//lib:junit',
+    '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/python:rules',
     '//src/com/facebook/buck/rules:build_rule',
