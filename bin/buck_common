@@ -50,6 +50,14 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
 
   BUCK_CURRENT_VERSION=`git rev-parse HEAD`
   
+  function restartBuck()
+  {
+    # Rerun command with new version of buck.
+    cd "$ORIGINAL_WORKING_DIRECTORY"
+    "$SOURCE" "$@"
+    exit $?
+  }
+
   # Note that this test succeeds if you have local changes in your Buck repository that have not
   # been committed.
   if [ "$BUCK_REQUIRED_VERSION" != "$BUCK_CURRENT_VERSION" ]; then
@@ -65,34 +73,11 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
 
     # Now that we have updated the repository, we should rebuild Buck.
     ant clean
+
+    # Rerun this script after checking out the new version.
+    restartBuck $@
   fi
 fi
-
-# Make sure that Buck has been built.
-if [ ! -e "build/buck.jar" ]; then
-
-  if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCKD_PID_FILE" ]; then
-    echo "Killing buckd before building buck"
-    kill `cat "$BUCKD_PID_FILE"` || true
-  fi
- 
-  echo "No sign of buck.jar -- building Buck!"
-  # Note the jar file will not be used,
-  # but serves to represent whether everything has been built.
-  ant clean && ant
-
-  if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
-    echo "Restarting buckd after building buck"
-    "${BUCK_BIN_DIRECTORY}/buckd"
-  fi
-
-  # Rerun command with new version of buck.
-  cd "$ORIGINAL_WORKING_DIRECTORY"
-  "$SOURCE" "$@"
-  exit $?
-
-fi
-
 
 # Get current buck version.
 BUCK_REPOSITORY_DIRTY=0
@@ -116,30 +101,70 @@ if [ "x${BUCK_REPOSITORY_DIRTY}" = "x0" ] ; then
   BUCK_VERSION_UID="${BUCK_CURRENT_VERSION}"
 else
   if [ -d ".git" ] ; then
-    # Get git tree for current revision.
-    git_tree_in=`git log -n1 --pretty=format:%T HEAD`
+    function computeLocalHash()
+    {
+      # Get git tree for current revision.
+      git_tree_in=`git log -n1 --pretty=format:%T HEAD`
 
-    # Generate git tree as it would exist if current local changes were
-    # committed.
-    git_tree_out=$(
-      git_index_file=`mktemp ${TMPDIR}/buck-git-index.XXXXXX` || exit 1
-      export GIT_INDEX_FILE="${git_index_file}"
-      git read-tree ${git_tree_in} || exit 1
-      git update-index --add --remove `git diff --name-only HEAD` || exit 1
-      git write-tree || exit 1
-      rm -f "${git_index_file}"
-    )
+      # Generate git tree as it would exist if current local changes were
+      # committed.
+      git_tree_out=$(
+        git_index_file=`mktemp ${TMPDIR}/buck-git-index.XXXXXX` || exit 1
+        export GIT_INDEX_FILE="${git_index_file}"
+        git read-tree ${git_tree_in} || exit 1
+        git update-index --add --remove `git diff --name-only HEAD` || exit 1
+        git write-tree || exit 1
+        rm -f "${git_index_file}"
+      )
 
-    # Compute UID based on relevant portions of the output git tree.
-    buck_version_uid_input=`mktemp "${TMPDIR}/buck-version-uid-input.XXXXXX"` || exit 1
-    git ls-tree --full-tree ${git_tree_out} > ${buck_version_uid_input} || exit 1
-    BUCK_VERSION_UID=`git hash-object ${buck_version_uid_input}` || exit 1
-    rm -f "${buck_version_uid_input}"
+      # Compute UID based on relevant portions of the output git tree.
+      buck_version_uid_input=`mktemp "${TMPDIR}/buck-version-uid-input.XXXXXX"` || exit 1
+      git ls-tree --full-tree ${git_tree_out} > ${buck_version_uid_input} || exit 1
+      BUCK_VERSION_UID=`git hash-object ${buck_version_uid_input}` || exit 1
+      rm -f "${buck_version_uid_input}"
+    }
+    if [ -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
+      computeLocalHash
+    else
+      if [ -z "$BUCK_CLEAN_REPO_IF_DIRTY" ]; then
+        echo ":: Your local buck directory is dirty, and therefore builds will"
+        echo ":: not be able to use a distributed cache."
+        echo ":: Do you want to clean your buck directory? [y/N]"
+        read BUCK_CLEAN_REPO_IF_DIRTY
+      fi
+      if [[ "$(echo $BUCK_CLEAN_REPO_IF_DIRTY | tr '[:lower:]' '[:upper:]')" =~ ^Y.* ]]; then
+        git clean -fd
+        # Restart buck just in case the files we just deleted in any way
+        # affected this file.
+        restartBuck $@
+      else
+        computeLocalHash
+      fi
+    fi
   else
     BUCK_VERSION_UID="N/A"
   fi
 fi
-  
+
+# Make sure that Buck has been built.
+if [ ! -e "build/buck.jar" ]; then
+
+  if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCKD_PID_FILE" ]; then
+    echo "Killing buckd before building buck"
+    kill `cat "$BUCKD_PID_FILE"` || true
+  fi
+
+  echo "No sign of buck.jar -- building Buck!"
+  # Note the jar file will not be used,
+  # but serves to represent whether everything has been built.
+  ant clean && ant
+
+  if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
+    echo "Restarting buckd after building buck"
+    "${BUCK_BIN_DIRECTORY}/buckd"
+  fi
+fi
+
 # Pop back to the original directory.
 popd > /dev/null
 popd > /dev/null
