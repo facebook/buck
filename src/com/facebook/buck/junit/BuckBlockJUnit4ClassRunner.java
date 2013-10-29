@@ -16,6 +16,8 @@
 
 package com.facebook.buck.junit;
 
+import com.facebook.buck.util.concurrent.MoreExecutors;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -36,8 +38,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -55,15 +55,7 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
   // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
   // garbage is not spewed to the user's console if the build fails.
-  // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
-  // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
-  // garbage is not spewed to the user's console if the build fails.
-  private final ExecutorService executor = new ThreadPoolExecutor(
-        /* corePoolSize */ 1,
-        /* maximumPoolSize */ 1,
-        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
-        /* handler */ new ThreadPoolExecutor.DiscardPolicy());
+  private final ExecutorService executor = MoreExecutors.newSingleThreadExecutor();
 
   private final long defaultTestTimeoutMillis;
 

@@ -7,7 +7,6 @@
   <property name="lib.dir" value="${basedir}/lib" />
   <property name="third-party.dir" value="${basedir}/third-party" />
   <property name="build.dir" value="${basedir}/build" />
-  <property name="testrunner.src.dir" value="${src.dir}/com/facebook/buck/junit/" />
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
   <property name="abi_processor.src.dir" value="${src.dir}/com/facebook/buck/java/abi/" />
   <property name="abi_processor.classes.dir" value="${build.dir}/abi_processor/classes" />
@@ -90,7 +89,8 @@
 
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
-    <javac srcdir="${testrunner.src.dir}"
+    <javac srcdir="${src.dir}"
+           includes="com/facebook/buck/junit/**,src/com/facebook/buck/util/concurrent/MoreExecutors.java"
            destdir="${testrunner.classes.dir}"
            classpathref="junit"
            debug="on"
