@@ -68,32 +68,17 @@ public class MoreFutures {
       return false;
     }
 
-    boolean wasInterrupted = false;
     try {
-      while (true) {
-        try {
-          future.get();
-          return true;
-        } catch (ExecutionException e) {
-          // The computation threw an exception, so it did not complete successfully.
-          return false;
-        } catch (CancellationException e) {
-          // The computation was cancelled, so it did not complete successfully.
-          return false;
-        } catch (InterruptedException e) {
-          // This is kind of annoying.  We know that the future is done, but .get()
-          // still thew an InterruptedException because it can be a blocking method.
-          // Throwing InterruptedException from here would be annoying because this
-          // method is not really blocking.  Therefore, we keep trying until we get
-          // the value without being interrupted (which should be fast since it won't
-          // block), then restore the interrupt status.
-          wasInterrupted = true;
-        }
-      }
-    } finally {
-      if (wasInterrupted) {
-        Thread.currentThread().interrupt();
-      }
+      // Try to get the future, but ignore (and preserve) the thread interrupted state.
+      // This should be fast because we know the future is already complete.
+      Uninterruptibles.getUninterruptibly(future);
+      return true;
+    } catch (ExecutionException e) {
+      // The computation threw an exception, so it did not complete successfully.
+      return false;
+    } catch (CancellationException e) {
+      // The computation was cancelled, so it did not complete successfully.
+      return false;
     }
   }
 
