@@ -20,6 +20,7 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
+// TODO: This should be renamed to DummyFileHashCache and moved under the test/ directory.
 public class NullFileHashCache implements FileHashCache {
 
   @Override
@@ -30,9 +31,5 @@ public class NullFileHashCache implements FileHashCache {
   @Override
   public HashCode get(Path path) {
     return null;
-  }
-
-  @Override
-  public void put(Path path, HashCode fileSha1) {
   }
 }

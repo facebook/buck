@@ -24,11 +24,11 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.InputRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -85,14 +85,14 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     // than once.
     new AbstractBottomUpTraversal<BuildRule, Void>(partialGraph.getDependencyGraph()) {
 
-      final Set<InputRule> inputs = Sets.newHashSet();
+      final Set<Path> inputs = Sets.newHashSet();
 
       @Override
       public void visit(BuildRule rule) {
-        for (InputRule input : rule.getInputs()) {
+        for (Path input : rule.getInputs()) {
           boolean isNewInput = inputs.add(input);
           if (isNewInput) {
-            getStdOut().println(input.getFullyQualifiedName());
+            getStdOut().println(input);
           }
         }
       }

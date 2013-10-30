@@ -35,7 +35,7 @@ public interface Buildable {
    * Get the set of input files whose contents should be hashed for the purpose of determining
    * whether this rule is cached.
    * <p>
-   * Note that inputs are iterable and should generally be alphatized so that lists with the same
+   * Note that inputs are iterable and should generally be alphabetized so that lists with the same
    * elements will be {@code .equals()} to one another. However, for some build rules (such as
    * {@link com.facebook.buck.shell.Genrule}), the order of the inputs is significant and in these
    * cases the inputs may be ordered in any way the rule feels most appropriate.

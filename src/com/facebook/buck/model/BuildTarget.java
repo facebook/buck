@@ -53,26 +53,6 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   }
 
   /**
-   * For use by InputRule, which is synthetic, and therefore has no buildFile.
-   * @param inputFile Input file.
-   * @param relativePath
-   */
-  private BuildTarget(File inputFile, String relativePath) {
-    Preconditions.checkNotNull(inputFile);
-    Preconditions.checkNotNull(relativePath);
-    this.baseName = String.format("//%s", relativePath);
-    this.shortName = inputFile.getName();
-    this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
-  }
-
-  /**
-   * For exclusive use by {@link com.facebook.buck.rules.InputRule#InputRule(File, String)}.
-   */
-  public static BuildTarget createBuildTargetForInputFile(File inputFile, String relativePath) {
-    return new BuildTarget(inputFile, relativePath);
-  }
-
-  /**
    * The build file in which this rule was defined.
    * @throws MissingBuildFileException if the build file for the target does not exist.
    */

@@ -20,9 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -32,10 +36,14 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 
 public class DirArtifactCacheTest {
-  @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule
+  public TemporaryFolder tmpDir = new TemporaryFolder();
+
+  private FileHashCache fileHashCache = new NullFileHashCache();
 
   @Test
   public void testCacheCreation() throws IOException {
@@ -53,9 +61,9 @@ public class DirArtifactCacheTest {
         /* maxCacheSizeBytes */ Optional.of(0L));
 
     Files.write("x", fileX, Charsets.UTF_8);
-    InputRule inputRuleX = new InputRuleForTest(fileX);
+    BuildRule inputRuleX = new BuildRuleForTest(fileX);
     RuleKey ruleKeyX = RuleKey.builder(inputRuleX,
-        new NullFileHashCache()).build().getTotalRuleKey();
+        fileHashCache).build().getTotalRuleKey();
 
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
   }
@@ -69,19 +77,19 @@ public class DirArtifactCacheTest {
         /* maxCacheSizeBytes */ Optional.<Long>absent());
 
     Files.write("x", fileX, Charsets.UTF_8);
-    InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, new NullFileHashCache()).build().getTotalRuleKey();
+    BuildRule inputRuleX = new BuildRuleForTest(fileX);
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, fileHashCache).build().getTotalRuleKey();
 
     dirArtifactCache.store(ruleKeyX, fileX);
 
     // Test that artifact overwrite works.
     assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(inputRuleX, new InputRuleForTest(fileX));
+    assertEquals(inputRuleX, new BuildRuleForTest(fileX));
 
     // Test that artifact creation works.
     assertTrue(fileX.delete());
     assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(inputRuleX, new InputRuleForTest(fileX));
+    assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
   @Test
@@ -93,14 +101,14 @@ public class DirArtifactCacheTest {
         /* maxCacheSizeBytes */ Optional.of(0L));
 
     Files.write("x", fileX, Charsets.UTF_8);
-    InputRule inputRuleX = new InputRuleForTest(fileX);
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, new NullFileHashCache()).build().getTotalRuleKey();
+    BuildRule inputRuleX = new BuildRuleForTest(fileX);
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, fileHashCache).build().getTotalRuleKey();
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
 
     assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(inputRuleX, new InputRuleForTest(fileX));
+    assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
   @Test
@@ -117,17 +125,16 @@ public class DirArtifactCacheTest {
     Files.write("y", fileY, Charsets.UTF_8);
     Files.write("z", fileZ, Charsets.UTF_8);
 
-    InputRule inputRuleX = new InputRuleForTest(fileX);
-    InputRule inputRuleY = new InputRuleForTest(fileY);
-    InputRule inputRuleZ = new InputRuleForTest(fileZ);
+    BuildRule inputRuleX = new BuildRuleForTest(fileX);
+    BuildRule inputRuleY = new BuildRuleForTest(fileY);
+    BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
     assertFalse(inputRuleX.equals(inputRuleY));
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
 
-    NullFileHashCache hashCache = new NullFileHashCache();
-    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, hashCache).build().getTotalRuleKey();
-    RuleKey ruleKeyY = RuleKey.builder(inputRuleY, hashCache).build().getTotalRuleKey();
-    RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ, hashCache).build().getTotalRuleKey();
+    RuleKey ruleKeyX = RuleKey.builder(inputRuleX, fileHashCache).build().getTotalRuleKey();
+    RuleKey ruleKeyY = RuleKey.builder(inputRuleY, fileHashCache).build().getTotalRuleKey();
+    RuleKey ruleKeyZ = RuleKey.builder(inputRuleZ, fileHashCache).build().getTotalRuleKey();
 
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
     assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));
@@ -145,9 +152,9 @@ public class DirArtifactCacheTest {
     assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyY, fileY));
     assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyZ, fileZ));
 
-    assertEquals(inputRuleX, new InputRuleForTest(fileX));
-    assertEquals(inputRuleY, new InputRuleForTest(fileY));
-    assertEquals(inputRuleZ, new InputRuleForTest(fileZ));
+    assertEquals(inputRuleX, new BuildRuleForTest(fileX));
+    assertEquals(inputRuleY, new BuildRuleForTest(fileY));
+    assertEquals(inputRuleZ, new BuildRuleForTest(fileZ));
 
     assertEquals(3, cacheDir.listFiles().length);
 
@@ -226,9 +233,19 @@ public class DirArtifactCacheTest {
     assertEquals(ImmutableSet.of(fileZ, fileW), ImmutableSet.copyOf(cacheDir.listFiles()));
   }
 
-  private static class InputRuleForTest extends InputRule {
-    private InputRuleForTest(File file) {
-      super(file, file.getPath());
+  private static class BuildRuleForTest extends FakeBuildRule {
+    private static final BuildRuleType TYPE = new BuildRuleType("fake");
+
+    private final File file;
+
+    private BuildRuleForTest(File file) {
+      super(TYPE, new BuildTarget("//foo", file.getName()));
+      this.file = Preconditions.checkNotNull(file);
+    }
+
+    @Override
+    public Iterable<Path> getInputs() {
+      return ImmutableList.of(file.toPath());
     }
   }
 }

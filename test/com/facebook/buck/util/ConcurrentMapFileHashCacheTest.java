@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util;
 
-import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
 import static com.facebook.buck.testutil.WatchEvents.createOverflowEvent;
+import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,60 +36,60 @@ public class ConcurrentMapFileHashCacheTest {
 
   @Test
   public void whenPathIsPutCacheContainsPath() {
-    ConcurrentMapFileHashCache cache = new ConcurrentMapFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     Path path = new File("SomeClass.java").toPath();
-    cache.put(path, HashCode.fromInt(42));
+    cache.loadingCache.put(path, HashCode.fromInt(42));
     assertTrue("Cache should contain path", cache.contains(path));
   }
 
   @Test
   public void whenPathIsPutPathGetReturnsHash() {
-    ConcurrentMapFileHashCache cache = new ConcurrentMapFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     Path path = new File("SomeClass.java").toPath();
     HashCode hash = HashCode.fromInt(42);
-    cache.put(path, hash);
+    cache.loadingCache.put(path, hash);
     assertEquals("Cache should contain hash", hash, cache.get(path));
   }
 
   @Test
   public void whenNotifiedOfOverflowEventCacheIsCleared() throws IOException {
-    ConcurrentMapFileHashCache cache = new ConcurrentMapFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     Path path = new File("SomeClass.java").toPath();
     HashCode hash = HashCode.fromInt(42);
-    cache.put(path, hash);
+    cache.loadingCache.put(path, hash);
     cache.onFileSystemChange(createOverflowEvent());
     assertFalse("Cache should not contain path", cache.contains(path));
   }
 
   @Test
   public void whenNotifiedOfCreateEventCacheEntryIsRemoved() throws IOException {
-    ConcurrentMapFileHashCache cache = new ConcurrentMapFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     File file = new File("SomeClass.java");
     Path path = file.toPath();
     HashCode hash = HashCode.fromInt(42);
-    cache.put(path, hash);
+    cache.loadingCache.put(path, hash);
     cache.onFileSystemChange(createPathEvent(file, StandardWatchEventKinds.ENTRY_CREATE));
     assertFalse("Cache should not contain path", cache.contains(path));
   }
 
   @Test
   public void whenNotifiedOfChangeEventCacheEntryIsRemoved() throws IOException {
-    ConcurrentMapFileHashCache cache = new ConcurrentMapFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     File file = new File("SomeClass.java");
     Path path = file.toPath();
     HashCode hash = HashCode.fromInt(42);
-    cache.put(path, hash);
+    cache.loadingCache.put(path, hash);
     cache.onFileSystemChange(createPathEvent(file, StandardWatchEventKinds.ENTRY_MODIFY));
     assertFalse("Cache should not contain path", cache.contains(path));
   }
 
   @Test
   public void whenNotifiedOfDeleteEventCacheEntryIsRemoved() throws IOException {
-    ConcurrentMapFileHashCache cache = new ConcurrentMapFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     File file = new File("SomeClass.java");
     Path path = file.toPath();
     HashCode hash = HashCode.fromInt(42);
-    cache.put(path, hash);
+    cache.loadingCache.put(path, hash);
     cache.onFileSystemChange(createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
     assertFalse("Cache should not contain path", cache.contains(path));
   }

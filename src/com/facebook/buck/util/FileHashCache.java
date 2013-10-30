@@ -17,9 +17,10 @@
 package com.facebook.buck.util;
 
 import com.google.common.hash.HashCode;
+
 import java.nio.file.Path;
 
-/*
+/**
  * A cache which maps Paths to cached hashes of their contents,
  * based on a simplified subset of the java.util.Map<Path, HashCode> interface.
  */
@@ -27,7 +28,5 @@ public interface FileHashCache {
   boolean contains(Path path);
 
   HashCode get(Path path);
-
-  void put(Path path, HashCode fileSha1);
 
 }

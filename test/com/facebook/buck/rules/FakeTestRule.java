@@ -63,7 +63,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public Iterable<InputRule> getInputs() {
+  public Iterable<Path> getInputs() {
     return ImmutableList.of();
   }
 

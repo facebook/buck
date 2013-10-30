@@ -47,7 +47,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
-import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -74,14 +73,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.SortedMap;
 
 public class TargetsCommandTest {
 
-  private static final Function<String, Path> PATH_RELATIVIZER =
-      IdentityPathRelativizer.getIdentityRelativizer();
   private final String projectRootPath = ".";
   private final File projectRoot = new File(projectRootPath);
   private TestConsole console;
@@ -301,7 +297,7 @@ public class TargetsCommandTest {
     SortedMap<String, BuildRule> matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
     assertTrue(matchingBuildRules.isEmpty());
 
     // Only test-android-library target depends on the referenced file.
@@ -309,18 +305,18 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
 
-    // The test-android-library target indirectly depend on the referenced file,
-    // while test-java-library target directly depend on the referenced file.
+    // The test-android-library target indirectly depends on the referenced file,
+    // while test-java-library target directly depends on the referenced file.
     referencedFiles = ImmutableSet.of("javasrc/JavaLibrary.java");
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -331,7 +327,7 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
-            new TargetsCommandPredicate(graph, PATH_RELATIVIZER, buildRuleTypes, referencedFiles, targetBuildRules));
+            new TargetsCommandPredicate(graph, buildRuleTypes, referencedFiles, targetBuildRules));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
@@ -342,7 +338,6 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingBuildRules(
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(graph,
-                PATH_RELATIVIZER,
                 buildRuleTypes,
                 ImmutableSet.<String>of(),
                 targetBuildRules));
@@ -359,7 +354,6 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
-                PATH_RELATIVIZER,
                 ImmutableSet.of(BuildRuleType.JAVA_TEST, BuildRuleType.JAVA_LIBRARY),
                 ImmutableSet.<String>of(),
                 targetBuildRules));
@@ -376,7 +370,6 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
-                PATH_RELATIVIZER,
                 ImmutableSet.of(BuildRuleType.JAVA_TEST, BuildRuleType.JAVA_LIBRARY),
                 ImmutableSet.<String>of(),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));
@@ -389,7 +382,6 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
-                PATH_RELATIVIZER,
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.<String>of(),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));
@@ -403,7 +395,6 @@ public class TargetsCommandTest {
             graph.getDependencyGraph(),
             new TargetsCommandPredicate(
                 graph,
-                PATH_RELATIVIZER,
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.of("javatest/TestJavaLibrary.java"),
                 ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))));

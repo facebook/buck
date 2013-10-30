@@ -6,7 +6,6 @@ java_library(
     'FakeBuildableContext.java',
     'FakeBuildRule.java',
     'FakeBuildRuleParams.java',
-    'FakeInputRule.java',
     'FakeRuleKeyBuilderFactory.java',
     'FakeTestRule.java',
     'NonCheckingBuildRuleFactoryParams.java',

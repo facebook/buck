@@ -55,7 +55,6 @@ java_library(
     'DefaultBuildRuleBuilderParams.java',
     'DependencyGraph.java',
     'FileSourcePath.java',
-    'InputRule.java',
     'JavaPackageFinder.java',
     'OnDiskBuildInfo.java',
     'RuleKey.java',

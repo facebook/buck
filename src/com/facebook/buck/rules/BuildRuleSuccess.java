@@ -63,7 +63,7 @@ public class BuildRuleSuccess {
         Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK
         ),
 
-    /** Created trivially, such as an {@link InputRule} or {@link ProjectConfigRule}. */
+    /** Created trivially, such as a {@link ProjectConfigRule}. */
     BY_DEFINITION,
 
     ;

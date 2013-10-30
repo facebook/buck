@@ -32,14 +32,10 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -166,36 +162,6 @@ public class RuleKey {
       return separate().feed(sectionLabel.getBytes()).separate();
     }
 
-    private Builder setVal(@Nullable File file) throws IOException {
-
-      if (file != null) {
-
-        Path path = file.toPath();
-        HashCode fileSha1 = null;
-
-        if (hashCache.contains(path)) {
-
-          // Use cached hash if possible, to avoid reading all input files on each build.
-          fileSha1 = hashCache.get(path);
-        } else {
-
-          // Compute a separate SHA-1 for the file contents and feed that into messageDigest rather
-          // than the file contents, in order to avoid the overhead of escaping SEPARATOR in the file
-          // content.
-          InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
-          fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
-          hashCache.put(path, fileSha1);
-        }
-
-        if (logElms != null) {
-          logElms.add(String.format("file(path=\"%s\", sha1=%s):", file.getPath(),
-              fileSha1.toString()));
-        }
-        feed(fileSha1.asBytes());
-      }
-      return separate();
-    }
-
     private Builder setVal(@Nullable String s) {
       if (s != null) {
         if (logElms != null) {
@@ -230,14 +196,6 @@ public class RuleKey {
         feed(ruleKey.toString().getBytes());
       }
       return separate();
-    }
-
-    public Builder set(String key, @Nullable File val) throws IOException {
-      return setKey(key).setVal(val);
-    }
-
-    public Builder set(String key, @Nullable Path path) throws IOException {
-      return set(key, path == null ? null : path.toFile());
     }
 
     public Builder set(String key, @Nullable String val) {
@@ -284,12 +242,22 @@ public class RuleKey {
       return separate();
     }
 
-    public Builder setInputs(String key, @Nullable Iterable<InputRule> val) throws IOException {
+    /**
+     * @param inputs is an {@link Iterator} rather than an {@link Iterable} because {@link Path}
+     *     implements {@link Iterable} and we want to protect against passing a single {@link Path}
+     *     instead of multiple {@link Path}s.
+     */
+    public Builder setInputs(String key, Iterator<Path> inputs) throws IOException {
+      Preconditions.checkNotNull(key);
+      Preconditions.checkNotNull(inputs);
       setKey(key);
-      if (val != null) {
-        for (InputRule inputRule : val) {
-          setVal(inputRule.getRuleKey(hashCache));
+      while (inputs.hasNext()) {
+        Path input = inputs.next();
+        HashCode sha1 = hashCache.get(input);
+        if (sha1 == null) {
+          throw new RuntimeException("No SHA for " + input);
         }
+        setVal(sha1.toString());
       }
       return separate();
     }

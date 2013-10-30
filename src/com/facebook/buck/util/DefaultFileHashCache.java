@@ -16,31 +16,51 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.WatchEvent;
+import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.concurrent.ConcurrentMap;
+import java.nio.file.WatchEvent;
+import java.util.concurrent.ExecutionException;
 
-public class ConcurrentMapFileHashCache implements FileHashCache {
+public class DefaultFileHashCache implements FileHashCache {
 
-  private final ConcurrentMap<Path, HashCode> hashCache;
   private final ProjectFilesystem projectFilesystem;
   private final Console console;
 
-  public ConcurrentMapFileHashCache(ProjectFilesystem projectFilesystem, Console console) {
-    this.projectFilesystem = projectFilesystem;
-    this.console = console;
-    hashCache = Maps.newConcurrentMap();
+  @VisibleForTesting
+  final LoadingCache<Path, HashCode> loadingCache;
+
+  public DefaultFileHashCache(ProjectFilesystem projectFilesystem, Console console) {
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.console = Preconditions.checkNotNull(console);
+
+    this.loadingCache = CacheBuilder.newBuilder()
+        .build(new CacheLoader<Path, HashCode>() {
+          @Override
+          public HashCode load(Path path) throws Exception {
+            File file = DefaultFileHashCache.this.projectFilesystem.resolve(path).toFile();
+            InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
+            return ByteStreams.hash(inputSupplier, Hashing.sha1());
+          }
+        });
   }
 
   @Override
   public boolean contains(Path path) {
-    return hashCache.containsKey(path);
+    return loadingCache.getIfPresent(path) != null;
   }
 
   /**
@@ -49,14 +69,13 @@ public class ConcurrentMapFileHashCache implements FileHashCache {
    */
   @Override
   public HashCode get(Path path) {
-
-    // checkNotNull on result rather than checkState(this.contains(Path)) to avoid 2 lookups.
-    return Preconditions.checkNotNull(hashCache.get(path));
-  }
-
-  @Override
-  public void put(Path path, HashCode fileSha1) {
-    hashCache.put(path, fileSha1);
+    HashCode sha1;
+    try {
+      sha1 = loadingCache.get(path);
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+    return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", path);
   }
 
   /**
@@ -65,22 +84,18 @@ public class ConcurrentMapFileHashCache implements FileHashCache {
    */
   @Subscribe
   public void onFileSystemChange(WatchEvent<?> event) throws IOException {
-
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("ConcurrentMapFileHashCache watched event %s %s\n", event.kind(),
           projectFilesystem.createContextString(event));
     }
 
     if (projectFilesystem.isPathChangeEvent(event)) {
-
       // Path event, remove the path from the cache as it has been changed, added or deleted.
       Path path = (Path) event.context();
-      hashCache.remove(path);
-
+      loadingCache.invalidate(path);
     } else {
-
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
-      hashCache.clear();
+      loadingCache.invalidateAll();
     }
   }
 }

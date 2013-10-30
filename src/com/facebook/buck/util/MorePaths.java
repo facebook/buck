@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,5 +108,16 @@ public class MorePaths {
     Path target = Paths.get(base, pathToExistingFileUnderProjectRoot.toString());
     Files.createSymbolicLink(pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot), target);
     return target;
+  }
+
+  /**
+   * Convert a set of input file paths as strings to {@link Path} objects.
+   */
+  public static ImmutableSortedSet<Path> asPaths(Iterable<String> paths) {
+    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
+    for (String path : paths) {
+      builder.add(Paths.get(path));
+    }
+    return builder.build();
   }
 }

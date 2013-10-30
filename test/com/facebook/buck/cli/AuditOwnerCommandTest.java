@@ -33,12 +33,12 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
@@ -51,6 +51,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -61,16 +63,16 @@ public class AuditOwnerCommandTest {
 
   private static class StubBuildRule implements BuildRule {
 
-    private final ImmutableSet<InputRule> inputs;
+    private final ImmutableSet<Path> inputs;
     private final BuildTarget target;
 
-    public StubBuildRule(BuildTarget target, Iterable<InputRule> inputs) {
+    public StubBuildRule(BuildTarget target, Iterable<Path> inputs) {
       this.target = target;
       this.inputs = ImmutableSet.copyOf(inputs);
     }
 
     @Override
-    public Iterable<InputRule> getInputs() {
+    public Iterable<Path> getInputs() {
       return inputs;
     }
 
@@ -142,7 +144,7 @@ public class AuditOwnerCommandTest {
 
     @Override
     public int compareTo(BuildRule buildRule) {
-      throw new UnsupportedOperationException();
+      return this.getFullyQualifiedName().compareTo(buildRule.getFullyQualifiedName());
     }
   }
 
@@ -338,9 +340,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java"
     };
-    ImmutableSortedSet<InputRule> inputs
-        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args),
-            filesystem.getPathRelativizer());
+    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(Arrays.asList(args));
 
     // Create options
     AuditOwnerOptions options = getOptions(args);
@@ -376,9 +376,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java"
     };
-    ImmutableSortedSet<InputRule> inputs
-        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args),
-            filesystem.getPathRelativizer());
+    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
 
     // Build rule that owns all inputs
     BuildTarget target = new BuildTarget("//base/name", "name");
@@ -427,9 +425,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java"
     };
-    ImmutableSortedSet<InputRule> inputs
-        = InputRule.inputPathsAsInputRules(ImmutableSortedSet.copyOf(args),
-            filesystem.getPathRelativizer());
+    ImmutableSortedSet<Path> inputs = MorePaths.asPaths(ImmutableSortedSet.copyOf(args));
 
     // Build rule that owns all inputs
     BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1:name1");

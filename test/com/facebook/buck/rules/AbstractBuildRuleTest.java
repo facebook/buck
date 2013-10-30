@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.util.Comparator;
 
 import javax.annotation.Nullable;
@@ -218,7 +219,7 @@ public class AbstractBuildRuleTest {
       }
 
       @Override
-      public final Iterable<InputRule> getInputs() {
+      public final Iterable<Path> getInputs() {
         return ImmutableList.of();
       }
 

@@ -37,7 +37,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ConcurrentMapFileHashCache;
+import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
@@ -121,7 +121,7 @@ public final class Main {
                   Console console) throws IOException {
       this.config = Preconditions.checkNotNull(config);
       this.console = Preconditions.checkNotNull(console);
-      ConcurrentMapFileHashCache hashCache = new ConcurrentMapFileHashCache(projectFilesystem, console);
+      DefaultFileHashCache hashCache = new DefaultFileHashCache(projectFilesystem, console);
       this.parser = new Parser(projectFilesystem,
           new KnownBuildRuleTypes(),
           console,
@@ -346,7 +346,7 @@ public final class Main {
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
           createRuleKeyBuilderFactory(config,
-              new ConcurrentMapFileHashCache(projectFilesystem, console)));
+              new DefaultFileHashCache(projectFilesystem, console)));
     }
 
     Clock clock = new DefaultClock();

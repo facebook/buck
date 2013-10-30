@@ -33,9 +33,11 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Optional;
@@ -121,8 +123,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     List<Step> buildSteps = Lists.newArrayList();
     AbstractCachingBuildRule cachingRule = createRule(
         ImmutableSet.of(dep),
-        ImmutableList.<InputRule>of(FakeInputRule.createWithRuleKey("/dev/null",
-            new RuleKey("ae8c0f860a0ecad94ecede79b69460434eddbfbc"))),
+        ImmutableList.of(Paths.get("/dev/null")),
         buildSteps,
         pathToOutputFile);
     verifyAll();
@@ -310,7 +311,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     };
     BuildableAbstractCachingBuildRule cachingRule = createRule(
         /* deps */ ImmutableSet.<BuildRule>of(),
-        ImmutableList.<InputRule>of(),
+        ImmutableList.<Path>of(),
         ImmutableList.of(step),
         /* pathToOutputFile */ null);
 
@@ -376,33 +377,47 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
   private static BuildableAbstractCachingBuildRule createRule(
       ImmutableSet<BuildRule> deps,
-      Iterable<InputRule> inputRules,
+      Iterable<Path> inputs,
       List<Step> buildSteps,
       @Nullable String pathToOutputFile) {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget, sortedDeps);
+    final FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
+          "/dev/null", "ae8c0f860a0ecad94ecede79b69460434eddbfbc"));
+    final RuleKeyBuilderFactory ruleKeyBuilderFactory = new RuleKeyBuilderFactory() {
+      @Override
+      public RuleKey.Builder newInstance(BuildRule buildRule) {
+        return RuleKey.builder(buildRule, fileHashCache);
+      }
+    };
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget, sortedDeps) {
+      @Override
+      public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+        return ruleKeyBuilderFactory;
+      }
+    };
+
     return new BuildableAbstractCachingBuildRule(buildRuleParams,
-        inputRules,
+        inputs,
         pathToOutputFile,
         buildSteps);
   }
 
   private static class BuildableAbstractCachingBuildRule extends DoNotUseAbstractBuildable {
 
-    private final Iterable<InputRule> inputRules;
+    private final Iterable<Path> inputs;
     private final String pathToOutputFile;
     private final List<Step> buildSteps;
 
     private boolean isInitializedFromDisk = false;
 
     private BuildableAbstractCachingBuildRule(BuildRuleParams params,
-        Iterable<InputRule> inputRules,
+        Iterable<Path> inputs,
         @Nullable String pathToOutputFile,
         List<Step> buildSteps) {
       super(params);
-      this.inputRules = inputRules;
+      this.inputs = inputs;
       this.pathToOutputFile = pathToOutputFile;
       this.buildSteps = buildSteps;
     }
@@ -413,8 +428,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public Iterable<InputRule> getInputs() {
-      return inputRules;
+    public Iterable<Path> getInputs() {
+      return inputs;
     }
 
     @Override

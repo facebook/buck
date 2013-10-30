@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -71,7 +72,7 @@ public interface BuildRule extends Comparable<BuildRule> {
   /**
    * @return the inputs needed to build this build rule
    */
-  public Iterable<InputRule> getInputs();
+  public Iterable<Path> getInputs();
 
   /**
    * This method must be idempotent.
