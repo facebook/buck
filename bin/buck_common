@@ -80,7 +80,13 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
 fi
 
 # Get current buck version.
+
+# Whether or not the repo is dirty (contains untracked files or modified
+# tracked files).
 BUCK_REPOSITORY_DIRTY=0
+
+# Whether or not the repo contains changes to tracked files.
+BUCK_REPOSITORY_LOCAL_CHANGES=0
 BUCK_CURRENT_VERSION="N/A"
 BUCK_VERSION_TIMESTAMP=-1
 if [ -d ".git" ]; then
@@ -92,12 +98,17 @@ if [ -d ".git" ]; then
   if [ -n "`git status -s`" ]; then
     BUCK_REPOSITORY_DIRTY=1
   fi
+  # If the output of "git ls-files -m" is non-empty, buck has local changes to
+  # tracked files that can't be cleaned automatically with `git clean -fd`.
+  if [ -n "`git ls-files -m`" ]; then
+    BUCK_REPOSITORY_LOCAL_CHANGES=1
+  fi
 fi
 
 # Compute a version string that uniquely incorporates the current git revision
 # and local modifications (if any) to managed files that are relevant to
 # building/running the buck application.
-if [ "x${BUCK_REPOSITORY_DIRTY}" = "x0" ] ; then
+if [ "${BUCK_REPOSITORY_DIRTY}" = "0" ] ; then
   BUCK_VERSION_UID="${BUCK_CURRENT_VERSION}"
 else
   if [ -d ".git" ] ; then
@@ -123,9 +134,18 @@ else
       BUCK_VERSION_UID=`git hash-object ${buck_version_uid_input}` || exit 1
       rm -f "${buck_version_uid_input}"
     }
-    if [ -e "${PROJECT_ROOT}/.nobuckcheck" ]; then
+    if [ -e "${PROJECT_ROOT}/.nobuckcheck" ] || [ ! -e "${PROJECT_ROOT}/.buckversion" ]; then
       computeLocalHash
     else
+      if [ "${BUCK_REPOSITORY_LOCAL_CHANGES}" = "1" ] ; then
+        # If the buck repo is dirty but has local changes, warn the user, but we
+        # can't clean the repo for them.
+        echo ":: Your buck directory has local modifications, and therefore"
+        echo ":: builds will not be able to use a distributed cache."
+        echo ":: The following files must be either reverted or committed:"
+        git ls-files -m
+        BUCK_CLEAN_REPO_IF_DIRTY=N
+      fi
       if [ -z "$BUCK_CLEAN_REPO_IF_DIRTY" ]; then
         echo ":: Your local buck directory is dirty, and therefore builds will"
         echo ":: not be able to use a distributed cache."
