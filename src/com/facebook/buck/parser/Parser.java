@@ -109,7 +109,7 @@ public class Parser {
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
-  private final Console console;
+  private Console console;
 
   /**
    * Key of the meta-rule that lists the build files executed while reading rules.
@@ -123,6 +123,14 @@ public class Parser {
    * that depend on them (typically {@code /jimp/BUCK} files).
    */
   private final ListMultimap<Path, Path> buildFileDependents;
+
+  /**
+   * Parsers may be reused on different consoles, so need to allow the console to be set.
+   * @param console The new console that the Parser should use.
+   */
+  public synchronized void setConsole(Console console) {
+    this.console = console;
+  }
 
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.

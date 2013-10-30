@@ -110,6 +110,7 @@ public final class Main {
   private final class Daemon implements Closeable {
 
     private final Parser parser;
+    private final DefaultFileHashCache hashCache;
     private final EventBus fileEventBus;
     private final ProjectFilesystemWatcher filesystemWatcher;
     private final BuckConfig config;
@@ -121,7 +122,7 @@ public final class Main {
                   Console console) throws IOException {
       this.config = Preconditions.checkNotNull(config);
       this.console = Preconditions.checkNotNull(console);
-      DefaultFileHashCache hashCache = new DefaultFileHashCache(projectFilesystem, console);
+      this.hashCache = new DefaultFileHashCache(projectFilesystem, console);
       this.parser = new Parser(projectFilesystem,
           new KnownBuildRuleTypes(),
           console,
@@ -187,13 +188,15 @@ public final class Main {
       });
     }
 
-    private void watchFileSystem() throws IOException {
+    private void watchFileSystem(Console console) throws IOException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
       // as a single, atomic Parser cache update and are not interleaved with Parser cache
       // invalidations triggered by requests to parse build files or interrupted by client
       // disconnections.
       synchronized (parser) {
+        parser.setConsole(console);
+        hashCache.setConsole(console);
         filesystemWatcher.postEvents();
       }
     }
@@ -336,7 +339,7 @@ public final class Main {
     if (context.isPresent()) {
       Daemon daemon = getDaemon(projectFilesystem, config, console);
       daemon.watchClient(context.get());
-      daemon.watchFileSystem();
+      daemon.watchFileSystem(console);
       daemon.initWebServer();
       parser = daemon.getParser();
     } else {

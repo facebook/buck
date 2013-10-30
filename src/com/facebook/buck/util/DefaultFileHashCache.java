@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutionException;
 public class DefaultFileHashCache implements FileHashCache {
 
   private final ProjectFilesystem projectFilesystem;
-  private final Console console;
+  private Console console;
 
   @VisibleForTesting
   final LoadingCache<Path, HashCode> loadingCache;
@@ -83,9 +83,9 @@ public class DefaultFileHashCache implements FileHashCache {
    * build rules if required.
    */
   @Subscribe
-  public void onFileSystemChange(WatchEvent<?> event) throws IOException {
+  public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
     if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().printf("ConcurrentMapFileHashCache watched event %s %s\n", event.kind(),
+      console.getStdErr().printf("DefaultFileHashCache watched event %s %s\n", event.kind(),
           projectFilesystem.createContextString(event));
     }
 
@@ -97,5 +97,13 @@ public class DefaultFileHashCache implements FileHashCache {
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
       loadingCache.invalidateAll();
     }
+  }
+
+  /**
+   * DefaultFileHashCaches may be reused on different consoles, so allow the console to be set.
+   * @param console The new console that the Parser should use.
+   */
+  public synchronized void setConsole(Console console) {
+    this.console = console;
   }
 }
