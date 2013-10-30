@@ -257,11 +257,13 @@
              windowtitle="Buck"
              failonerror="true"
              >
-      <fileset dir="${src.dir}"/>
-      <fileset dir="${test.dir}">
-        <exclude name="**/testdata/**" />
+      <fileset dir="${src.dir}">
+        <exclude name="com/facebook/buck/cli/quickstart/**" />
         <exclude name="**/BUCK" />
-        <exclude name="**/*.properties"/>
+        <exclude name="**/*.iml"/>
+        <exclude name="**/*.py"/>
+        <exclude name="**/*.pyc"/>
+        <exclude name="**/*.sh"/>
       </fileset>
       <link href="http://docs.oracle.com/javase/7/docs/api/" />
       <link href="http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/" />
