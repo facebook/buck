@@ -31,6 +31,16 @@ import java.util.concurrent.Future;
  */
 class DelegateRunnerWithTimeout extends Runner {
 
+  /**
+   * Shared {@link ExecutorService} on which all tests run by this {@link Runner} are executed.
+   * <p>
+   * In Robolectric, the {@code ShadowLooper.resetThreadLoopers()} asserts that the current thread
+   * is the same as the thread on which the {@code ShadowLooper} class was loaded. Therefore, to
+   * preserve the behavior of the {@code org.robolectric.RobolectricTestRunner}, we use an
+   * {@link ExecutorService} with a single thread to run all of the tests.
+   */
+  private static final ExecutorService executor = MoreExecutors.newSingleThreadExecutor();
+
   private final Runner delegate;
   private final long defaultTestTimeoutMillis;
 
@@ -63,7 +73,6 @@ class DelegateRunnerWithTimeout extends Runner {
         delegate, notifier, defaultTestTimeoutMillis);
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
-    ExecutorService executor = MoreExecutors.newSingleThreadExecutor();
     Future<?> future = executor.submit(new Runnable() {
       @Override
       public void run() {
