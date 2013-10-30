@@ -117,6 +117,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     // Print through the {@code DirtyPrintStreamDecorator} so printing from the simple console
     // is considered to dirty stderr and stdout and so it gets synchronized to avoid interlacing
     // output.
-    console.getStdErr().println(Joiner.on("\n").join(lines.build()));
+    ImmutableList<String> stringList = lines.build();
+    if (stringList.size() == 0) {
+      return;
+    }
+    console.getStdErr().println(Joiner.on("\n").join(stringList));
   }
 }
