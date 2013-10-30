@@ -9,15 +9,14 @@ http://downloads.sourceforge.net/project/emma/emma-release/2.0.5312/emma-2.0.531
 
 
 nailgun-server-0.9.2-SNAPSHOT.jar and nailgun-server-0.9.2-SNAPSHOT-sources.jar were
-built from a fork of Nailgun which adds support for detecting client disconnection at
-https://github.com/jimpurbrick/nailgun.git
+built from https://github.com/martylamb/nailgun.git
 
 To regenerate these jars:
 
  0) install maven (brew install maven)
- 1) git clone https://github.com/jimpurbrick/nailgun.git
+ 1) git clone https://github.com/martylamb/nailgun
  2) cd nailgun
- 3) git checkout d005c16f13d42489ac1ab428b15c3d9cdb1ada31
+ 3) git checkout fcc24ecd63ead63f160e96f6a0640f6b4280f72d
  4) mvn clean install
  5) copy nailgun-server/target/nailgun-server-0.9.2-SNAPSHOT.jar and
     nailgun-server/target/nailgun-server-0.9.2-SNAPSHOT-sources.jar to your buck/lib directory

@@ -16,6 +16,5 @@ you will additionally need to "make ng.exe".
 
 For more information, see [the nailgun website](http://martiansoftware.com/nailgun/).
 
-Buck currently uses a fork of nailgun hosted at https://github.com/jimpurbrick/nailgun.
-This fork adds support for interrupting server processing when client disconnection is
-detected, changes which are currently being accepted in to the main nailgun repository.
+Buck currently uses https://github.com/martylamb/nailgun at
+fcc24ecd63ead63f160e96f6a0640f6b4280f72d
