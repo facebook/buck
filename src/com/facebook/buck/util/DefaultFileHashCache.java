@@ -71,7 +71,7 @@ public class DefaultFileHashCache implements FileHashCache {
   public HashCode get(Path path) {
     HashCode sha1;
     try {
-      sha1 = loadingCache.get(path);
+      sha1 = loadingCache.get(path.normalize());
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
@@ -92,7 +92,7 @@ public class DefaultFileHashCache implements FileHashCache {
     if (projectFilesystem.isPathChangeEvent(event)) {
       // Path event, remove the path from the cache as it has been changed, added or deleted.
       Path path = (Path) event.context();
-      loadingCache.invalidate(path);
+      loadingCache.invalidate(path.normalize());
     } else {
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
       loadingCache.invalidateAll();
