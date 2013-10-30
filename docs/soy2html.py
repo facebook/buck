@@ -50,7 +50,8 @@ def main(output_dir):
         copy_to_output_dir(html_file, output_dir, html)
       elif (file_name.endswith('.css') or
             file_name.endswith('.js') or
-            file_name.endswith('.png')):
+            file_name.endswith('.png') or
+            file_name.endswith('.html')):
         #  Copy the static resource to output_dir.
         relative_path = os.path.join(root, file_name)
         with open(relative_path) as resource_file:

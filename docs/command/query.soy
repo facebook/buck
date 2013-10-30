@@ -1,0 +1,39 @@
+{namespace buck.query}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck query' /}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+Queries the build dependency graph.
+
+<p>
+
+This can be used to find a path from one dependency to another in the build graph.
+The format of the query is <code><em>source</em> -> <em>sink</em></code> as follows:
+
+<pre>buck query "&#x2F;/apps/myapp:app -> &#x2F;/res/com/example/activity:res"</pre>
+
+It can also be used to find the set of transitive dependencies for a build rule by omitting the
+sink in the query expression.
+
+<pre>buck query "&#x2F;/apps/myapp:app -> "</pre>
+
+This can be useful in untangling your dependencies, or for general scripting against
+the build graph.
+
+{/param}
+
+{param params}
+None.
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}
