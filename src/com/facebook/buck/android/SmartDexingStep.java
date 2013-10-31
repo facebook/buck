@@ -72,6 +72,7 @@ public class SmartDexingStep implements Step {
   private final Path successDir;
   private final Optional<Integer> numThreads;
   private final DexStore dexStore;
+  private final boolean optimizeDex;
   private ListeningExecutorService dxExecutor;
 
   /** Lazily initialized.  See {@link InputResolver#createOutputToInputs(DexStore)}. */
@@ -99,7 +100,8 @@ public class SmartDexingStep implements Step {
       Optional<String> secondaryInputsDir,
       Path successDir,
       Optional<Integer> numThreads,
-      DexStore dexStore) {
+      DexStore dexStore,
+      boolean optimizeDex) {
     this.inputResolver = new InputResolver(primaryOutputPath,
         primaryInputsToDex,
         secondaryOutputDir,
@@ -107,6 +109,7 @@ public class SmartDexingStep implements Step {
     this.successDir = Preconditions.checkNotNull(successDir);
     this.numThreads = Preconditions.checkNotNull(numThreads);
     this.dexStore = Preconditions.checkNotNull(dexStore);
+    this.optimizeDex = optimizeDex;
   }
 
   @VisibleForTesting
@@ -241,7 +244,8 @@ public class SmartDexingStep implements Step {
             }
           })),
           outputFile.getPath(),
-          context.getProjectFilesystem().resolve(successDir.resolve(outputFile.getName()))));
+          context.getProjectFilesystem().resolve(successDir.resolve(outputFile.getName())),
+          optimizeDex));
     }
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -340,16 +344,19 @@ public class SmartDexingStep implements Step {
     private final Set<Path> srcs;
     private final String outputPath;
     private final Path outputHashPath;
+    private final boolean optimizeDex;
     private String newInputsHash;
 
     public DxPseudoRule(ExecutionContext context,
         Set<Path> srcs,
         String outputPath,
-        Path outputHashPath) {
+        Path outputHashPath,
+        boolean optimizeDex) {
       this.context = Preconditions.checkNotNull(context);
       this.srcs = ImmutableSet.copyOf(srcs);
       this.outputPath = Preconditions.checkNotNull(outputPath);
       this.outputHashPath = Preconditions.checkNotNull(outputHashPath);
+      this.optimizeDex = optimizeDex;
     }
 
     /**
@@ -435,7 +442,7 @@ public class SmartDexingStep implements Step {
       List<Step> steps = Lists.newArrayList();
       if (useXzCompression()) {
         String tempDexJarOutput = outputPath.replaceAll("\\.jar\\.xz$", ".tmp.jar");
-        steps.add(new DxStep(tempDexJarOutput, srcs));
+        steps.add(new DxStep(tempDexJarOutput, srcs, optimizeDex));
         // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
         // compression won't be effective.
         String repackedJar = outputPath.replaceAll("\\.xz$", "");
@@ -448,7 +455,7 @@ public class SmartDexingStep implements Step {
         steps.add(new RmStep(tempDexJarOutput, true));
         steps.add(new XzStep(repackedJar));
       } else {
-        steps.add(new DxStep(outputPath, srcs));
+        steps.add(new DxStep(outputPath, srcs, optimizeDex));
       }
       steps.add(new WriteFileStep(newInputsHash, outputHashPath));
 

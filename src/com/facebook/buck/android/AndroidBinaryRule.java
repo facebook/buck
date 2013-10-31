@@ -1082,7 +1082,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         secondaryInputsDir,
         successDir,
         Optional.<Integer>absent(),
-        dexSplitMode.getDexStore());
+        dexSplitMode.getDexStore(),
+        /* optimize */ PackageType.RELEASE.equals(packageType));
     commands.add(smartDexingCommand);
   }
 

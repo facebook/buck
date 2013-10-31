@@ -32,15 +32,18 @@ public class DxStep extends ShellStep {
 
   private final String outputDexFile;
   private final Set<Path> filesToDex;
+  private final boolean optimize;
 
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files
+   * @param optimize If false, specify {@code --no-optimize}.
    */
-  public DxStep(String outputDexFile, Iterable<Path> filesToDex) {
+  public DxStep(String outputDexFile, Iterable<Path> filesToDex, boolean optimize) {
     this.outputDexFile = Preconditions.checkNotNull(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
+    this.optimize = optimize;
   }
 
   @Override
@@ -54,6 +57,10 @@ public class DxStep extends ShellStep {
     // --statistics flag, if appropriate.
     if (context.getVerbosity().shouldPrintSelectCommandOutput()) {
       builder.add("--statistics");
+    }
+
+    if (!optimize) {
+      builder.add("--no-optimize");
     }
 
     // verbose flag, if appropriate.
