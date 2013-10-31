@@ -250,6 +250,19 @@ on the generated files.
   post_process = ./scripts/post_process_buck_project.sh
 </pre>{/literal}
 
+<h2>[log]</h2>
+
+This section controls how buck will log information about builds for later
+inspection.
+
+{literal}<pre>
+[log]
+  max_traces = 25
+</pre>{/literal}
+
+Will limit buck to creating, at most, 25{sp}
+<a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.
+
     {/param}
   {/call}
 {/template}

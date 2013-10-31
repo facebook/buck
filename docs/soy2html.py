@@ -51,6 +51,7 @@ def main(output_dir):
       elif (file_name.endswith('.css') or
             file_name.endswith('.js') or
             file_name.endswith('.png') or
+            file_name.endswith('.gif') or
             file_name.endswith('.html')):
         #  Copy the static resource to output_dir.
         relative_path = os.path.join(root, file_name)
