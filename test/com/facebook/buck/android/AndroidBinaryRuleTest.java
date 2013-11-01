@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.easymock.EasyMock.createMock;
@@ -27,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.Keystore;
@@ -379,17 +379,6 @@ public class AndroidBinaryRuleTest {
         .setBuildTarget(libraryOnebuildTarget);
 
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
-      BuildTarget resourceOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
-      AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
-          AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-          .setAssetsDirectory(assetDirectory)
-          .setRes(resDirectory)
-          .setBuildTarget(resourceOnebuildTarget));
-
-      androidLibraryRuleBuilder.addDep(androidResourceRule.getBuildTarget());
-    }
-
-    if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
       AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
@@ -439,6 +428,7 @@ public class AndroidBinaryRuleTest {
                 .getInputsToCompareToOutput());
 
     SourcePath proguardConfig = new FileSourcePath("java/src/com/facebook/proguard.cfg");
+    androidBinaryRuleBuilder.setBuildTarget(new BuildTarget("//java/src/com/facebook", "app2"));
     androidBinaryRuleBuilder.setProguardConfig(Optional.of(proguardConfig));
     MoreAsserts.assertListEquals(
         "getInputsToCompareToOutput() should include Proguard config, if present.",
@@ -454,12 +444,13 @@ public class AndroidBinaryRuleTest {
   @Test
   public void testGetUnsignedApkPath() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildTarget keystoreTarget = addKeystoreRule(ruleResolver);
 
     AndroidBinaryRule ruleInRootDirectory = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
-        .setKeystore(addKeystoreRule(ruleResolver))
+        .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
     assertEquals(GEN_DIR + "/fb4a.apk", ruleInRootDirectory.getApkPath());
 
@@ -467,7 +458,7 @@ public class AndroidBinaryRuleTest {
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example:fb4a"))
         .setManifest("AndroidManifest.xml")
-        .setKeystore(addKeystoreRule(ruleResolver))
+        .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
     assertEquals(GEN_DIR + "/java/com/example/fb4a.apk", ruleInNonRootDirectory.getApkPath());
   }
