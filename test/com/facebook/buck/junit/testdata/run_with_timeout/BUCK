@@ -42,6 +42,24 @@ java_test(
   ],
 )
 
+java_library(
+  name = 'UtilityThatHoldsAReferenceToTheMainThread',
+  srcs = [ 'UtilityThatHoldsAReferenceToTheMainThread.java', ],
+)
+
+java_test(
+  name = 'MultipleTestsThatExpectToBeAbleToReuseTheMainThread',
+  srcs = [
+    'Test1.java',
+    'Test2.java',
+  ],
+  deps = [
+    ':junit',
+    ':NotBuckBlockJUnit4ClassRunner',
+    ':UtilityThatHoldsAReferenceToTheMainThread',
+  ],
+)
+
 prebuilt_jar(
   name = 'junit',
   binary_jar = 'junit-4.11.jar',

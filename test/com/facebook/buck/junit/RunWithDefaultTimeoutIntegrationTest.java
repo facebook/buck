@@ -99,4 +99,14 @@ public class RunWithDefaultTimeoutIntegrationTest {
     testResult.assertExitCode(0);
   }
 
+  @Test
+  public void testAllTestsForRunWithAreRunOnTheSameThread() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "run_with_timeout", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult testResult = workspace.runBuckCommand("test",
+        "//:MultipleTestsThatExpectToBeAbleToReuseTheMainThread");
+    testResult.assertExitCode(0);
+  }
 }
