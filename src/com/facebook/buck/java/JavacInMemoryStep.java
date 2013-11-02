@@ -321,8 +321,21 @@ public class JavacInMemoryStep implements Step {
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {
+        int numErrors = 0;
+        int numWarnings = 0;
         for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+          Diagnostic.Kind kind = diagnostic.getKind();
+          if (kind == Diagnostic.Kind.ERROR) {
+            ++numErrors;
+          } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
+            ++numWarnings;
+          }
+
           context.getStdErr().println(diagnostic);
+        }
+
+        if (numErrors > 0 || numWarnings > 0) {
+          context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
         }
       }
       return 1;
