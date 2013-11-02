@@ -198,6 +198,8 @@ PYTHON_INTERP_FALLBACK=${BUCK_DIRECTORY}/bin/jython
 RELATIVE_PATH_TO_BUCK_PY=src/com/facebook/buck/parser/buck.py
 PATH_TO_BUCK_PY="${BUCK_DIRECTORY}/$RELATIVE_PATH_TO_BUCK_PY"
 
+BUCK_PATH_TO_CUSTOM_DX=""
+
 # Run Buck "unpacked": specifying its individual classpath elements rather than from a
 # single monolithic JAR file that includes all of its dependencies. This speeds up Buck development
 # because `ant compile` takes much less time to rebuild Buck than `ant jar` does.
@@ -253,6 +255,7 @@ BUCK_JAVA_ARGS="\
 -Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \
 -Dbuck.quickstart_origin_dir=${BUCK_DIRECTORY}/src/com/facebook/buck/cli/quickstart/android \
 -Dbuck.version_uid=${BUCK_VERSION_UID} \
+-Dbuck.dx=${BUCK_PATH_TO_CUSTOM_DX} \
 -Dbuck.buckd_dir=${BUCKD_DIR} \
 -Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties \
 ${BUCK_EXTRA_JAVA_ARGS}"

@@ -16,7 +16,8 @@
       test/com/facebook/buck/java/testdata, \
       test/com/facebook/buck/junit/testdata, \
       test/com/facebook/buck/parser/testdata, \
-      test/com/facebook/buck/shell/testdata,
+      test/com/facebook/buck/shell/testdata, \
+      third-party/java/dalvik-jelly-bean
 
     # Common temp file patterns:
     # .*\.swp$ (vim)

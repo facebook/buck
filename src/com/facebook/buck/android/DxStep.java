@@ -72,7 +72,10 @@ public class DxStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-    builder.add(androidPlatformTarget.getDxExecutable().getAbsolutePath());
+    String dx = androidPlatformTarget.getDxExecutable().getAbsolutePath();
+
+
+    builder.add(dx);
     builder.add("--dex");
 
     // --statistics flag, if appropriate.

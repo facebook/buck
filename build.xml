@@ -79,7 +79,7 @@
 
   <!-- Default target so that a command line build can 
        do more than one thing. -->
-  <target name="default" depends="jar, client" />
+  <target name="default" depends="jar, dx, client" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
@@ -135,6 +135,9 @@
            annotation processed. Not sure which files are the culprit -->
       <compilerarg value="-implicit:class" />
     </javac>
+  </target>
+
+  <target name="dx">
   </target>
 
   <target name="jar"
