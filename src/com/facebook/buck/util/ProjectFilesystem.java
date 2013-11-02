@@ -28,9 +28,12 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -132,6 +135,15 @@ public class ProjectFilesystem {
     return getFileForRelativePath(pathRelativeToProjectRoot).exists();
   }
 
+  public long getFileSize(Path pathRelativeToProjectRoot) throws IOException {
+    File file = getFileForRelativePath(pathRelativeToProjectRoot);
+    // TODO(mbolin): Decide if/how symlinks should be supported and add unit test.
+    if (!file.isFile()) {
+      throw new IOException("Cannot get size of " + file + " because it is not an ordinary file.");
+    }
+    return file.length();
+  }
+
   /**
    * Deletes a file specified by its path relative to the project root.
    * @param pathRelativeToProjectRoot path to the file
@@ -202,6 +214,23 @@ public class ProjectFilesystem {
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
     mkdirs(file.getParentFile().toPath());
+  }
+
+  /**
+   * Writes each line in {@code lines} with a trailing newline to a file at the specified path.
+   * <p>
+   * The parent path of {@code pathRelativeToProjectRoot} must exist.
+   */
+  public void writeLinesToPath(Iterable<String> lines, Path pathRelativeToProjectRoot)
+      throws IOException {
+    try (Writer writer = new BufferedWriter(
+        new FileWriter(
+            getFileForRelativePath(pathRelativeToProjectRoot)))) {
+      for (String line : lines) {
+        writer.write(line);
+        writer.write('\n');
+      }
+    }
   }
 
   public void writeContentsToPath(String contents, Path pathRelativeToProjectRoot)

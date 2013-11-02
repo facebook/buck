@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import org.junit.Before;
@@ -32,6 +33,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** Unit test for {@link ProjectFilesystem}. */
 public class ProjectFilesystemTest {
@@ -89,5 +91,28 @@ public class ProjectFilesystemTest {
     File multiLineFile = tmp.newFile("foo.txt");
     Files.write("foo\nbar\nbaz\n", multiLineFile, Charsets.UTF_8);
     assertEquals(Optional.of("foo"), filesystem.readFirstLine("foo.txt"));
+  }
+
+  @Test
+  public void testGetFileSize() throws IOException {
+    File wordsFile = tmp.newFile("words.txt");
+    String content = "Here\nare\nsome\nwords.\n";
+    Files.write(content, wordsFile, Charsets.UTF_8);
+
+    assertEquals(content.length(), filesystem.getFileSize(Paths.get("words.txt")));
+  }
+
+  @Test(expected = IOException.class)
+  public void testGetFileSizeThrowsForNonExistentFile() throws IOException {
+    filesystem.getFileSize(Paths.get("words.txt"));
+  }
+
+  @Test
+  public void testWriteLinesToPath() throws IOException {
+    Iterable<String> lines = ImmutableList.of("foo", "bar", "baz");
+    filesystem.writeLinesToPath(lines, Paths.get("lines.txt"));
+
+    String contents = Files.toString(new File(tmp.getRoot(), "lines.txt"), Charsets.UTF_8);
+    assertEquals("foo\nbar\nbaz\n", contents);
   }
 }
