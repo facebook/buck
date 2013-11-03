@@ -38,6 +38,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -148,6 +149,11 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
         "%s must be built before its ABI key can be returned.",
         this);
     return abiKey;
+  }
+
+  @VisibleForTesting
+  void setAbiKey(Sha1HashCode abiKey) {
+    this.abiKey = Preconditions.checkNotNull(abiKey);
   }
 
   @Override

@@ -260,8 +260,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                ImmutableSetMultimap.builder();
 
-            Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(
-                Sets.union(getDeps(), ImmutableSet.of(DefaultJavaLibraryRule.this)),
+            Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(getDeps(),
                 JavaLibraryRule.class);
 
             for (JavaLibraryRule rule : javaLibraryDeps) {

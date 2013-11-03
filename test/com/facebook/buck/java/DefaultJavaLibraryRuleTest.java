@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -72,6 +73,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -442,6 +444,57 @@ public class DefaultJavaLibraryRuleTest {
         parent.getTransitiveClasspathEntries());
   }
 
+  @Test
+  public void testClasspathForJavacCommand() throws IOException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    PrebuiltJarRule libraryOne = ruleResolver.buildAndAddToIndex(
+        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(libraryOneTarget)
+        .setBinaryJar("java/src/com/libone/bar.jar"));
+
+    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
+    JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(libraryTwoTarget)
+        .addSrc("java/src/com/libtwo/Foo.java")
+        .addDep(BuildTargetFactory.newInstance("//:libone")));
+
+    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
+
+    BuildContext buildContext = EasyMock.createMock(BuildContext.class);
+    expect(buildContext.getDependencyGraph()).andReturn(graph);
+    expect(buildContext.getBuildDependencies()).andReturn(BuildDependencies.FIRST_ORDER_ONLY)
+        .times(2);
+    JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
+    expect(buildContext.getJavaPackageFinder()).andReturn(javaPackageFinder);
+
+    replay(buildContext, javaPackageFinder);
+
+    libraryOne.build(buildContext);
+    libraryOne.setAbiKey(new Sha1HashCode(Strings.repeat("cafebabe", 5)));
+    List<Step> steps = libraryTwo.getBuildSteps(buildContext, new FakeBuildableContext());
+
+    EasyMock.verify(buildContext, javaPackageFinder);
+
+    ImmutableList<JavacInMemoryStep> javacSteps = FluentIterable
+        .from(steps)
+        .filter(JavacInMemoryStep.class)
+        .toList();
+    assertEquals("There should be only one javac step.", 1, javacSteps.size());
+    JavacInMemoryStep javacStep = javacSteps.get(0);
+    assertEquals(
+        "The classpath to use when compiling //:libtwo according to getDeclaredClasspathEntries()" +
+            "should contain only bar.jar.",
+        ImmutableSet.of("java/src/com/libone/bar.jar"),
+        ImmutableSet.copyOf(libraryTwo.getDeclaredClasspathEntries().values()));
+    assertEquals(
+        "The classpath for the javac step to compile //:libtwo should contain only bar.jar.",
+        ImmutableSet.of("java/src/com/libone/bar.jar"),
+        javacStep.getClasspathEntries());
+  }
+
   /**
    * Verify adding an annotation processor java binary with options.
    */
@@ -515,12 +568,16 @@ public class DefaultJavaLibraryRuleTest {
         .addDep(BuildTargetFactory.newInstance("//:libtwo")));
 
     assertEquals(
+        "A java_library that depends on //:libone should include only libone.jar in its " +
+            "classpath when compiling itself.",
         ImmutableSetMultimap.builder()
             .put(libraryOne, "buck-out/gen/lib__libone__output/libone.jar")
             .build(),
         libraryOne.getOutputClasspathEntries());
 
     assertEquals(
+        "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include " +
+            "both libone.jar and libtwo.jar in its classpath when compiling itself.",
         ImmutableSetMultimap.builder()
             .put(libraryOne, "buck-out/gen/lib__libone__output/libone.jar")
             .put(libraryTwo, "buck-out/gen/lib__libone__output/libone.jar")
@@ -528,13 +585,33 @@ public class DefaultJavaLibraryRuleTest {
             .build(),
         libraryTwo.getOutputClasspathEntries());
 
-    ImmutableSetMultimap.Builder<BuildRule, String> expected = ImmutableSetMultimap.builder();
-    expected.put(parent, "buck-out/gen/lib__parent__output/parent.jar");
-    expected.putAll(libraryTwo,
-        "buck-out/gen/lib__libone__output/libone.jar",
-        "buck-out/gen/lib__libtwo__output/libtwo.jar");
+    assertEquals(
+        "//:libtwo exports its deps, so both libone.jar and libtwo.jar should be on the classpath" +
+            " when compiling //:parent.",
+        ImmutableSetMultimap.builder()
+            .put(libraryTwo, "buck-out/gen/lib__libone__output/libone.jar")
+            .put(libraryTwo, "buck-out/gen/lib__libtwo__output/libtwo.jar")
+            .build(),
+        parent.getDeclaredClasspathEntries());
 
-    assertEquals(expected.build(), parent.getDeclaredClasspathEntries());
+    assertEquals(
+        "A java_binary that depends on //:parent should include libone.jar, libtwo.jar and " +
+            "parent.jar.",
+        ImmutableSetMultimap.builder()
+            .put(libraryOne, "buck-out/gen/lib__libone__output/libone.jar")
+            .put(libraryTwo, "buck-out/gen/lib__libone__output/libone.jar")
+            .put(libraryTwo, "buck-out/gen/lib__libtwo__output/libtwo.jar")
+            .put(parent, "buck-out/gen/lib__parent__output/parent.jar")
+            .build(),
+        parent.getTransitiveClasspathEntries());
+
+    assertEquals(
+        "A java_library that depends on //:parent should include only parent.jar in its " +
+            "-classpath when compiling itself.",
+        ImmutableSetMultimap.builder()
+            .put(parent, "buck-out/gen/lib__parent__output/parent.jar")
+            .build(),
+        parent.getOutputClasspathEntries());
   }
 
   /**
@@ -766,9 +843,9 @@ public class DefaultJavaLibraryRuleTest {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
 
     BuildContext context = EasyMock.createMock(BuildContext.class);
-    EasyMock.expect(context.getDependencyGraph()).andReturn(graph).anyTimes();
+    expect(context.getDependencyGraph()).andReturn(graph).anyTimes();
 
-    EasyMock.expect(context.getBuildDependencies()).andReturn(buildDependencies).anyTimes();
+    expect(context.getBuildDependencies()).andReturn(buildDependencies).anyTimes();
 
     replay(context);
 
@@ -783,7 +860,7 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableList<Path> bootclasspathEntries = (bootclasspath == null)
         ? ImmutableList.<Path>of(Paths.get("I am not used"))
         : ImmutableList.of(Paths.get(bootclasspath));
-    EasyMock.expect(platformTarget.getBootclasspathEntries()).andReturn(bootclasspathEntries)
+    expect(platformTarget.getBootclasspathEntries()).andReturn(bootclasspathEntries)
         .anyTimes();
     replay(platformTarget);
 
