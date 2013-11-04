@@ -24,26 +24,47 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.Set;
 
 public class DxStep extends ShellStep {
 
+  /** Options to pass to {@code dx}. */
+  public static enum Option {
+    /** Specify the {@code --no-optimize} flag when running {@code dx}. */
+    NO_OPTIMIZE,
+
+    /** Specify the {@code --no-optimize} flag when running {@code dx}. */
+    FORCE_JUMBO,
+    ;
+  }
+
   private final String outputDexFile;
   private final Set<Path> filesToDex;
-  private final boolean optimize;
+  private final Set<Option> options;
 
   /**
-   * @param outputDexFile path to the file where the generated classes.dex should go
+   * @param outputDexFile path to the file where the generated classes.dex should go.
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
-   *     files, or a directory of .class files
-   * @param optimize If false, specify {@code --no-optimize}.
+   *     files, or a directory of .class files.
    */
-  public DxStep(String outputDexFile, Iterable<Path> filesToDex, boolean optimize) {
+  public DxStep(String outputDexFile, Iterable<Path> filesToDex) {
+    this(outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
+  }
+
+  /**
+   * @param outputDexFile path to the file where the generated classes.dex should go.
+   * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
+   *     files, or a directory of .class files.
+   * @param options to pass to {@code dx}.
+   */
+  public DxStep(String outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options) {
     this.outputDexFile = Preconditions.checkNotNull(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
-    this.optimize = optimize;
+    this.options = Sets.immutableEnumSet(options);
   }
 
   @Override
@@ -59,8 +80,12 @@ public class DxStep extends ShellStep {
       builder.add("--statistics");
     }
 
-    if (!optimize) {
+    if (options.contains(Option.NO_OPTIMIZE)) {
       builder.add("--no-optimize");
+    }
+
+    if (options.contains(Option.FORCE_JUMBO)) {
+      builder.add("--force-jumbo");
     }
 
     // verbose flag, if appropriate.

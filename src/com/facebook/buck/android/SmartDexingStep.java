@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.ClasspathTraverser;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
@@ -52,6 +53,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -440,9 +442,13 @@ public class SmartDexingStep implements Step {
       Preconditions.checkState(newInputsHash != null, "Must call checkIsCached first!");
 
       List<Step> steps = Lists.newArrayList();
+
+      EnumSet<Option> dxOptions = optimizeDex
+          ? EnumSet.noneOf(DxStep.Option.class)
+          : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
       if (useXzCompression()) {
         String tempDexJarOutput = outputPath.replaceAll("\\.jar\\.xz$", ".tmp.jar");
-        steps.add(new DxStep(tempDexJarOutput, srcs, optimizeDex));
+        steps.add(new DxStep(tempDexJarOutput, srcs, dxOptions));
         // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
         // compression won't be effective.
         String repackedJar = outputPath.replaceAll("\\.xz$", "");
@@ -455,7 +461,7 @@ public class SmartDexingStep implements Step {
         steps.add(new RmStep(tempDexJarOutput, true));
         steps.add(new XzStep(repackedJar));
       } else {
-        steps.add(new DxStep(outputPath, srcs, optimizeDex));
+        steps.add(new DxStep(outputPath, srcs, dxOptions));
       }
       steps.add(new WriteFileStep(newInputsHash, outputHashPath));
 
