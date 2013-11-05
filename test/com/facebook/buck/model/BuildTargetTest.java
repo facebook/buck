@@ -19,6 +19,7 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,5 +87,41 @@ public class BuildTargetTest {
     BuildTarget utilTarget = new BuildTarget("//src/com/facebook/buck/util", "util");
     BuildTarget ioTarget = new BuildTarget("//src/com/facebook/buck/util", "io");
     assertFalse(utilTarget.equals(ioTarget));
+  }
+
+  @Test
+  public void testBuildTargetWithFlavor() {
+    BuildTarget target = new BuildTarget("//foo/bar", "baz", "dex");
+    assertEquals(target.getShortName(), "baz#dex");
+    assertEquals(target.getShortNameWithoutFlavor(), "baz");
+    assertTrue(target.isFlavored());
+  }
+
+  @Test
+  public void testBuildTargetWithoutFlavor() {
+    BuildTarget target = new BuildTarget("//foo/bar", "baz");
+    assertEquals(target.getShortName(), "baz");
+    assertEquals(target.getShortNameWithoutFlavor(), "baz");
+    assertFalse(target.isFlavored());
+  }
+
+  @Test
+  public void testFlavorIsValid() {
+    try {
+      new BuildTarget("//foo/bar", "baz", "d3x");
+      fail("Should have thrown IllegalArgumentException.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid flavor: d3x", e.getMessage());
+    }
+  }
+
+  @Test
+  public void testShortNameCannotContainHash() {
+    try {
+      new BuildTarget("//foo/bar", "baz#dex");
+      fail("Should have thrown IllegalArgumentException.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Build target name cannot contain '#' but was: baz#dex.", e.getMessage());
+    }
   }
 }

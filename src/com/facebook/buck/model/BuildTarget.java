@@ -19,11 +19,16 @@ package com.facebook.buck.model;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -34,22 +39,47 @@ public final class BuildTarget implements Comparable<BuildTarget> {
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
+  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[a-zA-Z_]+");
+
   private final String baseName;
   private final String shortName;
+  private final Optional<String> flavor;
   private final String fullyQualifiedName;
 
   public BuildTarget(String baseName, String shortName) {
+    this(baseName, shortName, /* flavor */ Optional.<String>absent());
+  }
+
+  public BuildTarget(String baseName, String shortName, String flavor) {
+    this(baseName, shortName, Optional.of(flavor));
+  }
+
+  private BuildTarget(String baseName, String shortName, Optional<String> flavor) {
     Preconditions.checkNotNull(baseName);
+    // shortName may be the empty string when parsing visibility patterns.
+    Preconditions.checkNotNull(shortName);
+    Preconditions.checkNotNull(flavor);
+
     Preconditions.checkArgument(baseName.startsWith(BUILD_TARGET_PREFIX),
         "baseName must start with // but was %s",
         baseName);
 
-    // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
-    baseName = baseName.replace("\\", "/");
+    Preconditions.checkArgument(!shortName.contains("#"),
+        "Build target name cannot contain '#' but was: %s.",
+        shortName);
+    if (flavor.isPresent()) {
+      String flavorName = flavor.get();
+      if (!VALID_FLAVOR_PATTERN.matcher(flavorName).matches()) {
+        throw new IllegalArgumentException("Invalid flavor: " + flavorName);
+      }
+      shortName += "#" + flavorName;
+    }
 
-    this.baseName = baseName;
-    this.shortName = Preconditions.checkNotNull(shortName);
-    this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
+    // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
+    this.baseName = baseName.replace("\\", "/");
+    this.shortName = shortName;
+    this.flavor = flavor;
+    this.fullyQualifiedName = baseName + ":" + shortName;
   }
 
   /**
@@ -82,7 +112,7 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   }
 
   public Path getBuildFilePath() {
-    return java.nio.file.Paths.get(getBaseNameWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME);
+    return Paths.get(getBaseNameWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME);
   }
 
   /**
@@ -92,6 +122,15 @@ public final class BuildTarget implements Comparable<BuildTarget> {
   @JsonProperty("shortName")
   public String getShortName() {
     return shortName;
+  }
+
+  @VisibleForTesting
+  String getShortNameWithoutFlavor() {
+    if (!isFlavored()) {
+      return shortName;
+    } else {
+      return shortName.substring(0, shortName.length() - flavor.get().length() - 1);
+    }
   }
 
   /**
@@ -147,6 +186,11 @@ public final class BuildTarget implements Comparable<BuildTarget> {
    */
   public String getFullyQualifiedName() {
     return fullyQualifiedName;
+  }
+
+  @JsonIgnore
+  public boolean isFlavored() {
+    return flavor.isPresent();
   }
 
   @Override
