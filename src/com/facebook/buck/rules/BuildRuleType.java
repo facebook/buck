@@ -44,6 +44,9 @@ public final class BuildRuleType {
   public static BuildRuleType SH_BINARY = new BuildRuleType("sh_binary");
   public static BuildRuleType SH_TEST = new BuildRuleType("sh_test");
 
+  // Internal rule types. Denoted by leading trailing underscore.
+  public static BuildRuleType _CLASS_NAMES = new BuildRuleType("_class_names");
+
   private final String name;
   private final boolean isTestRule;
 
