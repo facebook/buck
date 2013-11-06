@@ -136,7 +136,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       String output = target.getKey();
       if (showOutput) {
         BuildRule buildRule = target.getValue();
-        String outputPath = ((Buildable)buildRule).getPathToOutputFile();
+        String outputPath = buildRule.getBuildable().getPathToOutputFile();
         if (outputPath != null) {
           output += " " + outputPath;
         }

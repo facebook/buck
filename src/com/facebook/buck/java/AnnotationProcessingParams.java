@@ -19,7 +19,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -190,7 +189,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         // We're using raw strings here to avoid circular dependencies.
         // TODO(simons): don't use raw strings.
         if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
-          String pathToOutput = ((Buildable)rule).getPathToOutputFile();
+          String pathToOutput = rule.getBuildable().getPathToOutputFile();
           if (pathToOutput != null) {
             searchPathElements.add(pathToOutput);
           }
