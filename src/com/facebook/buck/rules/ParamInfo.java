@@ -259,7 +259,7 @@ class ParamInfo implements Comparable<ParamInfo> {
       return true;
     }
 
-    if (value instanceof List && ((List) value).isEmpty()) {
+    if (value instanceof List && ((List<?>) value).isEmpty()) {
       return true;
     }
 
