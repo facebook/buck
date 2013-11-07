@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import javax.annotation.Nullable;
+
 public abstract class AbstractCommandOptions {
 
   @VisibleForTesting static final String HELP_LONG_ARG = "--help";
@@ -62,6 +64,9 @@ public abstract class AbstractCommandOptions {
 
   private final BuckConfig buckConfig;
 
+  @Nullable // Lazily loaded via getCommandLineBuildTargetNormalizer().
+  private CommandLineBuildTargetNormalizer commandLineBuildTargetNormalizer;
+
   AbstractCommandOptions(BuckConfig buckConfig) {
     this.buckConfig = Preconditions.checkNotNull(buckConfig);
   }
@@ -81,6 +86,13 @@ public abstract class AbstractCommandOptions {
 
   public boolean showHelp() {
     return help;
+  }
+
+  protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer() {
+    if (commandLineBuildTargetNormalizer == null) {
+      commandLineBuildTargetNormalizer = new CommandLineBuildTargetNormalizer(buckConfig);
+    }
+    return commandLineBuildTargetNormalizer;
   }
 
   /** @return androidSdkDir */

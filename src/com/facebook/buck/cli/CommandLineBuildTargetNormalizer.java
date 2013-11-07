@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -58,10 +59,31 @@ import java.util.List;
  */
 class CommandLineBuildTargetNormalizer {
 
-  /** Utility class: do not instantiate. */
-  private CommandLineBuildTargetNormalizer() {}
+  private final Function<String, String> normalizer;
 
-  public static String normalizeBuildTargetIdentifier(final String buildTargetFromCommandLine) {
+  CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
+    Preconditions.checkNotNull(buckConfig);
+    this.normalizer = new Function<String, String>() {
+      @Override
+      public String apply(String arg) {
+        String aliasValue = buckConfig.getBuildTargetForAlias(arg);
+        if (aliasValue != null) {
+          return aliasValue;
+        } else {
+          return normalizeBuildTargetIdentifier(arg);
+        }
+      }
+    };
+  }
+
+  public List<String> normalizeAll(List<String> arguments) {
+    // When transforming command-line arguments, first check to see whether it is an alias in the
+    // BuckConfig. If so, return the value associated with the alias. Otherwise, try normalize().
+    return Lists.transform(arguments, normalizer);
+  }
+
+  @VisibleForTesting
+  static String normalizeBuildTargetIdentifier(final String buildTargetFromCommandLine) {
     Preconditions.checkNotNull(buildTargetFromCommandLine);
 
     // Build rules in the root are weird, but they do happen. Special-case them.
@@ -98,29 +120,4 @@ class CommandLineBuildTargetNormalizer {
 
     return target;
   }
-
-  public static List<String> normalizeAll(final BuckConfig buckConfig, List<String> arguments) {
-    // When transforming command-line arguments, first check to see whether it is an alias in the
-    // BuckConfig. If so, return the value associated with the alias. Otherwise, try normalize().
-    return Lists.transform(arguments, new Function<String, String>() {
-      @Override
-      public String apply(String arg) {
-        String aliasValue = buckConfig.getBuildTargetForAlias(arg);
-        if (aliasValue != null) {
-          return aliasValue;
-        } else {
-          return CommandLineBuildTargetNormalizer.normalize.apply(arg);
-        }
-      }
-    });
-  }
-
-  public static final Function<String, String> normalize = new Function<String, String>() {
-
-    @Override
-    public String apply(String target) {
-      return normalizeBuildTargetIdentifier(target);
-    }
-
-  };
 }
