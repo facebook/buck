@@ -17,15 +17,36 @@
 package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+import static org.easymock.EasyMock.createMock;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
+
+import java.io.IOException;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Unit test for {@link PythonLibrary}.
@@ -43,5 +64,73 @@ public class PythonLibraryTest {
 
     assertTrue(pythonLibrary.getProperties().is(LIBRARY));
     assertSame(srcs, pythonLibrary.getPythonSrcs());
+  }
+
+  @Test
+  public void testFlattening() throws IOException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
+    ruleResolver.buildAndAddToIndex(
+        PythonLibrary.newPythonLibraryBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .addSrc("baz.py")
+            .addSrc("foo/__init__.py")
+            .addSrc("foo/bar.py")
+            .setBuildTarget(pyLibraryTarget));
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    BuildContext buildContext = createMock(BuildContext.class);
+    PythonLibrary rule = (PythonLibrary)ruleResolver.get(pyLibraryTarget).getBuildable();
+    List<Step> steps = rule.getBuildSteps(buildContext, buildableContext);
+
+    final String projectRoot = "/";
+    final String pylibpath = "__pylib_py_library";
+
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File(projectRoot));
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+      .setProjectFilesystem(projectFilesystem)
+      .build();
+
+    MoreAsserts.assertSteps(
+        "python_library() should ensure each file is copied and has its destination directory made",
+        ImmutableList.of(
+            String.format(
+              "mkdir -p %s%s/%s",
+              projectRoot,
+              BuckConstant.GEN_DIR,
+              pylibpath
+              ),
+            String.format(
+              "mkdir -p %s%s/%s/foo",
+              projectRoot,
+              BuckConstant.GEN_DIR,
+              pylibpath
+              ),
+            String.format(
+              "cp baz.py %s/%s/baz.py",
+              BuckConstant.GEN_DIR,
+              pylibpath
+              ),
+            String.format(
+              "cp foo/__init__.py %s/%s/foo/__init__.py",
+              BuckConstant.GEN_DIR,
+              pylibpath
+              ),
+            String.format(
+              "cp foo/bar.py %s/%s/foo/bar.py",
+              BuckConstant.GEN_DIR,
+              pylibpath
+              )
+        ),
+        steps.subList(1, 6),
+        executionContext);
+
+    ImmutableSet<Path> artifacts = buildableContext.getRecordedArtifacts();
+    assertEquals(
+      ImmutableSet.of(
+        Paths.get(pylibpath, "baz.py"),
+        Paths.get(pylibpath, "foo/__init__.py"),
+        Paths.get(pylibpath, "foo/bar.py")
+      ),
+      artifacts);
   }
 }

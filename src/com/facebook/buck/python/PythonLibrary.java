@@ -32,12 +32,12 @@ import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -106,19 +106,30 @@ public class PythonLibrary extends AbstractBuildable {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Copy all of the sources to a generated directory so that the generated directory can be
-    // included as a $PYTHONPATH element. Symlinks would be more efficient, but we need to include
-    // this structure in the artifact, which is not guaranteed to be zip-friendly.
-    // TODO(mbolin): Do not flatten the directory structure when creating the symlinks, as directory
-    // structure is significant in Python when __init__.py is used.
+    // included as a $PYTHONPATH element. TODO(mbolin): Symlinks would be more efficient, but we
+    // need to include this structure in the artifact, which is not guaranteed to be zip-friendly.
     commands.add(new MakeCleanDirectoryStep(pythonPathDirectory));
-    for (String src : srcs) {
-      String srcName = new File(src).getName();
-      Path target = pythonPathDirectory.resolve(srcName);
-      commands.add(new CopyStep(Paths.get(src), target));
 
-      Path pathToArtifact = Paths.get(getPathUnderGenDirectory(), srcName);
+    ImmutableSortedSet.Builder<Path> directories = ImmutableSortedSet.naturalOrder();
+    ImmutableList.Builder<Step> copySteps = ImmutableList.builder();
+
+    for (String src : srcs) {
+      Path srcPath = Paths.get(src);
+      Path relativeSrc = Paths.get(buildTarget.getBasePath()).relativize(srcPath);
+      Path target = pythonPathDirectory.resolve(relativeSrc);
+
+      directories.add(target.getParent());
+      copySteps.add(new CopyStep(srcPath, target));
+
+      Path pathToArtifact = Paths.get(getPathUnderGenDirectory()).resolve(relativeSrc);
       buildableContext.recordArtifact(pathToArtifact);
     }
+
+    for (Path path : directories.build()) {
+      commands.add(new MkdirStep(path));
+    }
+
+    commands.addAll(copySteps.build());
 
     return commands.build();
   }
