@@ -55,6 +55,7 @@ RULES_SRCS = [
   'AndroidTransitiveDependencyGraph.java',
   'ApkGenrule.java',
   'ApkGenruleBuildRuleFactory.java',
+  'DexProducedFromJavaLibraryThatContainsClassFiles.java',
   'GenAidl.java',
   'GenAidlBuildRuleFactory.java',
   'HasAndroidPlatformTarget.java',

@@ -39,6 +39,14 @@ public abstract class AbstractBuildable implements Buildable {
     return builder;
   }
 
+  /**
+   * @param onDiskBuildInfo Contains metadata that was read from disk.
+   * @see AbstractCachingBuildRule#initializeFromDisk
+   */
+  protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+
+  }
+
   protected static abstract class Builder extends AbstractBuildRuleBuilder<AbstractCachingBuildRule> {
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
@@ -64,6 +72,13 @@ public abstract class AbstractBuildable implements Buildable {
         @Override
         public BuildRuleType getType() {
           return type;
+        }
+
+        @Override
+        protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+          if (buildable instanceof AbstractBuildable) {
+            ((AbstractBuildable) buildable).initializeFromDisk(onDiskBuildInfo);
+          }
         }
       };
     }

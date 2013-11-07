@@ -67,6 +67,10 @@ public class AccumulateClassNames extends AbstractBuildable {
     return pathToOutputFile.toString();
   }
 
+  public JavaLibraryRule getJavaLibraryRule() {
+    return javaLibraryRule;
+  }
+
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
