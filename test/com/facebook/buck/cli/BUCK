@@ -10,6 +10,7 @@ java_library(
   name = 'FakeBuckConfig',
   srcs = FAKE_BUCK_CONFIG_SRCS,
   deps = [
+    '//lib:easymock',
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/cli:cli',

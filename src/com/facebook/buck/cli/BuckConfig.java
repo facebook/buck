@@ -492,14 +492,23 @@ class BuckConfig {
     }
   }
 
-  public Ansi createAnsi() {
-    String color = getValue("color", "ui").or("auto");
+  /**
+   * Create an Ansi object appropriate for the current output. First respect the user's
+   * preferences, if set. Next, respect any default provided by the caller. (This is used by buckd
+   * to tell the daemon about the client's terminal.) Finally, allow the Ansi class to autodetect
+   * whether the current output is a tty.
+   * @param defaultColor Default value provided by the caller (e.g. the client of buckd)
+   */
+  public Ansi createAnsi(Optional<String> defaultColor) {
+    String color = getValue("color", "ui").or(defaultColor).or("auto");
+
     switch (color) {
       case "false":
+      case "never":
         return Ansi.withoutTty();
-      // Git also supports "always" and "never" for color.ui:
-      // https://www.kernel.org/pub/software/scm/git/docs/git-config.html
-      // It would be nice to be able to mirror those nuances.
+      case "true":
+      case "always":
+        return Ansi.forceTty();
       case "auto":
       default:
         return new Ansi(platform);

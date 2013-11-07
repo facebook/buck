@@ -57,6 +57,7 @@ public final class Ansi {
   private final boolean isAnsiTerminal;
 
   private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
+  private static final Ansi forceTtyAnsi = new Ansi(true /* isAnsiTerminal */);
 
   public Ansi(Platform platform) {
     this(isConnectedToTty() && platform != Platform.WINDOWS);
@@ -74,6 +75,10 @@ public final class Ansi {
 
   public static Ansi withoutTty() {
     return noTtyAnsi;
+  }
+
+  public static Ansi forceTty() {
+    return forceTtyAnsi;
   }
 
   public boolean isAnsiTerminal() {

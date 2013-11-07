@@ -21,7 +21,8 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.File;
+import org.easymock.EasyMock;
+
 import java.util.Map;
 
 /**
@@ -36,19 +37,23 @@ public class FakeBuckConfig extends BuckConfig {
       ImmutableMap.<String, Map<String, String>>of();
 
   public FakeBuckConfig() {
-    this(EMPTY_SECTIONS, new ProjectFilesystem(new File(".")));
+    this(EMPTY_SECTIONS);
   }
 
   public FakeBuckConfig(Map<String, Map<String, String>> sections) {
-    this(sections, new ProjectFilesystem(new File(".")));
+    this(sections, Platform.detect());
+  }
+
+  public FakeBuckConfig(Platform platform) {
+    this(EMPTY_SECTIONS, platform);
   }
 
   private FakeBuckConfig(
       Map<String, Map<String, String>> sections,
-      ProjectFilesystem projectFilesystem) {
+      Platform platform) {
     super(sections,
-        projectFilesystem,
-        new BuildTargetParser(projectFilesystem),
-        Platform.detect());
+        EasyMock.createMock(ProjectFilesystem.class),
+        EasyMock.createMock(BuildTargetParser.class),
+        platform);
   }
 }

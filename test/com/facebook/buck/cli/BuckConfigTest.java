@@ -36,6 +36,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -443,6 +444,21 @@ public class BuckConfigTest {
         "    mode ="));
     // Verify that no exception is thrown when a definition is overridden.
     BuckConfig.createFromReaders(ImmutableList.of(readerA, readerB));
+  }
+
+  @Test
+  public void testCreateAnsi() {
+    FakeBuckConfig windowsConfig = new FakeBuckConfig(Platform.WINDOWS);
+    // "auto" on Windows is equivalent to "never".
+    assertFalse(windowsConfig.createAnsi(Optional.<String>absent()).isAnsiTerminal());
+    assertFalse(windowsConfig.createAnsi(Optional.of("auto")).isAnsiTerminal());
+    assertTrue(windowsConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
+    assertFalse(windowsConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
+
+    FakeBuckConfig linuxConfig = new FakeBuckConfig(Platform.LINUX);
+    // We don't test "auto" on Linux, because the behavior would depend on how the test was run.
+    assertTrue(linuxConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
+    assertFalse(linuxConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
   }
 
   private BuckConfig createWithDefaultFilesystem(Reader reader, @Nullable BuildTargetParser parser)

@@ -95,6 +95,8 @@ public final class Main {
   private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
   private static final String BUCK_VERSION_UID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
 
+  private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
+
   private final PrintStream stdOut;
   private final PrintStream stdErr;
 
@@ -331,7 +333,14 @@ public final class Main {
         createBuckConfig(new ProjectFilesystem(projectRoot), platform).getIgnorePaths());
     BuckConfig config = createBuckConfig(projectFilesystem, platform);
     Verbosity verbosity = VerbosityParser.parse(args);
-    final Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi());
+    Optional<String> color;
+    if (context.isPresent() && (context.get().getEnv() != null)) {
+      String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
+      color = Optional.fromNullable(colorString);
+    } else {
+      color = Optional.absent();
+    }
+    final Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi(color));
     KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
 
     // Create or get and invalidate cached command parameters.
