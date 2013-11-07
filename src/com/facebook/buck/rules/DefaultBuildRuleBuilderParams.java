@@ -29,7 +29,13 @@ public class DefaultBuildRuleBuilderParams implements AbstractBuildRuleBuilderPa
 
   public DefaultBuildRuleBuilderParams(ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this.pathRelativizer = Preconditions.checkNotNull(projectFilesystem).getPathRelativizer();
+    this(Preconditions.checkNotNull(projectFilesystem).getPathRelativizer(),
+        ruleKeyBuilderFactory);
+  }
+
+  public DefaultBuildRuleBuilderParams(Function<String, Path> pathRelativizer,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    this.pathRelativizer = Preconditions.checkNotNull(pathRelativizer);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
   }
 

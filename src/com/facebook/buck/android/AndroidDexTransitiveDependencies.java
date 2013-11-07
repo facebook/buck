@@ -15,8 +15,11 @@
  */
 package com.facebook.buck.android;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -30,11 +33,19 @@ public class AndroidDexTransitiveDependencies {
   public final ImmutableSet<String> noDxClasspathEntries;
   public final ImmutableSet<String> pathsToThirdPartyJars;
 
+  /**
+   * If present, identifies a directory that contains the .class files that were generated as a
+   * result of compiling R.java files.
+   */
+  public final Optional<Path> pathToCompiledRDotJavaFiles;
+
   public AndroidDexTransitiveDependencies(Set<String> pathsToDex,
                                           Set<String> pathsToThirdPartyJars,
-                                          ImmutableSet<String> noDxClasspathEntries) {
+                                          ImmutableSet<String> noDxClasspathEntries,
+                                          Optional<Path> pathToCompiledRDotJavaFiles) {
     this.classpathEntriesToDex = ImmutableSet.copyOf(pathsToDex);
     this.pathsToThirdPartyJars = ImmutableSet.copyOf(pathsToThirdPartyJars);
     this.noDxClasspathEntries = ImmutableSet.copyOf(noDxClasspathEntries);
+    this.pathToCompiledRDotJavaFiles = Preconditions.checkNotNull(pathToCompiledRDotJavaFiles);
   }
 }

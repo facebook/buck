@@ -83,6 +83,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         apkUnderTest.getPrimaryDexClassesFile(),
         apkUnderTest.getResourceFilter(),
         apkUnderTest.getCpuFilters(),
+        apkUnderTest.getPreDexDeps(),
         apkUnderTest.getPreprocessJavaClassesDeps(),
         apkUnderTest.getPreprocessJavaClassesBash());
     this.apkUnderTest = apkUnderTest;

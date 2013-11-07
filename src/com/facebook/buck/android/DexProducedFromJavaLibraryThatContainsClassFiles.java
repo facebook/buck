@@ -86,6 +86,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
     this.javaLibraryWithClassesList = Preconditions.checkNotNull(javaLibraryWithClassesList);
   }
 
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
+
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
     // The deps of this rule already capture all of the inputs that should affect the cache key.
