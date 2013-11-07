@@ -38,6 +38,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
+import org.easymock.Capture;
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,6 +52,9 @@ public class QueryCommandTest {
   private QueryCommand queryCommand;
 
   private PartialGraph testGraph;
+
+  private BuckConfig buckConfig;
+  private CommandLineBuildTargetNormalizer normalizer;
 
   /**
    * Sets up the following dependency graph:
@@ -77,6 +82,18 @@ public class QueryCommandTest {
     addRule(ruleResolver, "//:B", ImmutableList.of("//:D"));
     addRule(ruleResolver, "//:A", ImmutableList.of("//:B", "//:C"));
     testGraph = createGraphFromBuildRules(ruleResolver, ImmutableList.of("//:A"));
+
+    buckConfig = EasyMock.createMock(BuckConfig.class);
+    EasyMock.expect(buckConfig.getBuildTargetForAlias(EasyMock.capture(new Capture<String>())))
+        .andReturn(null)
+        .anyTimes();
+    EasyMock.replay(buckConfig);
+    normalizer = new CommandLineBuildTargetNormalizer(buckConfig);
+  }
+
+  @Before
+  public void tearDown() {
+    EasyMock.verify(buckConfig);
   }
 
   /** Test that the pattern we use to match query strings matches the right stuff. */
@@ -102,25 +119,25 @@ public class QueryCommandTest {
   @Test
   public void testQueryParser() {
     DependencyQuery query;
-    query = DependencyQuery.parseQueryString("//:ased>> -4> //:>- ");
+    query = DependencyQuery.parseQueryString("//:ased>> -4> //:>- ", normalizer);
     assertEquals(4, query.getDepth().get().longValue());
     assertEquals("//:ased>>", query.getTarget());
     assertEquals("//:>-", query.getSource().get());
 
-    query = DependencyQuery.parseQueryString("//:dd -*>");
+    query = DependencyQuery.parseQueryString("//:dd -*>", normalizer);
     assertFalse(query.getDepth().isPresent());
     assertEquals("//:dd", query.getTarget());
     assertFalse(query.getSource().isPresent());
 
     try {
-      query = DependencyQuery.parseQueryString("//:hello - > //:goodbye");
+      query = DependencyQuery.parseQueryString("//:hello - > //:goodbye", normalizer);
       fail("Should not have parsed noncontinguous arrow");
     } catch (HumanReadableException e) {
       assertEquals("Invalid query string: //:hello - > //:goodbye.", e.getMessage());
     }
 
     try {
-      query = DependencyQuery.parseQueryString("-> //:goodbye");
+      query = DependencyQuery.parseQueryString("-> //:goodbye", normalizer);
       fail("Query needs source");
     } catch (HumanReadableException e) {
       assertEquals("Invalid query string: -> //:goodbye.", e.getMessage());
@@ -142,14 +159,14 @@ public class QueryCommandTest {
   }
 
   private void testQuery(String queryString, String expectedOut) {
-    DependencyQuery query = DependencyQuery.parseQueryString(queryString);
+    DependencyQuery query = DependencyQuery.parseQueryString(queryString, normalizer);
     String output = queryCommand.executeQuery(testGraph, query);
     assertEqualsModuloLines(expectedOut, output);
   }
 
   private void testQueryError(String queryString, String expectedErr) {
     try {
-      DependencyQuery query = DependencyQuery.parseQueryString(queryString);
+      DependencyQuery query = DependencyQuery.parseQueryString(queryString, normalizer);
       queryCommand.executeQuery(testGraph, query);
       fail(String.format("Query: %s should have failed", queryString));
     } catch (HumanReadableException e) {

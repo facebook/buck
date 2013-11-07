@@ -84,7 +84,8 @@ public class QueryCommand extends AbstractCommandRunner<QueryCommandOptions> {
       return 1;
     }
 
-    DependencyQuery query = DependencyQuery.parseQueryString(options.getArguments().get(0));
+    DependencyQuery query = DependencyQuery.parseQueryString(options.getArguments().get(0),
+        options.getCommandLineBuildTargetNormalizer());
 
     PartialGraph graph;
     try {

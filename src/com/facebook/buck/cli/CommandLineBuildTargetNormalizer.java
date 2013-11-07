@@ -76,6 +76,10 @@ class CommandLineBuildTargetNormalizer {
     };
   }
 
+  public String normalize(String argument) {
+    return normalizer.apply(argument);
+  }
+
   public List<String> normalizeAll(List<String> arguments) {
     // When transforming command-line arguments, first check to see whether it is an alias in the
     // BuckConfig. If so, return the value associated with the alias. Otherwise, try normalize().

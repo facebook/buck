@@ -59,12 +59,9 @@ public class DependencyQuery {
   }
 
   private DependencyQuery(Optional<Integer> depth, String target, Optional<String> source) {
-    Preconditions.checkNotNull(depth);
-    Preconditions.checkNotNull(target);
-    Preconditions.checkNotNull(source);
-    this.depth = depth;
-    this.target = target;
-    this.source = source;
+    this.depth = Preconditions.checkNotNull(depth);
+    this.target = Preconditions.checkNotNull(target);
+    this.source = Preconditions.checkNotNull(source);
   }
 
   String getTarget() {
@@ -98,7 +95,9 @@ public class DependencyQuery {
    * @return dependency query we constructed based on string.
    * @throws HumanReadableException on bad query strings.
    */
-  static DependencyQuery parseQueryString(String queryString) throws HumanReadableException {
+  static DependencyQuery parseQueryString(String queryString,
+      CommandLineBuildTargetNormalizer commandLineBuildTargetNormalizer)
+          throws HumanReadableException {
     Matcher queryMatcher = ARROW_PATTERN.matcher(queryString);
     if (!queryMatcher.matches()) {
       throw new HumanReadableException(String.format("Invalid query string: %s.", queryString));
@@ -121,12 +120,10 @@ public class DependencyQuery {
     }
 
     String target = queryMatcher.group(1).trim();
-    final String fullyQualifiedTarget =
-        CommandLineBuildTargetNormalizer.normalizeBuildTargetIdentifier(target);
+    final String fullyQualifiedTarget = commandLineBuildTargetNormalizer.normalize(target);
 
     String source = queryMatcher.group(3).trim();
-    String fullyQualifiedSource =
-        CommandLineBuildTargetNormalizer.normalizeBuildTargetIdentifier(source);
+    String fullyQualifiedSource = commandLineBuildTargetNormalizer.normalize(source);
 
     if (source.isEmpty()) {
       return new DependencyQuery(depth, fullyQualifiedTarget);
