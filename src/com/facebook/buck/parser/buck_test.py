@@ -1,6 +1,7 @@
 from buck import glob_pattern_to_regex_string
 from buck import LazyBuildEnvPartial
 from buck import relpath
+from buck import symlink_aware_walk
 import unittest
 import re
 import os
@@ -79,6 +80,67 @@ class TestBuck(unittest.TestCase):
       self.assertEqual("../../a", relpath("a", "b/c"))
     finally:
       os.getcwd = real_getcwd
+
+
+  def test_symlink_aware_walk(self):
+    real_walk = os.walk
+    real_realpath = os.path.realpath
+    real_abspath = os.path.abspath
+
+    # a/
+    #  b/
+    #   c/
+    #    file
+    #   sibling -> c
+    #   ancestor -> ../..
+
+    def mock_walk(base, **kwargs):
+      self.assertEqual('a', base)
+
+      dirs = ['b']
+      yield ('a', dirs, [])
+      self.assertEqual(['b'], dirs)
+
+      dirs = ['c','sibling','ancestor']
+      yield ('a/b', dirs, [])
+      self.assertEqual(['c', 'sibling', 'ancestor'], dirs)
+
+      yield ('a/b/c', [], ['file'])
+      yield ('a/b/sibling', [], ['file'])
+
+      dirs = ['b']
+      yield ('a/b/ancestor', dirs, [])
+      self.assertEqual([], dirs)
+
+      raise StopIteration
+
+    def mock_realpath(path):
+      if path == 'a/b/sibling':
+        return 'a/b/c'
+      if path == 'a/b/ancestor':
+        return 'a'
+      return path
+
+    def mock_abspath(path):
+      return path
+
+    try:
+      os.walk = mock_walk
+      os.path.realpath = mock_realpath
+      os.path.abspath = mock_abspath
+      result = set(root for (root, _, _) in symlink_aware_walk('a'))
+      self.assertEqual(
+        set([
+          'a',
+          'a/b',
+          'a/b/c',
+          'a/b/sibling',
+        ]),
+        result)
+    finally:
+      os.walk = real_walk
+      os.path.realpath = real_realpath
+      os.path.abspath = real_abspath
 
 
 if __name__ == '__main__':

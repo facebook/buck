@@ -136,15 +136,18 @@ def pattern_to_regex(pattern):
 def symlink_aware_walk(base):
   """ Recursive symlink aware version of `os.walk`.
 
-  Will not emit an entry for a directory it has previously visited.
+  Will not traverse a symlink that refers to a previously visited ancestor of
+  the current directory.
   """
   visited_dirs = set()
   for entry in os.walk(base, topdown=True, followlinks=True):
     (root, dirs, _files) = entry
     realdirpath = os.path.realpath(root)
     if realdirpath in visited_dirs:
-      dirs[:] = []
-      continue
+      absdirpath = os.path.abspath(root)
+      if absdirpath.startswith(realdirpath):
+        dirs[:] = []
+        continue
     visited_dirs.add(realdirpath)
     yield entry
   raise StopIteration
