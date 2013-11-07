@@ -38,6 +38,9 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   @Nullable
   private String outputFile;
 
+  @Nullable
+  private RuleKey ruleKey;
+
   public FakeBuildRule(BuildRuleType type,
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
@@ -87,6 +90,19 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
 
   public void setOutputFile(String outputFile) {
     this.outputFile = outputFile;
+  }
+
+  public void setRuleKey(RuleKey ruleKey) {
+    this.ruleKey = ruleKey;
+  }
+
+  @Override
+  public RuleKey getRuleKey() throws IOException {
+    if (ruleKey != null) {
+      return ruleKey;
+    } else {
+      throw new IllegalStateException("This method should not be called");
+    }
   }
 
   @Override

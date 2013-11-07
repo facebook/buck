@@ -27,6 +27,7 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
@@ -175,10 +176,19 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void ruleStarted(BuildRuleEvent.Started started) {
+    BuildRule buildRule = started.getBuildRule();
+
+    String ruleKey;
+    try {
+      ruleKey = buildRule.getRuleKey().toString();
+    } catch (IOException e) {
+      ruleKey = "INACCESSIBLE: " + e.getMessage();
+    }
+
     writeChromeTraceEvent("buck",
-        started.getBuildRule().getFullyQualifiedName(),
+        buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.<String, String>of("rule_key", ruleKey),
         started);
   }
 
