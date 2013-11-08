@@ -39,13 +39,11 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.List;
@@ -184,11 +182,8 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
         "Must specify a main class for %s in order to to run it.",
         getBuildTarget().getFullyQualifiedName());
 
-    return String.format("java -classpath %s %s",
-        Joiner.on(':').join(Iterables.transform(
-            getTransitiveClasspathEntries().values(),
-            projectFilesystem.getPathRelativizer())),
-        mainClass);
+    return String.format("java -jar %s",
+        projectFilesystem.getPathRelativizer().apply(getOutputFile()));
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<JavaBinaryRule> {

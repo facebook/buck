@@ -332,10 +332,10 @@ public class GenruleTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath = getAbsolutePathInBase(
-        GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar");
+        GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar");
 
     String expectedCmd = String.format(
-        "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
+        "java -jar %s $OUT",
         expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -357,9 +357,9 @@ public class GenruleTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath = getAbsolutePathInBase(
-        GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar");
+        GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar");
     String expectedCmd = String.format(
-        "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
+        "java -jar %s $OUT",
         expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -412,9 +412,9 @@ public class GenruleTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath = getAbsolutePathInBase(
-        GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar");
+        GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar");
     String expectedCmd = String.format(
-        "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
+        "java -jar %s $OUT",
         expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
