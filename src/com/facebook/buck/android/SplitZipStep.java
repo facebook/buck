@@ -168,36 +168,7 @@ public class SplitZipStep implements Step {
   @VisibleForTesting
   Predicate<String> createRequiredInPrimaryZipPredicate(ExecutionContext context)
       throws IOException {
-    final ImmutableSet<String> classNames;
-    if (primaryDexClassesFile.isPresent()) {
-      Path manifest = primaryDexClassesFile.get();
-      classNames = FluentIterable
-          .from(context.getProjectFilesystem().readLines(manifest))
-          .transform(new Function<String, String>() {
-            @Override
-            public String apply(String line) {
-              // Blank lines should be ignored.
-              return line.trim();
-            }
-          })
-          .filter(new Predicate<String>() {
-            @Override
-            public boolean apply(String line) {
-              // Allow users to use # to comment out a line.
-              return !line.isEmpty() && !(line.charAt(0) == '#');
-            }
-          })
-          .transform(new Function<String, String>() {
-            @Override
-            public String apply(String line) {
-              // Append a ".class" so the input file can just contain the internal class name.
-              return line + ".class";
-            }
-          })
-          .toSet();
-    } else {
-      classNames = ImmutableSet.of();
-    }
+    final ImmutableSet<String> primaryDexClassNames = getPrimaryDexClassNames(context);
 
     return new Predicate<String>() {
       @Override
@@ -210,7 +181,7 @@ public class SplitZipStep implements Step {
           return true;
         }
 
-        if (classNames.contains(name)) {
+        if (primaryDexClassNames.contains(name)) {
           return true;
         }
 
@@ -222,6 +193,39 @@ public class SplitZipStep implements Step {
         return false;
       }
     };
+  }
+
+  private ImmutableSet<String> getPrimaryDexClassNames(ExecutionContext context)
+      throws IOException {
+    if (!primaryDexClassesFile.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    Path manifest = primaryDexClassesFile.get();
+    return FluentIterable
+        .from(context.getProjectFilesystem().readLines(manifest))
+        .transform(new Function<String, String>() {
+          @Override
+          public String apply(String line) {
+            // Blank lines should be ignored.
+            return line.trim();
+          }
+        })
+        .filter(new Predicate<String>() {
+          @Override
+          public boolean apply(String line) {
+            // Allow users to use # to comment out a line.
+            return !line.isEmpty() && !(line.charAt(0) == '#');
+          }
+        })
+        .transform(new Function<String, String>() {
+          @Override
+          public String apply(String line) {
+            // Append a ".class" so the input file can just contain the internal class name.
+            return line + ".class";
+          }
+        })
+        .toSet();
   }
 
   @VisibleForTesting
