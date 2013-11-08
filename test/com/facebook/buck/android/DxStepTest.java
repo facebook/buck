@@ -46,6 +46,10 @@ import java.util.EnumSet;
 
 public class DxStepTest extends EasyMockSupport {
 
+  private static final String EXPECTED_DX_PREFIX =
+      "/usr/bin/dx" +
+          " --dex";
+
   private static Path SAMPLE_OUTPUT_PATH = Paths.get("buck-out/gen/classes.dex");
 
   private static ImmutableSet<Path> SAMPLE_FILES_TO_DEX = ImmutableSet.of(
@@ -72,7 +76,8 @@ public class DxStepTest extends EasyMockSupport {
         SAMPLE_FILES_TO_DEX,
         EnumSet.of(Option.NO_OPTIMIZE));
 
-    String expected = String.format("/usr/bin/dx --dex --no-optimize --output %s %s",
+    String expected = String.format("%s --no-optimize --output %s %s",
+        EXPECTED_DX_PREFIX,
         SAMPLE_OUTPUT_PATH,
         Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
     MoreAsserts.assertShellCommands(
@@ -91,7 +96,8 @@ public class DxStepTest extends EasyMockSupport {
 
     DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(), SAMPLE_FILES_TO_DEX);
 
-    String expected = String.format("/usr/bin/dx --dex --output %s %s",
+    String expected = String.format("%s --output %s %s",
+        EXPECTED_DX_PREFIX,
         SAMPLE_OUTPUT_PATH,
         Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
     MoreAsserts.assertShellCommands(
@@ -112,7 +118,9 @@ public class DxStepTest extends EasyMockSupport {
         SAMPLE_FILES_TO_DEX,
         EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
 
-    String expected = String.format("/usr/bin/dx --dex --no-optimize --force-jumbo --output %s %s",
+    String expected = String.format(
+        "%s --no-optimize --force-jumbo --output %s %s",
+        EXPECTED_DX_PREFIX,
         SAMPLE_OUTPUT_PATH,
         Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
     MoreAsserts.assertShellCommands(
@@ -131,7 +139,8 @@ public class DxStepTest extends EasyMockSupport {
 
     DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(), SAMPLE_FILES_TO_DEX);
 
-    String expected = String.format("/usr/bin/dx --dex --statistics --output %s %s",
+    String expected = String.format("%s --statistics --output %s %s",
+        EXPECTED_DX_PREFIX,
         SAMPLE_OUTPUT_PATH,
         Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
     MoreAsserts.assertShellCommands(
@@ -155,7 +164,9 @@ public class DxStepTest extends EasyMockSupport {
 
     DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(), SAMPLE_FILES_TO_DEX);
 
-    String expected = String.format("/usr/bin/dx --dex --statistics --verbose --output %s %s",
+    String expected = String.format(
+        "%s --statistics --verbose --output %s %s",
+        EXPECTED_DX_PREFIX,
         SAMPLE_OUTPUT_PATH,
         Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
     MoreAsserts.assertShellCommands(
