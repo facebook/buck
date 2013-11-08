@@ -46,6 +46,10 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
     this.ruleKeyBuilderFactory = params.getRuleKeyBuilderFactory();
   }
 
+  /**
+   * This method must support being able to be invoked multiple times, as this builder will be
+   * reused when buckd is being used.
+   */
   @Override
   public abstract T build(BuildRuleResolver ruleResolver);
 
