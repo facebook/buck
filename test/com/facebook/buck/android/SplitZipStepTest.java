@@ -101,6 +101,7 @@ public class SplitZipStepTest {
         /* primaryJarPath */ "",
         /* secondaryJarDir */ "",
         /* secondaryJarPattern */ "",
+        /* proguardMappingFile */ Optional.<Path>absent(),
         /* primaryDexSubstrings */ ImmutableSet.of("List"),
         Optional.of(primaryDexClassesFile),
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -150,6 +151,79 @@ public class SplitZipStepTest {
 
     EasyMock.verify(projectFilesystem, context);
   }
+
+  @Test
+  public void testRequiredInPrimaryZipPredicateWithProguard() throws IOException {
+    Path proguardMappingFile = Paths.get("the/mapping.txt");
+    Path primaryDexClassesFile = Paths.get("the/manifest.txt");
+    SplitZipStep splitZipStep = new SplitZipStep(
+        /* inputPathsToSplit */ ImmutableSet.<String>of(),
+        /* secondaryJarMetaPath */ "",
+        /* primaryJarPath */ "",
+        /* secondaryJarDir */ "",
+        /* secondaryJarPattern */ "",
+        /* proguardMappingFile */ Optional.of(proguardMappingFile),
+        /* primaryDexSubstrings */ ImmutableSet.of("/primary/", "x/"),
+        Optional.of(primaryDexClassesFile),
+        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+        DexStore.JAR,
+        /* pathToReportDir */ "",
+        /* useLinearAllocSplitDex */ true,
+        /* linearAllocHardLimit */ 4 * 1024 * 1024);
+    List<String> linesInMappingFile = ImmutableList.of(
+        "foo.bar.MappedPrimary -> foo.bar.a:",
+        "foo.bar.MappedSecondary -> foo.bar.b:",
+        "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
+        "foo.bar.UnmappedSecondary -> foo.bar.UnmappedSecondary:",
+        "foo.primary.MappedPackage -> x.a:",
+        "foo.secondary.MappedPackage -> x.b:",
+        "foo.primary.UnmappedPackage -> foo.primary.UnmappedPackage:"
+    );
+    List<String> linesInManifestFile = ImmutableList.of(
+        // Actual primary dex classes.
+        "foo/bar/MappedPrimary",
+        "foo/bar/UnmappedPrimary",
+        // Red herrings!
+        "foo/bar/b",
+        "x/b"
+    );
+
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
+        .andReturn(linesInManifestFile);
+    EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
+        .andReturn(linesInMappingFile);
+    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
+    EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
+    EasyMock.replay(projectFilesystem, context);
+
+    Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
+        .createRequiredInPrimaryZipPredicate(context);
+    assertTrue(
+        "Mapped class from primary list should be in primary.",
+        requiredInPrimaryZipPredicate.apply("foo/bar/a.class"));
+    assertTrue(
+        "Unmapped class from primary list should be in primary.",
+        requiredInPrimaryZipPredicate.apply("foo/bar/UnmappedPrimary.class"));
+    assertTrue(
+        "Mapped class from substring should be in primary.",
+        requiredInPrimaryZipPredicate.apply("x/a.class"));
+    assertTrue(
+        "Unmapped class from substring should be in primary.",
+        requiredInPrimaryZipPredicate.apply("foo/primary/UnmappedPackage.class"));
+    assertFalse(
+        "Mapped class with obfuscated name match should not be in primary.",
+        requiredInPrimaryZipPredicate.apply("foo/bar/b.class"));
+    assertFalse(
+        "Unmapped class name should not randomly be in primary.",
+        requiredInPrimaryZipPredicate.apply("foo/bar/UnmappedSecondary.class"));
+    assertFalse(
+        "Map class with obfuscated name substring should not be in primary.",
+        requiredInPrimaryZipPredicate.apply("x/b.class"));
+
+    EasyMock.verify(projectFilesystem, context);
+  }
+
 
   @Test
   public void testClassFilePattern() {

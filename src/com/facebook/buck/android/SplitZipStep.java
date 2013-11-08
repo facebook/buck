@@ -26,11 +26,13 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -41,11 +43,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import javax.annotation.Nullable;
 
 /**
  * Split zipping tool designed to divide input code blobs into a set of output jar files such that
@@ -71,6 +76,7 @@ public class SplitZipStep implements Step {
   private final String primaryJarPath;
   private final String secondaryJarDir;
   private final String secondaryJarPattern;
+  private final Optional<Path> proguardMappingFile;
   private final ImmutableSet<String> primaryDexSubstrings;
   private final Optional<Path> primaryDexClassesFile;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
@@ -101,6 +107,7 @@ public class SplitZipStep implements Step {
       String primaryJarPath,
       String secondaryJarDir,
       String secondaryJarPattern,
+      Optional<Path> proguardMappingFile,
       Set<String> primaryDexSubstrings,
       Optional<Path> primaryDexClassesFile,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
@@ -113,6 +120,7 @@ public class SplitZipStep implements Step {
     this.primaryJarPath = Preconditions.checkNotNull(primaryJarPath);
     this.secondaryJarDir = Preconditions.checkNotNull(secondaryJarDir);
     this.secondaryJarPattern = Preconditions.checkNotNull(secondaryJarPattern);
+    this.proguardMappingFile = Preconditions.checkNotNull(proguardMappingFile);
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
@@ -168,6 +176,7 @@ public class SplitZipStep implements Step {
   @VisibleForTesting
   Predicate<String> createRequiredInPrimaryZipPredicate(ExecutionContext context)
       throws IOException {
+    final Function<String, String> deobfuscate = createProguardDeobfuscator(context);
     final ImmutableSet<String> primaryDexClassNames = getPrimaryDexClassNames(context);
 
     return new Predicate<String>() {
@@ -181,12 +190,16 @@ public class SplitZipStep implements Step {
           return true;
         }
 
-        if (primaryDexClassNames.contains(classFileName)) {
+        // Drop the ".class" suffix and deobfuscate the class name before we apply our checks.
+        String internalClassName = Preconditions.checkNotNull(
+            deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
+
+        if (primaryDexClassNames.contains(internalClassName)) {
           return true;
         }
 
         for (String substr : SplitZipStep.this.primaryDexSubstrings) {
-          if (classFileName.contains(substr)) {
+          if (internalClassName.contains(substr)) {
             return true;
           }
         }
@@ -195,6 +208,10 @@ public class SplitZipStep implements Step {
     };
   }
 
+  /**
+   * Construct a {@link Set} of internal class names that should go into the primary dex.
+   * @return the Set.
+   */
   private ImmutableSet<String> getPrimaryDexClassNames(ExecutionContext context)
       throws IOException {
     if (!primaryDexClassesFile.isPresent()) {
@@ -218,14 +235,38 @@ public class SplitZipStep implements Step {
             return !line.isEmpty() && !(line.charAt(0) == '#');
           }
         })
-        .transform(new Function<String, String>() {
-          @Override
-          public String apply(String line) {
-            // Append a ".class" so the input file can just contain the internal class name.
-            return line + ".class";
-          }
-        })
         .toSet();
+  }
+
+  /**
+   * Create a {@link Function} that will deobfuscate internal class names for this build.
+   * @return the Function.
+   */
+  private Function<String, String> createProguardDeobfuscator(ExecutionContext context)
+      throws IOException {
+    if (!proguardMappingFile.isPresent()) {
+      return Functions.identity();
+    }
+
+    Map<String, String> rawProguardMap = ProguardMapping.readClassMapping(
+        context.getProjectFilesystem().readLines(proguardMappingFile.get()));
+
+    ImmutableMap.Builder<String, String> internalNameBuilder = ImmutableMap.builder();
+    for (Map.Entry<String, String> entry : rawProguardMap.entrySet()) {
+      internalNameBuilder.put(
+          entry.getValue().replace('.', '/'),
+          entry.getKey().replace('.', '/'));
+    }
+    final Map<String, String> deobfuscator = internalNameBuilder.build();
+
+    return new Function<String, String>() {
+      @Nullable
+      @Override
+      public String apply(@Nullable String input) {
+        return deobfuscator.get(input);
+      }
+    };
+
   }
 
   @VisibleForTesting

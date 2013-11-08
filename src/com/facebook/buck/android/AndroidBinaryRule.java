@@ -1041,6 +1041,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     final Optional<String> secondaryInputsDir;
 
     if (shouldSplitDex()) {
+      Optional<Path> proguardMappingFile = Optional.absent();
+      if (packageType.isBuildWithObfuscation()) {
+        proguardMappingFile = Optional.of(getPathForProGuardDirectory().resolve("mapping.txt"));
+      }
+
       // DexLibLoader expects that metadata.txt and secondary jar files are under this dir
       // in assets.
       String magicSecondaryDexSubdir = "assets/secondary-program-dex-jars";
@@ -1073,6 +1078,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           primaryJarPath,
           secondaryZipDir,
           "secondary-%d.jar",
+          proguardMappingFile,
           primaryDexSubstrings,
           primaryDexClassesFile.transform(sourcePathResolver),
           dexSplitMode.getDexSplitStrategy(),
