@@ -1189,6 +1189,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private BuildTarget keystoreTarget;
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
     private Set<BuildTarget> buildRulesToExcludeFromDex = Sets.newHashSet();
+    private boolean disablePreDex = false;
     private DexSplitMode dexSplitMode = new DexSplitMode(
         /* shouldSplitDex */ false,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -1227,7 +1228,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       BuildRuleParams originalParams = createBuildRuleParams(ruleResolver);
       ImmutableSortedSet<BuildRule> originalDeps = originalParams.getDeps();
       ImmutableSet<DexProducedFromJavaLibraryThatContainsClassFiles> preDexDeps;
-      if (PackageType.DEBUG.equals(packageType)
+      if (!disablePreDex
+          && PackageType.DEBUG.equals(packageType)
           && !dexSplitMode.isShouldSplitDex() // TODO(mbolin): Support predex for split dex.
           && !preprocessJavaClassesBash.isPresent() // TODO(mbolin): Support predex post-preprocess.
           ) {
@@ -1394,6 +1396,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     public Builder addBuildRuleToExcludeFromDex(BuildTarget entry) {
       this.buildRulesToExcludeFromDex.add(entry);
+      return this;
+    }
+
+    public Builder setDisablePreDex(boolean disablePreDex) {
+      this.disablePreDex = disablePreDex;
       return this;
     }
 

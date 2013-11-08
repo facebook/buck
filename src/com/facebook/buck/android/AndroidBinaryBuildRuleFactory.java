@@ -18,10 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleFactory;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildRuleFactory;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
@@ -74,6 +74,9 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     ZipSplitter.DexSplitStrategy dexSplitStrategy = params.getBooleanAttribute("minimize_primary_dex_size")
         ? ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
         : ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
+
+    // disable_pre_dex
+    builder.setDisablePreDex(params.getBooleanAttribute("disable_pre_dex"));
 
     // dex_compression
     DexStore dexStore =

@@ -411,6 +411,7 @@ def android_binary(
       use_split_dex=False,
       use_linear_alloc_split_dex=False,
       minimize_primary_dex_size=False,
+      disable_pre_dex=False,
       dex_compression='jar',
       use_android_proguard_config_with_optimizations=False,
       proguard_config=None,
@@ -438,6 +439,7 @@ def android_binary(
     'use_split_dex': use_split_dex,
     'use_linear_alloc_split_dex': use_linear_alloc_split_dex,
     'minimize_primary_dex_size': minimize_primary_dex_size,
+    'disable_pre_dex' : disable_pre_dex,
     'dex_compression': dex_compression,
     'use_android_proguard_config_with_optimizations':
         use_android_proguard_config_with_optimizations,
