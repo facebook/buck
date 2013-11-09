@@ -230,6 +230,7 @@ ${BUCK_DIRECTORY}/third-party/java/astyanax/libthrift-0.7.0.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/log4j-1.2.16.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-api-1.7.2.jar:\
 ${BUCK_DIRECTORY}/third-party/java/astyanax/slf4j-log4j12-1.7.2.jar:\
+${BUCK_DIRECTORY}/third-party/java/gson/gson-2.2.4.jar:\
 ${BUCK_DIRECTORY}/third-party/java/jetty/jetty-all-9.0.4.v20130625.jar:\
 ${BUCK_DIRECTORY}/third-party/java/jetty/servlet-api.jar:\
 ${BUCK_DIRECTORY}/third-party/java/neo4j/geronimo-jta_1.1_spec-1.1.1.jar:\
