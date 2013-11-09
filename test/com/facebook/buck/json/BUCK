@@ -6,8 +6,8 @@ java_test(
   ],
   deps = [
     '//lib:guava',
-    '//lib:jackson-core',
     '//lib:junit',
     '//src/com/facebook/buck/json:json',
+    '//third-party/java/gson:gson',
   ],
 )

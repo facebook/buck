@@ -21,6 +21,7 @@ import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -31,8 +32,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +130,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
     stderrConsumer.start();
 
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
+
+    // TODO(mbolin): Ensure that the Reader gets closed.
+    Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
+    buckPyStdoutParser = new BuildFileToJsonParser(reader, isServerMode);
   }
 
   private ImmutableList<String> buildArgs() {
@@ -221,21 +228,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPyStdinWriter.write(buildFile.get());
       buckPyStdinWriter.newLine();
       buckPyStdinWriter.flush();
-    }
-
-    // Construct the parser lazily because Jackson expects that when the parser is made it is
-    // safe to immediately begin reading from the underlying stream to detect the encoding.
-    // For our server use case, the server will produce no output until directed to by a
-    // request for a particular build file.
-    //
-    // TODO: Jackson has a severe bug which assumes that it is safe to require at least 4 bytes
-    // of input due to JSON's BOM concept (see detectEncoding).  buck.py, and many other
-    // facilities, do not write a BOM header and therefore may end up producing insufficient
-    // bytes to unwedge the parser's construction.  For example, if the first BUCK file
-    // submitted outputted no rules (that is, "[]"), then this line would hang waiting for
-    // more input!
-    if (buckPyStdoutParser == null) {
-      buckPyStdoutParser = new BuildFileToJsonParser(buckPyProcess.getInputStream());
     }
 
     return buckPyStdoutParser.nextRules();
