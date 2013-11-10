@@ -1,4 +1,17 @@
 
+if [ -f "/etc/buck.conf" ] ; then
+  . /etc/buck.conf
+fi
+if [ -f "$HOME/.buck/buck.conf" ] ; then
+  . $HOME/.buck/buck.conf
+fi
+if [ -f "$HOME/.buckrc" ] ; then
+  . "$HOME/.buckrc"
+fi
+
+if [ -z "$BUCK_EXTRA_JAVA_ARGS" ] ; then
+  BUCK_EXTRA_JAVA_ARGS="-XX:MaxPermSize=256m -Xmx1000m"
+fi
 
 # Set TMPDIR to a reasonable default if it isn't already set, so that mktmp(1) can be
 # succinctly and portably used.
@@ -240,8 +253,6 @@ ${BUCK_DIRECTORY}/third-party/java/xz-java-1.3/xz-1.3.jar:\
 "
 
 BUCK_JAVA_ARGS="\
--XX:MaxPermSize=256m \
--Xmx1000m \
 -Djava.awt.headless=true \
 -Dbuck.testrunner_classes=${BUCK_DIRECTORY}/build/testrunner/classes \
 -Dbuck.abi_processor_classes=${BUCK_DIRECTORY}/build/abi_processor/classes \

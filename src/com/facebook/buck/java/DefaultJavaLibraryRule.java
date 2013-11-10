@@ -107,6 +107,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   private final ImmutableSortedSet<String> srcs;
 
+  private final ImmutableSortedSet<BuildRule> compileDeps;
+
   private final ImmutableSortedSet<SourcePath> resources;
 
   private final Optional<String> outputJar;
@@ -114,7 +116,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   private final List<String> inputsToConsiderForCachingPurposes;
 
   private final Optional<String> proguardConfig;
-
 
   private final boolean exportDeps;
 
@@ -125,6 +126,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
+
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
+      compileClasspathEntriesSupplier;
 
   private final JavacOptions javacOptions;
 
@@ -182,12 +186,14 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
                                    Set<String> srcs,
+                                   Set<BuildRule> compileDeps,
                                    Set<? extends SourcePath> resources,
                                    Optional<String> proguardConfig,
                                    boolean exportDeps,
                                    JavacOptions javacOptions) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
+    this.compileDeps = ImmutableSortedSet.copyOf(compileDeps);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.exportDeps = exportDeps;
@@ -234,14 +240,46 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
             final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                 ImmutableSetMultimap.builder();
+
+            ImmutableSortedSet.Builder<BuildRule> transitive = ImmutableSortedSet.naturalOrder();
+            for (BuildRule r: getDeps()) {
+              if (!DefaultJavaLibraryRule.this.compileDeps.contains(r)) {
+                transitive.add(r);
+              }
+            }
             ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForDeps =
-                Classpaths.getClasspathEntries(getDeps());
+                Classpaths.getClasspathEntries(transitive.build());
 
             classpathEntries.putAll(classpathEntriesForDeps);
 
             if (DefaultJavaLibraryRule.this.exportDeps) {
               classpathEntries.putAll(DefaultJavaLibraryRule.this,
                   classpathEntriesForDeps.values());
+            }
+
+            // Only add ourselves to the classpath if there's a jar to be built.
+            if (outputJar.isPresent()) {
+              classpathEntries.putAll(DefaultJavaLibraryRule.this, getPathToOutputFile());
+            }
+
+            return classpathEntries.build();
+          }
+        });
+
+    compileClasspathEntriesSupplier =
+        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
+          @Override
+          public ImmutableSetMultimap<JavaLibraryRule, String> get() {
+            final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
+                ImmutableSetMultimap.builder();
+            ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForCompileDeps =
+                Classpaths.getClasspathEntries(getCompileDeps());
+
+            classpathEntries.putAll(classpathEntriesForCompileDeps);
+
+            if (DefaultJavaLibraryRule.this.exportDeps) {
+              classpathEntries.putAll(DefaultJavaLibraryRule.this,
+                  classpathEntriesForCompileDeps.values());
             }
 
             // Only add ourselves to the classpath if there's a jar to be built.
@@ -282,6 +320,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   private void createCommandsForJavac(
       String outputDirectory,
       ImmutableSet<String> transitiveClasspathEntries,
+      ImmutableSet<String> compileClasspathEntries,
       ImmutableSet<String> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildDependencies buildDependencies,
@@ -293,11 +332,15 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
+      ImmutableSet<String> declaredAndCompileEntries = new ImmutableSet.Builder<String>()
+          .addAll(compileClasspathEntries)
+          .addAll(declaredClasspathEntries)
+          .build();
       final JavacInMemoryStep javac = new JavacInMemoryStep(
           outputDirectory,
           getJavaSrcs(),
           transitiveClasspathEntries,
-          declaredClasspathEntries,
+          declaredAndCompileEntries,
           javacOptions,
           Optional.of(getPathToAbiOutputFile()),
           Optional.of(getFullyQualifiedName()),
@@ -391,7 +434,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         .set("srcs", srcs)
         .setSourcePaths("resources", resources)
         .set("proguard", proguardConfig)
-        .set("exportDeps", exportDeps);
+        .set("exportDeps", exportDeps)
+        .set("compileDeps", compileDeps);
     javacOptions.appendToRuleKey(builder);
     return builder;
   }
@@ -411,9 +455,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     return srcs;
   }
 
+  public ImmutableSortedSet<BuildRule> getCompileDeps() {
+    return compileDeps;
+  }
+
   @Override
   public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
+  }
+
+  public ImmutableSetMultimap<JavaLibraryRule, String> getCompileClasspathEntries() {
+    return compileClasspathEntriesSupplier.get();
   }
 
   @Override
@@ -475,6 +527,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries =
         getTransitiveClasspathEntries();
+    ImmutableSetMultimap<JavaLibraryRule, String> compileClasspathEntries =
+        getCompileClasspathEntries();
     ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries =
         getDeclaredClasspathEntries();
 
@@ -523,6 +577,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     createCommandsForJavac(
         outputDirectory,
         ImmutableSet.copyOf(transitiveClasspathEntries.values()),
+        ImmutableSet.copyOf(compileClasspathEntries.values()),
         ImmutableSet.copyOf(declaredClasspathEntries.values()),
         javacOptions,
         context.getBuildDependencies(),
@@ -762,6 +817,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
     protected Set<String> srcs = Sets.newHashSet();
+    protected Set<BuildTarget> compileDeps = Sets.newHashSet();
     protected Set<SourcePath> resources = Sets.newHashSet();
     protected final AnnotationProcessingParams.Builder annotationProcessingBuilder =
         new AnnotationProcessingParams.Builder();
@@ -776,6 +832,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     @Override
     public DefaultJavaLibraryRule build(BuildRuleResolver ruleResolver) {
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
+      ImmutableSortedSet<BuildRule> compileDepsAsBuildRules =
+          getCompileDepsAsBuildRules(ruleResolver);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
@@ -783,6 +841,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       return new DefaultJavaLibraryRule(
           buildRuleParams,
           srcs,
+          compileDepsAsBuildRules,
           resources,
           proguardConfig,
           exportDeps,
@@ -803,6 +862,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     @Override
     public Builder addDep(BuildTarget dep) {
       super.addDep(dep);
+      return this;
+    }
+
+    public Builder addCompileDep(BuildTarget compileDep) {
+      compileDeps.add(compileDep);
       return this;
     }
 
@@ -843,6 +907,15 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     public Builder setExportDeps(boolean exportDeps) {
       this.exportDeps = exportDeps;
       return this;
+    }
+
+    protected ImmutableSortedSet<BuildRule> getCompileDepsAsBuildRules(
+        final BuildRuleResolver ruleResolver) {
+      if (compileDeps.isEmpty()) {
+        return ImmutableSortedSet.of();
+      }
+      return getBuildTargetsAsBuildRules(ruleResolver,
+        compileDeps, false /* allowNonExistentRule */);
     }
   }
 }
