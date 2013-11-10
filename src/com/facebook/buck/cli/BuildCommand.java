@@ -57,10 +57,15 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   }
 
   @Override
+  @SuppressWarnings("PMD.PrematureDeclaration")
   int runCommandWithOptionsInternal(BuildCommandOptions options) throws IOException {
     // Set the logger level based on the verbosity option.
     Verbosity verbosity = console.getVerbosity();
     Logging.setLoggingLevelForVerbosity(verbosity);
+
+    // Create artifact cache to initialize Cassandra connection, if appropriate.
+    ArtifactCache artifactCache = getArtifactCache();
+
 
     try {
       buildTargets = getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
@@ -96,8 +101,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
-
-    ArtifactCache artifactCache = getArtifactCache();
 
     // Create and execute the build.
     build = options.createBuild(

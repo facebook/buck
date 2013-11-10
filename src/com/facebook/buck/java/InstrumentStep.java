@@ -22,14 +22,15 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 public class InstrumentStep extends ShellStep {
 
   private final String mode;
-  private final Set<String> instrumentDirectories;
+  private final Set<Path> instrumentDirectories;
 
-  public InstrumentStep(String mode, Set<String> instrumentDirectories) {
+  public InstrumentStep(String mode, Set<Path> instrumentDirectories) {
     this.mode = mode;
     this.instrumentDirectories = ImmutableSet.copyOf(instrumentDirectories);
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2012-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,111 +17,82 @@
 package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.java.abi.AbiWriterProtocol;
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Charsets;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
 
-import org.junit.Rule;
+import org.easymock.EasyMockSupport;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
 
-public class JavacInMemoryStepTest {
-
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+public class JavacInMemoryStepTest extends EasyMockSupport {
 
   @Test
-  public void testGetDescription() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = createExecutionContext();
-    String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
-    String pathToAbiFile = new File(tmp.getRoot(), "abi").getAbsolutePath();
+  public void testFindFailedImports() throws Exception {
+    String lineSeperator = System.getProperty("line.separator");
+
+    String stderrOutput = Joiner.on(lineSeperator).join(ImmutableList.of(
+        "java/com/foo/bar.java:5: package javax.annotation.concurrent does not exist",
+        "java/com/foo/bar.java:99: error: cannot access com.facebook.Raz",
+        "java/com/foo/bar.java:142: cannot find symbol: class ImmutableSet",
+        "java/com/foo/bar.java:999: you are a clown"));
+
+    ImmutableSet<String> missingImports =
+        JavacInMemoryStep.findFailedImports(stderrOutput);
     assertEquals(
-        String.format("javac -target 6 -source 6 -g " +
-            "-processorpath %s " +
-            "-processor %s " +
-            "-A%s=%s " +
-        		"-d %s Example.java",
-        		AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
-        		AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
-        		AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,
-        		pathToAbiFile,
-        		pathToOutputDir),
-        javac.getDescription(executionContext));
+        ImmutableSet.of("javax.annotation.concurrent", "com.facebook.Raz", "ImmutableSet"),
+        missingImports);
   }
 
   @Test
-  public void testGetShortName() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
-    assertEquals("javac", javac.getShortName());
-  }
-
-  @Test
-  public void testGetAbiKeyOnSuccessfulCompile() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = createExecutionContext();
-    int exitCode = javac.execute(executionContext);
-    assertEquals("javac should exit with code 0.", exitCode, 0);
-    assertEquals(new Sha1HashCode("65386ff045e932d8ba6444043132c140f76a4613"), javac.getAbiKey());
-  }
-
-  @Test
-  public void testGetAbiKeyOnFailedCompile() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ true);
-    ExecutionContext executionContext = createExecutionContext();
-    int exitCode = javac.execute(executionContext);
-    assertEquals("javac should exit with code 1 due to sytnax error.", exitCode, 1);
-    assertEquals("ABI key will not be available when compilation fails.", null, javac.getAbiKey());
-  }
-
-  @Test
-  public void testGetAbiKeyThrowsIfNotBuilt() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
-    try {
-      javac.getAbiKey();
-      fail("Should have thrown IllegalStateException.");
-    } catch (IllegalStateException e) {
-      assertEquals("Must execute step before requesting AbiKey.", e.getMessage());
-    }
-  }
-
-  private JavacInMemoryStep createJavac(boolean withSyntaxError) throws IOException {
-    File exampleJava = tmp.newFile("Example.java");
-    Files.write(Joiner.on('\n').join(
-            "package com.example;",
-            "",
-            "public class Example {" +
-            (withSyntaxError ? "" : "}")
-        ),
-        exampleJava,
-        Charsets.UTF_8);
-
-    String pathToOutputDirectory = "out";
-    tmp.newFolder(pathToOutputDirectory);
-    String pathToOutputAbiFile = "abi";
-    return new JavacInMemoryStep(
-        pathToOutputDirectory,
-        /* javaSourceFilePaths */ ImmutableSet.of("Example.java"),
-        /* classpathEntries */ ImmutableSet.<String>of(),
-        JavacOptions.builder().build(),
-        Optional.of(pathToOutputAbiFile));
-  }
-
-  private ExecutionContext createExecutionContext() {
-    return TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
+  public void testJavacCommand() {
+    ExecutionContext context = ExecutionContext.builder()
+        .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
+          @Override
+          public Function<String, Path> getPathRelativizer() {
+            return IdentityPathRelativizer.getIdentityRelativizer();
+          }
+        })
+        .setConsole(new TestConsole())
+        .setEventBus(BuckEventBusFactory.newInstance())
+        .setPlatform(Platform.detect())
         .build();
+
+    JavacInMemoryStep firstOrder = createTestStep(BuildDependencies.FIRST_ORDER_ONLY);
+    JavacInMemoryStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);
+    JavacInMemoryStep transitive = createTestStep(BuildDependencies.TRANSITIVE);
+
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar foobar.java",
+        firstOrder.getDescription(context));
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar foobar.java",
+        warn.getDescription(context));
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath bar.jar" + File.pathSeparator +
+        "foo.jar foobar.java",
+        transitive.getDescription(context));
+  }
+
+  private JavacInMemoryStep createTestStep(BuildDependencies buildDependencies) {
+    return new JavacInMemoryStep(
+          /* outputDirectory */ ".",
+          /* javaSourceFilePaths */ ImmutableSet.of("foobar.java"),
+          /* transitiveClasspathEntries */ ImmutableSet.of("bar.jar", "foo.jar"),
+          /* declaredClasspathEntries */ ImmutableSet.of("foo.jar"),
+          /* JavacOptions */ JavacOptions.DEFAULTS,
+          /* pathToOutputAbiFile */ Optional.<String>absent(),
+          /* invokingRule */ Optional.<String>absent(),
+          /* buildDependencies */ buildDependencies,
+          /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent());
   }
 }

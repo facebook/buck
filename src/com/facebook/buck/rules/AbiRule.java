@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Optional;
-
 import java.io.IOException;
 
 /**
@@ -38,8 +36,6 @@ public interface AbiRule {
 
   /**
    * Returns a {@link Sha1HashCode} that represents the ABI of this rule's deps.
-   *
-   * @return {@link Optional#absent()} if not all deps that should have an ABI key have one.
    */
-  public Optional<Sha1HashCode> getAbiKeyForDeps() throws IOException;
+  public Sha1HashCode getAbiKeyForDeps() throws IOException;
 }

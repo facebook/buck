@@ -41,8 +41,6 @@ import javax.annotation.Nullable;
  */
 public class DalvikStatsTool {
 
-  // TODO(user): This class needs a unit test.
-
   // Reasonable defaults based on dreiss's observations.
   private static final ImmutableMap<Pattern, Integer> PENALTIES = ImmutableMap.of(
       Pattern.compile("Layout$"), 1500,
@@ -119,14 +117,15 @@ public class DalvikStatsTool {
    */
   public static void main(String[] args) throws IOException {
     for (String fname : args) {
-      ZipFile inJar = new ZipFile(fname);
-      for (ZipEntry entry : Collections.list(inJar.entries())) {
-        if (!entry.getName().endsWith(".class")) {
-          continue;
+      try (ZipFile inJar = new ZipFile(fname)) {
+        for (ZipEntry entry : Collections.list(inJar.entries())) {
+          if (!entry.getName().endsWith(".class")) {
+            continue;
+          }
+          InputStream rawClass = inJar.getInputStream(entry);
+          int footprint = getEstimate(rawClass, PENALTIES).estimatedLinearAllocSize;
+          System.out.println(footprint + "\t" + entry.getName().replace(".class", ""));
         }
-        InputStream rawClass = inJar.getInputStream(entry);
-        int footprint = getEstimate(rawClass, PENALTIES).estimatedLinearAllocSize;
-        System.out.println(footprint + "\t" + entry.getName().replace(".class", ""));
       }
     }
   }

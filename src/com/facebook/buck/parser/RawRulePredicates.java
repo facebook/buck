@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.google.common.base.Preconditions;
 
 import java.util.Map;
 
@@ -51,6 +52,19 @@ public class RawRulePredicates {
 
   public static RawRulePredicate alwaysFalse() {
     return alwaysFalse;
+  }
+
+  public static RawRulePredicate matchName(final String fullyQualifiedName) {
+    Preconditions.checkNotNull(fullyQualifiedName);
+    return new RawRulePredicate() {
+      @Override
+      public boolean isMatch(
+          Map<String, Object> rawParseData,
+          BuildRuleType buildRuleType,
+          BuildTarget buildTarget) {
+        return fullyQualifiedName.equals(buildTarget.getFullyQualifiedName());
+      }
+    };
   }
 
 }

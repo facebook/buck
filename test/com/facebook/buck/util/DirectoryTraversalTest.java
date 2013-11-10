@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class DirectoryTraversalTest {
   @Rule
@@ -38,6 +39,13 @@ public class DirectoryTraversalTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "directory_traversal_ignore_paths", temporaryFolder);
     workspace.setUp();
+
+    // Write a recursive symlink. We could store this in version control, but `ant lint` emits a
+    // warning about the recursive symlink.
+    Files.createDirectories(workspace.resolve(java.nio.file.Paths.get("loop/1")));
+    Files.createSymbolicLink(
+        workspace.resolve(java.nio.file.Paths.get("loop/1/upwards")),
+        java.nio.file.Paths.get("../"));
 
     // The workspace contains the following:
     //

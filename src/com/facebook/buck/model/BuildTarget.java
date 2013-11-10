@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -45,34 +44,12 @@ public final class BuildTarget implements Comparable<BuildTarget> {
         "baseName must start with // but was %s",
         baseName);
 
-    // On Windows, basePath may contain backslashes, which are not permitted by BuildTarget.
-    if (Paths.containsBackslash(baseName)) {
-      baseName = Paths.normalizePathSeparator(baseName);
-    }
+    // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
+    baseName = baseName.replace("\\", "/");
 
     this.baseName = baseName;
     this.shortName = Preconditions.checkNotNull(shortName);
     this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
-  }
-
-  /**
-   * For use by InputRule, which is synthetic, and therefore has no buildFile.
-   * @param inputFile Input file.
-   * @param relativePath
-   */
-  private BuildTarget(File inputFile, String relativePath) {
-    Preconditions.checkNotNull(inputFile);
-    Preconditions.checkNotNull(relativePath);
-    this.baseName = String.format("//%s", relativePath);
-    this.shortName = inputFile.getName();
-    this.fullyQualifiedName = String.format("%s:%s", baseName, shortName);
-  }
-
-  /**
-   * For exclusive use by {@link com.facebook.buck.rules.InputRule#InputRule(File, String)}.
-   */
-  public static BuildTarget createBuildTargetForInputFile(File inputFile, String relativePath) {
-    return new BuildTarget(inputFile, relativePath);
   }
 
   /**

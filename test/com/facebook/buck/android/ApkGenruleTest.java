@@ -26,10 +26,10 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
+import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -47,11 +47,11 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,11 +71,11 @@ import java.util.Map;
  */
 public class ApkGenruleTest {
 
-  private static final Function<String, String> relativeToAbsolutePathFunction =
-      new Function<String, String>() {
+  private static final Function<String, Path> relativeToAbsolutePathFunction =
+      new Function<String, Path>() {
         @Override
-        public String apply(String path) {
-          return String.format("/opt/local/fbandroid/%s", path);
+        public Path apply(String path) {
+          return Paths.get("/opt/local/fbandroid", path);
         }
       };
 
@@ -140,7 +140,8 @@ public class ApkGenruleTest {
     ApkGenrule apkGenrule = (ApkGenrule) ruleResolver.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.
-    String expectedApkOutput = "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";
+    String expectedApkOutput =
+        "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";
     assertEquals(BuildRuleType.APK_GENRULE, apkGenrule.getType());
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
@@ -213,17 +214,11 @@ public class ApkGenruleTest {
     ShellStep genruleCommand = (ShellStep) seventhStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(new ImmutableMap.Builder<String, String>()
-        .put("SRCS", "/opt/local/fbandroid/src/com/facebook/signer.py " +
-            "/opt/local/fbandroid/src/com/facebook/key.properties")
         .put("APK", GEN_DIR + "/fb4a.apk")
-        .put("GEN_DIR", "/opt/local/fbandroid/" + GEN_DIR)
-        .put("DEPS", "")
-        .put("TMP", "/opt/local/fbandroid/" + relativePathToTmpDir)
-        .put("SRCDIR", "/opt/local/fbandroid/" + relativePathToSrcDir)
         .put("OUT", expectedApkOutput).build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
-        ImmutableList.of("/bin/bash", "-c", "python signer.py $APK key.properties > $OUT"),
+        ImmutableList.of("/bin/bash", "-e", "-c", "python signer.py $APK key.properties > $OUT"),
         genruleCommand.getShellCommand(executionContext));
 
     EasyMock.verify(parser);
@@ -234,8 +229,8 @@ public class ApkGenruleTest {
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
           @Override
-          public Function<String, String> getPathRelativizer() {
-            return Functions.identity();
+          public Function<String, Path> getPathRelativizer() {
+            return IdentityPathRelativizer.getIdentityRelativizer();
           }
 
           @Override

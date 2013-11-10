@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.FileHashCache;
+import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -30,14 +32,10 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,19 +70,7 @@ public class RuleKey {
    *     {@link com.google.common.hash.HashCode#toString()}.
    */
   public RuleKey(String hashString) {
-    this(HashCode.fromBytes(hashStringToBytes(hashString)));
-  }
-
-  private static byte[] hashStringToBytes(String hashString) {
-    byte[] bytes = new byte[hashString.length() / 2];
-    for (int i = 0; i < hashString.length(); i += 2) {
-      char highOrderBits = hashString.charAt(i);
-      char lowOrderBits = hashString.charAt(i + 1);
-      bytes[i / 2] = (byte)
-          ((Byte.parseByte(String.valueOf(highOrderBits), 16) << 4) +
-          Byte.parseByte(String.valueOf(lowOrderBits), 16));
-    }
-    return bytes;
+    this(HashCode.fromString(hashString));
   }
 
   public HashCode getHashCode() {
@@ -124,72 +110,39 @@ public class RuleKey {
     return this.getHashCode().hashCode();
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
   /**
-   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
-   * arguments.
+   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
    */
-  public static Builder builder(BuildRule rule) throws IOException {
-    return builder(rule, /* includeDeps */ true);
-  }
-
-  /**
-   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s input
-   * arguments <em>except</em> for its <code>deps</doe>.
-   */
-  public static Builder builderWithoutDeps(BuildRule rule) throws IOException {
-    return builder(rule, /* includeDeps */ false);
-  }
-
-  private static Builder builder(BuildRule rule, boolean includeDeps) throws IOException {
-    Builder builder = new Builder()
+  public static Builder builder(BuildRule rule, FileHashCache hashCache) {
+    Builder builder = new Builder(rule, hashCache)
         .set("name", rule.getFullyQualifiedName())
 
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .set("buck.type", rule.getType().getName());
 
-    if (includeDeps) {
-      builder.setKey("deps");
-      // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
-      for (BuildRule buildRule : rule.getDeps()) {
-        builder.setVal(buildRule.getRuleKey());
-      }
-    }
-    builder.separate();
-
     return builder;
   }
 
   public static class Builder {
-    private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
-
-    @VisibleForTesting
-    static final String buckVersionUID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
 
     @VisibleForTesting
     static final byte SEPARATOR = '\0';
 
     private static final Logger logger = Logger.getLogger(Builder.class.getName());
 
+    private final BuildRule rule;
     private final Hasher hasher;
-    private boolean idempotent;
+    private final FileHashCache hashCache;
+
     @Nullable private List<String> logElms;
 
-    private Builder() {
-      hasher = Hashing.sha1().newHasher();
-      idempotent = true;
+    private Builder(BuildRule rule, FileHashCache hashCache) {
+      this.rule = Preconditions.checkNotNull(rule);
+      this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
+      this.hashCache = Preconditions.checkNotNull(hashCache);
       if (logger.isLoggable(Level.INFO)) {
-        logElms = Lists.newArrayList();
+        this.logElms = Lists.newArrayList();
       }
-      setBuckVersionUID();
-    }
-
-    private Builder(String header) {
-      this();
-      setHeader(header);
     }
 
     private Builder feed(byte[] bytes) {
@@ -202,42 +155,11 @@ public class RuleKey {
       return this;
     }
 
-    private void setBuckVersionUID() {
-      if (logElms != null) {
-        logElms.add(String.format("buckVersionUID(%s):", buckVersionUID));
-      }
-      feed(buckVersionUID.getBytes()).separate();
-    }
-
-    private void setHeader(String header) {
-      if (logElms != null) {
-        logElms.add(String.format("header(%s):", header));
-      }
-      feed(header.getBytes()).separate();
-    }
-
     private Builder setKey(String sectionLabel) {
       if (logElms != null) {
         logElms.add(String.format(":key(%s):", sectionLabel));
       }
       return separate().feed(sectionLabel.getBytes()).separate();
-    }
-
-    private Builder setVal(@Nullable File file) throws IOException {
-      if (file != null) {
-        // Compute a separate SHA-1 for the file contents and feed that into messageDigest rather
-        // than the file contents, in order to avoid the overhead of escaping SEPARATOR in the file
-        // content.
-        InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(file);
-        HashCode fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
-
-        if (logElms != null) {
-          logElms.add(String.format("file(path=\"%s\", sha1=%s):", file.getPath(),
-              fileSha1.toString()));
-        }
-        feed(fileSha1.asBytes());
-      }
-      return separate();
     }
 
     private Builder setVal(@Nullable String s) {
@@ -274,14 +196,6 @@ public class RuleKey {
         feed(ruleKey.toString().getBytes());
       }
       return separate();
-    }
-
-    public Builder set(String key, @Nullable File val) throws IOException {
-      return setKey(key).setVal(val);
-    }
-
-    public Builder set(String key, @Nullable Path path) throws IOException {
-      return set(key, path == null ? null : path.toFile());
     }
 
     public Builder set(String key, @Nullable String val) {
@@ -328,12 +242,22 @@ public class RuleKey {
       return separate();
     }
 
-    public Builder setInputs(String key, @Nullable Iterable<InputRule> val) throws IOException {
+    /**
+     * @param inputs is an {@link Iterator} rather than an {@link Iterable} because {@link Path}
+     *     implements {@link Iterable} and we want to protect against passing a single {@link Path}
+     *     instead of multiple {@link Path}s.
+     */
+    public Builder setInputs(String key, Iterator<Path> inputs) throws IOException {
+      Preconditions.checkNotNull(key);
+      Preconditions.checkNotNull(inputs);
       setKey(key);
-      if (val != null) {
-        for (InputRule inputRule : val) {
-          setVal(inputRule.getRuleKey());
+      while (inputs.hasNext()) {
+        Path input = inputs.next();
+        HashCode sha1 = hashCache.get(input);
+        if (sha1 == null) {
+          throw new RuntimeException("No SHA for " + input);
         }
+        setVal(sha1.toString());
       }
       return separate();
     }
@@ -386,12 +310,41 @@ public class RuleKey {
       return separate();
     }
 
-    public RuleKey build() {
-      RuleKey ruleKey = idempotent ? new RuleKey(hasher.hash()) : new RuleKey((HashCode)null);
-      if (logElms != null) {
-        logger.info(String.format("RuleKey %s=%s", ruleKey, Joiner.on("").join(logElms)));
+    public static class RuleKeyPair {
+      private final RuleKey totalRuleKey;
+      private final RuleKey ruleKeyWithoutDeps;
+
+      private RuleKeyPair(RuleKey totalRuleKey, RuleKey ruleKeyWithoutDeps) {
+        this.totalRuleKey = Preconditions.checkNotNull(totalRuleKey);
+        this.ruleKeyWithoutDeps = Preconditions.checkNotNull(ruleKeyWithoutDeps);
       }
-      return ruleKey;
+
+      public RuleKey getTotalRuleKey() {
+        return totalRuleKey;
+      }
+
+      public RuleKey getRuleKeyWithoutDeps() {
+        return ruleKeyWithoutDeps;
+      }
+    }
+
+    public RuleKeyPair build() throws IOException {
+      RuleKey ruleKeyWithoutDeps = new RuleKey(hasher.hash());
+
+      // Now introduce the deps into the RuleKey.
+      setKey("deps");
+      // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
+      for (BuildRule buildRule : rule.getDeps()) {
+        setVal(buildRule.getRuleKey());
+      }
+      separate();
+      RuleKey totalRuleKey = new RuleKey(hasher.hash());
+
+      if (logElms != null) {
+        logger.info(String.format("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms)));
+      }
+
+      return new RuleKeyPair(totalRuleKey, ruleKeyWithoutDeps);
     }
   }
 }

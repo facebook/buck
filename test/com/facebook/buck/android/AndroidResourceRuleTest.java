@@ -27,74 +27,52 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.DirectoryTraversal;
-import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.Paths;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
-
-import java.io.IOException;
 
 
 public class AndroidResourceRuleTest {
 
   @Test
   public void testGetInputsToCompareToOutput() {
-    // Mock out the traversal of the res/ and assets/ directories. Note that the directory entries
-    // are not traversed in alphabetical order because ensuring that a sort happens is part of what
-    // we are testing.
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
-        if ("java/src/com/facebook/base/res".equals(rootPath)) {
-          traversal.visit(null, "drawable/E.xml");
-          traversal.visit(null, "drawable/A.xml");
-          traversal.visit(null, "drawable/C.xml");
-        } else if ("java/src/com/facebook/base/assets".equals(rootPath)) {
-          traversal.visit(null, "drawable/F.xml");
-          traversal.visit(null, "drawable/B.xml");
-          traversal.visit(null, "drawable/D.xml");
-        } else {
-          throw new RuntimeException("Unexpected path: " + rootPath);
-        }
-      }
-    };
-
     // Create an android_library rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,
-        ImmutableSortedSet.<BuildRule>of() /* deps */,
-        ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
-        /* pathRelativizer */ Functions.<String>identity());
+        ImmutableSortedSet.<BuildRule>of());
     AndroidResourceRule androidResourceRule = new AndroidResourceRule(
         buildRuleParams,
         "java/src/com/facebook/base/res",
+        ImmutableSortedSet.of(
+            "java/src/com/facebook/base/res/drawable/E.xml",
+            "java/src/com/facebook/base/res/drawable/A.xml",
+            "java/src/com/facebook/base/res/drawable/C.xml"),
         "com.facebook",
         "java/src/com/facebook/base/assets",
-        "java/src/com/facebook/base/AndroidManifest.xml",
-        traverser);
+        ImmutableSortedSet.of(
+            "java/src/com/facebook/base/assets/drawable/F.xml",
+            "java/src/com/facebook/base/assets/drawable/B.xml",
+            "java/src/com/facebook/base/assets/drawable/D.xml"),
+        "java/src/com/facebook/base/AndroidManifest.xml");
 
     // Test getInputsToCompareToOutput().
     MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should return an alphabetically sorted list of all input " +
         "files that contribute to this android_resource() rule.",
         ImmutableList.of(
-            "java/src/com/facebook/base/AndroidManifest.xml",
+            "java/src/com/facebook/base/res/drawable/A.xml",
+            "java/src/com/facebook/base/res/drawable/C.xml",
+            "java/src/com/facebook/base/res/drawable/E.xml",
             "java/src/com/facebook/base/assets/drawable/B.xml",
             "java/src/com/facebook/base/assets/drawable/D.xml",
             "java/src/com/facebook/base/assets/drawable/F.xml",
-            "java/src/com/facebook/base/res/drawable/A.xml",
-            "java/src/com/facebook/base/res/drawable/C.xml",
-            "java/src/com/facebook/base/res/drawable/E.xml"),
+            "java/src/com/facebook/base/AndroidManifest.xml"),
         androidResourceRule.getInputsToCompareToOutput());
   }
 

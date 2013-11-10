@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -161,7 +162,7 @@ public class ProjectConfigRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final Iterable<InputRule> getInputs() {
+  public final Iterable<Path> getInputs() {
     return ImmutableList.of();
   }
 

@@ -107,6 +107,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         if (console.getStdOut().isDirty() || console.getStdErr().isDirty()) {
           renderScheduler.shutdown();
         } else if (!nextFrame.isEmpty()) {
+          nextFrame = ansi.asNoWrap(nextFrame);
           console.getStdErr().getRawStream().println(nextFrame);
         }
       }

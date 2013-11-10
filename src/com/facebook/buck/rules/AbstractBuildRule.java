@@ -34,13 +34,15 @@ abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> deps;
   private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
-  @Nullable private volatile RuleKey ruleKey;
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
     Preconditions.checkNotNull(buildRuleParams);
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.deps = buildRuleParams.getDeps();
     this.visibilityPatterns = buildRuleParams.getVisibilityPatterns();
+    this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
 
     for (BuildRule dep : this.deps) {
       if (!dep.isVisibleTo(buildTarget)) {
@@ -149,18 +151,7 @@ abstract class AbstractBuildRule implements BuildRule {
    */
   @Override
   public RuleKey getRuleKey() throws IOException {
-    // This uses the "double-checked locking using volatile" pattern:
-    // http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html.
-    if (ruleKey == null) {
-      synchronized (this) {
-        if (ruleKey == null) {
-          RuleKey.Builder builder = RuleKey.builder(this);
-          appendToRuleKey(builder);
-          ruleKey = builder.build();
-        }
-      }
-    }
-    return ruleKey;
+    return getRuleKeyPair().getTotalRuleKey();
   }
 
   /**
@@ -169,7 +160,22 @@ abstract class AbstractBuildRule implements BuildRule {
    */
   @Override
   public RuleKey getRuleKeyWithoutDeps() throws IOException {
-    return appendToRuleKey(RuleKey.builderWithoutDeps(this)).build();
+    return getRuleKeyPair().getRuleKeyWithoutDeps();
+  }
+
+  private RuleKey.Builder.RuleKeyPair getRuleKeyPair() throws IOException {
+    // This uses the "double-checked locking using volatile" pattern:
+    // http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html.
+    if (ruleKeyPair == null) {
+      synchronized (this) {
+        if (ruleKeyPair == null) {
+          RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(this);
+          appendToRuleKey(builder);
+          ruleKeyPair = builder.build();
+        }
+      }
+    }
+    return ruleKeyPair;
   }
 
   /**

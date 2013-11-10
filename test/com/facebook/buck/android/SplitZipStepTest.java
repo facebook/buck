@@ -87,7 +87,7 @@ public class SplitZipStepTest {
 
     // Note that we cannot test data[1] (the hash) because zip files change their hash each
     // time they are written due to timestamps written into the file.
-    assertEquals(SmartDexingStep.transformInputToDexOutput(outJar.getName(), DexStore.JAR), data[0]);
+    assertEquals(SmartDexingStep.transformInputToDexOutput(outJar, DexStore.JAR), data[0]);
     assertTrue(String.format("Unexpected class: %s", data[2]),
         fileToClassName.values().contains(data[2]));
   }
@@ -109,9 +109,9 @@ public class SplitZipStepTest {
         /* useLinearAllocSplitDex */ true,
         /* linearAllocHardLimit */ 4 * 1024 * 1024);
     List<String> linesInManifestFile = ImmutableList.of(
-        "com/google/common/collect/ImmutableSortedSet.class",
-        "  com/google/common/collect/ImmutableSet.class",
-        "# com/google/common/collect/ImmutableMap.class"
+        "com/google/common/collect/ImmutableSortedSet",
+        "  com/google/common/collect/ImmutableSet",
+        "# com/google/common/collect/ImmutableMap"
         );
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);

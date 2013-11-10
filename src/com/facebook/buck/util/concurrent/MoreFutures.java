@@ -64,20 +64,20 @@ public class MoreFutures {
    *     cancelled.
    */
   public static boolean isSuccess(ListenableFuture<?> future) {
-    if (future.isDone()) {
-      try {
-        future.get();
-        return true;
-      } catch (ExecutionException e) {
-        // The computation threw an exception, so it did not complete successfully.
-        return false;
-      } catch (CancellationException e) {
-        // The computation was cancelled, so it did not complete successfully.
-        return false;
-      } catch (InterruptedException e) {
-        throw new RuntimeException("Should not be possible to interrupt a resolved future.", e);
-      }
-    } else {
+    if (!future.isDone()) {
+      return false;
+    }
+
+    try {
+      // Try to get the future, but ignore (and preserve) the thread interrupted state.
+      // This should be fast because we know the future is already complete.
+      Uninterruptibles.getUninterruptibly(future);
+      return true;
+    } catch (ExecutionException e) {
+      // The computation threw an exception, so it did not complete successfully.
+      return false;
+    } catch (CancellationException e) {
+      // The computation was cancelled, so it did not complete successfully.
       return false;
     }
   }

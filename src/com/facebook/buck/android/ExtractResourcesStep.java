@@ -51,8 +51,7 @@ public class ExtractResourcesStep implements Step {
   public int execute(ExecutionContext context) {
     File outputDirectory = new File(extractedResourcesDir);
     for (String path : pathsToThirdPartyJars) {
-      try {
-        final JarFile jar = new JarFile(path);
+      try (final JarFile jar = new JarFile(path)) {
         for (Enumeration<JarEntry> entries = jar.entries(); entries.hasMoreElements(); ) {
           final JarEntry entry = entries.nextElement();
           String name = entry.getName();

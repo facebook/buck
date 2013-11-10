@@ -99,16 +99,19 @@ public abstract class ShellStep implements Step {
     }
 
     Process process;
+    int exitCode;
     try {
       startTime = System.currentTimeMillis();
       process = processBuilder.start();
+      exitCode = interactWithProcess(context, process);
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
-      return 1;
+      exitCode = 1;
     }
 
-    int exitCode = interactWithProcess(context, process);
     endTime = System.currentTimeMillis();
+
+    onProcessFinished(exitCode);
     return exitCode;
   }
 
@@ -150,6 +153,14 @@ public abstract class ShellStep implements Step {
    */
   @VisibleForTesting
   protected abstract ImmutableList<String> getShellCommandInternal(ExecutionContext context);
+
+  /**
+   * Callback function to be run after invoking the shell command.
+   * @param exitCode exit code from invoking the shell script.
+   */
+  protected void onProcessFinished(int exitCode) {
+    // Do nothing by default.
+  }
 
   @Override
   public final String getDescription(ExecutionContext context) {

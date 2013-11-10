@@ -49,6 +49,7 @@ public class PythonLibrary extends AbstractBuildable {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
   private final BuildTarget buildTarget;
+  // TODO(simons): Convert to using Paths
   private final ImmutableSortedSet<String> srcs;
   private final Path pythonPathDirectory;
 
@@ -113,7 +114,7 @@ public class PythonLibrary extends AbstractBuildable {
     for (String src : srcs) {
       String srcName = new File(src).getName();
       Path target = pythonPathDirectory.resolve(srcName);
-      commands.add(new CopyStep(src, target.toString()));
+      commands.add(new CopyStep(Paths.get(src), target));
 
       Path pathToArtifact = Paths.get(getPathUnderGenDirectory(), srcName);
       buildableContext.recordArtifact(pathToArtifact);

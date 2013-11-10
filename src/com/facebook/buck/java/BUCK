@@ -50,7 +50,7 @@ java_library(
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/parser:support',
+    '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test:test',
@@ -68,7 +68,6 @@ java_library(
 java_library(
   name = 'steps',
   srcs = [
-    'DependencyCheckingJavacStep.java',
     'GenerateCodeCoverageReportStep.java',
     'InstrumentStep.java',
     'JarDirectoryStep.java',

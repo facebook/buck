@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.martiansoftware.nailgun.NGContext;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -62,7 +64,7 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new File("."));
+    int exitCode = main.runMainWithExitCode(new File("."), Optional.<NGContext>absent());
     assertEquals(1, exitCode);
     assertEquals(
         "When the user does not specify any arguments, the usage information should be displayed",
@@ -75,7 +77,7 @@ public class MainTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
 
     Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(new File("."), "--help");
+    int exitCode = main.runMainWithExitCode(new File("."), Optional.<NGContext>absent(), "--help");
     assertEquals(1, exitCode);
     assertEquals("Users instinctively try running `buck --help`, so it should print usage info.",
         getUsageString(),
@@ -90,15 +92,17 @@ public class MainTest {
         "  buck command --help",
         "  buck command [command-options]",
         "available commands:",
-        "  audit      lists the inputs for the specified target",
-        "  build      builds the specified target",
-        "  cache      makes calls to the artifact cache",
-        "  clean      deletes any generated files",
-        "  install    builds and installs an APK",
-        "  project    generates project configuration files for an IDE",
-        "  targets    prints the list of buildable targets",
-        "  test       builds and runs the tests for the specified target",
-        "  uninstall  uninstalls an APK",
+        "  audit       lists the inputs for the specified target",
+        "  build       builds the specified target",
+        "  cache       makes calls to the artifact cache",
+        "  clean       deletes any generated files",
+        "  install     builds and installs an APK",
+        "  project     generates project configuration files for an IDE",
+        "  query       queries the dependency graph",
+        "  quickstart  generates a default project directory",
+        "  targets     prints the list of buildable targets",
+        "  test        builds and runs the tests for the specified target",
+        "  uninstall   uninstalls an APK",
         "options:",
         " --help         : Shows this screen and exits.",
         " --version (-V) : Show version number.",

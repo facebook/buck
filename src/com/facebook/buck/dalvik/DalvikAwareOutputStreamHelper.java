@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.java.classes.FileLike;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
@@ -108,21 +109,6 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
           stats.estimatedLinearAllocSize, stats.methodReferences.size(), name
       );
       Files.append(report, reportFile, Charsets.UTF_8);
-    }
-  }
-
-  private DalvikStatsTool.Stats getStats(FileLike entry) {
-    String name = entry.getRelativePath();
-    if (!name.endsWith(".class")) {
-      // Probably something like a pom.properties file in a JAR: this does not contribute
-      // to the linear alloc size, so return zero.
-      return DalvikStatsTool.Stats.ZERO;
-    }
-
-    try {
-      return DalvikStatsTool.getEstimate(entry.getInput());
-    } catch (IOException | RuntimeException e) {
-      throw new RuntimeException(String.format("Error calculating size for %s.", name), e);
     }
   }
 

@@ -30,7 +30,6 @@ public final class BuildRuleType {
   public static BuildRuleType GEN_AIDL = new BuildRuleType("gen_aidl");
   public static BuildRuleType GEN_PARCELABLE = new BuildRuleType("gen_parcelable");
   public static BuildRuleType GENRULE = new BuildRuleType("genrule");
-  public static BuildRuleType INPUT = new BuildRuleType("input");
   public static BuildRuleType JAVA_BINARY = new BuildRuleType("java_binary");
   public static BuildRuleType JAVA_LIBRARY = new BuildRuleType("java_library");
   public static BuildRuleType JAVA_TEST = new BuildRuleType("java_test");

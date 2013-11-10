@@ -51,7 +51,8 @@ public class LicenseCheckTest {
 
     @Override
     public void visit(File file, String relativePath) {
-      if (!"java".equals(Files.getFileExtension(relativePath))) {
+      if (!"java".equals(Files.getFileExtension(relativePath)) ||
+          relativePath.startsWith("com/facebook/buck/cli/quickstart/android/")) {
         return;
       }
 

@@ -133,6 +133,23 @@ def pattern_to_regex(pattern):
   return re.compile(pattern)
 
 
+def symlink_aware_walk(base):
+  """ Recursive symlink aware version of `os.walk`.
+
+  Will not emit an entry for a directory it has previously visited.
+  """
+  visited_dirs = set()
+  for entry in os.walk(base, topdown=True, followlinks=True):
+    (root, dirs, _files) = entry
+    realdirpath = os.path.realpath(root)
+    if realdirpath in visited_dirs:
+      dirs[:] = []
+      continue
+    visited_dirs.add(realdirpath)
+    yield entry
+  raise StopIteration
+
+
 @provide_for_build
 def glob(includes, excludes=[], build_env=None):
   search_base = build_env['BUILD_FILE_DIRECTORY']
@@ -162,7 +179,7 @@ def glob(includes, excludes=[], build_env=None):
     if passes_glob_filter(path):
       paths.append(path)
 
-  for root, dirs, files in os.walk(search_base):
+  for root, dirs, files in symlink_aware_walk(search_base):
     if len(files) == 0:
       continue
     relative_root = relpath(root, search_base)
@@ -338,12 +355,24 @@ def android_resource(
     deps=[],
     visibility=[],
     build_env=None):
+  if res:
+    res_srcs = glob([res + '/**/*'], build_env=build_env)
+  else:
+    res_srcs = None
+
+  if assets:
+    assets_srcs = glob([assets + '/**/*'], build_env=build_env)
+  else:
+    assets_srcs = None
+
   add_rule({
     'type' : 'android_resource',
     'name' : name,
     'res' : res,
+    'res_srcs' : res_srcs,
     'package' : package,
     'assets' : assets,
+    'assets_srcs' : assets_srcs,
     'manifest' : manifest,
     'deps' : deps,
     'visibility' : visibility,
@@ -382,7 +411,7 @@ def android_binary(
       dex_compression='jar',
       use_android_proguard_config_with_optimizations=False,
       proguard_config=None,
-      compress_resources=False,
+      resource_compression=None,
       primary_dex_substrings=None,
       primary_dex_classes_file=None,
       # By default, assume we have 5MB of linear alloc,
@@ -410,7 +439,7 @@ def android_binary(
     'use_android_proguard_config_with_optimizations':
         use_android_proguard_config_with_optimizations,
     'proguard_config' : proguard_config,
-    'compress_resources' : compress_resources,
+    'resource_compression' : resource_compression,
     'primary_dex_substrings' : primary_dex_substrings,
     'primary_dex_classes_file' : primary_dex_classes_file,
     'linear_alloc_hard_limit' : linear_alloc_hard_limit,
@@ -809,7 +838,7 @@ def main():
     ignore_paths = [os.path.abspath(os.path.join(project_root, d))
         for d in options.ignore_paths or []]
     build_files = []
-    for dirpath, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=False):
+    for dirpath, dirnames, filenames in symlink_aware_walk(project_root):
       # Do not walk directories that contain generated/non-source files.
       # All modifications to dirnames must occur in-place.
       dirnames[:] = [d for d in dirnames if not (os.path.join(dirpath, d) in ignore_paths)]

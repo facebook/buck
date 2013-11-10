@@ -23,7 +23,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
@@ -33,7 +33,8 @@ import com.google.common.collect.ImmutableList;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class BuildContextTest {
@@ -51,10 +52,10 @@ public class BuildContextTest {
     builder.setEventBus(BuckEventBusFactory.newInstance());
 
     AndroidPlatformTarget androidPlatformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
-    List<File> entries = ImmutableList.of(
-        new File("add-ons/addon-google_apis-google-15/libs/effects.jar"),
-        new File("add-ons/addon-google_apis-google-15/libs/maps.jar"),
-        new File("add-ons/addon-google_apis-google-15/libs/usb.jar"));
+    List<Path> entries = ImmutableList.of(
+        Paths.get("add-ons/addon-google_apis-google-15/libs/effects.jar"),
+        Paths.get("add-ons/addon-google_apis-google-15/libs/maps.jar"),
+        Paths.get("add-ons/addon-google_apis-google-15/libs/usb.jar"));
     EasyMock.expect(androidPlatformTarget.getBootclasspathEntries()).andReturn(entries);
 
     EasyMock.replay(androidPlatformTarget);
@@ -64,7 +65,7 @@ public class BuildContextTest {
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
 
-    String androidBootclasspath = Paths.normalizePathSeparator(androidBootclasspathSupplier.get());
+    String androidBootclasspath = MorePaths.newPathInstance(androidBootclasspathSupplier.get()).toString();
     assertEquals(
         "add-ons/addon-google_apis-google-15/libs/effects.jar:" +
         "add-ons/addon-google_apis-google-15/libs/maps.jar:" +

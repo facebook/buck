@@ -33,6 +33,7 @@ IO_SRCS = [
   'DirtyPrintStreamDecorator.java',
   'InputStreamConsumer.java',
   'MoreFiles.java',
+  'MorePaths.java',
   'ProcessExecutor.java',
   'ProjectFilesystem.java',
   'Verbosity.java',
@@ -50,6 +51,7 @@ java_library(
 )
 
 NETWORK_SRCS = [
+  'BlockingHttpEndpoint.java',
   'HttpEndpoint.java',
 ]
 java_library(

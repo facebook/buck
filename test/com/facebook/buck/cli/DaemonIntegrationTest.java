@@ -17,20 +17,35 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.martiansoftware.nailgun.NGClientListener;
+import com.martiansoftware.nailgun.NGConstants;
+import com.martiansoftware.nailgun.NGContext;
+import com.martiansoftware.nailgun.NGExitException;
+import com.martiansoftware.nailgun.NGInputStream;
+import com.martiansoftware.nailgun.NGSecurityManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,6 +54,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DaemonIntegrationTest {
 
+  private static final int SUCCESS_EXIT_CODE = 0;
   private ScheduledExecutorService executorService;
 
   @Rule
@@ -55,9 +71,9 @@ public class DaemonIntegrationTest {
   }
 
   /**
-   * This verifies that when the user tries to run the Buck Main method, while it is already running,
-   * the second call will fail to avoid multiple threads accessing and corrupting the static state
-   * used by the Buck daemon.
+   * This verifies that when the user tries to run the Buck Main method, while it is already
+   * running, the second call will fail. Serializing command execution in this way avoids
+   * multiple threads accessing and corrupting the static state used by the Buck daemon.
    */
   @Test
   public void testExclusiveExecution()
@@ -75,8 +91,11 @@ public class DaemonIntegrationTest {
       public void run() {
         try {
           Main main = new Main(stdOut, firstThreadStdErr);
-          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(), "build", "//:sleep");
-          assertEquals("Should return 0 when no command running.", 0, exitCode);
+          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
+              Optional.<NGContext>absent(),
+              "build",
+              "//:sleep");
+          assertEquals("Should return 0 when no command running.", SUCCESS_EXIT_CODE, exitCode);
         } catch (IOException e) {
           fail("Should not throw IOException");
           throw Throwables.propagate(e);
@@ -88,8 +107,10 @@ public class DaemonIntegrationTest {
       public void run() {
         try {
           Main main = new Main(stdOut, secondThreadStdErr);
-          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(), "targets");
-          assertEquals("Should return 1 when command running.", Main.BUSY_EXIT_CODE, exitCode);
+          int exitCode = main.tryRunMainWithExitCode(tmp.getRoot(),
+              Optional.<NGContext>absent(),
+              "targets");
+          assertEquals("Should return 2 when command running.", Main.BUSY_EXIT_CODE, exitCode);
         } catch (IOException e) {
           fail("Should not throw IOException.");
           throw Throwables.propagate(e);
@@ -98,5 +119,77 @@ public class DaemonIntegrationTest {
     }, 500L, TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
+  }
+
+  private InputStream createHeartbeatStream(int count) {
+    final int BYTES_PER_HEARTBEAT = 5;
+    byte[] bytes = new byte[BYTES_PER_HEARTBEAT * count];
+    Arrays.fill(bytes, NGConstants.CHUNKTYPE_HEARTBEAT);
+    return new ByteArrayInputStream(bytes);
+  }
+
+  /**
+   * This verifies that a client disconnection will be detected by a Nailgun
+   * NGInputStream which then calls a clientDisconnected handler which interrupts Buck command
+   * processing.
+   */
+  @Test
+  public void whenClientDisconnectsThenCommandIsInterrupted()
+      throws InterruptedException, IOException {
+
+    // NGInputStream test double which provides access to registered client listener.
+    class TestNGInputStream extends NGInputStream {
+
+      public NGClientListener listener = null;
+
+      public TestNGInputStream(InputStream in, DataOutputStream out, PrintStream serverLog) {
+        super(in, out, serverLog);
+      }
+
+      @Override
+      public synchronized void addClientListener(NGClientListener listener) {
+        this.listener = listener;
+      }
+    }
+
+    // Build an NGContext connected to an NGInputStream reading from a stream of heartbeats.
+    Thread.currentThread().setName("Test");
+    CapturingPrintStream serverLog = new CapturingPrintStream();
+    NGContext context = new NGContext();
+    try (TestNGInputStream inputStream = new TestNGInputStream(
+            new DataInputStream(createHeartbeatStream(100)),
+            new DataOutputStream(new ByteArrayOutputStream(0)),
+            serverLog)) {
+      context.setArgs(new String[] {"targets"});
+      context.in = inputStream;
+      context.out = new CapturingPrintStream();
+      context.err = new CapturingPrintStream();
+
+      // NGSecurityManager is used to convert System.exit() calls in to NGExitExceptions.
+      SecurityManager originalSecurityManager = System.getSecurityManager();
+
+      // Run command to register client listener.
+      try {
+        System.setSecurityManager(new NGSecurityManager(originalSecurityManager));
+        Main.nailMain(context);
+        fail("Should throw NGExitException.");
+      } catch (NGExitException e) {
+        assertEquals("Should exit with status 0.", SUCCESS_EXIT_CODE, e.getStatus());
+      } finally {
+        System.setSecurityManager(originalSecurityManager);
+      }
+
+      // Check listener was registered calls System.exit() with client disconnect exit code.
+      try {
+        System.setSecurityManager(new NGSecurityManager(originalSecurityManager));
+        assertNotNull("Should register client listener.", inputStream.listener);
+        inputStream.listener.clientDisconnected();
+        fail("Should throw NGExitException.");
+      } catch (NGExitException e) {
+        assertEquals("Should exit with status 3", Main.CLIENT_DISCONNECT_EXIT_CODE, e.getStatus());
+      } finally {
+        System.setSecurityManager(originalSecurityManager);
+      }
+    }
   }
 }

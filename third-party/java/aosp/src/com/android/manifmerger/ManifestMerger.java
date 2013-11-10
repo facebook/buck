@@ -56,7 +56,7 @@ import javax.xml.xpath.XPathExpressionException;
  *          except: application:agentBackup if defined, it must match.
  *          (these represent class names and we don't want a lib to assume their app or backup
  *           classes are being used when that will never be the case.)
- *      C- activity / activity-alias / service / receiver / provider
+ *      C- activity / activity-alias / service / receiver / provider / meta-data
  *          => Merge as-is. Error if exists in the destination (same {@code @name})
  *             unless the definitions are exactly the same.
  *             New elements are always merged at the end of the application element.
@@ -216,6 +216,10 @@ public class ManifestMerger {
       }
     }
 
+    if (!normalizeActivityAliases()) {
+      success = false;
+    }
+
     mXPath = null;
     mMainDoc = null;
     return success;
@@ -251,6 +255,10 @@ public class ManifestMerger {
       }
     }
 
+    if (!normalizeActivityAliases()) {
+      success = false;
+    }
+
     mXPath = null;
     mMainDoc = null;
     return success;
@@ -281,6 +289,11 @@ public class ManifestMerger {
     err |= !doNotMergeCheckEqual("/manifest/supports-gl-texture", libDoc);     //$NON-NLS-1$
 
     // Strategy C
+    err |= !mergeNewOrEqual(
+        "/manifest/application/meta-data",                              //$NON-NLS-1$
+        "name",                                                         //$NON-NLS-1$
+        libDoc,
+        true);
     err |= !mergeNewOrEqual(
         "/manifest/application/activity",                               //$NON-NLS-1$
         "name",                                                         //$NON-NLS-1$
@@ -595,6 +608,47 @@ public class ManifestMerger {
     }
 
     return success;
+  }
+
+  /**
+   * If activity-alias is used, then the activity used in `android:targetActivity' is required
+   * to be declared before activity-alias. If this is not the case application will fail to be
+   * installed.
+   *
+   * This function resolves this issues by moving all activity-alias elements to the very
+   * bottom of <application> element. This way all activities declared in manifest will
+   * always come before activity-alias elements.
+   *
+   * @return true if successfully normalized manifest, false if failed.
+   */
+  private boolean normalizeActivityAliases() {
+    String parentPath = "/manifest/application";
+    String path = "/manifest/application/activity-alias";
+
+    Element parent = findFirstElement(mMainDoc, parentPath);
+    if (parent == null) {
+      mLog.error(Severity.ERROR,
+          xmlFileAndLine(mMainDoc),
+          "Failed to find element %s",
+          parentPath);
+      return false;
+    }
+
+    for (Element src : findElements(mMainDoc, path)) {
+      // Copies all relevant nodes (f.e. comments) in addition to activity-alias elements.
+      Node start = selectPreviousSiblings(src);
+      unsafeInsertAtEndOf(parent, start, src);
+
+      // Remove nodes that were copied at the end of <application> tag on previous step.
+      Node current = start;
+      Node end = src.getNextSibling();
+      while (current != null && current != end) {
+        Node forRemoval = current;
+        current = forRemoval.getNextSibling();
+        parent.removeChild(forRemoval);
+      }
+    }
+    return true;
   }
 
   /**
@@ -1109,6 +1163,20 @@ public class ManifestMerger {
   }
 
   /**
+   * Same as unsafeInsertAtEndOf() but verifies that dest and start/end
+   * are from different documents.
+   */
+  private Node insertAtEndOf(Element dest, Node start, Node end) {
+    // Destination and start..end must not be part of the same document
+    // because we try to import below. If they were, it would mess the
+    // structure.
+    assert dest.getOwnerDocument() == mMainDoc;
+    assert dest.getOwnerDocument() != start.getOwnerDocument();
+    assert start.getOwnerDocument() == end.getOwnerDocument();
+    return unsafeInsertAtEndOf(dest, start, end);
+  }
+
+  /**
    * Inserts all siblings from {@code start} to {@code end} at the end
    * of the given destination element.
    * <p/>
@@ -1122,7 +1190,7 @@ public class ManifestMerger {
    * @return The copy of the {@code end} node in the destination document or null
    *   if no such copy was created and added to the destination.
    */
-  private Node insertAtEndOf(Element dest, Node start, Node end) {
+  private Node unsafeInsertAtEndOf(Element dest, Node start, Node end) {
     // Check whether we'll need to adjust URI prefixes
     String destPrefix = XmlUtils.lookupNsPrefix(mMainDoc, NS_URI);
     String srcPrefix  = XmlUtils.lookupNsPrefix(start.getOwnerDocument(), NS_URI);
@@ -1150,12 +1218,7 @@ public class ManifestMerger {
       target = target.getNextSibling();
     }
 
-    // Destination and start..end must not be part of the same document
-    // because we try to import below. If they were, it would mess the
-    // structure.
-    assert dest.getOwnerDocument() == mMainDoc;
-    assert dest.getOwnerDocument() != start.getOwnerDocument();
-    assert start.getOwnerDocument() == end.getOwnerDocument();
+
 
     while (start != null) {
       Node node = mMainDoc.importNode(start, true /*deep*/);

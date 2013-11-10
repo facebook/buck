@@ -26,10 +26,12 @@ import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.android.SmartDexingStep.InputResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
@@ -41,6 +43,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -64,22 +67,29 @@ public class SmartDexingStepTest {
     Files.write(new byte[]{0}, secondaryInFile);
 
     InputResolver resolver = new InputResolver(
-        primaryOut.getPath(),
+        "primary-out/primary.jar",
         primaryIn,
-        Optional.of(secondaryOutDir.getPath()),
-        Optional.of(secondaryInDir.getPath()));
+        Optional.of("secondary-out"),
+        Optional.of("secondary-in"));
     assertTrue("Expected secondary output", resolver.hasSecondaryOutput());
-    Multimap<File, File> outputToInputs = resolver.createOutputToInputs(DexStore.JAR);
+    final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    Multimap<File, File> outputToInputs = resolver.createOutputToInputs(DexStore.JAR,
+        projectFilesystem);
     assertEquals("Expected 2 output artifacts", 2, outputToInputs.keySet().size());
 
     MoreAsserts.assertIterablesEquals(
         "Detected inconsistency with primary input arguments",
-        Paths.transformPathToFile(primaryIn),
+        Iterables.transform(primaryIn, new Function<String, File>() {
+          @Override
+          public File apply(String input) {
+            return projectFilesystem.getFileForRelativePath(input);
+          }
+        }),
         outputToInputs.get(primaryOut));
 
     // Make sure that secondary-out/2.dex.jar came from secondary-in/2.jar.
     File secondaryOutFile = new File(secondaryOutDir,
-        SmartDexingStep.transformInputToDexOutput(secondaryInFile.getName(), DexStore.JAR));
+        SmartDexingStep.transformInputToDexOutput(secondaryInFile, DexStore.JAR));
     MoreAsserts.assertIterablesEquals(
         "Detected inconsistency with secondary output arguments",
         ImmutableSet.of(secondaryInFile),
@@ -105,18 +115,21 @@ public class SmartDexingStepTest {
     }
 
     File outputFile = tmpDir.newFile("out.dex");
-    File outputHashFile = new File(tmpDir.getRoot(), "out.dex.hash");
-    Files.write("dummy", outputHashFile, Charsets.UTF_8);
+    Path outputHashFile = new File(tmpDir.getRoot(), "out.dex.hash").toPath();
+    Files.write("dummy", outputHashFile.toFile(), Charsets.UTF_8);
 
-    DxPseudoRule rule = new DxPseudoRule(context, ImmutableSet.of(testIn.getPath()),
-        outputFile.getPath(), outputHashFile.getPath());
+    DxPseudoRule rule = new DxPseudoRule(context,
+        ImmutableSet.of(testIn.toPath()),
+        outputFile.getPath(),
+        outputHashFile,
+        /* optimizeDex */ false);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
     // yields true.
     String actualHash = rule.hashInputs();
     assertFalse(actualHash.isEmpty());
-    Files.write(actualHash, outputHashFile, Charsets.UTF_8);
+    Files.write(actualHash, outputHashFile.toFile(), Charsets.UTF_8);
 
     assertTrue("Matching input hash should be considered cached", rule.checkIsCached());
   }

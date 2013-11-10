@@ -18,7 +18,9 @@ package com.facebook.buck.dalvik;
 
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -32,6 +34,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -109,7 +112,7 @@ public class DefaultZipSplitterTest {
 
   @Test
   public void testBigLimit() throws IOException {
-    DefaultZipSplitter.splitZip(Collections.singleton(testInZip),
+    DefaultZipSplitter.splitZip(Collections.singleton(testInZip.toPath()),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -129,7 +132,7 @@ public class DefaultZipSplitterTest {
 
   @Test
   public void testMediumLimit() throws IOException {
-    DefaultZipSplitter.splitZip(Collections.singleton(testInZip),
+    DefaultZipSplitter.splitZip(Collections.singleton(testInZip.toPath()),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -149,7 +152,7 @@ public class DefaultZipSplitterTest {
 
   @Test
   public void testSmallLimit() throws IOException {
-    DefaultZipSplitter.splitZip(Collections.singleton(testInZip),
+    DefaultZipSplitter.splitZip(Collections.singleton(testInZip.toPath()),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -170,7 +173,7 @@ public class DefaultZipSplitterTest {
   @Test
   public void testBigLimitMinimizePrimaryZip() throws IOException {
     DefaultZipSplitter.splitZip(
-        Collections.singleton(testInZip),
+        Collections.singleton(testInZip.toPath()),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -191,7 +194,7 @@ public class DefaultZipSplitterTest {
   @Test
   public void testMediumLimitMinimizePrimaryZip() throws IOException {
     DefaultZipSplitter.splitZip(
-        Collections.singleton(testInZip),
+        Collections.singleton(testInZip.toPath()),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -212,7 +215,7 @@ public class DefaultZipSplitterTest {
   @Test
   public void testSmallLimitMinimizePrimaryZip() throws IOException {
     DefaultZipSplitter.splitZip(
-        Collections.singleton(testInZip),
+        Collections.singleton(testInZip.toPath()),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -232,7 +235,15 @@ public class DefaultZipSplitterTest {
 
   @Test
   public void testSoftLimit() throws IOException {
-    DefaultZipSplitter.splitZip(testInZips,
+    DefaultZipSplitter.splitZip(
+        FluentIterable.from(testInZips)
+            .transform(new Function<File, Path>() {
+              @Override
+              public Path apply(File file) {
+                return file.toPath();
+              }
+            })
+            .toSet(),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -259,7 +270,7 @@ public class DefaultZipSplitterTest {
   @Test
   public void testCanary() throws IOException {
     DefaultZipSplitter.splitZip(
-        Collections.singleton(testInZip),
+        Collections.singleton(testInZip.toPath()),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,

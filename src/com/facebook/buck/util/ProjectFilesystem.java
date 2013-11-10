@@ -28,12 +28,16 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -56,7 +60,7 @@ public class ProjectFilesystem {
   // the Function<String, String> can go away, as Function<Path, Path> should be used exclusively.
 
   private final Function<Path, Path> pathAbsolutifier;
-  private final Function<String, String> pathRelativizer;
+  private final Function<String, Path> pathRelativizer;
 
   private final ImmutableSet<String> ignorePaths;
 
@@ -78,10 +82,10 @@ public class ProjectFilesystem {
         return resolve(path);
       }
     };
-    this.pathRelativizer = new Function<String, String>() {
+    this.pathRelativizer = new Function<String, Path>() {
       @Override
-      public String apply(String relativePath) {
-        return getFileForRelativePath(relativePath).getAbsolutePath();
+      public Path apply(String relativePath) {
+        return MorePaths.absolutify(getFileForRelativePath(relativePath).toPath());
       }
     };
     this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
@@ -129,6 +133,15 @@ public class ProjectFilesystem {
 
   public boolean exists(String pathRelativeToProjectRoot) {
     return getFileForRelativePath(pathRelativeToProjectRoot).exists();
+  }
+
+  public long getFileSize(Path pathRelativeToProjectRoot) throws IOException {
+    File file = getFileForRelativePath(pathRelativeToProjectRoot);
+    // TODO(mbolin): Decide if/how symlinks should be supported and add unit test.
+    if (!file.isFile()) {
+      throw new IOException("Cannot get size of " + file + " because it is not an ordinary file.");
+    }
+    return file.length();
   }
 
   /**
@@ -184,7 +197,15 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Resolves the relative path against the project root and then calls {@link File#mkdirs()}.
+   * Recursively delete everything under the specified path.
+   */
+  public void rmdir(Path pathRelativeToProjectRoot) throws IOException {
+    MoreFiles.rmdir(resolve(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Resolves the relative path against the project root and then calls
+   * {@link java.nio.file.Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
    */
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
     java.nio.file.Files.createDirectories(resolve(pathRelativeToProjectRoot));
@@ -192,29 +213,29 @@ public class ProjectFilesystem {
 
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
-    Files.createParentDirs(file);
+    mkdirs(file.getParentFile().toPath());
   }
 
-  public void writeLinesToPath(Iterable<String> lines, String pathRelativeToProjectRoot)
+  /**
+   * Writes each line in {@code lines} with a trailing newline to a file at the specified path.
+   * <p>
+   * The parent path of {@code pathRelativeToProjectRoot} must exist.
+   */
+  public void writeLinesToPath(Iterable<String> lines, Path pathRelativeToProjectRoot)
       throws IOException {
-    MoreFiles.writeLinesToFile(lines, getFileForRelativePath(pathRelativeToProjectRoot));
+    try (Writer writer = new BufferedWriter(
+        new FileWriter(
+            getFileForRelativePath(pathRelativeToProjectRoot)))) {
+      for (String line : lines) {
+        writer.write(line);
+        writer.write('\n');
+      }
+    }
   }
 
   public void writeContentsToPath(String contents, Path pathRelativeToProjectRoot)
       throws IOException {
     Files.write(contents, getFileForRelativePath(pathRelativeToProjectRoot), Charsets.UTF_8);
-  }
-
-  /**
-   * Reads a file and returns its contents if the file exists.
-   * <p>
-   * If the file does not exist, {@link Optional#absent()} will be returned.
-   * <p>
-   * If the file exists, but cannot be read, a {@link RuntimeException} will be thrown.
-   */
-  public Optional<String> readFileIfItExists(String pathRelativeToProjectRoot) {
-    File fileToRead = getFileForRelativePath(pathRelativeToProjectRoot);
-    return readFileIfItExists(fileToRead, pathRelativeToProjectRoot);
   }
 
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
@@ -244,6 +265,15 @@ public class ProjectFilesystem {
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    */
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
+    return readFirstLine(Paths.get(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Attempts to read the first line of the file specified by the relative path. If the file does
+   * not exist, is empty, or encounters an error while being read, {@link Optional#absent()} is
+   * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
+   */
+  public Optional<String> readFirstLine(Path pathRelativeToProjectRoot) {
     Preconditions.checkNotNull(pathRelativeToProjectRoot);
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
     return readFirstLineFromFile(file);
@@ -269,22 +299,13 @@ public class ProjectFilesystem {
     return Files.readLines(file, Charsets.UTF_8);
   }
 
-  public Optional<File> getFileIfExists(String path) {
-    File file = new File(path);
-    if (file.exists()) {
-      return Optional.of(file);
-    } else {
-      return Optional.absent();
-    }
-  }
-
   /**
    * @return a function that takes a path relative to the project root and resolves it to an
    *     absolute path. This is particularly useful for {@link com.facebook.buck.step.Step}s that do
    *     not extend {@link com.facebook.buck.shell.ShellStep} because they are not guaranteed to be
    *     run from the project root.
    */
-  public Function<String, String> getPathRelativizer() {
+  public Function<String, Path> getPathRelativizer() {
     return pathRelativizer;
   }
 
@@ -298,19 +319,25 @@ public class ProjectFilesystem {
         event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
   }
 
-  public void copyFolder(String source, String target) throws IOException {
-    Path targetPath = java.nio.file.Paths.get(pathRelativizer.apply(target));
-    Path sourcePath = java.nio.file.Paths.get(pathRelativizer.apply(source));
-    MoreFiles.copyRecursively(sourcePath, targetPath);
+  public void copyFolder(Path source, Path target) throws IOException {
+    MoreFiles.copyRecursively(source, target);
   }
 
   public void copyFile(String source, String target) throws IOException {
-    Path targetPath = java.nio.file.Paths.get(pathRelativizer.apply(target));
-    Path sourcePath = java.nio.file.Paths.get(pathRelativizer.apply(source));
+    Path targetPath = pathRelativizer.apply(target);
+    Path sourcePath = pathRelativizer.apply(source);
     java.nio.file.Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
   }
 
-  public void createSymLink(Path sourcePath, Path targetPath) throws IOException {
+  public void copyFile(Path source, Path target) throws IOException {
+    java.nio.file.Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+  }
+
+  public void createSymLink(Path sourcePath, Path targetPath, boolean force)
+      throws IOException {
+    if (force) {
+      java.nio.file.Files.deleteIfExists(targetPath);
+    }
     if (Platform.detect() == Platform.WINDOWS) {
       if (isDirectory(sourcePath)) {
         // Creating symlinks to directories on Windows requires escalated privileges. We're just
@@ -339,5 +366,18 @@ public class ProjectFilesystem {
         zip.closeEntry();
       }
     }
+  }
+
+  /**
+   *
+   * @param event the event to format.
+   * @return the formatted event context string.
+   */
+  public String createContextString(WatchEvent<?> event) {
+    if (isPathChangeEvent(event)) {
+      Path path = (Path) event.context();
+      return path.toAbsolutePath().normalize().toString();
+    }
+    return event.context().toString();
   }
 }

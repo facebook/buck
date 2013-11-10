@@ -46,6 +46,12 @@ public enum Command {
   PROJECT(
       "generates project configuration files for an IDE",
       ProjectCommand.class),
+  QUERY(
+      "queries the dependency graph",
+      QueryCommand.class),
+  QUICKSTART(
+      "generates a default project directory",
+      QuickstartCommand.class),
   TARGETS(
       "prints the list of buildable targets",
       TargetsCommand.class),

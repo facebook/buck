@@ -20,12 +20,12 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
 public class BuildTargetPatternParser {
 
+  public static final String VISIBILITY_PUBLIC = "PUBLIC";
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
@@ -48,10 +48,10 @@ public class BuildTargetPatternParser {
 
     Preconditions.checkNotNull(buildTargetPattern);
 
-    if (buildTargetPattern.equals(BuildRule.VISIBILITY_PUBLIC)) {
+    if (buildTargetPattern.equals(VISIBILITY_PUBLIC)) {
       if (parseContext.getType() != ParseContext.Type.VISIBILITY) {
         throw new BuildTargetParseException(
-            String.format("%s not supported in the parse context", BuildRule.VISIBILITY_PUBLIC));
+            String.format("%s not supported in the parse context", VISIBILITY_PUBLIC));
       } else {
         return BuildTargetPattern.MATCH_ALL;
       }

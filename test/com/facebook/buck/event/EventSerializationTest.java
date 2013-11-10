@@ -38,6 +38,9 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -194,7 +197,14 @@ public class EventSerializationTest {
     return new TestResults(testCases);
   }
 
-  private void assertJsonEquals(String expected, String actual) {
-    assertEquals(String.format(expected, timestamp, nanoTime, threadId, buildId), actual);
+  private void assertJsonEquals(String expected, String actual) throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonFactory factory = mapper.getJsonFactory();
+    JsonParser jsonParser = factory.createJsonParser(
+        String.format(expected, timestamp, nanoTime, threadId, buildId));
+    JsonNode expectedObject = mapper.readTree(jsonParser);
+    jsonParser = factory.createJsonParser(actual);
+    JsonNode actualObject = mapper.readTree(jsonParser);
+    assertEquals(expectedObject, actualObject);
   }
 }

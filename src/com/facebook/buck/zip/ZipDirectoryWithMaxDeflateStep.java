@@ -18,18 +18,14 @@ package com.facebook.buck.zip;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closer;
 import com.google.common.io.Files;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -80,32 +76,25 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
         "%s must be a directory.",
         inputDirectoryPath);
 
-    Closer closer = Closer.create();
     try {
       ImmutableMap.Builder<File, ZipEntry> zipEntriesBuilder = ImmutableMap.builder();
       addDirectoryToZipEntryList(inputDirectory, "", zipEntriesBuilder);
       ImmutableMap<File, ZipEntry> zipEntries = zipEntriesBuilder.build();
 
       if (!zipEntries.isEmpty()) {
-        CustomZipOutputStream outputStream = closer.register(
-            ZipOutputStreams.newOutputStream(new BufferedOutputStream(
-                new FileOutputStream(outputZipPath))));
-
-        for (Map.Entry<File, ZipEntry> zipEntry : zipEntries.entrySet()) {
-          outputStream.putNextEntry(zipEntry.getValue());
-          ByteStreams.copy(Files.newInputStreamSupplier(zipEntry.getKey()), outputStream);
-          outputStream.closeEntry();
+        try (CustomZipOutputStream outputStream =
+                 ZipOutputStreams.newOutputStream(new File(outputZipPath))
+        ) {
+          for (Map.Entry<File, ZipEntry> zipEntry : zipEntries.entrySet()) {
+            outputStream.putNextEntry(zipEntry.getValue());
+            ByteStreams.copy(Files.newInputStreamSupplier(zipEntry.getKey()), outputStream);
+            outputStream.closeEntry();
+          }
         }
       }
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return 1;
-    } finally {
-      try {
-        closer.close();
-      } catch (IOException e) {
-        Throwables.propagate(e);
-      }
     }
     return 0;
   }

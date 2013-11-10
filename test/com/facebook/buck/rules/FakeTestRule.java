@@ -20,12 +20,12 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -41,11 +41,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
                        ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this(type,
         labels,
-        new BuildRuleParams(
-            target,
-            deps,
-            visibilityPatterns,
-            /* pathRelativizer */ Functions.<String>identity()));
+        new FakeBuildRuleParams(target, deps, visibilityPatterns));
   }
 
   public FakeTestRule(BuildRuleType type,
@@ -67,7 +63,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public Iterable<InputRule> getInputs() {
+  public Iterable<Path> getInputs() {
     return ImmutableList.of();
   }
 
@@ -104,5 +100,10 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   @Override
   public ImmutableSet<String> getContacts() {
     return ImmutableSet.of();
+  }
+
+  @Override
+  public Path getPathToTestOutputDirectory() {
+    throw new UnsupportedOperationException("getPathToTestOutput() not supported in fake");
   }
 }

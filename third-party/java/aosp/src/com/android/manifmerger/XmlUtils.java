@@ -487,7 +487,7 @@ public class XmlUtils {
             @Override
             public int compare(Attr a1, Attr a2) {
                 String s1 = a1 == null ? "" : a1.getNodeName();           //$NON-NLS-1$
-                String s2 = a2 == null ? "" : a2.getNodeValue();          //$NON-NLS-1$
+                String s2 = a2 == null ? "" : a2.getNodeName();           //$NON-NLS-1$
 
                 int prio1 = s1.equals("name") ? 0 : 1;                    //$NON-NLS-1$
                 int prio2 = s2.equals("name") ? 0 : 1;                    //$NON-NLS-1$

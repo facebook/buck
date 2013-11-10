@@ -28,7 +28,9 @@ import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 
 import org.easymock.EasyMock;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.tukaani.xz.XZ;
 import org.tukaani.xz.XZInputStream;
 
@@ -42,6 +44,9 @@ import java.io.InputStream;
  */
 public class XzStepTest {
 
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
+
   @Test
   public void testXzStepDefaultDestinationFile() {
     final String sourceFile = "/path/to/source.file";
@@ -54,8 +59,7 @@ public class XzStepTest {
     final File sourceFile = new File(
         TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check"),
         "xzstep.data");
-    final File destinationFile = File.createTempFile("XzStepTest", "xzstep.data.xz");
-    destinationFile.deleteOnExit();
+    final File destinationFile = tmp.newFile("xzstep.data.xz");
 
     XzStep step = new XzStep(
         sourceFile.getPath(),

@@ -47,6 +47,11 @@ public class MultiArtifactCacheTest {
     public void store(RuleKey ruleKey, File output) {
       storeKey = ruleKey;
     }
+
+    @Override
+    public boolean isStoreSupported() {
+      return true;
+    }
   }
 
   @Test

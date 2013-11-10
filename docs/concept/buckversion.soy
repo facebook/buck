@@ -10,8 +10,25 @@
 <div class="{css overview}">
 
 If the root of your project contains a file named <code>.buckversion</code>,
-then Buck will expect that file to contain a Git hash that specifies the
-version of Buck that should be used to build your project.
+then Buck will expect that file to contain a Git hash and an optional branch 
+that specifies the version of Buck that should be used to build your project.
+
+<p>
+
+The contents of <code>.buckversion</code> are expected to be in the format
+
+{literal}<pre>
+[Buck git hash]:[Optional Remote branch]
+{/literal}</pre>
+
+<p>
+
+For example, the following would both be valid <code>.buckversion</code> files:
+
+<ul>
+  <li><code>abcdef1234567890</code>
+  <li><code>abcdef1234567890:refs/releases/release-01-10-2013</code>
+</ul>
 
 <p>
 
@@ -19,8 +36,8 @@ If <code>.buckversion</code> is present, then <code>bin/buck</code> will
 compare the value in <code>.buckversion</code> with the value of
 {sp}<code>git rev-parse HEAD</code> in the directory where you checked out
 Buck from Git. If the values differ, then Buck will update itself to the
-revision that you specified (using <code>git fetch</code> and
-{sp}<code>git checkout</code>), and then rebuild itself.
+revision that you specified (using <code>git fetch</code>, tracking the remote
+branch if needed, and <code>git checkout</code>), and then rebuild itself.
 
 <p>
 

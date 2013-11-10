@@ -16,19 +16,25 @@
 
 package com.facebook.buck.dalvik;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Set;
-
+import com.facebook.buck.java.classes.ClasspathTraversal;
+import com.facebook.buck.java.classes.ClasspathTraverser;
+import com.facebook.buck.java.classes.DefaultClasspathTraverser;
+import com.facebook.buck.java.classes.FileLike;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+
 public class DefaultZipSplitter implements ZipSplitter {
 
-  private final Set<File> inFiles;
+  private final Set<Path> inFiles;
   private final File outPrimary;
   private final Predicate<String> requiredInPrimaryZip;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
@@ -44,7 +50,7 @@ public class DefaultZipSplitter implements ZipSplitter {
    * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate, DexSplitStrategy, CanaryStrategy, File)
    */
   private DefaultZipSplitter(
-      Set<File> inFiles,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,
@@ -65,7 +71,7 @@ public class DefaultZipSplitter implements ZipSplitter {
   }
 
   public static DefaultZipSplitter splitZip(
-      Set<File> inFiles,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,
@@ -113,8 +119,8 @@ public class DefaultZipSplitter implements ZipSplitter {
     secondaryDexWriter.reset();
 
     try {
-      for (File inFile : inFiles) {
-        classpathTraverser.traverse(new ClasspathTraversal(ImmutableSet.of(inFile)) {
+      for (Path inFile : inFiles) {
+        classpathTraverser.traverse(new ClasspathTraversal(Collections.singleton(inFile)) {
           @Override
           public void visit(FileLike entry) throws IOException {
             processEntry(entry);

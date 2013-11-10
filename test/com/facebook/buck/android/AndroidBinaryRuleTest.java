@@ -19,12 +19,14 @@ package com.facebook.buck.android;
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.Keystore;
@@ -38,7 +40,6 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -47,13 +48,14 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,15 +66,11 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
 public class AndroidBinaryRuleTest {
-
-  /**
-   * Directory where native libraries are expected to put their output.
-   */
-  final String nativeOutDir = "buck-out/bin/__native_zips__fbandroid_with_dash_debug_fbsign__/";
 
   @Test
   public void testAndroidBinaryNoDx() {
@@ -133,8 +131,8 @@ public class AndroidBinaryRuleTest {
             ImmutableSet.<String>of(),
             "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt");
 
-    ProGuardObfuscateStep expectedObfuscation =
-        new ProGuardObfuscateStep(
+    Step expectedObfuscation =
+        ProGuardObfuscateStep.create(
           "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt",
           ImmutableSet.<String>of(),
           false,
@@ -250,7 +248,7 @@ public class AndroidBinaryRuleTest {
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
+        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
         if ("java/src/com/facebook/base/assets2".equals(rootPath)) {
           traversal.visit(
               new File("java/src/com/facebook/base/assets2",
@@ -327,7 +325,7 @@ public class AndroidBinaryRuleTest {
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
       public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = Paths.normalizePathSeparator(traversal.getRoot().getPath());
+        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
         if ("java/src/com/facebook/base/assets1".equals(rootPath)) {
           traversal.visit(
               new File("java/src/com/facebook/base/assets1",
@@ -381,17 +379,6 @@ public class AndroidBinaryRuleTest {
         .setBuildTarget(libraryOnebuildTarget);
 
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
-      BuildTarget resourceOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
-      AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
-          AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-          .setAssetsDirectory(assetDirectory)
-          .setRes(resDirectory)
-          .setBuildTarget(resourceOnebuildTarget));
-
-      androidLibraryRuleBuilder.addDep(androidResourceRule.getBuildTarget());
-    }
-
-    if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
       AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
@@ -441,6 +428,7 @@ public class AndroidBinaryRuleTest {
                 .getInputsToCompareToOutput());
 
     SourcePath proguardConfig = new FileSourcePath("java/src/com/facebook/proguard.cfg");
+    androidBinaryRuleBuilder.setBuildTarget(new BuildTarget("//java/src/com/facebook", "app2"));
     androidBinaryRuleBuilder.setProguardConfig(Optional.of(proguardConfig));
     MoreAsserts.assertListEquals(
         "getInputsToCompareToOutput() should include Proguard config, if present.",
@@ -456,12 +444,13 @@ public class AndroidBinaryRuleTest {
   @Test
   public void testGetUnsignedApkPath() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildTarget keystoreTarget = addKeystoreRule(ruleResolver);
 
     AndroidBinaryRule ruleInRootDirectory = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest("AndroidManifest.xml")
-        .setKeystore(addKeystoreRule(ruleResolver))
+        .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
     assertEquals(GEN_DIR + "/fb4a.apk", ruleInRootDirectory.getApkPath());
 
@@ -469,7 +458,7 @@ public class AndroidBinaryRuleTest {
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example:fb4a"))
         .setManifest("AndroidManifest.xml")
-        .setKeystore(addKeystoreRule(ruleResolver))
+        .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
     assertEquals(GEN_DIR + "/java/com/example/fb4a.apk", ruleInNonRootDirectory.getApkPath());
   }
@@ -485,11 +474,11 @@ public class AndroidBinaryRuleTest {
         .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16"));
 
-    String proguardDir = rule.getProguardOutputFromInputClasspath(
+    Path proguardDir = rule.getProguardOutputFromInputClasspath(
         BIN_DIR + "/first-party/orca/lib-base/lib__lib-base__classes");
     assertEquals(GEN_DIR + "/.proguard/fbandroid_with_dash_debug_fbsign/" +
         BIN_DIR + "/first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar",
-        proguardDir);
+        proguardDir.toString());
   }
 
   private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands) {
@@ -550,7 +539,7 @@ public class AndroidBinaryRuleTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "bash -c cp -R /path/to/source/* /path/to/destination/"));
+            "cp -R /path/to/source /path/to/destination"));
   }
 
   @Test
@@ -560,10 +549,8 @@ public class AndroidBinaryRuleTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "bash -c " +
-                "[ -d /path/to/source/armeabi-v7a ] && " +
-                "cp -R /path/to/source/armeabi-v7a /path/to/destination/ || " +
-                "exit 0"));
+            "[ -d /path/to/source/armeabi-v7a ] && mkdir -p /path/to/destination/armeabi-v7a " +
+                "&& cp -R /path/to/source/armeabi-v7a /path/to/destination/armeabi-v7a"));
   }
 
   @Test
@@ -573,17 +560,82 @@ public class AndroidBinaryRuleTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "bash -c [ -d /path/to/source/armeabi ] && " +
-                "cp -R /path/to/source/armeabi /path/to/destination/ || exit 0",
-            "bash -c [ -d /path/to/source/x86 ] && " +
-                "cp -R /path/to/source/x86 /path/to/destination/ || exit 0"));
+            "[ -d /path/to/source/armeabi ] && mkdir -p /path/to/destination/armeabi " +
+                "&& cp -R /path/to/source/armeabi /path/to/destination/armeabi",
+            "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
+                "&& cp -R /path/to/source/x86 /path/to/destination/x86"));
+  }
+
+  @Test
+  public void testFilterResources() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
+        new FakeAbstractBuildRuleBuilderParams())
+        .setBuildTarget(BuildTargetFactory.newInstance("//:target"))
+        .setManifest("AndroidManifest.xml")
+        .setKeystore(addKeystoreRule(resolver))
+        .setTarget("Google Inc:Google APIs:16")
+        .setResourceFilter(new ResourceFilter(ImmutableList.<String>of("mdpi")))
+        .setResourceCompressionMode("enabled_with_strings_as_assets");
+
+    AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
+    ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
+    Set<String> resourceDirectories = ImmutableSet.of("one", "two");
+
+    Set<String> filteredResDirs = buildRule.getFilteredResourceDirectories(
+        commandsBuilder, resourceDirectories);
+
+    assertEquals(
+        ImmutableSet.of(
+            "buck-out/bin/__filtered__target__/0",
+            "buck-out/bin/__filtered__target__/1"),
+        filteredResDirs);
+
+    ImmutableList<Step> commands = commandsBuilder.build();
+    assertEquals(3, commands.size());
+
+    FilterResourcesStep resourcesStep = (FilterResourcesStep)commands.get(0);
+    MakeCleanDirectoryStep cleanDirectoryStep = (MakeCleanDirectoryStep)commands.get(1);
+
+    assertTrue(resourcesStep.isFilterStrings());
+    assertEquals("mdpi", resourcesStep.getResourceFilter());
+    assertEquals(ImmutableBiMap.of(
+        "one", "buck-out/bin/__filtered__target__/0",
+        "two", "buck-out/bin/__filtered__target__/1"),
+        resourcesStep.getInResDirToOutResDirMap());
+
+    assertEquals("buck-out/bin/__strings_target__", cleanDirectoryStep.getPath());
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
       ImmutableSet<String> cpuFilters,
       String sourceDir,
       String destinationDir,
-      ImmutableList<String> expectedShellCommands) {
+      ImmutableList<String> expectedCommandDescriptions) {
+
+    class FakeProjectFilesystem extends ProjectFilesystem {
+
+      public FakeProjectFilesystem() {
+        super(new File("."));
+      }
+
+      @Override
+      public Function<String, Path> getPathRelativizer() {
+        return new Function<String, Path>() {
+
+          @Override
+          public Path apply(String input) {
+            return Paths.get(input);
+          }
+        };
+      }
+
+      @Override
+      public Path resolve(Path path) {
+        return path;
+      }
+    }
+
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
         new FakeAbstractBuildRuleBuilderParams())
@@ -602,14 +654,14 @@ public class AndroidBinaryRuleTest {
 
     ImmutableList<Step> steps = commands.build();
 
-    assertEquals(steps.size(), expectedShellCommands.size());
+    assertEquals(steps.size(), expectedCommandDescriptions.size());
     ExecutionContext context = createMock(ExecutionContext.class);
+    expect(context.getProjectFilesystem()).andReturn(new FakeProjectFilesystem()).anyTimes();
     replay(context);
 
     for (int i = 0; i < steps.size(); ++i) {
-      Iterable<String> observedArgs = ((BashStep)steps.get(i)).getShellCommand(context);
-      String observedCommand = Joiner.on(' ').join(observedArgs);
-      assertEquals(expectedShellCommands.get(i), observedCommand);
+      String description = steps.get(i).getDescription(context);
+      assertEquals(expectedCommandDescriptions.get(i), description);
     }
 
     verify(context);

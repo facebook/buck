@@ -84,7 +84,7 @@ public abstract class AbstractCommandOptions {
   }
 
   /** @return androidSdkDir */
-  protected Optional<File> findAndroidSdkDir() {
+  public static Optional<File> findAndroidSdkDir() {
     Optional<File> androidSdkDir = findDirectoryByPropertiesThenEnvironmentVariable(
         "sdk.dir", "ANDROID_SDK", "ANDROID_HOME");
     if (androidSdkDir.isPresent()) {
@@ -143,10 +143,10 @@ public abstract class AbstractCommandOptions {
 
   /**
    * @param propertyName The name of the property to look for in local.properties.
-   * @param environmentVariable The name of the environment variable to try.
+   * @param environmentVariables The name of the environment variables to try.
    * @return If present, the value is confirmed to be a directory.
    */
-  private Optional<File> findDirectoryByPropertiesThenEnvironmentVariable(
+  public static Optional<File> findDirectoryByPropertiesThenEnvironmentVariable(
       String propertyName,
       String... environmentVariables) {
     // First, try to find a value in local.properties using the specified propertyName.

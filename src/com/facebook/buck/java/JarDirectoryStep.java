@@ -32,7 +32,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closer;
 import com.google.common.io.Files;
 
 import java.io.ByteArrayInputStream;
@@ -192,34 +191,40 @@ public class JarDirectoryStep implements Step {
       Manifest manifest,
       Set<String> alreadyAddedEntries,
       BuckEventBus eventBus) throws IOException {
-    ZipFile zip = new ZipFile(file);
-    for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
-      ZipEntry entry = entries.nextElement();
-      String entryName = entry.getName();
+    try (ZipFile zip = new ZipFile(file)) {
+      for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
+        ZipEntry entry = entries.nextElement();
+        String entryName = entry.getName();
 
-      if (entryName.equals(JarFile.MANIFEST_NAME)) {
-        Manifest readManifest = readManifest(zip, entry);
-        merge(manifest, readManifest);
-        continue;
+        if (entryName.equals(JarFile.MANIFEST_NAME)) {
+          Manifest readManifest = readManifest(zip, entry);
+          merge(manifest, readManifest);
+          continue;
+        }
+
+        // We're in the process of merging a bunch of different jar files. These typically contain
+        // just ".class" files and the manifest, but they can also include things like license files
+        // from third party libraries and config files. We should include those license files within
+        // the jar we're creating. Extracting them is left as an exercise for the consumer of the jar.
+        // Because we don't know which files are important, the only ones we skip are duplicate class
+        // files.
+        if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
+          // Duplicate entries. Skip.
+          eventBus.post(LogEvent.create(
+              determineSeverity(entry), "Duplicate found when adding file to jar: %s", entryName));
+          continue;
+        }
+
+        // Reinitialize the compressed field to -1 as the ZipEntry(String) constructor would.
+        // See https://github.com/spearce/buck/commit/8338c1c3d4a546f577eed0c9941d9f1c2ba0a1b7.
+        ZipEntry newEntry = new ZipEntry(entry);
+        newEntry.setCompressedSize(-1);
+
+        jar.putNextEntry(newEntry);
+        InputStream inputStream = zip.getInputStream(entry);
+        ByteStreams.copy(inputStream, jar);
+        jar.closeEntry();
       }
-
-      // We're in the process of merging a bunch of different jar files. These typically contain
-      // just ".class" files and the manifest, but they can also include things like license files
-      // from third party libraries and config files. We should include those license files within
-      // the jar we're creating. Extracting them is left as an exercise for the consumer of the jar.
-      // Because we don't know which files are important, the only ones we skip are duplicate class
-      // files.
-      if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
-        // Duplicate entries. Skip.
-        eventBus.post(LogEvent.create(
-            determineSeverity(entry), "Duplicate found when adding file to jar: %s", entryName));
-        continue;
-      }
-
-      jar.putNextEntry(entry);
-      InputStream inputStream = zip.getInputStream(entry);
-      ByteStreams.copy(inputStream, jar);
-      jar.closeEntry();
     }
   }
 
@@ -228,16 +233,13 @@ public class JarDirectoryStep implements Step {
   }
 
   private Manifest readManifest(ZipFile zip, ZipEntry manifestMfEntry) throws IOException {
-    Closer closer = Closer.create();
-    ByteArrayOutputStream output = closer.register(
-        new ByteArrayOutputStream((int) manifestMfEntry.getSize()));
-    InputStream stream = closer.register(zip.getInputStream(manifestMfEntry));
-    try {
+    try (
+        ByteArrayOutputStream output = new ByteArrayOutputStream((int) manifestMfEntry.getSize());
+        InputStream stream = zip.getInputStream(manifestMfEntry);
+    ) {
       ByteStreams.copy(stream, output);
       ByteArrayInputStream rawManifest = new ByteArrayInputStream(output.toByteArray());
       return new Manifest(rawManifest);
-    } finally {
-      closer.close();
     }
   }
 

@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -32,8 +33,6 @@ import javax.annotation.Nullable;
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 public interface BuildRule extends Comparable<BuildRule> {
-
-  public static final String VISIBILITY_PUBLIC = "PUBLIC";
 
   public BuildTarget getBuildTarget();
 
@@ -73,7 +72,7 @@ public interface BuildRule extends Comparable<BuildRule> {
   /**
    * @return the inputs needed to build this build rule
    */
-  public Iterable<InputRule> getInputs();
+  public Iterable<Path> getInputs();
 
   /**
    * This method must be idempotent.

@@ -17,15 +17,19 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesStep.ImageScaler;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -46,16 +50,21 @@ public class FilterResourcesStepTest {
   private final static String second = "/second-path/res";
   private final static String third = "/third-path/res";
 
-  private final static ImmutableSet<String> resDirectories = ImmutableSet.of(first, second, third);
+  private final static ImmutableBiMap<String, String> inResDirToOutResDirMap =
+      ImmutableBiMap.of(
+          first, "/dest/1",
+          second, "/dest/2",
+          third, "/dest/3");
   private static Set<String> qualifiers = ImmutableSet.of("mdpi", "hdpi", "xhdpi");
   private final String targetDensity = "mdpi";
   private final File baseDestination = new File("/dest");
 
-  private final String scaleSource = getFile(first, "xhdpi", "other.png");
-  private final String scaleDest = getFile(first, "mdpi", "other.png");
+  private final String scaleSource = getDrawableFile(first, "xhdpi", "other.png");
+  private final String scaleDest = getDrawableFile(first, "mdpi", "other.png");
 
-  private String getFile(String dir, String qualifier, String filename) {
-    return new File(dir, String.format("drawable-%s/%s", qualifier, filename)).getPath();
+  private String getDrawableFile(String dir, String qualifier, String filename) {
+    return MorePaths.newPathInstance(
+        new File(dir, String.format("drawable-%s/%s", qualifier, filename))).toString();
   }
 
   @Test
@@ -93,8 +102,8 @@ public class FilterResourcesStepTest {
     // Create mock FilteredDirectoryCopier to find what we're calling on it.
     FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
     // We'll want to see what the filtering command passes to the copier.
-    Capture<Map<String, String>> dirMapCapture = new Capture<Map<String, String>>();
-    Capture<Predicate<File>> predCapture = new Capture<Predicate<File>>();
+    Capture<Map<String, String>> dirMapCapture = new Capture<>();
+    Capture<Predicate<File>> predCapture = new Capture<>();
     copier.copyDirs(EasyMock.capture(dirMapCapture),
         EasyMock.capture(predCapture));
     EasyMock.replay(copier);
@@ -111,15 +120,16 @@ public class FilterResourcesStepTest {
     EasyMock.replay(scaler);
 
     FilterResourcesStep command = new FilterResourcesStep(
-        resDirectories,
-        baseDestination,
-        targetDensity,
+        inResDirToOutResDirMap,
+        /* filterDrawables */ true,
+        /* filterStrings */ true,
         copier,
+        targetDensity,
         finder,
         scaler);
 
     EasyMock
-      .expect(finder.findDrawables(resDirectories))
+      .expect(finder.findDrawables(inResDirToOutResDirMap.keySet()))
       .andAnswer(new IAnswer<Set<String>>() {
         @SuppressWarnings("unchecked")
         @Override
@@ -127,7 +137,7 @@ public class FilterResourcesStepTest {
           ImmutableSet.Builder<String> builder = ImmutableSet.builder();
           for (String dir : (Iterable<String>) EasyMock.getCurrentArguments()[0]) {
             for (String qualifier : qualifiers) {
-              builder.add(getFile(dir, qualifier, "some.png"));
+              builder.add(getDrawableFile(dir, qualifier, "some.png"));
             }
           }
 
@@ -140,14 +150,14 @@ public class FilterResourcesStepTest {
 
     // Called by the downscaling step.
     EasyMock
-      .expect(finder.findDrawables(command.getFilteredResourceDirectories()))
+      .expect(finder.findDrawables(inResDirToOutResDirMap.values()))
       .andAnswer(new IAnswer<Set<String>>() {
         @SuppressWarnings("unchecked")
         @Override
         public Set<String> answer() throws Throwable {
           ImmutableSet.Builder<String> builder = ImmutableSet.builder();
           for (String dir : (Iterable<String>) EasyMock.getCurrentArguments()[0]) {
-            builder.add(getFile(dir, targetDensity, "some.png"));
+            builder.add(getDrawableFile(dir, targetDensity, "some.png"));
           }
 
           builder.add(scaleSource);
@@ -160,8 +170,8 @@ public class FilterResourcesStepTest {
     // We'll use this to verify the source->destination mappings created by the command.
     ImmutableMap.Builder<String, String> dirMapBuilder = ImmutableMap.builder();
 
-    Iterator<String> destIterator = command.getFilteredResourceDirectories().iterator();
-    for(String dir : resDirectories) {
+    Iterator<String> destIterator = inResDirToOutResDirMap.values().iterator();
+    for (String dir : inResDirToOutResDirMap.keySet()) {
       String nextDestination = destIterator.next();
       dirMapBuilder.put(dir, nextDestination);
 
@@ -176,7 +186,7 @@ public class FilterResourcesStepTest {
     assertEquals(dirMapBuilder.build(), dirMapCapture.getValue());
 
     // Ensure the right filter is created.
-    Set<String> drawables = finder.findDrawables(resDirectories);
+    Set<String> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet());
     Predicate<File> expectedPred = Filters.createImageDensityFilter(drawables, targetDensity);
     Predicate<File> capturedPred = predCapture.getValue();
     for (String drawablePath : drawables) {
@@ -187,5 +197,18 @@ public class FilterResourcesStepTest {
     // We shouldn't need the execution context, should call copyDirs once on the copier,
     // and we're calling finder.findDrawables twice.
     EasyMock.verify(copier, context, finder, filesystem, scaler);
+  }
+
+  @Test
+  public void testNonEnglishStringsPathRegex() {
+    assertTrue(matchesRegex("res/values-es/strings.xml"));
+    assertFalse(matchesRegex("res/values-/strings.xml"));
+    assertTrue(matchesRegex("/res/values-es/strings.xml"));
+    assertFalse(matchesRegex("rootres/values-es/strings.xml"));
+    assertTrue(matchesRegex("root/res/values-es-rUS/strings.xml"));
+  }
+
+  private static boolean matchesRegex(String input) {
+    return FilterResourcesStep.NON_ENGLISH_STRING_PATH.matcher(input).matches();
   }
 }

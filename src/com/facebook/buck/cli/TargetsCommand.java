@@ -28,11 +28,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -45,6 +44,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -110,7 +110,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         graph.getDependencyGraph(),
         new TargetsCommandPredicate(
             graph,
-            getProjectFilesystem().getPathRelativizer(),
             buildRuleTypesBuilder.build(),
             options.getReferencedFiles(getProjectFilesystem().getProjectRoot()),
             matchingBuildTargets));
@@ -334,30 +333,31 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     private DependencyGraph graph;
     private ImmutableSet<BuildRuleType> buildRuleTypes;
-    private ImmutableSet<InputRule> referencedInputs;
+    private ImmutableSet<Path> referencedInputs;
     private Set<String> basePathOfTargets;
     private Set<BuildRule> dependentTargets;
     private Set<BuildTarget> matchingBuildRules;
 
+    /**
+     * @param referencedPaths All of these paths must be relative to the project root.
+     */
     public TargetsCommandPredicate(
         PartialGraph partialGraph,
-        Function<String, String> pathRelativizer,
         ImmutableSet<BuildRuleType> buildRuleTypes,
-        ImmutableSet<String> referencedFiles,
+        ImmutableSet<String> referencedPaths,
         ImmutableSet<BuildTarget> matchingBuildRules) {
       this.graph = partialGraph.getDependencyGraph();
       this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
       this.matchingBuildRules = Preconditions.checkNotNull(matchingBuildRules);
 
-      Preconditions.checkNotNull(referencedFiles);
-      if (!referencedFiles.isEmpty()) {
-        this.referencedInputs = InputRule.inputPathsAsInputRules(referencedFiles, pathRelativizer);
+      Preconditions.checkNotNull(referencedPaths);
+      if (!referencedPaths.isEmpty()) {
+        this.referencedInputs = MorePaths.asPaths(referencedPaths);
         BuildFileTree tree = new BuildFileTree(partialGraph.getTargets());
         basePathOfTargets = Sets.newHashSet();
         dependentTargets = Sets.newHashSet();
-        for (InputRule input : referencedInputs) {
-          basePathOfTargets.add(tree.getBasePathOfAncestorTarget(
-              input.getBuildTarget().getBasePath()));
+        for (Path input : referencedInputs) {
+          basePathOfTargets.add(tree.getBasePathOfAncestorTarget(input.toString()));
         }
       } else {
         basePathOfTargets = ImmutableSet.of();
@@ -375,7 +375,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         // Any referenced file, only those with the nearest BuildTarget can
         // directly depend on that file.
         if (!isDependent && basePathOfTargets.contains(rule.getBuildTarget().getBasePath())) {
-          for (InputRule input : rule.getInputs()) {
+          for (Path input : rule.getInputs()) {
             if (referencedInputs.contains(input)) {
               isDependent = true;
               break;

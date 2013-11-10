@@ -21,9 +21,11 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.junit.Test;
@@ -60,9 +62,9 @@ public class AbstractDependencyVisitorTest {
     final List<BuildRule> buildRuleTraversalOrder = Lists.newArrayList();
     new AbstractDependencyVisitor(initialRule) {
       @Override
-      public boolean visit(BuildRule rule) {
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
         buildRuleTraversalOrder.add(rule);
-        return true;
+        return rule.getDeps();
       }
     }.start();
 
@@ -78,6 +80,56 @@ public class AbstractDependencyVisitorTest {
             ruleB,
             ruleC,
             ruleA),
+        buildRuleTraversalOrder);
+  }
+
+  @Test
+  public void testSubsetWorks() {
+    // The dependency graph of build rules being built up is as follows:
+    //
+    //                       10
+    //                /    /   \     \
+    //              6    7       8     9
+    //            /   \        /   \     \
+    //          5       4    3       2     1
+    //
+    BuildRule rule1 = createRule("1");
+    BuildRule rule2 = createRule("2");
+    BuildRule rule3 = createRule("3");
+    BuildRule rule4 = createRule("4");
+    BuildRule rule5 = createRule("5");
+
+    BuildRule rule6 = createRule("6", rule5, rule4);
+    BuildRule rule7 = createRule("7");
+    BuildRule rule8 = createRule("8", rule3, rule2);
+    BuildRule rule9 = createRule("9", rule1);
+
+    BuildRule initialRule = createRule("10", rule6, rule7, rule8, rule9);
+
+    final List<BuildRule> buildRuleTraversalOrder = Lists.newArrayList();
+
+    // This visitor only visits dependencies whose node names are even numbers.
+    new AbstractDependencyVisitor(initialRule) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        buildRuleTraversalOrder.add(rule);
+        return ImmutableSet.copyOf(Iterables.filter(rule.getDeps(), new Predicate<BuildRule>() {
+          @Override
+          public boolean apply(BuildRule input) {
+            return Integer.parseInt(input.getBuildTarget().getShortName()) % 2 == 0;
+          }
+        }));
+      }
+    }.start();
+
+    assertEquals(
+        "Dependencies should be explored depth-first, only containing rules whose rule name is " +
+            "an even number",
+        ImmutableList.of(initialRule,
+            rule6,
+            rule8,
+            rule4,
+            rule2),
         buildRuleTraversalOrder);
   }
 

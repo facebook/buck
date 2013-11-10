@@ -77,18 +77,17 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   @Override
-  public final int runCommand(BuckConfig buckConfig, String[] args) throws IOException {
+  public final int runCommand(BuckConfig buckConfig, String... args) throws IOException {
     ParserAndOptions<T> parserAndOptions = createParser(buckConfig);
     T options = parserAndOptions.options;
     CmdLineParser parser = parserAndOptions.parser;
 
     boolean hasValidOptions = false;
     try {
-
       parser.parseArgument(args);
       hasValidOptions = true;
     } catch (CmdLineException e) {
-      System.err.println(e.getMessage());
+      console.getStdErr().println(e.getMessage());
     }
 
     if (hasValidOptions && !options.showHelp()) {

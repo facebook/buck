@@ -32,9 +32,10 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -61,6 +62,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -87,6 +90,7 @@ class BuckConfig {
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
   private static final String DEFAULT_CASSANDRA_MODE = CassandraMode.readwrite.name();
+  private static final String DEFAULT_MAX_TRACES = "25";
 
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
@@ -307,8 +311,8 @@ class BuckConfig {
 
     // Take care not to ignore absolute paths.
     String buckdDir = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
-    String cacheDir = getCacheDir();
-    for (String path : ImmutableList.of(buckdDir, cacheDir)) {
+    Path cacheDir = getCacheDir();
+    for (String path : ImmutableList.of(buckdDir, cacheDir.toString())) {
       if (!path.isEmpty() && path.charAt(0) != '/') {
         builder.add(path);
       }
@@ -324,11 +328,11 @@ class BuckConfig {
     // Normalize paths in order to eliminate trailing '/' characters and whatnot.
     return ImmutableSet.<String>builder().addAll(Iterables.transform(builder.build(),
         new Function<String, String>() {
-      @Override
-      public String apply(String path) {
-        return Paths.normalizePathSeparator(new File(path).getPath());
-      }
-    })).build();
+          @Override
+          public String apply(String path) {
+            return MorePaths.newPathInstance(path).toString();
+          }
+        })).build();
   }
 
   public ImmutableSet<Pattern> getTempFilePatterns() {
@@ -431,6 +435,10 @@ class BuckConfig {
     return Long.parseLong(getValue("test", "timeout").or("0"));
   }
 
+  public int getMaxTraces() {
+    return Integer.parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
+  }
+
   public ImmutableSet<String> getListenerJars() {
     String jarPathsString = getValue("extensions", "listeners").or("");
     Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
@@ -499,17 +507,18 @@ class BuckConfig {
   }
 
   public ArtifactCache createArtifactCache(BuckEventBus buckEventBus) {
-    String cacheMode = getValue("cache", "mode").or("");
-    if (cacheMode.isEmpty()) {
+    ImmutableList<String> modes = getArtifactCacheModes();
+    if (modes.isEmpty()) {
       return new NoopArtifactCache();
     }
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
-    Iterable<String> modes = Splitter.on(',').trimResults().split(cacheMode);
     try {
       for (String mode : modes) {
         switch (ArtifactCacheNames.valueOf(mode)) {
         case dir:
-          builder.add(createDirArtifactCache());
+          ArtifactCache dirArtifactCache = createDirArtifactCache();
+          buckEventBus.register(dirArtifactCache);
+          builder.add(dirArtifactCache);
           break;
         case cassandra:
           ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(buckEventBus);
@@ -520,7 +529,7 @@ class BuckConfig {
         }
       }
     } catch (IllegalArgumentException e) {
-      throw new HumanReadableException("Unusable cache.mode: '%s'", cacheMode);
+      throw new HumanReadableException("Unusable cache.mode: '%s'", modes.toString());
     }
     ImmutableList<ArtifactCache> artifactCaches = builder.build();
     if (artifactCaches.size() == 1) {
@@ -531,20 +540,34 @@ class BuckConfig {
     }
   }
 
+  ImmutableList<String> getArtifactCacheModes() {
+    String cacheMode = getValue("cache", "mode").or("");
+    return ImmutableList.copyOf(Splitter.on(',').trimResults().omitEmptyStrings().split(cacheMode));
+  }
+
   @VisibleForTesting
-  String getCacheDir() {
+  Path getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
     if (!cacheDir.isEmpty() && cacheDir.charAt(0) == '/') {
-      return cacheDir;
+      return Paths.get(cacheDir);
     }
     return projectFilesystem.getPathRelativizer().apply(cacheDir);
   }
 
+  public Optional<Long> getCacheDirMaxSizeBytes() {
+    return getValue("cache", "dir_max_size").transform(new Function<String, Long>() {
+      @Override
+      public Long apply(String input) {
+        return SizeUnit.parseBytes(input);
+      }
+    });
+  }
+
   private ArtifactCache createDirArtifactCache() {
-    String cacheDir = getCacheDir();
-    File dir = new File(cacheDir);
+    Path cacheDir = getCacheDir();
+    File dir = cacheDir.toFile();
     try {
-      return new DirArtifactCache(dir);
+      return new DirArtifactCache(dir, getCacheDirMaxSizeBytes());
     } catch (IOException e) {
       throw new HumanReadableException("Failure initializing artifact cache directory: %s", dir);
     }

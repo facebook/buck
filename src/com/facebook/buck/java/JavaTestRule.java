@@ -53,6 +53,8 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -157,7 +159,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    String pathToTestOutput = getPathToTestOutput();
+    Path pathToTestOutput = getPathToTestOutputDirectory();
     MakeCleanDirectoryStep mkdirClean = new MakeCleanDirectoryStep(pathToTestOutput);
     steps.add(mkdirClean);
 
@@ -181,7 +183,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         classpathEntries,
         testClassNames,
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
-        pathToTestOutput,
+        pathToTestOutput.toString(),
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled());
     steps.add(junit);
@@ -229,7 +231,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       return true;
     }
 
-    File outputDirectory = new File(getPathToTestOutput());
+    File outputDirectory = executionContext.getProjectFilesystem().getFileForRelativePath(
+        getPathToTestOutputDirectory());
     for (String testClass : testClassNames) {
       File testResultFile = new File(outputDirectory, testClass + ".xml");
       if (!testResultFile.isFile()) {
@@ -240,11 +243,13 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     return true;
   }
 
-  private String getPathToTestOutput() {
-    return String.format("%s/%s__java_test_%s_output__",
+  @Override
+  public Path getPathToTestOutputDirectory() {
+    return Paths.get(
         BuckConstant.GEN_DIR,
-        getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName());
+        getBuildTarget().getBaseNameWithSlash(),
+        String.format("__java_test_%s_output__", getBuildTarget().getShortName())
+    );
   }
 
   @Override
@@ -265,7 +270,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         ProjectFilesystem filesystem = context.getProjectFilesystem();
         for (String testClass : testClassNames) {
           File testResultFile = filesystem.getFileForRelativePath(
-              String.format("%s/%s.xml", getPathToTestOutput(), testClass));
+              getPathToTestOutputDirectory().resolve(String.format("%s.xml", testClass)));
           TestCaseSummary summary = XmlTestResultParser.parse(testResultFile);
           summaries.add(summary);
         }
@@ -291,7 +296,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     CompiledClassFileFinder(JavaTestRule rule, ExecutionContext context) {
       Preconditions.checkState(rule.isRuleBuilt(),
           "Rule must be built so that the classes folder is available");
-      String outputPath;
+      Path outputPath;
       String relativeOutputPath = rule.getPathToOutputFile();
       if (relativeOutputPath != null) {
         outputPath = context.getProjectFilesystem().getPathRelativizer().apply(relativeOutputPath);
@@ -323,7 +328,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      * @param jarFile jar where the generated .class files were written
      */
     @VisibleForTesting
-    static Set<String> getClassNamesForSources(Set<String> sources, @Nullable String jarFile) {
+    static Set<String> getClassNamesForSources(Set<String> sources, @Nullable Path jarFile) {
       if (jarFile == null) {
         return ImmutableSet.of();
       }
@@ -339,7 +344,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       }
 
       final ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
-      ZipFileTraversal traversal = new ZipFileTraversal(new File(jarFile)) {
+      ZipFileTraversal traversal = new ZipFileTraversal(jarFile.toFile()) {
 
         @Override
         public void visit(ZipFile zipFile, ZipEntry zipEntry) {

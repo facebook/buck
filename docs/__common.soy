@@ -34,7 +34,7 @@
 <html>
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#">
   <title>{$fullTitle}</title>
-  <link type="image/png" rel="icon" href="{ROOT}favicon.png" />
+  <link type="image/png" rel="icon" href="{ROOT}static/favicon.png" />
   <meta http-equiv="content-type" content="text/html;charset=utf-8">
   {if $prettify}
     <link type="text/css"
@@ -43,7 +43,7 @@
           >
   {/if}
   // List buck.css second to override prettify.
-  <link type="text/css" rel="stylesheet" href="{ROOT}buck.css">
+  <link type="text/css" rel="stylesheet" href="{ROOT}static/buck.css">
 
 // Google Analytics.
 <script>
@@ -80,7 +80,7 @@ ga('send', 'pageview');
 
 // Image copied from https://github.com/blog/273-github-ribbons
 <a href="https://github.com/facebook/buck">
-  <img id="fork" src="{ROOT}fork_me.png" alt="Fork me on GitHub">
+  <img id="fork" src="{ROOT}static/fork_me.png" alt="Fork me on GitHub">
 </a>
 
 <div id="fb-root"></div>
@@ -123,8 +123,15 @@ ga('send', 'pageview');
   <li><span class="{css toc_header}">Getting Started</span>
   <ul>
     <li><a href="{ROOT}">Overview</a>
-    <li><a href="{ROOT}setup/quickstart.html">Quick Start</a>
+    <li><a href="{ROOT}setup/quick_start.html">Quick Start</a>
     <li><a href="{ROOT}setup/install.html">Downloading and Installing Buck</a>
+  </ul>
+  <li><span class="{css toc_header}">About</span>
+  <ul>
+    <li><a href="{ROOT}concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a>
+    <li><a href="{ROOT}concept/troubleshooting.html">Troubleshooting</a>
+    <li><a href="{ROOT}about/performance_tuning.html">Performance Tuning</a>
+    <li><a href="{ROOT}concept/faq.html">FAQ</a>
   </ul>
   <li><span class="{css toc_header}">Concepts</span>
   <ul>
@@ -136,8 +143,6 @@ ga('send', 'pageview');
     <li><a href="{ROOT}concept/buckconfig.html">.buckconfig</a>
     <li><a href="{ROOT}concept/build_target_pattern.html">Build Target Pattern</a>
     <li><a href="{ROOT}concept/visibility.html">Visibility</a>
-    <li><a href="{ROOT}concept/troubleshooting.html">Troubleshooting</a>
-    <li><a href="{ROOT}concept/faq.html">FAQ</a>
   </ul>
   <li><span class="{css toc_header}">Build Rules</span>
   <ul>
@@ -180,6 +185,8 @@ ga('send', 'pageview');
         'clean',
         'install',
         'project',
+        'query',
+        'quickstart',
         'targets',
         'test',
         'uninstall',
@@ -411,6 +418,33 @@ ga('send', 'pageview');
 /***/
 {template .project_config}
 {call .ruleLink}{param name : 'project_config' /}{/call}
+{/template}
+
+/**
+ * @param name
+ */
+{template .cmd_link}
+<a href="{ROOT}command/{$name}.html"><code>buck {$name}</code></a>
+{/template}
+
+/***/
+{template .cmd_clean}
+{call .cmd_link}{param name : 'clean' /}{/call}
+{/template}
+
+/***/
+{template .cmd_project}
+{call .cmd_link}{param name : 'project' /}{/call}
+{/template}
+
+/***/
+{template .cmd_quickstart}
+{call .cmd_link}{param name : 'quickstart' /}{/call}
+{/template}
+
+/***/
+{template .concept_buckconfig}
+<a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>
 {/template}
 
 /***/

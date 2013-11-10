@@ -16,15 +16,21 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 
-public class FakeAbstractBuildRuleBuilderParams implements
-    AbstractBuildRuleBuilderParams {
+import java.nio.file.Path;
+
+public class FakeAbstractBuildRuleBuilderParams implements AbstractBuildRuleBuilderParams {
 
   @Override
-  public Function<String, String> getPathRelativizer() {
-    return Functions.identity();
+  public Function<String, Path> getPathRelativizer() {
+    return IdentityPathRelativizer.getIdentityRelativizer();
+  }
+
+  @Override
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+    return new FakeRuleKeyBuilderFactory();
   }
 
 }

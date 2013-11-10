@@ -34,6 +34,7 @@ import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -81,26 +82,27 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
         projectFilesystem.getPathRelativizer().apply(main));
   }
 
-  private ImmutableSet<Path> getPythonPathEntries() {
+  @VisibleForTesting
+  ImmutableSet<Path> getPythonPathEntries() {
     final ImmutableSet.Builder<Path> entries = ImmutableSet.builder();
 
     final PythonBinaryRule pythonBinaryRule = this;
     new AbstractDependencyVisitor(this) {
 
       @Override
-      public boolean visit(BuildRule rule) {
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
         Buildable buildable = rule.getBuildable();
         if (buildable instanceof PythonLibrary) {
           PythonLibrary pythonLibrary = (PythonLibrary) buildable;
 
           Path pythonPathEntry = pythonLibrary.getPythonPathDirectory();
           entries.add(pythonPathEntry);
-          return true;
+          return rule.getDeps();
         }
 
         // AbstractDependencyVisitor will start from this (PythonBinaryRule) so make sure it
         // descends to its dependencies even though it is not a library rule.
-        return rule == pythonBinaryRule;
+        return maybeVisitAllDeps(rule, rule == pythonBinaryRule);
       }
 
     }.start();

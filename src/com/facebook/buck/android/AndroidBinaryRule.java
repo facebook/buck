@@ -45,38 +45,41 @@ import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.AbstractGenruleStep;
-import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
-import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -132,7 +135,32 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     ARM,
     ARMV7,
     X86,
-    MIPS
+    MIPS,
+  }
+
+  static enum ResourceCompressionMode {
+    DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
+    ENABLED(/* isCompressResources */ true, /* isStoreStringsAsAssets */ false),
+    ENABLED_WITH_STRINGS_AS_ASSETS(
+      /* isCompressResources */ true,
+      /* isStoreStringsAsAssets */ true),
+    ;
+
+    private final boolean isCompressResources;
+    private final boolean isStoreStringsAsAssets;
+
+    private ResourceCompressionMode(boolean isCompressResources, boolean isStoreStringsAsAssets) {
+      this.isCompressResources = isCompressResources;
+      this.isStoreStringsAsAssets = isStoreStringsAsAssets;
+    }
+
+    public boolean isCompressResources() {
+      return isCompressResources;
+    }
+
+    public boolean isStoreStringsAsAssets() {
+      return isStoreStringsAsAssets;
+    }
   }
 
   private final String manifest;
@@ -144,7 +172,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private DexSplitMode dexSplitMode;
   private final boolean useAndroidProguardConfigWithOptimizations;
   private final Optional<SourcePath> proguardConfig;
-  private final boolean compressResources;
+  private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> primaryDexSubstrings;
   private final long linearAllocHardLimit;
 
@@ -184,7 +212,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       DexSplitMode dexSplitMode,
       boolean useAndroidProguardConfigWithOptimizations,
       Optional<SourcePath> proguardConfig,
-      boolean compressResources,
+      ResourceCompressionMode resourceCompressionMode,
       Set<String> primaryDexSubstrings,
       long linearAllocHardLimit,
       Optional<SourcePath> primaryDexClassesFile,
@@ -202,7 +230,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-    this.compressResources = compressResources;
+    this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
     this.linearAllocHardLimit = linearAllocHardLimit;
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
@@ -242,7 +270,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
         .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
-        .set("compressResources", compressResources)
+        .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("primaryDexSubstrings", primaryDexSubstrings)
         .set("linearAllocHardLimit", linearAllocHardLimit)
         .set("primaryDexClassesFile", primaryDexClassesFile.transform(SourcePath.TO_REFERENCE))
@@ -269,8 +297,20 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return packageType == PackageType.RELEASE;
   }
 
-  public boolean isCompressResources(){
-    return this.compressResources;
+  private boolean isCompressResources(){
+    return resourceCompressionMode.isCompressResources();
+  }
+
+  private boolean isStoreStringsAsAssets() {
+    return resourceCompressionMode.isStoreStringsAsAssets();
+  }
+
+  public ResourceCompressionMode getResourceCompressionMode() {
+    return resourceCompressionMode;
+  }
+
+  public boolean requiresResourceFilter() {
+    return resourceFilter.isEnabled() || isStoreStringsAsAssets();
   }
 
   public FilterResourcesStep.ResourceFilter getResourceFilter() {
@@ -310,28 +350,53 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   }
 
-  // TODO(user): Replace the BashSteps in this class with Steps that are platform-agnostic.
-  // You'll need to do this as part of making it possible to build an APK on Windows using Buck.
-
   @VisibleForTesting
   void copyNativeLibrary(String sourceDir,
       String destinationDir,
       ImmutableList.Builder<Step> commands) {
+    Path sourceDirPath = Paths.get(sourceDir);
+    Path destinationDirPath = Paths.get(destinationDir);
+
     if (getCpuFilters().isEmpty()) {
-      commands.add(new BashStep(String.format("cp -R %s/* %s", sourceDir, destinationDir)));
+      commands.add(new CopyStep(sourceDirPath, destinationDirPath, true));
     } else {
       for (TargetCpuType cpuType: getCpuFilters()) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
-        String libsDirectory = sourceDir + "/" + abiDirectoryComponent.get();
-        commands.add(new BashStep(String.format(
-            "[ -d %s ] && cp -R %s %s || exit 0", libsDirectory, libsDirectory, destinationDir)));
+
+        final Path libSourceDir = sourceDirPath.resolve(abiDirectoryComponent.get());
+        Path libDestinationDir = destinationDirPath.resolve(abiDirectoryComponent.get());
+
+        final MkdirStep mkDirStep = new MkdirStep(libDestinationDir);
+        final CopyStep copyStep = new CopyStep(libSourceDir, libDestinationDir, true);
+        commands.add(new Step() {
+          @Override
+          public int execute(ExecutionContext context) {
+            if (!context.getProjectFilesystem().exists(libSourceDir.toString())) {
+              return 0;
+            }
+            if (mkDirStep.execute(context) == 0 && copyStep.execute(context) == 0) {
+              return 0;
+            }
+            return 1;
+          }
+
+          @Override
+          public String getShortName() {
+            return "copy_native_libraries";
+          }
+
+          @Override
+          public String getDescription(ExecutionContext context) {
+            ImmutableList.Builder<String> stringBuilder = ImmutableList.builder();
+            stringBuilder.add(String.format("[ -d %s ]", libSourceDir.toString()));
+            stringBuilder.add(mkDirStep.getDescription(context));
+            stringBuilder.add(copyStep.getDescription(context));
+            return Joiner.on(" && ").join(stringBuilder.build());
+          }
+        });
       }
     }
-  }
-
-  public DexSplitMode getDexSplitMode() {
-    return dexSplitMode;
   }
 
   /** The APK at this path is the final one that points to an APK that a user should install. */
@@ -360,6 +425,52 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return inputs.build();
   }
 
+  /**
+   * Sets up filtering of resources, images/drawables and strings in particular, based on build
+   * rule parameters {@code resourceFilter} and {@code isStoreStringsAsAssets}.
+   *
+   * {@link com.facebook.buck.android.FilterResourcesStep.ResourceFilter} {@code resourceFilter}
+   * determines which drawables end up in the APK (based on density - mdpi, hdpi etc), and also
+   * whether higher density drawables get scaled down to the specified density (if not present).
+   *
+   * {@code isStoreStringsAsAssets} determines whether non-english string resources are packaged
+   * separately as assets (and not bundled together into the {@code resources.arsc} file).
+   *
+   * @return The set of resource directories that will eventually contain filtered resources.
+   */
+  @VisibleForTesting
+  Set<String> getFilteredResourceDirectories(
+      ImmutableList.Builder<Step> commands,
+      Set<String> resourceDirectories) {
+    ImmutableBiMap.Builder<String, String> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
+    String resDestinationBasePath = getBinPath("__filtered__%s__");
+    int count = 0;
+    for (String resDir : resourceDirectories) {
+      filteredResourcesDirMapBuilder.put(resDir,
+          Paths.get(resDestinationBasePath, String.valueOf(count++)).toString());
+    }
+
+    ImmutableBiMap<String, String> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
+    FilterResourcesStep.Builder filterResourcesStepBuilder = FilterResourcesStep.builder()
+        .setInResToOutResDirMap(resSourceToDestDirMap)
+        .setResourceFilter(resourceFilter);
+
+    if (isStoreStringsAsAssets()) {
+      filterResourcesStepBuilder.enableStringsFilter();
+    }
+
+    FilterResourcesStep filterResourcesStep = filterResourcesStepBuilder.build();
+    commands.add(filterResourcesStep);
+
+    if (isStoreStringsAsAssets()) {
+      Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
+      commands.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
+      commands.add(new CompileStringsStep(filterResourcesStep, tmpStringsDirPath));
+    }
+
+    return resSourceToDestDirMap.values();
+  }
+
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -379,20 +490,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     Set<String> resDirectories = transitiveDependencies.resDirectories;
     Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
 
-
-    FilterResourcesStep.ResourceFilter resourceFilter = getResourceFilter();
-    // If resource filtering was requested (currently only by dpi).
-    if (resourceFilter.isEnabled()) {
-      FilterResourcesStep filterResourcesCommand = new FilterResourcesStep(
-          resDirectories,
-          new File(getBinPath("__filtered__%s__")),
-          resourceFilter.getDensity(),
-          DefaultFilteredDirectoryCopier.getInstance(),
-          FilterResourcesStep.DefaultDrawableFinder.getInstance(),
-          resourceFilter.shouldDownscale() ? FilterResourcesStep.ImageMagickScaler.getInstance() : null
-      );
-      commands.add(filterResourcesCommand);
-      resDirectories = filterResourcesCommand.getFilteredResourceDirectories();
+    if (requiresResourceFilter()) {
+      resDirectories = getFilteredResourceDirectories(commands, resDirectories);
     }
 
     // Extract the resources from third-party jars.
@@ -419,16 +518,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // to reflect that.
       final String preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
       final String preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
+      commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesInDir));
+      commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       commands.add(new SymlinkFilesIntoDirectoryStep(
-          java.nio.file.Paths.get("."),
+          Paths.get("."),
           dexTransitiveDependencies.classpathEntriesToDex,
-          java.nio.file.Paths.get(preprocessJavaClassesInDir)
+          Paths.get(preprocessJavaClassesInDir)
           ));
       classpathEntriesToDex = FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
           .transform(new Function<String, String>() {
             @Override
             public String apply(String classpathEntry) {
-              return java.nio.file.Paths.get(preprocessJavaClassesOutDir, classpathEntry).toString();
+              return Paths.get(preprocessJavaClassesOutDir, classpathEntry).toString();
             }
           })
           .toSet();
@@ -530,10 +631,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       nativeLibraryDirectories.add(libSubdirectory);
       commands.add(new MakeCleanDirectoryStep(libSubdirectory));
       for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
-        // TODO(mbolin): Verify whether this check is actually necessary. If not, remove it.
-        if (nativeLibDir.endsWith("/")) {
-          nativeLibDir = nativeLibDir.substring(0, nativeLibDir.length() - 1);
-        }
         copyNativeLibrary(nativeLibDir, libSubdirectory, commands);
       }
     }
@@ -544,7 +641,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     Optional<String> assetsDirectory;
     if (transitiveDependencies.assetsDirectories.isEmpty() && extraAssets.isEmpty()
-        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
+        && !isStoreStringsAsAssets()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
@@ -556,6 +654,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
         copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, commands);
       }
+    }
+
+    if (isStoreStringsAsAssets()) {
+      Path stringAssetsDir = Paths.get(assetsDirectory.get()).resolve("strings");
+      commands.add(new MakeCleanDirectoryStep(stringAssetsDir));
+      commands.add(new CopyStep(
+          getPathForTmpStringAssetsDirectory(),
+          stringAssetsDir,
+          /* shouldRecurse */ true));
     }
 
     commands.add(new MkdirStep(outputGenDirectory));
@@ -667,8 +774,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
       commands.add(new MkdirAndSymlinkFileStep(
-          Paths.normalizePathSeparator(entry.getValue().getPath()),
-          Paths.normalizePathSeparator(destinationDirectory + "/" + entry.getKey())));
+          MorePaths.newPathInstance(entry.getValue()).toString(),
+          MorePaths.newPathInstance(destinationDirectory + "/" + entry.getKey()).toString()));
     }
 
     return Optional.of(destination);
@@ -714,17 +821,21 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * @return path to directory (will not include trailing slash)
    */
   @VisibleForTesting
-  String getPathForProGuardDirectory() {
-    return String.format("%s/%s.proguard/%s",
+  Path getPathForProGuardDirectory() {
+    return MorePaths.newPathInstance(
+        String.format("%s/%s.proguard/%s",
         BuckConstant.GEN_DIR,
         getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName());
+        getBuildTarget().getShortName()));
   }
 
   @VisibleForTesting
   String getPathToAllAssetsDirectory() {
-    String format = "__assets_%s__";
-    return getBinPath(format);
+    return getBinPath("__assets_%s__");
+  }
+
+  private Path getPathForTmpStringAssetsDirectory() {
+    return Paths.get(getBinPath("__strings_%s__"));
   }
 
   /**
@@ -786,15 +897,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @VisibleForTesting
-  String getProguardOutputFromInputClasspath(String classpathEntry) {
+  Path getProguardOutputFromInputClasspath(String classpathEntry) {
     // Hehe, this is so ridiculously fragile.
     Preconditions.checkArgument(classpathEntry.charAt(0) != '/',
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
-    String obfuscatedName = Paths.getBasename(classpathEntry, ".jar") + "-obfuscated.jar";
-    String dirName = Paths.normalizePathSeparator(new File(classpathEntry).getParent());
-    String outputJar = getPathForProGuardDirectory() + "/" + dirName + "/" +
-        obfuscatedName;
+    String obfuscatedName = Files.getNameWithoutExtension(classpathEntry) + "-obfuscated.jar";
+    Path dirName = MorePaths.newPathInstance(new File(classpathEntry).getParent());
+    Path outputJar = getPathForProGuardDirectory().resolve(dirName).resolve(obfuscatedName);
     return outputJar;
   }
 
@@ -820,7 +930,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
 
     // Clean out the directory for generated ProGuard files.
-    String proguardDirectory = getPathForProGuardDirectory();
+    Path proguardDirectory = getPathForProGuardDirectory();
     commands.add(new MakeCleanDirectoryStep(proguardDirectory));
 
     // Generate a file of ProGuard config options using aapt.
@@ -846,18 +956,19 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .toMap(new Function<String, String>() {
           @Override
           public String apply(String classpathEntry) {
-            return getProguardOutputFromInputClasspath(classpathEntry);
+            return getProguardOutputFromInputClasspath(classpathEntry).toString();
           }
         });
 
     // Run ProGuard on the classpath entries.
-    ProGuardObfuscateStep obfuscateCommand = new ProGuardObfuscateStep(
+    // TODO: ProGuardObfuscateStep's final argument should be a Path
+    Step obfuscateCommand = ProGuardObfuscateStep.create(
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
         useAndroidProguardConfigWithOptimizations,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
-        proguardDirectory);
+        proguardDirectory.toString());
     commands.add(obfuscateCommand);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
@@ -951,7 +1062,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
-    String successDir = getBinPath("__%s_smart_dex__/.success");
+    Path successDir = Paths.get(getBinPath("__%s_smart_dex__/.success"));
     commands.add(new MkdirStep(successDir));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if
@@ -971,7 +1082,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         secondaryInputsDir,
         successDir,
         Optional.<Integer>absent(),
-        dexSplitMode.getDexStore());
+        dexSplitMode.getDexStore(),
+        /* optimize */ PackageType.RELEASE.equals(packageType));
     commands.add(smartDexingCommand);
   }
 
@@ -1041,7 +1153,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         /* useLinearAllocSplitDex */ false);
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<SourcePath> proguardConfig = Optional.absent();
-    private boolean compressResources = false;
+    private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
     private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
     private long linearAllocHardLimit = 0;
     private Optional<SourcePath> primaryDexClassesFile = Optional.absent();
@@ -1084,7 +1196,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           dexSplitMode,
           useAndroidProguardConfigWithOptimizations,
           proguardConfig,
-          compressResources,
+          resourceCompressionMode,
           primaryDexSubstrings.build(),
           linearAllocHardLimit,
           primaryDexClassesFile,
@@ -1164,11 +1276,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       return this;
     }
 
-    public Builder setCompressResources(boolean compressResources) {
-      this.compressResources = compressResources;
-      return this;
-    }
-
     public Builder addPrimaryDexSubstrings(Iterable<String> primaryDexSubstrings) {
       this.primaryDexSubstrings.addAll(primaryDexSubstrings);
       return this;
@@ -1186,6 +1293,20 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     public Builder setResourceFilter(ResourceFilter resourceFilter) {
       this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+      return this;
+    }
+
+    public Builder setResourceCompressionMode(String resourceCompressionMode) {
+      Preconditions.checkNotNull(resourceCompressionMode);
+      try {
+        this.resourceCompressionMode = ResourceCompressionMode.valueOf(
+            resourceCompressionMode.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new HumanReadableException(String.format(
+            "In %s, android_binary() was passed an invalid resource compression mode: %s",
+            buildTarget.getFullyQualifiedName(),
+            resourceCompressionMode));
+      }
       return this;
     }
 

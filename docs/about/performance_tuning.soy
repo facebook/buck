@@ -1,0 +1,65 @@
+{namespace buck.performance}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Performance Tuning' /}
+    {param content}
+
+<h2>Performance Tuning Your Builds</h2>
+
+Buck <a href="{ROOT}concept/what_makes_buck_so_fast.html">does a lot of work</a>
+{sp} to make builds as fast as possible, and we also give developers tools to
+figure out where the time is being spent inside of their builds.
+
+<h2>Super Console</h2>
+
+<img id="super_console_sample"
+     src="{ROOT}static/buck-build-15fps.gif"
+     alt="Chrome Tracing Sample">
+
+<p>
+
+When running Buck in an{sp}
+<a href="http://en.wikipedia.org/wiki/ANSI_escape_code">Ansi</a> compliant
+terminal, Buck displays the break down of
+what each thread is doing, updated every 100ms, in what we affectionately call
+"SuperConsole."  While a build is running, this gives developers a good idea of
+what Buck is spending its time doing, and can often help people spot issues in
+their builds.  If you want to see what happened after the fact or to have a
+trace you can send around your team, use Chrome Tracing.
+
+<h2>Chrome Tracing</h2>
+
+<img id="chrome_sample"
+     src="{ROOT}static/buck_chrome_sample.png"
+     alt="Chrome Tracing Sample">
+
+The Chrome team has built an awesome framework for viewing performance traces
+right inside of{sp}
+<a href="http://www.chromium.org/developers/how-tos/trace-event-profiling-tool">
+Chrome</a>.  You can access this by going to <code>chrome://tracing</code> in
+your browser.  Consult the trace viewer's
+{sp}<a href="https://code.google.com/p/trace-viewer/">project page</a> for more
+information on the trace viewer and the file format.
+
+<p>
+
+After Buck is done with each build, it will produce a Chrome Trace file that can
+be loaded up in <code>chrome://tracing</code> in the directory
+{sp}<code>buck-out/log/traces/</code>.  Buck will save a file in the format
+<code>build.[timestamp].trace</code>, and then create a symlink from the most
+recent trace to <code>build.trace</code>.
+
+<p>
+
+To load up this trace, visit <code>chrome://tracing</code> inside of Chrome, and
+hit "Load".  Load the trace file of interest, and look around to see where time
+was spent.  Each row represents a different thread, and all of the steps taken
+for a given rule are logged underneath that rule.  Additionally, we log
+information about how the rule was built and and the rule key for each artifact
+fetch.  Press <em>?</em> to get the help menu for the Chrome Trace Viewer.
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

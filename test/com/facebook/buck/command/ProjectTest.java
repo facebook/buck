@@ -47,7 +47,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -60,6 +59,7 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -223,8 +223,8 @@ public class ProjectTest {
   @Test
   public void testGenerateRelativeGenPath() {
     String basePathOfModuleWithSlash = "android_res/com/facebook/gifts/";
-    String expectedRelativePathToGen =
-        "/../../../../buck-out/android/android_res/com/facebook/gifts/gen";
+    Path expectedRelativePathToGen =
+        java.nio.file.Paths.get("/../../../../buck-out/android/android_res/com/facebook/gifts/gen");
     assertEquals(
         expectedRelativePathToGen, Project.generateRelativeGenPath(basePathOfModuleWithSlash));
   }
@@ -837,7 +837,7 @@ public class ProjectTest {
       assertEquals("You must define a project_config() in example/child/BUCK containing " +
           "//example/parent:ex1. The project_config() in //example/child:config transitively " +
           "depends on it.",
-          Paths.normalizePathSeparator(e.getHumanReadableErrorMessage()));
+          e.getHumanReadableErrorMessage().replace("\\", "/"));
     }
   }
 }

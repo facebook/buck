@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.parser.AbstractBuildRuleFactory;
-import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.AbstractBuildRuleFactory;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
@@ -43,6 +43,12 @@ public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<An
       builder.setRes(resDir);
     }
 
+    // res_srcs
+    for (String resSrc : params.getOptionalListAttribute("res_srcs")) {
+      String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(resSrc);
+      builder.addResSrc(relativePath);
+    }
+
     // package
     Optional<String> rDotJavaPackage = params.getOptionalStringAttribute("package");
     if (rDotJavaPackage.isPresent()) {
@@ -54,6 +60,12 @@ public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<An
     if (assets.isPresent()) {
       String assetsDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(assets.get());
       builder.setAssetsDirectory(assetsDir);
+    }
+
+    // assets_srcs
+    for (String assetsSrc : params.getOptionalListAttribute("assets_srcs")) {
+      String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(assetsSrc);
+      builder.addAssetsSrc(relativePath);
     }
 
     // manifest

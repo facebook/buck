@@ -23,9 +23,15 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.RuleKey.Builder;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.DefaultFileHashCache;
+import com.facebook.buck.util.FileHashCache;
+import com.facebook.buck.util.ProjectFilesystem;
 
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -44,16 +50,30 @@ public class RuleKeyTest {
    */
   @Test
   public void testRuleKeyDependsOnDeps() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver1 = new BuildRuleResolver();
+    BuildRuleResolver ruleResolver2 = new BuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
+    final FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem,
+        new TestConsole());
+    AbstractBuildRuleBuilderParams builderParams = new DefaultBuildRuleBuilderParams(
+        projectFilesystem,
+        new RuleKeyBuilderFactory() {
+          @Override
+          public Builder newInstance(BuildRule buildRule) {
+            return RuleKey.builder(buildRule, fileHashCache);
+          }
+        });
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
-    ruleResolver.buildAndAddToIndex(
-        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common")));
+    DefaultJavaLibraryRule.Builder commonJavaLibraryRuleBuilder = DefaultJavaLibraryRule
+        .newJavaLibraryRuleBuilder(builderParams)
+        .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
+    ruleResolver1.buildAndAddToIndex(commonJavaLibraryRuleBuilder);
+    ruleResolver2.buildAndAddToIndex(commonJavaLibraryRuleBuilder);
 
     // Create a java_library() rule with no deps.
     DefaultJavaLibraryRule.Builder javaLibraryBuilder = DefaultJavaLibraryRule
-        .newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        .newJavaLibraryRuleBuilder(builderParams)
         .setBuildTarget(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"))
         // The source file must be an existing file or else RuleKey.Builder.setVal(File) will throw
         // an IOException, which is caught and then results in the rule being flagged as
@@ -61,12 +81,12 @@ public class RuleKeyTest {
         // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that file
         // access can be mocked appropriately during a unit test.
         .addSrc("src/com/facebook/buck/cli/Main.java");
-    DefaultJavaLibraryRule libraryNoCommon = ruleResolver.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryNoCommon = ruleResolver1.buildAndAddToIndex(
         javaLibraryBuilder);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
     javaLibraryBuilder.addDep(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:common"));
-    DefaultJavaLibraryRule libraryWithCommon = ruleResolver.buildAndAddToIndex(
+    DefaultJavaLibraryRule libraryWithCommon = ruleResolver2.buildAndAddToIndex(
         javaLibraryBuilder);
 
     // Assert that the RuleKeys are distinct.

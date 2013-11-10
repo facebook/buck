@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -149,8 +150,8 @@ public class JUnitStep extends ShellStep {
     // Next, add the bootclasspath entries specific to the Android platform being targeted.
     if (context.getAndroidPlatformTargetOptional().isPresent()) {
       AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-      for (File bootclasspathEntry : androidPlatformTarget.getBootclasspathEntries()) {
-        classpath.add(bootclasspathEntry.getAbsolutePath());
+      for (Path bootclasspathEntry : androidPlatformTarget.getBootclasspathEntries()) {
+        classpath.add(bootclasspathEntry.toString());
       }
     }
 

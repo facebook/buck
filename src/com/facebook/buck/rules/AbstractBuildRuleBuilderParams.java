@@ -20,6 +20,8 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 
+import java.nio.file.Path;
+
 /**
  * Context object that is passed to an {@link AbstractBuildRuleBuilder} constructor.
  */
@@ -32,6 +34,7 @@ public interface AbstractBuildRuleBuilderParams {
    * makes it easier to create a fake {@link AbstractBuildRuleBuilderParams} for testing that
    * could be implemented by {@link Functions#identity()}.
    */
-  public Function<String, String> getPathRelativizer();
+  public Function<String, Path> getPathRelativizer();
 
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory();
 }

@@ -33,6 +33,8 @@ import com.google.common.base.Function;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class JavaBinaryRuleTest {
 
@@ -83,10 +85,10 @@ public class JavaBinaryRuleTest {
     String expectedCommand = String.format("java -classpath %s com.facebook.base.Main",
         expectedClasspath);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    Function<String, String> pathRelativizer = new Function<String, String>() {
+    Function<String, Path> pathRelativizer = new Function<String, Path>() {
       @Override
-      public String apply(String path) {
-        return basePath + path;
+      public Path apply(String path) {
+        return Paths.get(basePath, path);
       }
     };
     expect(projectFilesystem.getPathRelativizer()).andReturn(pathRelativizer);

@@ -16,6 +16,10 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.java.classes.ClasspathTraversal;
+import com.facebook.buck.java.classes.ClasspathTraverser;
+import com.facebook.buck.java.classes.DefaultClasspathTraverser;
+import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -24,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
@@ -42,12 +47,13 @@ import java.util.Set;
  */
 public class DalvikAwareZipSplitter implements ZipSplitter {
 
-  private final Set<File> inFiles;
+  private final Set<Path> inFiles;
   private final File outPrimary;
   private final Predicate<String> requiredInPrimaryZip;
   private final File reportDir;
   private final long linearAllocLimit;
   private final DalvikStatsCache dalvikStatsCache;
+  private final DexSplitStrategy dexSplitStrategy;
 
   private final MySecondaryDexHelper secondaryDexWriter;
   private DalvikAwareOutputStreamHelper primaryOut;
@@ -56,12 +62,13 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
    * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate, DexSplitStrategy, CanaryStrategy, File)
    */
   private DalvikAwareZipSplitter(
-      Set<File> inFiles,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
+      DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
     if (linearAllocLimit <= 0) {
@@ -72,17 +79,19 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.secondaryDexWriter = new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
     this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
     this.reportDir = reportDir;
+    this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.linearAllocLimit = linearAllocLimit;
     this.dalvikStatsCache = new DalvikStatsCache();
   }
 
   public static DalvikAwareZipSplitter splitZip(
-      Set<File> inFiles,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
+      DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
     return new DalvikAwareZipSplitter(
@@ -92,6 +101,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         secondaryPattern,
         linearAllocLimit,
         requiredInPrimaryZip,
+        dexSplitStrategy,
         canaryStrategy,
         reportDir);
   }
@@ -126,7 +136,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
         // Even if we have started writing a secondary dex, we still check if there is any leftover
         // room in the primary dex for the current entry in the traversal.
-        if (primaryOut.canPutEntry(entry)) {
+        if (dexSplitStrategy == DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE &&
+            primaryOut.canPutEntry(entry)) {
           primaryOut.putEntry(entry);
         } else {
           secondaryDexWriter.getOutputToWriteTo(entry).putEntry(entry);

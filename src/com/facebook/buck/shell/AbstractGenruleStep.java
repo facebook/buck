@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -101,9 +102,17 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    ExecutionArgsAndCommand commandAndExecutionArgs = getCommandAndExecutionArgs(context);
+    return ImmutableList.<String>builder()
+        .addAll(commandAndExecutionArgs.executionArgs)
+        .add(commandAndExecutionArgs.command)
+        .build();
+  }
+
+  private ExecutionArgsAndCommand getCommandAndExecutionArgs(ExecutionContext context) {
     // The priority sequence is
     //   "cmd.exe /c winCommand" (Windows Only)
-    //   "/bin/bash -c shCommand" (Non-windows Only)
+    //   "/bin/bash -e -c shCommand" (Non-windows Only)
     //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
     String command;
     if (context.getPlatform() == Platform.WINDOWS) {
@@ -117,7 +126,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
             getFullyQualifiedName());
       }
       command = replaceMatches(context.getProjectFilesystem(), commandInUse);
-      return ImmutableList.of("cmd.exe", "/c", command);
+      return new ExecutionArgsAndCommand(ImmutableList.of("cmd.exe", "/c"), command);
     } else {
       String commandInUse;
       if (commandString.bash.isPresent()) {
@@ -129,17 +138,36 @@ public abstract class AbstractGenruleStep extends ShellStep {
             getFullyQualifiedName());
       }
       command = replaceMatches(context.getProjectFilesystem(), commandInUse);
-      return ImmutableList.of("/bin/bash", "-c", command);
+      return new ExecutionArgsAndCommand(ImmutableList.of("/bin/bash", "-e", "-c"), command);
     }
   }
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    ImmutableMap.Builder<String, String> environmentVariablesBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, String> allEnvironmentVariablesBuilder = ImmutableMap.builder();
+    addEnvironmentVariables(context, allEnvironmentVariablesBuilder);
+    ImmutableMap<String, String> allEnvironmentVariables = allEnvironmentVariablesBuilder.build();
 
-    addEnvironmentVariables(context, environmentVariablesBuilder);
-
-    return environmentVariablesBuilder.build();
+    // Long lists of environment variables can extend the length of the command such that it exceeds
+    // exec()'s ARG_MAX limit. Defend against this by filtering out variables that do not appear in
+    // the command string.
+    String command = getCommandAndExecutionArgs(context).command;
+    ImmutableMap.Builder<String, String> usedEnvironmentVariablesBuilder = ImmutableMap.builder();
+    for (Map.Entry<String, String> environmentVariable : allEnvironmentVariables.entrySet()) {
+      // We check for the presence of the variable without adornment for $ or %% so it works on both
+      // Windows and non-Windows environments. Eventually, we will require $ in the command string
+      // and modify the command directly rather than using envrionment variables.
+      String environmentVariableName = environmentVariable.getKey();
+      if (command.contains(environmentVariableName)) {
+        // I hate this $DEPS variable so much...
+        if ("DEPS".equals(environmentVariableName) &&
+            allEnvironmentVariables.containsKey("GEN_DIR")) {
+          usedEnvironmentVariablesBuilder.put("GEN_DIR", allEnvironmentVariables.get("GEN_DIR"));
+        }
+        usedEnvironmentVariablesBuilder.put(environmentVariable);
+      }
+    }
+    return usedEnvironmentVariablesBuilder.build();
   }
 
   abstract protected void addEnvironmentVariables(ExecutionContext context,
@@ -152,7 +180,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   /**
    * @return the cmd with binary and location build targets interpolated as either commands or the
-   * location of the outputs of those targets.
+   *     location of the outputs of those targets.
    */
   @VisibleForTesting
   String replaceMatches(ProjectFilesystem filesystem, String command) {
@@ -188,7 +216,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
           break;
 
         case "location":
-          replacement = getLocationReplacementFrom(filesystem, matchingBuildable);
+          replacement = getLocationReplacementFrom(filesystem, matchingBuildable).toString();
           break;
 
         default:
@@ -204,7 +232,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     return buffer.toString();
   }
 
-  private String getLocationReplacementFrom(ProjectFilesystem filesystem, Buildable matchingRule) {
+  private Path getLocationReplacementFrom(ProjectFilesystem filesystem, Buildable matchingRule) {
     return filesystem.getPathRelativizer().apply(matchingRule.getPathToOutputFile());
   }
 
@@ -236,5 +264,15 @@ public abstract class AbstractGenruleStep extends ShellStep {
         cmd,
         buildRule.getType().getName(),
         getFullyQualifiedName());
+  }
+
+  private static class ExecutionArgsAndCommand {
+    private final ImmutableList<String> executionArgs;
+    private final String command;
+
+    private ExecutionArgsAndCommand(ImmutableList<String> executionArgs, String command) {
+      this.executionArgs = Preconditions.checkNotNull(executionArgs);
+      this.command = Preconditions.checkNotNull(command);
+    }
   }
 }

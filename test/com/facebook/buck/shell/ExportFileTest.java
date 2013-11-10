@@ -20,13 +20,12 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.step.Step;
@@ -36,11 +35,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -50,6 +46,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -61,11 +59,7 @@ public class ExportFileTest {
 
   @Before
   public void createFixtures() {
-    BuildTarget target = BuildTargetFactory.newInstance("//:example.html");
-    params = new BuildRuleParams(target,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSet.<BuildTargetPattern>of(),
-        /* pathRelativizer */ Functions.<String>identity());
+    params = new FakeBuildRuleParams(new BuildTarget("//", "example.html"));
     root = new File(".");
     context = getBuildContext(root);
   }
@@ -73,7 +67,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
     ExportFile exportFile = new ExportFile(
-        params, /* src */ Optional.<String>absent(), /* out */ Optional.<String>absent());
+        params, /* src */ Optional.<Path>absent(), /* out */ Optional.<Path>absent());
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -90,7 +84,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
     ExportFile exportFile = new ExportFile(
-        params, /* src */ Optional.<String>absent(), /* out */ Optional.of("fish"));
+        params, /* src */ Optional.<Path>absent(), /* out */ Optional.of(Paths.get("fish")));
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -107,8 +101,8 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFile exportFile = new ExportFile(params,
-        /* src */ Optional.of("chips"),
-        /* out */ Optional.of("fish"));
+        /* src */ Optional.of(Paths.get("chips")),
+        /* out */ Optional.of(Paths.get("fish")));
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 

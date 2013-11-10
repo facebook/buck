@@ -28,16 +28,18 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildRuleFactoryParams;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.NonCheckingBuildRuleFactoryParams;
+import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.Genrule.Builder;
 import com.facebook.buck.step.ExecutionContext;
@@ -46,6 +48,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
@@ -55,7 +58,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,10 +82,10 @@ public class GenruleTest {
 
   private static final String BASE_PATH = getAbsolutePathFor("/opt/local/fbandroid");
 
-  private static final Function<String, String> relativeToAbsolutePathFunction =
-      new Function<String, String>() {
+  private static final Function<String, Path> relativeToAbsolutePathFunction =
+      new Function<String, Path>() {
         @Override
-        public String apply(String path) {
+        public Path apply(String path) {
           return getAbsolutePathInBase(path);
         }
       };
@@ -153,7 +155,8 @@ public class GenruleTest {
     assertEquals(BuildRuleType.GENRULE, genrule.getType());
     assertEquals(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml",
         genrule.getPathToOutputFile());
-    assertEquals(getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
+    assertEquals(
+        getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
         genrule.getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
     ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
@@ -217,24 +220,50 @@ public class GenruleTest {
     ShellStep genruleCommand = (ShellStep) sixthStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(ImmutableMap.<String, String>builder()
-        .put("SRCS",
-            getAbsolutePathInBase("/src/com/facebook/katana/convert_to_katana.py ") +
-            getAbsolutePathInBase("/src/com/facebook/katana/AndroidManifest.xml"))
         .put("OUT",
-            getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"))
-        .put("GEN_DIR",
-            getAbsolutePathInBase(GEN_DIR))
-        .put("DEPS",
-            "$GEN_DIR/java/com/facebook/util/lib__util__output/util.jar")
-        .put("TMP",
-            getAbsolutePathInBase(pathToTmpDir))
-        .put("SRCDIR",
-            getAbsolutePathInBase(pathToSrcDir))
+            getAbsolutePathInBase(
+                GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
-        ImmutableList.of("/bin/bash", "-c", "python convert_to_katana.py AndroidManifest.xml > $OUT"),
+        ImmutableList.of("/bin/bash", "-e", "-c", "python convert_to_katana.py AndroidManifest.xml > $OUT"),
         genruleCommand.getShellCommand(executionContext));
+  }
+
+  @Test
+  public void testDepsEnvironmentVariableIsComplete() {
+    BuildTarget depTarget = new BuildTarget("//foo", "bar");
+    BuildRule dep = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY, depTarget) {
+      @Override
+      public String getPathToOutputFile() {
+        return "buck-out/gen/foo/bar.jar";
+      }
+    };
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(ImmutableMap.of(depTarget, dep));
+
+    AbstractBuildRuleBuilderParams params = new FakeAbstractBuildRuleBuilderParams();
+    Builder builder = Genrule.newGenruleBuilder(params);
+    builder.setBuildTarget(new BuildTarget("//foo", "baz"));
+    builder.setBash(Optional.of("cat $DEPS > $OUT"));
+    builder.setOut("deps.txt");
+    builder.addDep(depTarget);
+
+    Genrule genrule = builder.build(ruleResolver);
+    AbstractGenruleStep genruleStep = genrule.createGenruleStep();
+    ExecutionContext context = newEmptyExecutionContext(Platform.LINUX);
+    Map<String, String> environmentVariables = genruleStep.getEnvironmentVariables(context);
+    assertEquals(
+        "Make sure that the use of $DEPS pulls in $GEN_DIR, as well.",
+        ImmutableMap.of(
+            "DEPS", "$GEN_DIR/foo/bar.jar",
+            "GEN_DIR", "buck-out/gen",
+            "OUT", "buck-out/gen/foo/deps.txt"),
+        environmentVariables);
+
+    // Ensure that $GEN_DIR is declared before $DEPS.
+    List<String> keysInOrder = ImmutableList.copyOf(environmentVariables.keySet());
+    assertEquals("GEN_DIR", keysInOrder.get(1));
+    assertEquals("DEPS", keysInOrder.get(2));
   }
 
   private ExecutionContext newEmptyExecutionContext(Platform platform) {
@@ -242,8 +271,8 @@ public class GenruleTest {
         .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
           @Override
-          public Function<String, String> getPathRelativizer() {
-            return Functions.identity();
+          public Function<String, Path> getPathRelativizer() {
+            return IdentityPathRelativizer.getIdentityRelativizer();
           }
 
           @Override
@@ -302,7 +331,7 @@ public class GenruleTest {
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
 
     // Verify that the correct cmd was created.
-    String expectedClasspath = getAbsolutePathInBase(
+    Path expectedClasspath = getAbsolutePathInBase(
         GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar");
 
     String expectedCmd = String.format(
@@ -327,7 +356,7 @@ public class GenruleTest {
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
 
     // Verify that the correct cmd was created.
-    String expectedClasspath = getAbsolutePathInBase(
+    Path expectedClasspath = getAbsolutePathInBase(
         GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar");
     String expectedCmd = String.format(
         "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
@@ -358,7 +387,7 @@ public class GenruleTest {
     String transformedString = genruleStep.replaceMatches(filesystem, originalCmd);
 
     // Verify that the correct cmd was created.
-    String pathToOutput = getAbsolutePathInBase(
+    Path pathToOutput = getAbsolutePathInBase(
         GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar");
     String expectedCmd = String.format("%s %s $OUT", pathToOutput, pathToOutput);
     assertEquals(expectedCmd, transformedString);
@@ -382,7 +411,7 @@ public class GenruleTest {
     String transformedString = genruleStep.replaceMatches(fakeFilesystem, originalCmd);
 
     // Verify that the correct cmd was created.
-    String expectedClasspath = getAbsolutePathInBase(
+    Path expectedClasspath = getAbsolutePathInBase(
         GEN_DIR + "/java/com/facebook/util/lib__util__output/util.jar");
     String expectedCmd = String.format(
         "java -classpath %s com.facebook.util.ManifestGenerator $OUT",
@@ -511,7 +540,7 @@ public class GenruleTest {
         .build(new BuildRuleResolver());
 
     ImmutableList<String> command = rule.createGenruleStep().getShellCommand(linuxExecutionContext);
-    assertEquals(ImmutableList.of("/bin/bash", "-c", bash), command);
+    assertEquals(ImmutableList.of("/bin/bash", "-e", "-c", bash), command);
 
     command = rule.createGenruleStep().getShellCommand(windowsExecutionContext);
     assertEquals(ImmutableList.of("cmd.exe", "/c", cmdExe), command);
@@ -523,7 +552,7 @@ public class GenruleTest {
         .setOut("out.txt")
         .build(new BuildRuleResolver());
     command = rule.createGenruleStep().getShellCommand(linuxExecutionContext);
-    assertEquals(ImmutableList.of("/bin/bash", "-c", cmd), command);
+    assertEquals(ImmutableList.of("/bin/bash", "-e", "-c", cmd), command);
 
     command = rule.createGenruleStep().getShellCommand(windowsExecutionContext);
     assertEquals(ImmutableList.of("cmd.exe", "/c", cmd), command);
@@ -552,7 +581,7 @@ public class GenruleTest {
     return new File(path).getAbsolutePath();
   }
 
-  private static String getAbsolutePathInBase(String path) {
-    return getAbsolutePathFor(String.format("%s/%s", BASE_PATH, path));
+  private static Path getAbsolutePathInBase(String path) {
+    return Paths.get(BASE_PATH, path);
   }
 }

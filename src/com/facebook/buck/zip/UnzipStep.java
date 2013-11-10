@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -137,12 +138,10 @@ public class UnzipStep implements Step {
                              String destination,
                              ImmutableSet<String> filesToExtract,
                              boolean overwriteExistingFiles) throws IOException {
-    // Create output directory is not exists
+    // Create output directory if it does not exist
     File folder = new File(destination);
     // TODO UnzipStep could be a CompositeStep with a MakeCleanDirectoryStep for the output dir.
-    if (!folder.exists() && !folder.mkdirs()) {
-      throw new IOException(String.format("Folder %s could not be created.", folder.toString()));
-    }
+    Files.createDirectories(folder.toPath());
 
     try (ZipInputStream zip = new ZipInputStream(new FileInputStream(zipFile))) {
       for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
@@ -157,17 +156,10 @@ public class UnzipStep implements Step {
         }
         if (entry.isDirectory()) {
           // Create the directory and all its parent directories
-          if (!target.mkdirs()) {
-            throw new IOException(String.format("Folder %s could not be created.",
-                target.toString()));
-          }
+          Files.createDirectories(target.toPath());
         } else {
           // Create parent folder
-          File parentFolder = target.getParentFile();
-          if (!parentFolder.exists() && !parentFolder.mkdirs()) {
-            throw new IOException(String.format("Folder %s could not be created.",
-                parentFolder.toString()));
-          }
+          Files.createDirectories(target.toPath().getParent());
           // Write file
           try (FileOutputStream out = new FileOutputStream(target)) {
             ByteStreams.copy(zip, out);

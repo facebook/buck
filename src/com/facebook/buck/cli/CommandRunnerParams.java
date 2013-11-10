@@ -18,9 +18,14 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKey.Builder;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -45,7 +50,7 @@ class CommandRunnerParams {
   private final Platform platform;
 
   @VisibleForTesting
-  public CommandRunnerParams(
+  CommandRunnerParams(
       Console console,
       ProjectFilesystem projectFilesystem,
       KnownBuildRuleTypes buildRuleTypes,
@@ -62,7 +67,13 @@ class CommandRunnerParams {
             buildRuleTypes,
             console,
             pythonInterpreter,
-            ImmutableSet.<Pattern>of() /* Temp file patterns */),
+            /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
+            new RuleKeyBuilderFactory() {
+              @Override
+              public Builder newInstance(BuildRule buildRule) {
+                return RuleKey.builder(buildRule, new NullFileHashCache());
+              }
+            }),
         platform);
   }
 

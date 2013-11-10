@@ -24,17 +24,22 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +47,8 @@ import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -50,18 +57,57 @@ import java.util.concurrent.TimeUnit;
  * Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing).
  */
 public class ChromeTraceBuildListener implements BuckEventListener {
-  private final ProjectFilesystem projectFilesystem;
-  private ConcurrentLinkedQueue<ChromeTraceEvent> eventList =
-      new ConcurrentLinkedQueue<ChromeTraceEvent>();
+  private static final String TRACE_FILE_PATTERN = "build\\.\\d*\\.trace";
 
-  public ChromeTraceBuildListener(ProjectFilesystem projectFilesystem) {
+  private final ProjectFilesystem projectFilesystem;
+  private final int tracesToKeep;
+  private final Clock clock;
+  private ConcurrentLinkedQueue<ChromeTraceEvent> eventList = new ConcurrentLinkedQueue<ChromeTraceEvent>();
+
+  public ChromeTraceBuildListener(ProjectFilesystem projectFilesystem,
+      Clock clock,
+      int tracesToKeep) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.tracesToKeep = tracesToKeep;
+    this.clock = clock;
+  }
+
+  @VisibleForTesting
+  void deleteOldTraces() {
+    if (!projectFilesystem.exists(BuckConstant.BUCK_TRACE_DIR)) {
+      return;
+    }
+
+    ImmutableList<File> filesSortedByModified = FluentIterable.
+        from(Arrays.asList(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR))).
+        filter(new Predicate<File>() {
+          @Override
+          public boolean apply(File input) {
+            return input.getName().matches(TRACE_FILE_PATTERN);
+          }
+        }).
+        toSortedList(new Comparator<File>() {
+          @Override
+          public int compare(File a, File b) {
+            return Long.signum(b.lastModified() - a.lastModified());
+          }
+        });
+
+    if (filesSortedByModified.size() > tracesToKeep) {
+      ImmutableList<File> filesToRemove =
+          filesSortedByModified.subList(tracesToKeep, filesSortedByModified.size());
+      for (File file : filesToRemove) {
+        file.delete();
+      }
+    }
   }
 
   @Override
   public void outputTrace() {
     try {
-      String tracePath = String.format("%s/%s", BuckConstant.BIN_DIR, "build.trace");
+      String tracePath = String.format("%s/build.%s.trace",
+          BuckConstant.BUCK_TRACE_DIR,
+          Long.toString(clock.currentTimeMillis()));
       File traceOutput = projectFilesystem.getFileForRelativePath(tracePath);
       projectFilesystem.createParentDirs(tracePath);
 
@@ -76,6 +122,15 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
       ObjectMapper mapper = new ObjectMapper();
       mapper.writeValue(traceOutput, tsSortedEvents);
+
+      String symlinkPath = String.format("%s/build.trace",
+          BuckConstant.BUCK_TRACE_DIR);
+      File symlinkFile = projectFilesystem.getFileForRelativePath(symlinkPath);
+      projectFilesystem.createSymLink(Paths.get(traceOutput.toURI()),
+          Paths.get(symlinkFile.toURI()),
+          true);
+
+      deleteOldTraces();
     } catch (IOException e) {
       throw new HumanReadableException("Unable to write trace file.");
     }
@@ -243,17 +298,42 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.<String, String>of(
+            "rule_key", started.getRuleKey().toString()),
         started);
   }
 
   @Subscribe
   public void artifactFetchFinished(ArtifactCacheEvent.Finished finished) {
+    ImmutableMap.Builder<String, String> argumentsBuilder = ImmutableMap.<String, String>builder()
+        .put("success", Boolean.toString(finished.isSuccess()))
+        .put("rule_key", finished.getRuleKey().toString());
+    Optionals.putIfPresent(finished.getCacheResult().transform(Functions.toStringFunction()),
+        "cache_result",
+        argumentsBuilder);
+
     writeChromeTraceEvent("buck",
         finished.getCategory(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(
-            "success", Boolean.toString(finished.isSuccess())),
+        argumentsBuilder.build(),
+        finished);
+  }
+
+  @Subscribe
+  public void artifactConnectStarted(ArtifactCacheConnectEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "artifact_connect",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.<String, String>of(),
+        started);
+  }
+
+  @Subscribe
+  public void artifactConnectFinished(ArtifactCacheConnectEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "artifact_connect",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>of(),
         finished);
   }
 

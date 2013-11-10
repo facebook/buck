@@ -24,8 +24,10 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -46,9 +48,12 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
   public static void ensureLogFileIsWritten() {
     try {
-      File dir = new File(BuckConstant.BIN_DIR);
-      if (!dir.exists() && !dir.mkdirs()) {
-        throw new HumanReadableException("Unable to create output directory: " + dir);
+      Path dir = Paths.get(BuckConstant.BIN_DIR);
+
+      try {
+        Files.createDirectories(dir);
+      } catch (IOException e) {
+        throw new HumanReadableException(e, "Unable to create output directory: " + dir);
       }
 
       FileHandler handler = new FileHandler(

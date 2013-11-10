@@ -84,7 +84,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         options.getPathToPostProcessScript(),
         options.getBuckConfig().getPythonInterpreter());
 
-    File tempFile = new File(Files.createTempDir(), "project.json");
+    File tempDir = Files.createTempDir();
+    File tempFile = new File(tempDir, "project.json");
     int exitCode;
     try {
       exitCode = createIntellijProject(project,
@@ -114,7 +115,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       if (console.getVerbosity().shouldPrintOutput()) {
         getStdErr().printf("project.json was written to %s", tempFile.getAbsolutePath());
       } else {
-        tempFile.deleteOnExit();
+        tempFile.delete();
+        tempDir.delete();
       }
     }
 

@@ -35,6 +35,8 @@ public class BuckConstant {
 
   public static final String ANNOTATION_DIR = BUCK_OUTPUT_DIRECTORY + "/annotation";
 
+  public static final String BUCK_TRACE_DIR = BUCK_OUTPUT_DIRECTORY + "/log/traces";
+
   /**
    * This variable is package-private because conceptually, only parsing logic should be concerned
    * with the files that define build rules. Note that if the value of this variable changes, the

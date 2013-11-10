@@ -18,12 +18,21 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 
 public class Optionals {
   public static <T> void addIfPresent(Optional<T> optional,
                                       ImmutableCollection.Builder<T> collection) {
     if (optional.isPresent()) {
       collection.add(optional.get());
+    }
+  }
+
+  public static <K, T> void putIfPresent(Optional<T> optional,
+                                         K key,
+                                         ImmutableMap.Builder<K, T> collection) {
+    if (optional.isPresent()) {
+      collection.put(key, optional.get());
     }
   }
 }

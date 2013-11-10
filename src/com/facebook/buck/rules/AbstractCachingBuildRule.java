@@ -22,10 +22,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -69,24 +69,20 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
    */
   private final SettableFuture<BuildRuleSuccess> buildRuleResult;
 
-  private final Function<String, String> pathRelativizer;
-
   /** @see Buildable#getInputsToCompareToOutput()  */
-  private Iterable<InputRule> inputsToCompareToOutputs;
+  private Iterable<Path> inputsToCompareToOutputs;
 
   protected AbstractCachingBuildRule(Buildable buildable, BuildRuleParams params) {
     super(params);
     this.buildable = Preconditions.checkNotNull(buildable);
     this.hasBuildStarted = new AtomicBoolean(false);
     this.buildRuleResult = SettableFuture.create();
-    this.pathRelativizer = params.getPathRelativizer();
   }
 
   protected AbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
     super(buildRuleParams);
     this.hasBuildStarted = new AtomicBoolean(false);
     this.buildRuleResult = SettableFuture.create();
-    this.pathRelativizer = buildRuleParams.getPathRelativizer();
     this.buildable = Preconditions.checkNotNull(getBuildable());
   }
 
@@ -110,10 +106,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
   }
 
   @Override
-  public Iterable<InputRule> getInputs() {
+  public Iterable<Path> getInputs() {
     if (inputsToCompareToOutputs == null) {
-      inputsToCompareToOutputs = InputRule.inputPathsAsInputRules(
-          buildable.getInputsToCompareToOutput(), pathRelativizer);
+      inputsToCompareToOutputs = MorePaths.asPaths(
+          buildable.getInputsToCompareToOutput());
     }
     return inputsToCompareToOutputs;
   }
@@ -125,7 +121,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
     // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
     builder = super.appendToRuleKey(builder)
-        .setInputs("buck.inputs", getInputs());
+        .setInputs("buck.inputs", getInputs().iterator());
     // TODO(simons): Rename this when no Buildables extend this class.
     return buildable.appendDetailsToRuleKey(builder);
   }
@@ -340,10 +336,10 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
       if (ruleKeyNoDeps.equals(cachedRuleKeyNoDeps.orNull())) {
         // The RuleKey for the definition of this build rule and its input files has not changed.
         // Therefore, if the ABI of its deps has not changed, there is nothing to rebuild.
-        Optional<Sha1HashCode> abiKeyForDeps = abiRule.getAbiKeyForDeps();
+        Sha1HashCode abiKeyForDeps = abiRule.getAbiKeyForDeps();
         Optional<Sha1HashCode> cachedAbiKeyForDeps = onDiskBuildInfo.getHash(
             AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
-        if (abiKeyForDeps.isPresent() && abiKeyForDeps.equals(cachedAbiKeyForDeps)) {
+        if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
           // Re-copy the ABI metadata.
           // TODO(mbolin): This seems really bad: there could be other metadata to copy, too?
           buildInfoRecorder.addMetadata(
@@ -412,6 +408,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // there.
     CacheResult cacheResult = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
     if (!cacheResult.isSuccess()) {
+      zipFile.delete();
       return cacheResult;
     }
 

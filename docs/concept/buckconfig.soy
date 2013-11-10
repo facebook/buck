@@ -24,7 +24,7 @@ version control because it contains user-specific overrides (such as personal al
 
 <h2>[alias]</h2>
 
-As demonstrated in the <a href="{ROOT}setup/quickstart.html">Quick Start</a>{sp}
+As demonstrated in the <a href="{ROOT}setup/quick_start.html">Quick Start</a>{sp}
 instructions, aliases for build targets can be defined in
 {sp}<code>.buckconfig</code>:
 
@@ -249,6 +249,19 @@ on the generated files.
 [project]
   post_process = ./scripts/post_process_buck_project.sh
 </pre>{/literal}
+
+<h2>[log]</h2>
+
+This section controls how buck will log information about builds for later
+inspection.
+
+{literal}<pre>
+[log]
+  max_traces = 25
+</pre>{/literal}
+
+Will limit buck to creating, at most, 25{sp}
+<a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.
 
     {/param}
   {/call}

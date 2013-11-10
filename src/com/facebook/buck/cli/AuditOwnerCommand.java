@@ -22,12 +22,10 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.InputRule;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -38,7 +36,8 @@ import com.google.common.collect.TreeMultimap;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Comparator;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
 /**
@@ -54,13 +53,13 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
   @VisibleForTesting
   static final class OwnersReport {
-    final ImmutableSetMultimap<BuildRule, InputRule> owners;
-    final ImmutableSet<InputRule> inputsWithNoOwners;
+    final ImmutableSetMultimap<BuildRule, Path> owners;
+    final ImmutableSet<Path> inputsWithNoOwners;
     final ImmutableSet<String> nonExistentInputs;
     final ImmutableSet<String> nonFileInputs;
 
-    public OwnersReport(SetMultimap<BuildRule, InputRule> owners,
-                        Set<InputRule> inputsWithNoOwners,
+    public OwnersReport(SetMultimap<BuildRule, Path> owners,
+                        Set<Path> inputsWithNoOwners,
                         Set<String> nonExistentInputs,
                         Set<String> nonFileInputs) {
       this.owners = ImmutableSetMultimap.copyOf(owners);
@@ -100,12 +99,11 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   OwnersReport generateOwnersReport(DependencyGraph graph, AuditOwnerOptions options) {
 
     // Process arguments assuming they are all relative file paths.
-    Set<InputRule> inputs = Sets.newHashSet();
+    Set<Path> inputs = Sets.newHashSet();
     Set<String> nonExistentInputs = Sets.newHashSet();
     Set<String> nonFileInputs = Sets.newHashSet();
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
     for (String filePath : options.getArguments()) {
       File file = projectFilesystem.getFileForRelativePath(filePath);
       if (!file.exists()) {
@@ -113,15 +111,15 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       } else if (!file.isFile()) {
         nonFileInputs.add(filePath);
       } else {
-        inputs.add(InputRule.inputPathAsInputRule(filePath, pathRelativizer));
+        inputs.add(Paths.get(filePath));
       }
     }
 
     // Try to find owners for each valid and existing file.
-    Set<InputRule> inputsWithNoOwners = Sets.newHashSet(inputs);
-    SetMultimap<BuildRule, InputRule> owners = createOwnersMap();
+    Set<Path> inputsWithNoOwners = Sets.newHashSet(inputs);
+    SetMultimap<BuildRule, Path> owners = TreeMultimap.create();
     for (BuildRule rule : graph.getNodes()) {
-      for (InputRule ruleInput : rule.getInputs()) {
+      for (Path ruleInput : rule.getInputs()) {
         if (inputs.contains(ruleInput)) {
           inputsWithNoOwners.remove(ruleInput);
           owners.put(rule, ruleInput);
@@ -143,10 +141,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
    * missing file as input.
    */
   private void guessOwnersForNonExistentFiles(DependencyGraph graph,
-      SetMultimap<BuildRule, InputRule> owners, Set<String> nonExistentFiles) {
+      SetMultimap<BuildRule, Path> owners, Set<String> nonExistentFiles) {
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
     for (String nonExistentFile : nonExistentFiles) {
       File file = projectFilesystem.getFileForRelativePath(nonExistentFile);
       File buck = findBuckFileFor(file);
@@ -157,7 +154,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
         try {
           File ruleBuck = rule.getBuildTarget().getBuildFile(projectFilesystem);
           if (buck.getCanonicalFile().equals(ruleBuck.getCanonicalFile())) {
-            owners.put(rule, InputRule.inputPathAsInputRule(nonExistentFile, pathRelativizer));
+            owners.put(rule, Paths.get(nonExistentFile));
           }
         } catch (IOException | BuildTargetException e) {
           throw Throwables.propagate(e);
@@ -214,8 +211,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       out.println(ansi.asSuccessText("Owners:"));
       for (BuildRule rule : report.owners.keySet()) {
         out.println(rule.getFullyQualifiedName());
-        Set<InputRule> files = report.owners.get(rule);
-        for (InputRule input : files) {
+        Set<Path> files = report.owners.get(rule);
+        for (Path input : files) {
           out.println(FILE_INDENT + input);
         }
       }
@@ -224,7 +221,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     if (!report.inputsWithNoOwners.isEmpty()) {
       out.println();
       out.println(ansi.asErrorText("Files without owners:"));
-      for (InputRule input : report.inputsWithNoOwners) {
+      for (Path input : report.inputsWithNoOwners) {
         out.println(FILE_INDENT + input);
       }
     }
@@ -244,24 +241,6 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
         out.println(FILE_INDENT + input);
       }
     }
-  }
-
-  private SetMultimap<BuildRule, InputRule> createOwnersMap() {
-    Comparator<BuildRule> keyComparator = new Comparator<BuildRule>() {
-      @Override
-      public int compare(BuildRule o1, BuildRule o2) {
-        return o1.getFullyQualifiedName().compareTo(o2.getFullyQualifiedName());
-      }
-    };
-
-    Comparator<InputRule> valueComparator = new Comparator<InputRule>() {
-      @Override
-      public int compare(InputRule o1, InputRule o2) {
-        return o1.compareTo(o2);
-      }
-    };
-
-    return TreeMultimap.create(keyComparator, valueComparator);
   }
 
   @Override

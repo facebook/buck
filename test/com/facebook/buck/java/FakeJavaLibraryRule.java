@@ -18,20 +18,17 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import javax.annotation.Nullable;
 
 public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRule {
 
@@ -76,8 +73,7 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
   }
 
   @Override
-  @Nullable
-  public Optional<Sha1HashCode> getAbiKey() {
-    return Optional.absent();
+  public Sha1HashCode getAbiKey() {
+    throw new UnsupportedOperationException();
   }
 }

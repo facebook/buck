@@ -28,10 +28,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
+import com.facebook.buck.rules.BuildRuleFactory;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -63,7 +66,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * High-level build file parsing machinery.  Primarily responsible for producing a
@@ -72,7 +74,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  * processes filesystem WatchEvents to invalidate the cache as files change. Expected to be used
  * from a single thread, so methods are not synchronized or thread safe.
  */
-@NotThreadSafe
 public class Parser {
 
   private final BuildTargetParser buildTargetParser;
@@ -107,7 +108,8 @@ public class Parser {
   private final ProjectFilesystem projectFilesystem;
   private final KnownBuildRuleTypes buildRuleTypes;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
-  private final Console console;
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  private Console console;
 
   /**
    * Key of the meta-rule that lists the build files executed while reading rules.
@@ -121,6 +123,14 @@ public class Parser {
    * that depend on them (typically {@code /jimp/BUCK} files).
    */
   private final ListMultimap<Path, Path> buildFileDependents;
+
+  /**
+   * Parsers may be reused on different consoles, so need to allow the console to be set.
+   * @param console The new console that the Parser should use.
+   */
+  public synchronized void setConsole(Console console) {
+    this.console = console;
+  }
 
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
@@ -161,7 +171,8 @@ public class Parser {
       KnownBuildRuleTypes buildRuleTypes,
       Console console,
       String pythonInterpreter,
-      ImmutableSet<Pattern> tempFilePatterns) {
+      ImmutableSet<Pattern> tempFilePatterns,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this(projectFilesystem,
         buildRuleTypes,
         console,
@@ -175,7 +186,8 @@ public class Parser {
         new BuildTargetParser(projectFilesystem),
          /* knownBuildTargets */ Maps.<BuildTarget, BuildRuleBuilder<?>>newHashMap(),
         new DefaultProjectBuildFileParserFactory(projectFilesystem, pythonInterpreter),
-        tempFilePatterns);
+        tempFilePatterns,
+        ruleKeyBuilderFactory);
   }
 
   /**
@@ -190,7 +202,8 @@ public class Parser {
          BuildTargetParser buildTargetParser,
          Map<BuildTarget, BuildRuleBuilder<?>> knownBuildTargets,
          ProjectBuildFileParserFactory buildFileParserFactory,
-         ImmutableSet<Pattern> tempFilePatterns) {
+         ImmutableSet<Pattern> tempFilePatterns,
+         RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
     this.console = Preconditions.checkNotNull(console);
@@ -199,6 +212,7 @@ public class Parser {
     this.knownBuildTargets = Maps.newHashMap(Preconditions.checkNotNull(knownBuildTargets));
     this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
+    this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
     this.parsedBuildFiles = ArrayListMultimap.create();
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
@@ -244,7 +258,7 @@ public class Parser {
    * @param includes the files to include before executing the build file.
    * @return true if the cache was invalidated, false if the cache is still valid.
    */
-  private boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
+  private synchronized boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
     List<String> includesList = Lists.newArrayList(includes);
     if (!includesList.equals(this.cacheDefaultIncludes)) {
       invalidateCache();
@@ -254,7 +268,7 @@ public class Parser {
     return false;
   }
 
-  private void invalidateCache() {
+  private synchronized void invalidateCache() {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().println("Parser invalidating entire cache");
     }
@@ -455,7 +469,7 @@ public class Parser {
    * @param rules the raw rule objects to parse.
    */
   @VisibleForTesting
-  void parseRawRulesInternal(Iterable<Map<String, Object>> rules)
+  synchronized void parseRawRulesInternal(Iterable<Map<String, Object>> rules)
       throws BuildTargetException, IOException {
     for (Map<String, Object> map : rules) {
 
@@ -481,7 +495,8 @@ public class Parser {
           projectFilesystem,
           buildFileTree,
           buildTargetParser,
-          target));
+          target,
+          ruleKeyBuilderFactory));
       Object existingRule = knownBuildTargets.put(target, buildRuleBuilder);
       if (existingRule != null) {
         throw new RuntimeException("Duplicate definition for " + target.getFullyQualifiedName());
@@ -570,7 +585,7 @@ public class Parser {
    *     in the List returned by this method. If filter is null, then this method returns null.
    * @return The build targets in the project filtered by the given filter.
    */
-  public List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
+  public synchronized List<BuildTarget> filterAllTargetsInProject(ProjectFilesystem filesystem,
                                                      Iterable<String> includes,
                                                      @Nullable RawRulePredicate filter)
       throws BuildFileParseException, BuildTargetException, IOException {
@@ -591,18 +606,6 @@ public class Parser {
   }
 
   /**
-   * @param event the event to format.
-   * @return the formatted event context string.
-   */
-  private String createContextString(WatchEvent<?> event) {
-    if (projectFilesystem.isPathChangeEvent(event)) {
-      Path path = (Path) event.context();
-      return path.toAbsolutePath().normalize().toString();
-    }
-    return event.context().toString();
-  }
-
-  /**
    * Called when file change events are posted to the file change EventBus to invalidate cached
    * build rules if required.
    */
@@ -610,7 +613,7 @@ public class Parser {
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Parser watched event %s %s\n", event.kind(),
-          createContextString(event));
+          projectFilesystem.createContextString(event));
     }
 
     if (projectFilesystem.isPathChangeEvent(event)) {
@@ -681,7 +684,7 @@ public class Parser {
    * targets and rules defined by files that transitively include {@code path} from the cache.
    * @param path The File that has changed.
    */
-  private void invalidateDependents(Path path) {
+  private synchronized void invalidateDependents(Path path) {
     // Normalize path to ensure it hashes equally with map keys.
     path = normalize(path);
 

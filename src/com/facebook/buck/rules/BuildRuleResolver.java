@@ -61,7 +61,11 @@ public class BuildRuleResolver {
 
   public <T extends BuildRule> T buildAndAddToIndex(BuildRuleBuilder<T> builder) {
     T buildRule = builder.build(this);
-    buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
+    BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
+    if (oldValue != null) {
+      throw new IllegalStateException("A build rule for this target has already been created: " +
+          buildRule.getBuildTarget());
+    }
     return buildRule;
   }
 }

@@ -33,9 +33,17 @@ public interface ArtifactCache {
    * Store the artifact at path specified by output to cache, such that it can later be fetched
    * using ruleKey as the lookup key.  If any internal errors occur, fail silently and continue
    * execution.
+   * <p>
+   * This is a noop if {@link #isStoreSupported()} returns {@code false}.
    *
    * @param ruleKey cache store key
    * @param output path to read artifact from
    */
   public void store(RuleKey ruleKey, File output);
+
+  /**
+   * This method must return the same value over the lifetime of this object.
+   * @return whether this{@link ArtifactCache} supports storing artifacts.
+   */
+  public boolean isStoreSupported();
 }

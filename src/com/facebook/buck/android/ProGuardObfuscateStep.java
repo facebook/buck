@@ -16,14 +16,17 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.Functions;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -35,47 +38,57 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 
 public final class ProGuardObfuscateStep extends ShellStep {
 
-  private final String generatedProGuardConfig;
-
-  private final Set<String> customProguardConfigs;
-
   private final Map<String, String> inputAndOutputEntries;
-
-  private final Set<String> additionalLibraryJarsForProguard;
-
-  private final boolean useAndroidProguardConfigWithOptimizations;
-
-  private final String proguardDirectory;
+  private final String pathToProGuardCommandLineArgsFile;
 
   /**
-   * @param generatedProGuardConfig Proguard configuration as produced by aapt.
-   * @param customProguardConfigs Main rule and its dependencies proguard configurations.
-   * @param useProguardOptimizations Whether to include the Android SDK proguard defaults.
-   * @param inputAndOutputEntries Map of input/output pairs to proguard.  The key represents an
-   *     input jar (-injars); the value an output jar (-outjars).
-   * @param additionalLibraryJarsForProguard Libraries that are not operated upon by proguard but
-   *     needed to resolve symbols.
-   * @param proguardDirectory Output directory for various proguard-generated meta artifacts.
+   * @return step that writes out ProGuard's command line arguments to a text file and then runs
+   *     ProGuard using those arguments. We write the arguments to a file to avoid blowing out
+   *     exec()'s ARG_MAX limit.
    */
-  public ProGuardObfuscateStep(
+  public static Step create(
       String generatedProGuardConfig,
       Set<String> customProguardConfigs,
       boolean useProguardOptimizations,
       Map<String, String> inputAndOutputEntries,
       Set<String> additionalLibraryJarsForProguard,
       String proguardDirectory) {
-    this.generatedProGuardConfig = Preconditions.checkNotNull(generatedProGuardConfig);
-    this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
-    this.useAndroidProguardConfigWithOptimizations = useProguardOptimizations;
+
+    String pathToProGuardCommandLineArgsFile = proguardDirectory + "/command-line.txt";
+
+    CommandLineHelperStep commandLineHelperStep = new CommandLineHelperStep(
+        generatedProGuardConfig,
+        customProguardConfigs,
+        useProguardOptimizations,
+        inputAndOutputEntries,
+        additionalLibraryJarsForProguard,
+        proguardDirectory,
+        pathToProGuardCommandLineArgsFile);
+
+    ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
+        inputAndOutputEntries, pathToProGuardCommandLineArgsFile);
+
+    return new CompositeStep(ImmutableList.of(commandLineHelperStep, proGuardStep));
+  }
+
+  /**
+   * @param inputAndOutputEntries Map of input/output pairs to proguard. The key represents an
+   *     input jar (-injars); the value an output jar (-outjars).
+   * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
+   */
+  private ProGuardObfuscateStep(
+      Map<String, String> inputAndOutputEntries,
+      String pathToProGuardCommandLineArgsFile) {
     this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
-    this.additionalLibraryJarsForProguard = ImmutableSet.copyOf(additionalLibraryJarsForProguard);
-    this.proguardDirectory = Preconditions.checkNotNull(proguardDirectory);
+    this.pathToProGuardCommandLineArgsFile = Preconditions.checkNotNull(
+        pathToProGuardCommandLineArgsFile);
   }
 
   @Override
@@ -85,46 +98,16 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> args = ImmutableList.builder();
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-    Joiner pathJoiner = Joiner.on(':');
 
     // Run ProGuard as a standalone executable JAR file.
     String proguardJar = androidPlatformTarget.getProguardJar().getAbsolutePath();
-    args.add("java").add("-Xmx1024M").add("-jar").add(proguardJar);
 
-    // -include
-    if (useAndroidProguardConfigWithOptimizations) {
-      args.add("-include")
-          .add(androidPlatformTarget.getOptimizedProguardConfig().getAbsolutePath());
-    } else {
-      args.add("-include").add(androidPlatformTarget.getProguardConfig().getAbsolutePath());
-    }
-    for (String proguardConfig : customProguardConfigs) {
-      args.add("-include").add(proguardConfig);
-    }
-    args.add("-include").add(generatedProGuardConfig);
-
-    // -injars and -outjars paired together for each input.
-    for (Map.Entry<String, String> inputOutputEntry : inputAndOutputEntries.entrySet()) {
-      args.add("-injars").add(inputOutputEntry.getKey());
-      args.add("-outjars").add(inputOutputEntry.getValue());
-    }
-
-    // -libraryjars
-    Iterable<String> bootclasspathPaths = Iterables.transform(
-        androidPlatformTarget.getBootclasspathEntries(), Functions.FILE_TO_ABSOLUTE_PATH);
-    Iterable<String> libraryJars = Iterables.concat(bootclasspathPaths,
-        additionalLibraryJarsForProguard);
-    args.add("-libraryjars").add(pathJoiner.join(libraryJars));
-
-    // -dump
-    args.add("-dump").add(proguardDirectory + "/dump.txt");
-    args.add("-printseeds").add(proguardDirectory + "/seeds.txt");
-    args.add("-printusage").add(proguardDirectory + "/usage.txt");
-    args.add("-printmapping").add(proguardDirectory + "/mapping.txt");
-    args.add("-printconfiguration").add(proguardDirectory + "/configuration.txt");
-
+    ImmutableList.Builder<String> args = ImmutableList.builder();
+    args.add("java")
+        .add("-Xmx1024M")
+        .add("-jar").add(proguardJar)
+        .add("@" + pathToProGuardCommandLineArgsFile);
     return args.build();
   }
 
@@ -138,23 +121,27 @@ public final class ProGuardObfuscateStep extends ShellStep {
     // account for this and remove those entries from the classes to dex so we hack things here to
     // ensure that the files exist but are empty.
     if (exitCode == 0) {
-      ensureAllOutputsExist();
+      exitCode = ensureAllOutputsExist(context);
     }
 
     return exitCode;
   }
 
-  private void ensureAllOutputsExist() {
+  private int ensureAllOutputsExist(ExecutionContext context) {
     for (String outputJar : inputAndOutputEntries.values()) {
       File outputJarFile = new File(outputJar);
       if (!outputJarFile.exists()) {
         try {
           createEmptyZip(outputJarFile);
         } catch (IOException e) {
-          throw new HumanReadableException("Failed to create empty jar file: %s", outputJar);
+          context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+              "Error creating empty zip file at: %s.",
+              outputJarFile));
+          return 1;
         }
       }
     }
+    return 0;
   }
 
   @VisibleForTesting
@@ -170,29 +157,160 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null || !(obj instanceof ProGuardObfuscateStep)) {
+    if (this == obj) {
+      return true;
+    } else if (!(obj instanceof ProGuardObfuscateStep)) {
       return false;
     }
-    ProGuardObfuscateStep that = (ProGuardObfuscateStep) obj;
 
-    return
-        Objects.equal(useAndroidProguardConfigWithOptimizations,
-            that.useAndroidProguardConfigWithOptimizations) &&
-        Objects.equal(additionalLibraryJarsForProguard,
-            that.additionalLibraryJarsForProguard) &&
-        Objects.equal(customProguardConfigs, that.customProguardConfigs) &&
-        Objects.equal(generatedProGuardConfig, that.generatedProGuardConfig) &&
-        Objects.equal(inputAndOutputEntries, that.inputAndOutputEntries) &&
-        Objects.equal(proguardDirectory, that.proguardDirectory);
+    ProGuardObfuscateStep that = (ProGuardObfuscateStep) obj;
+    return Objects.equal(this.inputAndOutputEntries, that.inputAndOutputEntries) &&
+        Objects.equal(this.pathToProGuardCommandLineArgsFile,
+            that.pathToProGuardCommandLineArgsFile);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(useAndroidProguardConfigWithOptimizations,
-        additionalLibraryJarsForProguard,
-        customProguardConfigs,
-        generatedProGuardConfig,
-        inputAndOutputEntries,
-        proguardDirectory);
+    return Objects.hashCode(inputAndOutputEntries, pathToProGuardCommandLineArgsFile);
+  }
+
+  /**
+   * Helper class to run as a step before ProGuardObfuscateStep to write out the
+   * command-line parameters to a file.  The ProGuardObfuscateStep references
+   * this file when it runs using ProGuard's '@' syntax.  This allows for longer
+   * command-lines than would otherwise be supported.
+   */
+  private static class CommandLineHelperStep extends AbstractExecutionStep {
+
+    private final String generatedProGuardConfig;
+    private final Set<String> customProguardConfigs;
+    private final Map<String, String> inputAndOutputEntries;
+    private final Set<String> additionalLibraryJarsForProguard;
+    private final boolean useAndroidProguardConfigWithOptimizations;
+    private final String proguardDirectory;
+    private final String pathToProGuardCommandLineArgsFile;
+
+    /**
+     * @param generatedProGuardConfig Proguard configuration as produced by aapt.
+     * @param customProguardConfigs Main rule and its dependencies proguard configurations.
+     * @param useProguardOptimizations Whether to include the Android SDK proguard defaults.
+     * @param inputAndOutputEntries Map of input/output pairs to proguard.  The key represents an
+     *     input jar (-injars); the value an output jar (-outjars).
+     * @param additionalLibraryJarsForProguard Libraries that are not operated upon by proguard but
+     *     needed to resolve symbols.
+     * @param proguardDirectory Output directory for various proguard-generated meta artifacts.
+     * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
+     */
+    private CommandLineHelperStep(
+        String generatedProGuardConfig,
+        Set<String> customProguardConfigs,
+        boolean useProguardOptimizations,
+        Map<String, String> inputAndOutputEntries,
+        Set<String> additionalLibraryJarsForProguard,
+        String proguardDirectory,
+        String pathToProGuardCommandLineArgsFile) {
+      super("write_proguard_command_line_parameters");
+      this.generatedProGuardConfig = Preconditions.checkNotNull(generatedProGuardConfig);
+      this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
+      this.useAndroidProguardConfigWithOptimizations = useProguardOptimizations;
+      this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
+      this.additionalLibraryJarsForProguard = ImmutableSet.copyOf(additionalLibraryJarsForProguard);
+      this.proguardDirectory = Preconditions.checkNotNull(proguardDirectory);
+      this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
+    }
+
+    @Override
+    public int execute(ExecutionContext context) {
+      String proGuardArguments = Joiner.on('\n').join(getParameters(context));
+      try {
+        context.getProjectFilesystem().writeContentsToPath(
+            proGuardArguments,
+            Paths.get(pathToProGuardCommandLineArgsFile));
+      } catch (IOException e) {
+        context.getBuckEventBus().post(ThrowableLogEvent.create(e,
+            "Error writing ProGuard arguments to file: %s.",
+            pathToProGuardCommandLineArgsFile));
+        return 1;
+      }
+
+      return 0;
+    }
+
+    /** @return the list of arguments to pass to ProGuard. */
+    private ImmutableList<String> getParameters(ExecutionContext context) {
+      ImmutableList.Builder<String> args = ImmutableList.builder();
+      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+      Joiner pathJoiner = Joiner.on(':');
+
+      // Relative paths should be interpreted relative to project directory root, not the
+      // written parameters file.
+      args.add("-basedirectory")
+          .add(context.getProjectDirectoryRoot().getAbsolutePath());
+
+      // -include
+      if (useAndroidProguardConfigWithOptimizations) {
+        args.add("-include")
+            .add(androidPlatformTarget.getOptimizedProguardConfig().getAbsolutePath());
+      } else {
+        args.add("-include").add(androidPlatformTarget.getProguardConfig().getAbsolutePath());
+      }
+      for (String proguardConfig : customProguardConfigs) {
+        args.add("-include").add(proguardConfig);
+      }
+      args.add("-include").add(generatedProGuardConfig);
+
+      // -injars and -outjars paired together for each input.
+      for (Map.Entry<String, String> inputOutputEntry : inputAndOutputEntries.entrySet()) {
+        args.add("-injars").add(inputOutputEntry.getKey());
+        args.add("-outjars").add(inputOutputEntry.getValue());
+      }
+
+      // -libraryjars
+      Iterable<String> bootclasspathPaths = Iterables.transform(
+          androidPlatformTarget.getBootclasspathEntries(),
+          Functions.toStringFunction());
+      Iterable<String> libraryJars = Iterables.concat(bootclasspathPaths,
+          additionalLibraryJarsForProguard);
+      args.add("-libraryjars").add(pathJoiner.join(libraryJars));
+
+      // -dump
+      args.add("-dump").add(proguardDirectory + "/dump.txt");
+      args.add("-printseeds").add(proguardDirectory + "/seeds.txt");
+      args.add("-printusage").add(proguardDirectory + "/usage.txt");
+      args.add("-printmapping").add(proguardDirectory + "/mapping.txt");
+      args.add("-printconfiguration").add(proguardDirectory + "/configuration.txt");
+
+      return args.build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof CommandLineHelperStep)) {
+        return false;
+      }
+      CommandLineHelperStep that = (CommandLineHelperStep) obj;
+
+      return
+          Objects.equal(useAndroidProguardConfigWithOptimizations,
+              that.useAndroidProguardConfigWithOptimizations) &&
+          Objects.equal(additionalLibraryJarsForProguard,
+              that.additionalLibraryJarsForProguard) &&
+          Objects.equal(customProguardConfigs, that.customProguardConfigs) &&
+          Objects.equal(generatedProGuardConfig, that.generatedProGuardConfig) &&
+          Objects.equal(inputAndOutputEntries, that.inputAndOutputEntries) &&
+          Objects.equal(proguardDirectory, that.proguardDirectory) &&
+          Objects.equal(pathToProGuardCommandLineArgsFile, that.pathToProGuardCommandLineArgsFile);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(useAndroidProguardConfigWithOptimizations,
+          additionalLibraryJarsForProguard,
+          customProguardConfigs,
+          generatedProGuardConfig,
+          inputAndOutputEntries,
+          proguardDirectory,
+          pathToProGuardCommandLineArgsFile);
+    }
   }
 }

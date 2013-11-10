@@ -41,7 +41,9 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,9 +51,28 @@ import com.google.common.eventbus.EventBus;
 
 import org.junit.Test;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 
 public class SuperConsoleEventBusListenerTest {
+  private static final DecimalFormat timeFormatter = new DecimalFormat("0.0s");
+
+  /**
+   * Formats a string with times passed in in seconds.
+   *
+   * Used to avoid these tests failing if the user's locale doesn't use '.' as the decimal
+   * separator, as was the case in https://github.com/facebook/buck/issues/58.
+   */
+  private static String formatConsoleTimes(String template, Double... time) {
+    return String.format(template, (Object[]) FluentIterable.from(ImmutableList.copyOf(time))
+        .transform(new Function<Double, String>() {
+            @Override
+            public String apply(Double input) {
+              return timeFormatter.format(input);
+            }
+          }).toArray(String.class));
+  }
+
   @Test
   public void testSimpleBuild() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
@@ -82,17 +103,18 @@ public class SuperConsoleEventBusListenerTest {
         ParseEvent.started(buildTargets),
         0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    validateConsole(console, listener, 300L, ImmutableList.of("[+] PARSING BUILD FILES...0.3s"));
+    validateConsole(console, listener, 300L, ImmutableList.of(
+        formatConsoleTimes("[+] PARSING BUILD FILES...%s", 0.3)));
 
     rawEventBus.post(
         configureTestEventAtTime(ParseEvent.finished(buildTargets,
                                                      Optional.<DependencyGraph>absent()),
         400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    final String parsingLine = "[-] PARSING BUILD FILES...FINISHED 0.4s";
+    final String parsingLine = formatConsoleTimes("[-] PARSING BUILD FILES...FINISHED %s", 0.4);
 
     validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.1s"));
+        formatConsoleTimes("[+] BUILDING...%s", 0.1)));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(fakeRule),
@@ -100,8 +122,8 @@ public class SuperConsoleEventBusListenerTest {
 
 
     validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.4s",
-        " |=> //banana:stand...  0.2s (checking local cache)"));
+        formatConsoleTimes("[+] BUILDING...%s", 0.4),
+        formatConsoleTimes(" |=> //banana:stand...  %s (checking local cache)", 0.2)));
 
     FakeStep fakeStep = new FakeStep("doing_something", "working hard", 0);
     rawEventBus.post(configureTestEventAtTime(
@@ -109,8 +131,8 @@ public class SuperConsoleEventBusListenerTest {
           800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 900L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.5s",
-        " |=> //banana:stand...  0.3s (running doing_something[0.1s])"));
+        formatConsoleTimes("[+] BUILDING...%s", 0.5),
+        formatConsoleTimes(" |=> //banana:stand...  %s (running doing_something[%s])", 0.3, 0.1)));
 
     rawEventBus.post(configureTestEventAtTime(
         StepEvent.finished(fakeStep, "working hard", 0),
@@ -124,7 +146,7 @@ public class SuperConsoleEventBusListenerTest {
         1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 1000L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.6s",
+        formatConsoleTimes("[+] BUILDING...%s", 0.6),
         " |=> IDLE"));
 
     rawEventBus.post(configureTestEventAtTime(
@@ -132,9 +154,9 @@ public class SuperConsoleEventBusListenerTest {
         1010L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
-        "[+] BUILDING...0.7s",
+        formatConsoleTimes("[+] BUILDING...%s", 0.7),
         " |=> IDLE",
-        " |=> //chicken:dance...  0.1s (checking local cache)"));
+        formatConsoleTimes(" |=> //chicken:dance...  %s (checking local cache)", 0.1)));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
@@ -148,7 +170,7 @@ public class SuperConsoleEventBusListenerTest {
         BuildEvent.finished(buildTargets, 0),
         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    final String buildingLine = "[-] BUILDING...FINISHED 0.8s";
+    final String buildingLine = formatConsoleTimes("[-] BUILDING...FINISHED %s", 0.8);
 
     validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
 
@@ -167,7 +189,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 3000L, ImmutableList.of(parsingLine,
         buildingLine,
-        "[+] INSTALLING...0.5s",
+        formatConsoleTimes("[+] INSTALLING...%s", 0.5),
         "Log:",
         "I've made a huge mistake."));
 
@@ -177,7 +199,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 5000L, ImmutableList.of(parsingLine,
         buildingLine,
-        "[-] INSTALLING...FINISHED 1.5s",
+        formatConsoleTimes("[-] INSTALLING...FINISHED %s", 1.5),
         "Log:",
         "I've made a huge mistake."));
 

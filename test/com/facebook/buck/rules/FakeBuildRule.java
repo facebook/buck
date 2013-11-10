@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -27,6 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -43,16 +43,16 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     this(type,
-        new BuildRuleParams(
-            target,
-            deps,
-            visibilityPatterns,
-            /* pathRelativizer */ Functions.<String>identity()));
+        new FakeBuildRuleParams(target, deps, visibilityPatterns));
   }
 
   public FakeBuildRule(BuildRuleType type, BuildRuleParams buildRuleParams) {
     super(buildRuleParams);
     this.type = Preconditions.checkNotNull(type);
+  }
+
+  public FakeBuildRule(BuildRuleType type, BuildTarget buildTarget) {
+    this(type, new FakeBuildRuleParams(buildTarget));
   }
 
   @Override
@@ -76,7 +76,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
-  public final Iterable<InputRule> getInputs() {
+  public Iterable<Path> getInputs() {
     return ImmutableList.of();
   }
 

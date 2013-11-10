@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
@@ -55,6 +56,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -72,9 +74,11 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -145,7 +149,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
    */
   private Step getInstrumentCommand(
       ImmutableSet<JavaLibraryRule> rulesUnderTest, ProjectFilesystem projectFilesystem) {
-    ImmutableSet.Builder<String> pathsToInstrumentedClasses = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> pathsToInstrumentedClasses = ImmutableSet.builder();
 
     // Add all JAR files produced by java libraries that we are testing to -instrpath.
     for (JavaLibraryRule path : rulesUnderTest) {
@@ -259,6 +263,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildTargetException, BuildFileParseException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
+    // Create artifact cache to initialize Cassandra connection, if appropriate.
+    ArtifactCache artifactCache = getArtifactCache();
+
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
     RawRulePredicate predicate = new RawRulePredicate() {
@@ -292,7 +299,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Build build = options.createBuild(options.getBuckConfig(),
         graph,
         getProjectFilesystem(),
-        getArtifactCache(),
+        artifactCache,
         console,
         getBuckEventBus(),
         options.getTargetDeviceOptional(),
@@ -433,15 +440,24 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     };
 
+    TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
+        executionContext.getProjectFilesystem());
     for (TestRule test : tests) {
       List<Step> steps;
 
       // Determine whether the test needs to be executed.
-      boolean isTestRunRequired = isTestRunRequiredForTest(test, executionContext);
+      boolean isTestRunRequired =
+          isTestRunRequiredForTest(test, executionContext, testRuleKeyFileHelper);
       if (isTestRunRequired) {
         getBuckEventBus().post(IndividualTestEvent.started(
             options.getArgumentsFormattedAsBuildTargets()));
-        steps = test.runTests(buildContext, executionContext);
+        ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+        List<Step> testSteps = test.runTests(buildContext, executionContext);
+        if (!testSteps.isEmpty()) {
+          stepsBuilder.addAll(testSteps);
+          stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
+        }
+        steps = stepsBuilder.build();
       } else {
         steps = ImmutableList.of();
       }
@@ -450,7 +466,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // because the rule is cached, but its results must still be processed.
       ListenableFuture<TestResults> testResults =
           stepRunner.runStepsAndYieldResult(steps,
-              test.interpretTestResults(executionContext),
+              getCachingStatusTransformingCallable(
+                  isTestRunRequired,
+                  test.interpretTestResults(executionContext)),
               test.getBuildTarget());
       Futures.addCallback(testResults, onTestFinishedCallback);
       results.add(testResults);
@@ -504,8 +522,34 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     return failures ? 1 : 0;
   }
 
+  private Callable<TestResults> getCachingStatusTransformingCallable(
+      boolean isTestRunRequired,
+      final Callable<TestResults> originalCallable) {
+    if (isTestRunRequired) {
+      return originalCallable;
+    }
+    return new Callable<TestResults>() {
+      @Override
+      public TestResults call() throws Exception {
+        TestResults originalTestResults = originalCallable.call();
+        ImmutableList<TestCaseSummary> cachedTestResults = FluentIterable
+            .from(originalTestResults.getTestCases())
+            .transform(TestCaseSummary.TO_CACHED_TRANSFORMATION)
+            .toList();
+        return new TestResults(
+            originalTestResults.getBuildTarget(),
+            cachedTestResults,
+            originalTestResults.getContacts());
+      }
+    };
+  }
+
   @VisibleForTesting
-  static boolean isTestRunRequiredForTest(TestRule test, ExecutionContext executionContext) {
+  static boolean isTestRunRequiredForTest(
+      TestRule test,
+      ExecutionContext executionContext,
+      TestRuleKeyFileHelper testRuleKeyFileHelper)
+      throws IOException {
     boolean isTestRunRequired;
     BuildRuleSuccess.Type successType;
     if (executionContext.isDebugEnabled()) {
@@ -513,9 +557,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // hook up a debugger.
       isTestRunRequired = true;
     } else if (((successType = test.getBuildResultType()) != null)
-               && (successType == BuildRuleSuccess.Type.FETCHED_FROM_CACHE
-                      || successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY)
-               && test.hasTestResultFiles(executionContext)) {
+               && successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY
+               && test.hasTestResultFiles(executionContext)
+               && testRuleKeyFileHelper.isRuleKeyInDir(test)) {
       // If this build rule's artifacts (which includes the rule's output and its test result
       // files) are up to date, then no commands are necessary to run the tests. The test result
       // files will be read from the XML files in interpretTestResults().

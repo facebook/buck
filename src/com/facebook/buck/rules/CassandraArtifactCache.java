@@ -246,7 +246,7 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   @Override
   public void store(RuleKey ruleKey, File output) {
-    if (!doStore) {
+    if (!isStoreSupported()) {
       return;
     }
 
@@ -271,6 +271,11 @@ public class CassandraArtifactCache implements ArtifactCache {
           ruleKey,
           output.getPath()));
     }
+  }
+
+  @Override
+  public boolean isStoreSupported() {
+    return doStore;
   }
 
   private void reportConnectionFailure(String context, ConnectionException exception) {

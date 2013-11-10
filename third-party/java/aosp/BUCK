@@ -1,0 +1,32 @@
+java_library(
+  name = 'aosp',
+  srcs = glob(['src/**/*.java']),
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+TEST_SRC = ['tests/src/**/*Test.java'];
+
+java_library(
+  name = 'testutils',
+  srcs = glob(['tests/src/**/*.java'], excludes = TEST_SRC),
+  deps = [
+    ':aosp',
+    '//lib:junit',
+  ],
+)
+
+java_test(
+  name = 'tests',
+  srcs = glob(TEST_SRC),
+  resources = glob(['tests/src/com/android/manifmerger/data/*']),
+  deps = [
+    ':aosp',
+    ':testutils',
+    '//lib:junit',
+  ],
+  source_under_test = [
+    ':aosp',
+  ],
+)

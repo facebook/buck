@@ -32,7 +32,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -245,7 +244,7 @@ public class BuildContext {
           @Override
           @Nullable
           public String get() {
-            List<File> bootclasspathEntries = androidPlatformTarget.getBootclasspathEntries();
+            List<Path> bootclasspathEntries = androidPlatformTarget.getBootclasspathEntries();
             Preconditions.checkState(!bootclasspathEntries.isEmpty(),
                 "There should be entries for the bootclasspath");
             return Joiner.on(":").join(bootclasspathEntries);

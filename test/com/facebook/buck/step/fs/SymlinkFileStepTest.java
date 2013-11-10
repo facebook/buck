@@ -18,6 +18,7 @@ package com.facebook.buck.step.fs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -26,7 +27,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -69,7 +69,7 @@ public class SymlinkFileStepTest {
 
   @Test
   public void testReplaceMalformedSymlink() throws IOException, InterruptedException {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     // Run `ln -s /path/that/does/not/exist dummy` in /tmp.
     ProcessBuilder builder = new ProcessBuilder();

@@ -82,11 +82,11 @@ public class NdkBuildStep extends ShellStep {
     builder.addAll(this.flags);
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    Function<String, String> pathRelativizer = projectFilesystem.getPathRelativizer();
+    Function<String, Path> pathRelativizer = projectFilesystem.getPathRelativizer();
     builder.add(
-        "APP_PROJECT_PATH=" + pathRelativizer.apply(this.buildArtifactsDirectory),
+        "APP_PROJECT_PATH=" + pathRelativizer.apply(this.buildArtifactsDirectory) + "/",
         "APP_BUILD_SCRIPT=" + pathRelativizer.apply(this.makefilePath),
-        "NDK_OUT=" + pathRelativizer.apply(this.buildArtifactsDirectory),
+        "NDK_OUT=" + pathRelativizer.apply(this.buildArtifactsDirectory) + "/",
         "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory));
 
     return builder.build();

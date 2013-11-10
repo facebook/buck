@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -62,14 +64,14 @@ public class JavacOptions {
   }
 
   public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
-      Function<String, String> pathRelativizer) {
+      Function<String, Path> pathRelativizer) {
     appendOptionsToList(optionsBuilder,
         pathRelativizer,
         AnnotationProcessingDataDecorators.identity());
   }
 
   public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
-      final Function<String, String> pathRelativizer,
+      final Function<String, Path> pathRelativizer,
       AnnotationProcessingDataDecorator decorator) {
     Preconditions.checkNotNull(optionsBuilder);
 
@@ -103,13 +105,13 @@ public class JavacOptions {
       // Create a path relativizer that relativizes all processor paths, except for
       // AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH, which will already be
       // an absolute path.
-      Function<String, String> pathRelativizerThatOmitsAbiProcessor =
-          new Function<String, String>() {
+      Function<String, Path> pathRelativizerThatOmitsAbiProcessor =
+          new Function<String, Path>() {
         @Override
-        public String apply(String searchPathElement) {
+        public Path apply(String searchPathElement) {
           if (AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH.equals(
               searchPathElement)) {
-            return searchPathElement;
+            return Paths.get(searchPathElement);
           } else {
             return pathRelativizer.apply(searchPathElement);
           }

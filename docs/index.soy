@@ -3,10 +3,13 @@
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'An Android build tool' /}
+    {param title: 'An Android (and Java!) build tool' /}
     {param content}
 Buck is a build system for Android that encourages the creation of
-small, reusable modules consisting of code and resources.
+small, reusable modules consisting of code and resources. Because Android
+applications are predominantly written in Java, Buck also functions as a
+Java build system. <a href="{ROOT}concept/what_makes_buck_so_fast.html">Learn more</a> about
+the strategies Buck uses to build Java code so quickly.
 
 <h2>Features</h2>
 
@@ -15,8 +18,8 @@ Buck can help you do the following:
 <ul>
   <li>Speed up your Android builds. Buck builds independent artifacts in
       parallel to take advantage of multiple cores. Further, it reduces incremental
-      build times by keeping track of unchanged resources so that the minimal set
-      of resources is rebuilt.
+      build times by keeping track of unchanged modules so that the minimal set
+      of modules is rebuilt.
   <li>Introduce ad-hoc build steps for building artifacts that are not
       supported out-of-the-box using the standard Ant build scripts for Android.
   <li>Keep the logic for generating build rules in the build system instead of
@@ -73,7 +76,7 @@ the process of making atomic commits.
 
 If you build multiple applications, or if even if you ship one application but
 use several sample applications for development, then Buck is definitely for you.
-Give the <a href="{ROOT}setup/quickstart.html">Quick Start</a> a try and see how
+Give the <a href="{ROOT}setup/quick_start.html">Quick Start</a> a try and see how
 Buck can help you organize your Android project and build it faster than ever before.
     {/param}
   {/call}

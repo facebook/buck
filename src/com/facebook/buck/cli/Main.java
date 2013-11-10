@@ -25,14 +25,20 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.ArtifactCacheEvent;
+import com.facebook.buck.rules.ArtifactCacheConnectEvent;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKey.Builder;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultFileHashCache;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -49,6 +55,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
+import com.martiansoftware.nailgun.NGClientListener;
+import com.martiansoftware.nailgun.NGContext;
 
 import java.io.Closeable;
 import java.io.File;
@@ -76,8 +84,16 @@ public final class Main {
    */
   public static final int BUSY_EXIT_CODE = 2;
 
+  /**
+   * Client disconnected.
+   */
+  public static final int CLIENT_DISCONNECT_EXIT_CODE = 3;
+
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
   private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
+
+  private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
+  private static final String BUCK_VERSION_UID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
@@ -94,6 +110,7 @@ public final class Main {
   private final class Daemon implements Closeable {
 
     private final Parser parser;
+    private final DefaultFileHashCache hashCache;
     private final EventBus fileEventBus;
     private final ProjectFilesystemWatcher filesystemWatcher;
     private final BuckConfig config;
@@ -105,11 +122,13 @@ public final class Main {
                   Console console) throws IOException {
       this.config = Preconditions.checkNotNull(config);
       this.console = Preconditions.checkNotNull(console);
+      this.hashCache = new DefaultFileHashCache(projectFilesystem, console);
       this.parser = new Parser(projectFilesystem,
           new KnownBuildRuleTypes(),
           console,
           config.getPythonInterpreter(),
-          config.getTempFilePatterns());
+          config.getTempFilePatterns(),
+          createRuleKeyBuilderFactory(config, hashCache));
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
@@ -117,6 +136,7 @@ public final class Main {
           config.getIgnorePaths(),
           FileSystems.getDefault().newWatchService());
       fileEventBus.register(parser);
+      fileEventBus.register(hashCache);
       webServer = createWebServer(config, console);
     }
 
@@ -151,8 +171,34 @@ public final class Main {
       return parser;
     }
 
-    private void watchFileSystem() throws IOException {
-      filesystemWatcher.postEvents();
+    private void watchClient(NGContext context) {
+      context.addClientListener(new NGClientListener() {
+        @Override
+        public void clientDisconnected() {
+
+          // Synchronize on parser object so that the main command processing thread is not
+          // interrupted mid way through a Parser cache update by the Thread.interrupt() call
+          // triggered by System.exit(). The Parser cache will be reused by subsequent commands
+          // so needs to be left in a consistent state even if the current command is interrupted
+          // due to a client disconnection.
+          synchronized (parser) {
+            System.exit(CLIENT_DISCONNECT_EXIT_CODE);
+          }
+        }
+      });
+    }
+
+    private void watchFileSystem(Console console) throws IOException {
+
+      // Synchronize on parser object so that all outstanding watch events are processed
+      // as a single, atomic Parser cache update and are not interleaved with Parser cache
+      // invalidations triggered by requests to parse build files or interrupted by client
+      // disconnections.
+      synchronized (parser) {
+        parser.setConsole(console);
+        hashCache.setConsole(console);
+        filesystemWatcher.postEvents();
+      }
     }
 
     /** @return true if the web server was started successfully. */
@@ -191,10 +237,16 @@ public final class Main {
 
   @Nullable private static Daemon daemon;
 
-  private boolean isDaemon() {
-    return Boolean.getBoolean("buck.daemon");
+  /**
+   * Get existing Daemon.
+   */
+  private Daemon getDaemon() {
+    return Preconditions.checkNotNull(daemon);
   }
 
+  /**
+   * Get or create Daemon.
+   */
   private Daemon getDaemon(ProjectFilesystem filesystem,
                            BuckConfig config,
                            Console console) throws IOException {
@@ -261,11 +313,12 @@ public final class Main {
   }
 
   /**
+   * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public int runMainWithExitCode(File projectRoot, String... args) throws IOException {
+  public int runMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args) throws IOException {
     if (args.length == 0) {
       return usage();
     }
@@ -283,20 +336,20 @@ public final class Main {
 
     // Create or get and invalidate cached command parameters.
     Parser parser;
-    Optional<Daemon> daemonOptional;
-    if (isDaemon()) {
+    if (context.isPresent()) {
       Daemon daemon = getDaemon(projectFilesystem, config, console);
-      daemon.watchFileSystem();
+      daemon.watchClient(context.get());
+      daemon.watchFileSystem(console);
       daemon.initWebServer();
-      daemonOptional = Optional.of(daemon);
       parser = daemon.getParser();
     } else {
-      daemonOptional = Optional.absent();
       parser = new Parser(projectFilesystem,
           knownBuildRuleTypes,
           console,
           config.getPythonInterpreter(),
-          config.getTempFilePatterns());
+          config.getTempFilePatterns(),
+          createRuleKeyBuilderFactory(config,
+              new DefaultFileHashCache(projectFilesystem, console)));
     }
 
     Clock clock = new DefaultClock();
@@ -307,24 +360,20 @@ public final class Main {
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0], console);
     if (command.isPresent()) {
-      Optional<WebServer> webServerOptional = Optional.absent();
-      if (daemonOptional.isPresent()) {
-        webServerOptional = daemonOptional.get().getWebServer();
-      }
       ImmutableList<BuckEventListener> eventListeners =
           addEventListeners(buildEventBus,
               clock,
               projectFilesystem,
               console,
               config,
-              webServerOptional);
+              getWebServerIfDaemon(context));
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
-      buildEventBus.post(CommandEvent.started(commandName, isDaemon()));
+      buildEventBus.post(CommandEvent.started(commandName, context.isPresent()));
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
       // running commands such as `buck clean`.
@@ -334,10 +383,10 @@ public final class Main {
           if (options.isNoCache()) {
             return new NoopArtifactCache();
           } else {
-            buildEventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.CONNECT));
+            buildEventBus.post(ArtifactCacheConnectEvent.started());
             ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
                 .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
-            buildEventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.CONNECT));
+            buildEventBus.post(ArtifactCacheConnectEvent.finished());
             return artifactCache;
           }
         }
@@ -352,7 +401,7 @@ public final class Main {
           parser,
           platform));
 
-      buildEventBus.post(CommandEvent.finished(commandName, isDaemon(), exitCode));
+      buildEventBus.post(CommandEvent.finished(commandName, context.isPresent(), exitCode));
 
       ExecutorService buildEventBusExecutor = buildEventBus.getExecutorService();
       buildEventBusExecutor.shutdown();
@@ -374,6 +423,13 @@ public final class Main {
         return exitCode;
       }
     }
+  }
+
+  private Optional<WebServer> getWebServerIfDaemon(Optional<NGContext> context) {
+    if (context.isPresent()) {
+      return getDaemon().getWebServer();
+    }
+    return Optional.absent();
   }
 
   private void loadListenersFromBuckConfig(
@@ -439,7 +495,7 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(new ChromeTraceBuildListener(projectFilesystem));
+            .add(new ChromeTraceBuildListener(projectFilesystem, clock, config.getMaxTraces()));
 
     if (webServer.isPresent()) {
       eventListenersBuilder.add(webServer.get().createListener());
@@ -456,6 +512,8 @@ public final class Main {
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
 
+
+
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 
     for (BuckEventListener eventListener : eventListeners) {
@@ -463,6 +521,7 @@ public final class Main {
     }
 
     JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+
     return eventListeners;
   }
 
@@ -487,14 +546,32 @@ public final class Main {
     return BuckConfig.createFromFiles(projectFilesystem, configFiles, platform);
   }
 
+  /**
+   * @param buckConfig This is currently unused, but we plan to use this in the near future so that
+   *     global user configurations can be included when computing keys.
+   * @param hashCache A cache of file content hashes, used to avoid reading and hashing input files.
+   */
+  @SuppressWarnings("unused")
+  private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(BuckConfig buckConfig, final FileHashCache hashCache) {
+    return new RuleKeyBuilderFactory() {
+      @Override
+      public Builder newInstance(BuildRule buildRule) {
+        RuleKey.Builder builder = RuleKey.builder(buildRule, hashCache);
+        builder.set("buckVersionUid", BUCK_VERSION_UID);
+        return builder;
+      }
+    };
+  }
+
   @VisibleForTesting
-  int tryRunMainWithExitCode(File projectRoot, String... args) throws IOException {
+  int tryRunMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
+      throws IOException {
     // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
     if (!commandSemaphore.tryAcquire()) {
       return BUSY_EXIT_CODE;
     }
     try {
-      return runMainWithExitCode(projectRoot, args);
+      return runMainWithExitCode(projectRoot, context, args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
           stdOut,
@@ -507,12 +584,11 @@ public final class Main {
     }
   }
 
-  public static void main(String[] args) {
-    Main main = new Main(System.out, System.err);
+  private void runMainThenExit(String[] args, Optional<NGContext> context) {
     File projectRoot = new File(".");
     int exitCode = FAIL_EXIT_CODE;
     try {
-      exitCode = main.tryRunMainWithExitCode(projectRoot, args);
+      exitCode = tryRunMainWithExitCode(projectRoot, context, args);
     } catch (Throwable t) {
       t.printStackTrace();
     } finally {
@@ -520,5 +596,18 @@ public final class Main {
       // keep the VM alive.
       System.exit(exitCode);
     }
+  }
+
+  public static void main(String[] args) {
+    new Main(System.out, System.err).runMainThenExit(args, Optional.<NGContext>absent());
+  }
+
+  /**
+   * When running as a daemon in the NailGun server, {@link #nailMain(NGContext)} is called instead
+   * of {@link #main(String[])} so that the given context can be used to listen for client
+   * disconnections and interrupt command processing when they occur.
+   */
+  public static void nailMain(final NGContext context) throws InterruptedException {
+    new Main(context.out, context.err).runMainThenExit(context.getArgs(), Optional.of(context));
   }
 }

@@ -24,15 +24,14 @@ import com.facebook.buck.android.AndroidBinaryRule;
 import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
-import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
@@ -42,10 +41,11 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -76,6 +76,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -246,7 +248,6 @@ public class Project {
   @Nullable
   File writeProjectDotPropertiesFile(Module module, Map<String, Module> nameToModuleIndex)
       throws IOException {
-    String pathToImlFile = module.pathToImlFile;
     SortedSet<String> references = Sets.newTreeSet();
     for (DependentModule dependency : module.dependencies) {
       if (!dependency.isModule()) {
@@ -265,15 +266,10 @@ public class Project {
         continue;
       }
 
-      String relativePath = Paths.computeRelativePath(
-          Paths.getParentPath(pathToImlFile),
-          Paths.getParentPath(dep.pathToImlFile));
+      Path pathToImlFile = Paths.get(module.pathToImlFile);
+      Path depPathToImlFile = Paths.get(dep.pathToImlFile);
 
-      // Drop the trailing slash from the path, since that's what the Android tools appear to do
-      // when generating project.properties.
-      if (relativePath.endsWith("/")) {
-        relativePath = relativePath.substring(0, relativePath.length() - 1);
-      }
+      String relativePath = pathToImlFile.getParent().relativize(depPathToImlFile.getParent()).toString();
 
       // This is probably a self-reference. Ignore it.
       if (relativePath.isEmpty()) {
@@ -435,7 +431,7 @@ public class Project {
     // so that it will not disturb our glob() rules.
     // To specify the location of gen, Intellij requires the relative path from
     // the base path of current build target.
-    module.moduleGenPath = generateRelativeGenPath(basePathWithSlash);
+    module.moduleGenPath = generateRelativeGenPath(basePathWithSlash).toString();
 
     DependentModule jdkDependency;
     if (isAndroidRule) {
@@ -444,7 +440,7 @@ public class Project {
         NdkLibrary ndkLibrary = (NdkLibrary) projectRule.getBuildable();
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-        module.nativeLibs = Paths.computeRelativePath(relativePath, ndkLibrary.getLibraryPath());
+        module.nativeLibs = Paths.get(relativePath).relativize(Paths.get(ndkLibrary.getLibraryPath())).toString();
       } else if (projectRule instanceof AndroidResourceRule) {
         AndroidResourceRule androidResourceRule = (AndroidResourceRule)projectRule;
         module.resFolder = createRelativePath(androidResourceRule.getRes(), target);
@@ -461,8 +457,7 @@ public class Project {
 
         // getKeystore() returns a path relative to the project root, but an IntelliJ module
         // expects the path to the keystore to be relative to the module root.
-        module.keystorePath = Paths.computeRelativePath(relativePath,
-            keystoreProperties.getKeystore());
+        module.keystorePath = Paths.get(relativePath).relativize(Paths.get(keystoreProperties.getKeystore())).toString();
       } else {
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
@@ -483,7 +478,7 @@ public class Project {
               "indicating that it is relative to the root of the repository.",
               rootPrefix);
           manifestPath = manifestPath.substring(rootPrefix.length());
-          String relativePathToManifest = Paths.computeRelativePath(basePathWithSlash, manifestPath);
+          String relativePathToManifest = Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
           // IntelliJ requires that the path start with a slash to indicate that it is relative to
           // the module.
           module.androidManifest = "/" + relativePathToManifest;
@@ -515,7 +510,7 @@ public class Project {
       String annotationGenSrc = processingData.getGeneratedSourceFolderName();
       if (annotationGenSrc != null) {
         module.annotationGenPath =
-            "/" + Paths.computeRelativePath(basePathWithSlash, annotationGenSrc);
+            "/" + Paths.get(basePathWithSlash).relativize(Paths.get(annotationGenSrc)).toString();
         module.annotationGenIsForTest = !hasSourceFoldersForSrcRule;
       }
     }
@@ -562,14 +557,13 @@ public class Project {
    *
    * @return the relative path of gen from the base path of current module.
    */
-  static String generateRelativeGenPath(String basePathOfModuleWithSlash) {
-    return
-        "/"
-        + Paths.computeRelativePath(basePathOfModuleWithSlash, "")
-        + ANDROID_GEN_DIR
-        + "/"
-        + Paths.computeRelativePath("", basePathOfModuleWithSlash)
-        + "gen";
+  static Path generateRelativeGenPath(String basePathOfModuleWithSlash) {
+    return Paths.get(
+        "/",
+        Paths.get(basePathOfModuleWithSlash).relativize(Paths.get("")).toString(),
+        ANDROID_GEN_DIR,
+        Paths.get("").relativize(Paths.get(basePathOfModuleWithSlash)).toString(),
+        "gen");
   }
 
   private boolean addSourceFolders(Module module,
@@ -741,7 +735,7 @@ public class Project {
       private final LinkedHashSet<DependentModule> modulesToAdd = Sets.newLinkedHashSet();
 
       @Override
-      public boolean visit(BuildRule dep) {
+      public ImmutableSet<BuildRule> visit(BuildRule dep) {
         boolean depShouldExportDeps = dep.getExportDeps() || rule.getProperties().is(PACKAGING);
         boolean shouldVisitDeps = (dep.getProperties().is(LIBRARY) && (depShouldExportDeps))
             || (dep instanceof AndroidResourceRule)
@@ -791,18 +785,12 @@ public class Project {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
-          return shouldVisitDeps;
-        } else if (dep instanceof JavaLibraryRule) {
+          return maybeVisitAllDeps(dep, shouldVisitDeps);
+        } else if (dep instanceof JavaLibraryRule || dep instanceof AndroidResourceRule) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
-        } else if (dep instanceof AndroidResourceRule) {
-          String moduleName = getIntellijNameForRule(dep);
-          dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
-        } else if (dep.getBuildable() instanceof GenAidl) {
-          // This will likely be handled appropriately by the IDE's Android plugin.
-          return shouldVisitDeps;
         } else {
-          return shouldVisitDeps;
+          return maybeVisitAllDeps(dep, shouldVisitDeps);
         }
 
         if (isForTests) {
@@ -826,7 +814,7 @@ public class Project {
           modulesToAdd.add(dependentModule);
         }
 
-        return shouldVisitDeps;
+        return maybeVisitAllDeps(dep, shouldVisitDeps);
       }
 
       @Override
@@ -935,7 +923,17 @@ public class Project {
       }
     };
 
-    int exitCode = command.execute(executionContext);
+    Console console = executionContext.getConsole();
+    Console childConsole = new Console(
+        console.getVerbosity(),
+        console.getStdOut(),
+        console.getStdErr(),
+        Ansi.withoutTty());
+    ExecutionContext childContext = ExecutionContext.builder()
+        .setExecutionContext(executionContext)
+        .setConsole(childConsole)
+        .build();
+    int exitCode = command.execute(childContext);
     return new ExitCodeAndStdOut(exitCode, command.getStdout());
   }
 

@@ -23,12 +23,12 @@ import com.facebook.buck.android.HasAndroidResourceDeps;
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
@@ -52,7 +52,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -74,6 +74,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -258,8 +260,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
                ImmutableSetMultimap.builder();
 
-            Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(
-                Sets.union(getDeps(), ImmutableSet.of(DefaultJavaLibraryRule.this)),
+            Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(getDeps(),
                 JavaLibraryRule.class);
 
             for (JavaLibraryRule rule : javaLibraryDeps) {
@@ -284,7 +285,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       ImmutableSet<String> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildDependencies buildDependencies,
-      Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRules,
+      Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRules,
       ImmutableList.Builder<Step> commands) {
     // Make sure that this directory exists because ABI information will be written here.
     Step mkdir = new MakeCleanDirectoryStep(getPathToAbiOutputDir());
@@ -292,7 +293,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
-      final JavacInMemoryStep javac = new DependencyCheckingJavacStep(
+      final JavacInMemoryStep javac = new JavacInMemoryStep(
           outputDirectory,
           getJavaSrcs(),
           transitiveClasspathEntries,
@@ -362,7 +363,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * lacks an ABI key, then returns {@link Optional#absent()}.
    */
   @Override
-  public Optional<Sha1HashCode> getAbiKeyForDeps() throws IOException {
+  public Sha1HashCode getAbiKeyForDeps() {
     SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {
@@ -377,14 +378,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         continue;
       }
 
-      Optional<Sha1HashCode> abiKey = ruleWithAbiToConsider.getAbiKey();
-      if (!abiKey.isPresent()) {
-        return Optional.absent();
-      }
-      hasher.putUnencodedChars(abiKey.get().getHash());
+      Sha1HashCode abiKey = ruleWithAbiToConsider.getAbiKey();
+      hasher.putUnencodedChars(abiKey.getHash());
     }
 
-    return Optional.of(new Sha1HashCode(hasher.hash().toString()));
+    return new Sha1HashCode(hasher.hash().toString());
   }
 
   @Override
@@ -515,7 +513,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     String outputDirectory = getClassesDir(getBuildTarget());
     commands.add(new MakeCleanDirectoryStep(outputDirectory));
 
-    Optional<DependencyCheckingJavacStep.SuggestBuildRules> suggestBuildRule =
+    Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRule =
         createSuggestBuildFunction(context,
             transitiveClasspathEntries,
             declaredClasspathEntries,
@@ -571,7 +569,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     });
 
     buildableContext.addMetadata(ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-        getAbiKeyForDeps().get().getHash());
+        getAbiKeyForDeps().getHash());
   }
 
   /**
@@ -619,7 +617,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    *    set of rules to suggest that the developer import to satisfy those imports.
    */
   @VisibleForTesting
-  Optional<DependencyCheckingJavacStep.SuggestBuildRules> createSuggestBuildFunction(
+  Optional<JavacInMemoryStep.SuggestBuildRules> createSuggestBuildFunction(
       BuildContext context,
       ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries,
       ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries,
@@ -640,8 +638,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
               }
             })).reverse();
 
-    DependencyCheckingJavacStep.SuggestBuildRules suggestBuildRuleFn =
-        new DependencyCheckingJavacStep.SuggestBuildRules() {
+    JavacInMemoryStep.SuggestBuildRules suggestBuildRuleFn =
+        new JavacInMemoryStep.SuggestBuildRules() {
       @Override
       public ImmutableSet<String> apply(ImmutableSet<String> failedImports) {
         ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
@@ -681,10 +679,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public Optional<Sha1HashCode> getAbiKey() {
+  public Sha1HashCode getAbiKey() {
     Preconditions.checkState(isRuleBuilt(),
         "%s must be built before its ABI key can be returned.", this);
-    return Optional.fromNullable(abiKeySupplier == null ? null : abiKeySupplier.get());
+    return abiKeySupplier.get();
   }
 
   private void setAbiKey(Supplier<Sha1HashCode> abiKeySupplier) {
@@ -718,9 +716,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         //
         // Therefore, some path-wrangling is required to produce the correct string.
 
-        String resource = Paths.normalizePathSeparator(rawResource.resolve(context).toString());
-        String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource);
-        String relativeSymlinkPath;
+        Path resource = MorePaths.separatorsToUnix(rawResource.resolve(context));
+        String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
+        Path relativeSymlinkPath;
 
 
         if (resource.startsWith(BuckConstant.BUCK_OUTPUT_DIRECTORY) ||
@@ -729,23 +727,23 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             resource.startsWith(BuckConstant.ANNOTATION_DIR)) {
           // Handle the case where we depend on the output of another BuildRule. In that case, just
           // grab the output and put in the same package as this target would be in.
-          relativeSymlinkPath = String.format(
-              "%s/%s", targetPackageDir, rawResource.resolve(context).getFileName());
+          relativeSymlinkPath = Paths.get(String.format(
+              "%s/%s", targetPackageDir, rawResource.resolve(context).getFileName()));
         } else if ("".equals(javaPackageAsPath)) {
           // In this case, the project root is acting as the default package, so the resource path
           // works fine.
           relativeSymlinkPath = resource;
         } else {
-          int lastIndex = resource.lastIndexOf(javaPackageAsPath);
+          int lastIndex = resource.toString().lastIndexOf(javaPackageAsPath);
           Preconditions.checkState(lastIndex >= 0,
               "Resource path %s must contain %s",
               resource,
               javaPackageAsPath);
 
-          relativeSymlinkPath = resource.substring(lastIndex);
+          relativeSymlinkPath = Paths.get(resource.toString().substring(lastIndex));
         }
-        String target = outputDirectory + '/' + relativeSymlinkPath;
-        MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource, target);
+        String target = Paths.get(outputDirectory).resolve(relativeSymlinkPath).toString();
+        MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(resource.toString(), target);
         commands.add(link);
       }
     }

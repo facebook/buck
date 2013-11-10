@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.util.Paths;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
@@ -79,8 +79,8 @@ public class TargetsCommandOptions extends BuildCommandOptions {
       // Ignore files that aren't under project root.
       if (canonicalFullPath.startsWith(projectRootCanonicalFullPathWithEndSlash)) {
         builder.add(
-            Paths.normalizePathSeparator(canonicalFullPath.substring(
-                projectRootCanonicalFullPathWithEndSlash.length())));
+            MorePaths.newPathInstance(canonicalFullPath.substring(
+                projectRootCanonicalFullPathWithEndSlash.length())).toString());
       }
     }
     return builder.build();

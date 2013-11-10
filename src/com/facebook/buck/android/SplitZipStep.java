@@ -22,7 +22,6 @@ import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.Paths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -139,7 +138,9 @@ public class SplitZipStep implements Step {
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       File primaryJarFile = new File(primaryJarPath);
       Collection<File> secondaryZips = zipSplitterFactory.newInstance(
-          ImmutableSet.copyOf(Paths.transformPathToFile(inputPathsToSplit)),
+          FluentIterable.from(inputPathsToSplit)
+              .transform(context.getProjectFilesystem().getPathRelativizer())
+              .toSet(),
           primaryJarFile,
           new File(secondaryJarDir),
           secondaryJarPattern,
@@ -186,6 +187,13 @@ public class SplitZipStep implements Step {
               return !line.isEmpty() && !(line.charAt(0) == '#');
             }
           })
+          .transform(new Function<String, String>() {
+            @Override
+            public String apply(String line) {
+              // Append a ".class" so the input file can just contain the internal class name.
+              return line + ".class";
+            }
+          })
           .toSet();
     } else {
       classNames = ImmutableSet.of();
@@ -222,8 +230,7 @@ public class SplitZipStep implements Step {
       Collection<File> jarFiles,
       DexStore dexStore) throws IOException {
     for (File secondary : jarFiles) {
-      String filename = SmartDexingStep.transformInputToDexOutput(
-           secondary.getName(), dexStore);
+      String filename = SmartDexingStep.transformInputToDexOutput(secondary, dexStore);
       String jarHash = hexSha1(secondary);
       String containedClass = findAnyClass(secondary);
       writer.write(String.format("%s %s %s",
@@ -233,11 +240,12 @@ public class SplitZipStep implements Step {
   }
 
   private static String findAnyClass(File jarFile) throws IOException {
-    ZipFile inZip = new ZipFile(jarFile);
-    for (ZipEntry entry : Collections.list(inZip.entries())) {
-      Matcher m = classFilePattern.matcher(entry.getName());
-      if (m.matches()) {
-        return m.group(1).replace('/', '.');
+    try (ZipFile inZip = new ZipFile(jarFile)) {
+      for (ZipEntry entry : Collections.list(inZip.entries())) {
+        Matcher m = classFilePattern.matcher(entry.getName());
+        if (m.matches()) {
+          return m.group(1).replace('/', '.');
+        }
       }
     }
     // TODO(user): It's possible for this to happen by chance, so we should handle it better.

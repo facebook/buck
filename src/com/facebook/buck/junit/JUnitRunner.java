@@ -18,6 +18,7 @@ package com.facebook.buck.junit;
 
 import org.junit.Ignore;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
+import org.junit.internal.builders.AnnotatedBuilder;
 import org.junit.internal.builders.JUnit4Builder;
 import org.junit.runner.Computer;
 import org.junit.runner.JUnitCore;
@@ -112,11 +113,28 @@ public final class JUnitRunner {
       }
     };
 
-    return new AllDefaultPossibilitiesBuilder(
-        /* canUseSuiteMethod */ true) {
+    return new AllDefaultPossibilitiesBuilder(/* canUseSuiteMethod */ true) {
       @Override
       protected JUnit4Builder junit4Builder() {
         return jUnit4RunnerBuilder;
+      }
+
+      @Override
+      protected AnnotatedBuilder annotatedBuilder() {
+        // If there is no default timeout specified in .buckconfig, then use the original behavior
+        // of AllDefaultPossibilitiesBuilder.
+        if (defaultTestTimeoutMillis <= 0) {
+          return super.annotatedBuilder();
+        }
+
+        return new AnnotatedBuilder(this) {
+          @Override
+          public Runner buildRunner(Class<? extends Runner> runnerClass,
+              Class<?> testClass) throws Exception {
+            Runner originalRunner = super.buildRunner(runnerClass, testClass);
+            return new DelegateRunnerWithTimeout(originalRunner, defaultTestTimeoutMillis);
+          }
+        };
       }
     };
   }

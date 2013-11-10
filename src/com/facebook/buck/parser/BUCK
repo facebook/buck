@@ -7,7 +7,7 @@ java_library(
   ],
   deps = [
     ':project',
-    ':support',
+    ':rule_pattern',
     '//lib:guava',
     '//lib:jackson-annotations',
     '//lib:jackson-core',
@@ -37,7 +37,7 @@ java_library(
     'RawRulePredicates.java',
   ],
   deps = [
-    ':support',
+    ':rule_pattern',
     '//lib:guava',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
@@ -47,14 +47,10 @@ java_library(
 )
 
 java_library(
-  name = 'support',
+  name = 'rule_pattern',
   srcs = [
-    'AbstractBuildRuleFactory.java',
-    'AbstractTestRuleFactory.java',
-    'BuildRuleFactory.java',
-    'BuildRuleFactoryParams.java',
-    'BuildTargetParseException.java',
     'BuildTargetParser.java',
+    'BuildTargetParseException.java',
     'BuildTargetPatternParser.java',
     'NoSuchBuildTargetException.java',
     'ParseContext.java',
@@ -63,12 +59,9 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:util',
   ],
   visibility = ['PUBLIC'],
 )

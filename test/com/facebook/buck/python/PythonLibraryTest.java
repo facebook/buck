@@ -20,12 +20,9 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -37,11 +34,8 @@ public class PythonLibraryTest {
 
   @Test
   public void testGetters() {
-    BuildRuleParams buildRuleParams = new BuildRuleParams(
-        BuildTargetFactory.newInstance("//scripts/python:foo"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-        /* pathRelativizer */ Functions.<String>identity());
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
+        new BuildTarget("//scripts/python", "foo"));
     ImmutableSortedSet<String> srcs = ImmutableSortedSet.of("");
     PythonLibrary pythonLibrary = new PythonLibrary(
         buildRuleParams,

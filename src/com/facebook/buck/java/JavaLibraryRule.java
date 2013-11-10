@@ -20,11 +20,8 @@ import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.io.IOException;
 
 public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntries {
   /**
@@ -60,9 +57,6 @@ public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntri
    * <p>
    * Because the ABI is computed as part of the build process, this rule cannot be invoked until
    * after this rule is built.
-   * <p>
-   * Returns {@link Optional#absent()} if the rule did not build successfully, or if the ABI could
-   * not be extracted for any reason.
    */
-  public Optional<Sha1HashCode> getAbiKey() throws IOException;
+  public Sha1HashCode getAbiKey();
 }

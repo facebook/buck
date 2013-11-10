@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 
-class VerbosityParser {
+public class VerbosityParser {
 
   @VisibleForTesting static final String VERBOSE_LONG_ARG = "--verbose";
 
@@ -42,7 +42,7 @@ class VerbosityParser {
     return DEFAULT_VERBOSITY;
   }
 
-  private static Verbosity getVerbosityForLevel(int verbosityLevel) {
+  public static Verbosity getVerbosityForLevel(int verbosityLevel) {
     if (verbosityLevel >= 8) {
       return Verbosity.ALL;
     } else if (verbosityLevel >= 5) {

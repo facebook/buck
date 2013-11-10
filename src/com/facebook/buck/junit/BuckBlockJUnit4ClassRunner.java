@@ -16,6 +16,8 @@
 
 package com.facebook.buck.junit;
 
+import com.facebook.buck.util.concurrent.MoreExecutors;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -30,14 +32,13 @@ import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
+import org.junit.runners.model.TestClass;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -55,15 +56,7 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
   // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
   // garbage is not spewed to the user's console if the build fails.
-  // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
-  // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
-  // garbage is not spewed to the user's console if the build fails.
-  private final ExecutorService executor = new ThreadPoolExecutor(
-        /* corePoolSize */ 1,
-        /* maximumPoolSize */ 1,
-        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
-        /* handler */ new ThreadPoolExecutor.DiscardPolicy());
+  private final ExecutorService executor = MoreExecutors.newSingleThreadExecutor();
 
   private final long defaultTestTimeoutMillis;
 
@@ -96,7 +89,7 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   }
 
   private boolean isNeedingCustomTimeout() {
-    return defaultTestTimeoutMillis <= 0 || hasTimeoutRule();
+    return defaultTestTimeoutMillis <= 0 || hasTimeoutRule(getTestClass());
   }
 
   /**
@@ -201,13 +194,13 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
    * @return {@code true} if the test class has any fields annotated with {@code Rule} whose type
    *     is {@link Timeout}.
    */
-  private boolean hasTimeoutRule() {
+  static boolean hasTimeoutRule(TestClass testClass) {
     // Many protected convenience methods in BlockJUnit4ClassRunner that are available in JUnit 4.11
     // such as getTestRules(Object) were not public until
     // https://github.com/junit-team/junit/commit/8782efa08abf5d47afdc16740678661443706740,
     // which appears to be JUnit 4.9. Because we allow users to use JUnit 4.7, we need to include a
     // custom implementation that is backwards compatible to JUnit 4.7.
-    List<FrameworkField> fields = getTestClass().getAnnotatedFields(Rule.class);
+    List<FrameworkField> fields = testClass.getAnnotatedFields(Rule.class);
     for (FrameworkField field : fields) {
       if (field.getField().getType().equals(Timeout.class)) {
         return true;

@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
@@ -160,7 +161,7 @@ public class UberRDotJavaUtil {
     AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(buildRule) {
 
       @Override
-      public boolean visit(BuildRule rule) {
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
         if (rule instanceof HasAndroidResourceDeps) {
           HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
           if (androidResourceRule.getRes() != null) {
@@ -170,7 +171,7 @@ public class UberRDotJavaUtil {
 
         // Only certain types of rules should be considered as part of this traversal.
         BuildRuleType type = rule.getType();
-        return TRAVERSABLE_TYPES.contains(type);
+        return maybeVisitAllDeps(rule, TRAVERSABLE_TYPES.contains(type));
       }
 
     };
@@ -277,8 +278,12 @@ public class UberRDotJavaUtil {
     return new JavacInMemoryStep(
         outputDirectory,
         javaSourceFilePaths,
+        ImmutableSet.<String>of(),
         classpathEntries,
         JavacOptions.DEFAULTS,
-        /* pathToOutputAbiFile */ Optional.<String>absent());
+        /* pathToOutputAbiFile */ Optional.<String>absent(),
+        Optional.<String>absent(),
+        BuildDependencies.FIRST_ORDER_ONLY,
+        Optional.<JavacInMemoryStep.SuggestBuildRules>absent());
   }
 }

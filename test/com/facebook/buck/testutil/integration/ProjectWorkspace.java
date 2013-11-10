@@ -27,8 +27,10 @@ import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.rules.TemporaryFolder;
 
@@ -129,7 +131,6 @@ public class ProjectWorkspace {
       };
       java.nio.file.Files.walkFileTree(destPath, copyDirVisitor);
     }
-
     isSetUp = true;
   }
 
@@ -145,7 +146,7 @@ public class ProjectWorkspace {
     CapturingPrintStream stderr = new CapturingPrintStream();
 
     Main main = new Main(stdout, stderr);
-    int exitCode = main.runMainWithExitCode(destDir, args);
+    int exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>absent(), args);
 
     return new ProcessResult(exitCode,
         stdout.getContentsAsString(Charsets.UTF_8),
@@ -161,6 +162,13 @@ public class ProjectWorkspace {
 
   public String getFileContents(String pathRelativeToProjectRoot) throws IOException {
     return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
+  }
+
+  /**
+   * @return the specified path resolved against the root of this workspace.
+   */
+  public Path resolve(Path pathRelativeToWorkspaceRoot) {
+    return destPath.resolve(pathRelativeToWorkspaceRoot);
   }
 
   /** The result of running {@code buck} from the command line. */

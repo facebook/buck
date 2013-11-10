@@ -17,10 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
 
 public class BuildRuleParamsFactory {
 
@@ -32,10 +29,6 @@ public class BuildRuleParamsFactory {
    *     that returns the parameter it receives verbatim.
    */
   public static BuildRuleParams createTrivialBuildRuleParams(BuildTarget buildTarget) {
-    return new BuildRuleParams(
-        Preconditions.checkNotNull(buildTarget),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* visibilityPatterns */ ImmutableSortedSet.<BuildTargetPattern>of(),
-        /* pathRelativizer */ Functions.<String>identity());
+    return new FakeBuildRuleParams(Preconditions.checkNotNull(buildTarget));
   }
 }

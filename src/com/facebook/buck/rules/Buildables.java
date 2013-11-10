@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraversers;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -34,6 +33,9 @@ public class Buildables {
   /** Utility class: do not instantiate. */
   private Buildables() {}
 
+  // TODO(mbolin): Remove or rewrite this. Code in an integration test that used this method was
+  // discovered to break things because it did not relative paths relative to the project root
+  // correctly.
   /**
    * Helper function for {@link Buildable}s to create their lists of files for caching.
    */
@@ -46,8 +48,7 @@ public class Buildables {
 
     Set<String> files;
     try {
-      files = DirectoryTraversers.getInstance().findFiles(
-          ImmutableSet.of(pathToDirectory), traverser);
+      files = DirectoryTraversers.getInstance().findFiles(pathToDirectory, traverser);
     } catch (IOException e) {
       throw new RuntimeException("Exception while traversing " + pathToDirectory + ".", e);
     }
