@@ -41,7 +41,6 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
     builder.setProguardConfig(
         proguardConfig.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 
-
     for (String exportedDep : params.getOptionalListAttribute("exported_deps")) {
       BuildTarget buildTarget = params.resolveBuildTarget(exportedDep);
       builder.addExportedDep(buildTarget);
@@ -53,6 +52,11 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
     Optional<String> sourceLevel = params.getOptionalStringAttribute("source");
     if (sourceLevel.isPresent()) {
       builder.setSourceLevel(sourceLevel.get());
+    }
+
+    for (String dep : params.getOptionalListAttribute("compile_deps")) {
+      BuildTarget buildTarget = params.resolveBuildTarget(dep);
+      builder.addCompileDep(buildTarget);
     }
 
     Optional<String> targetLevel = params.getOptionalStringAttribute("target");
