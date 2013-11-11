@@ -15,9 +15,10 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.SourcePath;
 
 public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFactory<AndroidManifest.Builder> {
 
@@ -30,7 +31,7 @@ public final class AndroidManifestBuildRuleFactory extends AbstractBuildRuleFact
   protected void amendBuilder(AndroidManifest.Builder builder, BuildRuleFactoryParams params) {
     // skeleton file
     String skeletonFile = params.getRequiredStringAttribute("skeleton");
-    String skeletonPath = params.resolveFilePathRelativeToBuildFileDirectory(skeletonFile);
+    SourcePath skeletonPath = params.asSourcePath(skeletonFile, builder);
     builder.setSkeletonFile(skeletonPath);
   }
 }

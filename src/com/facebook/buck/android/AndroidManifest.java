@@ -27,12 +27,15 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -64,16 +67,16 @@ import java.util.List;
 public class AndroidManifest extends AbstractBuildable {
 
   private final BuildTarget buildTarget;
-  private final String skeletonFile;
+  private final SourcePath skeletonFile;
 
-  protected AndroidManifest(BuildTarget buildTarget, String skeletonFile) {
+  protected AndroidManifest(BuildTarget buildTarget, SourcePath skeletonFile) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
   }
 
   @Override
-  public List<String> getInputsToCompareToOutput() {
-    return ImmutableList.of(skeletonFile);
+  public Iterable<String> getInputsToCompareToOutput() {
+    return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(skeletonFile));
   }
 
   public BuildTarget getBuildTarget() {
@@ -93,7 +96,7 @@ public class AndroidManifest extends AbstractBuildable {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.add(new GenerateManifestStep(
-        skeletonFile,
+        skeletonFile.resolve(context).toString(),
         transitiveDependencies.manifestFiles,
         getPathToOutputFile()));
 
@@ -125,7 +128,7 @@ public class AndroidManifest extends AbstractBuildable {
 
   public static class Builder extends AbstractBuildable.Builder {
 
-    protected String skeletonFile;
+    protected SourcePath skeletonFile;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -142,7 +145,7 @@ public class AndroidManifest extends AbstractBuildable {
       return BuildRuleType.ANDROID_MANIFEST;
     }
 
-    public Builder setSkeletonFile(String skeletonFile) {
+    public Builder setSkeletonFile(SourcePath skeletonFile) {
       this.skeletonFile = skeletonFile;
       return this;
     }

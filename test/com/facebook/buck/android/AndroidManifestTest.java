@@ -31,6 +31,7 @@ import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
@@ -62,7 +63,7 @@ public class AndroidManifestTest {
 
     assertEquals(
         ImmutableList.of("java/com/example/AndroidManifestSkeleton.xml"),
-        androidManifestRule.getInputsToCompareToOutput());
+        ImmutableList.copyOf(androidManifestRule.getInputsToCompareToOutput()));
     assertEquals(
         BuckConstant.GEN_DIR + "/java/com/example/AndroidManifest__manifest__.xml",
         androidManifestRule.getPathToOutputFile());
@@ -109,7 +110,7 @@ public class AndroidManifestTest {
     AndroidManifest.Builder builder = AndroidManifest.newManifestMergeRuleBuilder(
         new FakeAbstractBuildRuleBuilderParams());
     final AndroidManifest androidManifest = builder
-        .setSkeletonFile("java/com/example/AndroidManifestSkeleton.xml")
+        .setSkeletonFile(new FileSourcePath("java/com/example/AndroidManifestSkeleton.xml"))
         .newBuildable(buildRuleParams, new BuildRuleResolver());
 
     // Then create a BuildRule whose Buildable is the AndroidManifest.
