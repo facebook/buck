@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -248,8 +249,16 @@ public class SplitZipStep implements Step {
       return Functions.identity();
     }
 
-    Map<String, String> rawProguardMap = ProguardMapping.readClassMapping(
-        context.getProjectFilesystem().readLines(proguardMappingFile.get()));
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    Path pathToProguardMappingFile = proguardMappingFile.get();
+    // Proguard doesn't print a mapping when obfuscation is disabled.
+    // TODO(user): Make sure obfuscation was disabled.
+    if (!projectFilesystem.exists(pathToProguardMappingFile.toString())) {
+      return Functions.identity();
+    }
+
+    List<String> lines = projectFilesystem.readLines(pathToProguardMappingFile);
+    Map<String, String> rawProguardMap = ProguardMapping.readClassMapping(lines);
 
     ImmutableMap.Builder<String, String> internalNameBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : rawProguardMap.entrySet()) {

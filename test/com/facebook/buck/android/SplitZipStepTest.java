@@ -191,6 +191,8 @@ public class SplitZipStepTest {
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
         .andReturn(linesInManifestFile);
+    EasyMock.expect(projectFilesystem.exists(proguardMappingFile.toString()))
+        .andReturn(true);
     EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
         .andReturn(linesInMappingFile);
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
