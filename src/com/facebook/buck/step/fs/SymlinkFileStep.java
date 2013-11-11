@@ -18,21 +18,45 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Function;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class SymlinkFileStep implements Step {
 
-  private final String source;
-  private final String target;
+  private final String existingFile;
+  private final String desiredLink;
+  private final boolean useAbsolutePaths;
 
-  public SymlinkFileStep(String source, String target) {
-    this.source = Preconditions.checkNotNull(source);
-    this.target = Preconditions.checkNotNull(target);
+  public SymlinkFileStep(String existingFile, String desiredLink, boolean useAbsolutePaths) {
+    this.existingFile = Preconditions.checkNotNull(existingFile);
+    this.desiredLink = Preconditions.checkNotNull(desiredLink);
+    this.useAbsolutePaths = useAbsolutePaths;
+  }
+
+  /**
+   * Get the path to the existing file that should be linked.
+   */
+  private Path getExistingFilePath(ExecutionContext context) {
+    // This could be either an absolute or relative path.
+    // TODO ideally all symbolic links should be relative, consider eliminating the absolute option.
+    return (useAbsolutePaths ? getAbsolutePath(existingFile, context) :
+        MorePaths.getRelativePath(Paths.get(existingFile), Paths.get(desiredLink).getParent()));
+  }
+
+  /**
+   * Get the path to the desired link that should be created.
+   */
+  private Path getDesiredLinkPath(ExecutionContext context) {
+    return getAbsolutePath(desiredLink, context);
+  }
+
+  private static Path getAbsolutePath(String path, ExecutionContext context) {
+    return context.getProjectFilesystem().getPathRelativizer().apply(path);
   }
 
   @Override
@@ -42,23 +66,23 @@ public class SymlinkFileStep implements Step {
 
   @Override
   public String getDescription (ExecutionContext context) {
-    Function<String, Path> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
-    // Always symlink to an absolute path so the symlink is sure to be read correctly.
     return Joiner.on(" ").join(
         "ln",
         "-f",
         "-s",
-        pathRelativizer.apply(source),
-        pathRelativizer.apply(target));
+        getExistingFilePath(context),
+        getDesiredLinkPath(context));
   }
 
   @Override
   public int execute(ExecutionContext context) {
-    Function<String, Path> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
-    Path targetPath = pathRelativizer.apply(target);
-    Path sourcePath = pathRelativizer.apply(source);
+    Path existingFilePath = getExistingFilePath(context);
+    Path desiredLinkPath = getDesiredLinkPath(context);
     try {
-      context.getProjectFilesystem().createSymLink(sourcePath, targetPath, true);
+      context.getProjectFilesystem().createSymLink(
+          existingFilePath,
+          desiredLinkPath,
+          /* force */ true);
       return 0;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());

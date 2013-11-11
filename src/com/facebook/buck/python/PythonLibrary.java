@@ -30,9 +30,9 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -111,17 +111,19 @@ public class PythonLibrary extends AbstractBuildable {
     commands.add(new MakeCleanDirectoryStep(pythonPathDirectory));
 
     ImmutableSortedSet.Builder<Path> directories = ImmutableSortedSet.naturalOrder();
-    ImmutableList.Builder<Step> copySteps = ImmutableList.builder();
+    ImmutableList.Builder<Step> symlinkSteps = ImmutableList.builder();
 
     for (String src : srcs) {
       Path srcPath = Paths.get(src);
-      Path relativeSrc = Paths.get(buildTarget.getBasePath()).relativize(srcPath);
-      Path target = pythonPathDirectory.resolve(relativeSrc);
+      Path targetPath = pythonPathDirectory.resolve(srcPath);
 
-      directories.add(target.getParent());
-      copySteps.add(new CopyStep(srcPath, target));
+      directories.add(targetPath.getParent());
+      symlinkSteps.add(
+          new SymlinkFileStep(srcPath.toString(),
+              targetPath.toString(),
+              /* useAbsolutePaths */ false));
 
-      Path pathToArtifact = Paths.get(getPathUnderGenDirectory()).resolve(relativeSrc);
+      Path pathToArtifact = Paths.get(getPathUnderGenDirectory()).resolve(srcPath);
       buildableContext.recordArtifact(pathToArtifact);
     }
 
@@ -129,7 +131,7 @@ public class PythonLibrary extends AbstractBuildable {
       commands.add(new MkdirStep(path));
     }
 
-    commands.addAll(copySteps.build());
+    commands.addAll(symlinkSteps.build());
 
     return commands.build();
   }

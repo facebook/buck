@@ -35,6 +35,29 @@ public class MorePathsTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
+  public void testGetRelativePath() {
+    // Path on base directory.
+    assertEquals(
+        Paths.get("file"),
+        MorePaths.getRelativePath(Paths.get("file"), Paths.get("")));
+
+    // Path on base directory (using null).
+    assertEquals(
+        Paths.get("file"),
+        MorePaths.getRelativePath(Paths.get("file"), null));
+
+    // Path internal to base directory.
+    assertEquals(
+        Paths.get("dir/file"),
+        MorePaths.getRelativePath(Paths.get("base/dir/file"), Paths.get("base")));
+
+    // Path external to base directory.
+    assertEquals(
+        Paths.get("../dir1/file"),
+        MorePaths.getRelativePath(Paths.get("dir1/file"), Paths.get("base")));
+  }
+
+  @Test
   public void testCreateRelativeSymlinkToFilesInRoot() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");

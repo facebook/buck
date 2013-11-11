@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
@@ -25,6 +24,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import javax.annotation.Nullable;
 
 public class MorePaths {
 
@@ -65,6 +66,27 @@ public class MorePaths {
   }
 
   /**
+   * Get the path of a file relative to a base directory.
+   *
+   * @param path must reference a file, not a directory.
+   * @param baseDir must reference a directory that is relative to a common directory with the path.
+   *     may be null if referencing the same directory as the path.
+   * @return the relative path of path from the directory baseDir.
+   */
+  public static Path getRelativePath(Path path, @Nullable Path baseDir) {
+    if (baseDir == null) {
+      // This allows callers to use this method with "file.parent()" for files from the project
+      // root dir.
+      baseDir = Paths.get("");
+    }
+    Preconditions.checkArgument(!path.isAbsolute(),
+        "Path must be relative: %s.", path);
+    Preconditions.checkArgument(!baseDir.isAbsolute(),
+        "Path must be relative: %s.", baseDir);
+    return baseDir.relativize(path);
+  }
+
+  /**
    * Creates a symlink at
    * {@code projectFilesystem.getRootPath().resolve(pathToDesiredLinkUnderProjectRoot)} that
    * points to {@code projectFilesystem.getRootPath().resolve(pathToExistingFileUnderProjectRoot)}
@@ -86,7 +108,7 @@ public class MorePaths {
   /**
    * Creates a symlink at {@code pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot)} that
    * points to {@code pathToProjectRoot.resolve(pathToExistingFileUnderProjectRoot)} using a
-   * relative symlink.
+   * relative symlink. Both params must be relative to the project root.
    *
    * @param pathToDesiredLinkUnderProjectRoot must reference a file, not a directory.
    * @param pathToExistingFileUnderProjectRoot must reference a file, not a directory.
@@ -96,16 +118,9 @@ public class MorePaths {
       Path pathToDesiredLinkUnderProjectRoot,
       Path pathToExistingFileUnderProjectRoot,
       Path pathToProjectRoot) throws IOException {
-    Preconditions.checkArgument(!pathToDesiredLinkUnderProjectRoot.isAbsolute(),
-        "Path must be relative to project root: %s.",
-        pathToDesiredLinkUnderProjectRoot);
-    Preconditions.checkArgument(!pathToExistingFileUnderProjectRoot.isAbsolute(),
-        "Path must be relative to project root: %s.",
-        pathToExistingFileUnderProjectRoot);
-
-    Path parent = pathToDesiredLinkUnderProjectRoot.getParent();
-    String base = Strings.repeat("../", parent == null ? 0 : parent.getNameCount());
-    Path target = Paths.get(base, pathToExistingFileUnderProjectRoot.toString());
+    Path target = getRelativePath(
+        pathToExistingFileUnderProjectRoot,
+        pathToDesiredLinkUnderProjectRoot.getParent());
     Files.createSymbolicLink(pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot), target);
     return target;
   }

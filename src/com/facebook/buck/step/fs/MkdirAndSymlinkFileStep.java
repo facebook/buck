@@ -35,7 +35,7 @@ public final class MkdirAndSymlinkFileStep extends CompositeStep {
   public MkdirAndSymlinkFileStep(String source, String target) {
     super(ImmutableList.of(
         new MkdirStep(Paths.get(target).getParent().toString()),
-        new SymlinkFileStep(source, target)
+        new SymlinkFileStep(source, target, /* useAbsolutePaths */ true)
     ));
     this.source = Preconditions.checkNotNull(source);
     this.target = Preconditions.checkNotNull(target);

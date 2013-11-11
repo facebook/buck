@@ -40,7 +40,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.io.File;
@@ -52,6 +54,8 @@ import java.util.List;
  * Unit test for {@link PythonLibrary}.
  */
 public class PythonLibraryTest {
+  @Rule
+  public final TemporaryFolder projectRootDir = new TemporaryFolder();
 
   @Test
   public void testGetters() {
@@ -82,7 +86,7 @@ public class PythonLibraryTest {
     PythonLibrary rule = (PythonLibrary)ruleResolver.get(pyLibraryTarget).getBuildable();
     List<Step> steps = rule.getBuildSteps(buildContext, buildableContext);
 
-    final String projectRoot = "/";
+    final String projectRoot = projectRootDir.getRoot().getAbsolutePath();
     final String pylibpath = "__pylib_py_library";
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File(projectRoot));
@@ -91,32 +95,35 @@ public class PythonLibraryTest {
       .build();
 
     MoreAsserts.assertSteps(
-        "python_library() should ensure each file is copied and has its destination directory made",
+        "python_library() should ensure each file is linked and has its destination directory made",
         ImmutableList.of(
             String.format(
-              "mkdir -p %s%s/%s",
+              "mkdir -p %s/%s/%s",
               projectRoot,
               BuckConstant.GEN_DIR,
               pylibpath
               ),
             String.format(
-              "mkdir -p %s%s/%s/foo",
+              "mkdir -p %s/%s/%s/foo",
               projectRoot,
               BuckConstant.GEN_DIR,
               pylibpath
               ),
             String.format(
-              "cp baz.py %s/%s/baz.py",
+              "ln -f -s ../../../baz.py %s/%s/%s/baz.py",
+              projectRoot,
               BuckConstant.GEN_DIR,
               pylibpath
               ),
             String.format(
-              "cp foo/__init__.py %s/%s/foo/__init__.py",
+              "ln -f -s ../../../../foo/__init__.py %s/%s/%s/foo/__init__.py",
+              projectRoot,
               BuckConstant.GEN_DIR,
               pylibpath
               ),
             String.format(
-              "cp foo/bar.py %s/%s/foo/bar.py",
+              "ln -f -s ../../../../foo/bar.py %s/%s/%s/foo/bar.py",
+              projectRoot,
               BuckConstant.GEN_DIR,
               pylibpath
               )
