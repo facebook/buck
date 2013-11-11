@@ -21,7 +21,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -30,6 +33,8 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Set;
 
+import javax.annotation.CheckForNull;
+
 public class DxStep extends ShellStep {
 
   /** Options to pass to {@code dx}. */
@@ -37,14 +42,29 @@ public class DxStep extends ShellStep {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
     NO_OPTIMIZE,
 
-    /** Specify the {@code --no-optimize} flag when running {@code dx}. */
+    /** Specify the {@code --force-jumbo} flag when running {@code dx}. */
     FORCE_JUMBO,
+
+    /**
+     * See if the {@code buck.dx} property was specified, and if so, use the executable that that
+     * points to instead of the {@code dx} in the user's Android SDK.
+     */
+    USE_CUSTOM_DX_IF_AVAILABLE,
     ;
   }
+
+  private static final Supplier<String> DEFAULT_GET_CUSTOM_DX = new Supplier<String>() {
+    @Override
+    @CheckForNull
+    public String get() {
+      return Strings.emptyToNull(System.getProperty("buck.dx"));
+    }
+  };
 
   private final String outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
+  private final Supplier<String> getPathToCustomDx;
 
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go.
@@ -62,9 +82,16 @@ public class DxStep extends ShellStep {
    * @param options to pass to {@code dx}.
    */
   public DxStep(String outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options) {
+    this(outputDexFile, filesToDex, options, DEFAULT_GET_CUSTOM_DX);
+  }
+
+  @VisibleForTesting
+  DxStep(String outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options,
+      Supplier<String> getPathToCustomDx) {
     this.outputDexFile = Preconditions.checkNotNull(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
+    this.getPathToCustomDx = Preconditions.checkNotNull(getPathToCustomDx);
   }
 
   @Override
@@ -74,6 +101,10 @@ public class DxStep extends ShellStep {
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     String dx = androidPlatformTarget.getDxExecutable().getAbsolutePath();
 
+    if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
+      String customDx = getPathToCustomDx.get();
+      dx = customDx != null ? customDx : dx;
+    }
 
     builder.add(dx);
     builder.add("--dex");

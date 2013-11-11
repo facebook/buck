@@ -86,6 +86,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -620,7 +621,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       }
 
       // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-      commands.add(new DxStep(dexFile, filesToDex));
+      commands.add(new DxStep(dexFile,
+          filesToDex,
+          /* options */ EnumSet.of(DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE)));
     }
 
     // Copy the transitive closure of files in assets to a single directory, if any.

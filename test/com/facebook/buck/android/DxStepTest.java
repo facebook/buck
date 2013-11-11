@@ -30,6 +30,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -180,7 +181,63 @@ public class DxStepTest extends EasyMockSupport {
     assertTrue("Should print stdout since `dx --verbose` is enabled.",
         dx.shouldPrintStderr(context.getVerbosity()));
     verifyAll();
-}
+  }
+
+  @Test
+  public void testUseCustomDxOption() {
+    // Context with --verbose 2.
+    ExecutionContext context = createExecutionContext(2);
+    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(),
+        SAMPLE_FILES_TO_DEX,
+        EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+        new Supplier<String>() {
+          @Override
+          public String get() {
+            return "/home/mbolin/dx";
+          }
+        });
+
+    String expected = String.format("%s --output %s %s",
+        EXPECTED_DX_PREFIX.replace("/usr/bin/dx", "/home/mbolin/dx"),
+        SAMPLE_OUTPUT_PATH,
+        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+    MoreAsserts.assertShellCommands(
+        "/home/mbolin/dx should be used instead of /usr/bin/dx.",
+        ImmutableList.of(expected),
+        ImmutableList.<Step>of(dx),
+        context);
+    verifyAll();
+  }
+
+  @Test
+  public void testUseCustomDxOptionWithNullSupplier() {
+    // Context with --verbose 2.
+    ExecutionContext context = createExecutionContext(2);
+    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(),
+        SAMPLE_FILES_TO_DEX,
+        EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+        new Supplier<String>() {
+          @Override
+          public String get() {
+            return null;
+          }
+        });
+
+    String expected = String.format("%s --output %s %s",
+        EXPECTED_DX_PREFIX,
+        SAMPLE_OUTPUT_PATH,
+        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+    MoreAsserts.assertShellCommands(
+        "Should fall back to /usr/bin/dx even though USE_CUSTOM_DX_IF_AVAILABLE is used.",
+        ImmutableList.of(expected),
+        ImmutableList.<Step>of(dx),
+        context);
+    verifyAll();
+  }
 
   private ExecutionContext createExecutionContext(int verbosityLevel) {
     TestConsole console = new TestConsole();
