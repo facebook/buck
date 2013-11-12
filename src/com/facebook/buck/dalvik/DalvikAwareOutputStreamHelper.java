@@ -38,7 +38,8 @@ import java.util.zip.ZipOutputStream;
  */
 public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
-  private static final int MAX_METHOD_REFERENCES = 64 * 1024;
+  // TODO-mmarucheck (#3178515): remove the '-2' when we understand the missing references.
+  private static final int MAX_METHOD_REFERENCES = 64 * 1024 - 2;
 
   private final ZipOutputStream outStream;
   private final Set<String> entryNames = Sets.newHashSet();
