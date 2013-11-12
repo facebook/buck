@@ -683,7 +683,7 @@ public class DefaultJavaLibraryRuleTest {
         consumerNoExport.getAbiKeyForDeps(),
         not(equalTo(consumerWithExport.getAbiKeyForDeps())));
     String expectedAbiKeyNoDepsHashForConsumerWithExport = Hashing.sha1().newHasher()
-        .putUnencodedChars(commonWithExportAbiKeyHash)
+        .putUnencodedChars(commonWithExport.getAbiKey().getHash())
         .putUnencodedChars(tinyLibAbiKeyHash)
         .hash()
         .toString();
@@ -695,8 +695,201 @@ public class DefaultJavaLibraryRuleTest {
         observedAbiKeyNoDepsHashForConsumerWithExport);
   }
 
+  /**
+   * @see DefaultJavaLibraryRule#getAbiKey()
+   */
+  @Test
+  public void testGetAbiKeyInThePresenceOfExportDeps() throws IOException {
+    // Create a java_library named //:commonlib with a hardcoded ABI key.
+    String commonLibAbiKeyHash = Strings.repeat("a", 40);
+    JavaLibraryRule commonLibrary = createDefaultJavaLibaryRuleWithAbiKey(
+        commonLibAbiKeyHash,
+        BuildTargetFactory.newInstance("//:commonlib"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* exportDeps */ false);
+
+    // Create two java_library rules, each of which depends on //:commonlib, but only one of which
+    // exports its deps.
+    String libWithExportAbiKeyHash = Strings.repeat("b", 40);
+    DefaultJavaLibraryRule libWithExport = createDefaultJavaLibaryRuleWithAbiKey(
+        libWithExportAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_with_export"),
+        /* srcs */ ImmutableSet.<String>of(),
+        /* deps */ ImmutableSet.<BuildRule>of(commonLibrary),
+        /* exportDeps */ true);
+    String libNoExportAbiKeyHash = Strings.repeat("c", 40);
+    DefaultJavaLibraryRule libNoExport = createDefaultJavaLibaryRuleWithAbiKey(
+        /* abiHash */ libNoExportAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_no_export"),
+        /* srcs */ ImmutableSet.<String>of(),
+        /* deps */ ImmutableSet.<BuildRule>of(commonLibrary),
+        /* exportDeps */ false);
+
+    // Verify getAbiKey() for the two //:lib_XXX rules.
+    String expectedLibWithExportAbiKeyHash = Hashing.sha1().newHasher()
+        .putUnencodedChars(commonLibAbiKeyHash)
+        .putUnencodedChars(libWithExportAbiKeyHash)
+        .hash()
+        .toString();
+    assertEquals(
+        "getAbiKey() should include the dependencies' ABI keys for the rule with export_deps=true.",
+        expectedLibWithExportAbiKeyHash,
+        libWithExport.getAbiKey().getHash());
+
+    assertEquals(
+        "getAbiKey() should not include the dependencies' ABI keys for the rule with export_deps=false.",
+        libNoExportAbiKeyHash,
+        libNoExport.getAbiKey().getHash());
+  }
+
+  /**
+   * @see DefaultJavaLibraryRule#getAbiKey()
+   */
+  @Test
+  public void testGetAbiKeyRecursiveExportDeps() throws IOException {
+    String libAAbiKeyHash = Strings.repeat("a", 40);
+    String libBAbiKeyHash = Strings.repeat("b", 40);
+    String libCAbiKeyHash = Strings.repeat("c", 40);
+    String libDAbiKeyHash = Strings.repeat("d", 40);
+
+    // Test the following dependency graph:
+    // a(export_deps=true) -> b(export_deps=true) -> c(export_deps=true) -> d(export_deps=true)
+    JavaLibraryRule libD = createDefaultJavaLibaryRuleWithAbiKey(
+        libDAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_d"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* exportDeps */ true);
+    JavaLibraryRule libC = createDefaultJavaLibaryRuleWithAbiKey(
+        libCAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_c"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(libD),
+        /* exportDeps */ true);
+    JavaLibraryRule libB = createDefaultJavaLibaryRuleWithAbiKey(
+        libBAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_b"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(libC),
+        /* exportDeps */ true);
+    JavaLibraryRule libA = createDefaultJavaLibaryRuleWithAbiKey(
+        libAAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_a"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(libB),
+        /* exportDeps */ true);
+
+    assertEquals(
+        "If a rule has no dependencies its final ABI key should be the rule's own ABI key.",
+        libDAbiKeyHash,
+        libD.getAbiKey().getHash());
+
+    String expectedLibCAbiKeyHash = Hashing.sha1().newHasher()
+        .putUnencodedChars(libDAbiKeyHash)
+        .putUnencodedChars(libCAbiKeyHash)
+        .hash()
+        .toString();
+    assertEquals(
+        "The ABI key for lib_c should contain lib_d's ABI key.",
+        expectedLibCAbiKeyHash,
+        libC.getAbiKey().getHash());
+
+    String expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
+        .putUnencodedChars(expectedLibCAbiKeyHash)
+        .putUnencodedChars(libDAbiKeyHash)
+        .putUnencodedChars(libBAbiKeyHash)
+        .hash()
+        .toString();
+    assertEquals(
+        "The ABI key for lib_b should contain lib_c's and lib_d's ABI keys.",
+        expectedLibBAbiKeyHash,
+        libB.getAbiKey().getHash());
+
+    String expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
+        .putUnencodedChars(expectedLibBAbiKeyHash)
+        .putUnencodedChars(expectedLibCAbiKeyHash)
+        .putUnencodedChars(libDAbiKeyHash)
+        .putUnencodedChars(libAAbiKeyHash)
+        .hash()
+        .toString();
+    assertEquals(
+        "The ABI key for lib_a should contain lib_b's, lib_c's and lib_d's ABI keys.",
+        expectedLibAAbiKeyHash,
+        libA.getAbiKey().getHash());
+
+    // Test the following dependency graph:
+    // a(export_deps=true) -> b(export_deps=true) -> c(export_deps=false) -> d(export_deps=false)
+    libD = createDefaultJavaLibaryRuleWithAbiKey(
+        libDAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_d2"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* exportDeps */ false);
+    libC = createDefaultJavaLibaryRuleWithAbiKey(
+        libCAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_c2"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(libD),
+        /* exportDeps */ false);
+    libB = createDefaultJavaLibaryRuleWithAbiKey(
+        libBAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_b2"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(libC),
+        /* exportDeps */ true);
+    libA = createDefaultJavaLibaryRuleWithAbiKey(
+        libAAbiKeyHash,
+        BuildTargetFactory.newInstance("//:lib_a2"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(libB),
+        /* exportDeps */ true);
+
+    assertEquals(
+        "If export_deps is false, the final ABI key should be the rule's own ABI key.",
+        libDAbiKeyHash,
+        libD.getAbiKey().getHash());
+
+    assertEquals(
+        "If export_deps is false, the final ABI key should be the rule's own ABI key.",
+        libCAbiKeyHash,
+        libC.getAbiKey().getHash());
+
+    expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
+        .putUnencodedChars(libCAbiKeyHash)
+        .putUnencodedChars(libBAbiKeyHash)
+        .hash()
+        .toString();
+    assertEquals(
+        "The ABI key for lib_b should contain lib_c's ABI key.",
+        expectedLibBAbiKeyHash,
+        libB.getAbiKey().getHash());
+
+    expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
+        .putUnencodedChars(expectedLibBAbiKeyHash)
+        .putUnencodedChars(libCAbiKeyHash)
+        .putUnencodedChars(libDAbiKeyHash)
+        .putUnencodedChars(libAAbiKeyHash)
+        .hash()
+        .toString();
+    assertEquals(
+        "The ABI key for lib_a should contain lib_b's, lib_c's and lib_d's ABI keys.",
+        expectedLibAAbiKeyHash,
+        libA.getAbiKey().getHash());
+
+  }
+
   private static DefaultJavaLibraryRule createDefaultJavaLibaryRuleWithAbiKey(
-      @Nullable final String abiHash,
+      @Nullable final String partialAbiHash,
       BuildTarget buildTarget,
       ImmutableSet<String> srcs,
       ImmutableSet<BuildRule> deps,
@@ -711,10 +904,10 @@ public class DefaultJavaLibraryRuleTest {
         ) {
       @Override
       public Sha1HashCode getAbiKey() {
-        if (abiHash == null) {
+        if (partialAbiHash == null) {
           return super.getAbiKey();
         } else {
-          return new Sha1HashCode(abiHash);
+          return createTotalAbiKey(new Sha1HashCode(partialAbiHash));
         }
       }
     };

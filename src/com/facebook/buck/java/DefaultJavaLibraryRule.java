@@ -309,13 +309,38 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       setAbiKey(Suppliers.memoize(new Supplier<Sha1HashCode>() {
         @Override
         public Sha1HashCode get() {
-          return javac.getAbiKey();
+          return createTotalAbiKey(javac.getAbiKey());
         }
       }));
     } else {
       // When there are no .java files to compile, the ABI key should be a constant.
-      setAbiKey(Suppliers.ofInstance(new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY)));
+      setAbiKey(Suppliers.ofInstance(createTotalAbiKey(
+          new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY))));
     }
+  }
+
+  /**
+   * Creates the total ABI key for this rule. If export_deps is true, the total key is computed by
+   * hashing the ABI keys of the dependencies together with the ABI key of this rule. If export_deps
+   * is false, the standalone ABI key for this rule is used as the total key.
+   * @param abiKey the standalone ABI key for this rule.
+   * @return total ABI key containing also the ABI keys of the dependencies.
+   */
+  protected Sha1HashCode createTotalAbiKey(Sha1HashCode abiKey) {
+    if (!getExportDeps()) {
+      return abiKey;
+    }
+
+    SortedSet<JavaLibraryRule> depsForAbiKey = getDepsForAbiKey();
+    // If there are no deps to consider, just return the ABI Key for this rule.
+    if (depsForAbiKey.isEmpty()) {
+      return abiKey;
+    }
+
+    // Hash the ABI keys of all dependencies together with ABI key for the current rule.
+    Hasher hasher = createHasherWithAbiKeyForDeps(depsForAbiKey);
+    hasher.putUnencodedChars(abiKey.getHash());
+    return new Sha1HashCode(hasher.hash().toString());
   }
 
   private String getPathToAbiOutputDir() {
@@ -359,11 +384,18 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   /**
-   * Finds all deps that implement JavaLibraryRule and hash their ABI keys together. If any dep
-   * lacks an ABI key, then returns {@link Optional#absent()}.
+   * Finds all deps that implement JavaLibraryRule and hash their ABI keys together.
    */
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
+    return new Sha1HashCode(createHasherWithAbiKeyForDeps(getDepsForAbiKey()).hash().toString());
+  }
+
+  /**
+   * Returns a sorted set containing the dependencies which will be hashed in the final ABI key.
+   * @return the dependencies to be hashed in the final ABI key.
+   */
+  private SortedSet<JavaLibraryRule> getDepsForAbiKey() {
     SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
     for (BuildRule dep : getDeps()) {
       if (dep instanceof JavaLibraryRule) {
@@ -371,7 +403,16 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
       }
     }
+    return rulesWithAbiToConsider;
+  }
 
+  /**
+   * Creates a Hasher containing the ABI keys of the dependencies.
+   * @param rulesWithAbiToConsider a sorted set containing the dependencies whose ABI key will be
+   *     added to the hasher.
+   * @return a Hasher containing the ABI keys of the dependencies.
+   */
+  private Hasher createHasherWithAbiKeyForDeps(SortedSet<JavaLibraryRule> rulesWithAbiToConsider) {
     Hasher hasher = Hashing.sha1().newHasher();
     for (JavaLibraryRule ruleWithAbiToConsider : rulesWithAbiToConsider) {
       if (ruleWithAbiToConsider == this) {
@@ -382,7 +423,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       hasher.putUnencodedChars(abiKey.getHash());
     }
 
-    return new Sha1HashCode(hasher.hash().toString());
+    return hasher;
   }
 
   @Override
