@@ -32,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -77,7 +78,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     this.logEvents = new ConcurrentLinkedQueue<>();
 
-    this.renderScheduler = Executors.newScheduledThreadPool(1);
+    this.renderScheduler = Executors.newScheduledThreadPool(1,
+        new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
     this.testFormatter = new TestResultFormatter(console.getAnsi());
   }
 

@@ -36,6 +36,7 @@ IO_SRCS = [
   'MorePaths.java',
   'ProcessExecutor.java',
   'ProjectFilesystem.java',
+  'Threads.java',
   'Verbosity.java',
 ]
 java_library(

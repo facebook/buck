@@ -17,14 +17,38 @@
 package com.facebook.buck.util.concurrent;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MoreExecutors {
 
   private MoreExecutors() {
     // Utility class.
+  }
+
+  /**
+   * A ThreadFactory which gives each thread a meaningful and distinct name.
+   * ThreadFactoryBuilder is not used to avoid a dependency on Guava in the junit target.
+   */
+  private static class NamedThreadFactory implements ThreadFactory {
+
+    private final AtomicInteger threadCount = new AtomicInteger(0);
+    private final String threadName;
+
+    NamedThreadFactory(String threadName) {
+      this.threadName = threadName;
+    }
+
+    @Override
+    public Thread newThread(Runnable r) {
+      Thread newThread = Executors.defaultThreadFactory().newThread(r);
+      newThread.setName(String.format(threadName + "-%d", threadCount.incrementAndGet()));
+      return newThread;
+    }
   }
 
   /**
@@ -34,14 +58,25 @@ public class MoreExecutors {
    * user's console if the build fails.
    *
    * @return A single-threaded executor that silently discards rejected tasks.
+   * @param threadName a thread name prefix used to easily identify threads when debugging.
    */
-  public static ExecutorService newSingleThreadExecutor() {
+  public static ExecutorService newSingleThreadExecutor(final String threadName) {
     return new ThreadPoolExecutor(
         /* corePoolSize */ 1,
         /* maximumPoolSize */ 1,
         /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
+        /* threadFactory */ new NamedThreadFactory(threadName),
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }
 
+  /**
+   * Creates a multi-threaded executor with meaningfully named threads.
+   * @param threadName a thread name prefix used to easily identify threads when debugging.
+   * @param threadCount the number of threads that should be created in the pool.
+   * @return A multi-threaded executor.
+   */
+  public static ExecutorService newMultiThreadExecutor(final String threadName, int threadCount) {
+    return Executors.newFixedThreadPool(threadCount, new NamedThreadFactory(threadName));
+  }
 }

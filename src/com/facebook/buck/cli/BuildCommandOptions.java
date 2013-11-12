@@ -34,14 +34,14 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 public class BuildCommandOptions extends AbstractCommandOptions {
 
@@ -130,8 +130,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   }
 
   public ListeningExecutorService createListeningExecutorService() {
-    ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
-    return MoreExecutors.listeningDecorator(executorService);
+    return listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), numThreads));
   }
 
   Build createBuild(BuckConfig buckConfig,

@@ -39,7 +39,8 @@ class DelegateRunnerWithTimeout extends Runner {
    * preserve the behavior of the {@code org.robolectric.RobolectricTestRunner}, we use an
    * {@link ExecutorService} with a single thread to run all of the tests.
    */
-  private static final ExecutorService executor = MoreExecutors.newSingleThreadExecutor();
+  private static final ExecutorService executor =
+      MoreExecutors.newSingleThreadExecutor(DelegateRunnerWithTimeout.class.getSimpleName());
 
   private final Runner delegate;
   private final long defaultTestTimeoutMillis;

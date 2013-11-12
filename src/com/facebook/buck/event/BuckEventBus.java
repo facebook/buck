@@ -44,7 +44,7 @@ public class BuckEventBus {
 
 
   public BuckEventBus(Clock clock, String buildId) {
-    this(clock, MoreExecutors.newSingleThreadExecutor(), buildId);
+    this(clock, MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()), buildId);
   }
 
   @VisibleForTesting

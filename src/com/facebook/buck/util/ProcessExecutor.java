@@ -88,9 +88,9 @@ public class ProcessExecutor {
         ansi);
 
     // Consume the streams so they do not deadlock.
-    Thread stdOutConsumer = new Thread(stdOut);
+    Thread stdOutConsumer = Threads.namedThread("ProcessExecutor (stdOut)", stdOut);
     stdOutConsumer.start();
-    Thread stdErrConsumer = new Thread(stdErr);
+    Thread stdErrConsumer = Threads.namedThread("ProcessExecutor (stdErr)", stdErr);
     stdErrConsumer.start();
 
     // Block until the Process completes.

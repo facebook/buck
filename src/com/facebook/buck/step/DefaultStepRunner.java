@@ -25,12 +25,13 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
+
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 public final class DefaultStepRunner implements StepRunner {
 
@@ -41,7 +42,8 @@ public final class DefaultStepRunner implements StepRunner {
    * This StepRunner will run all steps on the same thread.
    */
   public DefaultStepRunner(ExecutionContext context) {
-    this(context, MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1)));
+    this(context,
+        listeningDecorator(newMultiThreadExecutor(DefaultStepRunner.class.getSimpleName(), 1)));
   }
 
   public DefaultStepRunner(ExecutionContext context,

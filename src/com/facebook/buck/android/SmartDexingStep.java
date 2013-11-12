@@ -48,7 +48,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,9 +55,11 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
+
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 /**
  * Optimized dx command runner which can invoke multiple dx commands in parallel and also avoid
@@ -124,7 +125,7 @@ public class SmartDexingStep implements Step {
     } else {
       numThreadsValue = determineOptimalThreadCount();
     }
-    return MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(numThreadsValue));
+    return listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), numThreadsValue));
   }
 
   private final ListeningExecutorService getDxExecutor() {

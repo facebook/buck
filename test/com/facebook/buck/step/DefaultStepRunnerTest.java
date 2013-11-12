@@ -30,15 +30,14 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 import org.junit.Test;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 public class DefaultStepRunnerTest {
 
@@ -59,12 +58,8 @@ public class DefaultStepRunnerTest {
         .setPlatform(Platform.detect())
         .build();
 
-    ThreadFactory threadFactory = new ThreadFactoryBuilder()
-        .setDaemon(true)
-        .setNameFormat(getClass().getSimpleName() + "-%d")
-        .build();
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(3, threadFactory));
+    ListeningExecutorService executorService =
+        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), 3));
     DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
     runner.runStep(passingStep);
     try {
@@ -104,12 +99,9 @@ public class DefaultStepRunnerTest {
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
         .build();
-    ThreadFactory threadFactory = new ThreadFactoryBuilder()
-        .setDaemon(true)
-        .setNameFormat(getClass().getSimpleName() + "-%d")
-        .build();
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(3, threadFactory));
+
+    ListeningExecutorService executorService =
+        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), 3));
     DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
     runner.runStepsInParallelAndWait(steps.build());
 

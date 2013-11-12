@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -272,12 +273,14 @@ public class QueryCommand extends AbstractCommandRunner<QueryCommandOptions> {
    * @param graphDb database service to shut down.
    */
   private static void registerShutdownHook(final GraphDatabaseService graphDb) {
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        graphDb.shutdown();
-      }
-    });
+    Runtime.getRuntime().addShutdownHook(Threads.namedThread(
+        QueryCommand.class.getSimpleName(),
+        new Runnable() {
+          @Override
+          public void run() {
+            graphDb.shutdown();
+          }
+        }));
   }
 
   private void clearDbPath() {

@@ -56,7 +56,8 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
   // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
   // garbage is not spewed to the user's console if the build fails.
-  private final ExecutorService executor = MoreExecutors.newSingleThreadExecutor();
+  private final ExecutorService executor =
+      MoreExecutors.newSingleThreadExecutor(getClass().getSimpleName());
 
   private final long defaultTestTimeoutMillis;
 

@@ -26,14 +26,15 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
+
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 /**
  * Base class for commands that use the AndroidDebugBridge to run commands on devices.
@@ -220,9 +221,8 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
 
     // Start executions on all matching devices.
     List<ListenableFuture<Boolean>> futures = Lists.newArrayList();
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(adbThreadCount));
-
+    ListeningExecutorService executorService =
+        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), adbThreadCount));
     for (final IDevice device : devices) {
       futures.add(executorService.submit(adbCallable.forDevice(device)));
     }

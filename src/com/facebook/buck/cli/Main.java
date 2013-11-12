@@ -140,6 +140,7 @@ public final class Main {
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
       webServer = createWebServer(config, console);
+      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
     }
 
     private Optional<WebServer> createWebServer(BuckConfig config, Console console) {
@@ -346,12 +347,15 @@ public final class Main {
     // Create or get and invalidate cached command parameters.
     Parser parser;
     if (context.isPresent()) {
+      // Wire up daemon to new client and console and get cached Parser.
       Daemon daemon = getDaemon(projectFilesystem, config, console);
       daemon.watchClient(context.get());
       daemon.watchFileSystem(console);
-      daemon.initWebServer();
+      daemon.initWebServer(); // TODO(user): avoid webserver initialization on each command?
       parser = daemon.getParser();
     } else {
+      // Initialize logging and create new Parser for new process.
+      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
       parser = new Parser(projectFilesystem,
           knownBuildRuleTypes,
           console,
@@ -528,8 +532,6 @@ public final class Main {
     for (BuckEventListener eventListener : eventListeners) {
       buckEvents.register(eventListener);
     }
-
-    JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
 
     return eventListeners;
   }

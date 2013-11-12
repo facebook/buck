@@ -19,6 +19,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +44,9 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
   private URL url;
   private int timeout = DEFAULT_COMMON_TIMEOUT_MS;
   private final ListeningExecutorService requestService;
+  private static final ThreadFactory threadFactory =
+      new ThreadFactoryBuilder().setNameFormat(BlockingHttpEndpoint.class.getSimpleName() + "-%d")
+          .build();
 
   public BlockingHttpEndpoint(String url, int maxParallelRequests) throws MalformedURLException {
     this.url = new URL(url);
@@ -54,6 +59,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
         2L,
         TimeUnit.MINUTES,
         workQueue,
+        threadFactory,
         new ThreadPoolExecutor.CallerRunsPolicy());
     requestService = MoreExecutors.listeningDecorator(executor);
   }
