@@ -27,19 +27,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.CompositeStep;
-import com.facebook.buck.step.ConditionalStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.FileExistsAndIsNotEmptyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -66,28 +61,14 @@ import javax.annotation.Nullable;
  */
 public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBuildable {
 
-  /**
-   * Key used with {@link OnDiskBuildInfo} to identify whether this {@link Buildable} has
-   * generated a {@code .dex} files. The only expected value to be associated with this key is
-   * {@code "true"}.
-   */
-  private static final String HAS_DEX_OUTPUT_METADATA = "HAS_DEX_OUTPUT";
-
   private final BuildTarget buildTarget;
   private final AccumulateClassNames javaLibraryWithClassesList;
 
-  /** This {@link Supplier} will be defined and determined after this buildable is built. */
-  @Nullable
-  private Supplier<Boolean> hasOutputFile;
-
-  private DexProducedFromJavaLibraryThatContainsClassFiles(BuildTarget buildTarget,
+  @VisibleForTesting
+  DexProducedFromJavaLibraryThatContainsClassFiles(BuildTarget buildTarget,
       AccumulateClassNames javaLibraryWithClassesList) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.javaLibraryWithClassesList = Preconditions.checkNotNull(javaLibraryWithClassesList);
-  }
-
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Override
@@ -106,31 +87,24 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
     // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
     steps.add(new MkdirStep(getPathToDex().getParent()));
 
-    // Check whether the list of class files in the JavaLibraryRule is empty.
-    FileExistsAndIsNotEmptyStep fileExistsStep = new FileExistsAndIsNotEmptyStep(
-        Paths.get(javaLibraryWithClassesList.getPathToOutputFile()));
-    hasOutputFile = fileExistsStep;
-    steps.add(fileExistsStep);
+    if (!javaLibraryWithClassesList.getClassNames().isEmpty()) {
+      // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
+      // merged into a final classes.dex that uses jumbo instructions.
+      JavaLibraryRule javaLibraryRuleToDex = javaLibraryWithClassesList.getJavaLibraryRule();
+      DxStep dx = new DxStep(getPathToDex().toString(),
+          Collections.singleton(Paths.get(javaLibraryRuleToDex.getPathToOutputFile())),
+          EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
+      steps.add(dx);
 
-    // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
-    // merged into a final classes.dex that uses jumbo instructions.
-    JavaLibraryRule javaLibraryRuleToDex = javaLibraryWithClassesList.getJavaLibraryRule();
-    DxStep dx = new DxStep(getPathToDex().toString(),
-        Collections.singleton(Paths.get(javaLibraryRuleToDex.getPathToOutputFile())),
-        EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
-    AbstractExecutionStep recordArtifactStep = new AbstractExecutionStep("record dx success") {
-      @Override
-      public int execute(ExecutionContext context) {
-        buildableContext.recordArtifact(getPathToDex().getFileName());
-        buildableContext.addMetadata(HAS_DEX_OUTPUT_METADATA, "true");
-        return 0;
-      }
-    };
-    CompositeStep dxAndStore = new CompositeStep(ImmutableList.of(dx, recordArtifactStep));
-
-    // Make sure that there are .class files to dex before running dx.
-    ConditionalStep runDxIfThereAreClassFiles = new ConditionalStep(fileExistsStep, dxAndStore);
-    steps.add(runDxIfThereAreClassFiles);
+      AbstractExecutionStep recordArtifactStep = new AbstractExecutionStep("record_dx_success") {
+        @Override
+        public int execute(ExecutionContext context) {
+          buildableContext.recordArtifact(getPathToDex().getFileName());
+          return 0;
+        }
+      };
+      steps.add(recordArtifactStep);
+    }
 
     return steps.build();
   }
@@ -152,14 +126,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   public boolean hasOutput() {
     // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
     // that from a Buildable (but there is from an AbstractCachingBuildRule).
-    Preconditions.checkNotNull(hasOutputFile);
-    return hasOutputFile.get();
-  }
-
-  @Override
-  protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    boolean hasOutput = "true".equals(onDiskBuildInfo.getValue(HAS_DEX_OUTPUT_METADATA).orNull());
-    this.hasOutputFile = Suppliers.ofInstance(hasOutput);
+    return !javaLibraryWithClassesList.getClassNames().isEmpty();
   }
 
   public static Builder newPreDexBuilder(AbstractBuildRuleBuilderParams params) {
