@@ -39,6 +39,8 @@ import java.util.zip.ZipEntry;
 
 public class AccumulateClassNamesStepTest {
 
+  private static final String SHA1_FOR_EMPTY_STRING = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -70,12 +72,13 @@ public class AccumulateClassNamesStepTest {
     accumulateClassNamesStep.execute(context);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), Charsets.UTF_8);
+    String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
         Joiner.on('\n').join(
-            "com/example/Bar",
-            "com/example/Foo",
-            "com/example/subpackage/Baz") + '\n',
+            "com/example/Bar" + separator + SHA1_FOR_EMPTY_STRING,
+            "com/example/Foo" + separator + SHA1_FOR_EMPTY_STRING,
+            "com/example/subpackage/Baz" + separator + SHA1_FOR_EMPTY_STRING) + '\n',
         contents);
   }
 
@@ -104,12 +107,13 @@ public class AccumulateClassNamesStepTest {
     accumulateClassNamesStep.execute(context);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), Charsets.UTF_8);
+    String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
         Joiner.on('\n').join(
-            "com/example/Bar",
-            "com/example/Foo",
-            "com/example/subpackage/Baz") + '\n',
+            "com/example/Bar" + separator + SHA1_FOR_EMPTY_STRING,
+            "com/example/Foo" + separator + SHA1_FOR_EMPTY_STRING,
+            "com/example/subpackage/Baz" + separator + SHA1_FOR_EMPTY_STRING) + '\n',
         contents);
   }
 }
