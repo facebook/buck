@@ -1352,13 +1352,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
             (AccumulateClassNames) accumulateClassNamesRule.getBuildable();
 
         // Create the PreDex and add it to both the ruleResolver and preDexDeps.
-        DexProducedFromJavaLibraryThatContainsClassFiles.Builder preDexBuilder =
-            DexProducedFromJavaLibraryThatContainsClassFiles.newPreDexBuilder(
+        IntermediateDexRule.Builder preDexBuilder =
+            IntermediateDexRule.newPreDexBuilder(
                 new DefaultBuildRuleBuilderParams(
                     pathRelativizer,
                     ruleKeyBuilderFactory));
         preDexBuilder.setBuildTarget(preDexTarget);
-        preDexBuilder.setPathToClassNamesList(accumulateClassNames);
+        preDexBuilder.setAccumulateClassNamesDep(accumulateClassNames);
         preDexBuilder.addDep(accumulateClassNamesBuildTarget);
         preDexBuilder.addVisibilityPattern(BuildTargetPattern.MATCH_ALL);
         BuildRule preDex = ruleResolver.buildAndAddToIndex(preDexBuilder);

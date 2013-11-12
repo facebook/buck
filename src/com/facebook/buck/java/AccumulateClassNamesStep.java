@@ -23,6 +23,7 @@ import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -142,4 +143,8 @@ public class AccumulateClassNamesStep extends AbstractExecutionStep
     return classNames;
   }
 
+  @VisibleForTesting
+  void setClassNamesForTesting(ImmutableSortedMap<String, HashCode> classNames) {
+    this.classNames = classNames;
+  }
 }

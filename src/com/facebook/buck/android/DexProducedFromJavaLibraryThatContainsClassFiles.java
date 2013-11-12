@@ -19,14 +19,12 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.AccumulateClassNames;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -36,6 +34,8 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -87,7 +87,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
     // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
     steps.add(new MkdirStep(getPathToDex().getParent()));
 
-    if (!javaLibraryWithClassesList.getClassNames().isEmpty()) {
+    // If there are classes, run dx.
+    final boolean hasClassesToDx = !javaLibraryWithClassesList.getClassNames().isEmpty();
+    if (hasClassesToDx) {
       // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
       // merged into a final classes.dex that uses jumbo instructions.
       JavaLibraryRule javaLibraryRuleToDex = javaLibraryWithClassesList.getJavaLibraryRule();
@@ -95,16 +97,29 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
           Collections.singleton(Paths.get(javaLibraryRuleToDex.getPathToOutputFile())),
           EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
       steps.add(dx);
-
-      AbstractExecutionStep recordArtifactStep = new AbstractExecutionStep("record_dx_success") {
-        @Override
-        public int execute(ExecutionContext context) {
-          buildableContext.recordArtifact(getPathToDex().getFileName());
-          return 0;
-        }
-      };
-      steps.add(recordArtifactStep);
     }
+
+    // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was
+    // run.
+    String stepName = hasClassesToDx ? "record_dx_success" : "record_empty_dx";
+    AbstractExecutionStep recordArtifactAndMetadataStep = new AbstractExecutionStep(stepName) {
+      @Override
+      public int execute(ExecutionContext context) {
+        if (hasClassesToDx) {
+          buildableContext.recordArtifact(getPathToDex().getFileName());
+        }
+
+        // The ABI key for the deps is also the ABI key for this Buildable. A dx-merge step can keep
+        // track of the ABIs of the DexProducedFromJavaLibraryThatContainsClassFiles that it has
+        // dexed before so it knows whether it needs to re-dex them. This way, adding a comment to a
+        // Java file that triggers a recompile will not trigger a dx or a dx-merge.
+        String abiKeyHash = getAbiKeyForDeps().getHash();
+        buildableContext.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA, abiKeyHash);
+        buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKeyHash);
+        return 0;
+      }
+    };
+    steps.add(recordArtifactAndMetadataStep);
 
     return steps.build();
   }
@@ -124,38 +139,17 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   }
 
   public boolean hasOutput() {
+    return !getClassNames().isEmpty();
+  }
+
+  private ImmutableSortedMap<String, HashCode> getClassNames() {
     // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
     // that from a Buildable (but there is from an AbstractCachingBuildRule).
-    return !javaLibraryWithClassesList.getClassNames().isEmpty();
+    return javaLibraryWithClassesList.getClassNames();
   }
 
-  public static Builder newPreDexBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
+  Sha1HashCode getAbiKeyForDeps() {
+    return javaLibraryWithClassesList.getAbiKey();
   }
 
-  public static class Builder extends AbstractBuildable.Builder {
-
-    private AccumulateClassNames javaLibraryWithClassesList;
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType._PRE_DEX;
-    }
-
-    @Override
-    protected DexProducedFromJavaLibraryThatContainsClassFiles newBuildable(
-        BuildRuleParams params, BuildRuleResolver resolver) {
-      return new DexProducedFromJavaLibraryThatContainsClassFiles(params.getBuildTarget(),
-          javaLibraryWithClassesList);
-    }
-
-    public Builder setPathToClassNamesList(AccumulateClassNames javaLibraryWithClassesList) {
-      this.javaLibraryWithClassesList = javaLibraryWithClassesList;
-      return this;
-    }
-  }
 }

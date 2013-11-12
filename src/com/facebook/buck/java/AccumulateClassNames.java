@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
@@ -26,6 +27,9 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -39,11 +43,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -58,6 +65,12 @@ public class AccumulateClassNames extends AbstractBuildable {
 
   private final JavaLibraryRule javaLibraryRule;
   private final Path pathToOutputFile;
+
+  /**
+   * This is not set until this {@link Buildable} is built.
+   */
+  @Nullable
+  private Sha1HashCode abiKey;
 
   /**
    * This will contain the classes info discovered in the course of building this {@link Buildable}.
@@ -93,7 +106,7 @@ public class AccumulateClassNames extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
       throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -108,20 +121,24 @@ public class AccumulateClassNames extends AbstractBuildable {
     classNames = accumulateClassNamesStep;
     steps.add(accumulateClassNamesStep);
 
+    AbstractExecutionStep recordAbiStep = new AbstractExecutionStep("record_abi") {
+      @Override
+      public int execute(ExecutionContext context) {
+        AccumulateClassNames.this.abiKey = computeAbiKey(classNames);
+        buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.toString());
+        return 0;
+      }
+    };
+    steps.add(recordAbiStep);
+
     return steps.build();
   }
 
-  public ImmutableSortedMap<String, HashCode> getClassNames() {
-    // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
-    // that from a Buildable (but there is from an AbstractCachingBuildRule).
-    Preconditions.checkNotNull(classNames);
-    return classNames.get();
-  }
-
+  /**
+   * Sets both {@link #classNames} and {@link #abiKey}.
+   */
   @Override
   protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    // Assign this.classNames when instantiating this Buildable when pulled from cache.
-
     // Read the output file, which should now be in place because this rule was downloaded from
     // cache.
     List<String> lines;
@@ -141,6 +158,31 @@ public class AccumulateClassNames extends AbstractBuildable {
       classNamesBuilder.put(key, value);
     }
     this.classNames = Suppliers.ofInstance(classNamesBuilder.build());
+    this.abiKey = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA).get();
+  }
+
+  public ImmutableSortedMap<String, HashCode> getClassNames() {
+    // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
+    // that from a Buildable (but there is from an AbstractCachingBuildRule).
+    Preconditions.checkNotNull(classNames);
+    return classNames.get();
+  }
+
+  public Sha1HashCode getAbiKey() {
+    Preconditions.checkNotNull(abiKey);
+    return abiKey;
+  }
+
+  @VisibleForTesting
+  static Sha1HashCode computeAbiKey(Supplier<ImmutableSortedMap<String, HashCode>> classNames) {
+    Hasher hasher = Hashing.sha1().newHasher();
+    for (Map.Entry<String, HashCode> entry : classNames.get().entrySet()) {
+      hasher.putUnencodedChars(entry.getKey());
+      hasher.putByte((byte)0);
+      hasher.putUnencodedChars(entry.getValue().toString());
+      hasher.putByte((byte)0);
+    }
+    return new Sha1HashCode(hasher.hash().toString());
   }
 
   public static Builder newAccumulateClassNamesBuilder(AbstractBuildRuleBuilderParams params) {
