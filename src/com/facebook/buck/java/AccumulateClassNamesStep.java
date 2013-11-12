@@ -25,6 +25,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
@@ -39,11 +40,14 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.Nullable;
+
 /**
  * {@link Step} that takes a directory or zip of {@code .class} files and traverses it to get the
  * total set of {@code .class} files included by the directory or zip.
  */
-public class AccumulateClassNamesStep extends AbstractExecutionStep {
+public class AccumulateClassNamesStep extends AbstractExecutionStep
+    implements Supplier<ImmutableSortedMap<String, HashCode>> {
 
   /**
    * In the generated {@code classes.txt} file, each line will contain the path to a {@code .class}
@@ -60,6 +64,14 @@ public class AccumulateClassNamesStep extends AbstractExecutionStep {
 
   private final Path pathToJarOrClassesDirectory;
   private final Path whereClassNamesShouldBeWritten;
+
+  /**
+   * Map of names of {@code .class} files to hashes of their contents.
+   * <p>
+   * This is not set until this step is executed.
+   */
+  @Nullable
+  private ImmutableSortedMap<String, HashCode> classNames;
 
   public AccumulateClassNamesStep(Path pathToJarOrClassesDirectory,
       Path whereClassNamesShouldBeWritten) {
@@ -119,7 +131,15 @@ public class AccumulateClassNamesStep extends AbstractExecutionStep {
       return 1;
     }
 
+    this.classNames = classNames;
     return 0;
+  }
+
+  @Override
+  public ImmutableSortedMap<String, HashCode> get() {
+    Preconditions.checkNotNull(classNames,
+        "Step must be executed successfully before invoking this method.");
+    return classNames;
   }
 
 }

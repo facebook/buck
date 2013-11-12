@@ -23,6 +23,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -80,6 +82,14 @@ public class AccumulateClassNamesStepTest {
             "com/example/Foo" + separator + SHA1_FOR_EMPTY_STRING,
             "com/example/subpackage/Baz" + separator + SHA1_FOR_EMPTY_STRING) + '\n',
         contents);
+    assertEquals(
+        "get() should return the class name/hash mappings.",
+        ImmutableSortedMap.of(
+          "com/example/Bar", HashCode.fromString(SHA1_FOR_EMPTY_STRING),
+          "com/example/Foo", HashCode.fromString(SHA1_FOR_EMPTY_STRING),
+          "com/example/subpackage/Baz", HashCode.fromString(SHA1_FOR_EMPTY_STRING)
+        ),
+        accumulateClassNamesStep.get());
   }
 
   @Test
@@ -115,5 +125,21 @@ public class AccumulateClassNamesStepTest {
             "com/example/Foo" + separator + SHA1_FOR_EMPTY_STRING,
             "com/example/subpackage/Baz" + separator + SHA1_FOR_EMPTY_STRING) + '\n',
         contents);
+    assertEquals(
+        "get() should return the class name/hash mappings.",
+        ImmutableSortedMap.of(
+          "com/example/Bar", HashCode.fromString(SHA1_FOR_EMPTY_STRING),
+          "com/example/Foo", HashCode.fromString(SHA1_FOR_EMPTY_STRING),
+          "com/example/subpackage/Baz", HashCode.fromString(SHA1_FOR_EMPTY_STRING)
+        ),
+        accumulateClassNamesStep.get());
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testGetClassesBeforeExecuteThrowsException() {
+    AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
+        Paths.get("pathToJarOrClassesDirectory"),
+        Paths.get("whereClassNamesShouldBeWritten"));
+    accumulateClassNamesStep.get();
   }
 }

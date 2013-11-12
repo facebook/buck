@@ -21,7 +21,10 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
@@ -72,5 +75,17 @@ public class OnDiskBuildInfo {
   public Optional<RuleKey> getRuleKeyWithoutDeps() {
     return getValue(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS)
         .transform(RuleKey.TO_RULE_KEY);
+  }
+
+  /**
+   * Invokes the {@link Buildable#getPathToOutputFile()} method of the specified {@link Buildable},
+   * reads the file at the specified path, and returns the list of lines in the file.
+   */
+  public List<String> getOutputFileContentsByLine(Buildable buildable) throws IOException {
+    Preconditions.checkNotNull(buildable);
+    String pathToOutputFile = buildable.getPathToOutputFile();
+    Preconditions.checkNotNull(pathToOutputFile);
+    Path path = Paths.get(pathToOutputFile);
+    return projectFilesystem.readLines(path);
   }
 }

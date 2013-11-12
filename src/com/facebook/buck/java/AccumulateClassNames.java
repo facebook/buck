@@ -25,18 +25,27 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * {@link Buildable} that writes the list of {@code .class} files found in a zip or directory to a
@@ -44,10 +53,22 @@ import java.util.List;
  */
 public class AccumulateClassNames extends AbstractBuildable {
 
+  private static final Splitter CLASS_NAME_AND_HASH_SPLITTER = Splitter.on(
+      AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR);
+
   private final JavaLibraryRule javaLibraryRule;
   private final Path pathToOutputFile;
 
-  private AccumulateClassNames(BuildTarget buildTarget, JavaLibraryRule javaLibraryRule) {
+  /**
+   * This will contain the classes info discovered in the course of building this {@link Buildable}.
+   * This {@link Supplier} will be defined and determined after this buildable is built.
+   */
+  @VisibleForTesting
+  @Nullable
+  Supplier<ImmutableSortedMap<String, HashCode>> classNames;
+
+  @VisibleForTesting
+  AccumulateClassNames(BuildTarget buildTarget, JavaLibraryRule javaLibraryRule) {
     Preconditions.checkNotNull(buildTarget);
     this.javaLibraryRule = Preconditions.checkNotNull(javaLibraryRule);
     this.pathToOutputFile = Paths.get(
@@ -81,11 +102,45 @@ public class AccumulateClassNames extends AbstractBuildable {
     // Make sure that the output directory exists for the output file.
     steps.add(new MkdirStep(pathToOutputFile.getParent()));
 
-    steps.add(new AccumulateClassNamesStep(
+    AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
         Paths.get(javaLibraryRule.getPathToOutputFile()),
-        Paths.get(getPathToOutputFile())));
+        Paths.get(getPathToOutputFile()));
+    classNames = accumulateClassNamesStep;
+    steps.add(accumulateClassNamesStep);
 
     return steps.build();
+  }
+
+  public ImmutableSortedMap<String, HashCode> getClassNames() {
+    // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
+    // that from a Buildable (but there is from an AbstractCachingBuildRule).
+    Preconditions.checkNotNull(classNames);
+    return classNames.get();
+  }
+
+  @Override
+  protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    // Assign this.classNames when instantiating this Buildable when pulled from cache.
+
+    // Read the output file, which should now be in place because this rule was downloaded from
+    // cache.
+    List<String> lines;
+    try {
+      lines = onDiskBuildInfo.getOutputFileContentsByLine(this);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    // Use the contents of the file to create the ImmutableSortedMap<String, HashCode>.
+    ImmutableSortedMap.Builder<String, HashCode> classNamesBuilder = ImmutableSortedMap.naturalOrder();
+    for (String line : lines) {
+      List<String> parts = CLASS_NAME_AND_HASH_SPLITTER.splitToList(line);
+      Preconditions.checkState(parts.size() == 2);
+      String key = parts.get(0);
+      HashCode value = HashCode.fromString(parts.get(1));
+      classNamesBuilder.put(key, value);
+    }
+    this.classNames = Suppliers.ofInstance(classNamesBuilder.build());
   }
 
   public static Builder newAccumulateClassNamesBuilder(AbstractBuildRuleBuilderParams params) {
