@@ -174,7 +174,7 @@ public final class Main {
       return parser;
     }
 
-    private void watchClient(NGContext context) {
+    private void watchClient(final NGContext context) {
       context.addClientListener(new NGClientListener() {
         @Override
         public void clientDisconnected() {
@@ -185,6 +185,8 @@ public final class Main {
           // so needs to be left in a consistent state even if the current command is interrupted
           // due to a client disconnection.
           synchronized (parser) {
+            // Client should no longer be connected, but printing helps detect false disconnections.
+            context.err.println("Client disconnected.");
             System.exit(CLIENT_DISCONNECT_EXIT_CODE);
           }
         }
