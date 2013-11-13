@@ -62,7 +62,7 @@ public class FilterResourcesStep implements Step {
 
   @VisibleForTesting
   static final Pattern DRAWABLE_PATH_PATTERN = Pattern.compile(
-      ".*drawable.*/.*(png|jpg|jpeg|gif)", Pattern.CASE_INSENSITIVE);
+      ".*drawable.*/.*(png|jpg|jpeg|gif|webp)", Pattern.CASE_INSENSITIVE);
 
   @VisibleForTesting
   static final Pattern NON_ENGLISH_STRING_PATH = Pattern.compile(
