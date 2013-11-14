@@ -42,8 +42,7 @@ public class OnDiskBuildInfoTest extends EasyMockSupport {
         "com/example/Foo.class e4fccb7520b7795e632651323c63217c9f59f72a");
     expect(projectFilesystem.readLines(Paths.get(pathToOutputFile))).andReturn(lines);
 
-    Buildable buildable = createMock(Buildable.class);
-    expect(buildable.getPathToOutputFile()).andReturn(pathToOutputFile);
+    Buildable buildable = new FakeBuildable().setPathToOutputFile(pathToOutputFile);
 
     replayAll();
 
@@ -75,11 +74,7 @@ public class OnDiskBuildInfoTest extends EasyMockSupport {
         new BuildTarget("//java/com/example", "ex"),
         projectFilesystem);
 
-    Buildable buildable = createMock(Buildable.class);
-    expect(buildable.getPathToOutputFile()).andReturn(null);
-
-    replayAll();
-
+    Buildable buildable = new FakeBuildable();
     onDiskBuildInfo.getOutputFileContentsByLine(buildable);
   }
 

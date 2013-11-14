@@ -3,6 +3,7 @@ java_library(
   srcs = [
     'BuildRuleParamsFactory.java',
     'FakeAbstractBuildRuleBuilderParams.java',
+    'FakeBuildable.java',
     'FakeBuildableContext.java',
     'FakeBuildRule.java',
     'FakeBuildRuleParams.java',
