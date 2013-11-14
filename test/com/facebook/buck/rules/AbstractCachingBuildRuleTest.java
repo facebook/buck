@@ -165,8 +165,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     expect(context.getProjectRoot()).andReturn(createMock(Path.class));
 
     // Configure the OnDiskBuildInfo.
-    OnDiskBuildInfo onDiskBuildInfo = createMock(OnDiskBuildInfo.class);
-    expect(onDiskBuildInfo.getRuleKey()).andReturn(Optional.<RuleKey>absent());
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo(buildTarget, projectFilesystem);
     expect(context.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
 
     // Configure the BuildInfoRecorder.
@@ -248,19 +248,20 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
            /* ruleKeyWithoutDeps */ capture(new Capture<RuleKey>())))
         .andReturn(buildInfoRecorder);
 
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     // Populate the metadata that should be read from disk.
-    OnDiskBuildInfo onDiskBuildInfo = createMock(OnDiskBuildInfo.class);
-    // The RuleKey on disk should be different from the current RuleKey in memory, so reverse() it.
-    expect(onDiskBuildInfo.getRuleKey()).andReturn(
-        Optional.of(reverse(buildRule.getRuleKey())));
-    // However, the RuleKey not including the deps in memory should be the same as the one on disk.
-    expect(onDiskBuildInfo.getRuleKeyWithoutDeps()).andReturn(
-        Optional.of(new RuleKey(TestAbstractCachingBuildRule.RULE_KEY_WITHOUT_DEPS_HASH)));
-    // Similarly, the ABI key for the deps in memory should be the same as the one on disk.
-    expect(onDiskBuildInfo.getHash(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA)).andReturn(
-        Optional.of(new Sha1HashCode(TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH)));
-    expect(onDiskBuildInfo.getValue(AbiRule.ABI_KEY_ON_DISK_METADATA)).andReturn(
-        Optional.of("At some point, this method call should go away."));
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo(buildTarget, projectFilesystem)
+         // The RuleKey on disk should be different from the current RuleKey in memory, so reverse()
+         // it.
+         .setRuleKey(reverse(buildRule.getRuleKey()))
+         // However, the RuleKey not including the deps in memory should be the same as the one on
+         // disk.
+         .setRuleKeyWithoutDeps(new RuleKey(TestAbstractCachingBuildRule.RULE_KEY_WITHOUT_DEPS_HASH))
+         // Similarly, the ABI key for the deps in memory should be the same as the one on disk.
+        .putMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+            TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH)
+        .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA,
+            "At some point, this method call should go away.");
 
     // This metadata must be added to the buildInfoRecorder so that it is written as part of
     // writeMetadataToDisk().

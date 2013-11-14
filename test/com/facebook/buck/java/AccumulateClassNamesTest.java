@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
@@ -37,7 +38,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -135,17 +135,17 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
   public void testInitializeFromDisk() throws IOException {
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
     JavaLibraryRule javaRule = new FakeJavaLibraryRule(buildTarget);
-
     AccumulateClassNames accumulateClassNames = new AccumulateClassNames(buildTarget, javaRule);
 
-    OnDiskBuildInfo onDiskBuildInfo = createMock(OnDiskBuildInfo.class);
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     List<String> lines = ImmutableList.of(
         "com/example/Bar 087b7707a5f8e0a2adf5652e3cd2072d89a197dc",
         "com/example/Baz 62b1c2510840c0de55c13f66065a98a719be0f19",
         "com/example/Foo e4fccb7520b7795e632651323c63217c9f59f72a");
-    expect(onDiskBuildInfo.getOutputFileContentsByLine(accumulateClassNames)).andReturn(lines);
-    expect(onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA))
-        .andReturn(Optional.of(new Sha1HashCode("f7d6d1efa11c8ceef36cc56b0ec6c3a20ddbf19f")));
+    expect(projectFilesystem.readLines(Paths.get("buck-out/gen/foo/bar.classes.txt")))
+        .andReturn(lines);
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo(buildTarget, projectFilesystem)
+        .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, "f7d6d1efa11c8ceef36cc56b0ec6c3a20ddbf19f");
 
     replayAll();
     accumulateClassNames.initializeFromDisk(onDiskBuildInfo);

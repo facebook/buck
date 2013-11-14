@@ -7,6 +7,7 @@ java_library(
     'FakeBuildableContext.java',
     'FakeBuildRule.java',
     'FakeBuildRuleParams.java',
+    'FakeOnDiskBuildInfo.java',
     'FakeRuleKeyBuilderFactory.java',
     'FakeTestRule.java',
     'NonCheckingBuildRuleFactoryParams.java',
