@@ -16,6 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -57,5 +61,12 @@ public class FakeBuildableContext implements BuildableContext {
 
   public ImmutableSet<Path> getRecordedArtifacts() {
     return ImmutableSet.copyOf(artifacts);
+  }
+
+  public void assertContainsMetadataMapping(String key, String value) {
+    assertNotNull(key);
+    assertNotNull(value);
+    assertTrue(metadata.containsKey(key));
+    assertEquals(value, metadata.get(key));
   }
 }

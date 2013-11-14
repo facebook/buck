@@ -27,7 +27,7 @@ import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -62,7 +62,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     expect(accumulateClassNames.getJavaLibraryRule()).andReturn(javaLibraryRule);
 
     BuildContext context = createMock(BuildContext.class);
-    BuildableContext buildableContext = createMock(BuildableContext.class);
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     replayAll();
 
@@ -107,16 +107,19 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     verifyAll();
     resetAll();
 
-    buildableContext.recordArtifact(Paths.get("bar.dex.jar"));
     Sha1HashCode abiKey = new Sha1HashCode("f7f34ed13b881c6c6f663533cde4a436ea84435e");
     expect(accumulateClassNames.getAbiKey()).andReturn(abiKey);
-    buildableContext.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA, abiKey.getHash());
-    buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
     replayAll();
 
     Step recordArtifactAndMetadataStep = steps.get(3);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
+    assertTrue("The generated .dex.jar file should be in the set of recorded artifacts.",
+        buildableContext.getRecordedArtifacts().contains(Paths.get("bar.dex.jar")));
+    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+        abiKey.getHash());
+    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
+        abiKey.getHash());
 
     verifyAll();
   }
@@ -128,7 +131,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         ImmutableSortedMap.<String, HashCode>of());
 
     BuildContext context = createMock(BuildContext.class);
-    BuildableContext buildableContext = createMock(BuildableContext.class);
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     replayAll();
 
@@ -165,13 +168,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     Sha1HashCode abiKey = new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY);
     expect(accumulateClassNames.getAbiKey()).andReturn(abiKey);
-    buildableContext.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA, abiKey.getHash());
-    buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
     replayAll();
 
     Step recordArtifactAndMetadataStep = steps.get(2);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
+    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+        abiKey.getHash());
+    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
+        abiKey.getHash());
 
     verifyAll();
   }

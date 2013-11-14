@@ -28,8 +28,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
@@ -88,7 +88,7 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
 
     // Mock out objects so getBuildSteps() can be invoked.
     BuildContext buildContext = createMock(BuildContext.class);
-    BuildableContext buildableContext = createMock(BuildableContext.class);
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     // Create the build steps.
     replayAll();
@@ -119,20 +119,16 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
     ImmutableSortedMap<String, HashCode> classNames = ImmutableSortedMap.of();
     accumulateClassNamesStep.setClassNamesForTesting(classNames);
 
-    resetAll();
-    String expectedAbiKey = AbiWriterProtocol.EMPTY_ABI_KEY;
-    buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, expectedAbiKey);
-    replayAll();
-
     // Invoke the recordAbiStep and ensure the correct data is recorded.
     Step recordAbiStep = steps.get(3);
     int exitCode = recordAbiStep.execute(context);
+    String expectedAbiKey = AbiWriterProtocol.EMPTY_ABI_KEY;
+    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
+        expectedAbiKey);
     assertEquals(0, exitCode);
     assertEquals("Should be the empty ABI key because the classNames map is empty.",
         new Sha1HashCode(expectedAbiKey),
         accumulateClassNames.getAbiKey());
-
-    verifyAll();
   }
 
   @Test
