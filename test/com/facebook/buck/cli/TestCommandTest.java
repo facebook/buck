@@ -30,8 +30,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
+import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavaTestRule;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
@@ -95,17 +97,15 @@ public class TestCommandTest {
     assertTrue(JavaTestRule.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
-
-    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
-    expect(javaLibraryRule.getJavaSrcs())
-        .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
+    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+        .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
-    Object[] mocks = new Object[] {projectFilesystem, defaultJavaPackageFinder, javaLibraryRule};
+    Object[] mocks = new Object[] {projectFilesystem, defaultJavaPackageFinder};
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
@@ -127,6 +127,8 @@ public class TestCommandTest {
     assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+        .setJavaSrcs(javaSrcs);
 
     File parentFile = createMock(File.class);
     expect(parentFile.getName()).andReturn("src");
@@ -144,16 +146,11 @@ public class TestCommandTest {
     expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile))
         .andReturn(sourceFile);
 
-    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
-    expect(javaLibraryRule.getJavaSrcs())
-        .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
-
     Object[] mocks = new Object[] {
         parentFile,
         sourceFile,
         defaultJavaPackageFinder,
-        projectFilesystem,
-        javaLibraryRule};
+        projectFilesystem};
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
@@ -175,6 +172,8 @@ public class TestCommandTest {
     assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
 
     ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+        .setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         createMock(DefaultJavaPackageFinder.class);
@@ -182,11 +181,7 @@ public class TestCommandTest {
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
-    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
-    expect(javaLibraryRule.getJavaSrcs())
-        .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
-
-    Object[] mocks = new Object[] {defaultJavaPackageFinder, projectFilesystem, javaLibraryRule};
+    Object[] mocks = new Object[] {defaultJavaPackageFinder, projectFilesystem};
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(
@@ -237,9 +232,8 @@ public class TestCommandTest {
     expect(projectFilesystem.getFileForRelativePath(pathToNonGenFile2))
         .andReturn(sourceFile2);
 
-    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
-    expect(javaLibraryRule.getJavaSrcs())
-        .andReturn(ImmutableSortedSet.copyOf(javaSrcs));
+    JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
+        .setJavaSrcs(javaSrcs);
 
     Object[] mocks = new Object[] {
         parentFile1,
@@ -247,8 +241,7 @@ public class TestCommandTest {
         parentFile2,
         sourceFile2,
         defaultJavaPackageFinder,
-        projectFilesystem,
-        javaLibraryRule};
+        projectFilesystem};
     replay(mocks);
 
     ImmutableSet<String> result = TestCommand.getPathToSourceFolders(

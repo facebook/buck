@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.AccumulateClassNames;
-import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
@@ -53,8 +53,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException {
-    JavaLibraryRule javaLibraryRule = createMock(JavaLibraryRule.class);
-    expect(javaLibraryRule.getPathToOutputFile()).andReturn("buck-out/gen/foo/bar.jar");
+    FakeJavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"));
+    javaLibraryRule.setOutputFile("buck-out/gen/foo/bar.jar");
 
     AccumulateClassNames accumulateClassNames = createMock(AccumulateClassNames.class);
     expect(accumulateClassNames.getClassNames()).andReturn(
@@ -66,7 +66,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    BuildTarget buildTarget = new BuildTarget("//foo", "bar", "dex");
     DexProducedFromJavaLibraryThatContainsClassFiles preDex =
         new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, accumulateClassNames);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
@@ -80,8 +80,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo")))
         .andReturn(Paths.get("/home/user/buck-out/gen/foo"));
-    expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar.dex.jar")))
-        .andReturn(Paths.get("/home/user/buck-out/gen/foo/bar.dex.jar"));
+    expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")))
+        .andReturn(Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar"));
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar.jar")))
         .andReturn(Paths.get("/home/user/buck-out/gen/foo/bar.jar"));
     replayAll();
@@ -93,11 +93,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         .build();
 
     String expectedDxCommand = "/usr/bin/dx" +
-        " --dex --no-optimize --force-jumbo --output buck-out/gen/foo/bar.dex.jar " +
+        " --dex --no-optimize --force-jumbo --output buck-out/gen/foo/bar#dex.dex.jar " +
         "/home/user/buck-out/gen/foo/bar.jar";
     MoreAsserts.assertSteps("Generate bar.dex.jar.",
         ImmutableList.of(
-          "rm -f /home/user/buck-out/gen/foo/bar.dex.jar",
+          "rm -f /home/user/buck-out/gen/foo/bar#dex.dex.jar",
           "mkdir -p /home/user/buck-out/gen/foo",
           expectedDxCommand,
           "record_dx_success"),
@@ -115,7 +115,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
     assertTrue("The generated .dex.jar file should be in the set of recorded artifacts.",
-        buildableContext.getRecordedArtifacts().contains(Paths.get("bar.dex.jar")));
+        buildableContext.getRecordedArtifacts().contains(Paths.get("bar#dex.dex.jar")));
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
         abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,

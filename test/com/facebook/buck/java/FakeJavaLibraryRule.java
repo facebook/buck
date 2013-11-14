@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -34,12 +35,18 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
+  private ImmutableSortedSet<String> srcs = ImmutableSortedSet.of();
+
   public FakeJavaLibraryRule(
       BuildRuleType type,
       BuildTarget target,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns) {
     super(type, target, deps, visibilityPatterns);
+  }
+
+  public FakeJavaLibraryRule(BuildTarget target) {
+    super(BuildRuleType.JAVA_LIBRARY, target);
   }
 
   @Override
@@ -64,7 +71,12 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
 
   @Override
   public ImmutableSortedSet<String> getJavaSrcs() {
-    return ImmutableSortedSet.of();
+    return srcs;
+  }
+
+  public FakeJavaLibraryRule setJavaSrcs(ImmutableSortedSet<String> srcs) {
+    this.srcs = Preconditions.checkNotNull(srcs);
+    return this;
   }
 
   @Override

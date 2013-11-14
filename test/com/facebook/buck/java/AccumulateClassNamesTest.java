@@ -134,12 +134,9 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
   @Test
   public void testInitializeFromDisk() throws IOException {
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
-    JavaLibraryRule javaRule = createMock(JavaLibraryRule.class);
+    JavaLibraryRule javaRule = new FakeJavaLibraryRule(buildTarget);
 
-    replayAll();
     AccumulateClassNames accumulateClassNames = new AccumulateClassNames(buildTarget, javaRule);
-    verifyAll();
-    resetAll();
 
     OnDiskBuildInfo onDiskBuildInfo = createMock(OnDiskBuildInfo.class);
     List<String> lines = ImmutableList.of(
