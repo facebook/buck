@@ -188,12 +188,14 @@ public class ProjectCommandTest {
     int createIntellijProject(Project project,
         File jsonTemplate,
         ProcessExecutor processExecutor,
-        PrintStream stdOut)
+        PrintStream stdOut,
+        PrintStream stdErr)
         throws IOException {
       assertNotNull(project);
       assertNotNull(jsonTemplate);
       assertNotNull(processExecutor);
       assertNotNull(stdOut);
+      assertNotNull(stdErr);
       return 0;
     }
 

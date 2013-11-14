@@ -1,6 +1,9 @@
 import errno
+import fnmatch
 import json
 import os
+import re
+import subprocess
 import sys
 
 
@@ -105,6 +108,9 @@ REMOTE_RUN_CONFIG_XML = """
 # and no files will need to be written.
 MODIFIED_FILES = []
 
+# Files that are part of the project being run.  We will delete all .iml files
+# that are not checked in and not in this set.
+PROJECT_FILES = set()
 
 def write_modules(modules):
   """Writes one XML file for each module."""
@@ -348,6 +354,7 @@ def write_run_configs():
 
 
 def write_file_if_changed(path, content):
+  PROJECT_FILES.add(path)
   if os.path.exists(path):
     file_content_as_string = open(path, 'r').read()
     needs_update = content.strip() != file_content_as_string.strip()
@@ -372,8 +379,31 @@ def mkdir_p(path):
       pass
     else: raise
 
+def clean_old_files():
+  if os.path.isdir('.git'):
+    try:
+      files_to_clean = subprocess.check_output(['git', 'ls-files', '--other'])
+      for file_name in files_to_clean.splitlines():
+        if file_name.endswith('.iml') and file_name not in PROJECT_FILES:
+          os.remove(file_name)
+      return
+    except Exception as e:
+      pass
+
 
 if __name__ == '__main__':
+  if not os.path.isdir('.git'):
+    for root, dirnames, filenames in os.walk('.'):
+      if fnmatch.filter(filenames, '*.iml'):
+        sys.stderr.write('\n'.join(
+          [ '  ::  "buck project" run from a directory not under Git source',
+            '  ::  control.  If invoking buck project with an argument, we are',
+            '  ::  not able to remove old .iml files, which can result in',
+            '  ::  IntelliJ being in a bad state.  Please close and re-open',
+            '  ::  IntelliJ if it\'s open.' ]))
+        sys.stderr.flush()
+        break
+
   json_file = sys.argv[1]
   parsed_json = json.load(open(json_file, 'r'))
 
@@ -384,6 +414,8 @@ if __name__ == '__main__':
   write_modules(modules)
   write_all_modules(modules)
   write_run_configs()
+  if PROJECT_FILES:
+    clean_old_files()
 
   # Write the list of modified files to stdout
   for path in MODIFIED_FILES: print path

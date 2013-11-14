@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -62,6 +64,57 @@ public class ProjectIntegrationTest {
           "modules/tip/module_modules_tip.iml"
         ) + '\n',
         result.getStdout());
+
+    assertThat(
+        "`buck project` should contain warning about being run from directory without git.",
+        result.getStderr(),
+        not(containsString(Joiner.on('\n').join(
+            "  ::  \"buck project\" run from a directory not under Git source",
+            "  ::  control.  If invoking buck project with an argument, we are",
+            "  ::  not able to remove old .iml files, which can result in",
+            "  ::  IntelliJ being in a bad state.  Please close and re-open",
+            "  ::  IntelliJ if it's open."))));
+  }
+
+  /**
+   * Verify that if we build a project by specifying a target, the resulting project only contains
+   * the transitive deps of that target.  In this example, that means everything except
+   * //modules/tip.
+   */
+  @Test
+  public void testBuckProjectSlice() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_slice", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//modules/dep1:dep1");
+    result.assertExitCode("buck project should exit cleanly", 0);
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/libraries/libs_guava_jar.xml",
+            ".idea/libraries/libs_jsr305_jar.xml",
+            ".idea/libraries/libs_junit_jar.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "modules/dep1/module_modules_dep1.iml"
+        ) + '\n',
+        result.getStdout());
+
+    assertThat(
+        "`buck project` should contain warning about being run from directory without git.",
+        result.getStderr(),
+        containsString(Joiner.on('\n').join(
+            "  ::  \"buck project\" run from a directory not under Git source",
+            "  ::  control.  If invoking buck project with an argument, we are",
+            "  ::  not able to remove old .iml files, which can result in",
+            "  ::  IntelliJ being in a bad state.  Please close and re-open",
+            "  ::  IntelliJ if it's open.")));
   }
 
   /**

@@ -48,6 +48,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -160,14 +161,15 @@ public class Project {
 
   public int createIntellijProject(File jsonTempFile,
       ProcessExecutor processExecutor,
-      PrintStream stdOut) throws IOException {
+      PrintStream stdOut,
+      PrintStream stdErr) throws IOException {
     List<Module> modules = createModulesForProjectConfigs();
     writeJsonConfig(jsonTempFile, modules);
 
     List<String> modifiedFiles = Lists.newArrayList();
 
     // Process the JSON config to generate the .xml and .iml files for IntelliJ.
-    ExitCodeAndStdOut result = processJsonConfig(jsonTempFile);
+    ExitCodeAndOutput result = processJsonConfig(jsonTempFile);
     if (result.exitCode != 0) {
       return result.exitCode;
     } else {
@@ -202,6 +204,8 @@ public class Project {
       SortedSet<String> modifiedFilesInSortedForder = Sets.newTreeSet(modifiedFiles);
       stdOut.printf("MODIFIED FILES:\n%s\n", Joiner.on('\n').join(modifiedFilesInSortedForder));
     }
+    // Blit stderr from intellij.py to parent stderr.
+    stdErr.print(result.stdErr);
 
     return 0;
   }
@@ -905,7 +909,7 @@ public class Project {
     }
   }
 
-  private ExitCodeAndStdOut processJsonConfig(File jsonTempFile) throws IOException {
+  private ExitCodeAndOutput processJsonConfig(File jsonTempFile) throws IOException {
     final ImmutableList<String> args = ImmutableList.of(
         pythonInterpreter, PATH_TO_INTELLIJ_PY, jsonTempFile.getAbsolutePath());
 
@@ -925,7 +929,7 @@ public class Project {
 
     Console console = executionContext.getConsole();
     Console childConsole = new Console(
-        console.getVerbosity(),
+        Verbosity.SILENT,
         console.getStdOut(),
         console.getStdErr(),
         Ansi.withoutTty());
@@ -934,15 +938,17 @@ public class Project {
         .setConsole(childConsole)
         .build();
     int exitCode = command.execute(childContext);
-    return new ExitCodeAndStdOut(exitCode, command.getStdout());
+    return new ExitCodeAndOutput(exitCode, command.getStdout(), command.getStderr());
   }
 
-  private static class ExitCodeAndStdOut {
+  private static class ExitCodeAndOutput {
     private final int exitCode;
     private final String stdOut;
-    ExitCodeAndStdOut(int exitCode, String stdOut) {
+    private final String stdErr;
+    ExitCodeAndOutput(int exitCode, String stdOut, String stdErr) {
       this.exitCode = exitCode;
       this.stdOut = Preconditions.checkNotNull(stdOut);
+      this.stdErr = Preconditions.checkNotNull(stdErr);
     }
   }
 

@@ -69,15 +69,44 @@ public class PartialGraph {
       Iterable<String> includes,
       Parser parser,
       BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
-
-    Preconditions.checkNotNull(parser);
+    Preconditions.checkNotNull(predicate);
 
     List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem, includes, predicate);
+
+    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
+  }
+
+  /**
+   * Creates a partial graph of all {@link BuildRule}s that are transitive dependencies of (rules
+   * that pass {@code predicate} and are contained in BUCK files that contain transitive
+   * dependencies of the {@link BuildTarget}s defined in {@code roots}).
+   */
+  public static PartialGraph createPartialGraphFromRoots(
+      Iterable<BuildTarget> roots,
+      RawRulePredicate predicate,
+      Iterable<String> includes,
+      Parser parser,
+      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+    Preconditions.checkNotNull(predicate);
+
+    List<BuildTarget> targets = parser.filterTargetsInProjectFromRoots(
+        roots, includes, eventBus, predicate);
+
+    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
+  }
+
+  private static PartialGraph parseAndCreateGraphFromTargets(
+      Iterable<BuildTarget> targets,
+      Iterable<String> includes,
+      Parser parser,
+      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+
+    Preconditions.checkNotNull(parser);
 
     // Now that the Parser is loaded up with the set of all build rules, use it to create a
     // DependencyGraph of only the targets we want to build.
     DependencyGraph graph = parser.parseBuildFilesForTargets(targets, includes, eventBus);
 
-    return new PartialGraph(graph, targets);
+    return new PartialGraph(graph, ImmutableList.copyOf(targets));
   }
 }

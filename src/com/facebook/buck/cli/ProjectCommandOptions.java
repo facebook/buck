@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.util.List;
@@ -33,8 +34,23 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   private String target;
 
 
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
   ProjectCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
+  }
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  public void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public List<String> getArgumentsFormattedAsBuildTargets() {
+    return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
   }
 
   public String getTarget() {

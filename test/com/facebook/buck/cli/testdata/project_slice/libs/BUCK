@@ -1,0 +1,23 @@
+prebuilt_jar(
+  name = 'guava',
+  binary_jar = 'guava.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jsr305',
+  binary_jar = 'jsr305.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)

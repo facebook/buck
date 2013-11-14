@@ -605,6 +605,32 @@ public class Parser {
     return filterTargets(filter);
   }
 
+
+  /**
+   * Takes a sequence of build targets and parses all of the build files that contain them and their
+   * transitive deps, producing a collection of "raw rules" that have been produced from the build
+   * files. The specified {@link RawRulePredicate} is applied to this collection. This method
+   * returns the collection of {@link BuildTarget}s that correspond to the raw rules that were
+   * matched by the predicate.
+   * <p>
+   * Because {@code project_config} rules are not transitive dependencies of rules such as
+   * {@code android_binary}, but are defined in the same build files as the transitive
+   * dependencies of an {@code android_binary}, this method is helpful in finding all of the
+   * {@code project_config} rules needed to produce an IDE configuration to build said
+   * {@code android_binary}. See {@link ProjectCommand#predicate} for an example of such
+   * a {@link RawRulePredicate}.
+   */
+  public synchronized List<BuildTarget> filterTargetsInProjectFromRoots(
+      Iterable<BuildTarget> roots,
+      Iterable<String> defaultIncludes,
+      BuckEventBus eventBus,
+      RawRulePredicate filter)
+      throws BuildFileParseException, BuildTargetException, IOException {
+    parseBuildFilesForTargets(roots, defaultIncludes, eventBus);
+
+    return filterTargets(filter);
+  }
+
   /**
    * Called when file change events are posted to the file change EventBus to invalidate cached
    * build rules if required.

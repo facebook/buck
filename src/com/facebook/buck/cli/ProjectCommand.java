@@ -91,7 +91,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       exitCode = createIntellijProject(project,
           tempFile,
           executionContext.getProcessExecutor(),
-          console.getStdOut());
+          console.getStdOut(),
+          console.getStdErr());
       if (exitCode != 0) {
         return exitCode;
       }
@@ -133,9 +134,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   int createIntellijProject(Project project,
       File jsonTemplate,
       ProcessExecutor processExecutor,
-      PrintStream stdOut)
+      PrintStream stdOut,
+      PrintStream stdErr)
       throws IOException {
-    return project.createIntellijProject(jsonTemplate, processExecutor, stdOut);
+    return project.createIntellijProject(jsonTemplate, processExecutor, stdOut, stdErr);
   }
 
   /**
@@ -152,12 +154,26 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   @VisibleForTesting
   PartialGraph createPartialGraph(RawRulePredicate rulePredicate, ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, IOException {
-    return PartialGraph.createPartialGraph(
-        rulePredicate,
-        getProjectFilesystem(),
-        options.getDefaultIncludes(),
-        getParser(),
-        getBuckEventBus());
+    List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
+
+    if (argumentsAsBuildTargets.isEmpty()) {
+      return PartialGraph.createPartialGraph(
+          rulePredicate,
+          getProjectFilesystem(),
+          options.getDefaultIncludes(),
+          getParser(),
+          getBuckEventBus());
+    } else {
+      // If build targets were specified, generate a partial intellij project that contains the
+      // files needed to build the build targets specified.
+      ImmutableList<BuildTarget> targets = getBuildTargets(argumentsAsBuildTargets);
+
+      return PartialGraph.createPartialGraphFromRoots(targets,
+          rulePredicate,
+          options.getDefaultIncludes(),
+          getParser(),
+          getBuckEventBus());
+    }
   }
 
   @Override
