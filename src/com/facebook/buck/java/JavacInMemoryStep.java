@@ -125,8 +125,10 @@ public class JavacInMemoryStep implements Step {
 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-  public static interface SuggestBuildRules extends
-      Function<ImmutableSet<String>,ImmutableSet<String>> {}
+  public static interface SuggestBuildRules {
+    public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
+        ImmutableSet<String> failedImports);
+  }
 
   public JavacInMemoryStep(
       String outputDirectory,
@@ -226,7 +228,8 @@ public class JavacInMemoryStep implements Step {
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
     if (declaredDepsResult != 0) {
-      int transitiveResult = buildWithClasspath(context, getClasspathEntries());
+      int transitiveResult = buildWithClasspath(context,
+          ImmutableSet.copyOf(transitiveClasspathEntries));
       if (transitiveResult == 0) {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
 
@@ -237,7 +240,8 @@ public class JavacInMemoryStep implements Step {
         if (suggestBuildRules.isPresent()) {
           context.getStdErr().println("Try adding the following deps:");
           context.getStdErr().println(Joiner.on(LINE_SEPARATOR)
-              .join(suggestBuildRules.get().apply(failedImports)));
+              .join(suggestBuildRules.get().suggest(context.getProjectFilesystem(),
+                  failedImports)));
         }
         context.getStdErr().println();
         context.getStdErr().println();

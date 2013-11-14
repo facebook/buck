@@ -1,0 +1,21 @@
+# This is a canonical example of a genrule() that generates Java source code
+# paired with a java_library() that compiles the output of the genrule() along
+# with some hard-coded Java source code into a single library.
+
+java_library(
+  name = 'foo',
+  srcs = ['Foo.java'],
+)
+
+java_library(
+  name = 'bar',
+  srcs = ['Bar.java'],
+  deps = [':foo'],
+)
+
+java_library(
+  name = 'raz',
+  srcs = ['Raz.java'],
+  deps = [':bar'],
+)
+

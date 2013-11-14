@@ -243,6 +243,7 @@
       </fileset>
       <fileset dir="${test.dir}">
         <include name="**/*.java"/>
+        <exclude name="**/testdata/**"/>
       </fileset>
       <fileset dir="${plugin.dir}">
         <include name="**/*.java"/>

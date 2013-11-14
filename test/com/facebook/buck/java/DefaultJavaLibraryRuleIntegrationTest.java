@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import static java.nio.file.StandardOpenOption.WRITE;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
@@ -31,6 +32,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 
@@ -122,6 +124,64 @@ public class DefaultJavaLibraryRuleIntegrationTest {
         "have changed, but we verify that they are the same size, as a proxy.",
         sizeOfOriginalJar,
         outputFile.length());
+  }
+
+  @Test
+  public void testBuildJavaLibraryWithTransitive() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "warn_on_transitive", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:raz", "-b", "TRANSITIVE");
+    buildResult.assertExitCode("Successful build should exit with 0.", 0);
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuildJavaLibraryWithFirstOrder() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "warn_on_transitive", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build",
+        "//:raz",
+        "-b",
+        "FIRST_ORDER_ONLY");
+    buildResult.assertExitCode("Build should have failed", 1);
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuildJavaLibraryWithWarnOnTransitive() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "warn_on_transitive", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build",
+        "//:raz",
+        "-b",
+        "WARN_ON_TRANSITIVE");
+
+    String expectedWarning = Joiner.on("\n").join(
+      "Rule //:raz builds with its transitive dependencies but not with its first order " +
+          "dependencies.",
+      "The following packages were missing:",
+      "Foo",
+      "Try adding the following deps:",
+      "//:foo");
+
+    buildResult.assertExitCode("Build should have succeeded with warnings.", 0);
+
+    assertThat(
+        buildResult.getStderr(),
+        containsString(expectedWarning));
+
+    workspace.verify();
   }
 
   @Test

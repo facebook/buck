@@ -53,8 +53,8 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -145,16 +145,19 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * jar.
    */
   @VisibleForTesting
-  static interface JarResolver extends Function<String, ImmutableSet<String>> {}
+  static interface JarResolver {
+    public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath);
+  }
 
   private final JarResolver JAR_RESOLVER =
       new JarResolver() {
     @Override
-    public ImmutableSet<String> apply(String classPath) {
+    public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
       ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
       try {
+        Path classPath = filesystem.getFileForRelativePath(relativeClassPath).toPath();
         ClassLoader loader = URLClassLoader.newInstance(
-            new URL[]{new File(classPath).toURI().toURL()},
+            new URL[]{classPath.toUri().toURL()},
           /* parent */ null);
 
         // For every class contained in that jar, check to see if the package name
@@ -621,7 +624,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    *  @return whether or not adding {@code transitiveNotDeclaredDep} as a dependency to this build
    *      rule would have satisfied one of the {@code failedImports}.
    */
-  private boolean isMissingBuildRule(BuildRule transitiveNotDeclaredDep,
+  private boolean isMissingBuildRule(ProjectFilesystem filesystem,
+      BuildRule transitiveNotDeclaredDep,
       Set<String> failedImports,
       JarResolver jarResolver) {
     if (!(transitiveNotDeclaredDep instanceof JavaLibraryRule)) {
@@ -635,8 +639,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     // the exception of rules that export their dependencies, this will result in a single
     // classpath.
     for (String classPath : classPaths) {
-      ImmutableSet<String> topLevelSymbols;
-      topLevelSymbols = jarResolver.apply(classPath);
+      ImmutableSet<String> topLevelSymbols = jarResolver.resolve(filesystem, Paths.get(classPath));
 
       for (String symbolName : topLevelSymbols) {
         if (failedImports.contains(symbolName)) {
@@ -668,7 +671,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
     final Set<JavaLibraryRule> transitiveNotDeclaredDeps = Sets.difference(
         transitiveClasspathEntries.keySet(),
-        declaredClasspathEntries.keySet());
+        Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
 
     final ImmutableList<BuildRule> sortedTransitiveNotDeclaredDeps = ImmutableList.copyOf(
         TopologicalSort.sort(context.getDependencyGraph(),
@@ -682,7 +685,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     JavacInMemoryStep.SuggestBuildRules suggestBuildRuleFn =
         new JavacInMemoryStep.SuggestBuildRules() {
       @Override
-      public ImmutableSet<String> apply(ImmutableSet<String> failedImports) {
+      public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
+          ImmutableSet<String> failedImports) {
         ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
 
         Set<String> remainingImports = Sets.newHashSet(failedImports);
@@ -691,7 +695,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           boolean ruleCanSeeDep = transitiveNotDeclaredDep.isVisibleTo(
               DefaultJavaLibraryRule.this.getBuildTarget());
           if (ruleCanSeeDep &&
-              isMissingBuildRule(transitiveNotDeclaredDep, remainingImports, jarResolver)) {
+              isMissingBuildRule(filesystem,
+                  transitiveNotDeclaredDep,
+                  remainingImports,
+                  jarResolver)) {
             suggestedDeps.add(transitiveNotDeclaredDep.getFullyQualifiedName());
           }
           // If we've wiped out all remaining imports, break the loop looking for them.

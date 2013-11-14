@@ -942,6 +942,7 @@ public class DefaultJavaLibraryRuleTest {
   @Test
   public void testSuggsetDepsReverseTopoSortRespected() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     DefaultJavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
@@ -991,7 +992,8 @@ public class DefaultJavaLibraryRuleTest {
 
     assertTrue(suggestFn.isPresent());
     assertEquals(ImmutableSet.of("//:parent", "//:libone"),
-        suggestFn.get().apply(ImmutableSet.of("com.facebook.Foo", "com.facebook.Bar")));
+                 suggestFn.get().suggest(projectFilesystem,
+                                         ImmutableSet.of("com.facebook.Foo", "com.facebook.Bar")));
 
     EasyMock.verify(context);
   }
@@ -1002,23 +1004,23 @@ public class DefaultJavaLibraryRuleTest {
   private DefaultJavaLibraryRule.JarResolver createJarResolver(
       final ImmutableMap<String, String> classToSymbols) {
 
-    ImmutableSetMultimap.Builder<String, String> resolveMapBuilder =
+    ImmutableSetMultimap.Builder<Path, String> resolveMapBuilder =
         ImmutableSetMultimap.builder();
 
     for (Map.Entry<String, String> entry : classToSymbols.entrySet()) {
       String fullyQualified = entry.getValue();
       String packageName = fullyQualified.substring(0, fullyQualified.lastIndexOf('.'));
       String className = fullyQualified.substring(fullyQualified.lastIndexOf('.'));
-      resolveMapBuilder.putAll(entry.getKey(), fullyQualified, packageName, className);
+      resolveMapBuilder.putAll(Paths.get(entry.getKey()), fullyQualified, packageName, className);
     }
 
-    final ImmutableSetMultimap<String, String> resolveMap = resolveMapBuilder.build();
+    final ImmutableSetMultimap<Path, String> resolveMap = resolveMapBuilder.build();
 
     return new DefaultJavaLibraryRule.JarResolver() {
       @Override
-      public ImmutableSet<String> apply(String input) {
-        if (resolveMap.containsKey(input)) {
-          return resolveMap.get(input);
+      public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
+        if (resolveMap.containsKey(relativeClassPath)) {
+          return resolveMap.get(relativeClassPath);
         } else {
           return ImmutableSet.of();
         }
