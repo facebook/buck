@@ -369,12 +369,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   @VisibleForTesting
   void copyNativeLibrary(String sourceDir,
       String destinationDir,
-      ImmutableList.Builder<Step> commands) {
+      ImmutableList.Builder<Step> steps) {
     Path sourceDirPath = Paths.get(sourceDir);
     Path destinationDirPath = Paths.get(destinationDir);
 
     if (getCpuFilters().isEmpty()) {
-      commands.add(new CopyStep(sourceDirPath, destinationDirPath, true));
+      steps.add(new CopyStep(sourceDirPath, destinationDirPath, true));
     } else {
       for (TargetCpuType cpuType: getCpuFilters()) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
@@ -385,7 +385,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
         final MkdirStep mkDirStep = new MkdirStep(libDestinationDir);
         final CopyStep copyStep = new CopyStep(libSourceDir, libDestinationDir, true);
-        commands.add(new Step() {
+        steps.add(new Step() {
           @Override
           public int execute(ExecutionContext context) {
             if (!context.getProjectFilesystem().exists(libSourceDir.toString())) {
@@ -453,7 +453,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * separately as assets (and not bundled together into the {@code resources.arsc} file).
    */
   @VisibleForTesting
-  FilterResourcesStep getFilterResourcesStep(Set<String> resourceDirectories) {
+  FilterResourcesStep createFilterResourcesStep(Set<String> resourceDirectories) {
     ImmutableBiMap.Builder<String, String> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
     String resDestinationBasePath = getBinPath("__filtered__%s__");
     int count = 0;
@@ -476,13 +476,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    // Map from asset name to pathname for extra files to be added to assets.
-    ImmutableMap.Builder<String, File> extraAssetsBuilder = ImmutableMap.builder();
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
-    commands.add(new MkdirAndSymlinkFileStep(getManifest(), getAndroidManifestXml()));
+    steps.add(new MkdirAndSymlinkFileStep(getManifest(), getAndroidManifestXml()));
 
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies(
         context.getDependencyGraph());
@@ -490,21 +488,78 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     final AndroidDexTransitiveDependencies dexTransitiveDependencies =
         findDexTransitiveDependencies(context.getDependencyGraph());
 
-    Set<String> resDirectories = transitiveDependencies.resDirectories;
-    Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
+    // Add the steps for the aapt_package command. This method returns data that the ApkBuilder
+    // needs to create a final, unsigned APK.
+    ResourceDirectoriesFromAapt resourceDirectoriesFromAapt = addAaptPackageSteps(steps,
+        transitiveDependencies,
+        dexTransitiveDependencies);
 
-    FilterResourcesStep filterResourcesStep = null;
+    // Create the .dex files and create the unsigned APK using ApkBuilder.
+    addDxAndApkBuilderSteps(context,
+        steps,
+        transitiveDependencies,
+        dexTransitiveDependencies,
+        resourceDirectoriesFromAapt.resDirectories,
+        resourceDirectoriesFromAapt.nativeLibraryDirectories,
+        getResourceApkPath(),
+        getUnsignedApkPath());
+
+    // Sign the APK.
+    String signedApkPath = getSignedApkPath();
+    SignApkStep signApkStep = new SignApkStep(
+        keystore.getPathToStore(),
+        keystore.getPathToPropertiesFile(),
+        getUnsignedApkPath(),
+        signedApkPath);
+    steps.add(signApkStep);
+
+    String apkToAlign;
+
+    // Optionally, compress the resources file in the .apk.
+    if (this.isCompressResources()) {
+      String compressedApkPath = getCompressedResourcesApkPath();
+      apkToAlign = compressedApkPath;
+      RepackZipEntriesStep arscComp = new RepackZipEntriesStep(
+          signedApkPath,
+          compressedApkPath,
+          ImmutableSet.of("resources.arsc"));
+      steps.add(arscComp);
+    } else {
+      apkToAlign = signedApkPath;
+    }
+
+    String apkPath = getApkPath();
+    ZipalignStep zipalign = new ZipalignStep(apkToAlign, apkPath);
+    steps.add(zipalign);
+
+    // Inform the user where the APK can be found.
+    EchoStep success = new EchoStep(
+        String.format("built APK for %s at %s", getFullyQualifiedName(), apkPath));
+    steps.add(success);
+
+    return steps.build();
+  }
+
+  private ResourceDirectoriesFromAapt addAaptPackageSteps(ImmutableList.Builder<Step> steps,
+      final AndroidTransitiveDependencies transitiveDependencies,
+      final AndroidDexTransitiveDependencies dexTransitiveDependencies) {
+    final Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
+    final FilterResourcesStep filterResourcesStep;
+    final ImmutableSet<String> resDirectories;
     if (requiresResourceFilter()) {
-      filterResourcesStep = getFilterResourcesStep(resDirectories);
-      commands.add(filterResourcesStep);
+      filterResourcesStep = createFilterResourcesStep(transitiveDependencies.resDirectories);
       resDirectories = filterResourcesStep.getOutputResourceDirs();
+      steps.add(filterResourcesStep);
+    } else {
+      filterResourcesStep = null;
+      resDirectories = transitiveDependencies.resDirectories;
     }
 
     // Extract the resources from third-party jars.
     // TODO(mbolin): The results of this should be cached between runs.
     String extractedResourcesDir = getBinPath("__resources__%s__");
-    commands.add(new MakeCleanDirectoryStep(extractedResourcesDir));
-    commands.add(new ExtractResourcesStep(dexTransitiveDependencies.pathsToThirdPartyJars,
+    steps.add(new MakeCleanDirectoryStep(extractedResourcesDir));
+    steps.add(new ExtractResourcesStep(dexTransitiveDependencies.pathsToThirdPartyJars,
         extractedResourcesDir));
 
     // Create the R.java files. Their compiled versions must be included in classes.dex.
@@ -513,18 +568,137 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       UberRDotJavaUtil.generateRDotJavaFiles(resDirectories,
           rDotJavaPackages,
           getBuildTarget(),
-          commands);
+          steps);
 
       if (isStoreStringsAsAssets()) {
         Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
-        commands.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
-        commands.add(new CompileStringsStep(
+        steps.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
+        steps.add(new CompileStringsStep(
             filterResourcesStep,
             Paths.get(UberRDotJavaUtil.getPathToGeneratedRDotJavaSrcFiles(getBuildTarget())),
             tmpStringsDirPath));
       }
     }
 
+    // Copy the transitive closure of files in assets to a single directory, if any.
+    Step collectAssets = new Step() {
+      @Override
+      public int execute(ExecutionContext context) {
+        // This must be done in a Command because the files and directories that are specified may
+        // not exist at the time this Command is created because the previous Commands have not run
+        // yet.
+        ImmutableList.Builder<Step> commands = ImmutableList.builder();
+        try {
+          createAllAssetsDirectory(
+              transitiveDependencies.assetsDirectories,
+              commands,
+              new DefaultDirectoryTraverser());
+        } catch (IOException e) {
+          context.logError(e, "Error creating all assets directory in %s.", getBuildTarget());
+          return 1;
+        }
+
+        for (Step command : commands.build()) {
+          int exitCode = command.execute(context);
+          if (exitCode != 0) {
+            throw new HumanReadableException("Error running " + command.getDescription(context));
+          }
+        }
+
+        return 0;
+      }
+
+      @Override
+      public String getShortName() {
+        return "symlink_assets";
+      }
+
+      @Override
+      public String getDescription(ExecutionContext context) {
+        return getShortName();
+      }
+    };
+    steps.add(collectAssets);
+
+    // Copy the transitive closure of files in native_libs to a single directory, if any.
+    ImmutableSet<String> nativeLibraryDirectories;
+    if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
+      ImmutableSet.Builder<String> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
+      String pathForNativeLibs = getPathForNativeLibs();
+      String libSubdirectory = pathForNativeLibs + "/lib";
+      nativeLibraryDirectoriesBuilder.add(libSubdirectory);
+      steps.add(new MakeCleanDirectoryStep(libSubdirectory));
+      for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
+        copyNativeLibrary(nativeLibDir, libSubdirectory, steps);
+      }
+      nativeLibraryDirectories = nativeLibraryDirectoriesBuilder.build();
+    } else {
+      nativeLibraryDirectories = ImmutableSet.of();
+    }
+
+    Optional<String> assetsDirectory;
+    if (transitiveDependencies.assetsDirectories.isEmpty()
+        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
+        && !isStoreStringsAsAssets()) {
+      assetsDirectory = Optional.absent();
+    } else {
+      assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
+    }
+
+    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+      String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
+      steps.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
+      for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
+        copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, steps);
+      }
+    }
+
+    if (isStoreStringsAsAssets()) {
+      Path stringAssetsDir = Paths.get(assetsDirectory.get()).resolve("strings");
+      steps.add(new MakeCleanDirectoryStep(stringAssetsDir));
+      steps.add(new CopyStep(
+          getPathForTmpStringAssetsDirectory(),
+          stringAssetsDir,
+          /* shouldRecurse */ true));
+    }
+
+    steps.add(new MkdirStep(outputGenDirectory));
+
+    if (!canSkipAaptResourcePackaging()) {
+      AaptStep aaptCommand = new AaptStep(
+          getAndroidManifestXml(),
+          resDirectories,
+          assetsDirectory,
+          getResourceApkPath(),
+          ImmutableSet.of(extractedResourcesDir),
+          packageType.isCrunchPngFiles());
+      steps.add(aaptCommand);
+    }
+
+    ResourceDirectoriesFromAapt resourceDirectoriesFromAapt = new ResourceDirectoriesFromAapt(
+        resDirectories,
+        nativeLibraryDirectories);
+    return resourceDirectoriesFromAapt;
+  }
+
+  private static class ResourceDirectoriesFromAapt {
+    final ImmutableSet<String> resDirectories;
+    final ImmutableSet<String> nativeLibraryDirectories;
+    public ResourceDirectoriesFromAapt(ImmutableSet<String> resDirectories,
+        ImmutableSet<String> nativeLibraryDirectories) {
+      this.resDirectories = resDirectories;
+      this.nativeLibraryDirectories = nativeLibraryDirectories;
+    }
+  }
+
+  private void addDxAndApkBuilderSteps(BuildContext context,
+      ImmutableList.Builder<Step> steps,
+      final AndroidTransitiveDependencies transitiveDependencies,
+      final AndroidDexTransitiveDependencies dexTransitiveDependencies,
+      ImmutableSet<String> resDirectories,
+      ImmutableSet<String> nativeLibraryDirectories,
+      String resourceApkPath,
+      String unsignedApkPath) {
     // Execute preprocess_java_classes_binary, if appropriate.
     ImmutableSet<String> classpathEntriesToDex;
     if (preprocessJavaClassesBash.isPresent()) {
@@ -533,9 +707,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // to reflect that.
       final String preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
       final String preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
-      commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesInDir));
-      commands.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
-      commands.add(new SymlinkFilesIntoDirectoryStep(
+      steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesInDir));
+      steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
+      steps.add(new SymlinkFilesIntoDirectoryStep(
           Paths.get("."),
           dexTransitiveDependencies.classpathEntriesToDex,
           Paths.get(preprocessJavaClassesInDir)
@@ -553,7 +727,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           /* cmd */ Optional.<String>absent(),
           /* bash */ preprocessJavaClassesBash,
           /* cmdExe */ Optional.<String>absent());
-      commands.add(new AbstractGenruleStep(this, commandString, preprocessJavaClassesDeps) {
+      steps.add(new AbstractGenruleStep(this, commandString, preprocessJavaClassesDeps) {
 
         @Override
         protected void addEnvironmentVariables(
@@ -575,7 +749,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           context,
           classpathEntriesToDex,
           transitiveDependencies.proguardConfigs,
-          commands,
+          steps,
           resDirectories);
     }
 
@@ -583,17 +757,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // The APK building command needs to take a directory of raw files, so we create a directory
     // that can only contain .dex files from this build rule.
     String dexDir = getBinPath(".dex/%s");
-    commands.add(new MkdirStep(dexDir));
+    steps.add(new MkdirStep(dexDir));
     String dexFile = String.format("%s/classes.dex", dexDir);
 
-    final ImmutableSet.Builder<String> secondaryDexDirectories = ImmutableSet.builder();
-
-    // Create dex artifacts. This may modify assetsDirectories.
+    // Create dex artifacts.
+    ImmutableSet.Builder<String> secondaryDexDirectoriesBuilder = ImmutableSet.builder();
     if (preDexDeps.isEmpty()) {
-      addDexingCommands(
+      addDexingSteps(
           classpathEntriesToDex,
-          secondaryDexDirectories,
-          commands,
+          secondaryDexDirectoriesBuilder,
+          steps,
           dexFile,
           context.getSourcePathResolver());
     } else {
@@ -621,118 +794,23 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       }
 
       // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-      commands.add(new DxStep(dexFile,
+      steps.add(new DxStep(dexFile,
           filesToDex,
           /* options */ EnumSet.of(DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE)));
     }
+    ImmutableSet<String> secondaryDexDirectories = secondaryDexDirectoriesBuilder.build();
 
-    // Copy the transitive closure of files in assets to a single directory, if any.
-    final ImmutableMap<String, File> extraAssets = extraAssetsBuilder.build();
-    Step collectAssets = new Step() {
-      @Override
-      public int execute(ExecutionContext context) {
-        // This must be done in a Command because the files and directories that are specified may
-        // not exist at the time this Command is created because the previous Commands have not run
-        // yet.
-        ImmutableList.Builder<Step> commands = ImmutableList.builder();
-        try {
-          createAllAssetsDirectory(
-              transitiveDependencies.assetsDirectories,
-              extraAssets,
-              commands,
-              new DefaultDirectoryTraverser());
-        } catch (IOException e) {
-          e.printStackTrace(context.getStdErr());
-          return 1;
-        }
-
-        for (Step command : commands.build()) {
-          int exitCode = command.execute(context);
-          if (exitCode != 0) {
-            throw new HumanReadableException("Error running " + command.getDescription(context));
-          }
-        }
-
-        return 0;
-      }
-
-      @Override
-      public String getShortName() {
-        return "symlink_assets";
-      }
-
-      @Override
-      public String getDescription(ExecutionContext context) {
-        return getShortName();
-      }
-    };
-    commands.add(collectAssets);
-
-    // Copy the transitive closure of files in native_libs to a single directory, if any.
-    ImmutableSet.Builder<String> nativeLibraryDirectories = ImmutableSet.builder();
-    if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
-      String pathForNativeLibs = getPathForNativeLibs();
-      String libSubdirectory = pathForNativeLibs + "/lib";
-      nativeLibraryDirectories.add(libSubdirectory);
-      commands.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
-        copyNativeLibrary(nativeLibDir, libSubdirectory, commands);
-      }
-    }
-
-    // Create the unsigned APK.
-    String resourceApkPath = getResourceApkPath();
-    String unsignedApkPath = getUnsignedApkPath();
-
-    Optional<String> assetsDirectory;
-    if (transitiveDependencies.assetsDirectories.isEmpty() && extraAssets.isEmpty()
-        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
-        && !isStoreStringsAsAssets()) {
-      assetsDirectory = Optional.absent();
-    } else {
-      assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
-    }
-
-    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
-      String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
-      commands.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
-      for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
-        copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, commands);
-      }
-    }
-
-    if (isStoreStringsAsAssets()) {
-      Path stringAssetsDir = Paths.get(assetsDirectory.get()).resolve("strings");
-      commands.add(new MakeCleanDirectoryStep(stringAssetsDir));
-      commands.add(new CopyStep(
-          getPathForTmpStringAssetsDirectory(),
-          stringAssetsDir,
-          /* shouldRecurse */ true));
-    }
-
-    commands.add(new MkdirStep(outputGenDirectory));
-
-    if (!canSkipAaptResourcePackaging()) {
-      AaptStep aaptCommand = new AaptStep(
-          getAndroidManifestXml(),
-          resDirectories,
-          assetsDirectory,
-          resourceApkPath,
-          ImmutableSet.of(extractedResourcesDir),
-          packageType.isCrunchPngFiles());
-      commands.add(aaptCommand);
-    }
 
     // Due to limitations of Froyo, we need to ensure that all secondary zip files are STORED in
     // the final APK, not DEFLATED.  The only way to ensure this with ApkBuilder is to zip up the
     // the files properly and then add the zip files to the apk.
     ImmutableSet.Builder<String> secondaryDexZips = ImmutableSet.builder();
-    for (String secondaryDexDirectory : secondaryDexDirectories.build()) {
+    for (String secondaryDexDirectory : secondaryDexDirectories) {
       // String the trailing slash from the directory name and add the zip extension.
       String zipFile = secondaryDexDirectory.replaceAll("/$", "") + ".zip";
 
       secondaryDexZips.add(zipFile);
-      commands.add(new ZipDirectoryWithMaxDeflateStep(secondaryDexDirectory,
+      steps.add(new ZipDirectoryWithMaxDeflateStep(secondaryDexDirectory,
           zipFile,
           FROYO_DEFLATE_LIMIT_BYTES));
     }
@@ -742,42 +820,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         unsignedApkPath,
         dexFile,
         ImmutableSet.<String>of(),
-        nativeLibraryDirectories.build(),
+        nativeLibraryDirectories,
         secondaryDexZips.build(),
         false);
-    commands.add(apkBuilderCommand);
-
-    // Sign the APK.
-    String signedApkPath = getSignedApkPath();
-    SignApkStep signApkStep = new SignApkStep(
-        keystore.getPathToStore(), keystore.getPathToPropertiesFile(), unsignedApkPath, signedApkPath);
-    commands.add(signApkStep);
-
-    String apkToAlign;
-
-    // Optionally, compress the resources file in the .apk.
-    if (this.isCompressResources()) {
-      String compressedApkPath = getCompressedResourcesApkPath();
-      apkToAlign = compressedApkPath;
-      RepackZipEntriesStep arscComp = new RepackZipEntriesStep(
-          signedApkPath,
-          compressedApkPath,
-          ImmutableSet.of("resources.arsc"));
-      commands.add(arscComp);
-    } else {
-      apkToAlign = signedApkPath;
-    }
-
-    String apkPath = getApkPath();
-    ZipalignStep zipalign = new ZipalignStep(apkToAlign, apkPath);
-    commands.add(zipalign);
-
-    // Inform the user where the APK can be found.
-    EchoStep success = new EchoStep(
-        String.format("built APK for %s at %s", getFullyQualifiedName(), apkPath));
-    commands.add(success);
-
-    return commands.build();
+    steps.add(apkBuilderCommand);
   }
 
   /**
@@ -792,17 +838,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   @VisibleForTesting
   Optional<String> createAllAssetsDirectory(
       Set<String> assetsDirectories,
-      ImmutableMap<String, File> extraAssets,
-      ImmutableList.Builder<Step> commands,
+      ImmutableList.Builder<Step> steps,
       DirectoryTraverser traverser) throws IOException {
-    if (assetsDirectories.isEmpty() && extraAssets.isEmpty()) {
+    if (assetsDirectories.isEmpty()) {
       return Optional.absent();
     }
 
     // Due to a limitation of aapt, only one assets directory can be specified, so if multiple are
     // specified in Buck, then all of the contents must be symlinked to a single directory.
     String destination = getPathToAllAssetsDirectory();
-    commands.add(new MakeCleanDirectoryStep(destination));
+    steps.add(new MakeCleanDirectoryStep(destination));
     final ImmutableMap.Builder<String, File> allAssets = ImmutableMap.builder();
 
     File destinationDirectory = new File(destination);
@@ -815,10 +860,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       });
     }
 
-    allAssets.putAll(extraAssets);
-
     for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
-      commands.add(new MkdirAndSymlinkFileStep(
+      steps.add(new MkdirAndSymlinkFileStep(
           MorePaths.newPathInstance(entry.getValue()).toString(),
           MorePaths.newPathInstance(destinationDirectory + "/" + entry.getKey()).toString()));
     }
@@ -961,7 +1004,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       BuildContext context,
       Set<String> classpathEntriesToDex,
       Set<String> depsProguardConfigs,
-      ImmutableList.Builder<Step> commands,
+      ImmutableList.Builder<Step> steps,
       Set<String> resDirectories) {
     final ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesMap =
         getTransitiveClasspathEntries();
@@ -976,7 +1019,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Clean out the directory for generated ProGuard files.
     Path proguardDirectory = getPathForProGuardDirectory();
-    commands.add(new MakeCleanDirectoryStep(proguardDirectory));
+    steps.add(new MakeCleanDirectoryStep(proguardDirectory));
 
     // Generate a file of ProGuard config options using aapt.
     String generatedProGuardConfig = proguardDirectory + "/proguard.txt";
@@ -984,7 +1027,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         getAndroidManifestXml(),
         resDirectories,
         generatedProGuardConfig);
-    commands.add(genProGuardConfig);
+    steps.add(genProGuardConfig);
 
     // Create list of proguard Configs for the app project and its dependencies
     ImmutableSet.Builder<String> proguardConfigsBuilder = ImmutableSet.builder();
@@ -1014,7 +1057,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
         proguardDirectory.toString());
-    commands.add(obfuscateCommand);
+    steps.add(obfuscateCommand);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
     // so that we're now dexing the proguarded artifacts).
@@ -1029,14 +1072,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * @param classpathEntriesToDex Full set of classpath entries that must make
    *     their way into the final APK structure (but not necessarily into the
    *     primary dex).
-   * @param commands
+   * @param steps List of steps to add to.
    * @param primaryDexPath Output path for the primary dex file.
    */
   @VisibleForTesting
-  void addDexingCommands(
+  void addDexingSteps(
       Set<String> classpathEntriesToDex,
       ImmutableSet.Builder<String> secondaryDexDirectories,
-      ImmutableList.Builder<Step> commands,
+      ImmutableList.Builder<Step> steps,
       String primaryDexPath,
       Function<SourcePath, Path> sourcePathResolver) {
     final Set<String> primaryInputsToDex;
@@ -1055,12 +1098,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
       // Intermediate directory holding the primary split-zip jar.
       String splitZipDir = getBinPath("__%s_split_zip__");
-      commands.add(new MakeCleanDirectoryStep(splitZipDir));
+      steps.add(new MakeCleanDirectoryStep(splitZipDir));
       String primaryJarPath = splitZipDir + "/primary.jar";
 
       String secondaryJarMetaDirParent = splitZipDir + "/secondary_meta/";
       String secondaryJarMetaDir = secondaryJarMetaDirParent + magicSecondaryDexSubdir;
-      commands.add(new MakeCleanDirectoryStep(secondaryJarMetaDir));
+      steps.add(new MakeCleanDirectoryStep(secondaryJarMetaDir));
       String secondaryJarMeta = secondaryJarMetaDir + "/metadata.txt";
 
       // Intermediate directory holding _ONLY_ the secondary split-zip jar files.  This is
@@ -1068,13 +1111,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
       String secondaryZipDir = getBinPath("__%s_secondary_zip__");
-      commands.add(new MakeCleanDirectoryStep(secondaryZipDir));
+      steps.add(new MakeCleanDirectoryStep(secondaryZipDir));
 
       // Run the split-zip command which is responsible for dividing the large set of input
       // classpaths into a more compact set of jar files such that no one jar file when dexed will
       // yield a dex artifact too large for dexopt or the dx method limit to handle.
       String zipSplitReportDir = getBinPath("__%s_split_zip_report__");
-      commands.add(new MakeCleanDirectoryStep(zipSplitReportDir));
+      steps.add(new MakeCleanDirectoryStep(zipSplitReportDir));
       SplitZipStep splitZipCommand = new SplitZipStep(
           classpathEntriesToDex,
           secondaryJarMeta,
@@ -1089,13 +1132,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           zipSplitReportDir,
           dexSplitMode.useLinearAllocSplitDex(),
           linearAllocHardLimit);
-      commands.add(splitZipCommand);
+      steps.add(splitZipCommand);
 
       // Add the secondary dex directory that has yet to be created, but will be by the
       // smart dexing command.  Smart dex will handle "cleaning" this directory properly.
       String secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
       secondaryDexDir = Optional.of(secondaryDexParentDir + magicSecondaryDexSubdir);
-      commands.add(new MkdirStep(secondaryDexDir.get()));
+      steps.add(new MkdirStep(secondaryDexDir.get()));
 
       secondaryDexDirectories.add(secondaryJarMetaDirParent);
       secondaryDexDirectories.add(secondaryDexParentDir);
@@ -1114,7 +1157,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
     Path successDir = Paths.get(getBinPath("__%s_smart_dex__/.success"));
-    commands.add(new MkdirStep(successDir));
+    steps.add(new MkdirStep(successDir));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if
     // it can be shown that the inputs have not changed.  It also parallelizes dx invocations
@@ -1135,7 +1178,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         Optional.<Integer>absent(),
         dexSplitMode.getDexStore(),
         /* optimize */ PackageType.RELEASE.equals(packageType));
-    commands.add(smartDexingCommand);
+    steps.add(smartDexingCommand);
   }
 
   /**

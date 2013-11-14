@@ -194,7 +194,7 @@ public class AndroidBinaryRuleTest {
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<String> allAssetsDirectory = androidBinary.createAllAssetsDirectory(
-        assetsDirectories, ImmutableMap.<String, File>of(), commands, traverser);
+        assetsDirectories, commands, traverser);
 
     // Verify that no assets/ directory is used.
     assertFalse("There should not be an assets/ directory to pass to aapt.",
@@ -265,7 +265,7 @@ public class AndroidBinaryRuleTest {
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<String> allAssetsDirectory = androidBinary.createAllAssetsDirectory(
-        assetsDirectories, ImmutableMap.<String, File>of(), commands, traverser);
+        assetsDirectories, commands, traverser);
 
     // Verify that the existing assets/ directory will be passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
@@ -347,7 +347,7 @@ public class AndroidBinaryRuleTest {
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<String> allAssetsDirectory = androidBinary.createAllAssetsDirectory(
-        assetsDirectories, ImmutableMap.<String, File>of(), commands, traverser);
+        assetsDirectories, commands, traverser);
 
     // Verify that an assets/ directory will be created and passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
@@ -512,7 +512,7 @@ public class AndroidBinaryRuleTest {
     ImmutableSet.Builder<String> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
     String primaryDexPath = BIN_DIR + "/.dex/classes.dex";
-    splitDexRule.addDexingCommands(classpath,
+    splitDexRule.addDexingSteps(classpath,
         secondaryDexDirectories,
         commandsBuilder,
         primaryDexPath,
@@ -566,7 +566,7 @@ public class AndroidBinaryRuleTest {
   }
 
   @Test
-  public void testFilterResources() {
+  public void testCreateFilterResourcesStep() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
         new FakeAbstractBuildRuleBuilderParams())
@@ -580,7 +580,8 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
     Set<String> resourceDirectories = ImmutableSet.of("one", "two");
 
-    FilterResourcesStep filterResourcesStep = buildRule.getFilterResourcesStep(resourceDirectories);
+    FilterResourcesStep filterResourcesStep = buildRule.createFilterResourcesStep(
+        resourceDirectories);
 
     assertEquals(
         ImmutableSet.of(
