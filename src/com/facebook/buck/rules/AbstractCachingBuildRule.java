@@ -23,13 +23,14 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -423,40 +424,20 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
     // to resolve a Path for a zip entry against a file Path on disk.
 
-    // TODO(user, simons): Make this work on Windows. A custom implementation of unzip in Java
-    // needs to be heavily tested to ensure that it works on all platforms in a multithreaded
-    // environment. In my testing of the unzip executable, this has not been an issue, so this level
-    // of fidelity needs to be maintained.
-    ProcessBuilder processBuilder = new ProcessBuilder(
-        "unzip", "-o", "-qq", zipFile.getAbsolutePath());
-    processBuilder.directory(projectRoot.toFile());
-
     try {
-      ProcessExecutor executor = buildContext.createProcessExecutorForUnzippingArtifact();
-      Process process = processBuilder.start();
-      ProcessExecutor.Result result = executor.execute(process,
-          /* shouldPrintStdOut */ false,
-          /* shouldPrintStdErr */ false,
-          /* isSilent */ false);
-      int exitCode = result.getExitCode();
-      if (exitCode != 0) {
-        // In the wild, we have seen some inexplicable failures during this step. For now, we try to
-        // give the user as much information as we can to debug the issue, but return false so that
-        // Buck will fall back on doing a local build.
-        buildContext.getEventBus().post(LogEvent.warning(
-            "Failed to unzip the artifact for %s at %s.\n" +
-            "The rule will be built locally, but here is the output of the failed unzip call:\n" +
-            "Exit code: %s\n" +
-            "STDOUT:\n%s\n" +
-            "STDERR:\n%s\n",
-            getBuildTarget(),
-            zipFile.getAbsolutePath(),
-            exitCode,
-            result.getStdout(),
-            result.getStderr()));
-        return CacheResult.MISS;
-      }
+      Unzip.extractZipFile(zipFile.getAbsolutePath(),
+          projectRoot.toAbsolutePath().toString(),
+          /* overwriteExistingFiles */ true);
     } catch (IOException e) {
+      // In the wild, we have seen some inexplicable failures during this step. For now, we try to
+      // give the user as much information as we can to debug the issue, but return CacheResult.MISS
+      // so that Buck will fall back on doing a local build.
+      buildContext.getEventBus().post(LogEvent.warning(
+          "Failed to unzip the artifact for %s at %s.\n" +
+          "The rule will be built locally, but here is the stacktrace of the failed unzip call:\n" +
+          getBuildTarget(),
+          zipFile.getAbsolutePath(),
+          Throwables.getStackTraceAsString(e)));
       return CacheResult.MISS;
     }
 

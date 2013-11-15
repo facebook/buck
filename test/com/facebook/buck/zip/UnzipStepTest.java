@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.Zip;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,11 +50,9 @@ public class UnzipStepTest {
 
   @Test
   public void testExtractZipFile() throws IOException {
-    ImmutableSet<String> filesToExtract = ImmutableSet.of();
     File extractFolder = tmpFolder.newFolder();
-    UnzipStep.extractZipFile(zipFile.getAbsolutePath(),
+    Unzip.extractZipFile(zipFile.getAbsolutePath(),
         extractFolder.getAbsolutePath(),
-        filesToExtract,
         false);
     assertTrue(new File(extractFolder.getAbsolutePath() + "/1.bin").exists());
     File bin2 = new File(extractFolder.getAbsolutePath() + "/subdir/2.bin");
