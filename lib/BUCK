@@ -1,6 +1,6 @@
 prebuilt_jar(
   name = 'args4j',
-  binary_jar = 'args4j.jar',
+  binary_jar = 'args4j-2.0.26.jar',
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//test/...',
