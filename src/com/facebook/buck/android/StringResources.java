@@ -35,6 +35,14 @@ import java.util.TreeMap;
  * for generating a custom format binary file for the resources.
  */
 public class StringResources {
+
+  /**
+   * Bump this whenever there's a change in the file format. The parser can decide to abort parsing
+   * if the version it finds in the file does not match it's own version, thereby avoiding
+   * potential data corruption issues.
+   */
+  private static final int FORMAT_VERSION = 1;
+
   public final TreeMap<Integer, String> strings;
   public final TreeMap<Integer, ImmutableMap<String, String>> plurals;
   public final TreeMultimap<Integer, String> arrays;
@@ -87,116 +95,118 @@ public class StringResources {
    * the following binary file format:
    * <p>
    * <pre>
-   *   [Short: #strings][Short: #plurals][Short: #arrays]
+   *   [Int: Version]
+   *   [Int: # of strings]
    *   [Int: Smallest resource id among strings]
-   *   [Short: resource id offset][Short: length of the string] x #strings
+   *   [Short: resource id delta][Short: length of the string] x # of strings
+   *   [Byte array of the string value] x # of strings
+   *   [Int: # of plurals]
    *   [Int: Smallest resource id among plurals]
-   *   [Short: resource id offset][Short: length of string representing the plural] x #plurals
+   *   [[Short: resource id delta][Byte: #categories][[Byte: category][Short: length of plural
+   *   value]] x #categories] x # of plurals
+   *   [Byte array of plural value] x Summation of plural categories over # of plurals
+   *   [Int: # of arrays]
    *   [Int: Smallest resource id among arrays]
-   *   [Short: resource id offset][Short: length of string representing the array] x #arrays
-   *   [Byte array of the string value] x #strings
-   *   [[Byte: #categories][[Byte: category][Short: length of plural][plural]] x #categories] x #plurals
-   *   [[Byte: #elements][[Short: length of element][element]] x #elements] x #arrays
+   *   [[Short: resource id delta][Int: #elements][Short: length of element] x #elements] x # of
+   *   arrays
+   *   [Byte array of string value] x Summation of array elements over # of arrays
    * </pre>
    * </p>
    */
   public byte[] getBinaryFileContent() {
     try (
-      ByteArrayOutputStream bos1 = new ByteArrayOutputStream();
-      DataOutputStream mapOutStream = new DataOutputStream(bos1);
-      ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
-      DataOutputStream dataOutStream = new DataOutputStream(bos2)
+      ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
+      DataOutputStream outputStream = new DataOutputStream(bytesStream)
     ) {
-      writeMapsSizes(mapOutStream);
+      outputStream.writeInt(FORMAT_VERSION);
 
-      writeStrings(mapOutStream, dataOutStream);
-      writePlurals(mapOutStream, dataOutStream);
-      writeArrays(mapOutStream, dataOutStream);
+      writeStrings(outputStream);
+      writePlurals(outputStream);
+      writeArrays(outputStream);
 
-      byte[] result = new byte[bos1.size() + bos2.size()];
-      System.arraycopy(bos1.toByteArray(), 0, result, 0, bos1.size());
-      System.arraycopy(bos2.toByteArray(), 0, result, bos1.size(), bos2.size());
-      return result;
+      return bytesStream.toByteArray();
     } catch (IOException e) {
       return null;
     }
   }
 
-  private void writeMapsSizes(DataOutputStream stream) throws IOException {
-    stream.writeShort(strings.size());
-    stream.writeShort(plurals.size());
-    stream.writeShort(arrays.keySet().size());
-  }
-
-  private void writeStrings(DataOutputStream mapStream, DataOutputStream dataStream)
-      throws IOException {
+  private void writeStrings(DataOutputStream outputStream) throws IOException {
+    outputStream.writeInt(strings.size());
     if (strings.isEmpty()) {
       return;
     }
-    int smallestResourceId = strings.firstKey();
-    mapStream.writeInt(smallestResourceId);
-    for (Map.Entry<Integer, String> entry : strings.entrySet()) {
-      byte[] resourceBytes = entry.getValue().getBytes(charset);
-      writeMapEntry(mapStream, entry.getKey() - smallestResourceId, resourceBytes.length);
-      dataStream.write(resourceBytes);
+    int previousResourceId = strings.firstKey();
+    outputStream.writeInt(previousResourceId);
+
+    try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
+      for (Map.Entry<Integer, String> entry : strings.entrySet()) {
+        byte[] resourceBytes = entry.getValue().getBytes(charset);
+        writeShort(outputStream, entry.getKey() - previousResourceId);
+        writeShort(outputStream, resourceBytes.length);
+        dataStream.write(resourceBytes, 0, resourceBytes.length);
+
+        previousResourceId = entry.getKey();
+      }
+      outputStream.write(dataStream.toByteArray());
     }
   }
 
-  private void writePlurals(DataOutputStream mapStream, DataOutputStream dataStream)
-      throws IOException {
+  private void writePlurals(DataOutputStream outputStream) throws IOException {
+    outputStream.writeInt(plurals.size());
     if (plurals.isEmpty()) {
       return;
     }
-    int smallestResourceId = plurals.firstKey();
-    mapStream.writeInt(smallestResourceId);
-    for (Map.Entry<Integer, ImmutableMap<String, String>> entry : plurals.entrySet()) {
-      ImmutableMap<String, String> categoryMap = entry.getValue();
-      dataStream.writeByte(categoryMap.size());
-      int resourceDataLength = 1;
+    int previousResourceId = plurals.firstKey();
+    outputStream.writeInt(previousResourceId);
 
-      for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
-        dataStream.writeByte(PLURAL_CATEGORY_MAP.get(cat.getKey()).byteValue());
-        byte[] pluralValue = cat.getValue().getBytes(charset);
-        dataStream.writeShort(pluralValue.length);
-        dataStream.write(pluralValue);
-        resourceDataLength += 3 + pluralValue.length;
+    try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
+      for (Map.Entry<Integer, ImmutableMap<String, String>> entry : plurals.entrySet()) {
+        writeShort(outputStream, entry.getKey() - previousResourceId);
+        ImmutableMap<String, String> categoryMap = entry.getValue();
+        outputStream.writeByte(categoryMap.size());
+
+        for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
+          outputStream.writeByte(PLURAL_CATEGORY_MAP.get(cat.getKey()).byteValue());
+          byte[] pluralValue = cat.getValue().getBytes(charset);
+          writeShort(outputStream, pluralValue.length);
+          dataStream.write(pluralValue);
+        }
+
+        previousResourceId = entry.getKey();
       }
 
-      writeMapEntry(mapStream, entry.getKey() - smallestResourceId, resourceDataLength);
+      outputStream.write(dataStream.toByteArray());
     }
   }
 
-  private void writeArrays(DataOutputStream mapStream, DataOutputStream dataStream)
-      throws IOException {
+  private void writeArrays(DataOutputStream outputStream) throws IOException {
+    outputStream.writeInt(arrays.keySet().size());
     if (arrays.keySet().isEmpty()) {
       return;
     }
-    boolean first = true;
-    int smallestResourceId = 0;
-    for (int resourceId : arrays.keySet()) {
-      if (first) {
-        first = false;
-        smallestResourceId = resourceId;
-        mapStream.writeInt(smallestResourceId);
-      }
-      Collection<String> arrayValues = arrays.get(resourceId);
-      dataStream.writeByte(arrayValues.size());
-      int resourceDataLength = 1;
+    int previousResourceId = arrays.keySet().first();
+    outputStream.writeInt(previousResourceId);
+    try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
+      for (int resourceId : arrays.keySet()) {
+        writeShort(outputStream, resourceId - previousResourceId);
+        Collection<String> arrayValues = arrays.get(resourceId);
+        outputStream.writeInt(arrayValues.size());
 
-      for (String arrayValue : arrayValues) {
-        byte[] byteValue = arrayValue.getBytes(charset);
-        dataStream.writeShort(byteValue.length);
-        dataStream.write(byteValue);
-        resourceDataLength += 2 + byteValue.length;
-      }
+        for (String arrayValue : arrayValues) {
+          byte[] byteValue = arrayValue.getBytes(charset);
+          writeShort(outputStream, byteValue.length);
+          dataStream.write(byteValue);
+        }
 
-      writeMapEntry(mapStream, resourceId - smallestResourceId, resourceDataLength);
+        previousResourceId = resourceId;
+      }
+      outputStream.write(dataStream.toByteArray());
     }
   }
 
-  private void writeMapEntry(DataOutputStream stream, int resourceOffset, int length)
-      throws IOException {
-    stream.writeShort(resourceOffset);
-    stream.writeShort(length);
+  private void writeShort(DataOutputStream stream, int number) throws IOException {
+    Preconditions.checkState(number <= Short.MAX_VALUE,
+        "Error attempting to compact a numeral to short: " + number);
+    stream.writeShort(number);
   }
 }

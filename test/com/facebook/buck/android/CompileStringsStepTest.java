@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -35,6 +36,8 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 import org.w3c.dom.NodeList;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -287,10 +290,42 @@ public class CompileStringsStepTest extends EasyMockSupport {
     assertEquals("Incorrect number of string files written.", 3, fileContentsMap.size());
     for (Map.Entry<String, byte[]> entry : fileContentsMap.entrySet()) {
       File expectedFile = Paths.get(TESTDATA_DIR + entry.getKey()).toFile();
-      assertArrayEquals(Files.toByteArray(expectedFile), fileContentsMap.get(entry.getKey()));
+      assertArrayEquals(createBinaryStream(expectedFile), fileContentsMap.get(entry.getKey()));
     }
 
     verifyAll();
+  }
+
+  private byte[] createBinaryStream(File expectedFile) throws IOException {
+    try (
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      DataOutputStream stream = new DataOutputStream(bos)
+    ) {
+      for (String line : Files.readLines(expectedFile, Charset.defaultCharset())) {
+        for (String token : Splitter.on('|').split(line)) {
+          char dataType = token.charAt(0);
+          String value = token.substring(2);
+          switch (dataType) {
+            case 'i':
+              stream.writeInt(Integer.parseInt(value));
+              break;
+            case 's':
+              stream.writeShort(Integer.parseInt(value));
+              break;
+            case 'b':
+              stream.writeByte(Integer.parseInt(value));
+              break;
+            case 't':
+              stream.write(value.getBytes());
+              break;
+            default:
+              throw new RuntimeException("Unexpected data type in .fbstr file: " + dataType);
+          }
+        }
+      }
+
+      return bos.toByteArray();
+    }
   }
 
 

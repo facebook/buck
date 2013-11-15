@@ -76,67 +76,68 @@ public class StringResourcesTest {
 
   private void verifyBinaryStream(byte[] binaryOutput) throws IOException {
     DataInputStream stream = new DataInputStream(new ByteArrayInputStream(binaryOutput));
-    assertEquals(3, stream.readShort());
-    assertEquals(2, stream.readShort());
-    assertEquals(2, stream.readShort());
 
+    // Version
+    assertEquals(1, stream.readInt());
+
+    // Strings
+    assertEquals(3, stream.readInt());
     assertEquals(12345678, stream.readInt());
     assertEquals(0, stream.readShort());
     assertEquals(5, stream.readShort());
     assertEquals(1, stream.readShort());
     assertEquals(5, stream.readShort());
-    assertEquals(2, stream.readShort());
+    assertEquals(1, stream.readShort());
     assertEquals(7, stream.readShort());
-
-    assertEquals(12345689, stream.readInt());
-    assertEquals(0, stream.readShort());
-    assertEquals(29, stream.readShort());
-    assertEquals(3, stream.readShort());
-    assertEquals(31, stream.readShort());
-
-    assertEquals(12345694, stream.readInt());
-    assertEquals(0, stream.readShort());
-    assertEquals(17, stream.readShort());
-    assertEquals(5, stream.readShort());
-    assertEquals(9, stream.readShort());
 
     // string values
     assertEquals("S_one", readStringOfLength(stream, 5));
     assertEquals("S_two", readStringOfLength(stream, 5));
     assertEquals("S_three", readStringOfLength(stream, 7));
 
-    // plural values
+    // Plurals
+    assertEquals(2, stream.readInt());
+    assertEquals(12345689, stream.readInt());
+    assertEquals(0, stream.readShort());
     assertEquals(3, stream.readByte()); // number of categories.
     assertEquals(1, stream.readByte());
     assertEquals(6, stream.readShort());
-    assertEquals("P1_one", readStringOfLength(stream, 6));
     assertEquals(3, stream.readByte());
     assertEquals(6, stream.readShort());
-    assertEquals("P1_few", readStringOfLength(stream, 6));
     assertEquals(4, stream.readByte());
     assertEquals(7, stream.readShort());
-    assertEquals("P1_many", readStringOfLength(stream, 7));
 
+    assertEquals(3, stream.readShort());
     assertEquals(3, stream.readByte()); // number of categories.
     assertEquals(0, stream.readByte());
     assertEquals(7, stream.readShort());
-    assertEquals("P2_zero", readStringOfLength(stream, 7));
     assertEquals(2, stream.readByte());
     assertEquals(6, stream.readShort());
-    assertEquals("P2_two", readStringOfLength(stream, 6));
     assertEquals(5, stream.readByte());
     assertEquals(8, stream.readShort());
+
+    // plural strings
+    assertEquals("P1_one", readStringOfLength(stream, 6));
+    assertEquals("P1_few", readStringOfLength(stream, 6));
+    assertEquals("P1_many", readStringOfLength(stream, 7));
+    assertEquals("P2_zero", readStringOfLength(stream, 7));
+    assertEquals("P2_two", readStringOfLength(stream, 6));
     assertEquals("P2_other", readStringOfLength(stream, 8));
 
-    //array values
-    assertEquals(2, stream.readByte()); // number of array elements.
+    // Arrays
+    assertEquals(2, stream.readInt());
+    assertEquals(12345694, stream.readInt());
+    assertEquals(0, stream.readShort());
+    assertEquals(2, stream.readInt()); // number of array elements.
     assertEquals(6, stream.readShort());
-    assertEquals("A1_one", readStringOfLength(stream, 6));
     assertEquals(6, stream.readShort());
-    assertEquals("A1_two", readStringOfLength(stream, 6));
+    assertEquals(5, stream.readShort());
+    assertEquals(1, stream.readInt()); // number of array elements.
+    assertEquals(6, stream.readShort());
 
-    assertEquals(1, stream.readByte()); // number of array elements.
-    assertEquals(6, stream.readShort());
+    // array strings
+    assertEquals("A1_one", readStringOfLength(stream, 6));
+    assertEquals("A1_two", readStringOfLength(stream, 6));
     assertEquals("A2_one", readStringOfLength(stream, 6));
   }
 
