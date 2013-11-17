@@ -87,6 +87,7 @@ set BUCK_JAVA_ARGS=^
 -Dbuck.git_commit=%BUCK_CURRENT_VERSION% ^
 -Dbuck.git_commit_timestamp=%BUCK_VERSION_TIMESTAMP% ^
 -Dbuck.git_dirty=%BUCK_REPOSITORY_DIRTY% ^
+-Dbuck.quickstart_origin_dir=%BUCK_DIRECTORY%\src\com\facebook\buck\cli\quickstart\android ^
 -Dbuck.version_uid=%BUCK_VERSION_UID% ^
 -Dbuck.buckd_dir=%BUCKD_DIR% ^
 -Dlog4j.configuration=file:%BUCK_DIRECTORY%\config\log4j.properties
@@ -95,14 +96,14 @@ set BUCK_JAVA_CLASSPATH=^
 %BUCK_DIRECTORY%\src;^
 %BUCK_DIRECTORY%\build\classes;^
 %BUCK_DIRECTORY%\lib\args4j-2.0.26.jar;^
+%BUCK_DIRECTORY%\lib\ddmlib-r21.jar;^
 %BUCK_DIRECTORY%\lib\guava-15.0.jar;^
 %BUCK_DIRECTORY%\lib\ini4j-0.5.2.jar;^
 %BUCK_DIRECTORY%\lib\jackson-annotations-2.0.5.jar;^
 %BUCK_DIRECTORY%\lib\jackson-core-2.0.5.jar;^
 %BUCK_DIRECTORY%\lib\jackson-databind-2.0.5.jar;^
 %BUCK_DIRECTORY%\lib\jsr305.jar;^
-%BUCK_DIRECTORY%\lib\sdklib.jar;^
-%BUCK_DIRECTORY%\lib\ddmlib-r21.jar;^
+%BUCK_DIRECTORY%\lib\nailgun-server-0.9.2-SNAPSHOT.jar;^
 %BUCK_DIRECTORY%\lib\sdklib.jar;^
 %BUCK_DIRECTORY%\third-party\java\asm\asm-debug-all-4.1.jar;^
 %BUCK_DIRECTORY%\third-party\java\astyanax\astyanax-cassandra-1.56.38.jar;^
@@ -119,6 +120,7 @@ set BUCK_JAVA_CLASSPATH=^
 %BUCK_DIRECTORY%\third-party\java\astyanax\log4j-1.2.16.jar;^
 %BUCK_DIRECTORY%\third-party\java\astyanax\slf4j-api-1.7.2.jar;^
 %BUCK_DIRECTORY%\third-party\java\astyanax\slf4j-log4j12-1.7.2.jar;^
+%BUCK_DIRECTORY%\third-party\java\gson\gson-2.2.4.jar;^
 %BUCK_DIRECTORY%\third-party\java\jetty\jetty-all-9.0.4.v20130625.jar;^
 %BUCK_DIRECTORY%\third-party\java\jetty\servlet-api.jar;^
 %BUCK_DIRECTORY%\third-party\java\neo4j\geronimo-jta_1.1_spec-1.1.1.jar;^
