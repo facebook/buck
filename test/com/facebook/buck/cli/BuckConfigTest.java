@@ -461,6 +461,93 @@ public class BuckConfigTest {
     assertFalse(linuxConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
   }
 
+  @Test
+  public void whenToolsPythonIsExecutableFileThenItIsUsed() throws IOException {
+    File configPythonFile = temporaryFolder.newFile("python");
+    assertTrue("Should be able to set file executable", configPythonFile.setExecutable(true));
+    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
+        .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
+        .build());
+    assertEquals("Should return path to temp file.",
+        configPythonFile.getAbsolutePath(), config.getPythonInterpreter());
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void whenToolsPythonDoesNotExistThenItIsNotUsed() throws IOException {
+    String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
+    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
+        .put("tools", ImmutableMap.of("python", invalidPath))
+        .build());
+    config.getPythonInterpreter();
+    fail("Should throw exception as python config is invalid.");
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void whenToolsPythonIsNonExecutableFileThenItIsNotUsed() throws IOException {
+    File configPythonFile = temporaryFolder.newFile("python");
+    assertTrue("Should be able to set file non-executable", configPythonFile.setExecutable(false));
+    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
+        .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
+        .build());
+    config.getPythonInterpreter();
+    fail("Should throw exception as python config is invalid.");
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void whenToolsPythonIsExecutableDirectoryThenItIsNotUsed() throws IOException {
+    File configPythonFile = temporaryFolder.newFolder("python");
+    assertTrue("Should be able to set file executable", configPythonFile.setExecutable(true));
+    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
+        .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
+        .build());
+    config.getPythonInterpreter();
+    fail("Should throw exception as python config is invalid.");
+  }
+
+  @Test
+  public void whenPythonOnPathIsExecutableFileThenItIsUsed() throws IOException {
+    File python = temporaryFolder.newFile("python");
+    assertTrue("Should be able to set file executable", python.setExecutable(true));
+    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
+        ImmutableMap.<String, String>builder()
+            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
+            .put("PATHEXT", "")
+            .build(),
+        ImmutableMap.<String, String>of()
+    );
+    config.getPythonInterpreter();
+  }
+
+  @Test
+  public void whenPythonPlusExtensionOnPathIsExecutableFileThenItIsUsed() throws IOException {
+    File python = temporaryFolder.newFile("python.exe");
+    assertTrue("Should be able to set file executable", python.setExecutable(true));
+    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
+        ImmutableMap.<String, String>builder()
+            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
+            .put("PATHEXT", ".exe")
+            .build(),
+        ImmutableMap.<String, String>of()
+    );
+    config.getPythonInterpreter();
+  }
+
+  @Test
+  public void whenPythonOnPathNotFoundThenJythonUsed() throws IOException {
+    File jython = temporaryFolder.newFile("jython");
+    assertTrue("Should be able to set file executable", jython.setExecutable(true));
+    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
+        ImmutableMap.<String, String>builder()
+            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
+            .put("PATHEXT", "")
+            .build(),
+        ImmutableMap.of("buck.path_to_python_interp", jython.getAbsolutePath())
+    );
+    assertEquals("Should fallback to Jython.",
+        jython.getAbsolutePath(),
+        config.getPythonInterpreter());
+  }
+
   private BuckConfig createWithDefaultFilesystem(Reader reader, @Nullable BuildTargetParser parser)
       throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));

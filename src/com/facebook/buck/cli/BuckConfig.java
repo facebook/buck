@@ -638,7 +638,8 @@ class BuckConfig {
     return Objects.hashCode(sectionsToEntries);
   }
 
-  private String[] getEnv(String propertyName, String separator) {
+  @VisibleForTesting
+  String[] getEnv(String propertyName, String separator) {
     String value = System.getenv(propertyName);
     if (value == null) {
       value = "";
@@ -647,36 +648,48 @@ class BuckConfig {
   }
 
   /**
-   * Returns the path to python interpreter. Firstly, it queries "python" under "tools" section
-   * defined in .buckconfig. If not found or invalid, it will try to find python under PATH.
+   * @return true if file is executable and not a directory.
+   */
+  private boolean isExecutableFile(File file) {
+    return file.canExecute() && !file.isDirectory();
+  }
+
+  /**
+   * Returns the path to python interpreter. If python is specified in the tools section
+   * that is used and an error reported if invalid. If no python is specified, the PATH
+   * is searched and if no python is found, jython is used as a fallback.
    * @return The found python interpreter.
    */
   public String getPythonInterpreter() {
-    String interpreter = getValue("tools", "python").or("python");
-    // Try finding interpreter with file name directly.
-    File executable = new File(interpreter);
-    if (executable.canExecute()) {
-      return executable.getAbsolutePath();
-    }
-
-    // Try to prepend path
-    // For windows, executables have certain extension names, i.e. .exe, .bat, .cmd, etc, which are
-    // defined in %PATHEXT%
-    String[] paths = getEnv("PATH", File.pathSeparator);
-    String[] pathExts = getEnv("PATHEXT", File.pathSeparator);
-    for (String path : paths) {
-      for (String pathExt : pathExts) {
-        executable = new File(path, interpreter + pathExt);
-        if (executable.canExecute()) {
-          return executable.getAbsolutePath();
+    Optional<String> configPath = getValue("tools", "python");
+    if (configPath.isPresent()) {
+      // Python path in config. Use it or report error if invalid.
+      File python = new File(configPath.get());
+      if (isExecutableFile(python)) {
+        return python.getAbsolutePath();
+      }
+      throw new HumanReadableException("Not a python executable: " + configPath.get());
+    } else {
+      // For each path in PATH, test "python" with each PATHEXT suffix to allow for file extensions.
+      for (String path : getEnv("PATH", File.pathSeparator)) {
+        for (String pathExt : getEnv("PATHEXT", File.pathSeparator)) {
+          File python = new File(path, "python" + pathExt);
+          if (isExecutableFile(python)) {
+            return python.getAbsolutePath();
+          }
         }
       }
+      // Fall back to Jython if no python found.
+      File jython = new File(getProperty("buck.path_to_python_interp", "bin/jython"));
+      if (isExecutableFile(jython)) {
+        return jython.getAbsolutePath();
+      }
+      throw new HumanReadableException("No python or jython found.");
     }
+  }
 
-    // Use Jython as a fallback
-    interpreter = System.getProperty("buck.path_to_python_interp", "bin/jython");
-    executable = new File(interpreter);
-    assert(executable.canExecute());
-    return interpreter;
+  @VisibleForTesting
+  String getProperty(String key, String def) {
+    return System.getProperty(key, def);
   }
 }
