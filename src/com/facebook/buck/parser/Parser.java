@@ -617,8 +617,8 @@ public class Parser {
    * {@code android_binary}, but are defined in the same build files as the transitive
    * dependencies of an {@code android_binary}, this method is helpful in finding all of the
    * {@code project_config} rules needed to produce an IDE configuration to build said
-   * {@code android_binary}. See {@link ProjectCommand#predicate} for an example of such
-   * a {@link RawRulePredicate}.
+   * {@code android_binary}. See {@link com.facebook.buck.cli.ProjectCommand#predicate} for an
+   * example of such a {@link RawRulePredicate}.
    */
   public synchronized List<BuildTarget> filterTargetsInProjectFromRoots(
       Iterable<BuildTarget> roots,
