@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -24,9 +25,11 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +51,14 @@ public class DalvikStatsTool {
       Pattern.compile("ViewGroup$"), 1800,
       Pattern.compile("Activity$"), 1100
   );
+
+  // DX translates MULTIANEWARRAY into a method call that matches this (owner,name,desc)
+  private static final String MULTIARRAY_OWNER = Type.getType(Array.class).getInternalName();
+  private static final String MULTIARRAY_NAME = "newInstance";
+  private static final String MULTIARRAY_DESC = Type.getMethodType(
+      Type.getType(Object.class),
+      Type.getType(Class.class),
+      Type.getType("[" + Type.INT_TYPE.getDescriptor())).getDescriptor();
 
   public static class MethodReference {
 
@@ -123,7 +134,7 @@ public class DalvikStatsTool {
             continue;
           }
           InputStream rawClass = inJar.getInputStream(entry);
-          int footprint = getEstimate(rawClass, PENALTIES).estimatedLinearAllocSize;
+          int footprint = getEstimate(rawClass).estimatedLinearAllocSize;
           System.out.println(footprint + "\t" + entry.getName().replace(".class", ""));
         }
       }
@@ -138,26 +149,23 @@ public class DalvikStatsTool {
    * @return the estimate
    */
   public static Stats getEstimate(InputStream rawClass) throws IOException {
-    return getEstimate(rawClass, PENALTIES);
+    ClassReader classReader = new ClassReader(rawClass);
+    return getEstimateInternal(classReader);
   }
 
   /**
    * Estimates the footprint that a given class will have in the LinearAlloc buffer
    * of Android's Dalvik VM.
    *
-   * @param rawClass Raw bytes of the Java class to analyze.
-   * @param penalties Map from regex patterns to run against the internal name of the class and
-   *                  its parent to a "penalty" to apply to the footprint, representing the size
-   *                  of the vtable of the parent class.
+   * @param classReader reader containing the Java class to analyze.
    * @return the estimate
    */
-  private static Stats getEstimate(
-      InputStream rawClass,
-      ImmutableMap<Pattern, Integer> penalties) throws IOException {
+  @VisibleForTesting
+  static Stats getEstimateInternal(ClassReader classReader) throws IOException {
     // SKIP_FRAMES was required to avoid an exception in ClassReader when running on proguard
     // output. We don't need to visit frames so this isn't an issue.
-    StatsClassVisitor statsVisitor = new StatsClassVisitor(penalties);
-    new ClassReader(rawClass).accept(statsVisitor, ClassReader.SKIP_FRAMES);
+    StatsClassVisitor statsVisitor = new StatsClassVisitor(PENALTIES);
+    classReader.accept(statsVisitor, ClassReader.SKIP_FRAMES);
     return new Stats(
         statsVisitor.footprint,
         statsVisitor.methodReferenceBuilder.build());
@@ -263,6 +271,14 @@ public class DalvikStatsTool {
       public void visitMethodInsn(int opcode, String owner, String name, String desc) {
         super.visitMethodInsn(opcode, owner, name, desc);
         methodReferenceBuilder.add(new MethodReference(owner, name, desc));
+      }
+
+      @Override
+      public void visitMultiANewArrayInsn(String desc, int dims) {
+        // dx translates this instruction into a method invocation on
+        // Array.newInstance(Class clazz, int...dims);
+        methodReferenceBuilder.add(
+            new MethodReference(MULTIARRAY_OWNER, MULTIARRAY_NAME, MULTIARRAY_DESC));
       }
     }
   }

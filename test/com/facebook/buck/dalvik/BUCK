@@ -10,5 +10,6 @@ java_test(
     '//lib:junit',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
+    '//third-party/java/asm:asm',
   ],
 )

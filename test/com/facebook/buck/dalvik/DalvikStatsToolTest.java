@@ -28,10 +28,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.objectweb.asm.ClassReader;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.Set;
 
@@ -145,6 +148,47 @@ public class DalvikStatsToolTest {
 
     );
     assertEquals(172, statsInner.estimatedLinearAllocSize);
+  }
+
+  /**
+   * Verifies that we count the MULTIANEWARRAY instruction (used in UsesMultiANewArray) as
+   * a call to Array.newInstance(Class, int...dims).  We do this by also measuring a class
+   * that uses MULTIANEWARRAY and calls Array.newInstance explicitly, and verify that the
+   * two classes have the same number of methodReferences.
+   */
+  @Test
+  public void testMultiANewArray() throws IOException {
+    // Avoid unused method warnings for types we statically analyze.
+    UsesMultiANewArray.createMultiArray();
+    UsesMultiANewArrayAndExplicitArrayCall.createMultiArray();
+
+    ClassReader usesImplicitOnly = new ClassReader(UsesMultiANewArray.class.getName());
+    DalvikStatsTool.Stats implicitStats = DalvikStatsTool.getEstimateInternal(usesImplicitOnly);
+
+    ClassReader usesBoth = new ClassReader(UsesMultiANewArrayAndExplicitArrayCall.class.getName());
+    DalvikStatsTool.Stats bothStats = DalvikStatsTool.getEstimateInternal(usesBoth);
+
+    assertEquals(implicitStats.methodReferences.size(), bothStats.methodReferences.size());
+  }
+
+  /**
+   * A test class that uses the MULTIANEWARRAY instruction but calls no methods explicitly.
+   */
+  private static class UsesMultiANewArray {
+    static Object createMultiArray() {
+      return new Object[1][1];
+    }
+  }
+
+  /**
+   * A test class that uses MULTINEWARRAY and also calls Array.newInstance(Class, int...)
+   * explicitly.
+   */
+  private static class UsesMultiANewArrayAndExplicitArrayCall {
+    static Object createMultiArray() {
+      Array.newInstance(Object.class, 1, 1);
+      return new Object[1][1];
+    }
   }
 
   /**
