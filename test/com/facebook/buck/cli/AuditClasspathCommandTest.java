@@ -42,6 +42,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -50,6 +51,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.SortedSet;
@@ -176,4 +178,43 @@ public class AuditClasspathCommandTest {
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
   }
+
+  private static final String EXPECTED_JSON = Joiner.on("").join(
+      "{",
+      "\"//:test-android-library\":",
+      "[",
+      "\"buck-out/gen/lib__test-android-library__output/test-android-library.jar\",",
+      "\"buck-out/gen/lib__test-java-library__output/test-java-library.jar\"",
+      "],",
+      "\"//:test-java-library\":",
+      "[",
+      "\"buck-out/gen/lib__test-java-library__output/test-java-library.jar\"",
+      "]",
+      "}");
+
+  @Test
+  public void testJsonClassPathOutput() throws IOException {
+    // Build a DependencyGraph of build rules manually.
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    ImmutableList<String> targets = ImmutableList.of(
+        "//:test-android-library",
+        "//:test-java-library");
+
+    ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
+            .addSrc("src/com/facebook/TestJavaLibrary.java"));
+    ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
+            .addSrc("src/com/facebook/TestAndroidLibrary.java")
+            .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
+
+    PartialGraph partialGraph = createGraphFromBuildRules(ruleResolver, targets);
+    auditClasspathCommand.printJsonClasspath(partialGraph);
+
+    assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+  }
+
 }

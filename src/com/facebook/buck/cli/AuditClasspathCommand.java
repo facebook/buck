@@ -27,10 +27,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultimap;
 
 import java.io.IOException;
 import java.util.List;
@@ -83,6 +86,8 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
     if (options.shouldGenerateDotOutput()) {
       return printDotOutput(partialGraph.getDependencyGraph());
+    } else if (options.shouldGenerateJsonOutput()) {
+      return printJsonClasspath(partialGraph);
     } else {
       return printClasspath(partialGraph);
     }
@@ -131,6 +136,35 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
     return 0;
   }
+
+  @VisibleForTesting
+  int printJsonClasspath(PartialGraph partialGraph) throws IOException {
+    DependencyGraph graph = partialGraph.getDependencyGraph();
+    List<BuildTarget> targets = partialGraph.getTargets();
+    Multimap<String, String> targetClasspaths = TreeMultimap.create();
+
+    for (BuildTarget target : targets) {
+      BuildRule rule = graph.findBuildRuleByTarget(target);
+      if (!(rule instanceof HasClasspathEntries)) {
+        continue;
+      }
+
+      HasClasspathEntries classpathEntries = (HasClasspathEntries) rule;
+      targetClasspaths.putAll(
+          target.getFullyQualifiedName(),
+          classpathEntries.getTransitiveClasspathEntries().values());
+    }
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    // Note: using `asMap` here ensures that the keys are sorted
+    mapper.writeValue(
+        console.getStdOut(),
+        targetClasspaths.asMap());
+
+    return 0;
+  }
+
 
   @Override
   String getUsageIntro() {

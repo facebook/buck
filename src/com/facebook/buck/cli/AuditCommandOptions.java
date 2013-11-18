@@ -36,6 +36,10 @@ public class AuditCommandOptions extends AbstractCommandOptions {
       usage = "Print dependencies as Dot graph")
   private boolean generateDotOutput;
 
+  @Option(name = "--json",
+	    usage = "Output in JSON format")
+  private boolean generateJsonOutput;
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -53,5 +57,9 @@ public class AuditCommandOptions extends AbstractCommandOptions {
 
   public boolean shouldGenerateDotOutput() {
     return generateDotOutput;
+  }
+
+  public boolean shouldGenerateJsonOutput() {
+    return generateJsonOutput;
   }
 }
