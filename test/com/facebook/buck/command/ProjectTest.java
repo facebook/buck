@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -184,7 +185,7 @@ public class ProjectTest {
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//foo:app"))
         .addClasspathDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
-        .setManifest("foo/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("foo/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget)
         .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava")));
@@ -200,7 +201,7 @@ public class ProjectTest {
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//bar:app"))
         .addClasspathDep(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
-            .setManifest("foo/AndroidManifest.xml")
+            .setManifest(new FileSourcePath("foo/AndroidManifest.xml"))
             .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystoreTarget));
 

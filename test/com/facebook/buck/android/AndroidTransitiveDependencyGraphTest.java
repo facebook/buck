@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
@@ -101,7 +102,7 @@ public class AndroidTransitiveDependencyGraphTest {
         .addClasspathDep(libraryRule.getBuildTarget())
         .addClasspathDep(manifestRule.getBuildTarget())
         .addBuildRuleToExcludeFromDex(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-        .setManifest("java/src/com/facebook/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget));
 
@@ -182,7 +183,7 @@ public class AndroidTransitiveDependencyGraphTest {
     AndroidBinaryRule androidBinaryRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(new BuildTarget("//apps/sample", "app"))
-        .setManifest("apps/sample/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("apps/sample/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget)
         .addClasspathDep(androidLibraryTarget));

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.google.common.collect.ImmutableList;
@@ -150,7 +151,7 @@ public class AndroidResourceRuleTest {
     AndroidBinaryRule e = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:e"))
-        .setManifest("AndroidManfiest.xml")
+        .setManifest(new FileSourcePath("AndroidManfiest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget)
         .addDep(BuildTargetFactory.newInstance("//:a"))

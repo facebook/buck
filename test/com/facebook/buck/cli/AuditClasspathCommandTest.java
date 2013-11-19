@@ -33,6 +33,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
@@ -125,7 +126,7 @@ public class AuditClasspathCommandTest {
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-binary"))
-        .setManifest("AndroidManifest.xml")
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreBuildTarget)
         .addClasspathDep(BuildTargetFactory.newInstance("//:test-android-library"))

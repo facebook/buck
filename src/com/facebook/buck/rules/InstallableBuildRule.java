@@ -21,7 +21,7 @@ public interface InstallableBuildRule extends BuildRule {
   /**
    * @return The manifest file for this build rule.
    */
-  public String getManifest();
+  public SourcePath getManifest();
 
   /**
    * @return The APK at this path is the final one that points to an APK that a user should

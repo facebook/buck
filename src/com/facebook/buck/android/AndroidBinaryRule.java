@@ -40,10 +40,10 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
-import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
@@ -59,6 +59,7 @@ import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -168,7 +169,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
   }
 
-  private final String manifest;
+  private final SourcePath manifest;
   private final String target;
   private final ImmutableSortedSet<BuildRule> classpathDeps;
   private final Keystore keystore;
@@ -209,7 +210,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    */
   protected AndroidBinaryRule(
       BuildRuleParams buildRuleParams,
-      String manifest,
+      SourcePath manifest,
       String target,
       ImmutableSortedSet<BuildRule> classpathDeps,
       Keystore keystore,
@@ -270,7 +271,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder)
-        .set("manifest", manifest)
+        .set("manifest", manifest.asReference())
         .set("target", target)
         .set("keystore", keystore.getBuildTarget().getFullyQualifiedName())
         .setRuleNames("classpathDeps", classpathDeps)
@@ -424,16 +425,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   @Override
   public List<String> getInputsToCompareToOutput() {
-    ImmutableList.Builder<String> inputs = ImmutableList.builder();
-    inputs.add(manifest);
-    if (proguardConfig.isPresent()) {
-      SourcePath sourcePath = proguardConfig.get();
-      // Alternatively, if it is a BuildTargetSourcePath, then it should not be included.
-      if (sourcePath instanceof FileSourcePath) {
-        inputs.add(sourcePath.asReference());
-      }
-    }
+    ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
+    sourcePaths.add(manifest);
 
+    Optionals.addIfPresent(proguardConfig, sourcePaths);
+
+    ImmutableList.Builder<String> inputs = ImmutableList.builder();
+    inputs.addAll(SourcePaths.filterInputsToCompareToOutput(sourcePaths.build()));
     return inputs.build();
   }
 
@@ -476,7 +474,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
-    steps.add(new MkdirAndSymlinkFileStep(getManifest(), getAndroidManifestXml()));
+    steps.add(new MkdirAndSymlinkFileStep(getManifest().resolve(context).toString(),
+        getAndroidManifestXml()));
 
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies(
         context.getDependencyGraph());
@@ -1184,7 +1183,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    *     AndroidManifest.xml.
    */
   @Override
-  public String getManifest() {
+  public SourcePath getManifest() {
     return manifest;
   }
 
@@ -1229,7 +1228,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   public static class Builder extends AbstractBuildRuleBuilder<AndroidBinaryRule> {
     private static final PackageType DEFAULT_PACKAGE_TYPE = PackageType.DEBUG;
 
-    private String manifest;
+    private SourcePath manifest;
     private String target;
 
     /** This should always be a subset of {@link #getDeps()}. */
@@ -1352,7 +1351,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       return this;
     }
 
-    public Builder setManifest(String manifest) {
+    public Builder setManifest(SourcePath manifest) {
       this.manifest = manifest;
       return this;
     }

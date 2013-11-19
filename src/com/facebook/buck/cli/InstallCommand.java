@@ -24,6 +24,7 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
@@ -83,7 +84,8 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
 
     // Uninstall the app first, if requested.
     if (options.shouldUninstallFirst()) {
-      String packageName = tryToExtractPackageNameFromManifest(installableBuildRule);
+      String packageName = tryToExtractPackageNameFromManifest(installableBuildRule,
+          build.getBuildContext().getDependencyGraph());
       uninstallApk(packageName,
           options.adbOptions(),
           options.targetDeviceOptions(),
@@ -99,7 +101,10 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     // We've installed the application successfully.
     // Is either of --activity or --run present?
     if (options.shouldStartActivity()) {
-      exitCode = startActivity(installableBuildRule, options.getActivityToStart(), options,
+      exitCode = startActivity(installableBuildRule,
+          options.getActivityToStart(),
+          options,
+          build.getBuildContext(),
           build.getExecutionContext());
       if (exitCode != 0) {
         return exitCode;
@@ -109,12 +114,15 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     return exitCode;
   }
 
-  private int startActivity(InstallableBuildRule androidBinaryRule, String activity,
-      InstallCommandOptions options, ExecutionContext context) throws IOException {
+  private int startActivity(InstallableBuildRule androidBinaryRule,
+      String activity,
+      InstallCommandOptions options,
+      BuildContext buildContext,
+      ExecutionContext context) throws IOException {
 
     // Might need the package name and activities from the AndroidManifest.
-    AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
-        androidBinaryRule.getManifest());
+    String pathToManifest = androidBinaryRule.getManifest().resolve(buildContext).toString();
+    AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest);
 
     if (activity == null) {
       // Get list of activities that show up in the launcher.

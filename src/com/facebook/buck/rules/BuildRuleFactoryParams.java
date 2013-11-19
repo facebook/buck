@@ -232,6 +232,17 @@ public final class BuildRuleFactoryParams {
   }
 
   /**
+   * @param identifier for the argument in this params.
+   * @param builder If the value associated with {@code identifier} corresponds to a
+   *     {@link BuildTarget}, that build target will be added to the {@code deps} of this builder.
+   * @return a source path that corresponds to the specified {@code identifier}.
+   */
+  public SourcePath getRequiredSourcePath(String identifier, AbstractBuildRuleBuilder<?> builder) {
+    String resource = getRequiredStringAttribute(identifier);
+    return asSourcePath(resource, builder);
+  }
+
+  /**
    * @param resource that identifies either a file path or a build target.
    * @param builder If {@code resource} corresponds to a {@link BuildTarget}, that build target will
    *     be added to the {@code deps} of this builder.

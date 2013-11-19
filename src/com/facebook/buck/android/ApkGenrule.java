@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -100,7 +101,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   }
 
   @Override
-  public String getManifest() {
+  public SourcePath getManifest() {
     return apk.getManifest();
   }
 

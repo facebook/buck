@@ -36,7 +36,12 @@ public class BuildTargetSourcePath extends AbstractSourcePath {
 
   @Override
   public Path resolve(BuildContext context) {
-    BuildRule rule = context.getDependencyGraph().findBuildRuleByTarget(buildTarget);
+    return resolve(context.getDependencyGraph());
+  }
+
+  @Override
+  public Path resolve(DependencyGraph graph) {
+    BuildRule rule = graph.findBuildRuleByTarget(buildTarget);
     if (rule == null) {
       throw new HumanReadableException("Cannot resolve: %s", buildTarget);
     }

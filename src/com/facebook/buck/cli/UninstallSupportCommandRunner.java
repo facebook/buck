@@ -23,6 +23,7 @@ import com.android.ddmlib.InstallException;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.cli.UninstallCommandOptions.UninstallOptions;
+import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
@@ -148,8 +149,9 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
     }
   }
 
-  String tryToExtractPackageNameFromManifest(InstallableBuildRule androidBinaryRule) {
-    String pathToManifest = androidBinaryRule.getManifest();
+  String tryToExtractPackageNameFromManifest(InstallableBuildRule androidBinaryRule,
+      DependencyGraph dependencyGraph) {
+    String pathToManifest = androidBinaryRule.getManifest().resolve(dependencyGraph).toString();
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file.
     File androidManifestXml = new File(pathToManifest);

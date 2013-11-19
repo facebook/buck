@@ -38,9 +38,7 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
   protected void amendBuilder(AndroidBinaryRule.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     // manifest
-    String manifestAttribute = params.getRequiredStringAttribute("manifest");
-    String manifestPath = params.resolveFilePathRelativeToBuildFileDirectory(manifestAttribute);
-    builder.setManifest(manifestPath);
+    builder.setManifest(params.getRequiredSourcePath("manifest", builder));
 
     // target
     String target = params.getRequiredStringAttribute("target");

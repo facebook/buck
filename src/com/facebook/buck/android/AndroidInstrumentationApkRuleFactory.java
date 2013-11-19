@@ -17,10 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleFactory;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildRuleFactory;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 
 public class AndroidInstrumentationApkRuleFactory
     extends AbstractBuildRuleFactory<AndroidInstrumentationApk.Builder> {
@@ -34,9 +34,7 @@ public class AndroidInstrumentationApkRuleFactory
   protected void amendBuilder(AndroidInstrumentationApk.Builder builder,
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     // manifest
-    String manifestAttribute = params.getRequiredStringAttribute("manifest");
-    String manifestPath = params.resolveFilePathRelativeToBuildFileDirectory(manifestAttribute);
-    builder.setManifest(manifestPath);
+    builder.setManifest(params.getRequiredSourcePath("manifest", builder));
 
     // apk
     String apk = params.getRequiredStringAttribute("apk");

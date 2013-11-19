@@ -34,6 +34,11 @@ public class FileSourcePath extends AbstractSourcePath {
   }
 
   @Override
+  public Path resolve(DependencyGraph graph) {
+    return Paths.get(relativePath);
+  }
+
+  @Override
   public String asReference() {
     return relativePath;
   }

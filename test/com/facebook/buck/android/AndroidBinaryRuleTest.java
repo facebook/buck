@@ -99,7 +99,7 @@ public class AndroidBinaryRuleTest {
         .addClasspathDep(libraryTwo.getBuildTarget())
         .addBuildRuleToExcludeFromDex(
             BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo"))
-        .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
         .setPackageType("debug"));
@@ -177,7 +177,7 @@ public class AndroidBinaryRuleTest {
         .setBuildTarget(binaryBuildTarget)
         .addClasspathDep(libraryOne.getBuildTarget())
         .addClasspathDep(libraryTwo.getBuildTarget())
-        .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
         .setPackageType("debug"));
@@ -236,7 +236,7 @@ public class AndroidBinaryRuleTest {
         .setBuildTarget(binaryBuildTarget)
         .addClasspathDep(libraryOne.getBuildTarget())
         .addClasspathDep(libraryTwo.getBuildTarget())
-        .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
         .setPackageType("debug"));
@@ -306,7 +306,7 @@ public class AndroidBinaryRuleTest {
         .setBuildTarget(binaryBuildTarget)
         .addClasspathDep(libraryOne.getBuildTarget())
         .addClasspathDep(libraryTwo.getBuildTarget())
-        .setManifest("java/src/com/facebook/base/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver))
         .setPackageType("debug"));
@@ -413,7 +413,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule.Builder androidBinaryRuleBuilder = AndroidBinaryRule
         .newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .setManifest("java/src/com/facebook/AndroidManifest.xml")
+        .setManifest(new FileSourcePath("java/src/com/facebook/AndroidManifest.xml"))
         .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(addKeystoreRule(ruleResolver));
 
@@ -448,7 +448,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule ruleInRootDirectory = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fb4a"))
-        .setManifest("AndroidManifest.xml")
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
     assertEquals(GEN_DIR + "/fb4a.apk", ruleInRootDirectory.getApkPath());
@@ -456,7 +456,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule ruleInNonRootDirectory = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example:fb4a"))
-        .setManifest("AndroidManifest.xml")
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
     assertEquals(GEN_DIR + "/java/com/example/fb4a.apk", ruleInNonRootDirectory.getApkPath());
@@ -469,7 +469,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule rule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest("AndroidManifest.xml")
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16"));
 
@@ -499,7 +499,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule splitDexRule = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest("AndroidManifest.xml")
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc.:Google APIs:16")
         .setDexSplitMode(new DexSplitMode(
@@ -571,7 +571,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
         new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:target"))
-        .setManifest("AndroidManifest.xml")
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(resolver))
         .setTarget("Google Inc:Google APIs:16")
         .setResourceFilter(new ResourceFilter(ImmutableList.<String>of("mdpi")))
@@ -623,7 +623,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
         new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest("AndroidManifest.xml")
+        .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver))
         .setTarget("Google Inc:Google APIs:16");
 
