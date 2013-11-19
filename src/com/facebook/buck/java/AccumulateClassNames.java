@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
@@ -214,5 +215,22 @@ public class AccumulateClassNames extends AbstractBuildable {
       return this;
     }
 
+    @Override
+    public Builder setBuildTarget(BuildTarget buildTarget) {
+      super.setBuildTarget(buildTarget);
+      return this;
+    }
+
+    @Override
+    public Builder addDep(BuildTarget buildTarget) {
+      super.addDep(buildTarget);
+      return this;
+    }
+
+    @Override
+    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
+      super.addVisibilityPattern(visibilityPattern);
+      return this;
+    }
   }
 }

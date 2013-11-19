@@ -22,7 +22,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.java.AccumulateClassNames;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -39,13 +38,11 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
@@ -78,7 +75,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -198,7 +194,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final ImmutableSet<TargetCpuType> cpuFilters;
-  private final ImmutableSet<DexProducedFromJavaLibraryThatContainsClassFiles> preDexDeps;
+  private final ImmutableSet<IntermediateDexRule> preDexDeps;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
@@ -228,7 +224,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Optional<SourcePath> primaryDexClassesFile,
       FilterResourcesStep.ResourceFilter resourceFilter,
       Set<TargetCpuType> cpuFilters,
-      Set<DexProducedFromJavaLibraryThatContainsClassFiles> preDexDeps,
+      Set<IntermediateDexRule> preDexDeps,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash) {
     super(buildRuleParams);
@@ -333,7 +329,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return this.cpuFilters;
   }
 
-  public ImmutableSet<DexProducedFromJavaLibraryThatContainsClassFiles> getPreDexDeps() {
+  public ImmutableSet<IntermediateDexRule> getPreDexDeps() {
     return preDexDeps;
   }
 
@@ -772,10 +768,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     } else {
       Iterable<Path> filesToDex = FluentIterable.from(preDexDeps)
           .transform(
-              new Function<DexProducedFromJavaLibraryThatContainsClassFiles, Path>() {
+              new Function<IntermediateDexRule, Path>() {
                   @Override
                   @Nullable
-                  public Path apply(DexProducedFromJavaLibraryThatContainsClassFiles preDex) {
+                  public Path apply(IntermediateDexRule preDexDep) {
+                    DexProducedFromJavaLibraryThatContainsClassFiles preDex = preDexDep
+                        .getBuildable();
                     if (preDex.hasOutput()) {
                       return preDex.getPathToDex();
                     } else {
@@ -1239,7 +1237,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     private BuildTarget keystoreTarget;
     private PackageType packageType = DEFAULT_PACKAGE_TYPE;
-    private Set<BuildTarget> buildRulesToExcludeFromDex = Sets.newHashSet();
+    private ImmutableSet.Builder<BuildTarget> buildRulesToExcludeFromDexBuilder =
+        ImmutableSet.builder();
     private boolean disablePreDex = false;
     private DexSplitMode dexSplitMode = new DexSplitMode(
         /* shouldSplitDex */ false,
@@ -1278,28 +1277,22 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
       BuildRuleParams originalParams = createBuildRuleParams(ruleResolver);
       ImmutableSortedSet<BuildRule> originalDeps = originalParams.getDeps();
-      ImmutableSet<BuildRule> preDexDepsAsBuildRules;
-      ImmutableSet<DexProducedFromJavaLibraryThatContainsClassFiles> preDexDeps;
+      ImmutableSet<IntermediateDexRule> preDexDeps;
+      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex =
+          buildRulesToExcludeFromDexBuilder.build();
       if (!disablePreDex
           && PackageType.DEBUG.equals(packageType)
           && !dexSplitMode.isShouldSplitDex() // TODO(mbolin): Support predex for split dex.
           && !preprocessJavaClassesBash.isPresent() // TODO(mbolin): Support predex post-preprocess.
           ) {
-        preDexDepsAsBuildRules = enhanceGraphToLeveragePreDexing(originalDeps,
+        AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+            originalDeps,
             buildRulesToExcludeFromDex,
-            ruleResolver,
             originalParams.getPathRelativizer(),
             originalParams.getRuleKeyBuilderFactory());
-        ImmutableSet.Builder<DexProducedFromJavaLibraryThatContainsClassFiles> preDexDepsBuilder =
-            ImmutableSet.builder();
-        for (BuildRule preDexDepBuildRule : preDexDepsAsBuildRules) {
-          preDexDepsBuilder.add(
-              (DexProducedFromJavaLibraryThatContainsClassFiles) preDexDepBuildRule.getBuildable());
-        }
-        preDexDeps = preDexDepsBuilder.build();
+        preDexDeps = graphEnhancer.createDepsForPreDexing(ruleResolver);
       } else {
-        preDexDepsAsBuildRules = ImmutableSet.of();
-        preDexDeps = ImmutableSortedSet.of();
+        preDexDeps = ImmutableSet.of();
       }
 
       boolean allowNonExistentRule =
@@ -1309,7 +1302,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // createBuildRuleParams(ruleResolver).
       ImmutableSortedSet<BuildRule> totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
           .addAll(originalDeps)
-          .addAll(preDexDepsAsBuildRules)
+          .addAll(preDexDeps)
           .build();
       BuildRuleParams finalParams = new BuildRuleParams(getBuildTarget(),
           totalDeps,
@@ -1339,75 +1332,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           preDexDeps,
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash);
-    }
-
-    /**
-     * @return The set of build rules that correspond to pre-dex'd artifacts that should be merged
-     *     to create the final classes.dex for the APK. For every element in the set, its
-     *     {@link BuildRule#getBuildable()} method will return an instance of
-     *     {@link DexProducedFromJavaLibraryThatContainsClassFiles}.
-     */
-    private ImmutableSet<BuildRule> enhanceGraphToLeveragePreDexing(
-            ImmutableSortedSet<BuildRule> originalDeps,
-            Set<BuildTarget> buildRulesToExcludeFromDex,
-            BuildRuleResolver ruleResolver,
-            Function<String, Path> pathRelativizer,
-            RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-      ImmutableSet.Builder<BuildRule> preDexDeps = ImmutableSet.builder();
-      ImmutableSet<JavaLibraryRule> transitiveJavaDeps = Classpaths
-          .getClasspathEntries(originalDeps).keySet();
-      for (JavaLibraryRule javaLibraryRule : transitiveJavaDeps) {
-        // If the rule has no output file (which happens when a java_library has no srcs or
-        // resources, but export_deps is true), then there will not be anything to dx.
-        if (javaLibraryRule.getPathToOutputFile() == null) {
-          continue;
-        }
-
-        // If the rule is in the no_dx list, then do not pre-dex it.
-        if (buildRulesToExcludeFromDex.contains(javaLibraryRule.getBuildTarget())) {
-          continue;
-        }
-
-        // See whether the corresponding PreDex has already been added to the ruleResolver.
-        BuildTarget originalTarget = javaLibraryRule.getBuildTarget();
-        BuildTarget preDexTarget = new BuildTarget(originalTarget.getBaseName(),
-            originalTarget.getShortName(),
-            "dex");
-        BuildRule preDexRule = ruleResolver.get(preDexTarget);
-        if (preDexRule != null) {
-          preDexDeps.add(preDexRule);
-          continue;
-        }
-
-        // Create a rule to get the list of the classes in the JavaLibraryRule.
-        AccumulateClassNames.Builder accumulateClassNamesBuilder = AccumulateClassNames
-            .newAccumulateClassNamesBuilder(new DefaultBuildRuleBuilderParams(
-                pathRelativizer, ruleKeyBuilderFactory));
-        BuildTarget accumulateClassNamesBuildTarget = new BuildTarget(
-            originalTarget.getBaseName(), originalTarget.getShortName(), "class_names");
-        accumulateClassNamesBuilder.setBuildTarget(accumulateClassNamesBuildTarget);
-        accumulateClassNamesBuilder.setJavaLibraryToDex(javaLibraryRule);
-        accumulateClassNamesBuilder.addDep(originalTarget);
-        accumulateClassNamesBuilder.addVisibilityPattern(BuildTargetPattern.MATCH_ALL);
-        BuildRule accumulateClassNamesRule = ruleResolver.buildAndAddToIndex(
-            accumulateClassNamesBuilder);
-        AccumulateClassNames accumulateClassNames =
-            (AccumulateClassNames) accumulateClassNamesRule.getBuildable();
-
-        // Create the PreDex and add it to both the ruleResolver and preDexDeps.
-        IntermediateDexRule.Builder preDexBuilder =
-            IntermediateDexRule.newPreDexBuilder(
-                new DefaultBuildRuleBuilderParams(
-                    pathRelativizer,
-                    ruleKeyBuilderFactory));
-        preDexBuilder.setBuildTarget(preDexTarget);
-        preDexBuilder.setAccumulateClassNamesDep(accumulateClassNames);
-        preDexBuilder.addDep(accumulateClassNamesBuildTarget);
-        preDexBuilder.addVisibilityPattern(BuildTargetPattern.MATCH_ALL);
-        BuildRule preDex = ruleResolver.buildAndAddToIndex(preDexBuilder);
-        preDexDeps.add(preDex);
-      }
-      return preDexDeps.build();
     }
 
     @Override
@@ -1460,7 +1384,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
 
     public Builder addBuildRuleToExcludeFromDex(BuildTarget entry) {
-      this.buildRulesToExcludeFromDex.add(entry);
+      this.buildRulesToExcludeFromDexBuilder.add(entry);
       return this;
     }
 

@@ -17,6 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.AccumulateClassNames;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -24,7 +26,6 @@ import com.facebook.buck.rules.AbstractCachingBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Preconditions;
 
@@ -39,7 +40,7 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
   }
 
   @Override
-  public Buildable getBuildable() {
+  public DexProducedFromJavaLibraryThatContainsClassFiles getBuildable() {
     return buildable;
   }
 
@@ -80,6 +81,24 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
 
     public Builder setAccumulateClassNamesDep(AccumulateClassNames javaLibraryWithClassesList) {
       this.javaLibraryWithClassesList = javaLibraryWithClassesList;
+      return this;
+    }
+
+    @Override
+    public Builder setBuildTarget(BuildTarget buildTarget) {
+      super.setBuildTarget(buildTarget);
+      return this;
+    }
+
+    @Override
+    public Builder addDep(BuildTarget buildTarget) {
+      super.addDep(buildTarget);
+      return this;
+    }
+
+    @Override
+    public Builder addVisibilityPattern(BuildTargetPattern visibilityPattern) {
+      super.addVisibilityPattern(visibilityPattern);
       return this;
     }
   }
