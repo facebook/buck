@@ -87,7 +87,7 @@ public class Parser {
    * We allow { and } to be used in place of &lt; and &gt; for Java generics in our XML
    * descriptor files.
    */
-  private static String escapeJavaType(@Nullable String type) {
+  private static String escapeJavaType(String type) {
     return type.replace('{', '<').replace('}', '>');
   }
 
