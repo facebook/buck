@@ -36,10 +36,12 @@ mkdir -p "$BUCKD_DIR" &> /dev/null || true
 echo $BUCKD_PORT > "$BUCKD_PORT_FILE"
 
 # Run buckd.
+BUCKD_CLIENT_TIMEOUT_MILLIS=10000
 java \
 $BUCK_JAVA_ARGS \
 -classpath \
 ${BUCK_JAVA_CLASSPATH} \
-com.martiansoftware.nailgun.NGServer localhost:${BUCKD_PORT} \
+com.martiansoftware.nailgun.NGServer \
+localhost:${BUCKD_PORT} $BUCKD_CLIENT_TIMEOUT_MILLIS \
 &> $BUCKD_LOG_FILE &
 echo $! > "$BUCKD_PID_FILE"

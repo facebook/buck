@@ -143,7 +143,7 @@ public class DaemonIntegrationTest {
       public NGClientListener listener = null;
 
       public TestNGInputStream(InputStream in, DataOutputStream out, PrintStream serverLog) {
-        super(in, out, serverLog);
+        super(in, out, serverLog, 10000 /* client timeout millis */);
       }
 
       @Override
