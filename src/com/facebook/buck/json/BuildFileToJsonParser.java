@@ -120,7 +120,12 @@ public class BuildFileToJsonParser implements AutoCloseable {
     if (json.isJsonPrimitive()) {
       JsonPrimitive primitive = json.getAsJsonPrimitive();
       if (primitive.isString()) {
-        return primitive.getAsString();
+        // On a large project, without invoking intern(), we have seen `buck targets` OOM. When this
+        // happened, according to the .hprof file generated using -XX:+HeapDumpOnOutOfMemoryError,
+        // 39.6% of the memory was spent on char[] objects while 14.5% was spent on Strings.
+        // (Another 10.5% was spent on java.util.HashMap$Entry.) Introducing intern() stopped the
+        // OOM from happening.
+        return primitive.getAsString().intern();
       } else if (primitive.isBoolean()) {
         return primitive.getAsBoolean();
       } else if (primitive.isNumber()) {
