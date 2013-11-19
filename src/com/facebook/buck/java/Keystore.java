@@ -79,7 +79,7 @@ public class Keystore extends AbstractBuildable {
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    // Nothing to build: this is like a glorified export_deps() rule.
+    // Nothing to build: this is like a glorified exported_deps() rule.
     return ImmutableList.of();
   }
 

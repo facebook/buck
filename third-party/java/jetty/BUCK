@@ -10,8 +10,8 @@ prebuilt_jar(
 
 java_library(
   name = 'jetty',
-  export_deps = True,
-  deps = [
+  deps = [],
+  exported_deps = [
     ':jetty-all',
     ':servlet-api',
   ],

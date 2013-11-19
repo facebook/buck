@@ -112,6 +112,7 @@ java_library(
     'DefaultBuildRuleBuilderParams.java',
     'DirArtifactCache.java',
     'DoNotUseAbstractBuildable.java',
+    'ExportDependencies.java',
     'IndividualTestEvent.java',
     'InstallableBuildRule.java',
     'LabelsAttributeBuilder.java',

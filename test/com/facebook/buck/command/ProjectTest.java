@@ -140,7 +140,7 @@ public class ProjectTest {
             "//java/src/com/facebook/exportlib:exportlib"))
         .addSrc("ExportLib.java")
         .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-        .setExportDeps(true)
+        .addExportedDep(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // android_library //java/src/com/facebook/base:base

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
@@ -35,13 +36,13 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
                                        Set<SourcePath> resources,
                                        Optional<String> proguardConfig,
                                        AnnotationProcessingParams annotationProcessingParams,
-                                       boolean exportDeps,
+                                       Set<BuildRule> exportedDeps,
                                        boolean ruleInputsAreCached) {
     super(buildRuleParams,
         srcs,
         resources,
         proguardConfig,
-        exportDeps,
+        exportedDeps,
         JavacOptions.builder().setAnnotationProcessingData(annotationProcessingParams).build()
     );
 
@@ -71,7 +72,7 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
           resources,
           proguardConfig,
           processingParams,
-          exportDeps,
+          getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           ruleInputsAreCached);
     }
 

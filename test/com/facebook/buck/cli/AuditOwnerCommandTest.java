@@ -128,11 +128,6 @@ public class AuditOwnerCommandTest {
     }
 
     @Override
-    public boolean getExportDeps() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
     public final RuleKey getRuleKey() {
       throw new UnsupportedOperationException();
     }

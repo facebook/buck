@@ -171,9 +171,11 @@ public class DefaultJavaLibraryRuleIntegrationTest {
       "Rule //:raz builds with its transitive dependencies but not with its first order " +
           "dependencies.",
       "The following packages were missing:",
+      "Blargh",
       "Meh",
       "Try adding the following deps:",
-      "//:foo");
+      "//:foo",
+      "//:blargh");
 
     buildResult.assertExitCode("Build should have succeeded with warnings.", 0);
 

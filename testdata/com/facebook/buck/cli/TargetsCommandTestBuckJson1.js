@@ -3,7 +3,7 @@
   "buck.output_file" : "{$OUTPUT_FILE}",
   "buck.base_path" : "testdata/com/facebook/buck/cli",
   "deps" : [ ],
-  "export_deps": false,
+  "exported_deps": [],
   "name" : "test-library",
   "proguard_config" : null, 
   "resources" : [ ],

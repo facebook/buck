@@ -42,8 +42,10 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
         proguardConfig.transform(params.getResolveFilePathRelativeToBuildFileDirectoryTransform()));
 
 
-    boolean exportDeps = params.getBooleanAttribute("export_deps");
-    builder.setExportDeps(exportDeps);
+    for (String exportedDep : params.getOptionalListAttribute("exported_deps")) {
+      BuildTarget buildTarget = params.resolveBuildTarget(exportedDep);
+      builder.addExportedDep(buildTarget);
+    }
 
     extractAnnotationProcessorParameters(
         builder.getAnnotationProcessingBuilder(), builder, params);

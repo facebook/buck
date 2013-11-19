@@ -25,6 +25,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -35,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.util.List;
@@ -61,7 +63,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
         srcs,
         resources,
         proguardConfig,
-        /* exportDeps */ false,
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         javacOptions);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }

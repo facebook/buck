@@ -210,7 +210,8 @@ def java_library(
     name,
     srcs=[],
     resources=[],
-    export_deps=False,
+    export_deps=None,
+    exported_deps=[],
     source='6',
     target='6',
     proguard_config=None,
@@ -222,11 +223,12 @@ def java_library(
     'name' : name,
     'srcs' : srcs,
     'resources' : resources,
-    'export_deps' : export_deps,
+    # Temporary hack to let repos cut over to new style of exporting deps.
+    'exported_deps' : deps if export_deps else exported_deps,
     'source' : source,
     'target' : target,
     'proguard_config' : proguard_config,
-    'deps' : deps,
+    'deps' : deps + exported_deps,
     'visibility' : visibility,
   }, build_env)
 

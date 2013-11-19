@@ -25,12 +25,14 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -62,7 +64,7 @@ import javax.annotation.Nullable;
  * A rule that establishes a pre-compiled JAR file as a dependency.
  */
 public class PrebuiltJarRule extends DoNotUseAbstractBuildable
-    implements JavaLibraryRule, HasClasspathEntries {
+    implements JavaLibraryRule, HasClasspathEntries, ExportDependencies {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -184,6 +186,11 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   @Override
   public ImmutableSortedSet<String> getJavaSrcs() {
     return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getExportedDeps() {
+    return getDeps();
   }
 
   @Override

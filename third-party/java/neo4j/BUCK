@@ -20,8 +20,8 @@ prebuilt_jar(
 
 java_library(
   name = 'neo4j',
-  export_deps = True,
-  deps = [
+  deps = [],
+  exported_deps = [
     ':geronimo-jta',
     ':lucene-core',
     ':neo4j-kernel',

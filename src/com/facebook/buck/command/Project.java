@@ -35,6 +35,7 @@ import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.rules.SourceRoot;
@@ -740,10 +741,16 @@ public class Project {
 
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule dep) {
-        boolean depShouldExportDeps = dep.getExportDeps() || rule.getProperties().is(PACKAGING);
-        boolean shouldVisitDeps = (dep.getProperties().is(LIBRARY) && (depShouldExportDeps))
-            || (dep instanceof AndroidResourceRule)
-            || dep == rule;
+        ImmutableSet<BuildRule> depsToVisit;
+        if (rule.getProperties().is(PACKAGING) ||
+            dep instanceof AndroidResourceRule ||
+            dep == rule) {
+          depsToVisit = dep.getDeps();
+        } else if (dep.getProperties().is(LIBRARY) && dep instanceof ExportDependencies) {
+          depsToVisit = ((ExportDependencies)dep).getExportedDeps();
+        } else {
+          depsToVisit = ImmutableSet.of();
+        }
 
         // Special Case: If we are traversing the test_target and we encounter a library rule in the
         // same package that is not the src_target, then we should traverse the deps. Consider the
@@ -774,10 +781,10 @@ public class Project {
         // the current directory should be treated as a source folder with test sources, but it
         // should contain the union of :lib and :test's deps as dependent modules.
         if (isForTests
-            && !shouldVisitDeps
+            && depsToVisit.isEmpty()
             && dep.getBuildTarget().getBasePath().equals(basePathForRule)
             && !dep.equals(srcTarget)) {
-          shouldVisitDeps = true;
+          depsToVisit = dep.getDeps();
         }
 
         DependentModule dependentModule;
@@ -789,12 +796,12 @@ public class Project {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
-          return maybeVisitAllDeps(dep, shouldVisitDeps);
+          return depsToVisit;
         } else if (dep instanceof JavaLibraryRule || dep instanceof AndroidResourceRule) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else {
-          return maybeVisitAllDeps(dep, shouldVisitDeps);
+          return depsToVisit;
         }
 
         if (isForTests) {
@@ -818,7 +825,7 @@ public class Project {
           modulesToAdd.add(dependentModule);
         }
 
-        return maybeVisitAllDeps(dep, shouldVisitDeps);
+        return depsToVisit;
       }
 
       @Override

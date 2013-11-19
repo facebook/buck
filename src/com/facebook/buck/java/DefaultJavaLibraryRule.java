@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
@@ -101,7 +102,7 @@ import javax.annotation.Nullable;
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
 public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
-    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries {
+    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -116,7 +117,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   private final Optional<String> proguardConfig;
 
 
-  private final boolean exportDeps;
+  private final ImmutableSortedSet<BuildRule> exportedDeps;
 
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>> outputClasspathEntriesSupplier;
 
@@ -187,13 +188,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
                                    Set<String> srcs,
                                    Set<? extends SourcePath> resources,
                                    Optional<String> proguardConfig,
-                                   boolean exportDeps,
+                                   Set<BuildRule> exportedDeps,
                                    JavacOptions javacOptions) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-    this.exportDeps = exportDeps;
+    this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
@@ -213,21 +214,26 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
-            ImmutableSetMultimap<JavaLibraryRule, String> outputClasspathEntries;
+            ImmutableSetMultimap.Builder<JavaLibraryRule, String> outputClasspathBuilder =
+                ImmutableSetMultimap.builder();
+            Iterable<JavaLibraryRule> javaExportedLibraryDeps = Iterables.filter(
+                getExportedDeps(),
+                JavaLibraryRule.class);
 
-            // If this java_library exports its dependencies then just return the transitive
-            // dependencies.
-            if (DefaultJavaLibraryRule.this.exportDeps) {
-              outputClasspathEntries = getTransitiveClasspathEntries();
-            } else if (outputJar.isPresent()) {
-              outputClasspathEntries = ImmutableSetMultimap.<JavaLibraryRule, String>builder()
-                  .put(DefaultJavaLibraryRule.this, getPathToOutputFile())
-                  .build();
-            } else {
-              outputClasspathEntries = ImmutableSetMultimap.of();
+            for (JavaLibraryRule rule : javaExportedLibraryDeps) {
+              outputClasspathBuilder.putAll(rule, rule.getOutputClasspathEntries().values());
+              // If we have any exported deps, add an entry mapping ourselves to to their,
+              // classpaths so when suggesting libraries to add we know that adding this library
+              // would pull in it's deps.
+              outputClasspathBuilder.putAll(DefaultJavaLibraryRule.this,
+                  rule.getOutputClasspathEntries().values());
             }
 
-            return outputClasspathEntries;
+            if (outputJar.isPresent()) {
+              outputClasspathBuilder.put(DefaultJavaLibraryRule.this, getPathToOutputFile());
+            }
+
+            return outputClasspathBuilder.build();
           }
         });
 
@@ -240,11 +246,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForDeps =
                 Classpaths.getClasspathEntries(getDeps());
 
+            ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForExportedsDeps =
+                Classpaths.getClasspathEntries(getExportedDeps());
+
             classpathEntries.putAll(classpathEntriesForDeps);
 
-            if (DefaultJavaLibraryRule.this.exportDeps) {
+            // If we have any exported deps, add an entry mapping ourselves to to their classpaths,
+            // so when suggesting libraries to add we know that adding this library would pull in
+            // it's deps.
+            if (!classpathEntriesForExportedsDeps.isEmpty()) {
               classpathEntries.putAll(DefaultJavaLibraryRule.this,
-                  classpathEntriesForDeps.values());
+                  classpathEntriesForExportedsDeps.values());
             }
 
             // Only add ourselves to the classpath if there's a jar to be built.
@@ -330,15 +342,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * @return total ABI key containing also the ABI keys of the dependencies.
    */
   protected Sha1HashCode createTotalAbiKey(Sha1HashCode abiKey) {
-    if (!getExportDeps()) {
+    if (getExportedDeps().isEmpty()) {
       return abiKey;
     }
 
     SortedSet<JavaLibraryRule> depsForAbiKey = getDepsForAbiKey();
-    // If there are no deps to consider, just return the ABI Key for this rule.
-    if (depsForAbiKey.isEmpty()) {
-      return abiKey;
-    }
 
     // Hash the ABI keys of all dependencies together with ABI key for the current rule.
     Hasher hasher = createHasherWithAbiKeyForDeps(depsForAbiKey);
@@ -432,10 +440,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder)
+        .set("exportedDeps", exportedDeps)
         .set("srcs", srcs)
         .setSourcePaths("resources", resources)
-        .set("proguard", proguardConfig)
-        .set("exportDeps", exportDeps);
+        .set("proguard", proguardConfig);
     javacOptions.appendToRuleKey(builder);
     return builder;
   }
@@ -486,8 +494,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public boolean getExportDeps() {
-    return exportDeps;
+  public ImmutableSortedSet<BuildRule> getExportedDeps() {
+    return exportedDeps;
   }
 
   /**
@@ -814,7 +822,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     protected Set<SourcePath> resources = Sets.newHashSet();
     protected final AnnotationProcessingParams.Builder annotationProcessingBuilder =
         new AnnotationProcessingParams.Builder();
-    protected boolean exportDeps = false;
+    protected Set<BuildTarget> exportedDeps = Sets.newHashSet();
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
     protected Optional<String> proguardConfig = Optional.absent();
 
@@ -834,7 +842,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           srcs,
           resources,
           proguardConfig,
-          exportDeps,
+          getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           javacOptions.build());
     }
 
@@ -889,8 +897,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       return this;
     }
 
-    public Builder setExportDeps(boolean exportDeps) {
-      this.exportDeps = exportDeps;
+    public Builder addExportedDep(BuildTarget buildTarget) {
+      this.exportedDeps.add(buildTarget);
       return this;
     }
   }

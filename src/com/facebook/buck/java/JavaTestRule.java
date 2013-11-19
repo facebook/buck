@@ -91,7 +91,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         srcs,
         resources,
         proguardConfig,
-        /* exportDeps */ false,
+        /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         javacOptions);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);

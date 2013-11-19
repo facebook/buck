@@ -88,11 +88,6 @@ public interface BuildRule extends Comparable<BuildRule> {
   public BuildRuleSuccess.Type getBuildResultType();
 
   /**
-   * @return whether or not this rule exports its dependencies to all rules depending on it.
-   */
-  public boolean getExportDeps();
-
-  /**
    * @return key based on the BuildRule's state, including the transitive closure of its
    *     dependencies' keys.
    */

@@ -14,8 +14,13 @@
  * under the License.
  */
 
-package com.example;
+package com.facebook.buck.rules;
 
-public class Foo {
-  private Meh meh;
+import com.google.common.collect.ImmutableSortedSet;
+
+/**
+ * {@link BuildRule} that can export a subset of it's dependencies.
+ */
+public interface ExportDependencies {
+  public ImmutableSortedSet<BuildRule> getExportedDeps();
 }

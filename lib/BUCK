@@ -71,12 +71,12 @@ prebuilt_jar(
 
 java_library(
     name = 'jackson',
-    deps = [
+    deps = [],
+    exported_deps = [
       ':jackson-annotations',
       ':jackson-core',
       ':jackson-databind',
     ],
-    export_deps = True,
     visibility = [
       '//src/com/facebook/buck/event:event',
     ],

@@ -72,11 +72,6 @@ abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public boolean getExportDeps() {
-    return true;
-  }
-
-  @Override
   public final ImmutableSortedSet<BuildRule> getDeps() {
     return deps;
   }
