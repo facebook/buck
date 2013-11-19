@@ -232,19 +232,21 @@ public class JavacInMemoryStep implements Step {
           ImmutableSet.copyOf(transitiveClasspathEntries));
       if (transitiveResult == 0) {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
+        ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
 
-        context.getStdErr().println(String.format("Rule %s builds with its transitive " +
+        errorMessage.add(String.format("Rule %s builds with its transitive " +
             "dependencies but not with its first order dependencies.", invokingRule.or("")));
-        context.getStdErr().println("The following packages were missing:");
-        context.getStdErr().println(Joiner.on(LINE_SEPARATOR).join(failedImports));
+        errorMessage.add("The following packages were missing:");
+        errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
         if (suggestBuildRules.isPresent()) {
-          context.getStdErr().println("Try adding the following deps:");
-          context.getStdErr().println(Joiner.on(LINE_SEPARATOR)
+          errorMessage.add("Try adding the following deps:");
+          errorMessage.add(Joiner.on(LINE_SEPARATOR)
               .join(suggestBuildRules.get().suggest(context.getProjectFilesystem(),
                   failedImports)));
         }
-        context.getStdErr().println();
-        context.getStdErr().println();
+        errorMessage.add("");
+        errorMessage.add("");
+        context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
       }
       return transitiveResult;
     } else {

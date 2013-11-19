@@ -17,6 +17,6 @@
 package com.example;
 
 public class Raz {
-  private Foo foo;
   private Bar bar;
+  private Meh meh;
 }

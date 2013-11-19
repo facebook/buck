@@ -3,8 +3,15 @@
 # with some hard-coded Java source code into a single library.
 
 java_library(
+  name = 'meh',
+  srcs = ['Meh.java'],
+)
+
+java_library(
   name = 'foo',
   srcs = ['Foo.java'],
+  export_deps = True,
+  deps = [':meh']
 )
 
 java_library(

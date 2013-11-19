@@ -632,8 +632,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       return false;
     }
 
-    ImmutableSet<String> classPaths = getTransitiveClasspathEntries()
-        .get((JavaLibraryRule)transitiveNotDeclaredDep);
+    ImmutableSet<String> classPaths =
+        ImmutableSet.copyOf(
+            ((JavaLibraryRule) transitiveNotDeclaredDep).getOutputClasspathEntries().values());
     boolean containsMissingBuildRule = false;
     // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
     // the exception of rules that export their dependencies, this will result in a single

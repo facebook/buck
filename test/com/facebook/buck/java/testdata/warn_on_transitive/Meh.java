@@ -16,6 +16,5 @@
 
 package com.example;
 
-public class Foo {
-  private Meh meh;  
+public class Meh {
 }
