@@ -57,8 +57,7 @@ import java.util.Set;
  *     }
  * </pre>
  */
-// TODO(simons): Revisit class name when we add Descriptions
-public class ArgObjectPopulatomatic {
+public class ConstructorArgMarshaller {
 
   private final Path basePath;
 
@@ -71,7 +70,7 @@ public class ArgObjectPopulatomatic {
    * @param pathFromProjectRootToBuildFile The path from the root of the project to the directory of
    *     the build file that this function is being created from.
    */
-  public ArgObjectPopulatomatic(Path pathFromProjectRootToBuildFile) {
+  public ConstructorArgMarshaller(Path pathFromProjectRootToBuildFile) {
     Preconditions.checkNotNull(pathFromProjectRootToBuildFile);
 
     // Without this check an IndexOutOfBounds exception is thrown by normalize.

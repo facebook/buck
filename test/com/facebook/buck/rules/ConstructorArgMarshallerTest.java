@@ -45,16 +45,16 @@ import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings("unused") // Many unused fields in sample DTO objects.
-public class ArgObjectPopulatomaticTest {
+public class ConstructorArgMarshallerTest {
 
   private Path basePath;
-  private ArgObjectPopulatomatic inspector;
+  private ConstructorArgMarshaller marshaller;
   private BuildRuleResolver ruleResolver;
 
   @Before
   public void setUpInspector() {
     basePath = Paths.get("example", "path");
-    inspector = new ArgObjectPopulatomatic(basePath);
+    marshaller = new ConstructorArgMarshaller(basePath);
     ruleResolver = new BuildRuleResolver();
   }
 
@@ -65,7 +65,7 @@ public class ArgObjectPopulatomaticTest {
 
     Dto dto = new Dto();
     try {
-      inspector.populate(
+      marshaller.populate(
           ruleResolver, buildRuleFactoryParams(ImmutableMap.<String, Object>of()), dto);
     } catch (RuntimeException e) {
       fail("Did not expect an exception to be thrown:\n" + Throwables.getStackTraceAsString(e));
@@ -79,7 +79,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of("name", "cheese")),
         dto);
@@ -94,7 +94,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(ruleResolver,
+    marshaller.populate(ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of("value", true)),
         dto);
 
@@ -109,7 +109,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(ruleResolver,
+    marshaller.populate(ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "target", "//cake:walk",
             "local", ":fish"
@@ -127,7 +127,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(ruleResolver,
+    marshaller.populate(ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of("number", 42L)),
         dto);
 
@@ -142,7 +142,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(ruleResolver,
+    marshaller.populate(ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of("some_path", "Fish.java")),
         dto);
 
@@ -158,7 +158,7 @@ public class ArgObjectPopulatomaticTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "filePath", "cheese.txt",
@@ -181,7 +181,7 @@ public class ArgObjectPopulatomaticTest {
 
     Dto dto = new Dto();
     // Note: the ordering is reversed from the natural ordering
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "deps", ImmutableList.of("//please/go:here", ":there"))),
@@ -197,7 +197,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "paths", ImmutableList.of("one", "two"))),
@@ -215,7 +215,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "list", ImmutableList.of("alpha", "beta"))),
@@ -234,7 +234,7 @@ public class ArgObjectPopulatomaticTest {
     Map<String, Object> args = Maps.newHashMap();
     args.put("targets", Lists.newArrayList());
 
-    inspector.populate(ruleResolver, buildRuleFactoryParams(args), dto);
+    marshaller.populate(ruleResolver, buildRuleFactoryParams(args), dto);
 
     assertEquals(Optional.of(Sets.newHashSet()), dto.targets);
   }
@@ -246,7 +246,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of("file", ImmutableList.of("a", "b"))),
         dto);
@@ -259,7 +259,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of("strings", "isn't going to happen")),
         dto);
@@ -272,7 +272,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "strings", ImmutableSet.of(true, false))),
@@ -286,7 +286,7 @@ public class ArgObjectPopulatomaticTest {
     }
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of("path", "./foo/../bar/./fish.txt")),
         dto);
@@ -300,7 +300,7 @@ public class ArgObjectPopulatomaticTest {
       public List<? super BuildTarget> nope;
     }
 
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "nope", ImmutableList.of("//will/not:happen"))),
@@ -315,7 +315,7 @@ public class ArgObjectPopulatomaticTest {
     }
     Dto dto = new Dto();
 
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "single", "//com/example:cheese",
@@ -344,7 +344,7 @@ public class ArgObjectPopulatomaticTest {
     BuildRuleResolver resolver = new BuildRuleResolver(ImmutableMap.of(target, rule));
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         resolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "directDep", target.getFullyQualifiedName())),
@@ -361,7 +361,7 @@ public class ArgObjectPopulatomaticTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//will:happen");
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         ruleResolver,
         buildRuleFactoryParams(ImmutableMap.<String, Object>of(
             "yup", ImmutableList.of(target.getFullyQualifiedName()))),
@@ -405,7 +405,7 @@ public class ArgObjectPopulatomaticTest {
         .put("notAPath", "./NotFile.java")
         .build();
     Dto dto = new Dto();
-    inspector.populate(ruleResolver, buildRuleFactoryParams(args), dto);
+    marshaller.populate(ruleResolver, buildRuleFactoryParams(args), dto);
 
     assertEquals("cheese", dto.required);
     assertEquals("cake", dto.notRequired.get());
@@ -437,7 +437,7 @@ public class ArgObjectPopulatomaticTest {
         .put("defaultSourcePath", "")
         .build();
     Dto dto = new Dto();
-    inspector.populate(ruleResolver, buildRuleFactoryParams(args), dto);
+    marshaller.populate(ruleResolver, buildRuleFactoryParams(args), dto);
 
     assertEquals(Optional.absent(), dto.noString);
     assertEquals(Optional.absent(), dto.defaultString);
@@ -456,7 +456,7 @@ public class ArgObjectPopulatomaticTest {
     BuildRuleResolver resolver = new BuildRuleResolver(ImmutableMap.of(target, rule));
 
     Dto dto = new Dto();
-    inspector.populate(
+    marshaller.populate(
         resolver,
         buildRuleFactoryParams(
             ImmutableMap.<String, Object>of("rule", target.getFullyQualifiedName())),

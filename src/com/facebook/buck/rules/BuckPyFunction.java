@@ -29,10 +29,10 @@ import java.util.SortedSet;
  */
 class BuckPyFunction {
 
-  private final ArgObjectPopulatomatic argsInspector;
+  private final ConstructorArgMarshaller argMarshaller;
 
-  public BuckPyFunction(ArgObjectPopulatomatic argsInspector) {
-    this.argsInspector = Preconditions.checkNotNull(argsInspector);
+  public BuckPyFunction(ConstructorArgMarshaller argMarshaller) {
+    this.argMarshaller = Preconditions.checkNotNull(argMarshaller);
   }
 
   String toPythonFunction(BuildRuleType type, Object dto) {
@@ -44,7 +44,7 @@ class BuckPyFunction {
     SortedSet<ParamInfo> mandatory = Sets.newTreeSet();
     SortedSet<ParamInfo> optional = Sets.newTreeSet();
 
-    for (ParamInfo param : argsInspector.getAllParamInfo(dto)) {
+    for (ParamInfo param : argMarshaller.getAllParamInfo(dto)) {
       if (isSkippable(param)) {
         continue;
       }

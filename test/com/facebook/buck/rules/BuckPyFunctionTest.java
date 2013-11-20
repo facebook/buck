@@ -39,9 +39,9 @@ public class BuckPyFunctionTest {
   private BuckPyFunction buckPyFunction;
 
   @Before
-  public void setUpInspector() {
+  public void setUpMarshaller() {
     Path basePath = Paths.get("example", "path");
-    buckPyFunction = new BuckPyFunction(new ArgObjectPopulatomatic(basePath));
+    buckPyFunction = new BuckPyFunction(new ConstructorArgMarshaller(basePath));
   }
 
   @Test
