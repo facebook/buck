@@ -56,7 +56,7 @@ public class FilterResourcesStepTest {
           second, "/dest/2",
           third, "/dest/3");
   private static Set<String> qualifiers = ImmutableSet.of("mdpi", "hdpi", "xhdpi");
-  private final String targetDensity = "mdpi";
+  private final Filters.Density targetDensity = Filters.Density.MDPI;
   private final File baseDestination = new File("/dest");
 
   private final String scaleSource = getDrawableFile(first, "xhdpi", "other.png");
@@ -124,7 +124,7 @@ public class FilterResourcesStepTest {
         /* filterDrawables */ true,
         /* filterStrings */ true,
         copier,
-        targetDensity,
+        ImmutableSet.of(targetDensity),
         finder,
         scaler);
 
@@ -157,7 +157,7 @@ public class FilterResourcesStepTest {
         public Set<String> answer() throws Throwable {
           ImmutableSet.Builder<String> builder = ImmutableSet.builder();
           for (String dir : (Iterable<String>) EasyMock.getCurrentArguments()[0]) {
-            builder.add(getDrawableFile(dir, targetDensity, "some.png"));
+            builder.add(getDrawableFile(dir, targetDensity.toString(), "some.png"));
           }
 
           builder.add(scaleSource);
@@ -187,7 +187,7 @@ public class FilterResourcesStepTest {
 
     // Ensure the right filter is created.
     Set<String> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet());
-    Predicate<File> expectedPred = Filters.createImageDensityFilter(drawables, targetDensity);
+    Predicate<File> expectedPred = Filters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
     Predicate<File> capturedPred = predCapture.getValue();
     for (String drawablePath : drawables) {
       File drawableFile = new File(drawablePath);

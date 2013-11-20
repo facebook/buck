@@ -17,12 +17,13 @@
 package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 
 import java.io.File;
@@ -31,15 +32,53 @@ import java.util.Set;
 
 public class Filters {
 
+  public enum Density {
+    LDPI("ldpi", 120.0),
+    NO_QUALIFIER("", 160.0),
+    MDPI("mdpi", 160.0),
+    TVDPI("tvdpi", 213.0),
+    HDPI("hdpi", 240.0),
+    XHDPI("xhdpi", 320.0),
+    XXHDPI("xxhdpi", 480.0),
+    XXXHDPI("xxxhdpi", 640.0);
 
-  public static final ImmutableMap<String, ImmutableList<String>> ORDERING = ImmutableMap.of(
-      "mdpi", ImmutableList.of("mdpi", "", "hdpi", "xhdpi"),
-      "hdpi", ImmutableList.of("hdpi", "xhdpi", "mdpi", ""),
-      "xhdpi", ImmutableList.of("xhdpi", "hdpi", "mdpi", "")
-  );
+    private final String qualifier;
+    private final double value;
+
+    public static final Ordering<Density> ORDERING = Ordering.<Density>natural();
+
+    Density(String qualifier, double value) {
+      this.qualifier = qualifier;
+      this.value = value;
+    }
+
+    public double value() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return qualifier;
+    }
+
+    public static Density from(String s) {
+      return s.isEmpty() ? NO_QUALIFIER : valueOf(s.toUpperCase());
+    }
+
+    public static boolean isDensity(String s) {
+      for (Density choice : values()) {
+        if (choice.toString().equals(s)) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
 
   public static class Qualifiers {
-    public final String density;
+    /** e.g. "xhdpi" */
+    public final Filters.Density density;
+    /** e.g. "de-v11" */
     public final String others;
 
     /**
@@ -47,17 +86,21 @@ public class Filters {
      * @param file path to a drawable
      */
     public Qualifiers(File file) {
-      StringBuilder densityBuilder = new StringBuilder();
+      Filters.Density density = Density.NO_QUALIFIER;
       StringBuilder othersBuilder = new StringBuilder();
       for (String qualifier : file.getParentFile().getName().split("-")) {
         if (qualifier.equals("drawable")) { // We're assuming they're all drawables.
           continue;
         }
-        StringBuilder whichBuilder =
-            ORDERING.containsKey(qualifier) ? densityBuilder : othersBuilder;
-        whichBuilder.append((MoreStrings.isEmpty(whichBuilder) ? "" : "-") + qualifier);
+
+        if (Filters.Density.isDensity(qualifier)) {
+          density = Density.from(qualifier);
+        } else {
+          othersBuilder.append((MoreStrings.isEmpty(othersBuilder) ? "" : "-") + qualifier);
+        }
+
       }
-      this.density = densityBuilder.toString();
+      this.density = density;
       this.others = othersBuilder.toString();
     }
   }
@@ -71,57 +114,84 @@ public class Filters {
    * {@code drawable-hdpi, drawable-mdpi, drawable-xhdpi, drawable-hdpi-ro}, for a target of {@code
    * mdpi}, we'll be keeping {@code drawable-mdpi, drawable-hdpi-ro}.
    * @param candidates list of paths to image files
-   * @param targetDensity density to keep
+   * @param targetDensities densities we want to keep
+   * @param canDownscale do we have access to an image scaler
    * @return set of files to remove
    */
   @VisibleForTesting
-  static Set<File> onlyOneImage(Iterable<String> candidates, String targetDensity) {
+  static Set<File> filterByDensity(
+      Iterable<String> candidates,
+      Set<Filters.Density> targetDensities,
+      boolean canDownscale) {
     ImmutableSet.Builder<File> removals = ImmutableSet.builder();
 
-    Table<String, String, String> imageValues = HashBasedTable.create();
+    Table<String, Density, String> imageValues = HashBasedTable.create();
 
     // Create mappings for drawables. If candidate == "<base>/drawable-<dpi>-<other>/<filename>",
     // then we'll record a mapping of the form ("<base>/<filename>/<other>", "<dpi>") -> candidate.
+    // For example:
+    //                                    mdpi                               hdpi
+    //                       --------------------------------------------------------------------
+    // key: res/some.png/    |  res/drawable-mdpi/some.png          res/drawable-hdpi/some.png
+    // key: res/some.png/fr  |  res/drawable-fr-hdpi/some.png
     for (String candidate : candidates) {
       File f = new File(candidate);
 
       Qualifiers qualifiers = new Qualifiers(f);
 
       String filename = f.getName();
-      String density = qualifiers.density;
+      Density density = qualifiers.density;
       String resDirectory = f.getParentFile().getParent();
       String key = String.format("%s/%s/%s", resDirectory, filename, qualifiers.others);
       imageValues.put(key, density, candidate);
     }
 
     for (String key : imageValues.rowKeySet()) {
-      Map<String, String> options = imageValues.row(key);
-      Set<String> densitiesForKey = options.keySet();
+      Map<Density, String> options = imageValues.row(key);
+      Set<Density> available = options.keySet();
 
-      ImmutableList<String> resOrder = ORDERING.get(targetDensity);
-
-      // If there's only one density, or there are densities we don't work with, skip this image.
-      if (options.size() == 1 || !resOrder.containsAll(densitiesForKey)) {
-        continue;
+      // This is to make sure we preserve the existing structure of drawable/ files.
+      Set<Density> targets = targetDensities;
+      if (available.contains(Density.NO_QUALIFIER) && !available.contains(Density.MDPI) ) {
+        targets = Sets.newHashSet(Iterables.transform(targetDensities,
+            new Function<Density, Density>() {
+              @Override
+              public Density apply(Density input) {
+                return (input == Density.MDPI) ? Density.NO_QUALIFIER : input;
+              }
+            }
+        ));
       }
 
-      // Go through DPIs in order of preference and keep the first one actually present.
-      String keep = resOrder.get(0);
-      for (String res : resOrder) {
-        if (densitiesForKey.contains(res)) {
-          keep = res;
-          break;
+      // We intend to keep all available targeted densities.
+      Set<Density> toKeep = Sets.newHashSet(Sets.intersection(available, targets));
+
+      // Make sure we have a decent fit for the largest target density.
+      Density largestTarget = Density.ORDERING.max(targets);
+      if (!available.contains(largestTarget)) {
+        Density fallback = null;
+        // Downscaling nine-patch drawables would require extra logic, not doing that yet.
+        if (canDownscale && !options.values().iterator().next().endsWith(".9.png")) {
+          // Highest possible quality, because we'll downscale it.
+          fallback = Density.ORDERING.max(available);
+        } else {
+          // We want to minimize size, so we'll go for the smallest available density that's
+          // still larger than the missing one and, missing that, for the largest available.
+          for (Density candidate : Density.ORDERING.reverse().sortedCopy(available)) {
+            if (fallback == null || Density.ORDERING.compare(candidate, largestTarget) > 0) {
+              fallback = candidate;
+            }
+          }
         }
+        toKeep.add(fallback);
       }
 
-      // Mark all the others for removal.
-      for (String density : densitiesForKey) {
-        if (keep.equals(density)) {
-          continue;
-        }
+      // Mark remaining densities for removal.
+      for (Density density : Sets.difference(available, toKeep)) {
         removals.add(new File(options.get(density)).getAbsoluteFile());
       }
     }
+
     return removals.build();
   }
 
@@ -130,17 +200,18 @@ public class Filters {
    * {@link com.google.common.base.Predicate} that fails for drawables of a different
    * density, whenever they can be safely removed.
    * @param candidates list of available drawables
-   * @param targetDensity one of {@code "xhdpi"}, {@code "hdpi"} or {@code "mdpi"}
+   * @param targetDensities set of e.g. {@code "mdpi"}, {@code "ldpi"} etc.
+   * @param canDownscale if no exact match is available, retain the highest quality
    * @return a predicate as above
    */
   public static Predicate<File> createImageDensityFilter(Iterable<String> candidates,
-      String targetDensity) {
-    Preconditions.checkArgument(ORDERING.containsKey(targetDensity));
-    final Set<File> removals = onlyOneImage(candidates, targetDensity);
+                                                         Set<Filters.Density> targetDensities,
+                                                         boolean canDownscale) {
+    final Set<File> filesToRemove = filterByDensity(candidates, targetDensities, canDownscale);
     return new Predicate<File>() {
       @Override
       public boolean apply(File pathname) {
-        return !removals.contains(pathname.getAbsoluteFile());
+        return !filesToRemove.contains(pathname.getAbsoluteFile());
       }
     };
   }

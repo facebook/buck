@@ -33,16 +33,15 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -53,14 +52,6 @@ import javax.annotation.Nullable;
  * while filtering out certain resources.
  */
 public class FilterResourcesStep implements Step {
-
-  /**
-   * We use this to compute scaling factors between different densities.
-   */
-  private static Map<String, Double> DPI_VALUES = ImmutableMap.of(
-      "mdpi", 160.0,
-      "hdpi", 240.0,
-      "xhdpi", 320.0);
 
   @VisibleForTesting
   static final Pattern DRAWABLE_PATH_PATTERN = Pattern.compile(
@@ -75,7 +66,7 @@ public class FilterResourcesStep implements Step {
   private final boolean filterStrings;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
   @Nullable
-  private final String resourceFilter;
+  private final Set<Filters.Density> targetDensities;
   @Nullable
   private final DrawableFinder drawableFinder;
   @Nullable
@@ -89,9 +80,8 @@ public class FilterResourcesStep implements Step {
    * @param filterStrings whether to filter non-english strings
    * @param filteredDirectoryCopier refer {@link FilteredDirectoryCopier}
    *
-   * @param resourceFilter filtering to perform (currently based on density; allowed values are
-   *     {@code "mdpi"}, {@code "hdpi"} and {@code "xhdpi"}). Only applicable if filterDrawables
-   *     is true
+   * @param targetDensities densities we're interested in keeping (e.g. {@code mdpi}, {@code hdpi}
+   *     etc.) Only applicable if filterDrawables is true
    * @param drawableFinder refer {@link DrawableFinder}. Only applicable if filterDrawables is true.
    * @param imageScaler if not null, use the {@link ImageScaler} to downscale higher-density
    *     drawables for which we weren't able to find an image file of the proper density (as opposed
@@ -103,19 +93,18 @@ public class FilterResourcesStep implements Step {
       boolean filterDrawables,
       boolean filterStrings,
       FilteredDirectoryCopier filteredDirectoryCopier,
-      @Nullable String resourceFilter,
+      @Nullable Set<Filters.Density> targetDensities,
       @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
     Preconditions.checkArgument(filterDrawables || filterStrings);
     Preconditions.checkArgument(!filterDrawables ||
-        (resourceFilter != null && drawableFinder != null));
+        (targetDensities != null && drawableFinder != null));
     this.inResDirToOutResDirMap = Preconditions.checkNotNull(inResDirToOutResDirMap);
     this.filterDrawables = filterDrawables;
     this.filterStrings = filterStrings;
     this.filteredDirectoryCopier = Preconditions.checkNotNull(filteredDirectoryCopier);
-
-    this.resourceFilter = resourceFilter;
+    this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
     this.nonEnglishStringFilesBuilder = ImmutableSet.builder();
@@ -145,9 +134,13 @@ public class FilterResourcesStep implements Step {
 
   private int doExecute(ExecutionContext context) throws IOException {
     List<Predicate<File>> filePredicates = Lists.newArrayList();
+
+    final boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
+
     if (filterDrawables) {
       Set<String> drawables = drawableFinder.findDrawables(inResDirToOutResDirMap.keySet());
-      filePredicates.add(Filters.createImageDensityFilter(drawables, resourceFilter));
+      filePredicates.add(
+          Filters.createImageDensityFilter(drawables, targetDensities, canDownscale));
     }
 
     if (filterStrings) {
@@ -168,12 +161,11 @@ public class FilterResourcesStep implements Step {
       });
     }
 
-
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
     filteredDirectoryCopier.copyDirs(inResDirToOutResDirMap, Predicates.and(filePredicates));
 
     // If an ImageScaler was specified, but only if it is available, try to apply it.
-    if ((imageScaler != null) && imageScaler.isAvailable(context)) {
+    if (canDownscale && filterDrawables) {
       scaleUnmatchedDrawables(context);
     }
 
@@ -191,8 +183,8 @@ public class FilterResourcesStep implements Step {
   }
 
   @VisibleForTesting
-  String getResourceFilter() {
-    return resourceFilter;
+  Set<Filters.Density> getTargetDensities() {
+    return targetDensities;
   }
 
   @VisibleForTesting
@@ -214,6 +206,7 @@ public class FilterResourcesStep implements Step {
    */
   private void scaleUnmatchedDrawables(ExecutionContext context) throws IOException {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
+    Filters.Density targetDensity = Filters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
     for (String drawable : drawableFinder.findDrawables(inResDirToOutResDirMap.values())) {
@@ -225,19 +218,20 @@ public class FilterResourcesStep implements Step {
       }
 
       Filters.Qualifiers qualifiers = new Filters.Qualifiers(drawableFile);
+      Filters.Density density = qualifiers.density;
 
       // If the image has a qualifier but it's not the right one.
-      if (!qualifiers.density.equals(this.resourceFilter) && !qualifiers.density.isEmpty()) {
+      if (!targetDensities.contains(density)) {
 
         // Replace density qualifier with target density using regular expression to match
         // the qualifier in the context of a path to a drawable.
         String destination = drawable.replaceFirst(
-            "((?:^|/)drawable[^/]*-)" + Pattern.quote(qualifiers.density) + "(-|$|/)",
-            "$1" + resourceFilter + "$2");
+            "((?:^|/)drawable[^/]*-)" + Pattern.quote(density.toString()) + "(-|$|/)",
+            "$1" + targetDensity + "$2");
 
-        double factor = DPI_VALUES.get(resourceFilter) / (DPI_VALUES.get(qualifiers.density));
-        if (factor > 1.0) {
-          // There is no point in up-scaling.
+        double factor = targetDensity.value() / density.value();
+        if (factor >= 1.0) {
+          // There is no point in up-scaling, or converting between drawable and drawable-mdpi.
           continue;
         }
 
@@ -328,37 +322,44 @@ public class FilterResourcesStep implements Step {
     }
   }
 
+  /**
+   * Helper class for interpreting the resource_filter argument to android_binary().
+   */
   public static class ResourceFilter {
 
     static final ResourceFilter EMPTY_FILTER = new ResourceFilter(ImmutableList.<String>of());
 
-    private final List<String> filter;
+    private final Set<String> filter;
+    private final Set<Filters.Density> densities;
+    private final boolean downscale;
 
     public ResourceFilter(List<String> resourceFilter) {
-      this.filter = ImmutableList.copyOf(resourceFilter);
+      this.filter = ImmutableSet.copyOf(resourceFilter);
+      this.densities = Sets.newHashSet();
+
+      boolean downscale = false;
+      for (String component : filter) {
+        if ("downscale".equals(component)) {
+          downscale = true;
+        } else {
+          densities.add(Filters.Density.from(component));
+        }
+      }
+
+      this.downscale = downscale;
     }
 
     public boolean shouldDownscale() {
-      return filter.contains("downscale");
+      return isEnabled() && downscale;
     }
 
     @Nullable
-    public String getDensity() {
-      String density = null;
-      for (String option : filter) {
-        if (Filters.ORDERING.containsKey(option)) {
-          if (density == null) {
-            density = option;
-          } else {
-            throw new HumanReadableException("Multiple target densities not supported yet.");
-          }
-        }
-      }
-      return density;
+    public Set<Filters.Density> getDensities() {
+      return densities;
     }
 
     public boolean isEnabled() {
-      return getDensity() != null;
+      return !densities.isEmpty();
     }
 
     public String getDescription() {
@@ -400,7 +401,7 @@ public class FilterResourcesStep implements Step {
           resourceFilter.isEnabled(),
           filterStrings,
           DefaultFilteredDirectoryCopier.getInstance(),
-          resourceFilter.getDensity(),
+          resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
           resourceFilter.shouldDownscale() ? ImageMagickScaler.getInstance() : null);
     }

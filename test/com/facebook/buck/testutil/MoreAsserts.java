@@ -26,9 +26,13 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+
+import org.junit.Assert;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -38,6 +42,18 @@ import javax.annotation.Nullable;
 public final class MoreAsserts {
 
   private MoreAsserts() {}
+
+  /**
+   * Asserts that two sets have the same contents.
+   * On failure, prints a readable diff of the two sets for easy debugging.
+   */
+  public static <E> void assertSetEquals(Set<E> expected, Set<E> actual) {
+    Set<E> missing = Sets.difference(expected, actual);
+    Set<E> extra = Sets.difference(actual, expected);
+    boolean setsEqual = missing.isEmpty() && extra.isEmpty();
+    Assert.assertTrue(String.format("%nMissing elements:%n%s" +
+        "%nExtraneous elements:%n%s", missing, extra), setsEqual);
+  }
 
   /**
    * @see #assertIterablesEquals(Iterable, Iterable)
