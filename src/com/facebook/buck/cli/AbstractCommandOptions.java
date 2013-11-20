@@ -49,7 +49,6 @@ public abstract class AbstractCommandOptions {
       name = VerbosityParser.VERBOSE_LONG_ARG,
       aliases = { VerbosityParser.VERBOSE_SHORT_ARG },
       usage = "Specify a number between 1 and 10.")
-  @SuppressWarnings("unused")
   private int verbosityLevel = -1;
 
   @Option(
