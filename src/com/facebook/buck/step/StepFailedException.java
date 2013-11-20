@@ -37,12 +37,12 @@ public class StepFailedException extends Exception {
       Optional<BuildTarget> buildTarget) {
     String message;
     if (buildTarget.isPresent()) {
-      message = String.format("%s failed on step \"%s\" with exit code %d",
+      message = String.format("%s failed with exit code %d:\n%s",
           buildTarget.get().getFullyQualifiedName(),
-          step.getShortName(),
-          exitCode);
+          exitCode,
+          step.getDescription(context));
     } else {
-      message = String.format("Failed with %d: %s",
+      message = String.format("Failed with exit code %d:\n%s",
           exitCode,
           step.getDescription(context));
     }

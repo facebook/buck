@@ -49,6 +49,7 @@ public class GenruleFailingCommandIntegrationTest {
 
     // We make sure that we failed for the right reason.
     assertThat(buildResult.getStderr(),
-        containsString("BUILD FAILED: //:fail failed on step \"genrule\" with exit code 1"));
+        containsString("BUILD FAILED: //:fail failed with exit code 1:\n" +
+        		"/bin/bash -e -c 'false; echo >&2 hi'"));
   }
 }
