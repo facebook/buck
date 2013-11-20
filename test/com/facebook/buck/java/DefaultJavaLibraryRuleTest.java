@@ -1216,6 +1216,7 @@ public class DefaultJavaLibraryRuleTest {
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<SourcePath>of(),
           /* proguardConfig */ Optional.<String>absent(),
+          /* exortDeps */ ImmutableSet.<BuildRule>of(),
           options.build(),
           /* manifestFile */ Optional.<String>absent());
     }

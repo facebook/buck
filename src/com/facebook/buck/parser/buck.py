@@ -333,6 +333,7 @@ def android_library(
     name,
     srcs=[],
     resources=[],
+    exported_deps=[],
     manifest=None,
     proguard_config=None,
     deps=[],
@@ -342,10 +343,11 @@ def android_library(
     'type' : 'android_library',
     'name' : name,
     'srcs' : srcs,
+    'exported_deps' : exported_deps,
     'resources' : resources,
     'manifest' : manifest,
     'proguard_config' : proguard_config,
-    'deps' : deps,
+    'deps' : deps + exported_deps,
     'visibility' : visibility,
   }, build_env)
 

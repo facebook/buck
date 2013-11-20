@@ -36,7 +36,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.util.List;
@@ -57,13 +56,14 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       Set<String> srcs,
       Set<SourcePath> resources,
       Optional<String> proguardConfig,
+      Set<BuildRule> exportedDeps,
       JavacOptions javacOptions,
       Optional<String> manifestFile) {
     super(buildRuleParams,
         srcs,
         resources,
         proguardConfig,
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        exportedDeps,
         javacOptions);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }
@@ -123,6 +123,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
           srcs,
           resources,
           proguardConfig,
+          getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           javacOptions.build(),
           manifestFile);
     }
