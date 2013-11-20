@@ -77,9 +77,9 @@ public class PartialGraph {
   }
 
   /**
-   * Creates a partial graph of all {@link BuildRule}s that are transitive dependencies of (rules
-   * that pass {@code predicate} and are contained in BUCK files that contain transitive
-   * dependencies of the {@link BuildTarget}s defined in {@code roots}).
+   * Creates a partial graph of all {@link com.facebook.buck.rules.BuildRule}s that are transitive
+   * dependencies of (rules that pass {@code predicate} and are contained in BUCK files that contain
+   * transitive dependencies of the {@link BuildTarget}s defined in {@code roots}).
    */
   public static PartialGraph createPartialGraphFromRoots(
       Iterable<BuildTarget> roots,
