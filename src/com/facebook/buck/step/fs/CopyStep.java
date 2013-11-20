@@ -48,7 +48,7 @@ public class CopyStep implements Step {
   }
 
   @Override
-  public String getDescription (ExecutionContext context) {
+  public String getDescription(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("cp");
     if (shouldRecurse) {
@@ -83,7 +83,7 @@ public class CopyStep implements Step {
       }
       return 0;
     } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
+      context.logError(e, "Failed when trying to copy: %s", getDescription(context));
       return 1;
     }
   }
