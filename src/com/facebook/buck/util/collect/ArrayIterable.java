@@ -75,7 +75,6 @@ public class ArrayIterable<T> implements Iterable<T> {
     }
   }
 
-  @SuppressWarnings("unchecked") // (Iterator<T>) ImmutableList.of()
   @Override
   public Iterator<T> iterator() {
 
