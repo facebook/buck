@@ -66,14 +66,9 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning about being run from directory without git.",
+        "`buck project` should contain warning to restart IntelliJ.",
         result.getStderr(),
-        not(containsString(Joiner.on('\n').join(
-            "  ::  \"buck project\" run from a directory not under Git source",
-            "  ::  control.  If invoking buck project with an argument, we are",
-            "  ::  not able to remove old .iml files, which can result in",
-            "  ::  IntelliJ being in a bad state.  Please close and re-open",
-            "  ::  IntelliJ if it's open."))));
+        containsString("  ::  Please close and re-open IntelliJ."));
   }
 
   /**
@@ -107,14 +102,9 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning about being run from directory without git.",
+        "`buck project` should contain warning to restart IntelliJ.",
         result.getStderr(),
-        containsString(Joiner.on('\n').join(
-            "  ::  \"buck project\" run from a directory not under Git source",
-            "  ::  control.  If invoking buck project with an argument, we are",
-            "  ::  not able to remove old .iml files, which can result in",
-            "  ::  IntelliJ being in a bad state.  Please close and re-open",
-            "  ::  IntelliJ if it's open.")));
+        containsString("  ::  Please close and re-open IntelliJ."));
   }
 
   /**

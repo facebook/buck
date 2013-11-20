@@ -392,18 +392,6 @@ def clean_old_files():
 
 
 if __name__ == '__main__':
-  if not os.path.isdir('.git'):
-    for root, dirnames, filenames in os.walk('.'):
-      if fnmatch.filter(filenames, '*.iml'):
-        sys.stderr.write('\n'.join(
-          [ '  ::  "buck project" run from a directory not under Git source',
-            '  ::  control.  If invoking buck project with an argument, we are',
-            '  ::  not able to remove old .iml files, which can result in',
-            '  ::  IntelliJ being in a bad state.  Please close and re-open',
-            '  ::  IntelliJ if it\'s open.' ]))
-        sys.stderr.flush()
-        break
-
   json_file = sys.argv[1]
   parsed_json = json.load(open(json_file, 'r'))
 
@@ -414,8 +402,8 @@ if __name__ == '__main__':
   write_modules(modules)
   write_all_modules(modules)
   write_run_configs()
-  if PROJECT_FILES:
-    clean_old_files()
 
   # Write the list of modified files to stdout
   for path in MODIFIED_FILES: print path
+
+  print >> sys.stderr, '  ::  Please close and re-open IntelliJ.'
