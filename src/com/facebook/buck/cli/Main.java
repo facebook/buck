@@ -240,7 +240,7 @@ public final class Main {
     }
   }
 
-  @Nullable private static Daemon daemon;
+  @Nullable volatile private static Daemon daemon;
 
   /**
    * Get existing Daemon.
@@ -564,7 +564,6 @@ public final class Main {
    *     global user configurations can be included when computing keys.
    * @param hashCache A cache of file content hashes, used to avoid reading and hashing input files.
    */
-  @SuppressWarnings("unused")
   private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(BuckConfig buckConfig, final FileHashCache hashCache) {
     return new RuleKeyBuilderFactory() {
       @Override
