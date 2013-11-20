@@ -20,7 +20,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -29,6 +28,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -59,26 +59,34 @@ public class GenerateShellScriptStep implements Step {
     lines.add("#!/bin/sh");
     lines.add("set -e");
 
-    // Create a tmp directory that will be deleted when this script exits.
-    lines.add("BUCK_PROJECT_ROOT=`mktemp -d -t sh_binary.XXXXXXXXXX`");
-    lines.add("trap \"chmod -R 755 $BUCK_PROJECT_ROOT " +
-    		"&& rm -rf $BUCK_PROJECT_ROOT\" EXIT HUP INT TERM");
+    // This script can be cached and used on machines other than the one where it was created. That
+    // means it can't contain any absolute filepaths. Expose the absolute filepath of the root of
+    // the project as $BUCK_REAL_ROOT, determined at runtime.
+    int levelsBelowRoot = outputFile.getNameCount() - 1;
+    String pathBackToRoot = Joiner.on("/").join(Collections.nCopies(levelsBelowRoot, ".."));
+    lines.add(String.format("BUCK_REAL_ROOT=\"$(cd `dirname $0`/%s; pwd)\"", pathBackToRoot));
+
+    // Create a tmp directory that will be deleted when this script exits. This ensures that
+    // scriptToRun doesn't leak any state onto the filesystem from run to run.
+    lines.add("BUCK_TMP_ROOT=`mktemp -d -t sh_binary.XXXXXXXXXX`");
+    lines.add("trap \"chmod -R 755 $BUCK_TMP_ROOT " +
+        "&& rm -rf $BUCK_TMP_ROOT\" EXIT HUP INT TERM");
 
     // Navigate to the tmp directory.
-    lines.add("cd $BUCK_PROJECT_ROOT");
+    lines.add("cd $BUCK_TMP_ROOT");
 
-    // Symlink the resources to the $BUCK_PROJECT_ROOT directory.
-    Function<String, Path> pathRelativizer = context.getProjectFilesystem().getPathRelativizer();
-    createSymlinkCommands(resources, pathRelativizer, lines);
+    // Symlink the resources to the $BUCK_TMP_ROOT directory.
+    createSymlinkCommands(resources, lines);
 
-    // Make everything in $BUCK_PROJECT_ROOT read-only.
-    lines.add("find $BUCK_PROJECT_ROOT -type d -exec chmod 555 {} \\;");
-    lines.add("find $BUCK_PROJECT_ROOT -type f -exec chmod 444 {} \\;");
+    // Make everything in $BUCK_TMP_ROOT read-only.
+    lines.add("find $BUCK_TMP_ROOT -type d -exec chmod 555 {} \\;");
+    lines.add("find $BUCK_TMP_ROOT -type f -exec chmod 444 {} \\;");
 
-    // Forward the args to this generated script to scriptToRun and execute it.
+    // Forward the args to this generated script to scriptToRun and execute it. Expose the temporary
+    // directory to the scriptToRun as $BUCK_PROJECT_ROOT.
     lines.add(String.format(
-        "BUCK_PROJECT_ROOT=$BUCK_PROJECT_ROOT %s \"$@\"",
-        pathRelativizer.apply(scriptToRun.toString())));
+        "BUCK_PROJECT_ROOT=$BUCK_TMP_ROOT \"$BUCK_REAL_ROOT\"/%s \"$@\"",
+        Escaper.escapeAsBashString(scriptToRun)));
 
     // Write the contents to the file.
     File output = context.getProjectFilesystem().getFileForRelativePath(outputFile.toString());
@@ -98,9 +106,7 @@ public class GenerateShellScriptStep implements Step {
     }
   }
 
-  private void createSymlinkCommands(Iterable<Path> paths,
-      Function<String, Path> pathRelativizer,
-      List<String> lines) {
+  private void createSymlinkCommands(Iterable<Path> paths, List<String> lines) {
     for (Path path : paths) {
       Preconditions.checkArgument(basePath.toString().isEmpty()
           || path.startsWith(basePath), "%s should start with %s", path, basePath);
@@ -108,9 +114,9 @@ public class GenerateShellScriptStep implements Step {
       if (path.getNameCount() > 1) {
         lines.add(String.format("mkdir -p %s", Escaper.escapeAsBashString(path.getParent())));
       }
-      lines.add(String.format("ln -s %s $BUCK_PROJECT_ROOT/%s",
-          Escaper.escapeAsBashString(pathRelativizer.apply(path.toString())),
-          Escaper.escapeAsBashString(path)));
+      String escapedPath = Escaper.escapeAsBashString(path);
+      lines.add(String.format("ln -s \"$BUCK_REAL_ROOT\"/%s $BUCK_TMP_ROOT/%s",
+          escapedPath, escapedPath));
     }
   }
 
