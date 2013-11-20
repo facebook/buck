@@ -26,10 +26,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
 
@@ -107,10 +105,9 @@ public class AndroidTransitiveDependencyGraphTest {
         .setKeystore(keystoreTarget));
 
     // Verify that the correct transitive dependencies are found.
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
-    AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies(graph);
+    AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies();
     AndroidDexTransitiveDependencies dexTransitiveDeps =
-    		binaryRule.findDexTransitiveDependencies(graph);
+    		binaryRule.findDexTransitiveDependencies();
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
         ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
@@ -188,9 +185,8 @@ public class AndroidTransitiveDependencyGraphTest {
         .setKeystore(keystoreTarget)
         .addClasspathDep(androidLibraryTarget));
 
-    DependencyGraph dependencyGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
     AndroidDexTransitiveDependencies androidTransitiveDeps = androidBinaryRule
-        .findDexTransitiveDependencies(dependencyGraph);
+        .findDexTransitiveDependencies();
     assertEquals(
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(BuckConstant.GEN_DIR + "/java/com/facebook/base/lib__base__output/base.jar"),

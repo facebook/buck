@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -105,13 +104,12 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   }
 
   @Override
-  protected ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal(
-      DependencyGraph graph) {
+  protected ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal() {
     // Filter out the AndroidResourceRules that are needed by this APK but not the APK under test.
     ImmutableSet<HasAndroidResourceDeps> originalResources = ImmutableSet.copyOf(
-        UberRDotJavaUtil.getAndroidResourceDeps(apkUnderTest, graph));
+        UberRDotJavaUtil.getAndroidResourceDeps(apkUnderTest));
     ImmutableList<HasAndroidResourceDeps> instrumentationResources =
-        UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
+        UberRDotJavaUtil.getAndroidResourceDeps(this);
 
     // Include all of the instrumentation resources first, in their original order.
     ImmutableList.Builder<HasAndroidResourceDeps> allResources = ImmutableList.builder();

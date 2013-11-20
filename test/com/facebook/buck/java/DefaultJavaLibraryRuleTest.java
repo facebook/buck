@@ -461,10 +461,7 @@ public class DefaultJavaLibraryRuleTest {
         .addSrc("java/src/com/libtwo/Foo.java")
         .addDep(BuildTargetFactory.newInstance("//:libone")));
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
-
     BuildContext buildContext = EasyMock.createMock(BuildContext.class);
-    expect(buildContext.getDependencyGraph()).andReturn(graph);
     expect(buildContext.getBuildDependencies()).andReturn(BuildDependencies.FIRST_ORDER_ONLY)
         .times(2);
     JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);

@@ -350,7 +350,7 @@ public class Project {
       if (srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinary = (AndroidBinaryRule)srcRule;
         AndroidDexTransitiveDependencies binaryDexTransitiveDependencies =
-            androidBinary.findDexTransitiveDependencies(dependencyGraph);
+            androidBinary.findDexTransitiveDependencies();
         noDxJarsBuilder.addAll(binaryDexTransitiveDependencies.noDxClasspathEntries);
       }
 
@@ -360,7 +360,7 @@ public class Project {
     ImmutableSet<String> noDxJars = noDxJarsBuilder.build();
 
     // Update module dependencies to apply scope="PROVIDED", where appropriate.
-    markNoDxJarsAsProvided(modules, noDxJars, dependencyGraph);
+    markNoDxJarsAsProvided(modules, noDxJars);
 
     return modules;
   }
@@ -664,10 +664,7 @@ public class Project {
    * to the android_binary that <em>does not</em> list the library in its {@code no_dx} list.
    */
   @VisibleForTesting
-  static void markNoDxJarsAsProvided(
-      List<Module> modules,
-      Set<String> noDxJars,
-        DependencyGraph dependencyGraph) {
+  static void markNoDxJarsAsProvided(List<Module> modules, Set<String> noDxJars) {
   Map<String, String> intelliJLibraryNameToJarPath = Maps.newHashMap();
     for (String jarPath : noDxJars) {
       String libraryName = getIntellijNameForBinaryJar(jarPath);
@@ -683,7 +680,7 @@ public class Project {
       if (module.srcRule instanceof AndroidBinaryRule) {
         AndroidBinaryRule androidBinaryRule = (AndroidBinaryRule)module.srcRule;
         AndroidDexTransitiveDependencies dexTransitiveDependencies =
-            androidBinaryRule.findDexTransitiveDependencies(dependencyGraph);
+            androidBinaryRule.findDexTransitiveDependencies();
         classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
             dexTransitiveDependencies.classpathEntriesToDex));
       } else {

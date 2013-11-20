@@ -153,8 +153,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     // androidResourceDeps will be null if this test is re-run without being rebuilt.
     if (androidResourceDeps == null) {
-      androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this,
-          buildContext.getDependencyGraph());
+      androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this);
     }
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();

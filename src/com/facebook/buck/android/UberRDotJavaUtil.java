@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
+import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.java.JavacOptions;
@@ -24,7 +27,6 @@ import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -39,6 +41,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -122,13 +126,55 @@ public class UberRDotJavaUtil {
   /**
    * Finds the transitive set of {@code rule}'s {@link AndroidResourceRule} dependencies with
    * non-null {@code res} directories, which can also include {@code rule} itself.
-   * This set will be returned as an {@link ImmutableList} with the rules topologically sorted as
-   * determined by {@code graph}. Rules will be ordered from least dependent to most dependent.
+   * This set will be returned as an {@link ImmutableList} with the rules topologically sorted.
+   * Rules will be ordered from least dependent to most dependent.
+   */
+  public static ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(BuildRule rule) {
+    return getAndroidResourceDeps(Collections.singleton(rule));
+  }
+
+  /**
+   * Finds the transitive set of {@code rules}' {@link AndroidResourceRule} dependencies with
+   * non-null {@code res} directories, which can also include any of the {@code rules} themselves.
+   * This set will be returned as an {@link ImmutableList} with the rules topologically sorted.
+   * Rules will be ordered from least dependent to most dependent.
    */
   public static ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(
-      BuildRule rule,
-      DependencyGraph graph) {
-    final Set<HasAndroidResourceDeps> allAndroidResourceRules = findAllAndroidResourceDeps(rule);
+      Collection<BuildRule> rules) {
+    // This visitor finds all AndroidResourceRules that are reachable from the specified rules via
+    // rules with types in the TRAVERSABLE_TYPES collection. It also builds up the dependency graph
+    // that was traversed to find the AndroidResourceRules.
+    final MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<>();
+    final ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
+    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(rules) {
+
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        mutableGraph.addNode(rule);
+
+        if (rule instanceof HasAndroidResourceDeps) {
+          HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
+          if (androidResourceRule.getRes() != null) {
+            androidResources.add(androidResourceRule);
+          }
+        }
+
+        // Only certain types of rules should be considered as part of this traversal.
+        BuildRuleType type = rule.getType();
+        ImmutableSet<BuildRule> depsToVisit = maybeVisitAllDeps(rule,
+            TRAVERSABLE_TYPES.contains(type));
+        for (BuildRule dep : depsToVisit) {
+          mutableGraph.addEdge(rule, dep);
+        }
+        return depsToVisit;
+      }
+
+    };
+    visitor.start();
+
+    final Set<HasAndroidResourceDeps> allAndroidResourceRules = androidResources.build();
+    final ImmutableDirectedAcyclicGraph<BuildRule> graph =
+        new DefaultImmutableDirectedAcyclicGraph<>(mutableGraph);
 
     // Now that we have the transitive set of AndroidResourceRules, we need to return them in
     // topologically sorted order. This is critical because the order in which -S flags are passed
@@ -159,30 +205,6 @@ public class UberRDotJavaUtil {
           return (HasAndroidResourceDeps)rule;
         }
       };
-
-  private static ImmutableSet<HasAndroidResourceDeps> findAllAndroidResourceDeps(BuildRule buildRule) {
-    final ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
-    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(buildRule) {
-
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (rule instanceof HasAndroidResourceDeps) {
-          HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
-          if (androidResourceRule.getRes() != null) {
-            androidResources.add(androidResourceRule);
-          }
-        }
-
-        // Only certain types of rules should be considered as part of this traversal.
-        BuildRuleType type = rule.getType();
-        return maybeVisitAllDeps(rule, TRAVERSABLE_TYPES.contains(type));
-      }
-
-    };
-    visitor.start();
-
-    return androidResources.build();
-  }
 
   /**
    * Aggregate information about a list of {@link AndroidResourceRule}s.

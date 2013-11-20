@@ -518,8 +518,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     // If this rule depends on AndroidResourceRules, then we need to generate the R.java files that
     // this rule needs in order to be able to compile itself.
-    androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this,
-        context.getDependencyGraph());
+    androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this);
     boolean dependsOnAndroidResourceRules = !androidResourceDeps.isEmpty();
     if (dependsOnAndroidResourceRules) {
       UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, commands);

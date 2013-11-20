@@ -36,7 +36,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -45,7 +44,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.MorePaths;
@@ -104,11 +102,10 @@ public class AndroidBinaryRuleTest {
         .setKeystore(addKeystoreRule(ruleResolver))
         .setPackageType("debug"));
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
     AndroidTransitiveDependencies transitiveDependencies =
-        androidBinary.findTransitiveDependencies(graph);
+        androidBinary.findTransitiveDependencies();
     AndroidDexTransitiveDependencies dexTransitiveDependencies =
-        androidBinary.findDexTransitiveDependencies(graph);
+        androidBinary.findDexTransitiveDependencies();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     BuildContext context = createMock(BuildContext.class);

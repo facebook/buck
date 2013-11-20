@@ -116,10 +116,9 @@ public class AndroidManifest extends AbstractBuildable {
    * @return a list of {@link AndroidResourceRule}s that should be passed,
    * in order, to {@code aapt} when generating the {@code R.java} files for this APK.
    */
-  private ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(
-      DependencyGraph graph) {
+  private ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(DependencyGraph graph) {
     BuildRule self = graph.findBuildRuleByTarget(buildTarget);
-    return UberRDotJavaUtil.getAndroidResourceDeps(self, graph);
+    return UberRDotJavaUtil.getAndroidResourceDeps(self);
   }
 
   public static Builder newManifestMergeRuleBuilder(AbstractBuildRuleBuilderParams params) {

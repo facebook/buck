@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -477,11 +476,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(new MkdirAndSymlinkFileStep(getManifest().resolve(context).toString(),
         getAndroidManifestXml()));
 
-    final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies(
-        context.getDependencyGraph());
+    final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies();
 
     final AndroidDexTransitiveDependencies dexTransitiveDependencies =
-        findDexTransitiveDependencies(context.getDependencyGraph());
+        findDexTransitiveDependencies();
 
     // Add the steps for the aapt_package command. This method returns data that the ApkBuilder
     // needs to create a final, unsigned APK.
@@ -866,13 +864,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return Optional.of(destination);
   }
 
-  public AndroidTransitiveDependencies findTransitiveDependencies(DependencyGraph graph) {
-    return getTransitiveDependencyGraph().findDependencies(getAndroidResourceDepsInternal(graph));
+  public AndroidTransitiveDependencies findTransitiveDependencies() {
+    return getTransitiveDependencyGraph().findDependencies(getAndroidResourceDepsInternal());
   }
 
-  public AndroidDexTransitiveDependencies findDexTransitiveDependencies(DependencyGraph graph) {
+  public AndroidDexTransitiveDependencies findDexTransitiveDependencies() {
     return getTransitiveDependencyGraph().findDexDependencies(
-        getAndroidResourceDepsInternal(graph),
+        getAndroidResourceDepsInternal(),
         buildRulesToExcludeFromDex);
   }
 
@@ -880,9 +878,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * @return a list of {@link HasAndroidResourceDeps}s that should be passed, in order, to {@code aapt}
    *     when generating the {@code R.java} files for this APK.
    */
-  protected ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal(
-      DependencyGraph graph) {
-    return UberRDotJavaUtil.getAndroidResourceDeps(this, graph);
+  protected ImmutableList<HasAndroidResourceDeps> getAndroidResourceDepsInternal() {
+    return UberRDotJavaUtil.getAndroidResourceDeps(this);
   }
 
   private boolean canSkipAaptResourcePackaging() {

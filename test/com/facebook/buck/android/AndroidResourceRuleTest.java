@@ -25,12 +25,10 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.RuleMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -125,8 +123,7 @@ public class AndroidResourceRuleTest {
         .addDep(BuildTargetFactory.newInstance("//:c"))
         .addDep(BuildTargetFactory.newInstance("//:d")));
 
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(ruleResolver);
-    ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a, graph);
+    ImmutableList<HasAndroidResourceDeps> deps = UberRDotJavaUtil.getAndroidResourceDeps(a);
 
     // Note that a topological sort for a DAG is not guaranteed to be unique. In this particular
     // case, there are two possible valid outcomes.
@@ -157,8 +154,7 @@ public class AndroidResourceRuleTest {
         .addDep(BuildTargetFactory.newInstance("//:a"))
         .addDep(BuildTargetFactory.newInstance("//:c")));
 
-    DependencyGraph graph2 = RuleMap.createGraphFromBuildRules(ruleResolver);
-    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e, graph2);
+    ImmutableList<HasAndroidResourceDeps> deps2 = UberRDotJavaUtil.getAndroidResourceDeps(e);
     assertTrue(
         String.format(
             "Topological sort %s should be either %s or %s", deps, validResult1, validResult2),

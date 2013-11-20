@@ -172,7 +172,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
 
     // Searching through the deps, find any additional res directories to pass to aapt.
     ImmutableList<HasAndroidResourceDeps> androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(
-        this, context.getDependencyGraph());
+        this);
     Set<String> resDirectories = ImmutableSet.copyOf(
         Iterables.transform(androidResourceDeps, GET_RES_FOR_RULE));
 
