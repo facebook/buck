@@ -240,7 +240,7 @@ public final class Main {
     }
   }
 
-  @Nullable private static Daemon daemon;
+  @Nullable volatile private static Daemon daemon;
 
   /**
    * Get existing Daemon.
