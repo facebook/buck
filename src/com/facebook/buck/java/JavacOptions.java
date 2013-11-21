@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  */
 public class JavacOptions {
 
-  private static final String DEFAULT_JAVA_TARGET = "6";
+  private static final String DEFAULT_JAVA_TARGET = "7";
 
   // Fields are initialized in order. We need the default java target level to have been set.
   public static final JavacOptions DEFAULTS = JavacOptions.builder().build();

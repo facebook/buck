@@ -4,8 +4,6 @@
     src_roots = src, test
 [alias]
     buck = //src/com/facebook/buck/cli:cli
-[buildfile]
-    includes = //DEFS
 [project]
     ignore = \
       .git, \
