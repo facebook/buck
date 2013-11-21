@@ -25,6 +25,7 @@ import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -224,31 +225,11 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
                 }
               }
 
-              // Give the rule a chance to populate its internal data structures now that all of the
-              // files should be in a valid state.
-              AbstractCachingBuildRule self = AbstractCachingBuildRule.this;
-              if (result.success.shouldInitializeFromDiskAfterBuilding()) {
-                if (InitializableFromDisk.class.isAssignableFrom(self.getClass())) {
-                  ((InitializableFromDisk) self).initializeFromDisk(onDiskBuildInfo);
-                }
-
-                // We're moving to a world where BuildRule becomes Buildable. In many cases, that
-                // refactoring hasn't happened yet, and in that case "self" and self's Buildable are
-                // the same instance. We don't want to call initializeFromDisk more than once, so
-                // handle this case gracefully-ish.
-                if (self.getBuildable() instanceof InitializableFromDisk && self != self.getBuildable()) {
-                  ((InitializableFromDisk) self.getBuildable()).initializeFromDisk(onDiskBuildInfo);
-                }
-              }
-
-              // Only now that the rule should be in a completely valid state, resolve the future.
-              BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(
-                  self, result.success);
-              buildRuleResult.set(buildRuleSuccess);
+              doHydrationAfterBuildStepsFinish(result, onDiskBuildInfo);
 
               // Do the post to the event bus immediately after the future is set so that the
               // build time measurement is as accurate as possible.
-              eventBus.post(BuildRuleEvent.finished(self,
+              eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
                   result.status,
                   result.cacheResult,
                   Optional.of(result.success)));
@@ -293,6 +274,36 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     }
 
     return buildRuleResult;
+  }
+
+  @VisibleForTesting
+  public void doHydrationAfterBuildStepsFinish(BuildResult result,
+      OnDiskBuildInfo onDiskBuildInfo) {
+    // Give the rule a chance to populate its internal data structures now that all of the
+    // files should be in a valid state.
+    if (this instanceof InitializableFromDisk) {
+      InitializableFromDisk<?> initializable = (InitializableFromDisk<?>) this;
+      doInitializeFromDisk(initializable, onDiskBuildInfo);
+    }
+
+    // We're moving to a world where BuildRule becomes Buildable. In many cases, that
+    // refactoring hasn't happened yet, and in that case "self" and self's Buildable are
+    // the same instance. We don't want to call initializeFromDisk more than once, so
+    // handle this case gracefully-ish.
+    if (this.getBuildable() instanceof InitializableFromDisk && this != this.getBuildable()) {
+      InitializableFromDisk<?> initializable = (InitializableFromDisk<?>) this.getBuildable();
+      doInitializeFromDisk(initializable, onDiskBuildInfo);
+    }
+
+    // Only now that the rule should be in a completely valid state, resolve the future.
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, result.success);
+    buildRuleResult.set(buildRuleSuccess);
+  }
+
+  private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable,
+      OnDiskBuildInfo onDiskBuildInfo) {
+    T buildOutput = initializable.initializeFromDisk(onDiskBuildInfo);
+    initializable.setBuildOutput(buildOutput);
   }
 
   /**
@@ -480,7 +491,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * {@link #buildOnceDepsAreBuilt(BuildContext, OnDiskBuildInfo, BuildInfoRecorder)} can return a
    * strongly typed value.
    */
-  private static class BuildResult {
+  public static class BuildResult {
 
     private final BuildRuleStatus status;
     private final CacheResult cacheResult;
@@ -488,7 +499,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     @Nullable private final BuildRuleSuccess.Type success;
     @Nullable private final Throwable failure;
 
-    BuildResult(BuildRuleSuccess.Type success, CacheResult cacheResult) {
+    public BuildResult(BuildRuleSuccess.Type success, CacheResult cacheResult) {
       this.status = BuildRuleStatus.SUCCESS;
       this.cacheResult = Preconditions.checkNotNull(cacheResult);
       this.success = Preconditions.checkNotNull(success);

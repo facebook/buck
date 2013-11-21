@@ -21,10 +21,14 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.AbstractCachingBuildRule.BuildResult;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -71,6 +75,13 @@ public class PrebuiltJarRuleTest {
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
     int exitCode = calculateAbiStep.execute(executionContext);
     assertEquals("Step should execute successfully.", 0, exitCode);
+
+    // Hydrate the rule as AbstractCachingBuildRule would.
+    OnDiskBuildInfo onDiskBuildInfo = buildableContext
+        .getMetadataThatWasWrittenToDiskAsOnDiskBuildInfo();
+    BuildResult buildResult = new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY,
+        CacheResult.MISS);
+    junitJarRule.doHydrationAfterBuildStepsFinish(buildResult, onDiskBuildInfo);
 
     // Make sure the ABI key is set as expected.
     Sha1HashCode abiKey = junitJarRule.getAbiKey();

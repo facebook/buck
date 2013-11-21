@@ -446,20 +446,45 @@ public class DefaultJavaLibraryRuleTest {
 
   @Test
   public void testClasspathForJavacCommand() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
+    // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
+    // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    PrebuiltJarRule libraryOne = ruleResolver.buildAndAddToIndex(
-        PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(libraryOneTarget)
-        .setBinaryJar("java/src/com/libone/bar.jar"));
+    JavaLibraryRule libraryOne = new FakeJavaLibraryRule(libraryOneTarget) {
+      @Override
+      public Sha1HashCode getAbiKey() {
+        return new Sha1HashCode(Strings.repeat("cafebabe", 5));
+      }
+
+      @Override
+      public ImmutableSetMultimap<JavaLibraryRule, String> getDeclaredClasspathEntries() {
+        return ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+            .put(this, "java/src/com/libone/bar.jar")
+            .build();
+      }
+
+      @Override
+      public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
+        return ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+            .put(this, "java/src/com/libone/bar.jar")
+            .build();
+      }
+
+      @Override
+      public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
+        return ImmutableSetMultimap.of();
+      }
+    };
+
+    Map<BuildTarget, BuildRule> buildRuleIndex = Maps.newHashMap();
+    buildRuleIndex.put(libraryOneTarget, libraryOne);
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(buildRuleIndex);
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
     JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libraryTwoTarget)
         .addSrc("java/src/com/libtwo/Foo.java")
-        .addDep(BuildTargetFactory.newInstance("//:libone")));
+        .addDep(libraryOneTarget));
 
     BuildContext buildContext = EasyMock.createMock(BuildContext.class);
     expect(buildContext.getBuildDependencies()).andReturn(BuildDependencies.FIRST_ORDER_ONLY)
@@ -469,8 +494,6 @@ public class DefaultJavaLibraryRuleTest {
 
     replay(buildContext, javaPackageFinder);
 
-    libraryOne.build(buildContext);
-    libraryOne.setAbiKey(new Sha1HashCode(Strings.repeat("cafebabe", 5)));
     List<Step> steps = libraryTwo.getBuildSteps(buildContext, new FakeBuildableContext());
 
     EasyMock.verify(buildContext, javaPackageFinder);
@@ -483,7 +506,7 @@ public class DefaultJavaLibraryRuleTest {
     JavacInMemoryStep javacStep = javacSteps.get(0);
     assertEquals(
         "The classpath to use when compiling //:libtwo according to getDeclaredClasspathEntries()" +
-            "should contain only bar.jar.",
+            " should contain only bar.jar.",
         ImmutableSet.of("java/src/com/libone/bar.jar"),
         ImmutableSet.copyOf(libraryTwo.getDeclaredClasspathEntries().values()));
     assertEquals(

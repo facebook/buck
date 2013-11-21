@@ -46,12 +46,10 @@ public class BuildRuleSuccess {
 
     /** Fetched via the {@link ArtifactCache}. */
     FETCHED_FROM_CACHE(
-        Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING
         ),
 
     /** Computed {@link RuleKey} matches the one on disk. */
     MATCHING_RULE_KEY(
-        Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING
         ),
 
     /**
@@ -59,7 +57,6 @@ public class BuildRuleSuccess {
      * the deps matches the one on disk.
      */
     MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS(
-        Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING,
         Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK
         ),
 
@@ -76,10 +73,6 @@ public class BuildRuleSuccess {
 
     private Type(Property... properties) {
       this.properties = EnumSet.copyOf(ImmutableSet.copyOf(properties));
-    }
-
-    public boolean shouldInitializeFromDiskAfterBuilding() {
-      return properties.contains(Property.SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING);
     }
 
     public boolean shouldWriteRecordedMetadataToDiskAfterBuilding() {

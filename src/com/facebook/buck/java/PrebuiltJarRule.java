@@ -40,7 +40,6 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -51,10 +50,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -65,7 +62,8 @@ import javax.annotation.Nullable;
  * A rule that establishes a pre-compiled JAR file as a dependency.
  */
 public class PrebuiltJarRule extends DoNotUseAbstractBuildable
-    implements JavaLibraryRule, HasClasspathEntries, ExportDependencies, InitializableFromDisk {
+    implements JavaLibraryRule, HasClasspathEntries, ExportDependencies,
+    InitializableFromDisk<JavaLibraryRule.Data> {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -78,12 +76,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
 
-  /**
-   * This will be set either by executing the build steps, or by
-   * {@link InitializableFromDisk#initializeFromDisk(com.facebook.buck.rules.OnDiskBuildInfo)}.
-   */
   @Nullable
-  private Sha1HashCode abiKey;
+  private JavaLibraryRule.Data buildOutput;
 
   PrebuiltJarRule(BuildRuleParams buildRuleParams,
       String classesJar,
@@ -147,26 +141,32 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   @Override
   public Sha1HashCode getAbiKey() {
-    Preconditions.checkNotNull(abiKey,
-        "%s must be built before its ABI key can be returned.",
-        this);
-    return abiKey;
-  }
-
-  @VisibleForTesting
-  void setAbiKey(Sha1HashCode abiKey) {
-    this.abiKey = Preconditions.checkNotNull(abiKey);
+    return getBuildOutput().getAbiKey();
   }
 
   @Override
-  public void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public JavaLibraryRule.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
     if (abiKeyHash.isPresent()) {
-      abiKey = abiKeyHash.get();
+      return new JavaLibraryRule.Data(abiKeyHash.get());
     } else {
       throw new IllegalStateException(String.format(
           "Should not be initializing %s from disk if the ABI key is not written.", this));
     }
+  }
+
+  @Override
+  public void setBuildOutput(JavaLibraryRule.Data buildOutput) {
+    Preconditions.checkState(this.buildOutput == null,
+        "buildOutput should not already be set for %s.",
+        this);
+    this.buildOutput = buildOutput;
+  }
+
+  @Override
+  public JavaLibraryRule.Data getBuildOutput() {
+    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
+    return buildOutput;
   }
 
   @Override
@@ -218,8 +218,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
     @Override
     public int execute(ExecutionContext context) {
-      File jarFile = context.getProjectFilesystem().getFileForRelativePath(binaryJar);
-      InputSupplier<? extends InputStream> inputSupplier = Files.newInputStreamSupplier(jarFile);
+      InputSupplier<? extends InputStream> inputSupplier = context.getProjectFilesystem()
+          .getInputSupplierForRelativePath(binaryJar);
       HashCode fileSha1;
       try {
         fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
@@ -228,7 +228,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
         return 1;
       }
 
-      abiKey = new Sha1HashCode(fileSha1.toString());
+      Sha1HashCode abiKey = new Sha1HashCode(fileSha1.toString());
       buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
 
       return 0;

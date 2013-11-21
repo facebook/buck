@@ -59,4 +59,16 @@ public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntri
    * after this rule is built.
    */
   public Sha1HashCode getAbiKey();
+
+  public static class Data {
+    private final Sha1HashCode abiKey;
+
+    public Data(Sha1HashCode abiKey) {
+      this.abiKey = abiKey;
+    }
+
+    public Sha1HashCode getAbiKey() {
+      return abiKey;
+    }
+  }
 }

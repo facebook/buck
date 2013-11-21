@@ -38,6 +38,9 @@ public class FakeBuildableContext implements BuildableContext {
 
   private final Set<Path> artifacts = Sets.newHashSet();
 
+  private final FakeOnDiskBuildInfo metadataThatWasWrittenToDiskAsOnDiskBuildInfo =
+      new FakeOnDiskBuildInfo();
+
   @Override
   public void addMetadata(String key, String value) {
     String oldValue = metadata.put(key, value);
@@ -48,6 +51,11 @@ public class FakeBuildableContext implements BuildableContext {
           oldValue,
           value));
     }
+    metadataThatWasWrittenToDiskAsOnDiskBuildInfo.putMetadata(key, value);
+  }
+
+  public OnDiskBuildInfo getMetadataThatWasWrittenToDiskAsOnDiskBuildInfo() {
+    return metadataThatWasWrittenToDiskAsOnDiskBuildInfo;
   }
 
   @Override

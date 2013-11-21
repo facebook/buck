@@ -17,8 +17,8 @@
 package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.java.AccumulateClassNames.ClassNamesAndAbiKey;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
@@ -94,9 +94,6 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
     List<Step> steps = accumulateClassNames.getBuildSteps(buildContext, buildableContext);
     verifyAll();
 
-    assertNotNull("The Supplier should be set as a side-effect of creating the steps.",
-        accumulateClassNames.classNames);
-
     // Verify the build steps.
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
     ExecutionContext context = TestExecutionContext
@@ -125,9 +122,23 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
         expectedAbiKey);
     assertEquals(0, exitCode);
+
+    // Populate an OnDiskBuildInfo with what should have been written by executing the rules.
+    FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
+    onDiskBuildInfo.putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, expectedAbiKey);
+    onDiskBuildInfo.setOutputFileContentsForBuildable(accumulateClassNames,
+        /* lines */ ImmutableList.<String>of());
+
+    // Hydrate the AccumulateClassNames and check its getters.
+    ClassNamesAndAbiKey classNamesAndAbikey = accumulateClassNames
+        .initializeFromDisk(onDiskBuildInfo);
+    accumulateClassNames.setBuildOutput(classNamesAndAbikey);
     assertEquals("Should be the empty ABI key because the classNames map is empty.",
         new Sha1HashCode(expectedAbiKey),
         accumulateClassNames.getAbiKey());
+    assertEquals("The classNames map available through the getter should also be empty.",
+        classNames,
+        accumulateClassNames.getClassNames());
   }
 
   @Test
@@ -144,9 +155,9 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
         .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, "f7d6d1efa11c8ceef36cc56b0ec6c3a20ddbf19f")
         .setOutputFileContentsForBuildable(accumulateClassNames, lines);
 
-    replayAll();
-    accumulateClassNames.initializeFromDisk(onDiskBuildInfo);
-    verifyAll();
+    ClassNamesAndAbiKey classNamesAndAbikey = accumulateClassNames.initializeFromDisk(
+        onDiskBuildInfo);
+    accumulateClassNames.setBuildOutput(classNamesAndAbikey);
 
     ImmutableSortedMap<String, HashCode> observedClasses = accumulateClassNames.getClassNames();
     assertEquals(

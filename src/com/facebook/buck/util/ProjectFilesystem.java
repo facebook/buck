@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -315,6 +316,11 @@ public class ProjectFilesystem {
   public List<String> readLines(Path pathRelativeToProjectRoot) throws IOException {
     File file = getFileForRelativePath(pathRelativeToProjectRoot);
     return Files.readLines(file, Charsets.UTF_8);
+  }
+
+  public InputSupplier<? extends InputStream> getInputSupplierForRelativePath(String path) {
+    File file = getFileForRelativePath(path);
+    return Files.newInputStreamSupplier(file);
   }
 
   /**

@@ -41,7 +41,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -61,7 +60,8 @@ import javax.annotation.Nullable;
  * {@link Buildable} that writes the list of {@code .class} files found in a zip or directory to a
  * file.
  */
-public class AccumulateClassNames extends AbstractBuildable implements InitializableFromDisk {
+public class AccumulateClassNames extends AbstractBuildable
+    implements InitializableFromDisk<AccumulateClassNames.ClassNamesAndAbiKey> {
 
   private static final Splitter CLASS_NAME_AND_HASH_SPLITTER = Splitter.on(
       AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR);
@@ -69,19 +69,8 @@ public class AccumulateClassNames extends AbstractBuildable implements Initializ
   private final JavaLibraryRule javaLibraryRule;
   private final Path pathToOutputFile;
 
-  /**
-   * This is not set until this {@link Buildable} is built.
-   */
   @Nullable
-  private Sha1HashCode abiKey;
-
-  /**
-   * This will contain the classes info discovered in the course of building this {@link Buildable}.
-   * This {@link Supplier} will be defined and determined after this buildable is built.
-   */
-  @VisibleForTesting
-  @Nullable
-  Supplier<ImmutableSortedMap<String, HashCode>> classNames;
+  private ClassNamesAndAbiKey buildOutput;
 
   @VisibleForTesting
   AccumulateClassNames(BuildTarget buildTarget, JavaLibraryRule javaLibraryRule) {
@@ -123,16 +112,15 @@ public class AccumulateClassNames extends AbstractBuildable implements Initializ
     // Make sure that the output directory exists for the output file.
     steps.add(new MkdirStep(pathToOutputFile.getParent()));
 
-    AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
+    final AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
         Paths.get(javaLibraryRule.getPathToOutputFile()),
         Paths.get(getPathToOutputFile()));
-    classNames = accumulateClassNamesStep;
     steps.add(accumulateClassNamesStep);
 
     AbstractExecutionStep recordAbiStep = new AbstractExecutionStep("record_abi") {
       @Override
       public int execute(ExecutionContext context) {
-        AccumulateClassNames.this.abiKey = computeAbiKey(classNames);
+        Sha1HashCode abiKey = computeAbiKey(accumulateClassNamesStep);
         buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.toString());
         return 0;
       }
@@ -142,11 +130,8 @@ public class AccumulateClassNames extends AbstractBuildable implements Initializ
     return steps.build();
   }
 
-  /**
-   * Sets both {@link #classNames} and {@link #abiKey}.
-   */
   @Override
-  public void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public ClassNamesAndAbiKey initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     // Read the output file, which should now be in place because this rule was downloaded from
     // cache.
     List<String> lines;
@@ -165,20 +150,55 @@ public class AccumulateClassNames extends AbstractBuildable implements Initializ
       HashCode value = HashCode.fromString(parts.get(1));
       classNamesBuilder.put(key, value);
     }
-    this.classNames = Suppliers.ofInstance(classNamesBuilder.build());
-    this.abiKey = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA).get();
+
+    return new ClassNamesAndAbiKey(onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA).get(),
+        classNamesBuilder.build());
+  }
+
+  public static class ClassNamesAndAbiKey {
+
+    private final Sha1HashCode abiKey;
+
+    /**
+     * This will contain the classes info discovered in the course of building this {@link Buildable}.
+     */
+    private final ImmutableSortedMap<String, HashCode> classNames;
+
+    public ClassNamesAndAbiKey(Sha1HashCode abiKey,
+        ImmutableSortedMap<String, HashCode> classNames) {
+      this.abiKey = Preconditions.checkNotNull(abiKey);
+      this.classNames = Preconditions.checkNotNull(classNames);
+    }
+
+    public Sha1HashCode getAbiKey() {
+      return abiKey;
+    }
+
+    public ImmutableSortedMap<String, HashCode> getClassNames() {
+      return classNames;
+    }
+  }
+
+  @Override
+  public void setBuildOutput(ClassNamesAndAbiKey buildOutput) {
+    Preconditions.checkState(this.buildOutput == null,
+        "buildOutput should not already be set for %s.",
+        this);
+    this.buildOutput = buildOutput;
+  }
+
+  @Override
+  public ClassNamesAndAbiKey getBuildOutput() {
+    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
+    return buildOutput;
   }
 
   public ImmutableSortedMap<String, HashCode> getClassNames() {
-    // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
-    // that from a Buildable (but there is from an AbstractCachingBuildRule).
-    Preconditions.checkNotNull(classNames);
-    return classNames.get();
+    return getBuildOutput().classNames;
   }
 
   public Sha1HashCode getAbiKey() {
-    Preconditions.checkNotNull(abiKey);
-    return abiKey;
+    return getBuildOutput().abiKey;
   }
 
   @VisibleForTesting
