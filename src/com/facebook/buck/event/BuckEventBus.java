@@ -22,12 +22,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.AsyncEventBus;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Thin wrapper around guava event bus.
  */
-public class BuckEventBus {
+public class BuckEventBus implements Closeable {
 
   private static Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER = new Supplier<Long>() {
     @Override
@@ -65,12 +68,6 @@ public class BuckEventBus {
     eventBus.register(object);
   }
 
-  public ExecutorService getExecutorService() {
-    Preconditions.checkNotNull(executorService,
-        "executorService must have been specified to the constructor");
-    return executorService;
-  }
-
   @VisibleForTesting
   AsyncEventBus getEventBus() {
     return eventBus;
@@ -95,5 +92,16 @@ public class BuckEventBus {
    */
   public String getBuildId() {
     return buildId;
+  }
+
+  @Override
+  public void close() throws IOException {
+    executorService.shutdown();
+    try {
+      executorService.awaitTermination(15, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      // Give the eventBus 15 seconds to finish dispatching all events, but if they should fail
+      // to finish in that amount of time just eat it, the end user doesn't care.
+    }
   }
 }

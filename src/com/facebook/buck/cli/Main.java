@@ -66,7 +66,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -368,68 +367,59 @@ public final class Main {
     }
 
     Clock clock = new DefaultClock();
-    final BuckEventBus buildEventBus = new BuckEventBus(
-        clock,
-         /* buildId */ MoreStrings.createRandomString());
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0], console);
     if (command.isPresent()) {
-      ImmutableList<BuckEventListener> eventListeners =
-          addEventListeners(buildEventBus,
-              clock,
-              projectFilesystem,
-              console,
-              config,
-              getWebServerIfDaemon(context));
-      String[] remainingArgs = new String[args.length - 1];
-      System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
+      String buildId = MoreStrings.createRandomString();
+      try (BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
+        ImmutableList<BuckEventListener> eventListeners =
+            addEventListeners(buildEventBus,
+                clock,
+                projectFilesystem,
+                console,
+                config,
+                getWebServerIfDaemon(context));
+        String[] remainingArgs = new String[args.length - 1];
+        System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
-      Command executingCommand = command.get();
-      String commandName = executingCommand.name().toLowerCase();
+        Command executingCommand = command.get();
+        String commandName = executingCommand.name().toLowerCase();
 
-      buildEventBus.post(CommandEvent.started(commandName, context.isPresent()));
+        buildEventBus.post(CommandEvent.started(commandName, context.isPresent()));
 
-      // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
-      // running commands such as `buck clean`.
-      ArtifactCacheFactory artifactCacheFactory = new ArtifactCacheFactory() {
-        @Override
-        public ArtifactCache newInstance(AbstractCommandOptions options) {
-          if (options.isNoCache()) {
-            return new NoopArtifactCache();
-          } else {
-            buildEventBus.post(ArtifactCacheConnectEvent.started());
-            ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
-                .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
-            buildEventBus.post(ArtifactCacheConnectEvent.finished());
-            return artifactCache;
+        // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
+        // running commands such as `buck clean`.
+        ArtifactCacheFactory artifactCacheFactory = new ArtifactCacheFactory() {
+          @Override
+          public ArtifactCache newInstance(AbstractCommandOptions options) {
+            if (options.isNoCache()) {
+              return new NoopArtifactCache();
+            } else {
+              buildEventBus.post(ArtifactCacheConnectEvent.started());
+              ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
+                  .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
+              buildEventBus.post(ArtifactCacheConnectEvent.finished());
+              return artifactCache;
+            }
           }
+        };
+
+        int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
+            console,
+            projectFilesystem,
+            new KnownBuildRuleTypes(),
+            artifactCacheFactory,
+            buildEventBus,
+            parser,
+            platform));
+
+        buildEventBus.post(CommandEvent.finished(commandName, context.isPresent(), exitCode));
+        for (BuckEventListener eventListener : eventListeners) {
+          eventListener.outputTrace();
         }
-      };
-
-      int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
-          console,
-          projectFilesystem,
-          new KnownBuildRuleTypes(),
-          artifactCacheFactory,
-          buildEventBus,
-          parser,
-          platform));
-
-      buildEventBus.post(CommandEvent.finished(commandName, context.isPresent(), exitCode));
-
-      ExecutorService buildEventBusExecutor = buildEventBus.getExecutorService();
-      buildEventBusExecutor.shutdown();
-      try {
-        buildEventBusExecutor.awaitTermination(15, TimeUnit.SECONDS);
-      } catch (InterruptedException e) {
-        // Give the eventBus 15 seconds to finish dispatching all events, but if they should fail
-        // to finish in that amount of time just eat it, the end user doesn't care.
+        return exitCode;
       }
-      for (BuckEventListener eventListener : eventListeners) {
-        eventListener.outputTrace();
-      }
-      return exitCode;
     } else {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
