@@ -55,6 +55,7 @@ java_library(
     'CacheResult.java',
     'ConstructorArgMarshaller.java',
     'DefaultBuildRuleBuilderParams.java',
+    'DefaultOnDiskBuildInfo.java',
     'DependencyGraph.java',
     'FileSourcePath.java',
     'Hint.java',

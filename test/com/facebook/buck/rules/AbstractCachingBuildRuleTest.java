@@ -165,8 +165,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     expect(context.getProjectRoot()).andReturn(createMock(Path.class));
 
     // Configure the OnDiskBuildInfo.
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo(buildTarget, projectFilesystem);
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     expect(context.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
 
     // Configure the BuildInfoRecorder.
@@ -249,9 +248,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
            /* ruleKeyWithoutDeps */ capture(new Capture<RuleKey>())))
         .andReturn(buildInfoRecorder);
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     // Populate the metadata that should be read from disk.
-    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo(buildTarget, projectFilesystem)
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo()
          // The RuleKey on disk should be different from the current RuleKey in memory, so reverse()
          // it.
          .setRuleKey(reverse(buildRule.getRuleKey()))

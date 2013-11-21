@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -28,16 +26,12 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class FakeOnDiskBuildInfo extends OnDiskBuildInfo {
+public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Nullable private RuleKey ruleKey;
   @Nullable private RuleKey ruleKeyWithoutDeps;
   private Map<String, String> metadata = Maps.newHashMap();
   private Map<Buildable, ImmutableList<String>> outputFileContents = Maps.newHashMap();
-
-  public FakeOnDiskBuildInfo(BuildTarget target, ProjectFilesystem projectFilesystem) {
-    super(target, projectFilesystem);
-  }
 
   /** @return this */
   public FakeOnDiskBuildInfo setRuleKey(@Nullable RuleKey ruleKey) {
@@ -70,6 +64,11 @@ public class FakeOnDiskBuildInfo extends OnDiskBuildInfo {
   @Override
   public Optional<String> getValue(String key) {
     return Optional.fromNullable(metadata.get(key));
+  }
+
+  @Override
+  public Optional<Sha1HashCode> getHash(String key) {
+    return getValue(key).transform(Sha1HashCode.TO_SHA1);
   }
 
   /** @return this */

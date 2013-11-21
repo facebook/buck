@@ -139,7 +139,7 @@ public class BuildContext {
    * in general.
    */
   OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target) {
-    return new OnDiskBuildInfo(target, projectFilesystem);
+    return new DefaultOnDiskBuildInfo(target, projectFilesystem);
   }
 
   /**

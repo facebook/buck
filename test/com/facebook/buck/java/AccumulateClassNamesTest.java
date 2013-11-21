@@ -132,16 +132,15 @@ public class AccumulateClassNamesTest extends EasyMockSupport {
 
   @Test
   public void testInitializeFromDisk() throws IOException {
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
-    JavaLibraryRule javaRule = new FakeJavaLibraryRule(buildTarget);
-    AccumulateClassNames accumulateClassNames = new AccumulateClassNames(buildTarget, javaRule);
+    JavaLibraryRule javaRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"));
+    AccumulateClassNames accumulateClassNames = new AccumulateClassNames(
+        new BuildTarget("//foo", "bar", "class_names"), javaRule);
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     List<String> lines = ImmutableList.of(
         "com/example/Bar 087b7707a5f8e0a2adf5652e3cd2072d89a197dc",
         "com/example/Baz 62b1c2510840c0de55c13f66065a98a719be0f19",
         "com/example/Foo e4fccb7520b7795e632651323c63217c9f59f72a");
-    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo(buildTarget, projectFilesystem)
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo()
         .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, "f7d6d1efa11c8ceef36cc56b0ec6c3a20ddbf19f")
         .setOutputFileContentsForBuildable(accumulateClassNames, lines);
 

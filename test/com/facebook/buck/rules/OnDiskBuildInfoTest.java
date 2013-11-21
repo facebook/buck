@@ -46,7 +46,7 @@ public class OnDiskBuildInfoTest extends EasyMockSupport {
 
     replayAll();
 
-    OnDiskBuildInfo onDiskBuildInfo = new OnDiskBuildInfo(
+    OnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         new BuildTarget("//java/com/example", "ex"),
         projectFilesystem);
     List<String> observedLines = onDiskBuildInfo.getOutputFileContentsByLine(buildable);
@@ -58,7 +58,7 @@ public class OnDiskBuildInfoTest extends EasyMockSupport {
   @Test(expected = NullPointerException.class)
   public void testGetOutputFileContentsByLineRejectsNullBuildable() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    OnDiskBuildInfo onDiskBuildInfo = new OnDiskBuildInfo(
+    OnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         new BuildTarget("//java/com/example", "ex"),
         projectFilesystem);
 
@@ -70,7 +70,7 @@ public class OnDiskBuildInfoTest extends EasyMockSupport {
   @Test(expected = NullPointerException.class)
   public void testGetOutputFileContentsByLineRejectsNullOutputPath() throws IOException {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    OnDiskBuildInfo onDiskBuildInfo = new OnDiskBuildInfo(
+    OnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         new BuildTarget("//java/com/example", "ex"),
         projectFilesystem);
 
