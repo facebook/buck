@@ -484,8 +484,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Add the steps for the aapt_package command. This method returns data that the ApkBuilder
     // needs to create a final, unsigned APK.
     ResourceDirectoriesFromAapt resourceDirectoriesFromAapt = addAaptPackageSteps(steps,
-        transitiveDependencies,
-        dexTransitiveDependencies);
+        transitiveDependencies);
 
     // Create the .dex files and create the unsigned APK using ApkBuilder.
     addDxAndApkBuilderSteps(context,
@@ -534,8 +533,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   private ResourceDirectoriesFromAapt addAaptPackageSteps(ImmutableList.Builder<Step> steps,
-      final AndroidTransitiveDependencies transitiveDependencies,
-      final AndroidDexTransitiveDependencies dexTransitiveDependencies) {
+      final AndroidTransitiveDependencies transitiveDependencies) {
     final Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
     final FilterResourcesStep filterResourcesStep;
     final ImmutableSet<String> resDirectories;
@@ -547,13 +545,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       filterResourcesStep = null;
       resDirectories = transitiveDependencies.resDirectories;
     }
-
-    // Extract the resources from third-party jars.
-    // TODO(mbolin): The results of this should be cached between runs.
-    String extractedResourcesDir = getBinPath("__resources__%s__");
-    steps.add(new MakeCleanDirectoryStep(extractedResourcesDir));
-    steps.add(new ExtractResourcesStep(dexTransitiveDependencies.pathsToThirdPartyJars,
-        extractedResourcesDir));
 
     // Create the R.java files. Their compiled versions must be included in classes.dex.
     // TODO(mbolin): Skip this step if the transitive set of AndroidResourceRules is cached.
@@ -663,7 +654,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           resDirectories,
           assetsDirectory,
           getResourceApkPath(),
-          ImmutableSet.of(extractedResourcesDir),
           packageType.isCrunchPngFiles());
       steps.add(aaptCommand);
     }
@@ -817,6 +807,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         ImmutableSet.<String>of(),
         nativeLibraryDirectories,
         secondaryDexZips.build(),
+        dexTransitiveDependencies.pathsToThirdPartyJars,
         false);
     steps.add(apkBuilderCommand);
   }

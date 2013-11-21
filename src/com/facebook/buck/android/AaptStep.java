@@ -38,7 +38,6 @@ public class AaptStep extends ShellStep {
   private final Set<String> resDirectories;
   private final Optional<String> assetsDirectory;
   private final String pathToOutputApkFile;
-  private final Set<String> pathsToRawFilesDirs;
 
   @SuppressWarnings("unused")
   private final boolean isCrunchPngFiles;
@@ -48,13 +47,11 @@ public class AaptStep extends ShellStep {
       Set<String> resDirectories,
       Optional<String> assetsDirectory,
       String pathToOutputApkFile,
-      Set<String> pathsToRawFilesDirs,
       boolean isCrunchPngFiles) {
     this.androidManifest = Preconditions.checkNotNull(androidManifest);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
     this.assetsDirectory = Preconditions.checkNotNull(assetsDirectory);
     this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
-    this.pathsToRawFilesDirs = ImmutableSet.copyOf(pathsToRawFilesDirs);
     this.isCrunchPngFiles = isCrunchPngFiles;
   }
 
@@ -104,8 +101,6 @@ public class AaptStep extends ShellStep {
     builder.add("-M").add(androidManifest);
     builder.add("-I", androidPlatformTarget.getAndroidJar().getAbsolutePath());
     builder.add("-F", pathToOutputApkFile);
-
-    builder.addAll(pathsToRawFilesDirs);
 
     return builder.build();
   }

@@ -45,6 +45,7 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<String> assetDirectories;
   private final ImmutableSet<String> nativeLibraryDirectories;
   private final ImmutableSet<String> zipFiles;
+  private final ImmutableSet<String> jarFilesThatMayContainResources;
   private final boolean debugMode;
 
   /**
@@ -64,12 +65,15 @@ public class ApkBuilderStep implements Step {
       ImmutableSet<String> javaResourcesDirectories,
       ImmutableSet<String> nativeLibraryDirectories,
       ImmutableSet<String> zipFiles,
+      ImmutableSet<String> jarFilesThatMayContainResources,
       boolean debugMode) {
     this.resourceApk = Preconditions.checkNotNull(resourceApk);
     this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
     this.dexFile = Preconditions.checkNotNull(dexFile);
     this.assetDirectories = Preconditions.checkNotNull(javaResourcesDirectories);
     this.nativeLibraryDirectories = Preconditions.checkNotNull(nativeLibraryDirectories);
+    this.jarFilesThatMayContainResources =
+        Preconditions.checkNotNull(jarFilesThatMayContainResources);
     this.zipFiles = Preconditions.checkNotNull(zipFiles);
     this.debugMode = debugMode;
   }
@@ -101,6 +105,10 @@ public class ApkBuilderStep implements Step {
         if (zipFileOnDisk.exists() && zipFileOnDisk.isFile()) {
           builder.addZipFile(zipFileOnDisk);
         }
+      }
+      for (String jarFileThatMayContainResources : jarFilesThatMayContainResources) {
+        File jarFile  = projectFilesystem.getFileForRelativePath(jarFileThatMayContainResources);
+        builder.addResourcesFromJar(jarFile);
       }
 
       // Build the APK
