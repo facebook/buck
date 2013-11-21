@@ -21,6 +21,7 @@ import com.facebook.buck.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
@@ -47,7 +48,11 @@ public class BuckEventBusFactory {
   }
 
   public static BuckEventBus newInstance(Clock clock, String buildId) {
-    return new BuckEventBus(clock, MoreExecutors.sameThreadExecutor(), buildId);
+    BuckEventBus buckEventBus = new BuckEventBus(clock,
+        MoreExecutors.sameThreadExecutor(),
+        buildId);
+    buckEventBus.register(new ErrorListener());
+    return buckEventBus;
   }
 
   public static EventBus getEventBusFor(BuckEventBus buckEventBus) {
@@ -56,5 +61,12 @@ public class BuckEventBusFactory {
 
   public static Supplier<Long> getThreadIdSupplierFor(BuckEventBus buckEventBus) {
     return buckEventBus.getThreadIdSupplier();
+  }
+
+  private static class ErrorListener {
+    @Subscribe
+    public void logEvent(LogEvent event) {
+      System.err.println(event.getMessage());
+    }
   }
 }

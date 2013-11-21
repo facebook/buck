@@ -23,6 +23,16 @@ import java.nio.file.Path;
 
 public class FakeAbstractBuildRuleBuilderParams implements AbstractBuildRuleBuilderParams {
 
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+
+  public FakeAbstractBuildRuleBuilderParams() {
+    this(new FakeRuleKeyBuilderFactory());
+  }
+
+  public FakeAbstractBuildRuleBuilderParams(RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+  }
+
   @Override
   public Function<String, Path> getPathRelativizer() {
     return IdentityPathRelativizer.getIdentityRelativizer();
@@ -30,7 +40,7 @@ public class FakeAbstractBuildRuleBuilderParams implements AbstractBuildRuleBuil
 
   @Override
   public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
-    return new FakeRuleKeyBuilderFactory();
+    return ruleKeyBuilderFactory;
   }
 
 }

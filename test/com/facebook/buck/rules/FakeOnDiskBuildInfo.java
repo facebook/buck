@@ -19,8 +19,11 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -30,6 +33,7 @@ public class FakeOnDiskBuildInfo extends OnDiskBuildInfo {
   @Nullable private RuleKey ruleKey;
   @Nullable private RuleKey ruleKeyWithoutDeps;
   private Map<String, String> metadata = Maps.newHashMap();
+  private Map<Buildable, ImmutableList<String>> outputFileContents = Maps.newHashMap();
 
   public FakeOnDiskBuildInfo(BuildTarget target, ProjectFilesystem projectFilesystem) {
     super(target, projectFilesystem);
@@ -66,5 +70,22 @@ public class FakeOnDiskBuildInfo extends OnDiskBuildInfo {
   @Override
   public Optional<String> getValue(String key) {
     return Optional.fromNullable(metadata.get(key));
+  }
+
+  /** @return this */
+  public FakeOnDiskBuildInfo setOutputFileContentsForBuildable(Buildable buildable,
+      List<String> lines) {
+    outputFileContents.put(buildable, ImmutableList.copyOf(lines));
+    return this;
+  }
+
+  @Override
+  public List<String> getOutputFileContentsByLine(Buildable buildable) throws IOException {
+    ImmutableList<String> lines = outputFileContents.get(buildable);
+    if (lines != null) {
+      return lines;
+    } else {
+      throw new RuntimeException("No lines for buildable: " + buildable);
+    }
   }
 }

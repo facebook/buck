@@ -17,17 +17,33 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.RuleKey.Builder;
+import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 
 /**
  * Basic implementation of {@link RuleKeyBuilderFactory} that does not inject any contextual
  * information when creating a {@link RuleKey.Builder}.
+ * <p>
+ * If reading files from disk needs to be faked when computing the hash for a {@link BuildRule} in
+ * the resulting {@link RuleKey.Builder}, then a {@link FakeFileHashCache} should be specified in
+ * the constructor.
  */
 public class FakeRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
 
+  private final FileHashCache fileHashCache;
+
+  public FakeRuleKeyBuilderFactory() {
+    this(new NullFileHashCache());
+  }
+
+  public FakeRuleKeyBuilderFactory(FileHashCache fileHashCache) {
+    this.fileHashCache = fileHashCache;
+  }
+
   @Override
   public Builder newInstance(BuildRule buildRule) {
-    return RuleKey.builder(buildRule, new NullFileHashCache());
+    return RuleKey.builder(buildRule, fileHashCache);
   }
 
 }
