@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -39,43 +38,38 @@ public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
 
   private final BuildableContext buildableContext;
   private final Path binDirectory;
-  private final String genDirectory;
-  private final Function<String, Path> artifactPathTransform;
+  private final Path genDirectory;
 
   /**
    * @param buildableContext Interface through which the outputs to include in the artifact should
    *     be recorded.
    * @param binDirectory Scratch directory where output files were generated.
-   * @param genDirectory Output directory where files should be written. This should be of the form
-   *     "buck-out/gen/build/target/path" (note there should not be a trailing slash).
+   * @param genDirectory Output directory where files should be written.
    */
   public RecordArtifactsInDirectoryStep(BuildableContext buildableContext,
       Path binDirectory,
-      String genDirectory,
-      Function<String, Path> artifactPathTransform) {
+      Path genDirectory) {
     super("recording artifacts in " + binDirectory);
     this.buildableContext = Preconditions.checkNotNull(buildableContext);
     this.binDirectory = Preconditions.checkNotNull(binDirectory);
     this.genDirectory = Preconditions.checkNotNull(genDirectory);
-    this.artifactPathTransform = Preconditions.checkNotNull(artifactPathTransform);
   }
 
   @Override
   public int execute(final ExecutionContext context) {
     final ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    final File binDir = projectFilesystem.getFileForRelativePath(binDirectory);
     ImmutableSet<String> ignorePaths = ImmutableSet.of();
 
-    DirectoryTraversal traversal = new DirectoryTraversal(binDir, ignorePaths) {
+    DirectoryTraversal traversal = new DirectoryTraversal(
+        projectFilesystem.getFileForRelativePath(binDirectory),
+        ignorePaths) {
       @Override
       public void visit(File file, String relativePath) throws IOException {
-        String source = new File(binDir, relativePath).getPath();
-        String target = genDirectory + "/" + relativePath;
+        Path source = binDirectory.resolve(relativePath);
+        Path target = genDirectory.resolve(relativePath);
         projectFilesystem.createParentDirs(target);
         projectFilesystem.copyFile(source, target);
-
-        Path artifactPath = artifactPathTransform.apply(relativePath);
-        buildableContext.recordArtifact(artifactPath);
+        buildableContext.recordArtifact(target);
       }
     };
 

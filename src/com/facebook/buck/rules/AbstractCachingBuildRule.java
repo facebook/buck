@@ -21,7 +21,6 @@ import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
@@ -381,9 +380,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
     // responsible for invoking recordArtifact() itself. Once that is done, this call to
     // recordArtifact() should be deleted.
     String pathToOutputFile = buildable.getPathToOutputFile();
-    if (pathToOutputFile != null && pathToOutputFile.startsWith(BuckConstant.GEN_DIR)) {
-      String prefix = BuckConstant.GEN_DIR + '/' + getBuildTarget().getBasePathWithSlash();
-      Path pathToArtifact = Paths.get(pathToOutputFile.substring(prefix.length()));
+    if (pathToOutputFile != null) {
+      Path pathToArtifact = Paths.get(pathToOutputFile);
       buildInfoRecorder.recordArtifact(pathToArtifact);
     }
 

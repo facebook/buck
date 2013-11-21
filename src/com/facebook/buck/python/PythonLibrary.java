@@ -123,8 +123,7 @@ public class PythonLibrary extends AbstractBuildable {
               targetPath.toString(),
               /* useAbsolutePaths */ false));
 
-      Path pathToArtifact = Paths.get(getPathUnderGenDirectory()).resolve(srcPath);
-      buildableContext.recordArtifact(pathToArtifact);
+      buildableContext.recordArtifact(targetPath);
     }
 
     for (Path path : directories.build()) {

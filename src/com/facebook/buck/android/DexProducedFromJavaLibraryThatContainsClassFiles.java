@@ -106,7 +106,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
       @Override
       public int execute(ExecutionContext context) {
         if (hasClassesToDx) {
-          buildableContext.recordArtifact(getPathToDex().getFileName());
+          buildableContext.recordArtifact(getPathToDex());
         }
 
         // The ABI key for the deps is also the ABI key for this Buildable. A dx-merge step can keep

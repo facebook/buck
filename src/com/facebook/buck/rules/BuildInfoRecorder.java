@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -33,7 +32,6 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
@@ -140,14 +138,10 @@ public class BuildInfoRecorder {
   }
 
   /**
-   * @param pathToArtifact Must be relative to the directory where the Buildable's
-   *     generated files are to be written. The caller should not be concerned with the location
-   *     of this directory.
+   * @param pathToArtifact Relative path to the project root.
    */
   public void recordArtifact(Path pathToArtifact) {
     Preconditions.checkNotNull(pathToArtifact);
-    Path fullPath = Paths.get(BuckConstant.GEN_DIR, buildTarget.getBasePath(),
-        pathToArtifact.toString());
-    pathsToOutputFiles.add(fullPath);
+    pathsToOutputFiles.add(pathToArtifact);
   }
 }

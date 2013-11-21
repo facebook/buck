@@ -119,7 +119,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // Replay the mocks to instantiate the AbstractCachingBuildRule.
     replayAll();
-    String pathToOutputFile = "some_file";
+    String pathToOutputFile = "buck-out/gen/src/com/facebook/orca/some_file";
     List<Step> buildSteps = Lists.newArrayList();
     AbstractCachingBuildRule cachingRule = createRule(
         ImmutableSet.of(dep),
@@ -201,6 +201,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     stepRunner.runStepForBuildTarget(buildStep, buildTarget);
 
     // These methods should be invoked after the rule is built locally.
+    buildInfoRecorder.recordArtifact(Paths.get(pathToOutputFile));
     buildInfoRecorder.writeMetadataToDisk();
     buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
 

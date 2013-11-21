@@ -37,6 +37,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
@@ -114,8 +115,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     Step recordArtifactAndMetadataStep = steps.get(3);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
-    assertTrue("The generated .dex.jar file should be in the set of recorded artifacts.",
-        buildableContext.getRecordedArtifacts().contains(Paths.get("bar#dex.dex.jar")));
+    assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",
+        ImmutableSet.of(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")),
+        buildableContext.getRecordedArtifacts());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
         abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,

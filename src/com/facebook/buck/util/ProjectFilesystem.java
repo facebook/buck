@@ -217,6 +217,16 @@ public class ProjectFilesystem {
   }
 
   /**
+   * @param pathRelativeToProjectRoot Must identify a file, not a directory. (Unfortunately, we have
+   *     no way to assert this because the path is not expected to exist yet.)
+   */
+  public void createParentDirs(Path pathRelativeToProjectRoot) throws IOException {
+    Path file = resolve(pathRelativeToProjectRoot);
+    Path directory = file.getParent();
+    mkdirs(directory);
+  }
+
+  /**
    * Writes each line in {@code lines} with a trailing newline to a file at the specified path.
    * <p>
    * The parent path of {@code pathRelativeToProjectRoot} must exist.
@@ -334,7 +344,7 @@ public class ProjectFilesystem {
   }
 
   public void copyFile(Path source, Path target) throws IOException {
-    java.nio.file.Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+    java.nio.file.Files.copy(resolve(source), resolve(target), StandardCopyOption.REPLACE_EXISTING);
   }
 
   public void createSymLink(Path sourcePath, Path targetPath, boolean force)

@@ -32,7 +32,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -123,20 +122,13 @@ public class GenAidl extends AbstractBuildable {
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used with genfile().
-    String genDirectory = String.format("%s/%s", BuckConstant.GEN_DIR, importPath);
+    Path genDirectory = Paths.get(BuckConstant.GEN_DIR, importPath);
     commands.add(new MkdirStep(genDirectory));
 
-    Function<String, Path> artifactPathTransform = new Function<String, Path>() {
-      @Override
-      public Path apply(String input) {
-        return Paths.get(input);
-      }
-    };
     commands.add(new RecordArtifactsInDirectoryStep(
         buildableContext,
         outputDirectory,
-        genDirectory,
-        artifactPathTransform));
+        genDirectory));
 
     return commands.build();
   }
