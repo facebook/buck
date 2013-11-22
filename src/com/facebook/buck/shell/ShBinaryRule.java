@@ -59,10 +59,11 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable implements BinaryBui
     this.resources = Preconditions.checkNotNull(resources);
 
     BuildTarget target = buildRuleParams.getBuildTarget();
-    this.output = Paths.get(String.format("%s/%s%s.sh",
+    this.output = Paths.get(
         BuckConstant.GEN_DIR,
-        target.getBasePathWithSlash(),
-        target.getShortName()));
+        target.getBasePath(),
+        "__" + target.getShortName() + "__",
+        target.getShortName() + ".sh");
   }
 
   @Override
