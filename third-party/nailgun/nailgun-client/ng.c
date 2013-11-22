@@ -118,6 +118,7 @@ char buf[BUFSIZE];
     HANDLE sending = 0;
 #else
     int readyToSend = 0;
+    struct timeval sendtime;
 #endif
 
 /**
@@ -219,6 +220,8 @@ void sendChunk(unsigned int size, char chunkType, char* buf) {
   if (WaitForSingleObject(sending, INFINITE) != WAIT_OBJECT_0) {
     handleError();
   }
+#else
+  gettimeofday(&sendtime, NULL);
 #endif
 
   sendAll(nailgunsocket, header, CHUNK_HEADER_LEN);
@@ -547,6 +550,17 @@ void processnailgunstream() {
 }
 
 /**
+ * Returns the time interval between start and end in milliseconds.
+ * @param end the end time
+ * @param start the start time
+ */
+int intervalMillis(struct timeval end, struct timeval start) {
+
+  return ((end.tv_sec - start.tv_sec) * 1000) +
+    ((end.tv_usec - start.tv_usec) /1000);
+}
+
+/**
  * Trims any path info from the beginning of argv[0] to determine
  * the name used to launch the client.
  *
@@ -620,6 +634,8 @@ int main(int argc, char *argv[], char *env[]) {
     fd_set readfds;
     int eof = 0;
     struct timeval readtimeout;
+    struct timeval currenttime;
+    memset(&sendtime, '\0', sizeof(sendtime));
   #endif
 
   #ifdef WIN32
@@ -787,8 +803,10 @@ int main(int argc, char *argv[], char *env[]) {
 	  FD_CLR(NG_STDIN_FILENO, &readfds);
 	  eof = 1;
 	}
-      } else {
-	sendHeartbeat();
+      }
+      gettimeofday(&currenttime, NULL);
+      if (intervalMillis(currenttime, sendtime) > HEARTBEAT_TIMEOUT_MILLIS) {
+	  sendHeartbeat();
       }
     #endif
   }  
