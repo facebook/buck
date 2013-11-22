@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
@@ -372,14 +373,20 @@ public final class Main {
     Optional<Command> command = Command.getCommandForName(args[0], console);
     if (command.isPresent()) {
       String buildId = MoreStrings.createRandomString();
-      try (BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
+      ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+      try (BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+           AbstractConsoleEventBusListener consoleListener =
+               createConsoleEventListener(clock, console, executionEnvironment))  {
+
         ImmutableList<BuckEventListener> eventListeners =
             addEventListeners(buildEventBus,
                 clock,
                 projectFilesystem,
-                console,
                 config,
-                getWebServerIfDaemon(context));
+                getWebServerIfDaemon(context),
+                executionEnvironment,
+                consoleListener);
+
         String[] remainingArgs = new String[args.length - 1];
         System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
 
@@ -489,30 +496,23 @@ public final class Main {
     }
   }
 
-  private ImmutableList<BuckEventListener> addEventListeners(BuckEventBus buckEvents,
-                                                             Clock clock,
-                                                             ProjectFilesystem projectFilesystem,
-                                                             Console console,
-                                                             BuckConfig config,
-                                                             Optional<WebServer> webServer) {
-    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+  private ImmutableList<BuckEventListener> addEventListeners(
+      BuckEventBus buckEvents,
+      Clock clock,
+      ProjectFilesystem projectFilesystem,
+      BuckConfig config,
+      Optional<WebServer> webServer,
+      ExecutionEnvironment executionEnvironment,
+      AbstractConsoleEventBusListener consoleEventBusListener) {
 
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(new ChromeTraceBuildListener(projectFilesystem, clock, config.getMaxTraces()));
+            .add(new ChromeTraceBuildListener(projectFilesystem, clock, config.getMaxTraces()))
+            .add(consoleEventBusListener);
 
     if (webServer.isPresent()) {
       eventListenersBuilder.add(webServer.get().createListener());
-    }
-
-    if (console.getAnsi().isAnsiTerminal()) {
-      SuperConsoleEventBusListener superConsole =
-          new SuperConsoleEventBusListener(console, clock, executionEnvironment);
-      superConsole.startRenderScheduler(100, TimeUnit.MILLISECONDS);
-      eventListenersBuilder.add(superConsole);
-    } else {
-      eventListenersBuilder.add(new SimpleConsoleEventBusListener(console, clock));
     }
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
@@ -526,6 +526,17 @@ public final class Main {
     }
 
     return eventListeners;
+  }
+
+  private AbstractConsoleEventBusListener createConsoleEventListener(
+      Clock clock, Console console, ExecutionEnvironment executionEnvironment) {
+    if (console.getAnsi().isAnsiTerminal()) {
+      SuperConsoleEventBusListener superConsole =
+          new SuperConsoleEventBusListener(console, clock, executionEnvironment);
+      superConsole.startRenderScheduler(100, TimeUnit.MILLISECONDS);
+      return superConsole;
+    }
+    return new SimpleConsoleEventBusListener(console, clock);
   }
 
 

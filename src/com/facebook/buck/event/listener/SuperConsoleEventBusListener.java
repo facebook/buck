@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,7 +85,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   /**
-   * Starts a background thread that updates the console output at a fixed interval.
+   * Schedules a runnable that updates the console output at a fixed interval.
    */
   public void startRenderScheduler(long renderInterval, TimeUnit timeUnit) {
     renderScheduler.scheduleAtFixedRate(new Runnable() {
@@ -93,6 +94,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         SuperConsoleEventBusListener.this.render();
       }
     }, /* initialDelay */ renderInterval, /* period */ renderInterval, timeUnit);
+  }
+
+  /**
+   * Shuts down the thread pool and cancels the fixed interval runnable.
+   */
+  private void stopRenderScheduler() {
+    renderScheduler.shutdownNow();
   }
 
   @VisibleForTesting
@@ -107,7 +115,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         // If another source has written to stderr or stdout, stop rendering with the SuperConsole.
         // We need to do this to keep our updates consistent.
         if (console.getStdOut().isDirty() || console.getStdErr().isDirty()) {
-          renderScheduler.shutdown();
+          stopRenderScheduler();
         } else if (!nextFrame.isEmpty()) {
           nextFrame = ansi.asNoWrap(nextFrame);
           console.getStdErr().getRawStream().println(nextFrame);
@@ -294,6 +302,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void logEvent(LogEvent event) {
     logEvents.add(event);
+  }
+
+  @Override
+  public void close() throws IOException {
+    stopRenderScheduler();
   }
 }
 

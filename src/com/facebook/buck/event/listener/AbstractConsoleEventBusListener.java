@@ -28,6 +28,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
@@ -38,7 +40,7 @@ import javax.annotation.Nullable;
  * Base class for {@link BuckEventListener}s responsible for outputting information about the running
  * build to {@code stderr}.
  */
-public class AbstractConsoleEventBusListener implements BuckEventListener {
+public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
   protected static final DecimalFormat timeFormatter = new DecimalFormat("0.0s");
   protected static final long UNFINISHED_EVENT_PAIR = -1;
   protected final Console console;
@@ -175,4 +177,8 @@ public class AbstractConsoleEventBusListener implements BuckEventListener {
 
   @Override
   public void outputTrace() {}
+
+  @Override
+  public void close() throws IOException {
+  }
 }
