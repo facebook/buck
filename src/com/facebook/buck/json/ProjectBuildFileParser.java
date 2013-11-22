@@ -37,6 +37,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private BufferedWriter buckPyStdinWriter;
 
   private final File projectRoot;
-  private final ImmutableSet<String> ignorePaths;
+  private final ImmutableSet<Path> ignorePaths;
   private final ImmutableList<String> commonIncludes;
   private final String pythonInterpreter;
 
@@ -164,9 +165,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add(include);
     }
 
-    for (String path : ignorePaths) {
+    for (Path path : ignorePaths) {
       argBuilder.add("--ignore_path");
-      argBuilder.add(path);
+      argBuilder.add(path.toString());
     }
 
     return argBuilder.build();

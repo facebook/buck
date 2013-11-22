@@ -45,11 +45,11 @@ public class ProjectFilesystemWatcher implements Closeable {
   private final Map<WatchKey,Path> keys;
   private final EventBus eventBus;
   private final ProjectFilesystem filesystem;
-  private final ImmutableSet<String> ignoredPrefixes;
+  private final ImmutableSet<Path> ignoredPrefixes;
 
   public ProjectFilesystemWatcher(ProjectFilesystem filesystem,
                                   EventBus fileChangeEventBus,
-                                  ImmutableSet<String> excludeDirectories,
+                                  ImmutableSet<Path> excludeDirectories,
                                   WatchService watchService) throws IOException {
     this.filesystem = Preconditions.checkNotNull(filesystem);
     this.ignoredPrefixes = Preconditions.checkNotNull(excludeDirectories);
@@ -120,7 +120,7 @@ public class ProjectFilesystemWatcher implements Closeable {
 
   private boolean shouldIgnore(Path path) {
     Path normalizedPath = path.normalize();
-    for (String prefix : ignoredPrefixes) {
+    for (Path prefix : ignoredPrefixes) {
       if (normalizedPath.startsWith(prefix)) {
         return true;
       }

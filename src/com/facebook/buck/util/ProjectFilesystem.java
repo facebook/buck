@@ -62,7 +62,7 @@ public class ProjectFilesystem {
   private final Function<Path, Path> pathAbsolutifier;
   private final Function<String, Path> pathRelativizer;
 
-  private final ImmutableSet<String> ignorePaths;
+  private final ImmutableSet<Path> ignorePaths;
 
   /**
    * There should only be one {@link ProjectFilesystem} created per process.
@@ -72,7 +72,7 @@ public class ProjectFilesystem {
    * a mock filesystem via EasyMock instead. Note that there are cases (such as integration tests)
    * where specifying {@code new File(".")} as the project root might be the appropriate thing.
    */
-  public ProjectFilesystem(File projectRoot, ImmutableSet<String> ignorePaths) {
+  public ProjectFilesystem(File projectRoot, ImmutableSet<Path> ignorePaths) {
     this.projectRoot = Preconditions.checkNotNull(projectRoot);
     this.pathToRoot = projectRoot.toPath();
     Preconditions.checkArgument(projectRoot.isDirectory());
@@ -88,11 +88,11 @@ public class ProjectFilesystem {
         return MorePaths.absolutify(getFileForRelativePath(relativePath).toPath());
       }
     };
-    this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
+    this.ignorePaths = MorePaths.filterForSubpaths(ignorePaths, this.pathToRoot);
   }
 
   public ProjectFilesystem(File projectRoot) {
-    this(projectRoot, ImmutableSet.<String>of());
+    this(projectRoot, ImmutableSet.<Path>of());
   }
 
   public Path getRootPath() {
@@ -117,7 +117,11 @@ public class ProjectFilesystem {
     return projectRoot;
   }
 
-  public ImmutableSet<String> getIgnorePaths() {
+  /**
+   * @return A {@link ImmutableSet} of {@link Path} objects to have buck ignore.  All paths will be
+   *     relative to the {@link ProjectFilesystem#getRootPath()}.
+   */
+  public ImmutableSet<Path> getIgnorePaths() {
     return ignorePaths;
   }
 

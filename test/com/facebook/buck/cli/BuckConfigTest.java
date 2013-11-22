@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -50,6 +51,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -347,17 +350,18 @@ public class BuckConfigTest {
         "ignore = .git, foo, bar/, baz//, a/b/c"));
     BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
 
-    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
-    assertEquals("Should ignore paths, sans trailing slashes", ignorePaths, ImmutableSet.of(
-        BuckConstant.BUCK_OUTPUT_DIRECTORY,
-        ".idea",
-        System.getProperty(BuckConfig.BUCK_BUCKD_DIR_KEY, ".buckd"),
-        config.getCacheDir().toString(),
-        ".git",
-        "foo",
-        "bar",
-        "baz",
-        "a/b/c"
+    ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
+    assertEquals("Should ignore paths, sans trailing slashes", ignorePaths,
+        MorePaths.asPaths(ImmutableSet.of(
+          BuckConstant.BUCK_OUTPUT_DIRECTORY,
+          ".idea",
+          System.getProperty(BuckConfig.BUCK_BUCKD_DIR_KEY, ".buckd"),
+          config.getCacheDir().toString(),
+          ".git",
+          "foo",
+          "bar",
+          "baz",
+          "a/b/c")
     ));
 
     EasyMock.verify(filesystem, parser);
@@ -376,9 +380,9 @@ public class BuckConfigTest {
         "dir = cache_dir"));
     BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
 
-    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
+    ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
     assertTrue("Relative cache directory should be in set of ignored paths",
-        ignorePaths.contains("cache_dir"));
+        ignorePaths.contains(Paths.get("cache_dir")));
 
     EasyMock.verify(filesystem, parser);
   }
@@ -394,7 +398,7 @@ public class BuckConfigTest {
         "dir = /cache_dir"));
     BuckConfig config = BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
 
-    ImmutableSet<String> ignorePaths = config.getIgnorePaths();
+    ImmutableSet<Path> ignorePaths = config.getIgnorePaths();
     assertFalse("Absolute cache directory should not be in set of ignored paths",
         ignorePaths.contains("/cache_dir"));
 

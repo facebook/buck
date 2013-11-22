@@ -60,7 +60,8 @@ public class ProjectIntegrationTest {
           ".idea/modules.xml",
           ".idea/runConfigurations/Debug_Buck_test.xml",
           "modules/dep1/module_modules_dep1.iml",
-          "modules/tip/module_modules_tip.iml"
+          "modules/tip/module_modules_tip.iml",
+          "root.iml"
         ) + '\n',
         result.getStdout());
 

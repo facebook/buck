@@ -74,7 +74,7 @@ public class DirectoryTraversalTest {
     final ImmutableSet.Builder<String> visitedPaths = ImmutableSet.builder();
     new DirectoryTraversal(
         temporaryFolder.getRoot(),
-        ImmutableSet.of("a", "b/c", "loop", "loop/1")) {
+        MorePaths.asPaths(ImmutableSet.of("a", "b/c", "loop", "loop/1"))) {
       @Override
       public void visit(File file, String relativePath) {
         visitedPaths.add(relativePath);

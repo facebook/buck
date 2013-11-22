@@ -299,40 +299,36 @@ class BuckConfig {
 
   /**
    * A set of paths to subtrees that do not contain source files, build files or files that could
-   * affect either (buck-out, .idea, .buckd, buck-cache, .git, etc.).
+   * affect either (buck-out, .idea, .buckd, buck-cache, .git, etc.).  May return absolute paths
+   * as well as relative paths.
    */
-  public ImmutableSet<String> getIgnorePaths() {
+  public ImmutableSet<Path> getIgnorePaths() {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
     final String IGNORE_KEY = "ignore";
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
-    builder.add(BuckConstant.BUCK_OUTPUT_DIRECTORY);
-    builder.add(".idea");
+    builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
+    builder.add(Paths.get(".idea"));
 
     // Take care not to ignore absolute paths.
-    String buckdDir = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
+    Path buckdDir = Paths.get(System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd"));
     Path cacheDir = getCacheDir();
-    for (String path : ImmutableList.of(buckdDir, cacheDir.toString())) {
-      if (!path.isEmpty() && path.charAt(0) != '/') {
+    for (Path path : ImmutableList.of(buckdDir, cacheDir)) {
+      if (!path.toString().isEmpty()) {
         builder.add(path);
       }
     }
 
     if (projectConfig.containsKey(IGNORE_KEY)) {
-      builder.addAll(Splitter.on(',')
-          .omitEmptyStrings()
-          .trimResults()
-          .split(projectConfig.get(IGNORE_KEY)));
+      builder.addAll(MorePaths.asPaths(
+          Splitter.on(',')
+            .omitEmptyStrings()
+            .trimResults()
+            .split(projectConfig.get(IGNORE_KEY))));
     }
 
     // Normalize paths in order to eliminate trailing '/' characters and whatnot.
-    return ImmutableSet.<String>builder().addAll(Iterables.transform(builder.build(),
-        new Function<String, String>() {
-          @Override
-          public String apply(String path) {
-            return MorePaths.newPathInstance(path).toString();
-          }
-        })).build();
+    return builder.build();
   }
 
   public ImmutableSet<Pattern> getTempFilePatterns() {

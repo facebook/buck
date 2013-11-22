@@ -58,7 +58,7 @@ public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
   @Override
   public int execute(final ExecutionContext context) {
     final ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    ImmutableSet<String> ignorePaths = ImmutableSet.of();
+    ImmutableSet<Path> ignorePaths = ImmutableSet.of();
 
     DirectoryTraversal traversal = new DirectoryTraversal(
         projectFilesystem.getFileForRelativePath(binDirectory),

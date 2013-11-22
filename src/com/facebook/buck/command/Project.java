@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidDexTransitiveDependencies;
 import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.android.AndroidResourceRule;
 import com.facebook.buck.android.NdkLibrary;
+import com.facebook.buck.java.JavaBinaryRule;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildFileTree;
@@ -369,6 +370,7 @@ public class Project {
     BuildRule projectRule = projectConfig.getProjectRule();
     Buildable buildable = projectRule.getBuildable();
     Preconditions.checkState(projectRule instanceof JavaLibraryRule
+        || projectRule instanceof JavaBinaryRule
         || projectRule instanceof AndroidLibraryRule
         || projectRule instanceof AndroidResourceRule
         || projectRule instanceof AndroidBinaryRule
@@ -408,6 +410,8 @@ public class Project {
         projectConfig.getSrcRule(),
         projectConfig.getSourceRoots(),
         false /* isTestSource */);
+
+    addRootExcludes(module, projectConfig.getSrcRule());
 
     // At least one of src or tests should contribute a source folder unless this is an
     // non-library Android project with no source roots specified.
@@ -579,7 +583,7 @@ public class Project {
       return false;
     }
 
-    if (buildRule instanceof AndroidBinaryRule && sourceRoots.isEmpty()) {
+    if (buildRule.getProperties().is(PACKAGING) && sourceRoots.isEmpty()) {
       return false;
     }
 
@@ -639,15 +643,17 @@ public class Project {
       module.excludeFolders.add(excludeFolder);
     }
 
+    return true;
+  }
+
+  private void addRootExcludes(Module module, BuildRule buildRule) {
     // If in the root of the project, specify ignored paths.
-    if ("".equals(buildRule.getBuildTarget().getBasePathWithSlash())) {
-      for (String path : projectFilesystem.getIgnorePaths()) {
-        module.excludeFolders.add(new SourceFolder(String.format("file://$MODULE_DIR$/%s", path),
-            false));
+    if (buildRule != null && buildRule.getBuildTarget().getBasePathWithSlash().isEmpty()) {
+      for (Path path : projectFilesystem.getIgnorePaths()) {
+        module.excludeFolders.add(
+            new SourceFolder(String.format("file://$MODULE_DIR$/%s", path), false));
       }
     }
-
-    return true;
   }
 
   /**

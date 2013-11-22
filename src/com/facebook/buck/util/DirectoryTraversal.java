@@ -35,16 +35,16 @@ import java.util.EnumSet;
 public abstract class DirectoryTraversal {
 
   private final File root;
-  private final ImmutableSet<String> ignorePaths;
+  private final ImmutableSet<Path> ignorePaths;
 
   /** @param root must be a directory */
-  public DirectoryTraversal(File root, ImmutableSet<String> ignorePaths) {
+  public DirectoryTraversal(File root, ImmutableSet<Path> ignorePaths) {
     this.root = Preconditions.checkNotNull(root);
     this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
   }
 
   public DirectoryTraversal(File root) {
-    this(root, ImmutableSet.<String>of());
+    this(root, ImmutableSet.<Path>of());
   }
 
   public File getRoot() {
@@ -58,7 +58,7 @@ public abstract class DirectoryTraversal {
     FileVisitor<Path> visitor = new FileVisitor<Path>() {
       @Override
       public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-        if (ignorePaths.contains(rootPath.relativize(dir).toString())) {
+        if (ignorePaths.contains(rootPath.relativize(dir))) {
           return FileVisitResult.SKIP_SUBTREE;
         } else {
           return FileVisitResult.CONTINUE;
