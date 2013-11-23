@@ -25,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
@@ -322,6 +323,11 @@ public class ProjectFilesystem {
   public InputSupplier<? extends InputStream> getInputSupplierForRelativePath(String path) {
     File file = getFileForRelativePath(path);
     return Files.newInputStreamSupplier(file);
+  }
+
+  public String computeSha1(Path pathRelativeToProjectRoot) throws IOException {
+    File fileToHash = getFileForRelativePath(pathRelativeToProjectRoot);
+    return Files.hash(fileToHash, Hashing.sha1()).toString();
   }
 
   /**

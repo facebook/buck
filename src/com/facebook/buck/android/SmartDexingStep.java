@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.android;
 
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.ClasspathTraverser;
@@ -57,9 +60,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 /**
  * Optimized dx command runner which can invoke multiple dx commands in parallel and also avoid
@@ -115,8 +115,7 @@ public class SmartDexingStep implements Step {
     this.optimizeDex = optimizeDex;
   }
 
-  @VisibleForTesting
-  protected ListeningExecutorService createDxExecutor() {
+  static ListeningExecutorService createDxExecutor(Optional<Integer> numThreads) {
     int numThreadsValue;
     if (numThreads.isPresent()) {
       Preconditions.checkArgument(numThreads.get() >= 1,
@@ -125,17 +124,19 @@ public class SmartDexingStep implements Step {
     } else {
       numThreadsValue = determineOptimalThreadCount();
     }
-    return listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), numThreadsValue));
+    return listeningDecorator(newMultiThreadExecutor(
+        SmartDexingStep.class.getSimpleName(),
+        numThreadsValue));
   }
 
-  private final ListeningExecutorService getDxExecutor() {
+  private ListeningExecutorService getDxExecutor() {
     if (dxExecutor == null) {
-      dxExecutor = createDxExecutor();
+      dxExecutor = createDxExecutor(numThreads);
     }
     return dxExecutor;
   }
 
-  private static int determineOptimalThreadCount() {
+  static int determineOptimalThreadCount() {
     return (int)(1.25 * Runtime.getRuntime().availableProcessors());
   }
 
@@ -430,15 +431,6 @@ public class SmartDexingStep implements Step {
       return newInputsHash.equals(currentInputsHash);
     }
 
-    /**
-     * Returns true if the output of dexing should be saved as .dex.jar. This is based on the
-     * target file extension, much as {@code dx} itself chooses whether to embed the dex inside
-     * a jar/zip based on the destination file passed to it.
-     */
-    private boolean useXzCompression() {
-      return outputPath.endsWith(".dex.jar.xz");
-    }
-
     public List<Step> buildInternal() {
       Preconditions.checkState(newInputsHash != null, "Must call checkIsCached first!");
 
@@ -447,29 +439,47 @@ public class SmartDexingStep implements Step {
       EnumSet<Option> dxOptions = optimizeDex
           ? EnumSet.noneOf(DxStep.Option.class)
           : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
-      if (useXzCompression()) {
-        String tempDexJarOutput = outputPath.replaceAll("\\.jar\\.xz$", ".tmp.jar");
-        steps.add(new DxStep(tempDexJarOutput, srcs, dxOptions));
-        // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
-        // compression won't be effective.
-        String repackedJar = outputPath.replaceAll("\\.xz$", "");
-        steps.add(new RepackZipEntriesStep(
-            tempDexJarOutput,
-            repackedJar,
-            ImmutableSet.of("classes.dex"),
-            ZipStep.MIN_COMPRESSION_LEVEL
-        ));
-        steps.add(new RmStep(tempDexJarOutput, true));
-        steps.add(new XzStep(repackedJar));
-      } else {
-        steps.add(new DxStep(outputPath, srcs, dxOptions));
-      }
+      steps.add(createDxStepForDxPseudoRule(srcs, outputPath, dxOptions));
       steps.add(new WriteFileStep(newInputsHash, outputHashPath));
 
       // Use a composite step to ensure that runDxSteps can still make use of
       // runStepsInParallelAndWait.  This is necessary to keep the DxStep and
       // WriteFileStep dependent in series.
       return ImmutableList.<Step>of(new CompositeStep(steps));
+    }
+
+  }
+
+  /**
+   * The step to produce the .dex file will be determined by the file extension of outputPath, much
+   * as {@code dx} itself chooses whether to embed the dex inside a jar/zip based on the destination
+   * file passed to it.
+   */
+  static Step createDxStepForDxPseudoRule(Iterable<Path> filesToDex,
+      String outputPath,
+      EnumSet<Option> dxOptions) {
+    if (outputPath.endsWith(DexStore.XZ.getExtension())) {
+      List<Step> steps = Lists.newArrayList();
+      String tempDexJarOutput = outputPath.replaceAll("\\.jar\\.xz$", ".tmp.jar");
+      steps.add(new DxStep(tempDexJarOutput, filesToDex, dxOptions));
+      // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
+      // compression won't be effective.
+      String repackedJar = outputPath.replaceAll("\\.xz$", "");
+      steps.add(new RepackZipEntriesStep(
+          tempDexJarOutput,
+          repackedJar,
+          ImmutableSet.of("classes.dex"),
+          ZipStep.MIN_COMPRESSION_LEVEL
+      ));
+      steps.add(new RmStep(tempDexJarOutput, true));
+      steps.add(new XzStep(repackedJar));
+      return new CompositeStep(steps);
+    } else if (outputPath.endsWith(DexStore.JAR.getExtension())) {
+      return new DxStep(outputPath, filesToDex, dxOptions);
+    } else {
+      throw new IllegalArgumentException(String.format(
+          "Suffix of %s does not have a corresponding DexStore type.",
+          outputPath));
     }
   }
 }

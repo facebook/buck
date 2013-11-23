@@ -118,8 +118,8 @@ public final class DefaultStepRunner implements StepRunner {
    *
    * @param steps List of steps to execute.
    */
-  public void runStepsInParallelAndWait(final List<Step> steps)
-      throws StepFailedException {
+  @Override
+  public void runStepsInParallelAndWait(final List<Step> steps) throws StepFailedException {
     List<Callable<Void>> callables = Lists.transform(steps,
         new Function<Step, Callable<Void>>() {
       @Override

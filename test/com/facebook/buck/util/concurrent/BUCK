@@ -1,6 +1,6 @@
 java_test(
   name = 'concurrent',
-  srcs = glob(['*.java']),
+  srcs = glob(['*Test.java']),
   source_under_test = [
     '//src/com/facebook/buck/util/concurrent:concurrent',
   ],
@@ -8,5 +8,18 @@ java_test(
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/util/concurrent:concurrent',
+  ],
+)
+
+java_library(
+  name = 'testutil',
+  srcs = [
+    'FakeListeningExecutorService.java',
+  ],
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = [
+    'PUBLIC',
   ],
 )

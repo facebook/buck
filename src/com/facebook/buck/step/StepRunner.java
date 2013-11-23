@@ -44,5 +44,7 @@ public interface StepRunner {
   public <T> ListenableFuture<T> runStepsAndYieldResult(
       List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget);
 
+  public void runStepsInParallelAndWait(final List<Step> steps) throws StepFailedException;
+
   public ListeningExecutorService getListeningExecutorService();
 }

@@ -89,4 +89,9 @@ public class LogEvent extends AbstractBuckEvent {
     return Objects.equal(getLevel(), that.getLevel()) &&
         Objects.equal(getMessage(), that.getMessage());
   }
+
+  @Override
+  public String toString() {
+    return getMessage();
+  }
 }

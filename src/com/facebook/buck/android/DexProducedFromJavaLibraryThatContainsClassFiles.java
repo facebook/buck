@@ -180,10 +180,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
     }
   }
 
-  public int getLinearAllocEstimate() {
-    return getBuildOutput().linearAllocEstimate;
-  }
-
   @Override
   @Nullable
   public String getPathToOutputFile() {
@@ -202,10 +198,14 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
     return !getClassNames().isEmpty();
   }
 
-  private ImmutableSortedMap<String, HashCode> getClassNames() {
+  ImmutableSortedMap<String, HashCode> getClassNames() {
     // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
     // that from a Buildable (but there is from an AbstractCachingBuildRule).
     return javaLibraryWithClassesList.getClassNames();
+  }
+
+  int getLinearAllocEstimate() {
+    return getBuildOutput().linearAllocEstimate;
   }
 
   Sha1HashCode getAbiKeyForDeps() {

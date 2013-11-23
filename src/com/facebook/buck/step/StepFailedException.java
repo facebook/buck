@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
 @SuppressWarnings("serial")
@@ -25,7 +26,9 @@ public class StepFailedException extends Exception {
   private final Step step;
   private final int exitCode;
 
-  private StepFailedException(String message, Step step, int exitCode) {
+  /** Callers should use {@link #createForFailingStep} unless in a unit test. */
+  @VisibleForTesting
+  public StepFailedException(String message, Step step, int exitCode) {
     super(message);
     this.step = step;
     this.exitCode = exitCode;

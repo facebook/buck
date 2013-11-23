@@ -19,10 +19,15 @@ package com.facebook.buck.event;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.MoreExecutors;
+
+import java.util.List;
 
 /**
  * Factory to create a {@link BuckEventBus} for tests.
@@ -47,6 +52,10 @@ public class BuckEventBusFactory {
     return newInstance(clock, BUILD_ID_FOR_TEST);
   }
 
+  /**
+   * This registers an {@link ErrorListener}. This is helpful when errors are logged during tests
+   * that would not otherwise be noticed.
+   */
   public static BuckEventBus newInstance(Clock clock, String buildId) {
     BuckEventBus buckEventBus = new BuckEventBus(clock,
         MoreExecutors.sameThreadExecutor(),
@@ -67,6 +76,19 @@ public class BuckEventBusFactory {
     @Subscribe
     public void logEvent(LogEvent event) {
       System.err.println(event.getMessage());
+    }
+  }
+
+  public static class CapturingLogEventListener {
+    private final List<LogEvent> logEvents = Lists.newArrayList();
+
+    @Subscribe
+    public void logEvent(LogEvent event) {
+      logEvents.add(event);
+    }
+
+    public List<String> getErrorMessages() {
+      return FluentIterable.from(logEvents).transform(Functions.toStringFunction()).toList();
     }
   }
 }

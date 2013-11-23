@@ -29,8 +29,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -125,13 +123,6 @@ public class RepackZipEntriesStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    // We don't actually want to create a temp directory. Since this is for cut-and-paste joy only
-    // currentTimeMillis is sufficiently random.
-    Path temp = Paths.get(System.getProperty("java.io.tmpdir"), "repack" + System.currentTimeMillis());
-
-    return new StringBuilder("cd ").append(temp.toString()).append(" && ")
-        .append("unzip ").append(inputFile).append(" && ")
-        .append("zip -r -").append(compressionLevel).append(" ").append(outputFile).append(" *")
-        .toString();
+    return String.format("repack %s in %s", inputFile, outputFile);
   }
 }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Specifies how secondary .dex files should be stored in the .apk.
  */
@@ -23,10 +25,21 @@ enum DexStore {
   /**
    * Secondary dexes should be compressed using JAR's deflate.
    */
-  JAR,
+  JAR(".dex.jar"),
 
   /**
    * Secondary dexes should be stored uncompressed in jars that will be XZ-compressed.
    */
-  XZ,
+  XZ(".dex.jar.xz"),
+  ;
+
+  private final String extension;
+
+  private DexStore(String extension) {
+    this.extension = Preconditions.checkNotNull(extension);
+  }
+
+  public String getExtension() {
+    return extension;
+  }
 }
