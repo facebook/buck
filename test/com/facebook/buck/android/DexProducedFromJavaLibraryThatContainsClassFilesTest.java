@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.AccumulateClassNames;
 import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -100,6 +101,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         ImmutableList.of(
           "rm -f /home/user/buck-out/gen/foo/bar#dex.dex.jar",
           "mkdir -p /home/user/buck-out/gen/foo",
+          "estimate_linear_alloc",
           expectedDxCommand,
           "record_dx_success"),
         steps,
@@ -112,7 +114,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     expect(accumulateClassNames.getAbiKey()).andReturn(abiKey);
     replayAll();
 
-    Step recordArtifactAndMetadataStep = steps.get(3);
+    ((EstimateLinearAllocStep) steps.get(2)).setLinearAllocEstimateForTesting(250);
+    Step recordArtifactAndMetadataStep = steps.get(4);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
     assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",
@@ -122,6 +125,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
         abiKey.getHash());
+    buildableContext.assertContainsMetadataMapping(
+        DexProducedFromJavaLibraryThatContainsClassFiles.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "250");
 
     verifyAll();
   }

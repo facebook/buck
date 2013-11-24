@@ -51,3 +51,21 @@ java_library(
     'PUBLIC',
   ],
 )
+
+java_library(
+  name = 'steps',
+  srcs = [
+    'EstimateLinearAllocStep.java',
+  ],
+  deps = [
+    ':dalvik_stats_tool',
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/java/classes:classes',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/step:step',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

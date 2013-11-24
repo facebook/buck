@@ -81,6 +81,7 @@ java_library(
     '//lib:jackson-databind',
     '//lib:jsr305',
     '//src/com/facebook/buck/dalvik:dalvik',
+    '//src/com/facebook/buck/dalvik:steps',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',

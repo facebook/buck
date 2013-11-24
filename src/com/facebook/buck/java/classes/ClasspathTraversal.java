@@ -49,6 +49,15 @@ public abstract class ClasspathTraversal {
 
   public abstract void visit(FileLike fileLike) throws IOException;
 
+  /**
+   * Subclasses can override this method to return a value of any type. This often represents some
+   * sort of cumulative value that is computed as a result of the traversal.
+   */
+  // TODO(mbolin): Change this from Object to a generic <T>.
+  public Object getResult() {
+    return null;
+  }
+
   public final void traverse() throws IOException {
     for (Path path : paths) {
       ClasspathTraverser adapter = createTraversalAdapter(path.toFile());

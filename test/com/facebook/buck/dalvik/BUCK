@@ -4,12 +4,18 @@ java_test(
   source_under_test = [
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
+    '//src/com/facebook/buck/dalvik:steps',
   ],
   deps = [
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
+    '//src/com/facebook/buck/dalvik:steps',
+    '//src/com/facebook/buck/java/classes:classes',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:io',
+    '//test/com/facebook/buck/step:testutil',
     '//third-party/java/asm:asm',
   ],
 )

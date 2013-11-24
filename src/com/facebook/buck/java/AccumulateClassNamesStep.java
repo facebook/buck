@@ -20,6 +20,7 @@ import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.java.classes.FileLikes;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -56,13 +57,6 @@ public class AccumulateClassNamesStep extends AbstractExecutionStep
    */
   static final String CLASS_NAME_HASH_CODE_SEPARATOR = " ";
 
-  /**
-   * Entries in the {@link #pathToJarOrClassesDirectory} that end with this suffix will be written
-   * to {@link #whereClassNamesShouldBeWritten}. Since they all share the same suffix, the suffix
-   * will be stripped when written to {@link #whereClassNamesShouldBeWritten}.
-   */
-  private static final String CLASS_NAME_SUFFIX = ".class";
-
   private final Path pathToJarOrClassesDirectory;
   private final Path whereClassNamesShouldBeWritten;
 
@@ -89,28 +83,28 @@ public class AccumulateClassNamesStep extends AbstractExecutionStep
     ClasspathTraversal traversal = new ClasspathTraversal(Collections.singleton(path)) {
       @Override
       public void visit(final FileLike fileLike) throws IOException {
-        String name = fileLike.getRelativePath();
-
         // When traversing a JAR file, it may have resources or directory entries that do not end
         // in .class, which should be ignored.
-        if (name.endsWith(CLASS_NAME_SUFFIX)) {
-          String key = name.substring(0, name.length() - CLASS_NAME_SUFFIX.length());
-          InputSupplier<InputStream> input = new InputSupplier<InputStream>() {
-            @Override
-            public InputStream getInput() throws IOException {
-              return fileLike.getInput();
-            }
-          };
-          HashCode value = ByteStreams.hash(input, Hashing.sha1());
-          classNamesBuilder.put(key, value);
+        if (!FileLikes.isClassFile(fileLike)) {
+          return;
         }
+
+        String key = FileLikes.getFileNameWithoutClassSuffix(fileLike);
+        InputSupplier<InputStream> input = new InputSupplier<InputStream>() {
+          @Override
+          public InputStream getInput() throws IOException {
+            return fileLike.getInput();
+          }
+        };
+        HashCode value = ByteStreams.hash(input, Hashing.sha1());
+        classNamesBuilder.put(key, value);
       }
     };
 
     try {
       new DefaultClasspathTraverser().traverse(traversal);
     } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
+      context.logError(e, "Error accumulating class names for %s.", pathToJarOrClassesDirectory);
       return 1;
     }
 

@@ -7,6 +7,7 @@ java_library(
     'DefaultClasspathTraverser.java',
     'FileLikeInputSupplier.java',
     'FileLike.java',
+    'FileLikes.java',
   ],
   deps = [
     '//lib:guava',

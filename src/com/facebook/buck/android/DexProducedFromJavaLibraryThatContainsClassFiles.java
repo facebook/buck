@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.DexProducedFromJavaLibraryThatContainsClassFiles.BuildOutput;
+import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.AccumulateClassNames;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
@@ -24,6 +26,8 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -34,6 +38,8 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -60,10 +66,16 @@ import javax.annotation.Nullable;
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBuildable {
+public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBuildable
+    implements InitializableFromDisk<BuildOutput> {
+
+  @VisibleForTesting
+  static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
 
   private final BuildTarget buildTarget;
   private final AccumulateClassNames javaLibraryWithClassesList;
+
+  @Nullable private BuildOutput buildOutput;
 
   @VisibleForTesting
   DexProducedFromJavaLibraryThatContainsClassFiles(BuildTarget buildTarget,
@@ -95,14 +107,22 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
 
     // If there are classes, run dx.
     final boolean hasClassesToDx = !javaLibraryWithClassesList.getClassNames().isEmpty();
+    final Supplier<Integer> linearAllocEstimate;
     if (hasClassesToDx) {
+      JavaLibraryRule javaLibraryRuleToDex = javaLibraryWithClassesList.getJavaLibraryRule();
+      Path pathToOutputFile = Paths.get(javaLibraryRuleToDex.getPathToOutputFile());
+      EstimateLinearAllocStep estimate = new EstimateLinearAllocStep(pathToOutputFile);
+      steps.add(estimate);
+      linearAllocEstimate = estimate;
+
       // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
       // merged into a final classes.dex that uses jumbo instructions.
-      JavaLibraryRule javaLibraryRuleToDex = javaLibraryWithClassesList.getJavaLibraryRule();
       DxStep dx = new DxStep(getPathToDex().toString(),
-          Collections.singleton(Paths.get(javaLibraryRuleToDex.getPathToOutputFile())),
+          Collections.singleton(pathToOutputFile),
           EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
       steps.add(dx);
+    } else {
+      linearAllocEstimate = Suppliers.ofInstance(0);
     }
 
     // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was
@@ -122,12 +142,46 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
         String abiKeyHash = getAbiKeyForDeps().getHash();
         buildableContext.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA, abiKeyHash);
         buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKeyHash);
+        buildableContext.addMetadata(LINEAR_ALLOC_KEY_ON_DISK_METADATA,
+            String.valueOf(linearAllocEstimate.get()));
         return 0;
       }
     };
     steps.add(recordArtifactAndMetadataStep);
 
     return steps.build();
+  }
+
+  @Override
+  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    int linearAllocEstimate = Integer.parseInt(
+        onDiskBuildInfo.getValue(LINEAR_ALLOC_KEY_ON_DISK_METADATA).get());
+    return new BuildOutput(linearAllocEstimate);
+  }
+
+  @Override
+  public void setBuildOutput(BuildOutput buildOutput) {
+    Preconditions.checkState(this.buildOutput == null,
+        "buildOutput should not already be set for %s.",
+        this);
+    this.buildOutput = buildOutput;
+  }
+
+  @Override
+  public BuildOutput getBuildOutput() {
+    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
+    return buildOutput;
+  }
+
+  static class BuildOutput {
+    private final int linearAllocEstimate;
+    private BuildOutput(int linearAllocEstimate) {
+      this.linearAllocEstimate = linearAllocEstimate;
+    }
+  }
+
+  public int getLinearAllocEstimate() {
+    return getBuildOutput().linearAllocEstimate;
   }
 
   @Override
