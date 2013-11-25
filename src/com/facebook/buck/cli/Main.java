@@ -18,9 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
-import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
@@ -367,73 +367,73 @@ public final class Main {
               new DefaultFileHashCache(projectFilesystem, console)));
     }
 
-    Clock clock = new DefaultClock();
-
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0], console);
-    if (command.isPresent()) {
-      String buildId = MoreStrings.createRandomString();
-      ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
-      try (BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-           AbstractConsoleEventBusListener consoleListener =
-               createConsoleEventListener(clock, console, executionEnvironment))  {
-
-        ImmutableList<BuckEventListener> eventListeners =
-            addEventListeners(buildEventBus,
-                clock,
-                projectFilesystem,
-                config,
-                getWebServerIfDaemon(context),
-                executionEnvironment,
-                consoleListener);
-
-        String[] remainingArgs = new String[args.length - 1];
-        System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
-
-        Command executingCommand = command.get();
-        String commandName = executingCommand.name().toLowerCase();
-
-        buildEventBus.post(CommandEvent.started(commandName, context.isPresent()));
-
-        // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
-        // running commands such as `buck clean`.
-        ArtifactCacheFactory artifactCacheFactory = new ArtifactCacheFactory() {
-          @Override
-          public ArtifactCache newInstance(AbstractCommandOptions options) {
-            if (options.isNoCache()) {
-              return new NoopArtifactCache();
-            } else {
-              buildEventBus.post(ArtifactCacheConnectEvent.started());
-              ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
-                  .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
-              buildEventBus.post(ArtifactCacheConnectEvent.finished());
-              return artifactCache;
-            }
-          }
-        };
-
-        int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
-            console,
-            projectFilesystem,
-            new KnownBuildRuleTypes(),
-            artifactCacheFactory,
-            buildEventBus,
-            parser,
-            platform));
-
-        buildEventBus.post(CommandEvent.finished(commandName, context.isPresent(), exitCode));
-        for (BuckEventListener eventListener : eventListeners) {
-          eventListener.outputTrace();
-        }
-        return exitCode;
-      }
-    } else {
+    if (!command.isPresent()) {
       int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
         return usage();
       } else {
         return exitCode;
       }
+    }
+
+    Clock clock = new DefaultClock();
+
+    String buildId = MoreStrings.createRandomString();
+    ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+    try (BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+         AbstractConsoleEventBusListener consoleListener =
+             createConsoleEventListener(clock, console, executionEnvironment))  {
+
+      ImmutableList<BuckEventListener> eventListeners =
+          addEventListeners(buildEventBus,
+              clock,
+              projectFilesystem,
+              config,
+              getWebServerIfDaemon(context),
+              executionEnvironment,
+              consoleListener);
+
+      String[] remainingArgs = new String[args.length - 1];
+      System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
+
+      Command executingCommand = command.get();
+      String commandName = executingCommand.name().toLowerCase();
+
+      buildEventBus.post(CommandEvent.started(commandName, context.isPresent()));
+
+      // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
+      // running commands such as `buck clean`.
+      ArtifactCacheFactory artifactCacheFactory = new ArtifactCacheFactory() {
+        @Override
+        public ArtifactCache newInstance(AbstractCommandOptions options) {
+          if (options.isNoCache()) {
+            return new NoopArtifactCache();
+          } else {
+            buildEventBus.post(ArtifactCacheConnectEvent.started());
+            ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
+                .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
+            buildEventBus.post(ArtifactCacheConnectEvent.finished());
+            return artifactCache;
+          }
+        }
+      };
+
+      int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
+          console,
+          projectFilesystem,
+          new KnownBuildRuleTypes(),
+          artifactCacheFactory,
+          buildEventBus,
+          parser,
+          platform));
+
+      buildEventBus.post(CommandEvent.finished(commandName, context.isPresent(), exitCode));
+      for (BuckEventListener eventListener : eventListeners) {
+        eventListener.outputTrace();
+      }
+      return exitCode;
     }
   }
 
