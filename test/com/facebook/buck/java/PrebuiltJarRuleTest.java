@@ -21,8 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
-import com.facebook.buck.rules.AbstractCachingBuildRule.BuildResult;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;

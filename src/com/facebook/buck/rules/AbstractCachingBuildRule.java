@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.annotation.Nullable;
 
 /**
  * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
@@ -204,7 +203,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
               try {
                 BuildResult result = buildOnceDepsAreBuilt(
                     context, onDiskBuildInfo, buildInfoRecorder.get());
-                if (result.isSuccess()) {
+                if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                   recordBuildRuleSuccess(result);
                 } else {
                   recordBuildRuleFailure(result);
@@ -217,7 +216,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
             private void recordBuildRuleSuccess(BuildResult result) {
               // Make sure that all of the local files have the same values they would as if the
               // rule had been built locally.
-              if (result.success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
+              if (result.getSuccess().shouldWriteRecordedMetadataToDiskAfterBuilding()) {
                 try {
                   buildInfoRecorder.get().writeMetadataToDisk();
                 } catch (IOException e) {
@@ -230,12 +229,12 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
               // Do the post to the event bus immediately after the future is set so that the
               // build time measurement is as accurate as possible.
               eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
-                  result.status,
-                  result.cacheResult,
-                  Optional.of(result.success)));
+                  result.getStatus(),
+                  result.getCacheResult(),
+                  Optional.of(result.getSuccess())));
 
               // Finally, upload to the artifact cache.
-              if (result.success.shouldUploadResultingArtifact()) {
+              if (result.getSuccess().shouldUploadResultingArtifact()) {
                 buildInfoRecorder.get().performUploadToArtifactCache(context.getArtifactCache(),
                     eventBus);
               }
@@ -254,15 +253,15 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
               // never invoked.
               if (startOfBuildWasRecordedOnTheEventBus) {
                 eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
-                    result.status,
-                    result.cacheResult,
+                    result.getStatus(),
+                    result.getCacheResult(),
                     Optional.<BuildRuleSuccess.Type>absent()));
               }
 
               // It seems possible (albeit unlikely) that something could go wrong in
               // recordBuildRuleSuccess() after buildRuleResult has been resolved such that Buck
               // would attempt to resolve the future again, which would fail.
-              buildRuleResult.setException(result.failure);
+              buildRuleResult.setException(result.getFailure());
             }
           },
           context.getExecutor());
@@ -296,7 +295,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     }
 
     // Only now that the rule should be in a completely valid state, resolve the future.
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, result.success);
+    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, result.getSuccess());
     buildRuleResult.set(buildRuleSuccess);
   }
 
@@ -483,38 +482,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
-    }
-  }
-
-  /**
-   * This is a union type that represents either a success or a failure. This exists so that
-   * {@link #buildOnceDepsAreBuilt(BuildContext, OnDiskBuildInfo, BuildInfoRecorder)} can return a
-   * strongly typed value.
-   */
-  public static class BuildResult {
-
-    private final BuildRuleStatus status;
-    private final CacheResult cacheResult;
-
-    @Nullable private final BuildRuleSuccess.Type success;
-    @Nullable private final Throwable failure;
-
-    public BuildResult(BuildRuleSuccess.Type success, CacheResult cacheResult) {
-      this.status = BuildRuleStatus.SUCCESS;
-      this.cacheResult = Preconditions.checkNotNull(cacheResult);
-      this.success = Preconditions.checkNotNull(success);
-      this.failure = null;
-    }
-
-    BuildResult(Throwable failure) {
-      this.status = BuildRuleStatus.FAIL;
-      this.cacheResult = CacheResult.MISS;
-      this.success = null;
-      this.failure = Preconditions.checkNotNull(failure);
-    }
-
-    boolean isSuccess() {
-      return status == BuildRuleStatus.SUCCESS;
     }
   }
 }
