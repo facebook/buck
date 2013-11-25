@@ -678,17 +678,6 @@ def sh_test(name, test, labels=[], deps=[], visibility=[], build_env=None):
 
 
 @provide_for_build
-def export_file(name, src=None, out=None, visibility=[], build_env=None):
-  add_rule({
-    'type' : 'export_file',
-    'name' : name,
-    'src' : src,
-    'out' : out,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def include_defs(name, build_env=None):
   """Loads a file in the context of the current build file.
   Name must begin with "//" and references a file relative to the project root.

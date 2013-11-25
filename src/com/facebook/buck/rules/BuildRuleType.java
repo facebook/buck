@@ -26,7 +26,6 @@ public final class BuildRuleType {
   public static BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
   public static BuildRuleType ANDROID_RESOURCE = new BuildRuleType("android_resource");
   public static BuildRuleType APK_GENRULE = new BuildRuleType("apk_genrule");
-  public static BuildRuleType EXPORT_FILE = new BuildRuleType("export_file");
   public static BuildRuleType GEN_AIDL = new BuildRuleType("gen_aidl");
   public static BuildRuleType GEN_PARCELABLE = new BuildRuleType("gen_parcelable");
   public static BuildRuleType GENRULE = new BuildRuleType("genrule");

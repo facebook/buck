@@ -2,7 +2,7 @@ java_library(
   name = 'rules',
   srcs = [
     'ExportFile.java',
-    'ExportFileBuildRuleFactory.java',
+    'ExportFileDescription.java',
     'Genrule.java',
     'GenruleBuildRuleFactory.java',
     'ShBinaryRule.java',

@@ -35,7 +35,7 @@ import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
 import com.facebook.buck.parser.ProjectConfigRuleFactory;
 import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
 import com.facebook.buck.python.PythonLibraryBuildRuleFactory;
-import com.facebook.buck.shell.ExportFileBuildRuleFactory;
+import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleBuildRuleFactory;
 import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
@@ -58,6 +58,8 @@ public class KnownBuildRuleTypes {
   private Map<String, BuildRuleType> types = Maps.newConcurrentMap();
 
   public KnownBuildRuleTypes() {
+    register(new ExportFileDescription());
+
     // TODO(simons): Consider whether we actually want to have default rules
     register(BuildRuleType.ANDROID_MANIFEST, new AndroidManifestBuildRuleFactory());
     register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
@@ -65,7 +67,6 @@ public class KnownBuildRuleTypes {
     register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
     register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
     register(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory());
-    register(BuildRuleType.EXPORT_FILE, new ExportFileBuildRuleFactory());
     register(BuildRuleType.GENRULE, new GenruleBuildRuleFactory());
     register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());

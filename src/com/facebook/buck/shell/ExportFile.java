@@ -16,12 +16,10 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
@@ -29,9 +27,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -39,8 +34,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * Export a file so that it can be easily referenced by other {@link com.facebook.buck.rules.BuildRule}s. There are several
@@ -82,26 +75,15 @@ import javax.annotation.Nullable;
 public class ExportFile extends AbstractBuildable {
 
   private final Path src;
-  private final Supplier<Path> out;
-
+  private final Path out;
 
   @VisibleForTesting
-  ExportFile(final BuildRuleParams params, Optional<Path> src, Optional<Path> out) {
-    Path shortName = Paths.get(params.getBuildTarget().getShortName());
+  ExportFile(final BuildRuleParams params, ExportFileDescription.Arg args) {
+    final BuildTarget target = params.getBuildTarget();
+    this.src = args.src.or(Paths.get(target.getBasePath(), target.getShortName()));
 
-    this.src = src.or(shortName);
-
-    final Path outName = out.or(shortName);
-
-    this.out = Suppliers.memoize(new Supplier<Path>() {
-      @Override
-      public Path get() {
-        Path name = outName.getFileName();
-        return Paths.get(
-            BuckConstant.GEN_DIR,
-            params.getBuildTarget().getBasePathWithSlash()).resolve(name);
-      }
-    });
+    final String outName = args.out.or(target.getShortName());
+    this.out = Paths.get(BuckConstant.GEN_DIR, target.getBasePath(), outName);
   }
 
   @Override
@@ -119,54 +101,17 @@ public class ExportFile extends AbstractBuildable {
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    Path pathToOutputFile = out.get();
-
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
-        .add(new MkdirStep(pathToOutputFile.getParent()))
-        .add(new CopyStep(src, pathToOutputFile));
+        .add(new MkdirStep(out.getParent()))
+        .add(new CopyStep(src, out));
 
     return builder.build();
   }
 
-  @Nullable
   @Override
   public String getPathToOutputFile() {
-    return out.get().toString();
-  }
-
-  public static Builder newExportFileBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildable.Builder {
-    private Optional<Path> src = Optional.absent();
-    private Optional<Path> out = Optional.absent();
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    public Builder setSrc(Optional<String> src) {
-      // TODO(simons): The plugin APIs make it easy to set Paths. Until that arrives, do this. Ugh.
-      this.src = src.isPresent() ? Optional.of(Paths.get(src.get())) : Optional.<Path>absent();
-      return this;
-    }
-
-    public Builder setOut(Optional<String> out) {
-      this.out = out.isPresent() ? Optional.of(Paths.get(out.get())) : Optional.<Path>absent();
-      return this;
-    }
-
-    @Override
-    protected BuildRuleType getType() {
-      return BuildRuleType.EXPORT_FILE;
-    }
-
-    @Override
-    protected ExportFile newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new ExportFile(params, src, out);
-    }
+    return out.toString();
   }
 }

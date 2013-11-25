@@ -46,7 +46,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -55,19 +54,20 @@ public class ExportFileTest {
 
   private BuildRuleParams params;
   private BuildContext context;
-  private File root;
 
   @Before
   public void createFixtures() {
     params = new FakeBuildRuleParams(new BuildTarget("//", "example.html"));
-    root = new File(".");
+    File root = new File(".");
     context = getBuildContext(root);
   }
 
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
-    ExportFile exportFile = new ExportFile(
-        params, /* src */ Optional.<Path>absent(), /* out */ Optional.<Path>absent());
+    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
+    args.out = Optional.absent();
+    args.src = Optional.absent();
+    ExportFile exportFile = new ExportFile(params, args);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -83,8 +83,10 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
-    ExportFile exportFile = new ExportFile(
-        params, /* src */ Optional.<Path>absent(), /* out */ Optional.of(Paths.get("fish")));
+    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
+    args.out = Optional.of("fish");
+    args.src = Optional.absent();
+    ExportFile exportFile = new ExportFile(params, args);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -100,9 +102,10 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
-    ExportFile exportFile = new ExportFile(params,
-        /* src */ Optional.of(Paths.get("chips")),
-        /* out */ Optional.of(Paths.get("fish")));
+    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
+    args.src = Optional.of(Paths.get("chips"));
+    args.out = Optional.of("fish");
+    ExportFile exportFile = new ExportFile(params, args);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
