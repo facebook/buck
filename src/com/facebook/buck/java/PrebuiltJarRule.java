@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ExportDependencies;
+import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -64,7 +65,7 @@ import javax.annotation.Nullable;
  * A rule that establishes a pre-compiled JAR file as a dependency.
  */
 public class PrebuiltJarRule extends DoNotUseAbstractBuildable
-    implements JavaLibraryRule, HasClasspathEntries, ExportDependencies {
+    implements JavaLibraryRule, HasClasspathEntries, ExportDependencies, InitializableFromDisk {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -79,7 +80,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   /**
    * This will be set either by executing the build steps, or by
-   * {@link #initializeFromDisk(OnDiskBuildInfo)}.
+   * {@link InitializableFromDisk#initializeFromDisk(com.facebook.buck.rules.OnDiskBuildInfo)}.
    */
   @Nullable
   private Sha1HashCode abiKey;

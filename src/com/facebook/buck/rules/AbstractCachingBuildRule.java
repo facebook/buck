@@ -52,8 +52,7 @@ import javax.annotation.Nullable;
  * an {@link ArtifactCache} to avoid doing any computation.
  */
 @Beta
-public abstract class AbstractCachingBuildRule extends AbstractBuildRule
-    implements BuildRule {
+public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
 
   private final Buildable buildable;
 
@@ -227,18 +226,29 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
 
               // Give the rule a chance to populate its internal data structures now that all of the
               // files should be in a valid state.
+              AbstractCachingBuildRule self = AbstractCachingBuildRule.this;
               if (result.success.shouldInitializeFromDiskAfterBuilding()) {
-                initializeFromDisk(onDiskBuildInfo);
+                if (InitializableFromDisk.class.isAssignableFrom(self.getClass())) {
+                  ((InitializableFromDisk) self).initializeFromDisk(onDiskBuildInfo);
+                }
+
+                // We're moving to a world where BuildRule becomes Buildable. In many cases, that
+                // refactoring hasn't happened yet, and in that case "self" and self's Buildable are
+                // the same instance. We don't want to call initializeFromDisk more than once, so
+                // handle this case gracefully-ish.
+                if (self.getBuildable() instanceof InitializableFromDisk && self != self.getBuildable()) {
+                  ((InitializableFromDisk) self.getBuildable()).initializeFromDisk(onDiskBuildInfo);
+                }
               }
 
               // Only now that the rule should be in a completely valid state, resolve the future.
               BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(
-                  AbstractCachingBuildRule.this, result.success);
+                  self, result.success);
               buildRuleResult.set(buildRuleSuccess);
 
               // Do the post to the event bus immediately after the future is set so that the
               // build time measurement is as accurate as possible.
-              eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
+              eventBus.post(BuildRuleEvent.finished(self,
                   result.status,
                   result.cacheResult,
                   Optional.of(result.success)));
@@ -464,18 +474,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
     }
   }
-
-  /**
-   * For a rule that is read from the build cache, it may have fields that would normally be
-   * populated by executing the steps returned by
-   * {@link Buildable#getBuildSteps(BuildContext, BuildableContext)}. Because
-   * {@link Buildable#getBuildSteps(BuildContext, BuildableContext)} is not invoked for cached rules, a rule
-   * may need to implement this method to populate those fields in some other way. For a cached
-   * rule, this method will be invoked just before the future returned by
-   * {@link #build(BuildContext)} is resolved.
-   * @param onDiskBuildInfo can be used to read metadata from disk to help initialize the rule.
-   */
-  protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {}
 
   /**
    * This is a union type that represents either a success or a failure. This exists so that

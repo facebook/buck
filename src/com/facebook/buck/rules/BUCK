@@ -115,6 +115,7 @@ java_library(
     'DoNotUseAbstractBuildable.java',
     'ExportDependencies.java',
     'IndividualTestEvent.java',
+    'InitializableFromDisk.java',
     'InstallableBuildRule.java',
     'LabelsAttributeBuilder.java',
     'LoggingArtifactCacheDecorator.java',

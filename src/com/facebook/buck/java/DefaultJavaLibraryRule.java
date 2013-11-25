@@ -39,6 +39,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ExportDependencies;
+import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.ResourcesAttributeBuilder;
@@ -102,7 +103,8 @@ import javax.annotation.Nullable;
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
 public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
-    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies {
+    implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
+    InitializableFromDisk {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -131,10 +133,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   /**
    * This returns the ABI key for this rule. This will be set <em>EITHER</em> as part of
-   * {@link #initializeFromDisk(OnDiskBuildInfo)}, or while the build steps (in particular, the
-   * javac step) for this rule are created. In the case of the latter, the {@link Supplier} is
-   * guaranteed to be able to return (a possibly null) value after the build steps have been
-   * executed.
+   * {@link InitializableFromDisk#initializeFromDisk(com.facebook.buck.rules.OnDiskBuildInfo)}, or
+   * while the build steps (in particular, the javac step) for this rule are created. In the case of
+   * the latter, the {@link Supplier} is guaranteed to be able to return (a possibly null) value
+   * after the build steps have been executed.
    * <p>
    * This field should be set exclusively through {@link #setAbiKey(Supplier)}
    */

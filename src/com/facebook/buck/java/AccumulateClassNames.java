@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -59,7 +60,7 @@ import javax.annotation.Nullable;
  * {@link Buildable} that writes the list of {@code .class} files found in a zip or directory to a
  * file.
  */
-public class AccumulateClassNames extends AbstractBuildable {
+public class AccumulateClassNames extends AbstractBuildable implements InitializableFromDisk {
 
   private static final Splitter CLASS_NAME_AND_HASH_SPLITTER = Splitter.on(
       AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR);
@@ -139,7 +140,7 @@ public class AccumulateClassNames extends AbstractBuildable {
    * Sets both {@link #classNames} and {@link #abiKey}.
    */
   @Override
-  protected void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     // Read the output file, which should now be in place because this rule was downloaded from
     // cache.
     List<String> lines;
