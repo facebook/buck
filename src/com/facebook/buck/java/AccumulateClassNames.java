@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -96,6 +97,11 @@ public class AccumulateClassNames extends AbstractBuildable implements Initializ
   public Iterable<String> getInputsToCompareToOutput() {
     // The deps of this rule already capture all of the inputs that should affect the cache key.
     return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return builder;
   }
 
   @Override

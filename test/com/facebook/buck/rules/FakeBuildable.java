@@ -52,4 +52,9 @@ public class FakeBuildable extends AbstractBuildable {
     return this;
   }
 
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    return builder;
+  }
+
 }

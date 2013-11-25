@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -106,6 +107,13 @@ public class ExportFile extends AbstractBuildable {
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
     return ImmutableSet.of(src.toString());
+  }
+
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    // TODO(simons): How should src and out factor into this?
+    return builder
+        .set("src", src.toString());
   }
 
   @Override

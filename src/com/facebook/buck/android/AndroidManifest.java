@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
@@ -77,6 +78,12 @@ public class AndroidManifest extends AbstractBuildable {
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
     return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(skeletonFile));
+  }
+
+  @Override
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return builder.
+        set("skeletonFile", skeletonFile.asReference());
   }
 
   public BuildTarget getBuildTarget() {
