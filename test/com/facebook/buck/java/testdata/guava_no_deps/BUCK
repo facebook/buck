@@ -1,0 +1,15 @@
+java_library(
+  name = 'foo',
+  srcs = ['Foo.java'],
+  visibility = [ 
+    'PUBLIC',
+  ]
+)
+
+java_library(
+  name = 'bar',
+  srcs = ['Bar.java'],
+  visibility = [ 
+    'PUBLIC',
+  ]
+)

@@ -127,6 +127,33 @@ public class DefaultJavaLibraryRuleIntegrationTest {
   }
 
   @Test
+  public void testBucksClasspathNotOnBuildClasspath() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "guava_no_deps", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:foo");
+    buildResult.assertExitCode("Build should have failed since //:foo depends on Guava and " +
+        "Args4j but does not include it in its deps.", 1);
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testNoDepsCompilesCleanly() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "guava_no_deps", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:bar");
+    buildResult.assertExitCode("Build should have succeeded.", 0);
+
+    workspace.verify();
+  }
+
+  @Test
   public void testBuildJavaLibraryWithTransitive() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "warn_on_transitive", tmp);
@@ -150,7 +177,7 @@ public class DefaultJavaLibraryRuleIntegrationTest {
         "//:raz",
         "-b",
         "FIRST_ORDER_ONLY");
-    buildResult.assertExitCode("Build should have failed", 1);
+    buildResult.assertExitCode("Build should have failed.", 1);
 
     workspace.verify();
   }

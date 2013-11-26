@@ -54,7 +54,9 @@ public class JavacInMemoryStepIntegrationTest {
             "-processorpath %s " +
             "-processor %s " +
             "-A%s=%s " +
-        		"-d %s Example.java",
+        		"-d %s " +
+            "-classpath '' " +
+            "Example.java",
         		AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
         		AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
         		AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,

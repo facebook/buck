@@ -190,6 +190,8 @@ public class JavacInMemoryStep implements Step {
       String classpath = Joiner.on(File.pathSeparator).join(
           Iterables.transform(buildClasspathEntries, pathRelativizer));
       builder.add("-classpath", classpath);
+    } else {
+      builder.add("-classpath", "''");
     }
 
     return builder.build();
