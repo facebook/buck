@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +28,11 @@ public interface OnDiskBuildInfo {
    * @return the value associated with the specified key, if it exists.
    */
   public Optional<String> getValue(String key);
+
+  /**
+   * @return the sequence of values associated with the specified key, if it exists.
+   */
+  public Optional<ImmutableList<String>> getValues(String key);
 
   /**
    * @return Assuming the value associated with the specified key is a valid sha1 hash, returns it

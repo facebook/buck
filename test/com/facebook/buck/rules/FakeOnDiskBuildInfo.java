@@ -67,6 +67,12 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
+  public Optional<ImmutableList<String>> getValues(String key) {
+    // TODO(mbolin): Implement.
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Optional<Sha1HashCode> getHash(String key) {
     return getValue(key).transform(Sha1HashCode.TO_SHA1);
   }

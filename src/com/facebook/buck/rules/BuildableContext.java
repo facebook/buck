@@ -39,6 +39,11 @@ public interface BuildableContext {
   public void addMetadata(String key, String value);
 
   /**
+   * @see BuildInfoRecorder#addMetadata(String, Iterable)
+   */
+  public void addMetadata(String key, Iterable<String> values);
+
+  /**
    * @see BuildInfoRecorder#recordArtifact(Path)
    */
   public void recordArtifact(Path pathToArtifact);
