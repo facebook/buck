@@ -151,7 +151,10 @@ public final class BuildRuleFactoryParams {
       }
 
       if (!ignoreFileExistenceChecks && !file.isFile()) {
-        throw new RuntimeException("Not an ordinary file: " + fullPath);
+        throw new RuntimeException(String.format(
+            "Not an ordinary file: %s. Failure when trying to create %s.",
+            fullPath,
+            target));
       }
 
       // First, verify that the path is a descendant of the directory containing the build file.
