@@ -27,4 +27,11 @@ public interface ArtifactCacheFactory {
 
   public ArtifactCache newInstance(AbstractCommandOptions options);
 
+  /**
+   * Close all instances of {@link ArtifactCache} created by the factory.
+   *
+   * @param timeoutInSeconds time to wait for the caches to close, in seconds
+   */
+  public void closeCreatedArtifactCaches(int timeoutInSeconds);
+
 }

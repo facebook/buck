@@ -52,6 +52,11 @@ public class MultiArtifactCacheTest {
     public boolean isStoreSupported() {
       return true;
     }
+
+    @Override
+    public void close() {
+      // Nothing to complete - do nothing.
+    }
   }
 
   @Test

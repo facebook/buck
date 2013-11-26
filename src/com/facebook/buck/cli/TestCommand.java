@@ -379,7 +379,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     try {
       return runTests(tests, buildContext, executionContext, stepRunner, options);
     } finally {
-      stepRunner.getListeningExecutorService().shutdownNow();
+      // Note: we need to use shutdown() instead of shutdownNow() to ensure that tasks submitted to
+      // the Execution Service are completed.
+      stepRunner.getListeningExecutorService().shutdown();
     }
   }
 

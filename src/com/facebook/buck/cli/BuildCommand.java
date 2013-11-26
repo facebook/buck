@@ -117,7 +117,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       exitCode = executeBuildAndPrintAnyFailuresToConsole(build, console);
     } finally {
       // Shutdown the Executor Service once the build completes.
-      build.getStepRunner().getListeningExecutorService().shutdownNow();
+      // Note: we need to use shutdown() instead of shutdownNow() to ensure that tasks submitted to
+      // the Execution Service are completed.
+      build.getStepRunner().getListeningExecutorService().shutdown();
     }
 
     getBuckEventBus().post(BuildEvent.finished(buildTargets,exitCode));

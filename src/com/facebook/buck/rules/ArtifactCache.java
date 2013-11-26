@@ -16,9 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import java.io.Closeable;
 import java.io.File;
 
-public interface ArtifactCache {
+public interface ArtifactCache extends Closeable {
   /**
    * Fetch a cached artifact, keyed by ruleKey, save the artifact to path specified by output, and
    * return true on success.

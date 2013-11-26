@@ -36,4 +36,9 @@ public class NoopArtifactCache implements ArtifactCache {
   public boolean isStoreSupported() {
     return false;
   }
+
+  @Override
+  public void close() {
+    // Nothing to complete - do nothing.
+  }
 }

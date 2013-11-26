@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * MultiArtifactCache encapsulates a set of ArtifactCache instances such that fetch() succeeds if
@@ -81,5 +82,15 @@ public class MultiArtifactCache implements ArtifactCache {
   @Override
   public boolean isStoreSupported() {
     return isStoreSupported;
+  }
+
+  @Override
+  public void close() throws IOException {
+    // TODO(user): It's possible for this to be interrupted before it gets to call close() on all
+    // the individual caches. This is acceptable for now since every ArtifactCache.close() is a
+    // no-op in every cache except CassandraArtifactCache.
+    for (ArtifactCache artifactCache : artifactCaches) {
+      artifactCache.close();
+    }
   }
 }

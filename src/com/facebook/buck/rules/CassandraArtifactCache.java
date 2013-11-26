@@ -22,7 +22,11 @@ import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.Keyspace;
@@ -42,13 +46,17 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CassandraArtifactCache implements ArtifactCache {
@@ -104,6 +112,9 @@ public class CassandraArtifactCache implements ArtifactCache {
   private final boolean doStore;
   private final BuckEventBus buckEventBus;
 
+  private final Set<ListenableFuture<OperationResult<Void>>> futures;
+  private final AtomicBoolean isWaitingToClose;
+
   public CassandraArtifactCache(String hosts, int port, boolean doStore, BuckEventBus buckEventBus)
       throws ConnectionException {
     this.doStore = doStore;
@@ -143,6 +154,10 @@ public class CassandraArtifactCache implements ArtifactCache {
         }
       }
     });
+
+    this.futures = Sets.newSetFromMap(
+        new ConcurrentHashMap<ListenableFuture<OperationResult<Void>>, Boolean>());
+    this.isWaitingToClose = new AtomicBoolean(false);
   }
 
   private static void verifyMagic(Keyspace keyspace) throws ConnectionException {
@@ -262,7 +277,8 @@ public class CassandraArtifactCache implements ArtifactCache {
       mutationBatch.withRow(CF_ARTIFACT, ruleKey.toString())
           .setDefaultTtl(ttl)
           .putColumn(artifactColumnName, Files.toByteArray(output));
-      mutationBatch.executeAsync();
+      ListenableFuture<OperationResult<Void>> mutationFuture = mutationBatch.executeAsync();
+      trackFuture(mutationFuture);
     } catch (ConnectionException e) {
       reportConnectionFailure("Attempting to store " + ruleKey + ".", e);
     } catch (IOException | OutOfMemoryError e) {
@@ -270,6 +286,39 @@ public class CassandraArtifactCache implements ArtifactCache {
           "Artifact store(%s, %s) error: %s",
           ruleKey,
           output.getPath()));
+    }
+  }
+
+  private void trackFuture(final ListenableFuture<OperationResult<Void>> future) {
+    futures.add(future);
+    Futures.addCallback(future, new FutureCallback<OperationResult<Void>>() {
+      @Override
+      public void onSuccess(OperationResult<Void> result) {
+        removeFuture();
+      }
+
+      @Override
+      public void onFailure(Throwable t) {
+        removeFuture();
+      }
+
+      private void removeFuture() {
+        if (!isWaitingToClose.get()) {
+          futures.remove(future);
+        }
+      }
+    });
+  }
+
+  @Override
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void close() {
+    isWaitingToClose.set(true);
+    ListenableFuture<List<OperationResult<Void>>> future = Futures.allAsList(futures);
+    try {
+      future.get();
+    } catch (InterruptedException | ExecutionException e) {
+      // Swallow exception and move on.
     }
   }
 

@@ -136,6 +136,11 @@ public class DirArtifactCache implements ArtifactCache {
     return true;
   }
 
+  @Override
+  public void close() {
+    // store() operation is synchronous - do nothing.
+  }
+
   /**
    * @param finished Signals that the build has finished.
    */

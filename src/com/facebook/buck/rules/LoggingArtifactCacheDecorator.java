@@ -19,6 +19,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
@@ -56,6 +57,11 @@ public class LoggingArtifactCacheDecorator {
       @Override
       public boolean isStoreSupported() {
         return delegate.isStoreSupported();
+      }
+
+      @Override
+      public void close() throws IOException {
+        delegate.close();
       }
     };
   }

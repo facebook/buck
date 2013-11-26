@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.rules.ArtifactCache;
 import com.google.common.base.Preconditions;
 
+import java.io.IOException;
+
 /**
  * An implementation of {@link ArtifactCacheFactory} used for testing that always returns the
  * instance of {@link ArtifactCache} passed to its constructor when its
@@ -35,6 +37,17 @@ public class InstanceArtifactCacheFactory implements ArtifactCacheFactory {
   @Override
   public ArtifactCache newInstance(AbstractCommandOptions options) {
     return artifactCache;
+  }
+
+  @Override
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void closeCreatedArtifactCaches(int timeoutInSeconds) {
+    // Ignore timeout for tests.
+    try {
+      artifactCache.close();
+    } catch (IOException e) {
+      // Ignore the exception and move on.
+    }
   }
 
 }

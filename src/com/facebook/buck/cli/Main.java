@@ -25,12 +25,8 @@ import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -96,6 +92,8 @@ public final class Main {
   private static final String BUCK_VERSION_UID = System.getProperty(BUCK_VERSION_UID_KEY, "N/A");
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
+
+  private static final int ARTIFACT_CACHE_TIMEOUT_IN_SECONDS = 15;
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
@@ -405,20 +403,7 @@ public final class Main {
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
       // running commands such as `buck clean`.
-      ArtifactCacheFactory artifactCacheFactory = new ArtifactCacheFactory() {
-        @Override
-        public ArtifactCache newInstance(AbstractCommandOptions options) {
-          if (options.isNoCache()) {
-            return new NoopArtifactCache();
-          } else {
-            buildEventBus.post(ArtifactCacheConnectEvent.started());
-            ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buildEventBus)
-                .decorate(options.getBuckConfig().createArtifactCache(buildEventBus));
-            buildEventBus.post(ArtifactCacheConnectEvent.finished());
-            return artifactCache;
-          }
-        }
-      };
+      ArtifactCacheFactory artifactCacheFactory = new LoggingArtifactCacheFactory(buildEventBus);
 
       int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
           console,
@@ -433,6 +418,8 @@ public final class Main {
       for (BuckEventListener eventListener : eventListeners) {
         eventListener.outputTrace();
       }
+      artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
+
       return exitCode;
     }
   }
