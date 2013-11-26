@@ -51,11 +51,11 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   private static final String XML_HEADER = "<?xml version='1.0' encoding='utf-8'?>";
 
-  private static final String TESTDATA_DIR = "testdata/com/facebook/buck/android/";
-  private static final String FIRST_FILE = TESTDATA_DIR + "first/res/values-es/strings.xml";
-  private static final String SECOND_FILE = TESTDATA_DIR + "second/res/values-es/strings.xml";
-  private static final String THIRD_FILE = TESTDATA_DIR + "third/res/values-pt/strings.xml";
-  private static final String FOURTH_FILE = TESTDATA_DIR + "third/res/values-pt-rBR/strings.xml";
+  private static final Path TESTDATA_DIR = Paths.get("testdata/com/facebook/buck/android/");
+  private static final Path FIRST_FILE = TESTDATA_DIR.resolve("first/res/values-es/strings.xml");
+  private static final Path SECOND_FILE = TESTDATA_DIR.resolve("second/res/values-es/strings.xml");
+  private static final Path THIRD_FILE = TESTDATA_DIR.resolve("third/res/values-pt/strings.xml");
+  private static final Path FOURTH_FILE = TESTDATA_DIR.resolve("third/res/values-pt-rBR/strings.xml");
 
   @Test
   public void testStringFilePattern() {
@@ -115,30 +115,28 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   @Test
   public void testGroupFilesByLocale() {
-    ImmutableSet<String> files = ImmutableSet.of(
-        "/project/dir/res/values-da/strings.xml",
-        "/project/dir/res/values-da-rAB/strings.xml",
-        "/project/dir/dontmatch/res/values/strings.xml",
-        "/project/groupme/res/values-da/strings.xml",
-        "/project/groupmetoo/res/values-da-rAB/strings.xml",
-        "/project/foreveralone/res/values-es/strings.xml"
-    );
+    Path path0 = Paths.get("project/dir/res/values-da/strings.xml");
+    Path path1 = Paths.get("project/dir/res/values-da-rAB/strings.xml");
+    Path path2 = Paths.get("project/dir/dontmatch/res/values/strings.xml");
+    Path path3 = Paths.get("project/groupme/res/values-da/strings.xml");
+    Path path4 = Paths.get("project/groupmetoo/res/values-da-rAB/strings.xml");
+    Path path5 = Paths.get("project/foreveralone/res/values-es/strings.xml");
+    ImmutableSet<Path> files = ImmutableSet.of(path0, path1, path2, path3, path4, path5);
 
-    ImmutableMultimap<String, String> groupedByLocale =
-        createNonExecutingStep().groupFilesByLocale(files);
+    ImmutableMultimap<String, Path> groupedByLocale =
+        createNonExecutingStep().groupFilesByLocale(ImmutableSet.copyOf(files));
 
-    ImmutableMultimap<String, String> expectedMap =
-        ImmutableMultimap.<String, String>builder()
-          .putAll("da", ImmutableSet.<String>of(
-              "/project/dir/res/values-da/strings.xml",
-              "/project/groupme/res/values-da/strings.xml"))
-          .putAll("da_AB", ImmutableSet.<String>of(
-              "/project/dir/res/values-da-rAB/strings.xml",
-              "/project/groupmetoo/res/values-da-rAB/strings.xml"))
-          .putAll("es", ImmutableSet.<String>of("/project/foreveralone/res/values-es/strings.xml"))
+    ImmutableMultimap<String, Path> expectedMap =
+        ImmutableMultimap.<String, Path>builder()
+          .putAll("da", ImmutableSet.of(path0, path3))
+          .putAll("da_AB", ImmutableSet.of(path1, path4))
+          .putAll("es", ImmutableSet.of(path5))
           .build();
 
-    assertEquals("Incorrect grouping of files by locale.", expectedMap, groupedByLocale);
+    assertEquals(
+        "Result of CompileStringsStep.groupFilesByLocale() should match the expected value.",
+        expectedMap,
+        groupedByLocale);
   }
 
   @Test
@@ -289,7 +287,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
     assertEquals("Incorrect number of string files written.", 3, fileContentsMap.size());
     for (Map.Entry<String, byte[]> entry : fileContentsMap.entrySet()) {
-      File expectedFile = Paths.get(TESTDATA_DIR + entry.getKey()).toFile();
+      File expectedFile = TESTDATA_DIR.resolve(entry.getKey()).toFile();
       assertArrayEquals(createBinaryStream(expectedFile), fileContentsMap.get(entry.getKey()));
     }
 
@@ -344,7 +342,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     @Override
     public List<String> readLines(Path path) throws IOException {
-      Path fullPath = Paths.get(TESTDATA_DIR).resolve(path);
+      Path fullPath = TESTDATA_DIR.resolve(path);
       return Files.readLines(fullPath.toFile(), Charset.defaultCharset());
     }
 

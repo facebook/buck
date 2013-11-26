@@ -39,6 +39,8 @@ import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,7 +80,7 @@ public class FilterResourcesStep implements Step {
   private final DrawableFinder drawableFinder;
   @Nullable
   private final ImageScaler imageScaler;
-  private final ImmutableSet.Builder<String> nonEnglishStringFilesBuilder;
+  private final ImmutableSet.Builder<Path> nonEnglishStringFilesBuilder;
 
   /**
    * Creates a command that filters a specified set of directories.
@@ -133,7 +135,7 @@ public class FilterResourcesStep implements Step {
    * @return If {@code filterStrings} is true, set containing absolute file paths to non-english
    * string files, matching NON_ENGLISH_STRING_PATH regex; else empty set.
    */
-  public ImmutableSet<String> getNonEnglishStringFiles() {
+  public ImmutableSet<Path> getNonEnglishStringFiles() {
     return nonEnglishStringFilesBuilder.build();
   }
 
@@ -149,12 +151,16 @@ public class FilterResourcesStep implements Step {
     }
 
     if (filterStrings) {
+      final ProjectFilesystem filesystem = context.getProjectFilesystem();
       filePredicates.add(new Predicate<File>() {
         @Override
         public boolean apply(File input) {
+          // TODO(user): Change the predicate to accept a relative Path instead of File.
           String inputPath = input.getAbsolutePath();
           if (NON_ENGLISH_STRING_PATH.matcher(inputPath).matches()) {
-            nonEnglishStringFilesBuilder.add(inputPath);
+            Path pathRelativeToProjectRoot = filesystem.getRootPath().toAbsolutePath().normalize()
+                .relativize(Paths.get(inputPath));
+            nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
             return false;
           }
           return true;
