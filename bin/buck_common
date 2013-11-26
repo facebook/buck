@@ -1,5 +1,16 @@
 
 
+function checkForAnt()
+{
+  if [ -z `command -v ant` ]; then
+    echo "You do not have ant on your \$PATH. Cannot build Buck."
+    if [[ "$OSTYPE" =~ ^darwin ]] && [ ! -z `command -v brew` ]; then
+      echo "Try running 'brew install ant'."
+    fi
+    exit 1
+  fi
+}
+
 # Set TMPDIR to a reasonable default if it isn't already set, so that mktmp(1) can be
 # succinctly and portably used.
 if [ "x${TMPDIR}" = "x" ] ; then
@@ -72,6 +83,7 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
     git checkout $BUCK_REQUIRED_VERSION
 
     # Now that we have updated the repository, we should rebuild Buck.
+    checkForAnt
     ant clean
 
     # Rerun this script after checking out the new version.
@@ -177,6 +189,7 @@ if [ ! -e "build/buck.jar" ]; then
   echo "No sign of buck.jar -- building Buck!"
   # Note the jar file will not be used,
   # but serves to represent whether everything has been built.
+  checkForAnt
   ant clean && ant
 
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "${BUCK_BIN_DIRECTORY}/buckd" ]; then
