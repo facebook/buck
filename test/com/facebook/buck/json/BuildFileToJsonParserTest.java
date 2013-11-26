@@ -18,13 +18,11 @@ package com.facebook.buck.json;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 import org.junit.Test;
 
@@ -38,99 +36,54 @@ import java.util.Map;
 public class BuildFileToJsonParserTest {
 
   @Test
-  public void testSimpleParse() throws IOException {
+  public void testSimpleParse() throws JsonParseException, IOException {
     String json =
         "{" +
           "\"srcs\": [\"src/com/facebook/buck/Bar.java\", \"src/com/facebook/buck/Foo.java\"]" +
     		"}";
-
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, false /* isServerMode */)) {
-      assertEquals(
-          ImmutableList.of(
-              ImmutableMap.of("srcs",
-                  ImmutableList.of(
-                      "src/com/facebook/buck/Bar.java",
-                      "src/com/facebook/buck/Foo.java"))),
-          parser.nextRules());
-    }
+    BuildFileToJsonParser parser = new BuildFileToJsonParser(json);
+    List<Map<String, Object>> tokens = parser.nextRules();
+    assertEquals(
+        ImmutableList.of(
+            ImmutableMap.of("srcs",
+                ImmutableList.of(
+                    "src/com/facebook/buck/Bar.java",
+                    "src/com/facebook/buck/Foo.java"))),
+        tokens);
   }
 
   @Test
   public void testParseLong() throws IOException {
     String json = "{\"thing\": 27}";
-    List<Map<String, Object>> tokens;
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, false /* isServerMode */)) {
-      tokens = parser.nextRules();
-    }
+    BuildFileToJsonParser parser = new BuildFileToJsonParser(json);
+    List<Map<String, Object>> rules = parser.nextRules();
 
-    assertEquals(1, tokens.size());
-    Map<String, Object> rule = tokens.get(0);
+    assertEquals(1, rules.size());
+    Map<String, Object> rule = rules.get(0);
     Object value = rule.get("thing");
-    assertEquals(Long.class, value.getClass());
+    assertTrue(value instanceof Long);
     assertEquals(27L, rule.get("thing"));
     assertNotEquals(27, rule.get("thing"));
   }
 
   @Test
-  public void testServerModeParse() throws IOException {
+  public void testServerModeParse() throws JsonParseException, IOException {
     String json =
         "[{\"foo\": \"a:1\"}, {\"foo\": \"a:2\"}]\n" +
         "[{\"bar\": \"b:1\"}]";
+    BuildFileToJsonParser parser = new BuildFileToJsonParser(json);
 
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, true /* isServerMode */)) {
-      assertEquals(
-          ImmutableList.of(
-              ImmutableMap.of("foo", "a:1"),
-              ImmutableMap.of("foo", "a:2")),
-          parser.nextRules());
+    List<Map<String, Object>> a = parser.nextRules();
+    assertEquals(
+        ImmutableList.of(
+            ImmutableMap.of("foo", "a:1"),
+            ImmutableMap.of("foo", "a:2")),
+        a);
 
-      assertEquals(
-          ImmutableList.of(
-              ImmutableMap.of("bar", "b:1")),
-          parser.nextRules());
-    }
-  }
-
-  @Test
-  public void testParseNestedStructures() throws IOException {
-    String json =
-         "{" +
-             "\"foo\": [\"a\", \"b\"]," +
-             "\"bar\": {\"baz\": \"quox\"}" +
-         "}";
-
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, false /* isServerMode */)) {
-      assertEquals(
-          ImmutableList.of(ImmutableMap.of(
-              "foo", ImmutableList.of("a", "b"),
-              "bar", ImmutableMap.of("baz", "quox"))),
-          parser.nextRules());
-    }
-  }
-
-  @Test
-  public void testToRawTypes() {
-    JsonObject ruleJson = new JsonObject();
-
-    ruleJson.addProperty("name", "foo");
-    ruleJson.addProperty("export_deps", false);
-    ruleJson.addProperty("proguard_config", (String)null);
-    ruleJson.addProperty("source", 6);
-
-    JsonArray deps = new JsonArray();
-    deps.add(new JsonPrimitive("//foo:bar"));
-    deps.add(new JsonPrimitive("//foo:baz"));
-    deps.add(new JsonPrimitive("//foo:biz"));
-    ruleJson.add("deps", deps);
-
-    // Note that an ImmutableMap does not allow null values, but BuildFileToJsonParser.toRawTypes()
-    // can return a Map with null values, so we use an ordinary HashMap for the expected value.
-    Map<String, Object> expected = Maps.newHashMap();
-    expected.put("name", "foo");
-    expected.put("export_deps", false);
-    expected.put("proguard_config", null);
-    expected.put("source", 6L);
-    expected.put("deps", ImmutableList.of("//foo:bar", "//foo:baz", "//foo:biz"));
-    assertEquals(expected, BuildFileToJsonParser.toRawTypes(ruleJson));
+    List<Map<String, Object>> b = parser.nextRules();
+    assertEquals(
+        ImmutableList.of(
+            ImmutableMap.of("bar", "b:1")),
+        b);
   }
 }
