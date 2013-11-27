@@ -136,7 +136,7 @@ public class BuildFileToJsonParser {
         }
 
       case FIELD_NAME:
-        currentFieldName = parser.getText();
+        currentFieldName = parser.getText().intern();
         break;
 
       case VALUE_STRING:
