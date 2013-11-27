@@ -420,15 +420,29 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies();
 
-    final AndroidDexTransitiveDependencies dexTransitiveDependencies =
-        findDexTransitiveDependencies();
-
     // Add the steps for the aapt_package command. This method returns data that the ApkBuilder
     // needs to create a final, unsigned APK.
-    ImmutableSet<String> nativeLibraryDirectories = addAaptPackageSteps(steps,
-        transitiveDependencies);
+    addAaptPackageSteps(steps, transitiveDependencies);
+
+    // Copy the transitive closure of files in native_libs to a single directory, if any.
+    ImmutableSet<String> nativeLibraryDirectories;
+    if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
+      ImmutableSet.Builder<String> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
+      String pathForNativeLibs = getPathForNativeLibs();
+      String libSubdirectory = pathForNativeLibs + "/lib";
+      nativeLibraryDirectoriesBuilder.add(libSubdirectory);
+      steps.add(new MakeCleanDirectoryStep(libSubdirectory));
+      for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
+        copyNativeLibrary(nativeLibDir, libSubdirectory, steps);
+      }
+      nativeLibraryDirectories = nativeLibraryDirectoriesBuilder.build();
+    } else {
+      nativeLibraryDirectories = ImmutableSet.of();
+    }
 
     // Create the .dex files and create the unsigned APK using ApkBuilder.
+    AndroidDexTransitiveDependencies dexTransitiveDependencies =
+        findDexTransitiveDependencies();
     addDxAndApkBuilderSteps(context,
         steps,
         transitiveDependencies,
@@ -474,10 +488,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return steps.build();
   }
 
-  /**
-   * @return The set of native lib directories that contributed to the packaging steps.
-   */
-  private ImmutableSet<String> addAaptPackageSteps(ImmutableList.Builder<Step> steps,
+  /** Packages the resources using {@code aapt}. */
+  private void addAaptPackageSteps(ImmutableList.Builder<Step> steps,
       final AndroidTransitiveDependencies transitiveDependencies) {
     // If the strings should be stored as assets, then we need to create the .fbstr bundles.
     final ImmutableSet<String> resDirectories = uberRDotJavaBuildable.getResDirectories();
@@ -530,24 +542,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     };
     steps.add(collectAssets);
 
-    // Copy the transitive closure of files in native_libs to a single directory, if any.
-    // TODO(mbolin): Verify that this stanza of code needs to be in this method. If not,
-    // move it out of here.
-    ImmutableSet<String> nativeLibraryDirectories;
-    if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
-      ImmutableSet.Builder<String> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
-      String pathForNativeLibs = getPathForNativeLibs();
-      String libSubdirectory = pathForNativeLibs + "/lib";
-      nativeLibraryDirectoriesBuilder.add(libSubdirectory);
-      steps.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
-        copyNativeLibrary(nativeLibDir, libSubdirectory, steps);
-      }
-      nativeLibraryDirectories = nativeLibraryDirectoriesBuilder.build();
-    } else {
-      nativeLibraryDirectories = ImmutableSet.of();
-    }
-
     Optional<String> assetsDirectory;
     if (transitiveDependencies.assetsDirectories.isEmpty()
         && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
@@ -576,17 +570,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     steps.add(new MkdirStep(outputGenDirectory));
 
-    if (!canSkipAaptResourcePackaging()) {
-      AaptStep aaptCommand = new AaptStep(
-          getAndroidManifestXml(),
-          resDirectories,
-          assetsDirectory,
-          getResourceApkPath(),
-          packageType.isCrunchPngFiles());
-      steps.add(aaptCommand);
-    }
-
-    return nativeLibraryDirectories;
+    steps.add(new AaptStep(
+        getAndroidManifestXml(),
+        resDirectories,
+        assetsDirectory,
+        getResourceApkPath(),
+        packageType.isCrunchPngFiles()));
   }
 
   private void addDxAndApkBuilderSteps(BuildContext context,
@@ -777,13 +766,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   public AndroidDexTransitiveDependencies findDexTransitiveDependencies() {
     return androidResourceDepsFinder.getAndroidDexTransitiveDependencies(
         uberRDotJavaBuildable);
-  }
-
-  private boolean canSkipAaptResourcePackaging() {
-    // TODO(mbolin): Create a RuleKey for resources only and use it to determine the value of this
-    // boolean. Whether the resources have not changed since the last build run is irrelevant
-    // because this AndroidBinary may not have been written as part of the last build run.
-    return false;
   }
 
   /**
