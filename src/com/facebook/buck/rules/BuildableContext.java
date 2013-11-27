@@ -47,4 +47,6 @@ public interface BuildableContext {
    * @see BuildInfoRecorder#recordArtifact(Path)
    */
   public void recordArtifact(Path pathToArtifact);
+
+  public void recordArtifactsInDirectory(Path pathToArtifactsDirectory);
 }

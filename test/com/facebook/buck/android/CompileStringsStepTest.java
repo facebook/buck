@@ -253,7 +253,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   private CompileStringsStep createNonExecutingStep() {
     return new CompileStringsStep(
-        createMock(FilterResourcesStep.class),
+        ImmutableSet.<Path>of(),
         createMock(Path.class),
         createMock(Path.class));
   }
@@ -271,16 +271,15 @@ public class CompileStringsStepTest extends EasyMockSupport {
     FakeProjectFileSystem fileSystem = new FakeProjectFileSystem();
     expect(context.getProjectFilesystem()).andStubReturn(fileSystem);
 
-    FilterResourcesStep filterResourcesStep = createMock(FilterResourcesStep.class);
-    expect(filterResourcesStep.getNonEnglishStringFiles()).andReturn(ImmutableSet.of(
+    ImmutableSet<Path> filteredStringFiles = ImmutableSet.of(
         FIRST_FILE,
         SECOND_FILE,
         THIRD_FILE,
-        FOURTH_FILE));
+        FOURTH_FILE);
 
     replayAll();
     CompileStringsStep step = new CompileStringsStep(
-        filterResourcesStep,
+        filteredStringFiles,
         rDotJavaSrcDir,
         destinationDir);
     assertEquals(0, step.execute(context));

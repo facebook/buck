@@ -51,6 +51,7 @@ RULES_SRCS = [
   'AndroidManifest.java',
   'AndroidManifestBuildRuleFactory.java',
   'AndroidResourceBuildRuleFactory.java',
+  'AndroidResourceDepsFinder.java',
   'AndroidResourceRule.java',
   'AndroidTransitiveDependencies.java',
   'AndroidTransitiveDependencyGraph.java',
@@ -68,6 +69,7 @@ RULES_SRCS = [
   'PrebuiltNativeLibraryBuildRuleFactory.java',
   'RobolectricTestBuildRuleFactory.java',
   'RobolectricTestRule.java',
+  'UberRDotJavaBuildable.java',
 ]
 java_library(
   name = 'rules',
@@ -84,6 +86,7 @@ java_library(
     '//src/com/facebook/buck/dalvik:steps',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/model:model',

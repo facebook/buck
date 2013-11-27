@@ -97,6 +97,7 @@ public class QuickstartIntegrationTest {
     assertEquals(
       "`buck targets` should display a list of targets.",
       Joiner.on('\n').join("//apps/myapp:app",
+        "//apps/myapp:app#uber_r_dot_java",
         "//apps/myapp:debug_keystore",
         "//apps/myapp:project_config",
         "//java/com/example/activity:activity",

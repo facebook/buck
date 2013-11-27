@@ -54,6 +54,11 @@ public class RobolectricTestRuleTest {
     public String getRes() {
       return resourceDirectory;
     }
+
+    @Override
+    public BuildTarget getBuildTarget() {
+      return null;
+    }
   }
 
   @Test

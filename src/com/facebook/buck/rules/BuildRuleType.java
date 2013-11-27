@@ -46,6 +46,7 @@ public final class BuildRuleType {
   // Internal rule types. Denoted by leading trailing underscore.
   public static BuildRuleType _CLASS_NAMES = new BuildRuleType("_class_names");
   public static BuildRuleType _PRE_DEX = new BuildRuleType("_pre_dex");
+  public static BuildRuleType _UBER_R_DOT_JAVA = new BuildRuleType("_uber_r_dot_java");
 
   private final String name;
   private final boolean isTestRule;

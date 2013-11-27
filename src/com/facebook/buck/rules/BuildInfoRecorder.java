@@ -19,11 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.DefaultDirectoryTraverser;
+import com.facebook.buck.util.DirectoryTraversal;
+import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -35,6 +39,7 @@ import com.google.gson.JsonPrimitive;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,6 +53,8 @@ import javax.annotation.Nullable;
  */
 public class BuildInfoRecorder {
 
+  private static final DirectoryTraverser DEFAULT_DIRECTORY_TRAVERSER = new DefaultDirectoryTraverser();
+
   private final BuildTarget buildTarget;
   private final Path pathToMetadataDirectory;
   private final ProjectFilesystem projectFilesystem;
@@ -59,10 +66,21 @@ public class BuildInfoRecorder {
    */
   private final Set<Path> pathsToOutputFiles;
 
+  private final Set<Path> pathsToOutputDirectories;
+  private final DirectoryTraverser directoryTraverser;
+
   BuildInfoRecorder(BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       RuleKey ruleKey,
       RuleKey rukeKeyWithoutDeps) {
+    this(buildTarget, projectFilesystem, ruleKey, rukeKeyWithoutDeps, DEFAULT_DIRECTORY_TRAVERSER);
+  }
+
+  BuildInfoRecorder(BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      RuleKey ruleKey,
+      RuleKey rukeKeyWithoutDeps,
+      DirectoryTraverser directoryTraverser) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.pathToMetadataDirectory = BuildInfo.getPathToMetadataDirectory(buildTarget);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
@@ -74,6 +92,8 @@ public class BuildInfoRecorder {
         Preconditions.checkNotNull(rukeKeyWithoutDeps).toString());
     this.ruleKey = ruleKey;
     this.pathsToOutputFiles = Sets.newHashSet();
+    this.pathsToOutputDirectories = Sets.newHashSet();
+    this.directoryTraverser = directoryTraverser;
   }
 
   /**
@@ -116,7 +136,7 @@ public class BuildInfoRecorder {
       return;
     }
 
-    ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.<Path>builder()
+    ImmutableSet.Builder<Path> pathsToIncludeInZipBuilder = ImmutableSet.<Path>builder()
         .addAll(Iterables.transform(metadataToWrite.keySet(),
             new Function<String, Path>() {
               @Override
@@ -124,8 +144,17 @@ public class BuildInfoRecorder {
                 return pathToMetadataDirectory.resolve(key);
               }
             }))
-        .addAll(pathsToOutputFiles)
-        .build();
+        .addAll(pathsToOutputFiles);
+
+    try {
+      for (Path outputDirectory : pathsToOutputDirectories) {
+        pathsToIncludeInZipBuilder.addAll(getEntries(outputDirectory));
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    ImmutableSet<Path> pathsToIncludeInZip = pathsToIncludeInZipBuilder.build();
     File zip;
     try {
       zip = File.createTempFile(buildTarget.getFullyQualifiedName().replace('/', '_'), ".zip");
@@ -139,6 +168,19 @@ public class BuildInfoRecorder {
     }
     artifactCache.store(ruleKey, zip);
     zip.delete();
+  }
+
+  private List<Path> getEntries(final Path outputDirectory) throws IOException {
+    final ImmutableList.Builder<Path> entries = ImmutableList.builder();
+    DirectoryTraversal traversal = new DirectoryTraversal(
+        projectFilesystem.getFileForRelativePath(outputDirectory)) {
+          @Override
+          public void visit(File file, String relativePath) throws IOException {
+            entries.add(outputDirectory.resolve(relativePath));
+          }
+    };
+    directoryTraverser.traverse(traversal);
+    return entries.build();
   }
 
   /**
@@ -156,6 +198,11 @@ public class BuildInfoRecorder {
   public void recordArtifact(Path pathToArtifact) {
     Preconditions.checkNotNull(pathToArtifact);
     pathsToOutputFiles.add(pathToArtifact);
+  }
+
+  public void recordArtifactsInDirectory(Path pathToArtifactsDirectory) {
+    Preconditions.checkNotNull(pathToArtifactsDirectory);
+    pathsToOutputDirectories.add(pathToArtifactsDirectory);
   }
 
   @Nullable

@@ -92,7 +92,7 @@ public class CompileStringsStep implements Step {
   static final Pattern R_DOT_TXT_STRING_RESOURCE_PATTERN = Pattern.compile(
       "^int (string|plurals|array) (\\w+) 0x([0-9a-f]+)$");
 
-  private final FilterResourcesStep filterResourcesStep;
+  private final ImmutableSet<Path> filteredStringFiles;
   private final Path rDotJavaSrcDir;
   private final Path destinationDir;
   private final Map<String, String> regionSpecificToBaseLocaleMap;
@@ -103,16 +103,17 @@ public class CompileStringsStep implements Step {
    * output json file, in the event of multiple xml files of a locale sharing the same string
    * resource name - file that appears first in the list wins.
    *
-   * @param filterResourcesStep {@link FilterResourcesStep} that filters non english string files.
+   * @param filteredStringFiles Set containing paths to non-english
+   *     string files, matching {@link FilterResourcesStep#NON_ENGLISH_STRING_PATH} regex.
    * @param rDotJavaSrcDir Path to the directory where aapt generates R.txt file along with the
    *     final R.java files per package.
    * @param destinationDir Output directory for the generated json files.
    */
   public CompileStringsStep(
-      FilterResourcesStep filterResourcesStep,
+      ImmutableSet<Path> filteredStringFiles,
       Path rDotJavaSrcDir,
       Path destinationDir) {
-    this.filterResourcesStep = Preconditions.checkNotNull(filterResourcesStep);
+    this.filteredStringFiles = Preconditions.checkNotNull(filteredStringFiles);
     this.rDotJavaSrcDir = Preconditions.checkNotNull(rDotJavaSrcDir);
     this.destinationDir = Preconditions.checkNotNull(destinationDir);
     this.regionSpecificToBaseLocaleMap = Maps.newHashMap();
@@ -129,9 +130,7 @@ public class CompileStringsStep implements Step {
       return 1;
     }
 
-    ImmutableSet<Path> filteredStringFiles = filterResourcesStep.getNonEnglishStringFiles();
     ImmutableMultimap<String, Path> filesByLocale = groupFilesByLocale(filteredStringFiles);
-
     Map<String, StringResources> resourcesByLocale = Maps.newHashMap();
     for (String locale : filesByLocale.keySet()) {
       try {

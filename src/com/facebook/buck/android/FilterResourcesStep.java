@@ -330,11 +330,13 @@ public class FilterResourcesStep implements Step {
 
   public static class ResourceFilter {
 
+    static final ResourceFilter EMPTY_FILTER = new ResourceFilter(ImmutableList.<String>of());
+
+    private final List<String> filter;
+
     public ResourceFilter(List<String> resourceFilter) {
       this.filter = ImmutableList.copyOf(resourceFilter);
     }
-
-    private final List<String> filter;
 
     public boolean shouldDownscale() {
       return filter.contains("downscale");

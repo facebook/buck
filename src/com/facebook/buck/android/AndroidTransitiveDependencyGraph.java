@@ -25,13 +25,10 @@ import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,36 +41,32 @@ import java.util.Set;
 
 public class AndroidTransitiveDependencyGraph {
 
-  private final Supplier<ImmutableSortedSet<BuildRule>> rulesToTraverseForTransitiveDeps;
-  private final BuildTarget buildTargetForTheRootOfTheTraversal;
 
-  public AndroidTransitiveDependencyGraph(final AndroidBinaryRule buildRule) {
-    // Because AndroidBinaryRule#getDeps() includes items such as its keystore, we use
-    // AndroidBinaryRule#getClasspathDeps() instead to ensure we only traverse the rules that
-    // the user specified as the "deps" argument in the build file.
-    this(buildRule.getClasspathDeps(), buildRule.getBuildTarget());
-  }
+  private final ImmutableSortedSet<BuildRule> rulesToTraverseForTransitiveDeps;
 
   /**
-   * As we move towards a world designed around {@link Buildable}s rather than {@link BuildRule}s,
-   * we will likely need to specify the {@link BuildTarget} independently.
+   * @param deps A set of dependencies for a {@link BuildRule}, presumably one that is in the
+   *     process of being constructed via its builder.
    */
-  private AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps,
-      BuildTarget buildTarget) {
-    this.rulesToTraverseForTransitiveDeps = Suppliers.ofInstance(Preconditions.checkNotNull(deps));
-    this.buildTargetForTheRootOfTheTraversal = Preconditions.checkNotNull(buildTarget);
+  AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps) {
+    this.rulesToTraverseForTransitiveDeps = Preconditions.checkNotNull(deps);
   }
 
   public static AndroidTransitiveDependencyGraph createForAndroidManifest(
       AndroidManifest androidManifest, DependencyGraph graph) {
     BuildTarget buildTarget = androidManifest.getBuildTarget();
     BuildRule rule = graph.findBuildRuleByTarget(buildTarget);
-    return new AndroidTransitiveDependencyGraph(rule.getDeps(), buildTarget);
+    return new AndroidTransitiveDependencyGraph(rule.getDeps());
   }
 
+  /**
+   * @param uberRDotJavaBuildable that may have produced {@code R.class} files that need to be
+   *     dexed.
+   */
   public AndroidDexTransitiveDependencies findDexDependencies(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
-      ImmutableSet<BuildRule> buildRulesToExcludeFromDex) {
+      ImmutableSet<BuildRule> buildRulesToExcludeFromDex,
+      UberRDotJavaBuildable uberRDotJavaBuildable) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
     final ImmutableSet.Builder<String> pathsToDexBuilder = ImmutableSet.builder();
@@ -90,7 +83,7 @@ public class AndroidTransitiveDependencyGraph {
 
     // Update pathsToDex.
     ImmutableSet<Map.Entry<JavaLibraryRule, String>> classpath =
-        Classpaths.getClasspathEntries(rulesToTraverseForTransitiveDeps.get()).entries();
+        Classpaths.getClasspathEntries(rulesToTraverseForTransitiveDeps).entries();
     for (Map.Entry<JavaLibraryRule, String> entry : classpath) {
       if (!buildRulesToExcludeFromDex.contains(entry.getKey())) {
         pathsToDexBuilder.add(entry.getValue());
@@ -100,7 +93,7 @@ public class AndroidTransitiveDependencyGraph {
     }
 
     // Visit all of the transitive dependencies to populate the above collections.
-    new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps.get()) {
+    new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as
@@ -118,8 +111,7 @@ public class AndroidTransitiveDependencyGraph {
     ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
     Optional<Path> pathToCompiledRDotJavaFilesOptional;
     if (!rDotJavaPackages.isEmpty()) {
-      String pathToCompiledRDotJavaFiles = UberRDotJavaUtil.getPathToCompiledRDotJavaFiles(
-          buildTargetForTheRootOfTheTraversal);
+      String pathToCompiledRDotJavaFiles = uberRDotJavaBuildable.getPathToCompiledRDotJavaFiles();
       pathsToDexBuilder.add(pathToCompiledRDotJavaFiles);
 
       // TODO: Ultimately, pathToCompiledRDotJavaFiles should be pre-dexed so that it does not need
@@ -172,7 +164,7 @@ public class AndroidTransitiveDependencyGraph {
         createAndroidResourceDetails(androidResourceDeps);
 
     // Visit all of the transitive dependencies to populate the above collections.
-    new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps.get()) {
+    new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         // We need to include the transitive closure of the compiled .class files when dex'ing, as

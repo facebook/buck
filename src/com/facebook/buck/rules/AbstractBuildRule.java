@@ -43,11 +43,14 @@ abstract class AbstractBuildRule implements BuildRule {
     this.visibilityPatterns = buildRuleParams.getVisibilityPatterns();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
 
-    for (BuildRule dep : this.deps) {
-      if (!dep.isVisibleTo(buildTarget)) {
-        throw new HumanReadableException("%s depends on %s, which is not visible",
-            buildTarget,
-            dep);
+    // Nodes added via graph enhancement are exempt from visibility checks.
+    if (!buildTarget.isFlavored()) {
+      for (BuildRule dep : this.deps) {
+        if (!dep.isVisibleTo(buildTarget)) {
+          throw new HumanReadableException("%s depends on %s, which is not visible",
+              buildTarget,
+              dep);
+        }
       }
     }
   }

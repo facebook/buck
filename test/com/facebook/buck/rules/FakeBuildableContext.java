@@ -39,6 +39,8 @@ public class FakeBuildableContext implements BuildableContext {
 
   private final Set<Path> artifacts = Sets.newHashSet();
 
+  private final Set<Path> artifactDirectories = Sets.newHashSet();
+
   private final FakeOnDiskBuildInfo metadataThatWasWrittenToDiskAsOnDiskBuildInfo =
       new FakeOnDiskBuildInfo();
 
@@ -69,12 +71,21 @@ public class FakeBuildableContext implements BuildableContext {
     artifacts.add(pathToArtifact);
   }
 
+  @Override
+  public void recordArtifactsInDirectory(Path pathToArtifactsDirectory) {
+    artifactDirectories.add(pathToArtifactsDirectory);
+  }
+
   public ImmutableMap<String, Object> getRecordedMetadata() {
     return ImmutableMap.copyOf(metadata);
   }
 
   public ImmutableSet<Path> getRecordedArtifacts() {
     return ImmutableSet.copyOf(artifacts);
+  }
+
+  public ImmutableSet<Path> getRecordedArtifactDirectories() {
+    return ImmutableSet.copyOf(artifactDirectories);
   }
 
   public void assertContainsMetadataMapping(String key, String value) {

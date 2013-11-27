@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
+
 /**
  * Indicates that this class may have android resources that should be packaged into an APK.
  */
@@ -34,4 +36,6 @@ public interface HasAndroidResourceDeps {
    * @return path to a directory containing Android resources.
    */
   String getRes();
+
+  BuildTarget getBuildTarget();
 }

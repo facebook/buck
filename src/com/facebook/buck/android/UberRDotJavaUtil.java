@@ -71,57 +71,6 @@ public class UberRDotJavaUtil {
   private UberRDotJavaUtil() {}
 
   /**
-   * Adds the commands to generate and compile the {@code R.java} files. The {@code .class} files
-   * will be written to {@link #getPathToCompiledRDotJavaFiles(BuildTarget)}.
-   */
-  public static void generateRDotJavaFiles(
-      Set<String> resDirectories,
-      Set<String> rDotJavaPackages,
-      BuildTarget buildTarget,
-      ImmutableList.Builder<Step> commands) {
-    // Create the path where the R.java files will be generated.
-    String rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles(buildTarget);
-    commands.add(new MakeCleanDirectoryStep(rDotJavaSrc));
-
-    // Generate the R.java files.
-    GenRDotJavaStep genRDotJava = new GenRDotJavaStep(
-        resDirectories,
-        rDotJavaSrc,
-        rDotJavaPackages.iterator().next(),
-        /* isTempRDotJava */ false,
-        rDotJavaPackages);
-    commands.add(genRDotJava);
-
-    // Create the path where the R.java files will be compiled.
-    String rDotJavaBin = getPathToCompiledRDotJavaFiles(buildTarget);
-    commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
-
-    // Compile the R.java files.
-    Set<String> javaSourceFilePaths = Sets.newHashSet();
-    for (String rDotJavaPackage : rDotJavaPackages) {
-      String path = rDotJavaSrc + "/" + rDotJavaPackage.replace('.', '/') + "/R.java";
-      javaSourceFilePaths.add(path);
-    }
-    JavacInMemoryStep javac = createJavacInMemoryCommandForRDotJavaFiles(
-        javaSourceFilePaths, rDotJavaBin);
-    commands.add(javac);
-  }
-
-  public static String getPathToGeneratedRDotJavaSrcFiles(BuildTarget buildTarget) {
-    return String.format("%s/%s__%s_uber_rdotjava_src__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
-  }
-
-  public static String getPathToCompiledRDotJavaFiles(BuildTarget buildTarget) {
-    return String.format("%s/%s__%s_uber_rdotjava_bin__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
-  }
-
-  /**
    * Finds the transitive set of {@code rule}'s {@link AndroidResourceRule} dependencies with
    * non-null {@code res} directories, which can also include {@code rule} itself.
    * This set will be returned as an {@link ImmutableList} with the rules topologically sorted.
@@ -143,13 +92,12 @@ public class UberRDotJavaUtil {
     // rules with types in the TRAVERSABLE_TYPES collection. It also builds up the dependency graph
     // that was traversed to find the AndroidResourceRules.
     final MutableDirectedGraph<BuildRule> mutableGraph = new MutableDirectedGraph<>();
+
     final ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
     AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(rules) {
 
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        mutableGraph.addNode(rule);
-
         if (rule instanceof HasAndroidResourceDeps) {
           HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
           if (androidResourceRule.getRes() != null) {
@@ -161,6 +109,7 @@ public class UberRDotJavaUtil {
         BuildRuleType type = rule.getType();
         ImmutableSet<BuildRule> depsToVisit = maybeVisitAllDeps(rule,
             TRAVERSABLE_TYPES.contains(type));
+        mutableGraph.addNode(rule);
         for (BuildRule dep : depsToVisit) {
           mutableGraph.addEdge(rule, dep);
         }
@@ -193,6 +142,31 @@ public class UberRDotJavaUtil {
         );
   }
 
+  public static Set<HasAndroidResourceDeps> getAndroidResourceDepsUnsorted(Collection<BuildRule> rules) {
+    final Set<HasAndroidResourceDeps> androidResources = Sets.newHashSet();
+    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(rules) {
+
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        if (rule instanceof HasAndroidResourceDeps) {
+          HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps)rule;
+          if (androidResourceRule.getRes() != null) {
+            androidResources.add(androidResourceRule);
+          }
+        }
+
+        // Only certain types of rules should be considered as part of this traversal.
+        BuildRuleType type = rule.getType();
+        ImmutableSet<BuildRule> depsToVisit = maybeVisitAllDeps(rule,
+            TRAVERSABLE_TYPES.contains(type));
+        return depsToVisit;
+      }
+
+    };
+    visitor.start();
+
+    return androidResources;
+  }
 
   private static Function<BuildRule, HasAndroidResourceDeps> CAST_TO_ANDROID_RESOURCE_RULE =
       new Function<BuildRule, HasAndroidResourceDeps>() {
