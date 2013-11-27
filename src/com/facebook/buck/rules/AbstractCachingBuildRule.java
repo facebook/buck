@@ -368,6 +368,16 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
           buildInfoRecorder.addMetadata(
               AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
               cachedAbiKeyForDeps.get().getHash());
+
+          // This key must be
+          // DexProducedFromJavaLibraryThatContainsClassFiles.LINEAR_ALLOC_KEY_ON_DISK_METADATA.
+          // This is a hack for an emergency fix that is a problem because of the TODO above.
+          String linearAllocKey = "linearalloc";
+          Optional<String> linearAlloc = onDiskBuildInfo.getValue(linearAllocKey);
+          if (linearAlloc.isPresent()) {
+            buildInfoRecorder.addMetadata(linearAllocKey, linearAlloc.get());
+          }
+
           return new BuildResult(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
               CacheResult.LOCAL_KEY_UNCHANGED_HIT);
         }
