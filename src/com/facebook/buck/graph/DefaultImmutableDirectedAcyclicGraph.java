@@ -18,42 +18,48 @@ package com.facebook.buck.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Sets;
 
 public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirectedAcyclicGraph<T> {
 
-  private final MutableDirectedGraph<T> graph;
+  private final ImmutableSet<T> nodes;
+  private final ImmutableSetMultimap<T, T> outgoingEdges;
+  private final ImmutableSetMultimap<T, T> incomingEdges;
 
   public DefaultImmutableDirectedAcyclicGraph(MutableDirectedGraph<T> graph) {
     Preconditions.checkNotNull(graph);
     Preconditions.checkArgument(graph.isAcyclic());
-    this.graph = new MutableDirectedGraph<T>(graph);
+    this.nodes = graph.createImmutableCopyOfNodes();
+    this.outgoingEdges = graph.createImmutableCopyOfOutgoingEdges();
+    this.incomingEdges = graph.createImmutableCopyOfIncomingEdges();
   }
 
   @Override
   public ImmutableSet<T> getOutgoingNodesFor(T source) {
-    return graph.getOutgoingNodesFor(source);
+    return outgoingEdges.get(source);
   }
 
   @Override
   public ImmutableSet<T> getIncomingNodesFor(T sink) {
-    return graph.getIncomingNodesFor(sink);
+    return incomingEdges.get(sink);
   }
 
   @Override
   public ImmutableSet<T> getNodesWithNoOutgoingEdges() {
-    return graph.getNodesWithNoOutgoingEdges();
+    return ImmutableSet.copyOf(Sets.difference(nodes, outgoingEdges.keySet()));
   }
 
   @Override
   public ImmutableSet<T> getNodesWithNoIncomingEdges() {
-    return graph.getNodesWithNoIncomingEdges();
+    return ImmutableSet.copyOf(Sets.difference(nodes, incomingEdges.keySet()));
   }
 
   public String toDebugString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("Number of nodes: " + graph.getNodes().size() + "\n");
-    for (T node : graph.getNodes()) {
-      for (T sink : graph.getOutgoingNodesFor(node)) {
+    builder.append("Number of nodes: " + nodes.size() + "\n");
+    for (T node : nodes) {
+      for (T sink : getOutgoingNodesFor(node)) {
         builder.append(String.format("%s => %s\n", node, sink));
       }
     }
@@ -62,11 +68,11 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
 
   /** @return the number of nodes in the graph */
   public int getNodeCount() {
-    return graph.getNodeCount();
+    return nodes.size();
   }
 
   /** @return an unmodifiable view of the nodes in this graph */
   public Iterable<T> getNodes() {
-    return graph.getNodes();
+    return nodes;
   }
 }

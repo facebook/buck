@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
-import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.java.JavacInMemoryStep;
@@ -173,8 +171,6 @@ public class UberRDotJavaUtil {
     visitor.start();
 
     final Set<HasAndroidResourceDeps> allAndroidResourceRules = androidResources.build();
-    final ImmutableDirectedAcyclicGraph<BuildRule> graph =
-        new DefaultImmutableDirectedAcyclicGraph<>(mutableGraph);
 
     // Now that we have the transitive set of AndroidResourceRules, we need to return them in
     // topologically sorted order. This is critical because the order in which -S flags are passed
@@ -185,7 +181,7 @@ public class UberRDotJavaUtil {
         return allAndroidResourceRules.contains(rule);
       }
     };
-    ImmutableList<BuildRule> sortedAndroidResourceRules = TopologicalSort.sort(graph,
+    ImmutableList<BuildRule> sortedAndroidResourceRules = TopologicalSort.sort(mutableGraph,
         inclusionPredicate);
 
     // TopologicalSort.sort() returns rules in leaves-first order, which is the opposite of what we

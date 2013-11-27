@@ -22,6 +22,7 @@ import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
@@ -143,8 +144,9 @@ public class Build {
   private static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
       final DependencyGraph dependencyGraph, final File androidSdkDir, final BuckEventBus eventBus) {
     // Traverse the dependency graph to determine androidPlatformTarget.
+    TraversableGraph<BuildRule> graph = dependencyGraph;
     AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>> traversal =
-        new AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>>(dependencyGraph) {
+        new AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>>(graph) {
 
       private String androidPlatformTargetId = null;
 

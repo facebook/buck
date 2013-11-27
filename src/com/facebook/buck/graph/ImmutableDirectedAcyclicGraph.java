@@ -18,13 +18,17 @@ package com.facebook.buck.graph;
 
 import com.google.common.collect.ImmutableSet;
 
-public interface ImmutableDirectedAcyclicGraph<T> {
+public interface ImmutableDirectedAcyclicGraph<T> extends TraversableGraph<T> {
 
+  @Override
   public ImmutableSet<T> getOutgoingNodesFor(T source);
 
+  @Override
   public ImmutableSet<T> getIncomingNodesFor(T sink);
 
+  @Override
   public ImmutableSet<T> getNodesWithNoOutgoingEdges();
 
+  @Override
   public ImmutableSet<T> getNodesWithNoIncomingEdges();
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -29,20 +30,20 @@ import java.util.Set;
  */
 public abstract class AbstractBottomUpTraversal<T, V> {
 
-  private final ImmutableDirectedAcyclicGraph<T> graph;
+  private final TraversableGraph<T> graph;
 
   private final Set<T> visitedNodes;
 
   private final Queue<T> nodesToExplore;
 
-  public AbstractBottomUpTraversal(ImmutableDirectedAcyclicGraph<T> graph) {
+  public AbstractBottomUpTraversal(TraversableGraph<T> graph) {
     this.graph = Preconditions.checkNotNull(graph);
     this.visitedNodes = Sets.newHashSet();
     this.nodesToExplore = Lists.newLinkedList();
   }
 
   public final void traverse() {
-    nodesToExplore.addAll(graph.getNodesWithNoOutgoingEdges());
+    Iterables.addAll(nodesToExplore, graph.getNodesWithNoOutgoingEdges());
     while (!nodesToExplore.isEmpty()) {
       T node = nodesToExplore.remove();
       if (visitedNodes.contains(node)) {
@@ -75,7 +76,7 @@ public abstract class AbstractBottomUpTraversal<T, V> {
 
   public abstract V getResult();
 
-  protected ImmutableDirectedAcyclicGraph<T> getGraph() {
+  protected TraversableGraph<T> getGraph() {
     return graph;
   }
 }

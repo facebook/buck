@@ -22,6 +22,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.android.HasAndroidResourceDeps;
 import com.facebook.buck.android.UberRDotJavaUtil;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -676,8 +677,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         transitiveClasspathEntries.keySet(),
         Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
 
+    TraversableGraph<BuildRule> graph = context.getDependencyGraph();
     final ImmutableList<BuildRule> sortedTransitiveNotDeclaredDeps = ImmutableList.copyOf(
-        TopologicalSort.sort(context.getDependencyGraph(),
+        TopologicalSort.sort(graph,
             new Predicate<BuildRule>() {
               @Override
               public boolean apply(BuildRule input) {

@@ -24,7 +24,7 @@ public class TopologicalSort {
   private TopologicalSort() {}
 
   public static <T> ImmutableList<T> sort(
-      ImmutableDirectedAcyclicGraph<T> graph,
+      TraversableGraph<T> graph,
       final Predicate<T> inclusionPredicate) {
     AbstractBottomUpTraversal<T, ImmutableList<T>> traversal =
         new AbstractBottomUpTraversal<T, ImmutableList<T>>(graph) {

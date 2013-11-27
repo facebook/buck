@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,7 +40,7 @@ import javax.annotation.Nullable;
  * The graph is not required to be connected or acyclic.
  * @param <T> the type of object stored as nodes in this graph
  */
-public final class MutableDirectedGraph<T> {
+public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /**
    * It is possible to have a node in the graph without any edges, which is why we must maintain a
@@ -148,12 +149,14 @@ public final class MutableDirectedGraph<T> {
     incomingEdges.remove(sink, source);
   }
 
-  public ImmutableSet<T> getOutgoingNodesFor(T source) {
-    return ImmutableSet.copyOf(outgoingEdges.get(source));
+  @Override
+  public Iterable<T> getOutgoingNodesFor(T source) {
+    return outgoingEdges.get(source);
   }
 
-  public ImmutableSet<T> getIncomingNodesFor(T sink) {
-    return ImmutableSet.copyOf(incomingEdges.get(sink));
+  @Override
+  public Iterable<T> getIncomingNodesFor(T sink) {
+    return incomingEdges.get(sink);
   }
 
   public boolean hasIncomingEdges(T node) {
@@ -206,12 +209,26 @@ public final class MutableDirectedGraph<T> {
     return tarjan.findStronglyConnectedComponents();
   }
 
-  public ImmutableSet<T> getNodesWithNoIncomingEdges() {
-    return ImmutableSet.copyOf(Sets.difference(nodes, incomingEdges.keySet()));
+  @Override
+  public Iterable<T> getNodesWithNoIncomingEdges() {
+    return Sets.difference(nodes, incomingEdges.keySet());
   }
 
-  public ImmutableSet<T> getNodesWithNoOutgoingEdges() {
-    return ImmutableSet.copyOf(Sets.difference(nodes, outgoingEdges.keySet()));
+  @Override
+  public Iterable<T> getNodesWithNoOutgoingEdges() {
+    return Sets.difference(nodes, outgoingEdges.keySet());
+  }
+
+  ImmutableSet<T> createImmutableCopyOfNodes() {
+    return ImmutableSet.copyOf(nodes);
+  }
+
+  ImmutableSetMultimap<T, T> createImmutableCopyOfOutgoingEdges() {
+    return ImmutableSetMultimap.copyOf(outgoingEdges);
+  }
+
+  ImmutableSetMultimap<T, T> createImmutableCopyOfIncomingEdges() {
+    return ImmutableSetMultimap.copyOf(incomingEdges);
   }
 
   private static class Tarjan<S> {
