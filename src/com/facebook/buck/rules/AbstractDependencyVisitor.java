@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -58,11 +57,6 @@ public abstract class AbstractDependencyVisitor {
       explored.add(currentRule);
 
       for (BuildRule dep : depsToVisit) {
-        Preconditions.checkState(currentRule.getDeps().contains(dep),
-            "%s said that it should visit %s, but %s is not in its deps.",
-            currentRule,
-            dep,
-            dep);
         if (!explored.contains(dep)) {
           toExplore.add(dep);
         }

@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -103,17 +102,17 @@ abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public final boolean equals(Object obj) {
     if (!(obj instanceof AbstractBuildRule)) {
       return false;
     }
-    AbstractBuildRule that = (AbstractBuildRule)obj;
-    return Objects.equal(this.buildTarget, that.buildTarget);
+    AbstractBuildRule that = (AbstractBuildRule) obj;
+    return this.buildTarget.equals(that.buildTarget);
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hashCode(this.buildTarget);
+  public final int hashCode() {
+    return this.buildTarget.hashCode();
   }
 
   @Override
