@@ -18,7 +18,8 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
-import com.facebook.buck.android.UberRDotJavaUtil;
+import com.facebook.buck.android.DummyRDotJava;
+import com.facebook.buck.android.JavaLibraryGraphEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
@@ -81,6 +82,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   protected JavaTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<SourcePath> resources,
+      Optional<DummyRDotJava> optionalDummyRDotJava,
       Set<String> labels,
       Set<String> contacts,
       Optional<String> proguardConfig,
@@ -90,6 +92,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     super(buildRuleParams,
         srcs,
         resources,
+        optionalDummyRDotJava,
         proguardConfig,
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         javacOptions);
@@ -151,11 +154,6 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       return ImmutableList.of();
     }
 
-    // androidResourceDeps will be null if this test is re-run without being rebuilt.
-    if (androidResourceDeps == null) {
-      androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this);
-    }
-
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
@@ -166,10 +164,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     // classpath used to run the test runner.
     ImmutableSet<String> classpathEntries;
     if (getProperties().is(ANDROID)) {
-      BuildTarget buildTarget = getBuildTarget();
-      String rDotJavaClasspathEntry;
-      UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, steps);
-      rDotJavaClasspathEntry = UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget);
+      Preconditions.checkState(optionalDummyRDotJava.isPresent(),
+          "DummyRDotJava must have been created by the BuildRuleBuilder!");
+      String rDotJavaClasspathEntry = optionalDummyRDotJava.get().getRDotJavaBinFolder();
       ImmutableSet.Builder<String> classpathEntriesBuilder = ImmutableSet.builder();
       classpathEntriesBuilder.add(rDotJavaClasspathEntry);
       classpathEntriesBuilder.addAll(getTransitiveClasspathEntries().values());
@@ -406,9 +403,17 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new JavaTestRule(createBuildRuleParams(ruleResolver),
+      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
+
+      JavaLibraryGraphEnhancer.Result result =
+          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+              .createBuildableForAndroidResources(
+                  ruleResolver, /* createBuildableIfEmptyDeps */ false);
+
+      return new JavaTestRule(result.getBuildRuleParams(),
           srcs,
           resources,
+          result.getOptionalDummyRDotJava(),
           labels,
           contacts,
           proguardConfig,

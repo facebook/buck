@@ -55,6 +55,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   public AndroidLibraryRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<SourcePath> resources,
+      Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<String> proguardConfig,
       Set<BuildRule> exportedDeps,
       JavacOptions javacOptions,
@@ -62,6 +63,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     super(buildRuleParams,
         srcs,
         resources,
+        optionalDummyRDotJava,
         proguardConfig,
         exportedDeps,
         javacOptions);
@@ -113,15 +115,23 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
 
     @Override
     public AndroidLibraryRule build(BuildRuleResolver ruleResolver) {
+      // TODO(user): Avoid code duplication by calling super.build() and defining a new
+      // constructor in DefaultJavaLibraryRule that takes an instance of itself.
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
+      JavaLibraryGraphEnhancer.Result result =
+          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+              .createBuildableForAndroidResources(
+                  ruleResolver, /* createBuildableIfEmptyDeps */ false);
+
       return new AndroidLibraryRule(
-          buildRuleParams,
+          result.getBuildRuleParams(),
           srcs,
           resources,
+          result.getOptionalDummyRDotJava(),
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           javacOptions.build(),

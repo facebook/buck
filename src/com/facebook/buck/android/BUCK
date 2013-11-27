@@ -1,6 +1,9 @@
 R_DOT_JAVA_SRCS = [
+  'DummyRDotJava.java',
+  'DummyRDotJavaAbiRule.java',
   'GenRDotJavaStep.java',
   'HasAndroidResourceDeps.java',
+  'JavaLibraryGraphEnhancer.java',
   'MergeAndroidResourcesStep.java',
   'UberRDotJavaUtil.java',
 ]
@@ -10,6 +13,7 @@ java_library(
   deps = [
     ':exceptions',
     '//lib:guava',
+    '//lib:jsr305',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:support',

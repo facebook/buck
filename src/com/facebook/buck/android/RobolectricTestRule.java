@@ -36,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -67,6 +68,7 @@ public class RobolectricTestRule extends JavaTestRule {
   protected RobolectricTestRule(BuildRuleParams buildRuleParams,
       Set<String> srcs,
       Set<SourcePath> resources,
+      Optional<DummyRDotJava> optionalDummyRDotJava,
       Set<String> labels,
       Set<String> contacts,
       Optional<String> proguardConfig,
@@ -76,6 +78,7 @@ public class RobolectricTestRule extends JavaTestRule {
     super(buildRuleParams,
         srcs,
         resources,
+        optionalDummyRDotJava,
         labels,
         contacts,
         proguardConfig,
@@ -103,7 +106,10 @@ public class RobolectricTestRule extends JavaTestRule {
   protected void onAmendVmArgs(ImmutableList.Builder<String> vmArgsBuilder,
       Optional<TargetDevice> targetDevice) {
     super.onAmendVmArgs(vmArgsBuilder, targetDevice);
-    vmArgsBuilder.add(getRobolectricResourceDirectories(androidResourceDeps));
+    Preconditions.checkState(optionalDummyRDotJava.isPresent(),
+        "DummyRDotJava must have been created by the BuildRuleBuilder!");
+    vmArgsBuilder.add(getRobolectricResourceDirectories(
+        optionalDummyRDotJava.get().getAndroidResourceDeps()));
   }
 
   @VisibleForTesting
@@ -138,9 +144,17 @@ public class RobolectricTestRule extends JavaTestRule {
       AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      return new RobolectricTestRule(createBuildRuleParams(ruleResolver),
+      BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
+
+      JavaLibraryGraphEnhancer.Result result =
+          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+              .createBuildableForAndroidResources(
+                  ruleResolver, /* createBuildableIfEmptyDeps */ true);
+
+      return new RobolectricTestRule(result.getBuildRuleParams(),
           srcs,
           resources,
+          result.getOptionalDummyRDotJava(),
           labels,
           contacts,
           proguardConfig,

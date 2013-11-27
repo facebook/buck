@@ -83,7 +83,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   private final ImmutableSortedSet<String> resSrcs;
 
   @Nullable
-  private String rDotJavaPackage;
+  private final String rDotJavaPackage;
 
   @Nullable
   private final String assets;

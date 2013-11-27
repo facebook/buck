@@ -421,6 +421,10 @@ public class JavacInMemoryStep implements Step {
     return javaSourceFilePaths;
   }
 
+  public String getOutputDirectory() {
+    return outputDirectory;
+  }
+
   /**
    * Returns a SHA-1 hash for the ABI of the Java code compiled by this step.
    * <p>

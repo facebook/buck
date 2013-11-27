@@ -19,8 +19,8 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.android.HasAndroidResourceDeps;
-import com.facebook.buck.android.UberRDotJavaUtil;
+import com.facebook.buck.android.DummyRDotJava;
+import com.facebook.buck.android.JavaLibraryGraphEnhancer;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -116,6 +116,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   private final ImmutableSortedSet<SourcePath> resources;
 
+  protected final Optional<DummyRDotJava> optionalDummyRDotJava;
+
   private final Optional<String> outputJar;
 
   private final List<String> inputsToConsiderForCachingPurposes;
@@ -174,22 +176,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
   };
 
-  /**
-   * This is set in
-   * {@link com.facebook.buck.rules.Buildable#getBuildSteps(com.facebook.buck.rules.BuildContext, BuildableContext)}
-   * and is available to subclasses.
-   */
-  protected ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
-
   protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
                                    Set<String> srcs,
                                    Set<? extends SourcePath> resources,
+                                   Optional<DummyRDotJava> optionalDummyRDotJava,
                                    Optional<String> proguardConfig,
                                    Set<BuildRule> exportedDeps,
                                    JavacOptions javacOptions) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
+    this.optionalDummyRDotJava = Preconditions.checkNotNull(optionalDummyRDotJava);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
@@ -513,8 +510,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   @Override
   public final List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    BuildTarget buildTarget = getBuildTarget();
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     JavacOptions javacOptions = this.javacOptions;
     // Only override the bootclasspath if this rule is supposed to compile Android code.
@@ -524,14 +520,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           .build();
     }
 
-    // If this rule depends on AndroidResourceRules, then we need to generate the R.java files that
-    // this rule needs in order to be able to compile itself.
-    androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(this);
-    boolean dependsOnAndroidResourceRules = !androidResourceDeps.isEmpty();
-    if (dependsOnAndroidResourceRules) {
-      UberRDotJavaUtil.createDummyRDotJavaFiles(androidResourceDeps, buildTarget, commands);
-    }
-
     ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries =
         getTransitiveClasspathEntries();
     ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries =
@@ -539,7 +527,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     // If this rule depends on AndroidResourceRules, then we need to include the compiled R.java
     // files on the classpath when compiling this rule.
-    if (dependsOnAndroidResourceRules) {
+    if (optionalDummyRDotJava.isPresent()) {
+      DummyRDotJava dummyRDotJava = optionalDummyRDotJava.get();
       ImmutableSetMultimap.Builder<JavaLibraryRule, String> transitiveClasspathEntriesWithRDotJava =
           ImmutableSetMultimap.builder();
       transitiveClasspathEntriesWithRDotJava.putAll(transitiveClasspathEntries);
@@ -549,7 +538,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       declaredClasspathEntriesWithRDotJava.putAll(declaredClasspathEntries);
 
       ImmutableSet<String> rDotJavaClasspath =
-          ImmutableSet.of(UberRDotJavaUtil.getRDotJavaBinFolder(buildTarget));
+          ImmutableSet.of(dummyRDotJava.getRDotJavaBinFolder());
 
       transitiveClasspathEntriesWithRDotJava.putAll(this, rDotJavaClasspath);
       declaredClasspathEntriesWithRDotJava.putAll(this, rDotJavaClasspath);
@@ -564,13 +553,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     if (annotationGenFolder != null) {
       MakeCleanDirectoryStep mkdirGeneratedSources =
           new MakeCleanDirectoryStep(annotationGenFolder);
-      commands.add(mkdirGeneratedSources);
+      steps.add(mkdirGeneratedSources);
     }
 
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     String outputDirectory = getClassesDir(getBuildTarget());
-    commands.add(new MakeCleanDirectoryStep(outputDirectory));
+    steps.add(new MakeCleanDirectoryStep(outputDirectory));
 
     Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRule =
         createSuggestBuildFunction(context,
@@ -586,15 +575,15 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         javacOptions,
         context.getBuildDependencies(),
         suggestBuildRule,
-        commands);
+        steps);
 
 
     // If there are resources, then link them to the appropriate place in the classes directory.
-    addResourceCommands(context, commands, outputDirectory, context.getJavaPackageFinder());
+    addResourceCommands(context, steps, outputDirectory, context.getJavaPackageFinder());
 
     if (outputJar.isPresent()) {
-      commands.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));
-      commands.add(new JarDirectoryStep(
+      steps.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));
+      steps.add(new JarDirectoryStep(
           outputJar.get(),
           Collections.singleton(outputDirectory),
           /* mainClass */ null,
@@ -605,11 +594,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         "abiKeySupplier must be set so that getAbiKey() will " +
         "return a non-null value if this rule builds successfully.");
 
-    addStepsToRecordAbiToDisk(commands, abiKeySupplier, buildableContext);
+    addStepsToRecordAbiToDisk(steps, abiKeySupplier, buildableContext);
 
-    JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, commands);
+    JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
-    return commands.build();
+    return steps.build();
   }
 
   /**
@@ -835,6 +824,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibraryRule> implements
       SrcsAttributeBuilder, ResourcesAttributeBuilder {
 
+    protected final AbstractBuildRuleBuilderParams params;
+
     protected Set<String> srcs = Sets.newHashSet();
     protected Set<SourcePath> resources = Sets.newHashSet();
     protected final AnnotationProcessingParams.Builder annotationProcessingBuilder =
@@ -845,19 +836,27 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
+      this.params = params;
     }
 
     @Override
     public DefaultJavaLibraryRule build(BuildRuleResolver ruleResolver) {
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
+
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
+      JavaLibraryGraphEnhancer.Result result =
+          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+              .createBuildableForAndroidResources(
+                  ruleResolver, /* createBuildableIfEmptyDeps */ false);
+
       return new DefaultJavaLibraryRule(
-          buildRuleParams,
+          result.getBuildRuleParams(),
           srcs,
           resources,
+          result.getOptionalDummyRDotJava(),
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           javacOptions.build());

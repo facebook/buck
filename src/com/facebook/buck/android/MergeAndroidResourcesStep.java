@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.google.common.collect.Ordering.*;
+
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
@@ -25,6 +27,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.SortedSetMultimap;
@@ -337,7 +341,10 @@ public class MergeAndroidResourcesStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getShortName() + " " + Joiner.on(' ').join(symbolsFileToRDotJavaPackage.keySet());
+    ImmutableList<String> sortedSymbolsFiles =
+        FluentIterable.from(symbolsFileToRDotJavaPackage.keySet()).toSortedList(natural());
+    return getShortName() + " " + Joiner.on(' ').join(sortedSymbolsFiles)
+        + " -o " + pathToGeneratedJavaFiles;
   }
 
   private static class IntEnumerator {
