@@ -31,7 +31,7 @@ public class StepFailedException extends Exception {
     this.exitCode = exitCode;
   }
 
-  static StepFailedException createForFailingStep(Step step,
+  static StepFailedException createForFailingStepWithExitCode(Step step,
       ExecutionContext context,
       int exitCode,
       Optional<BuildTarget> buildTarget) {
@@ -47,6 +47,24 @@ public class StepFailedException extends Exception {
           step.getDescription(context));
     }
     return new StepFailedException(message, step, exitCode);
+  }
+
+  static StepFailedException createForFailingStepWithException(Step step,
+      ExecutionContext context,
+      Throwable throwable,
+      Optional<BuildTarget> buildTarget) {
+    String message;
+    if (buildTarget.isPresent()) {
+      message = String.format("%s failed on step %s with an exception:\n%s",
+          buildTarget.get().getFullyQualifiedName(),
+          step.getShortName(),
+          throwable.getMessage());
+    } else {
+      message = String.format("Failed on step %s with an exception:\n%s",
+          step.getShortName(),
+          throwable.getMessage());
+    }
+    return new StepFailedException(message, step, 1);
   }
 
   public Step getStep() {

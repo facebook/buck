@@ -76,10 +76,22 @@ public final class DefaultStepRunner implements StepRunner {
     }
 
     context.postEvent(StepEvent.started(step, step.getDescription(context)));
-    int exitCode = step.execute(context);
-    context.postEvent(StepEvent.finished(step, step.getDescription(context), exitCode));
+    int exitCode = 1;
+    try {
+      exitCode = step.execute(context);
+    } catch (Throwable t) {
+      throw StepFailedException.createForFailingStepWithException(step,
+          context,
+          t,
+          buildTarget);
+    } finally {
+      context.postEvent(StepEvent.finished(step, step.getDescription(context), exitCode));
+    }
     if (exitCode != 0) {
-      throw StepFailedException.createForFailingStep(step, context, exitCode, buildTarget);
+      throw StepFailedException.createForFailingStepWithExitCode(step,
+          context,
+          exitCode,
+          buildTarget);
     }
   }
 

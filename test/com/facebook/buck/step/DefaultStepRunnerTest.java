@@ -108,6 +108,38 @@ public class DefaultStepRunnerTest {
     // Success if the test timeout is not reached.
   }
 
+  @Test
+  public void testExplodingStep() {
+    ExecutionContext context = TestExecutionContext.newInstance();
+
+    ListeningExecutorService executorService =
+        listeningDecorator(newMultiThreadExecutor(getClass().getSimpleName(), 3));
+    DefaultStepRunner runner = new DefaultStepRunner(context, executorService);
+    try {
+      runner.runStep(new ExplosionStep());
+      fail("Should have thrown a StepFailedException!");
+    } catch (StepFailedException e) {
+      assertEquals("Failed on step explode with an exception:\n#yolo", e.getMessage());
+    }
+  }
+
+  private static class ExplosionStep implements Step {
+    @Override
+    public int execute(ExecutionContext context) {
+      throw new RuntimeException("#yolo");
+    }
+
+    @Override
+    public String getShortName() {
+      return "explode";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "MOAR EXPLOSIONS!!!!";
+    }
+  }
+
   private static class SleepingStep implements Step {
     private final long sleepMillis;
     private final int exitCode;

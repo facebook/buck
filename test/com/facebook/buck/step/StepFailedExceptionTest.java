@@ -23,15 +23,17 @@ import com.google.common.base.Optional;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class StepFailedExceptionTest {
 
   @Test
-  public void testCreateForFailingStepWithBuildTarget() {
+  public void testCreateForFailingStepForExitCodeWithBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     ExecutionContext context = TestExecutionContext.newInstance();
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
-    StepFailedException exception = StepFailedException.createForFailingStep(
+    StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
         step, context, exitCode, Optional.of(buildTarget));
 
     assertEquals(step, exception.getStep());
@@ -40,15 +42,44 @@ public class StepFailedExceptionTest {
   }
 
   @Test
-  public void testCreateForFailingStepWithoutBuildTarget() {
+  public void testCreateForFailingStepForExitCodeWithoutBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     ExecutionContext context = TestExecutionContext.newInstance();
-    StepFailedException exception = StepFailedException.createForFailingStep(
+    StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
         step, context, exitCode, Optional.<BuildTarget>absent());
 
     assertEquals(step, exception.getStep());
     assertEquals(exitCode, exception.getExitCode());
     assertEquals("Failed with exit code 17:\ncp foo bar", exception.getMessage());
+  }
+
+  @Test
+  public void testCreateForFailingStepWithBuildTarget() {
+    final int exitCode = 17;
+    Step step = new FakeStep("cp", "cp foo bar", exitCode);
+    ExecutionContext context = TestExecutionContext.newInstance();
+    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
+    StepFailedException exception = StepFailedException.createForFailingStepWithException(
+        step, context, new IOException("Copy failed!"), Optional.of(buildTarget));
+
+    assertEquals(step, exception.getStep());
+    assertEquals(1, exception.getExitCode());
+    assertEquals("//foo:bar failed on step cp with an exception:\nCopy failed!",
+        exception.getMessage());
+  }
+
+  @Test
+  public void testCreateForFailingStepWithoutBuildTarget() {
+    final int exitCode = 17;
+    Step step = new FakeStep("cp", "cp foo bar", exitCode);
+    ExecutionContext context = TestExecutionContext.newInstance();
+    StepFailedException exception = StepFailedException.createForFailingStepWithException(
+        step, context, new IOException("Copy failed!"), Optional.<BuildTarget>absent());
+
+    assertEquals(step, exception.getStep());
+    assertEquals(1, exception.getExitCode());
+    assertEquals("Failed on step cp with an exception:\nCopy failed!",
+        exception.getMessage());
   }
 }
