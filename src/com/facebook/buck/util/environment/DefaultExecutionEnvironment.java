@@ -24,7 +24,7 @@ import java.net.UnknownHostException;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   private static final long  MEGABYTE = 1024L * 1024L;
-  private Platform platform;
+  private final Platform platform;
 
   public DefaultExecutionEnvironment() {
     platform = Platform.detect();
