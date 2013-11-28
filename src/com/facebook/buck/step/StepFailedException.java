@@ -50,7 +50,6 @@ public class StepFailedException extends Exception {
   }
 
   static StepFailedException createForFailingStepWithException(Step step,
-      ExecutionContext context,
       Throwable throwable,
       Optional<BuildTarget> buildTarget) {
     String message;

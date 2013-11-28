@@ -16,6 +16,9 @@
 
 package com.facebook.buck.step;
 
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Function;
@@ -29,9 +32,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 public final class DefaultStepRunner implements StepRunner {
 
@@ -80,10 +80,7 @@ public final class DefaultStepRunner implements StepRunner {
     try {
       exitCode = step.execute(context);
     } catch (Throwable t) {
-      throw StepFailedException.createForFailingStepWithException(step,
-          context,
-          t,
-          buildTarget);
+      throw StepFailedException.createForFailingStepWithException(step, t, buildTarget);
     } finally {
       context.postEvent(StepEvent.finished(step, step.getDescription(context), exitCode));
     }

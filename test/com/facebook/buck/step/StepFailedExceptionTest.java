@@ -58,10 +58,9 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepWithBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    ExecutionContext context = TestExecutionContext.newInstance();
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
     StepFailedException exception = StepFailedException.createForFailingStepWithException(
-        step, context, new IOException("Copy failed!"), Optional.of(buildTarget));
+        step, new IOException("Copy failed!"), Optional.of(buildTarget));
 
     assertEquals(step, exception.getStep());
     assertEquals(1, exception.getExitCode());
@@ -73,9 +72,8 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepWithoutBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    ExecutionContext context = TestExecutionContext.newInstance();
     StepFailedException exception = StepFailedException.createForFailingStepWithException(
-        step, context, new IOException("Copy failed!"), Optional.<BuildTarget>absent());
+        step, new IOException("Copy failed!"), Optional.<BuildTarget>absent());
 
     assertEquals(step, exception.getStep());
     assertEquals(1, exception.getExitCode());
