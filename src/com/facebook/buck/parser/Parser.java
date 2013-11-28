@@ -26,6 +26,7 @@ import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleBuilder;
 import com.facebook.buck.rules.BuildRuleFactory;
@@ -372,6 +373,14 @@ public class Parser {
             BuildRuleBuilder<?> builderForTarget = knownBuildTargets.get(buildTarget);
             BuildRule buildRule = ruleResolver.buildAndAddToIndex(builderForTarget);
 
+            // If the rule has any flavored deps, then add the appropriate edges to the graph.
+            for (BuildRule dep : buildRule.getDeps()) {
+              if (dep.getBuildTarget().isFlavored()) {
+                addGraphEnhancedDeps(buildRule);
+                break;
+              }
+            }
+
             // Update the graph.
             if (buildRule.getDeps().isEmpty()) {
               // If a build rule with no deps is specified as the build target to build, then make
@@ -382,6 +391,42 @@ public class Parser {
                 graph.addEdge(buildRule, dep);
               }
             }
+          }
+
+          private void addGraphEnhancedDeps(BuildRule buildRule) {
+            // If the builder for the build rule used graph enhancement to insert additional
+            // dependencies, then new rules should have been added to the ruleResolver by the build
+            // rule. Use a visitor to find such rules and make sure they are added to the
+            // MutableDirectedGraph.
+            new AbstractDependencyVisitor(buildRule) {
+
+              @Override
+              public ImmutableSet<BuildRule> visit(BuildRule rule) {
+                // Most of the time, this will not be used in the call to visit(), so set it to
+                // null by default.
+                ImmutableSet.Builder<BuildRule> depsToVisit = null;
+                boolean isRuleFlavored = rule.getBuildTarget().isFlavored();
+
+                for (BuildRule dep : rule.getDeps()) {
+                  // If either the rule or the dep is flavored, then add an edge for it.
+                  boolean isDepFlavored = dep.getBuildTarget().isFlavored();
+                  if (isRuleFlavored || isDepFlavored) {
+                    graph.addEdge(rule, dep);
+                  }
+
+                  // If the dep is flavored, then visit it.
+                  if (isDepFlavored) {
+                    if (depsToVisit == null) {
+                      depsToVisit = ImmutableSet.builder();
+                    }
+                    depsToVisit.add(dep);
+                  }
+                }
+
+                return depsToVisit == null ? ImmutableSet.<BuildRule>of() : depsToVisit.build();
+              }
+
+            }.start();
           }
 
           @Override

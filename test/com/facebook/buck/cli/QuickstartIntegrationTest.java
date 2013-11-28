@@ -101,6 +101,7 @@ public class QuickstartIntegrationTest {
         "//apps/myapp:debug_keystore",
         "//apps/myapp:project_config",
         "//java/com/example/activity:activity",
+        "//java/com/example/activity:activity#class_names",
         "//java/com/example/activity:activity#dex",
         "//java/com/example/activity:project_config",
         "//res/com/example/activity:project_config",
