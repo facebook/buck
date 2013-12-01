@@ -23,9 +23,8 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -42,11 +41,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.DirectoryTraversal;
-import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -61,7 +56,6 @@ import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -123,7 +117,7 @@ public class AndroidBinaryRuleTest {
 
     GenProGuardConfigStep expectedGenProguard =
         new GenProGuardConfigStep(
-            "buck-out/bin/java/src/com/facebook/base/__manifest_apk__/AndroidManifest.xml",
+            "buck-out/bin/java/src/com/facebook/base/__manifest_apk#aapt_package__/AndroidManifest.xml",
             ImmutableSet.<String>of(),
             "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt");
 
@@ -144,226 +138,7 @@ public class AndroidBinaryRuleTest {
         commands.build());
   }
 
-  /**
-   * Tests an android_binary with zero dependent android_library rules that contains an assets
-   * directory.
-   */
-  @Test
-  public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    // Two android_library deps, neither with an assets directory.
-    JavaLibraryRule libraryOne = createAndroidLibraryRule(
-        "//java/src/com/facebook/base:libraryOne",
-        ruleResolver,
-        null, /* resDirectory */
-        null, /* assetDirectory */
-        null /* nativeLibsDirectory */);
-    JavaLibraryRule libraryTwo = createAndroidLibraryRule(
-        "//java/src/com/facebook/base:libraryTwo",
-        ruleResolver,
-        null, /* resDirectory */
-        null, /* assetDirectory */
-        null /* nativeLibsDirectory */);
-
-    // One android_binary rule that depends on the two android_library rules.
-    BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
-        "//java/src/com/facebook/base:apk");
-    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(binaryBuildTarget)
-        .addClasspathDep(libraryOne.getBuildTarget())
-        .addClasspathDep(libraryTwo.getBuildTarget())
-        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(addKeystoreRule(ruleResolver))
-        .setPackageType("debug"));
-
-    // Build up the parameters needed to invoke createAllAssetsDirectory().
-    Set<String> assetsDirectories = ImmutableSet.of();
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) {
-        throw new RuntimeException("Unexpected: no assets directories to traverse!");
-      }
-    };
-
-    // Invoke createAllAssetsDirectory(), the method under test.
-    Optional<String> allAssetsDirectory = androidBinary.createAllAssetsDirectory(
-        assetsDirectories, commands, traverser);
-
-    // Verify that no assets/ directory is used.
-    assertFalse("There should not be an assets/ directory to pass to aapt.",
-        allAssetsDirectory.isPresent());
-    assertTrue("There should not be any commands to build up an assets/ directory.",
-        commands.build().isEmpty());
-  }
-
-  /**
-   * Tests an android_binary with one dependent android_library rule that contains an assets
-   * directory.
-   */
-  @Test
-  public void testCreateAllAssetsDirectoryWithOneAssetsDirectory() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    // Two android_library deps, one of which has an assets directory.
-    JavaLibraryRule libraryOne = createAndroidLibraryRule(
-        "//java/src/com/facebook/base:libraryOne",
-        ruleResolver,
-        null, /* resDirectory */
-        null, /* assetDirectory */
-        null /* nativeLibsDirectory */);
-    JavaLibraryRule libraryTwo = createAndroidLibraryRule(
-        "//java/src/com/facebook/base:libraryTwo",
-        ruleResolver,
-        null, /* resDirectory */
-        "java/src/com/facebook/base/assets2",
-        null /* nativeLibsDirectory */);
-
-    AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver
-        .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
-
-    // One android_binary rule that depends on the two android_library rules.
-    BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
-        "//java/src/com/facebook/base:apk");
-    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(binaryBuildTarget)
-        .addClasspathDep(libraryOne.getBuildTarget())
-        .addClasspathDep(libraryTwo.getBuildTarget())
-        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(addKeystoreRule(ruleResolver))
-        .setPackageType("debug"));
-
-    // Build up the parameters needed to invoke createAllAssetsDirectory().
-    Set<String> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
-        if ("java/src/com/facebook/base/assets2".equals(rootPath)) {
-          traversal.visit(
-              new File("java/src/com/facebook/base/assets2",
-                  "fonts/Theinhardt-Medium.otf"),
-              "fonts/Theinhardt-Medium.otf");
-          traversal.visit(
-              new File("java/src/com/facebook/base/assets2",
-                  "fonts/Theinhardt-Regular.otf"),
-              "fonts/Theinhardt-Regular.otf");
-        } else {
-          throw new RuntimeException("Unexpected path: " + rootPath);
-        }
-      }
-    };
-
-    // Invoke createAllAssetsDirectory(), the method under test.
-    Optional<String> allAssetsDirectory = androidBinary.createAllAssetsDirectory(
-        assetsDirectories, commands, traverser);
-
-    // Verify that the existing assets/ directory will be passed to aapt.
-    assertTrue(allAssetsDirectory.isPresent());
-    assertEquals(
-        "Even though there is only one assets directory, the one in " + BIN_DIR + " should be used.",
-        androidBinary.getPathToAllAssetsDirectory(),
-        allAssetsDirectory.get());
-  }
-
-  /**
-   * Tests an android_binary with multiple dependent android_library rules, each with its own assets
-   * directory.
-   */
-  @Test
-  public void testCreateAllAssetsDirectoryWithMultipleAssetsDirectories() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    // Two android_library deps, each with an assets directory.
-    JavaLibraryRule libraryOne = createAndroidLibraryRule(
-        "//java/src/com/facebook/base:libraryOne",
-        ruleResolver,
-        null, /* resDirectory */
-        "java/src/com/facebook/base/assets1",
-        null /* nativeLibsDirectory */);
-    JavaLibraryRule libraryTwo = createAndroidLibraryRule(
-        "//java/src/com/facebook/base:libraryTwo",
-        ruleResolver,
-        null, /* resDirectory */
-        "java/src/com/facebook/base/assets2",
-        null /* nativeLibsDirectory */);
-
-
-    // One android_binary rule that depends on the two android_library rules.
-    BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance(
-        "//java/src/com/facebook/base:apk");
-    AndroidBinaryRule androidBinary = ruleResolver.buildAndAddToIndex(
-        AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(binaryBuildTarget)
-        .addClasspathDep(libraryOne.getBuildTarget())
-        .addClasspathDep(libraryTwo.getBuildTarget())
-        .setManifest(new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(addKeystoreRule(ruleResolver))
-        .setPackageType("debug"));
-
-    AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver.get(
-        BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryOne_resources"));
-    AndroidResourceRule resourceTwo = (AndroidResourceRule) ruleResolver.get(
-        BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
-
-    // Build up the parameters needed to invoke createAllAssetsDirectory().
-    Set<String> assetsDirectories = ImmutableSet.of(
-        resourceOne.getAssets(),
-        resourceTwo.getAssets());
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
-        if ("java/src/com/facebook/base/assets1".equals(rootPath)) {
-          traversal.visit(
-              new File("java/src/com/facebook/base/assets1",
-                  "guava-10.0.1-fork.dex.1.jar"),
-              "guava-10.0.1-fork.dex.1.jar");
-        } else if ("java/src/com/facebook/base/assets2".equals(rootPath)) {
-          traversal.visit(
-              new File("java/src/com/facebook/base/assets2",
-                  "fonts/Theinhardt-Medium.otf"),
-              "fonts/Theinhardt-Medium.otf");
-          traversal.visit(
-              new File("java/src/com/facebook/base/assets2",
-                  "fonts/Theinhardt-Regular.otf"),
-              "fonts/Theinhardt-Regular.otf");
-        } else {
-          throw new RuntimeException("Unexpected path: " + rootPath);
-        }
-      }
-    };
-
-    // Invoke createAllAssetsDirectory(), the method under test.
-    Optional<String> allAssetsDirectory = androidBinary.createAllAssetsDirectory(
-        assetsDirectories, commands, traverser);
-
-    // Verify that an assets/ directory will be created and passed to aapt.
-    assertTrue(allAssetsDirectory.isPresent());
-    assertEquals(BIN_DIR + "/java/src/com/facebook/base/__assets_apk__", allAssetsDirectory.get());
-    List<? extends Step> expectedCommands = ImmutableList.of(
-        new MakeCleanDirectoryStep(BIN_DIR + "/java/src/com/facebook/base/__assets_apk__"),
-        new MkdirAndSymlinkFileStep(
-            "java/src/com/facebook/base/assets1/guava-10.0.1-fork.dex.1.jar",
-            BIN_DIR + "/java/src/com/facebook/base/__assets_apk__/guava-10.0.1-fork.dex.1.jar"),
-        new MkdirAndSymlinkFileStep(
-            "java/src/com/facebook/base/assets2/fonts/Theinhardt-Medium.otf",
-            BIN_DIR + "/java/src/com/facebook/base/__assets_apk__/fonts/Theinhardt-Medium.otf"),
-        new MkdirAndSymlinkFileStep(
-            "java/src/com/facebook/base/assets2/fonts/Theinhardt-Regular.otf",
-            BIN_DIR + "/java/src/com/facebook/base/__assets_apk__/fonts/Theinhardt-Regular.otf"));
-    MoreAsserts.assertListEquals(expectedCommands, commands.build());
-  }
-
-  private JavaLibraryRule createAndroidLibraryRule(String buildTarget,
+  static JavaLibraryRule createAndroidLibraryRule(String buildTarget,
       BuildRuleResolver ruleResolver,
       String resDirectory,
       String assetDirectory,
@@ -531,7 +306,7 @@ public class AndroidBinaryRuleTest {
   @Test
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.<String>of() /* cpuFilters */,
+        ImmutableSet.<TargetCpuType>of() /* cpuFilters */,
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
@@ -541,7 +316,7 @@ public class AndroidBinaryRuleTest {
   @Test
   public void testCopyNativeLibraryCommand() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.of("armv7"),
+        ImmutableSet.of(TargetCpuType.ARMV7),
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
@@ -552,7 +327,7 @@ public class AndroidBinaryRuleTest {
   @Test
   public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.of("arm", "x86"),
+        ImmutableSet.of(TargetCpuType.ARM, TargetCpuType.X86),
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
@@ -588,7 +363,7 @@ public class AndroidBinaryRuleTest {
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-      ImmutableSet<String> cpuFilters,
+      ImmutableSet<TargetCpuType> cpuFilters,
       String sourceDir,
       String destinationDir,
       ImmutableList<String> expectedCommandDescriptions) {
@@ -616,23 +391,10 @@ public class AndroidBinaryRuleTest {
       }
     }
 
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    AndroidBinaryRule.Builder builder = AndroidBinaryRule.newAndroidBinaryRuleBuilder(
-        new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-        .setManifest(new FileSourcePath("AndroidManifest.xml"))
-        .setKeystore(addKeystoreRule(ruleResolver))
-        .setTarget("Google Inc:Google APIs:16");
-
-    for (String filter: cpuFilters) {
-      builder.addCpuFilter(filter);
-    }
-
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    AndroidBinaryRule buildRule = ruleResolver.buildAndAddToIndex(builder);
-    buildRule.copyNativeLibrary(sourceDir, destinationDir, commands);
-
-    ImmutableList<Step> steps = commands.build();
+    // Invoke copyNativeLibrary to populate the steps.
+    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+    AndroidBinaryRule.copyNativeLibrary(sourceDir, destinationDir, cpuFilters, stepsBuilder);
+    ImmutableList<Step> steps = stepsBuilder.build();
 
     assertEquals(steps.size(), expectedCommandDescriptions.size());
     ExecutionContext context = createMock(ExecutionContext.class);

@@ -21,7 +21,9 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
@@ -77,11 +79,14 @@ public class AndroidBinaryGraphEnhancerTest {
     // is //java/com/example:lib, and that //java/com/example:dep2 is in its no_dx list.
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.<BuildRule>of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
-    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+    BuildRuleParams originalParams = new BuildRuleParams(
+        new BuildTarget("//java/com/example", "apk"),
         originalDeps,
-        buildRulesToExcludeFromDex,
+        /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
         pathRelativizer,
         ruleKeyBuilderFactory);
+    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        originalParams, buildRulesToExcludeFromDex);
     ImmutableSet<IntermediateDexRule> depsForPreDexing = graphEnhancer.createDepsForPreDexing(
         ruleResolver);
     assertEquals(

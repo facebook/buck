@@ -39,7 +39,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.InstallableBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -52,12 +51,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.DefaultDirectoryTraverser;
-import com.facebook.buck.util.DirectoryTraversal;
-import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
@@ -85,7 +80,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -132,7 +126,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       return this == RELEASE;
     }
 
-    private final boolean isCrunchPngFiles() {
+    final boolean isCrunchPngFiles() {
       return this == RELEASE;
     }
   }
@@ -171,6 +165,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ImmutableSet<IntermediateDexRule> preDexDeps;
   private final UberRDotJavaBuildable uberRDotJavaBuildable;
+  private final AaptPackageResources aaptPackageResourcesBuildable;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
@@ -202,6 +197,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<TargetCpuType> cpuFilters,
       Set<IntermediateDexRule> preDexDeps,
       UberRDotJavaBuildable uberRDotJavaBuildable,
+      AaptPackageResources aaptPackageResourcesBuildable,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
       AndroidResourceDepsFinder androidResourceDepsFinder,
@@ -226,6 +222,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.preDexDeps = ImmutableSet.copyOf(preDexDeps);
     this.uberRDotJavaBuildable = Preconditions.checkNotNull(uberRDotJavaBuildable);
+    this.aaptPackageResourcesBuildable = Preconditions.checkNotNull(aaptPackageResourcesBuildable);
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
@@ -288,10 +285,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return resourceCompressionMode.isCompressResources();
   }
 
-  private boolean isStoreStringsAsAssets() {
-    return resourceCompressionMode.isStoreStringsAsAssets();
-  }
-
   public ResourceCompressionMode getResourceCompressionMode() {
     return resourceCompressionMode;
   }
@@ -338,16 +331,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @VisibleForTesting
-  void copyNativeLibrary(String sourceDir,
+  static void copyNativeLibrary(String sourceDir,
       String destinationDir,
+      ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableList.Builder<Step> steps) {
     Path sourceDirPath = Paths.get(sourceDir);
     Path destinationDirPath = Paths.get(destinationDir);
 
-    if (getCpuFilters().isEmpty()) {
+    if (cpuFilters.isEmpty()) {
       steps.add(new CopyStep(sourceDirPath, destinationDirPath, true));
     } else {
-      for (TargetCpuType cpuType: getCpuFilters()) {
+      for (TargetCpuType cpuType : cpuFilters) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
 
@@ -413,29 +407,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
-    // commands to ensure that it is available at the desired path.
-    steps.add(new MkdirAndSymlinkFileStep(getManifest().resolve(context).toString(),
-        getAndroidManifestXml()));
-
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies();
-
-    // Add the steps for the aapt_package command. This method returns data that the ApkBuilder
-    // needs to create a final, unsigned APK.
-    addAaptPackageSteps(steps, transitiveDependencies);
 
     // Copy the transitive closure of files in native_libs to a single directory, if any.
     ImmutableSet<String> nativeLibraryDirectories;
     if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
-      ImmutableSet.Builder<String> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
       String pathForNativeLibs = getPathForNativeLibs();
       String libSubdirectory = pathForNativeLibs + "/lib";
-      nativeLibraryDirectoriesBuilder.add(libSubdirectory);
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
       for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
-        copyNativeLibrary(nativeLibDir, libSubdirectory, steps);
+        copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
       }
-      nativeLibraryDirectories = nativeLibraryDirectoriesBuilder.build();
+      nativeLibraryDirectories = ImmutableSet.of(libSubdirectory);
     } else {
       nativeLibraryDirectories = ImmutableSet.of();
     }
@@ -449,7 +432,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         dexTransitiveDependencies,
         uberRDotJavaBuildable.getResDirectories(),
         nativeLibraryDirectories,
-        getResourceApkPath(),
+        aaptPackageResourcesBuildable.getResourceApkPath(),
         getUnsignedApkPath());
 
     // Sign the APK.
@@ -486,96 +469,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(success);
 
     return steps.build();
-  }
-
-  /** Packages the resources using {@code aapt}. */
-  private void addAaptPackageSteps(ImmutableList.Builder<Step> steps,
-      final AndroidTransitiveDependencies transitiveDependencies) {
-    // If the strings should be stored as assets, then we need to create the .fbstr bundles.
-    final ImmutableSet<String> resDirectories = uberRDotJavaBuildable.getResDirectories();
-    if (!resDirectories.isEmpty() && isStoreStringsAsAssets()) {
-      Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
-      steps.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
-      steps.add(new CompileStringsStep(
-          uberRDotJavaBuildable.getNonEnglishStringFiles(),
-          Paths.get(uberRDotJavaBuildable.getPathToGeneratedRDotJavaSrcFiles()),
-          tmpStringsDirPath));
-    }
-
-    // Copy the transitive closure of files in assets to a single directory, if any.
-    Step collectAssets = new Step() {
-      @Override
-      public int execute(ExecutionContext context) {
-        // This must be done in a Command because the files and directories that are specified may
-        // not exist at the time this Command is created because the previous Commands have not run
-        // yet.
-        ImmutableList.Builder<Step> commands = ImmutableList.builder();
-        try {
-          createAllAssetsDirectory(
-              transitiveDependencies.assetsDirectories,
-              commands,
-              new DefaultDirectoryTraverser());
-        } catch (IOException e) {
-          context.logError(e, "Error creating all assets directory in %s.", getBuildTarget());
-          return 1;
-        }
-
-        for (Step command : commands.build()) {
-          int exitCode = command.execute(context);
-          if (exitCode != 0) {
-            throw new HumanReadableException("Error running " + command.getDescription(context));
-          }
-        }
-
-        return 0;
-      }
-
-      @Override
-      public String getShortName() {
-        return "symlink_assets";
-      }
-
-      @Override
-      public String getDescription(ExecutionContext context) {
-        return getShortName();
-      }
-    };
-    steps.add(collectAssets);
-
-    Optional<String> assetsDirectory;
-    if (transitiveDependencies.assetsDirectories.isEmpty()
-        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
-        && !isStoreStringsAsAssets()) {
-      assetsDirectory = Optional.absent();
-    } else {
-      assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
-    }
-
-    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
-      String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
-      steps.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
-      for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
-        copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, steps);
-      }
-    }
-
-    if (isStoreStringsAsAssets()) {
-      Path stringAssetsDir = Paths.get(assetsDirectory.get()).resolve("strings");
-      steps.add(new MakeCleanDirectoryStep(stringAssetsDir));
-      steps.add(new CopyStep(
-          getPathForTmpStringAssetsDirectory(),
-          stringAssetsDir,
-          /* shouldRecurse */ true));
-    }
-
-    steps.add(new MkdirStep(outputGenDirectory));
-
-    steps.add(new AaptStep(
-        getAndroidManifestXml(),
-        resDirectories,
-        assetsDirectory,
-        getResourceApkPath(),
-        packageType.isCrunchPngFiles()));
   }
 
   private void addDxAndApkBuilderSteps(BuildContext context,
@@ -716,49 +609,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(apkBuilderCommand);
   }
 
-  /**
-   * Given a set of assets directories to include in the APK (which may be empty), return the path
-   * to the directory that contains the union of all the assets. If any work needs to be done to
-   * create such a directory, the appropriate commands should be added to the {@code commands}
-   * list builder.
-   * <p>
-   * If there are no assets (i.e., {@code assetsDirectories} is empty), then the return value will
-   * be an empty {@link Optional}.
-   */
-  @VisibleForTesting
-  Optional<String> createAllAssetsDirectory(
-      Set<String> assetsDirectories,
-      ImmutableList.Builder<Step> steps,
-      DirectoryTraverser traverser) throws IOException {
-    if (assetsDirectories.isEmpty()) {
-      return Optional.absent();
-    }
-
-    // Due to a limitation of aapt, only one assets directory can be specified, so if multiple are
-    // specified in Buck, then all of the contents must be symlinked to a single directory.
-    String destination = getPathToAllAssetsDirectory();
-    steps.add(new MakeCleanDirectoryStep(destination));
-    final ImmutableMap.Builder<String, File> allAssets = ImmutableMap.builder();
-
-    File destinationDirectory = new File(destination);
-    for (String assetsDirectory : assetsDirectories) {
-      traverser.traverse(new DirectoryTraversal(new File(assetsDirectory)) {
-        @Override
-        public void visit(File file, String relativePath) {
-          allAssets.put(relativePath, file);
-        }
-      });
-    }
-
-    for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
-      steps.add(new MkdirAndSymlinkFileStep(
-          MorePaths.newPathInstance(entry.getValue()).toString(),
-          MorePaths.newPathInstance(destinationDirectory + "/" + entry.getKey()).toString()));
-    }
-
-    return Optional.of(destination);
-  }
-
   public AndroidTransitiveDependencies findTransitiveDependencies() {
     return androidResourceDepsFinder.getAndroidTransitiveDependencies();
   }
@@ -790,15 +640,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         getBuildTarget().getShortName()));
   }
 
-  @VisibleForTesting
-  String getPathToAllAssetsDirectory() {
-    return getBinPath("__assets_%s__");
-  }
-
-  private Path getPathForTmpStringAssetsDirectory() {
-    return Paths.get(getBinPath("__strings_%s__"));
-  }
-
   /**
    * All native libs are copied to this directory before running aapt.
    */
@@ -808,12 +649,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   public Keystore getKeystore() {
     return keystore;
-  }
-
-  public String getResourceApkPath() {
-    return String.format("%s%s.unsigned.ap_",
-        outputGenDirectory,
-        getBuildTarget().getShortName());
   }
 
   public String getUnsignedApkPath() {
@@ -830,18 +665,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   /** The APK at this path will have compressed resources, but will not be zipaligned. */
   private String getCompressedResourcesApkPath() {
     return getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".compressed.apk");
-  }
-
-  /**
-   * Buck does not require the manifest to be named AndroidManifest.xml, but commands such as aapt
-   * do. For this reason, we symlink the path to {@link #getManifest()} to the path returned by
-   * this method, whose name is always "AndroidManifest.xml".
-   * <p>
-   * Therefore, commands created by this method should use this method instead of
-   * {@link #getManifest()}.
-   */
-  private String getAndroidManifestXml() {
-    return getBinPath("__manifest_%s__/AndroidManifest.xml");
   }
 
   /**
@@ -897,7 +720,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Generate a file of ProGuard config options using aapt.
     String generatedProGuardConfig = proguardDirectory + "/proguard.txt";
     GenProGuardConfigStep genProGuardConfig = new GenProGuardConfigStep(
-        getAndroidManifestXml(),
+        aaptPackageResourcesBuildable.getAndroidManifestXml(),
         resDirectories,
         generatedProGuardConfig);
     steps.add(genProGuardConfig);
@@ -1159,16 +982,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       ImmutableSet<IntermediateDexRule> preDexDeps;
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex =
           buildTargetsToExcludeFromDexBuilder.build();
+      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+          originalParams, buildTargetsToExcludeFromDex);
       if (!disablePreDex
           && PackageType.DEBUG.equals(packageType)
           && !dexSplitMode.isShouldSplitDex() // TODO(mbolin): Support predex for split dex.
           && !preprocessJavaClassesBash.isPresent() // TODO(mbolin): Support predex post-preprocess.
           ) {
-        AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-            originalDeps,
-            buildTargetsToExcludeFromDex,
-            originalParams.getPathRelativizer(),
-            originalParams.getRuleKeyBuilderFactory());
         preDexDeps = graphEnhancer.createDepsForPreDexing(ruleResolver);
       } else {
         preDexDeps = ImmutableSet.of();
@@ -1194,38 +1014,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           return UberRDotJavaUtil.getAndroidResourceDepsUnsorted(originalDeps);
         }
       };
-      BuildTarget buildTargetForResources = new BuildTarget(
-          getBuildTarget().getBaseName(),
-          getBuildTarget().getShortName(),
-          "uber_r_dot_java");
-      BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
-          UberRDotJavaBuildable
-              .newUberRDotJavaBuildableBuilder(new DefaultBuildRuleBuilderParams(
-                  originalParams.getPathRelativizer(),
-                  originalParams.getRuleKeyBuilderFactory()))
-              .setBuildTarget(buildTargetForResources)
-              .setAllParams(buildTargetForResources,
-                  resourceCompressionMode,
-                  resourceFilter,
-                  androidResourceDepsFinder));
-      UberRDotJavaBuildable uberRDotJavaBuildable = (UberRDotJavaBuildable) uberRDotJavaBuildRule
-          .getBuildable();
 
-      // Must create a new BuildRuleParams to supersede the one built by
-      // createBuildRuleParams(ruleResolver).
-      ImmutableSortedSet<BuildRule> totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(originalDeps)
-          .addAll(preDexDeps)
-          .add(uberRDotJavaBuildRule)
-          .build();
-      BuildRuleParams finalParams = new BuildRuleParams(getBuildTarget(),
-          totalDeps,
-          originalParams.getVisibilityPatterns(),
-          originalParams.getPathRelativizer(),
-          originalParams.getRuleKeyBuilderFactory());
+      AndroidBinaryGraphEnhancer.Result result = graphEnhancer.addBuildablesToCreateAaptResources(ruleResolver,
+          resourceCompressionMode,
+          resourceFilter,
+          androidResourceDepsFinder,
+          manifest,
+          packageType,
+          cpuFilters.build(),
+          preDexDeps);
 
       return new AndroidBinaryRule(
-          finalParams,
+          result.getParams(),
           manifest,
           target,
           getBuildTargetsAsBuildRules(ruleResolver, classpathDepsBuilder.build()),
@@ -1241,7 +1041,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           primaryDexClassesFile,
           cpuFilters.build(),
           preDexDeps,
-          uberRDotJavaBuildable,
+          result.getUberRDotJavaBuildable(),
+          result.getAaptPackageResources(),
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,
           androidResourceDepsFinder,

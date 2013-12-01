@@ -147,13 +147,16 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
     return getBuildOutput().nonEnglishStringFiles;
   }
 
+  BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
+
   @Override
   public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
       throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    AndroidTransitiveDependencies transitiveDependencies = androidResourceDepsFinder
-        .getAndroidTransitiveDependencies();
+    AndroidTransitiveDependencies transitiveDependencies = getAndroidTransitiveDependencies();
     final Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
     final ImmutableSet<String> resDirectories;
     final Supplier<ImmutableSet<String>> nonEnglishStringFiles;
@@ -231,11 +234,15 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
     }
   }
 
+  AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
+    return androidResourceDepsFinder.getAndroidTransitiveDependencies();
+  }
+
   private boolean requiresResourceFilter() {
     return resourceFilter.isEnabled() || isStoreStringsAsAssets();
   }
 
-  private boolean isStoreStringsAsAssets() {
+  boolean isStoreStringsAsAssets() {
     return resourceCompressionMode.isStoreStringsAsAssets();
   }
 
