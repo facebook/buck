@@ -64,6 +64,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
   private AndroidInstrumentationApk(BuildRuleParams buildRuleParams,
       SourcePath manifest,
       AndroidBinaryRule apkUnderTest,
+      ImmutableSet<BuildRule> buildRulesToExcludeFromDex,
       UberRDotJavaBuildable uberRDotJavaBuildable,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk,
@@ -74,11 +75,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         classpathDepsForInstrumentationApk,
         apkUnderTest.getKeystore(),
         PackageType.INSTRUMENTED,
-        // Do not include the classes that will already be in the classes.dex of the APK under test.
-        ImmutableSet.<BuildRule>builder()
-            .addAll(apkUnderTest.getBuildRulesToExcludeFromDex())
-            .addAll(Classpaths.getClasspathEntries(apkUnderTest.getClasspathDeps()).keySet())
-            .build(),
+        buildRulesToExcludeFromDex,
         // Do not split the test apk even if the tested apk is split
         new DexSplitMode(
             /* shouldSplitDex */ false,
@@ -154,9 +151,13 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       AndroidTransitiveDependencyGraph androidTransitiveDependencyGraph =
           new AndroidTransitiveDependencyGraph(classpathDepsForInstrumentationApk);
 
+      ImmutableSet<BuildRule> buildRulesToExcludeFromDex = ImmutableSet.<BuildRule>builder()
+          .addAll(underlyingApk.getBuildRulesToExcludeFromDex())
+          .addAll(Classpaths.getClasspathEntries(underlyingApk.getClasspathDeps()).keySet())
+          .build();
       AndroidResourceDepsFinder androidResourceDepsFinder = new AndroidResourceDepsFinder(
           androidTransitiveDependencyGraph,
-          underlyingApk.getBuildRulesToExcludeFromDex()) {
+          buildRulesToExcludeFromDex) {
         @Override
         protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
           // Filter out the AndroidResourceRules that are needed by this APK but not the APK under test.
@@ -217,6 +218,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       return new AndroidInstrumentationApk(finalParams,
           manifest,
           underlyingApk,
+          buildRulesToExcludeFromDex,
           uberRDotJavaBuildable,
           androidResourceDepsFinder,
           getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()),
