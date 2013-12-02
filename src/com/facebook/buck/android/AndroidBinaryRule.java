@@ -426,6 +426,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Create the .dex files and create the unsigned APK using ApkBuilder.
     AndroidDexTransitiveDependencies dexTransitiveDependencies =
         findDexTransitiveDependencies();
+    String signedApkPath = getSignedApkPath();
     addDxAndApkBuilderSteps(context,
         steps,
         transitiveDependencies,
@@ -433,19 +434,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         uberRDotJavaBuildable.getResDirectories(),
         nativeLibraryDirectories,
         aaptPackageResourcesBuildable.getResourceApkPath(),
-        getUnsignedApkPath());
-
-    // Sign the APK.
-    String signedApkPath = getSignedApkPath();
-    SignApkStep signApkStep = new SignApkStep(
-        keystore.getPathToStore(),
-        keystore.getPathToPropertiesFile(),
-        getUnsignedApkPath(),
         signedApkPath);
-    steps.add(signApkStep);
 
     String apkToAlign;
-
     // Optionally, compress the resources file in the .apk.
     if (this.isCompressResources()) {
       String compressedApkPath = getCompressedResourcesApkPath();
@@ -605,7 +596,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         nativeLibraryDirectories,
         secondaryDexZips.build(),
         dexTransitiveDependencies.pathsToThirdPartyJars,
-        false);
+        keystore.getPathToStore(),
+        keystore.getPathToPropertiesFile(),
+        /* debugMode */ false);
     steps.add(apkBuilderCommand);
   }
 

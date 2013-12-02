@@ -23,6 +23,7 @@ import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -31,13 +32,30 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 /**
  * Merges resources into a final APK.  This code is based off of the now deprecated apkbuilder tool:
  * https://android.googlesource.com/platform/sdk/+/fd30096196e3747986bdf8a95cc7713dd6e0b239%5E/sdkmanager/libs/sdklib/src/main/java/com/android/sdklib/build/ApkBuilderMain.java
  */
 public class ApkBuilderStep implements Step {
+
+  /**
+   * The type of a keystore created via the {@code jarsigner} command in Sun/Oracle Java.
+   * See http://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#KeyStore.
+   */
+  private static final String JARSIGNER_KEY_STORE_TYPE = "jks";
 
   private final String resourceApk;
   private final String dexFile;
@@ -46,6 +64,8 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<String> nativeLibraryDirectories;
   private final ImmutableSet<String> zipFiles;
   private final ImmutableSet<String> jarFilesThatMayContainResources;
+  private final String pathToKeystore;
+  private final String pathToKeystorePropertiesFile;
   private final boolean debugMode;
 
   /**
@@ -57,6 +77,9 @@ public class ApkBuilderStep implements Step {
    * @param nativeLibraryDirectories List of paths to native directories.
    * @param zipFiles List of paths to zipfiles to be included into the apk.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
+   * @param pathToKeystore Path to the keystore used to sign the APK.
+   * @param pathToKeystorePropertiesFile Path to a {@code .properties} file that contains
+   *     information about the keystore used to sign the APK.
    */
   public ApkBuilderStep(
       String resourceApk,
@@ -66,6 +89,8 @@ public class ApkBuilderStep implements Step {
       ImmutableSet<String> nativeLibraryDirectories,
       ImmutableSet<String> zipFiles,
       ImmutableSet<String> jarFilesThatMayContainResources,
+      String pathToKeystore,
+      String pathToKeystorePropertiesFile,
       boolean debugMode) {
     this.resourceApk = Preconditions.checkNotNull(resourceApk);
     this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
@@ -75,6 +100,8 @@ public class ApkBuilderStep implements Step {
     this.jarFilesThatMayContainResources =
         Preconditions.checkNotNull(jarFilesThatMayContainResources);
     this.zipFiles = Preconditions.checkNotNull(zipFiles);
+    this.pathToKeystore = Preconditions.checkNotNull(pathToKeystore);
+    this.pathToKeystorePropertiesFile = Preconditions.checkNotNull(pathToKeystorePropertiesFile);
     this.debugMode = debugMode;
   }
 
@@ -87,11 +114,13 @@ public class ApkBuilderStep implements Step {
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     try {
+      PrivateKeyAndCertificate privateKeyAndCertificate = createKeystoreProperties(context);
       ApkBuilder builder = new ApkBuilder(
           projectFilesystem.getFileForRelativePath(pathToOutputApkFile),
           projectFilesystem.getFileForRelativePath(resourceApk),
           projectFilesystem.getFileForRelativePath(dexFile),
-          /* storeOsPath */ null,
+          privateKeyAndCertificate.privateKey,
+          privateKeyAndCertificate.certificate,
           output);
       builder.setDebugMode(debugMode);
       for (String nativeLibraryDirectory : nativeLibraryDirectories) {
@@ -113,16 +142,46 @@ public class ApkBuilderStep implements Step {
 
       // Build the APK
       builder.sealApk();
-    } catch (ApkCreationException e) {
-      throw new HumanReadableException(e.getMessage());
+    } catch (ApkCreationException
+        | CertificateException
+        | IOException
+        | KeyStoreException
+        | NoSuchAlgorithmException
+        | SealedApkException
+        | UnrecoverableKeyException e) {
+      context.logError(e, "Error when creating APK at: %s.", pathToOutputApkFile);
+      return 1;
     } catch (DuplicateFileException e) {
       throw new HumanReadableException(
           String.format("Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
               e.getArchivePath(), e.getFile1(), e.getFile2()));
-    } catch (SealedApkException e) {
-      throw new HumanReadableException(e.getMessage());
     }
     return 0;
+  }
+
+  private PrivateKeyAndCertificate createKeystoreProperties(ExecutionContext context)
+      throws CertificateException,
+          IOException,
+          KeyStoreException,
+          NoSuchAlgorithmException,
+          UnrecoverableKeyException {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
+        pathToKeystore,
+        pathToKeystorePropertiesFile,
+        projectFilesystem);
+    KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
+    InputStream inputStream = projectFilesystem.getInputSupplierForRelativePath(pathToKeystore)
+        .getInput();
+    char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
+    keystore.load(inputStream, keystorePassword);
+
+    String alias = keystoreProperties.getAlias();
+    char[] keyPassword = keystoreProperties.getKeypass().toCharArray();
+    Key key = keystore.getKey(alias, keyPassword);
+    Certificate certificate = keystore.getCertificate(alias);
+
+    return new PrivateKeyAndCertificate((PrivateKey) key, (X509Certificate) certificate);
   }
 
   @Override
@@ -154,5 +213,15 @@ public class ApkBuilderStep implements Step {
               }
             })),
         dexFile);
+  }
+
+  private static class PrivateKeyAndCertificate {
+    private final PrivateKey privateKey;
+    private final X509Certificate certificate;
+
+    PrivateKeyAndCertificate(PrivateKey privateKey, X509Certificate certificate) {
+      this.privateKey = Preconditions.checkNotNull(privateKey);
+      this.certificate = Preconditions.checkNotNull(certificate);
+    }
   }
 }
