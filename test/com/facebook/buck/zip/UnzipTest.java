@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-public class UnzipStepTest {
+public class UnzipTest {
   private final byte[] DUMMY_FILE_CONTENTS = "BUCK Unzip Test String!\nNihao\n".getBytes();
 
   @Rule
