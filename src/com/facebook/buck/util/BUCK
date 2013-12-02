@@ -53,6 +53,7 @@ java_library(
 
 NETWORK_SRCS = [
   'BlockingHttpEndpoint.java',
+  'HttpResponse.java',
   'HttpEndpoint.java',
 ]
 java_library(

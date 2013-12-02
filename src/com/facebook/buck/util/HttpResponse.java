@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2012-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,13 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.util;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.base.Preconditions;
 
-import java.io.IOException;
+public class HttpResponse {
 
-public interface HttpEndpoint {
-  ListenableFuture<HttpResponse> post(String content) throws IOException;
+  private final String postBody;
+  private final String responseBody;
+
+  public HttpResponse(String body, String response) {
+    this.postBody = Preconditions.checkNotNull(body);
+    this.responseBody = Preconditions.checkNotNull(response);
+  }
+
+  public String getPostBody() {
+    return postBody;
+  }
+
+  public String getResponseBody() {
+    return responseBody;
+  }
 }

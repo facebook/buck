@@ -15,7 +15,8 @@
  */
 package com.facebook.buck.util;
 
-import com.google.common.io.ByteStreams;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -24,9 +25,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -65,24 +68,24 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
   }
 
   @Override
-  public ListenableFuture<?> post(String content) throws IOException {
+  public ListenableFuture<HttpResponse> post(String content) throws IOException {
     HttpURLConnection connection = buildConnection("POST");
     connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
     return send(connection, content);
   }
 
-  private ListenableFuture<?> send(final HttpURLConnection connection, final String content) {
-    return requestService.submit(new Runnable() {
-      @Override
-      public void run() {
+  private ListenableFuture<HttpResponse> send(final HttpURLConnection connection, final String content) {
+    return requestService.submit(new Callable<HttpResponse>() {
+      public HttpResponse call() {
         try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
           out.writeBytes(content);
           out.flush();
           out.close();
-          try (InputStream response = connection.getInputStream()) {
-            ByteStreams.copy(response, ByteStreams.nullOutputStream());
-          }
-        }  catch (IOException e) {
+          InputStream inputStream = connection.getInputStream();
+          String response = CharStreams.toString(
+              new InputStreamReader(inputStream, Charsets.UTF_8));
+          return new HttpResponse(content, response);
+        } catch (IOException e) {
           throw new RuntimeException(e);
         }
       }
