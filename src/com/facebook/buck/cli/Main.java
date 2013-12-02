@@ -390,7 +390,8 @@ public final class Main {
               config,
               getWebServerIfDaemon(context),
               executionEnvironment,
-              consoleListener);
+              consoleListener,
+              console);
 
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
@@ -489,7 +490,8 @@ public final class Main {
       BuckConfig config,
       Optional<WebServer> webServer,
       ExecutionEnvironment executionEnvironment,
-      AbstractConsoleEventBusListener consoleEventBusListener) {
+      AbstractConsoleEventBusListener consoleEventBusListener,
+      Console console) {
 
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
@@ -502,6 +504,7 @@ public final class Main {
     }
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
+
 
 
 

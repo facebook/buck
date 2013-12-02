@@ -79,6 +79,7 @@ java_library(
   ],
   visibility = [
     '//test/com/facebook/buck/cli:',
+    '//src/com/facebook/buck/event:event',
     '//test/com/facebook/buck/android:android',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//src/com/facebook/buck/event:dependencies-for-external-projects-inner',
