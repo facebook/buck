@@ -26,6 +26,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -166,7 +167,7 @@ public class ConstructorArgMarshallerTest {
         )),
         dto);
 
-    assertEquals(new FileSourcePath("cheese.txt"), dto.filePath);
+    assertEquals(new FileSourcePath("example/path/cheese.txt"), dto.filePath);
     assertEquals(new BuildTargetSourcePath(target), dto.targetPath);
   }
 
@@ -463,6 +464,35 @@ public class ConstructorArgMarshallerTest {
         dto);
 
     assertEquals(rule, dto.rule);
+  }
+
+  @Test
+  public void shouldResolveCollectionOfSourcePaths() {
+    class Dto {
+      public ImmutableSortedSet<SourcePath> srcs;
+    }
+
+    BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
+    BuildRule rule = new FakeBuildRule(new BuildRuleType("py"), target);
+    BuildRuleResolver resolver = new BuildRuleResolver(ImmutableMap.of(target, rule));
+
+    Dto dto = new Dto();
+    marshaller.populate(
+        resolver,
+        buildRuleFactoryParams(
+            ImmutableMap.<String, Object>of("srcs",
+                ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py"))),
+        dto);
+
+    ImmutableSet<String> observedValues = FluentIterable.from(dto.srcs)
+        .transform(SourcePath.TO_REFERENCE)
+        .toSet();
+    assertEquals(
+        ImmutableSet.of(
+            "example/path/main.py",
+            "example/path/lib/__init__.py",
+            "example/path/lib/manifest.py"),
+        observedValues);
   }
 
   public BuildRuleFactoryParams buildRuleFactoryParams(Map<String, Object> args) {

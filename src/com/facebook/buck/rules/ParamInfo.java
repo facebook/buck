@@ -287,7 +287,7 @@ class ParamInfo implements Comparable<ParamInfo> {
         return new BuildTargetSourcePath(target);
       }
       Path path = asNormalizedPath(value);
-      return new FileSourcePath(pathRelativeToProjectRoot.relativize(path).toString());
+      return new FileSourcePath(path.toString());
     }
 
     if (value instanceof Number) {
