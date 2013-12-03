@@ -61,6 +61,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       Optional<String> manifestFile) {
     super(buildRuleParams,
         srcs,
+        ImmutableSortedSet.<BuildRule>of(),
         resources,
         proguardConfig,
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),

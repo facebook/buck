@@ -89,6 +89,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       ImmutableSet<JavaLibraryRule> sourceUnderTest) {
     super(buildRuleParams,
         srcs,
+        ImmutableSortedSet.<BuildRule>of(),
         resources,
         proguardConfig,
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),

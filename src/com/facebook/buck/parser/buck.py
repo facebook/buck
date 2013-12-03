@@ -216,6 +216,7 @@ def java_library(
     target='6',
     proguard_config=None,
     deps=[],
+    compile_deps=[],
     visibility=[],
     build_env=None):
   add_rule({
@@ -229,6 +230,7 @@ def java_library(
     'target' : target,
     'proguard_config' : proguard_config,
     'deps' : deps + exported_deps,
+    'compile_deps' : compile_deps,
     'visibility' : visibility,
   }, build_env)
 
