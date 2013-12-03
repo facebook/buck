@@ -12,6 +12,7 @@ java_library(
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/rules:rules',
     '//test/com/facebook/buck/rules:testutil',
   ],

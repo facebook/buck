@@ -236,6 +236,12 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       return this;
     }
 
+    @Override
+    public Builder setBuildTarget(BuildTarget buildTarget) {
+      super.setBuildTarget(buildTarget);
+      return this;
+    }
+
     public Builder addClasspathDep(BuildTarget classpathDep) {
       this.classpathDeps.add(classpathDep);
       addDep(classpathDep);

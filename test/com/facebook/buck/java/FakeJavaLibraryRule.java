@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -36,6 +37,15 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private ImmutableSortedSet<String> srcs = ImmutableSortedSet.of();
+
+  public FakeJavaLibraryRule(
+      BuildTarget target,
+      ImmutableSortedSet<BuildRule> deps) {
+    this(BuildRuleType.JAVA_LIBRARY,
+        target,
+        deps,
+        ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
+  }
 
   public FakeJavaLibraryRule(
       BuildRuleType type,
@@ -66,7 +76,14 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
 
   @Override
   public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
-    return ImmutableSetMultimap.of();
+    return ImmutableSetMultimap.of((JavaLibraryRule) this, getPathToOutputFile());
+  }
+
+  @Override
+  public String getPathToOutputFile() {
+    return BuckConstant.GEN_DIR + "/" +
+        getBuildTarget().getBasePathWithSlash() +
+        getBuildTarget().getShortName() + ".jar";
   }
 
   @Override
