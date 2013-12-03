@@ -19,16 +19,14 @@ package com.facebook.buck.python;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SrcsAttributeBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -37,6 +35,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -49,19 +48,17 @@ public class PythonLibrary extends AbstractBuildable {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
   private final BuildTarget buildTarget;
-  // TODO(simons): Convert to using Paths
-  private final ImmutableSortedSet<String> srcs;
+  private final ImmutableSortedSet<SourcePath> srcs;
   private final Path pythonPathDirectory;
 
   protected PythonLibrary(BuildRuleParams buildRuleParams,
-                          ImmutableSortedSet<String> srcs) {
+      ImmutableSortedSet<SourcePath> srcs) {
+    this.buildTarget = buildRuleParams.getBuildTarget();
+    Preconditions.checkNotNull(srcs);
     Preconditions.checkArgument(!srcs.isEmpty(),
         "Must specify srcs for %s.",
         buildRuleParams.getBuildTarget());
-
-    this.buildTarget = buildRuleParams.getBuildTarget();
-    this.srcs = ImmutableSortedSet.copyOf(srcs);
-
+    this.srcs = srcs;
     this.pythonPathDirectory = getPathToPythonPathDirectory();
   }
 
@@ -73,7 +70,8 @@ public class PythonLibrary extends AbstractBuildable {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder.set("srcs", srcs);
+    return builder
+        .set("srcs", ImmutableSortedSet.copyOf(Iterables.transform(srcs, SourcePath.TO_REFERENCE)));
   }
 
   private Path getPathToPythonPathDirectory() {
@@ -87,15 +85,15 @@ public class PythonLibrary extends AbstractBuildable {
     return "__pylib_" + buildTarget.getShortName();
   }
 
-  public ImmutableSortedSet<String> getPythonSrcs() {
-    return srcs;
-  }
-
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
-    return srcs;
+    return SourcePaths.filterInputsToCompareToOutput(srcs);
   }
 
+  /**
+   * @return The directory that must be added to the {@code PYTHONPATH} to include the sources from
+   *     this rule when running Python.
+   */
   public Path getPythonPathDirectory() {
     return pythonPathDirectory;
   }
@@ -113,8 +111,8 @@ public class PythonLibrary extends AbstractBuildable {
     ImmutableSortedSet.Builder<Path> directories = ImmutableSortedSet.naturalOrder();
     ImmutableList.Builder<Step> symlinkSteps = ImmutableList.builder();
 
-    for (String src : srcs) {
-      Path srcPath = Paths.get(src);
+    for (SourcePath src : srcs) {
+      Path srcPath = src.resolve(context);
       Path targetPath = pythonPathDirectory.resolve(srcPath);
 
       directories.add(targetPath.getParent());
@@ -138,34 +136,5 @@ public class PythonLibrary extends AbstractBuildable {
   @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
-  }
-
-  public static Builder newPythonLibraryBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildable.Builder
-      implements SrcsAttributeBuilder {
-    protected ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public Builder addSrc(String src) {
-      srcs.add(src);
-      return this;
-    }
-
-    @Override
-    public BuildRuleType getType() {
-      return BuildRuleType.PYTHON_LIBRARY;
-    }
-
-    @Override
-    protected PythonLibrary newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new PythonLibrary(params, srcs.build());
-    }
   }
 }

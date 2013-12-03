@@ -505,22 +505,6 @@ def ndk_library(
 
 
 @provide_for_build
-def python_library(
-      name,
-      srcs=[],
-      deps=[],
-      visibility=[],
-      build_env=None):
-  add_rule({
-    'type' : 'python_library',
-    'name' : name,
-    'srcs' : srcs,
-    'deps' : deps,
-    'visibility' : visibility,
-  }, build_env)
-
-
-@provide_for_build
 def python_binary(
     name,
     main=None,

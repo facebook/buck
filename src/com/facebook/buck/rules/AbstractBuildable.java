@@ -52,11 +52,11 @@ public abstract class AbstractBuildable implements Buildable {
     }
   }
 
-  private static class AnonymousBuildRule extends AbstractCachingBuildRule {
+  public static class AnonymousBuildRule extends AbstractCachingBuildRule {
     private final Buildable buildable;
     private final BuildRuleType type;
 
-    protected AnonymousBuildRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
+    public AnonymousBuildRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
       super(buildable, params);
       this.buildable = buildable;
       this.type = type;

@@ -19,17 +19,16 @@ package com.facebook.buck.python;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -61,29 +60,27 @@ public class PythonLibraryTest {
   public void testGetters() {
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         new BuildTarget("//scripts/python", "foo"));
-    ImmutableSortedSet<String> srcs = ImmutableSortedSet.of("");
+    SourcePath src = new FileSourcePath("");
+    ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of(src);
     PythonLibrary pythonLibrary = new PythonLibrary(
         buildRuleParams,
         srcs);
 
     assertTrue(pythonLibrary.getProperties().is(LIBRARY));
-    assertSame(srcs, pythonLibrary.getPythonSrcs());
   }
 
   @Test
   public void testFlattening() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
     BuildTarget pyLibraryTarget = BuildTargetFactory.newInstance("//:py_library");
-    ruleResolver.buildAndAddToIndex(
-        PythonLibrary.newPythonLibraryBuilder(new FakeAbstractBuildRuleBuilderParams())
-            .addSrc("baz.py")
-            .addSrc("foo/__init__.py")
-            .addSrc("foo/bar.py")
-            .setBuildTarget(pyLibraryTarget));
+    ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
+    srcs.add(new FileSourcePath("baz.py"));
+    srcs.add(new FileSourcePath("foo/__init__.py"));
+    srcs.add(new FileSourcePath("foo/bar.py"));
+    PythonLibrary rule = new PythonLibrary(new FakeBuildRuleParams(pyLibraryTarget),
+        srcs.build());
+
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     BuildContext buildContext = createMock(BuildContext.class);
-    PythonLibrary rule = (PythonLibrary)ruleResolver.get(pyLibraryTarget).getBuildable();
     List<Step> steps = rule.getBuildSteps(buildContext, buildableContext);
 
     final String projectRoot = projectRootDir.getRoot().getAbsolutePath();

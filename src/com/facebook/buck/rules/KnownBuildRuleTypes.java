@@ -34,7 +34,7 @@ import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
 import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
 import com.facebook.buck.parser.ProjectConfigRuleFactory;
 import com.facebook.buck.python.PythonBinaryBuildRuleFactory;
-import com.facebook.buck.python.PythonLibraryBuildRuleFactory;
+import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleBuildRuleFactory;
 import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
@@ -59,6 +59,7 @@ public class KnownBuildRuleTypes {
 
   public KnownBuildRuleTypes() {
     register(new ExportFileDescription());
+    register(new PythonLibraryDescription());
 
     // TODO(simons): Consider whether we actually want to have default rules
     register(BuildRuleType.ANDROID_MANIFEST, new AndroidManifestBuildRuleFactory());
@@ -78,7 +79,6 @@ public class KnownBuildRuleTypes {
     register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
     register(BuildRuleType.PREBUILT_NATIVE_LIBRARY, new PrebuiltNativeLibraryBuildRuleFactory());
     register(BuildRuleType.PROJECT_CONFIG, new ProjectConfigRuleFactory());
-    register(BuildRuleType.PYTHON_LIBRARY, new PythonLibraryBuildRuleFactory());
     register(BuildRuleType.PYTHON_BINARY, new PythonBinaryBuildRuleFactory());
     register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
     register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
