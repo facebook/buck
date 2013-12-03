@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.WatchEvents;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +35,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
 
 /** Unit test for {@link ProjectFilesystem}. */
 public class ProjectFilesystemTest {
@@ -58,9 +61,28 @@ public class ProjectFilesystemTest {
   }
 
   @Test
+  public void testIsDirectory() throws IOException {
+    File dir = tmp.newFolder("src");
+    File file = tmp.newFile("BUCK");
+    assertTrue(filesystem.isDirectory(Paths.get(dir.getName())));
+    assertFalse(filesystem.isDirectory(Paths.get(file.getName())));
+  }
+
+  @Test
   public void testMkdirsCanCreateNestedFolders() throws IOException {
     filesystem.mkdirs(new File("foo/bar/baz").toPath());
     assertTrue(new File(tmp.getRoot(), "foo/bar/baz").isDirectory());
+  }
+
+  @Test
+  public void testCreateParentDirs() throws IOException {
+    Path pathRelativeToProjectRoot = Paths.get("foo/bar/baz.txt");
+    filesystem.createParentDirs(pathRelativeToProjectRoot);
+    assertTrue(new File(tmp.getRoot(), "foo").isDirectory());
+    assertTrue(new File(tmp.getRoot(), "foo/bar").isDirectory());
+    assertFalse(
+        "createParentDirs() should create directories, but not the leaf/file part of the path.",
+        new File(tmp.getRoot(), "foo/bar/baz.txt").exists());
   }
 
   @Test(expected = NullPointerException.class)
@@ -114,5 +136,90 @@ public class ProjectFilesystemTest {
 
     String contents = Files.toString(new File(tmp.getRoot(), "lines.txt"), Charsets.UTF_8);
     assertEquals("foo\nbar\nbaz\n", contents);
+  }
+
+  @Test
+  public void testWriteBytesToPath() throws IOException {
+    String content = "Hello, World!";
+    byte[] bytes = content.getBytes();
+    filesystem.writeBytesToPath(bytes, Paths.get("hello.txt"));
+    assertEquals(content, Files.toString(new File(tmp.getRoot(), "hello.txt"), Charsets.UTF_8));
+  }
+
+  @Test
+  public void testCopyFolder() throws IOException {
+    // Build up a directory of dummy files.
+    tmp.newFolder("src");
+    tmp.newFolder("src/com");
+    tmp.newFolder("src/com/example");
+    tmp.newFolder("src/com/example/foo");
+    tmp.newFile("src/com/example/foo/Foo.java");
+    tmp.newFile("src/com/example/foo/package.html");
+    tmp.newFolder("src/com/example/bar");
+    tmp.newFile("src/com/example/bar/Bar.java");
+    tmp.newFile("src/com/example/bar/package.html");
+
+    // Copy the contents of src/ to dest/.
+    tmp.newFolder("dest");
+    filesystem.copyFolder(Paths.get("src"), Paths.get("dest"));
+
+    assertTrue(new File(tmp.getRoot(), "dest/com/example/foo/Foo.java").exists());
+    assertTrue(new File(tmp.getRoot(), "dest/com/example/foo/package.html").exists());
+    assertTrue(new File(tmp.getRoot(), "dest/com/example/bar/Bar.java").exists());
+    assertTrue(new File(tmp.getRoot(), "dest/com/example/bar/package.html").exists());
+  }
+
+  @Test
+  public void testCopyFile() throws IOException {
+    tmp.newFolder("foo");
+    File file = tmp.newFile("foo/bar.txt");
+    String content = "Hello, World!";
+    Files.write(content, file, Charsets.UTF_8);
+
+    filesystem.copyFile(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"));
+    assertEquals(content, Files.toString(new File(tmp.getRoot(), "foo/baz.txt"), Charsets.UTF_8));
+  }
+
+  @Test
+  public void testDeleteFileAtPath() throws IOException {
+    String path = "foo.txt";
+    File file = tmp.newFile(path);
+    assertTrue(file.exists());
+    filesystem.deleteFileAtPath(path);
+    assertFalse(file.exists());
+  }
+
+  @Test
+  public void testCreateContextStringForModifyEvent() throws IOException {
+    File file = tmp.newFile("foo.txt");
+    WatchEvent<Path> modifyEvent = WatchEvents.createPathEvent(file,
+        StandardWatchEventKinds.ENTRY_MODIFY);
+    assertEquals(file.getAbsolutePath(), filesystem.createContextString(modifyEvent));
+  }
+
+  @Test
+  public void testCreateContextStringForOverflowEvent() {
+    WatchEvent<Object> overflowEvent = new WatchEvent<Object>() {
+      @Override
+      public Kind<Object> kind() {
+        return StandardWatchEventKinds.OVERFLOW;
+      }
+
+      @Override
+      public int count() {
+        return 0;
+      }
+
+      @Override
+      public Object context() {
+        return new Object() {
+          @Override
+          public String toString() {
+            return "I am the context string.";
+          }
+        };
+      }
+    };
+    assertEquals("I am the context string.", filesystem.createContextString(overflowEvent));
   }
 }

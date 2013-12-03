@@ -344,13 +344,7 @@ public class ProjectFilesystem {
   }
 
   public void copyFolder(Path source, Path target) throws IOException {
-    MoreFiles.copyRecursively(source, target);
-  }
-
-  public void copyFile(String source, String target) throws IOException {
-    Path targetPath = pathRelativizer.apply(target);
-    Path sourcePath = pathRelativizer.apply(source);
-    java.nio.file.Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+    MoreFiles.copyRecursively(resolve(source), resolve(target));
   }
 
   public void copyFile(Path source, Path target) throws IOException {
