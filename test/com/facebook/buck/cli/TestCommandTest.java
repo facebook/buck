@@ -381,7 +381,7 @@ public class TestCommandTest {
     String expectedStr = Strings.nullToEmpty(expectedValue);
     assertTrue(
       ((firstChild == null) && (expectedStr.equals(""))) ||
-      (expectedStr.equals(firstChild.getNodeValue())));
+      ((firstChild != null) && expectedStr.equals(firstChild.getNodeValue())));
   }
 
   @Test

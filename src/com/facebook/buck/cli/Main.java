@@ -128,7 +128,7 @@ public final class Main {
           console,
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
-          createRuleKeyBuilderFactory(config, hashCache));
+          createRuleKeyBuilderFactory(hashCache));
       this.fileEventBus = new EventBus("file-change-events");
       this.filesystemWatcher = new ProjectFilesystemWatcher(
           projectFilesystem,
@@ -238,7 +238,7 @@ public final class Main {
     }
   }
 
-  @Nullable private static Daemon daemon;
+  @Nullable volatile private static Daemon daemon;
 
   /**
    * Get existing Daemon.
@@ -361,8 +361,7 @@ public final class Main {
           console,
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
-          createRuleKeyBuilderFactory(config,
-              new DefaultFileHashCache(projectFilesystem, console)));
+          createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
     }
 
     // Find and execute command.
@@ -548,12 +547,9 @@ public final class Main {
   }
 
   /**
-   * @param buckConfig This is currently unused, but we plan to use this in the near future so that
-   *     global user configurations can be included when computing keys.
    * @param hashCache A cache of file content hashes, used to avoid reading and hashing input files.
    */
-  @SuppressWarnings("unused")
-  private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(BuckConfig buckConfig, final FileHashCache hashCache) {
+  private static RuleKeyBuilderFactory createRuleKeyBuilderFactory(final FileHashCache hashCache) {
     return new RuleKeyBuilderFactory() {
       @Override
       public Builder newInstance(BuildRule buildRule) {

@@ -115,7 +115,11 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
     getStdOut().print(prompt);
     getStdOut().flush();
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    return expandTilde(br.readLine().trim());
+    String path = br.readLine();
+    if (path != null) {
+      return expandTilde(path.trim());
+    }
+    return "";
   }
 
   /**
