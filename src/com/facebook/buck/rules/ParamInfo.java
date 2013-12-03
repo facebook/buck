@@ -17,8 +17,10 @@
 package com.facebook.buck.rules;
 
 import static com.facebook.buck.model.BuildTarget.BUILD_TARGET_PREFIX;
+import static com.facebook.buck.rules.BuildRuleFactoryParams.GENFILE_PREFIX;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -32,6 +34,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -203,7 +206,7 @@ class ParamInfo implements Comparable<ParamInfo> {
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
    *
-   * @param resolver {@link com.facebook.buck.rules.BuildRuleResolver} used for {@link com.facebook.buck.rules.BuildRule} instances.
+   * @param resolver {@link BuildRuleResolver} used for {@link BuildRule} instances.
    * @param dto The constructor DTO on which the value should be set.
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
@@ -325,6 +328,11 @@ class ParamInfo implements Comparable<ParamInfo> {
         "Expected argument '%s' to be a build target", value);
 
     String param = (String) value;
+
+    if (param.startsWith(GENFILE_PREFIX)) {
+      return null;
+    }
+
     int colon = param.indexOf(':');
     if (colon == 0 && param.length() > 1) {
       return new BuildTarget(
@@ -341,7 +349,19 @@ class ParamInfo implements Comparable<ParamInfo> {
         "Expected argument '%s' to be a string in build file in %s",
         value, pathRelativeToProjectRoot);
 
-    return pathRelativeToProjectRoot.resolve((String) value).normalize();
+    // genfiles point to a path that's already relative to the buck-gen directory. Everything else
+    // is assumed to be a file relative to the pathRelativeToProjectRoot.
+    String path = (String) value;
+    if (path.startsWith(GENFILE_PREFIX)) {
+      path = path.substring(GENFILE_PREFIX.length());
+
+      return Paths.get(BuckConstant.GEN_DIR)
+          .resolve(pathRelativeToProjectRoot)
+          .resolve(path)
+          .normalize();
+    }
+
+    return pathRelativeToProjectRoot.resolve(path).normalize();
   }
 
   @SuppressWarnings("unchecked")

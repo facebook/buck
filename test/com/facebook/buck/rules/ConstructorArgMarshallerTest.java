@@ -289,7 +289,7 @@ public class ConstructorArgMarshallerTest {
     Dto dto = new Dto();
     marshaller.populate(
         ruleResolver,
-        buildRuleFactoryParams(ImmutableMap.<String, Object>of("path", "./foo/../bar/./fish.txt")),
+        buildRuleFactoryParams(ImmutableMap.<String, Object>of("path", "./bar/././fish.txt")),
         dto);
 
     assertEquals(basePath.resolve("bar/fish.txt").normalize(), dto.path);
@@ -493,6 +493,31 @@ public class ConstructorArgMarshallerTest {
             "example/path/lib/__init__.py",
             "example/path/lib/manifest.py"),
         observedValues);
+  }
+
+  @Test
+  public void shouldBeAbleToSetGenfilesProperly() {
+    class Dto {
+      public Path path;
+      public SourcePath sourcePath;
+    }
+
+    String raw = BuildRuleFactoryParams.GENFILE_PREFIX + "Thing.java";
+
+    Dto dto = new Dto();
+    BuildRuleFactoryParams params = buildRuleFactoryParams(
+        ImmutableMap.<String, Object>of(
+            "path", raw,
+            "sourcePath", raw));
+
+    Path expected = Paths.get(params.resolveFilePathRelativeToBuildFileDirectory(raw));
+
+    marshaller.populate(
+        ruleResolver,
+        params,
+        dto);
+
+    assertEquals(expected, dto.path);
   }
 
   public BuildRuleFactoryParams buildRuleFactoryParams(Map<String, Object> args) {
