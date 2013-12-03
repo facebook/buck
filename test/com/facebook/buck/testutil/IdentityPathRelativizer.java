@@ -23,9 +23,8 @@ import java.nio.file.Paths;
 
 public class IdentityPathRelativizer {
 
-  private IdentityPathRelativizer() {
-    // Utility class
-  }
+  /** Utility class: do not instantiate. */
+  private IdentityPathRelativizer() {}
 
   public static Function<String, Path> getIdentityRelativizer() {
     return new Function<String, Path>() {
