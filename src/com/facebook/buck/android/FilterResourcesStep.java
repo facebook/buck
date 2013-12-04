@@ -24,6 +24,7 @@ import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
+import com.facebook.buck.util.Filters.Density;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -225,9 +226,10 @@ public class FilterResourcesStep implements Step {
 
         // Replace density qualifier with target density using regular expression to match
         // the qualifier in the context of a path to a drawable.
+        String fromDensity = (density == Density.NO_QUALIFIER ? "" : "-") + density.toString();
         String destination = drawable.replaceFirst(
-            "((?:^|/)drawable[^/]*-)" + Pattern.quote(density.toString()) + "(-|$|/)",
-            "$1" + targetDensity + "$2");
+            "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
+            "$1-" + targetDensity + "$2");
 
         double factor = targetDensity.value() / density.value();
         if (factor >= 1.0) {
