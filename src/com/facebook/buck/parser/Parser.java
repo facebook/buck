@@ -482,10 +482,10 @@ public class Parser {
       File buildFile,
       Iterable<String> defaultIncludes)
       throws BuildFileParseException, BuildTargetException, IOException {
-    ProjectBuildFileParser projectBuildFileParser =
-        buildFileParserFactory.createParser(defaultIncludes);
-
-    return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser);
+    try (ProjectBuildFileParser projectBuildFileParser =
+        buildFileParserFactory.createParser(defaultIncludes)) {
+      return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser);
+    }
   }
 
   /**

@@ -290,6 +290,17 @@ public class ProjectBuildFileParser implements AutoCloseable {
         } catch (InterruptedException e) {
           throw Throwables.propagate(e);
         }
+
+        try {
+          synchronized (this) {
+            if (pathToBuckPy.isPresent()) {
+              Files.delete(pathToBuckPy.get());
+            }
+          }
+        } catch (IOException e) {
+          // Eat an exceptions from deleting the temporary buck.py file.
+        }
+
       }
     } finally {
       isClosed = true;
