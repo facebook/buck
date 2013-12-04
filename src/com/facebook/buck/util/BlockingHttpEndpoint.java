@@ -76,6 +76,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
 
   private ListenableFuture<HttpResponse> send(final HttpURLConnection connection, final String content) {
     return requestService.submit(new Callable<HttpResponse>() {
+      @Override
       public HttpResponse call() {
         try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
           out.writeBytes(content);
