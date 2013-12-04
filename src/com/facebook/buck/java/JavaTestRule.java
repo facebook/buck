@@ -467,19 +467,20 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
         if (rule instanceof JavaLibraryRule) {
           sourceUnderTest.add((JavaLibraryRule) rule);
+        } else if (rule == null) {
+          throw new HumanReadableException(
+              "Specified source under test for %s is not among its dependencies: %s",
+              getBuildTarget().getFullyQualifiedName(),
+              sourceUnderTestName);
         } else {
           // In this case, the source under test specified in the build file was not a Java library
           // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
           // not continue with the tests.
-
-          String ruleName = rule == null ? "unknown rule" : rule.getFullyQualifiedName();
-          String type = rule == null ? "unknown_type" : rule.getType().getName();
-
           throw new HumanReadableException(
               "Specified source under test for %s is not a Java library: %s (%s).",
               getBuildTarget().getFullyQualifiedName(),
-              ruleName,
-              type);
+              rule.getFullyQualifiedName(),
+              rule.getType().getName());
         }
       }
 

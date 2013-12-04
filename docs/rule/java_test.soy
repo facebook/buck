@@ -66,13 +66,12 @@ A <code>java_test()</code> rule is used to define a set of
   {param name: 'source_under_test' /}
   {param default : '[]' /}
   {param desc}
-  <code>java_library()</code> rules that the <code>java_test()</code>
-  is testing. This must be a subset of the <code>deps</code>
-  argument. The <code>.class</code> files for the rules specified by
-  {sp}</code>source_under_test</code> will be be instrumented by the
-  code coverage tool, EMMA, if <a
-  href="{ROOT}command/test.html"><code>buck test</code></a> is
-  executed with the {sp}<code>--code-coverage</code> option.
+  <code>java_library()</code> rules that the <code>java_test()</code> is
+  testing. These must be among the transitive dependencies of the
+  {sp}<code>java_test()</code>. The <code>.class</code> files for the rules
+  specified by <code>source_under_test</code> will be be instrumented by the
+  code coverage tool, EMMA, if <a href="{ROOT}command/test.html"><code>buck
+  test</code></a> is executed with the {sp}<code>--code-coverage</code> option.
   {/param}
 {/call}
 
