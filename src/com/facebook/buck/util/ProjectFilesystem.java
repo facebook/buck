@@ -31,6 +31,7 @@ import com.google.common.io.InputSupplier;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -379,8 +380,9 @@ public class ProjectFilesystem {
       for (Path path : pathsToIncludeInZip) {
         ZipEntry entry = new ZipEntry(path.toString());
         zip.putNextEntry(entry);
-        InputStream input = Files.newInputStreamSupplier(getFileForRelativePath(path)).getInput();
-        ByteStreams.copy(input, zip);
+        try (InputStream input = new FileInputStream(getFileForRelativePath(path))) {
+          ByteStreams.copy(input, zip);
+        }
         zip.closeEntry();
       }
     }
