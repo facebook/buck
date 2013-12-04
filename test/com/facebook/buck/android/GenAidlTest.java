@@ -24,12 +24,10 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -60,15 +58,11 @@ public class GenAidlTest {
     String pathToAidl = "java/com/example/base/IWhateverService.aidl";
     String importPath = "java/com/example/base/";
 
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    GenAidl.Builder builder = GenAidl
-        .newGenAidlRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService"))
-        .setAidl(pathToAidl)
-        .setImportPath(importPath);
-    Buildable genAidlRule = ruleResolver.buildAndAddToIndex(builder).getBuildable();
+    BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
+    Buildable genAidlRule = new GenAidl(target, Paths.get(pathToAidl), importPath);
 
-    assertEquals(BuildRuleType.GEN_AIDL, builder.getType());
+    GenAidlDescription description = new GenAidlDescription();
+    assertEquals(GenAidlDescription.TYPE, description.getBuildRuleType());
     assertTrue(genAidlRule.getProperties().is(ANDROID));
 
     assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput());

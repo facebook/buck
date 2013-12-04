@@ -19,10 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidBinaryBuildRuleFactory;
 import com.facebook.buck.android.AndroidInstrumentationApkRuleFactory;
 import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
-import com.facebook.buck.android.AndroidManifestBuildRuleFactory;
+import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
 import com.facebook.buck.android.ApkGenruleBuildRuleFactory;
-import com.facebook.buck.android.GenAidlBuildRuleFactory;
+import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryBuildRuleFactory;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
@@ -58,11 +58,12 @@ public class KnownBuildRuleTypes {
   private Map<String, BuildRuleType> types = Maps.newConcurrentMap();
 
   public KnownBuildRuleTypes() {
+    register(new AndroidManifestDescription());
     register(new ExportFileDescription());
+    register(new GenAidlDescription());
     register(new PythonLibraryDescription());
 
     // TODO(simons): Consider whether we actually want to have default rules
-    register(BuildRuleType.ANDROID_MANIFEST, new AndroidManifestBuildRuleFactory());
     register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
     register(BuildRuleType.ANDROID_INSTRUMENTATION_APK, new AndroidInstrumentationApkRuleFactory());
     register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
@@ -73,7 +74,6 @@ public class KnownBuildRuleTypes {
     register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
     register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
-    register(BuildRuleType.GEN_AIDL, new GenAidlBuildRuleFactory());
     register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
     register(BuildRuleType.NDK_LIBRARY, new NdkLibraryBuildRuleFactory());
     register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());

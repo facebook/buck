@@ -16,18 +16,20 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
  * A {@link BuildRule} that is constructed from a {@link Description}.
  */
 // TODO(simons): Delete once everything has migrated to using Buildables.
+@Beta
 public class DescribedRule extends AbstractCachingBuildRule {
 
   private final BuildRuleType type;
   private final Buildable buildable;
 
-  DescribedRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
+  public DescribedRule(BuildRuleType type, Buildable buildable, BuildRuleParams params) {
     super(buildable, params);
 
     this.type = Preconditions.checkNotNull(type);

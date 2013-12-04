@@ -24,11 +24,9 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
@@ -98,20 +96,17 @@ public class AndroidManifestTest {
 
   @Test
   public void testGetTypeMethodOfBuilder() {
-    AndroidManifest.Builder builder = AndroidManifest.newManifestMergeRuleBuilder(
-        new FakeAbstractBuildRuleBuilderParams());
-    assertEquals("android_manifest", builder.getType().getName());
+    assertEquals("android_manifest", AndroidManifestDescription.TYPE.getName());
   }
 
   private BuildRule createSimpleAndroidManifestRule() {
     // First, create the AndroidManifest object.
     BuildRuleParams buildRuleParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
         new BuildTarget("//java/com/example", "manifest"));
-    AndroidManifest.Builder builder = AndroidManifest.newManifestMergeRuleBuilder(
-        new FakeAbstractBuildRuleBuilderParams());
-    final AndroidManifest androidManifest = builder
-        .setSkeletonFile(new FileSourcePath("java/com/example/AndroidManifestSkeleton.xml"))
-        .newBuildable(buildRuleParams, new BuildRuleResolver());
+    AndroidManifestDescription description = new AndroidManifestDescription();
+    AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
+    arg.skeleton = new FileSourcePath("java/com/example/AndroidManifestSkeleton.xml");
+    final Buildable androidManifest = description.createBuildable(buildRuleParams, arg);
 
     // Then create a BuildRule whose Buildable is the AndroidManifest.
     return new FakeBuildRule(BuildRuleType.ANDROID_MANIFEST, buildRuleParams) {

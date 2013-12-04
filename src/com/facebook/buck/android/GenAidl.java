@@ -19,12 +19,8 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RecordArtifactsInDirectoryStep;
@@ -71,11 +67,9 @@ public class GenAidl extends AbstractBuildable {
   private final String aidlFilePath;
   private final String importPath;
 
-  private GenAidl(BuildTarget buildTarget,
-      String aidlFilePath,
-      String importPath) {
+  GenAidl(BuildTarget buildTarget, Path aidlFilePath, String importPath) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
+    this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath).toString();
     this.importPath = Preconditions.checkNotNull(importPath);
   }
 
@@ -131,47 +125,5 @@ public class GenAidl extends AbstractBuildable {
         genDirectory));
 
     return commands.build();
-  }
-
-  public static Builder newGenAidlRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
-  }
-
-  public static class Builder extends AbstractBuildable.Builder {
-
-    private String aidl;
-
-    private String importPath;
-
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
-    }
-
-    @Override
-    public BuildRuleType getType() {
-      return BuildRuleType.GEN_AIDL;
-    }
-
-    @Override
-    public GenAidl newBuildable(BuildRuleParams buildRuleParams,
-        BuildRuleResolver ruleResolver) {
-      return new GenAidl(buildRuleParams.getBuildTarget(), aidl, importPath);
-    }
-
-    @Override
-    public Builder setBuildTarget(BuildTarget buildTarget) {
-      super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    public Builder setAidl(String aidl) {
-      this.aidl = aidl;
-      return this;
-    }
-
-    public Builder setImportPath(String importPath) {
-      this.importPath = importPath;
-      return this;
-    }
   }
 }
