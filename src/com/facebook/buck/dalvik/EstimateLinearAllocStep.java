@@ -37,10 +37,16 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
     public int getEstimate(FileLike fileLike) throws IOException;
   }
 
+  /**
+   * This is a linear alloc estimator that uses the size of the {@code .class} file as the
+   * estimate. This should be used when speed is more important than accuracy. If accuracy is a
+   * priority, an estimator based on {@link DalvikStatsTool#getEstimate(java.io.InputStream)} should
+   * be used instead.
+   */
   private static LinearAllocEstimator DEFAULT_LINEAR_ALLOC_ESTIMATOR = new LinearAllocEstimator() {
     @Override
     public int getEstimate(FileLike fileLike) throws IOException {
-      return DalvikStatsTool.getEstimate(fileLike.getInput()).estimatedLinearAllocSize;
+      return (int) fileLike.getSize();
     }
   };
 
@@ -49,6 +55,12 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
 
   private int linearAllocEstimate = -1;
 
+  /**
+   * This uses a linear alloc estimator that uses the size of the {@code .class} file as the
+   * estimate. This should be used when speed is more important than accuracy. If accuracy is a
+   * priority, an estimator based on {@link DalvikStatsTool#getEstimate(java.io.InputStream)} should
+   * be used instead.
+   */
   public EstimateLinearAllocStep(Path pathToJarOrClassesDirectory) {
     this(pathToJarOrClassesDirectory, DEFAULT_LINEAR_ALLOC_ESTIMATOR);
   }
