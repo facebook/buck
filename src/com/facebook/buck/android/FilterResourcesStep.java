@@ -54,9 +54,12 @@ import javax.annotation.Nullable;
  */
 public class FilterResourcesStep implements Step {
 
-  @VisibleForTesting
-  static final Pattern DRAWABLE_PATH_PATTERN = Pattern.compile(
+  private static final Pattern DRAWABLE_PATH_PATTERN = Pattern.compile(
       ".*drawable.*/.*(png|jpg|jpeg|gif|webp)", Pattern.CASE_INSENSITIVE);
+  // Android doesn't scale these, so we don't need to scale or filter them either.
+  private static final Pattern DRAWABLE_EXCLUDE_PATTERN = Pattern.compile(
+      ".*-nodpi.*", Pattern.CASE_INSENSITIVE);
+
 
   @VisibleForTesting
   static final Pattern NON_ENGLISH_STRING_PATH = Pattern.compile(
@@ -275,7 +278,8 @@ public class FilterResourcesStep implements Step {
         new DirectoryTraversal(new File(dir)) {
           @Override
           public void visit(File file, String relativePath) {
-            if (DRAWABLE_PATH_PATTERN.matcher(relativePath).matches()) {
+            if (DRAWABLE_PATH_PATTERN.matcher(relativePath).matches() &&
+                !DRAWABLE_EXCLUDE_PATTERN.matcher(relativePath).matches()) {
               // The path is normalized so that the value can be matched against patterns.
               drawableBuilder.add(MorePaths.newPathInstance(file).toString());
             }
