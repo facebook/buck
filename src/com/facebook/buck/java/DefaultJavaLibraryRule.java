@@ -343,7 +343,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       return abiKey;
     }
 
-    SortedSet<JavaLibraryRule> depsForAbiKey = getDepsForAbiKey();
+    SortedSet<JavaAbiRule> depsForAbiKey = getDepsForAbiKey();
 
     // Hash the ABI keys of all dependencies together with ABI key for the current rule.
     Hasher hasher = createHasherWithAbiKeyForDeps(depsForAbiKey);
@@ -403,12 +403,16 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * Returns a sorted set containing the dependencies which will be hashed in the final ABI key.
    * @return the dependencies to be hashed in the final ABI key.
    */
-  private SortedSet<JavaLibraryRule> getDepsForAbiKey() {
-    SortedSet<JavaLibraryRule> rulesWithAbiToConsider = Sets.newTreeSet();
+  private SortedSet<JavaAbiRule> getDepsForAbiKey() {
+    SortedSet<JavaAbiRule> rulesWithAbiToConsider = Sets.newTreeSet();
     for (BuildRule dep : getDeps()) {
-      if (dep instanceof JavaLibraryRule) {
-        JavaLibraryRule javaRule = (JavaLibraryRule)dep;
-        rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
+      if (dep instanceof JavaAbiRule) {
+        if (dep instanceof JavaLibraryRule) {
+          JavaLibraryRule javaRule = (JavaLibraryRule) dep;
+          rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
+        } else {
+          rulesWithAbiToConsider.add((JavaAbiRule) dep);
+        }
       }
     }
     return rulesWithAbiToConsider;
@@ -420,9 +424,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    *     added to the hasher.
    * @return a Hasher containing the ABI keys of the dependencies.
    */
-  private Hasher createHasherWithAbiKeyForDeps(SortedSet<JavaLibraryRule> rulesWithAbiToConsider) {
+  private Hasher createHasherWithAbiKeyForDeps(SortedSet<JavaAbiRule> rulesWithAbiToConsider) {
     Hasher hasher = Hashing.sha1().newHasher();
-    for (JavaLibraryRule ruleWithAbiToConsider : rulesWithAbiToConsider) {
+    for (JavaAbiRule ruleWithAbiToConsider : rulesWithAbiToConsider) {
       if (ruleWithAbiToConsider == this) {
         continue;
       }

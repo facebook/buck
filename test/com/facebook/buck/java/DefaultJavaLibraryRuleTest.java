@@ -42,10 +42,12 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
@@ -81,6 +83,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMock;
@@ -659,6 +662,40 @@ public class DefaultJavaLibraryRuleTest {
             .put(parent, "buck-out/gen/lib__parent__output/parent.jar")
             .build(),
         parent.getOutputClasspathEntries());
+  }
+
+  /**
+   * Tests DefaultJavaLibraryRule#getAbiKeyForDeps() when the dependencies contain a JavaAbiRule
+   * that is not a JavaLibraryRule.
+   */
+  @Test
+  public void testGetAbiKeyForDepsWithMixedDeps() {
+    String tinyLibAbiKeyHash = Strings.repeat("a", 40);
+    JavaLibraryRule tinyLibrary = createDefaultJavaLibaryRuleWithAbiKey(
+        tinyLibAbiKeyHash,
+        BuildTargetFactory.newInstance("//:tinylib"),
+        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
+        /* srcs */ ImmutableSet.of("foo/Bar.java"),
+        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
+
+    String javaAbiRuleKeyHash = Strings.repeat("b", 40);
+    FakeJavaAbiRule fakeJavaAbiRule = new FakeJavaAbiRule(BuildRuleType.ANDROID_RESOURCE,
+        BuildTargetFactory.newInstance("//:tinylibfakejavaabi"),
+        javaAbiRuleKeyHash);
+
+    DefaultJavaLibraryRule defaultJavaLibary = createDefaultJavaLibaryRuleWithAbiKey(
+        Strings.repeat("c", 40),
+        BuildTargetFactory.newInstance("//:javalib"),
+        /* srcs */ ImmutableSet.<String>of(),
+        /* deps */ ImmutableSet.<BuildRule>of(tinyLibrary, fakeJavaAbiRule),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
+
+    Hasher hasher = Hashing.sha1().newHasher();
+    hasher.putUnencodedChars(tinyLibAbiKeyHash);
+    hasher.putUnencodedChars(javaAbiRuleKeyHash);
+
+    assertEquals(new Sha1HashCode(hasher.hash().toString()), defaultJavaLibary.getAbiKeyForDeps());
   }
 
   /**
@@ -1254,6 +1291,20 @@ public class DefaultJavaLibraryRuleTest {
       }
       assertNotNull("Expected a JavacInMemoryCommand in command list", javac);
       return (JavacInMemoryStep) javac;
+    }
+  }
+
+  private static class FakeJavaAbiRule extends FakeBuildRule implements JavaAbiRule {
+    private final String abiKeyHash;
+
+    public FakeJavaAbiRule(BuildRuleType type, BuildTarget buildTarget, String abiKeyHash) {
+      super(type, buildTarget);
+      this.abiKeyHash = abiKeyHash;
+    }
+
+    @Override
+    public Sha1HashCode getAbiKey() {
+      return new Sha1HashCode(abiKeyHash);
     }
   }
 }

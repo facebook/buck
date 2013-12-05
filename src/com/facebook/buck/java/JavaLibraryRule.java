@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.AnnotationProcessingData;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -25,7 +24,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
-public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntries {
+public interface JavaLibraryRule extends Buildable, HasClasspathEntries, JavaAbiRule {
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    *     build a jar associated with this rule.  Contains the classpath entries for the transitive
@@ -60,6 +59,7 @@ public interface JavaLibraryRule extends Buildable, BuildRule, HasClasspathEntri
    * Because the ABI is computed as part of the build process, this rule cannot be invoked until
    * after this rule is built.
    */
+  @Override
   public Sha1HashCode getAbiKey();
 
   /**
