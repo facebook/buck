@@ -259,6 +259,20 @@ public class ProjectFilesystem {
     Files.write(bytes, getFileForRelativePath(pathRelativeToProjectRoot));
   }
 
+  /**
+   * @param inputStream Source of the bytes. This method does not close this stream.
+   */
+  public void copyToPath(final InputStream inputStream, Path pathRelativeToProjectRoot)
+      throws IOException {
+    InputSupplier<? extends InputStream> inputSupplier = new InputSupplier<InputStream>() {
+      @Override
+      public InputStream getInput() throws IOException {
+        return inputStream;
+      }
+    };
+    Files.copy(inputSupplier, getFileForRelativePath(pathRelativeToProjectRoot));
+  }
+
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
     File fileToRead = getFileForRelativePath(pathRelativeToProjectRoot);
     return readFileIfItExists(fileToRead, pathRelativeToProjectRoot.toString());

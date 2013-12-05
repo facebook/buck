@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.eq;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -41,6 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.junit.Before;
@@ -48,6 +51,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -85,6 +89,7 @@ public class PreDexMergeStepTest {
   /** All of the steps in this list must be able to be run in parallel. */
   private List<Step> stepsAddedToStepRunnerToBeRunInParallel = Lists.newArrayList();
 
+  private Path scratchDirectory = Paths.get("buck-out/bin/app/__pre_dex_tmp__");
   private StepRunner stepRunner;
 
   /** This will be returned by the {@link #stepRunner}. */
@@ -111,10 +116,12 @@ public class PreDexMergeStepTest {
     // Mock the ProjectFilesystem.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     configureResolveMethod(projectFilesystem);
+    configureCanarySetup(projectFilesystem, 2);
+
     setExpectedSecondaryDexFiles(projectFilesystem, 2, DexStore.JAR, /* computeSha1 */ true);
     ImmutableList<String> lines = ImmutableList.of(
-        "secondary-1.dex.jar a451b51 com.example.common.base.Base",
-        "secondary-2.dex.jar 6e279aa com.example.common.io.Files");
+        "secondary-1.dex.jar a451b51 secondary.dex01.Canary",
+        "secondary-2.dex.jar 6e279aa secondary.dex02.Canary");
     projectFilesystem.writeLinesToPath(lines, secondaryDexMetadataTxt);
 
     // Mock the ExecutionContext.
@@ -139,9 +146,11 @@ public class PreDexMergeStepTest {
                 "buck-out/gen/app/r_classes.dex.jar " +
                 "buck-out/gen/dex3.dex.jar",
             dxCommandPrefix + secondaryDexJarFilesDir + "/secondary-1.dex.jar " +
+                scratchDirectory + "/canary_1 " +
                 "buck-out/gen/dex1.dex.jar " +
                 "buck-out/gen/dex2.dex.jar",
             dxCommandPrefix + secondaryDexJarFilesDir + "/secondary-2.dex.jar " +
+                scratchDirectory + "/canary_2 " +
                 "buck-out/gen/dex4.dex.jar"),
         stepsAddedToStepRunnerToBeRunInParallel,
         context);
@@ -157,9 +166,10 @@ public class PreDexMergeStepTest {
     // Mock the ProjectFilesystem.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     configureResolveMethod(projectFilesystem);
+    configureCanarySetup(projectFilesystem, 1);
     setExpectedSecondaryDexFiles(projectFilesystem, 1, DexStore.XZ, /* computeSha1 */ true);
     ImmutableList<String> lines = ImmutableList.of(
-        "secondary-1.dex.jar.xz 56175a8 com.example.common.base.Base");
+        "secondary-1.dex.jar.xz 56175a8 secondary.dex01.Canary");
     projectFilesystem.writeLinesToPath(lines, secondaryDexMetadataTxt);
 
     // Mock the ExecutionContext.
@@ -182,6 +192,7 @@ public class PreDexMergeStepTest {
     String tmpJar = secondaryDexJarFilesDir + "/secondary-1.dex.tmp.jar";
     String tmpDxJar = secondaryDexJarFilesDir + "/secondary-1.dex.jar";
     String dxStep = dxCommandPrefix + tmpJar + " " +
+        scratchDirectory + "/canary_1 " +
         "buck-out/gen/dex1.dex.jar " +
         "buck-out/gen/dex2.dex.jar " +
         "buck-out/gen/dex4.dex.jar";
@@ -267,6 +278,7 @@ public class PreDexMergeStepTest {
     // Mock the ProjectFilesystem.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     configureResolveMethod(projectFilesystem);
+    configureCanarySetup(projectFilesystem, 2);
     projectFilesystem.writeLinesToPath(EasyMock.isA(Iterable.class),
         EasyMock.isA(Path.class));
     EasyMock.expectLastCall().andThrow(new IOException());
@@ -291,7 +303,7 @@ public class PreDexMergeStepTest {
   }
 
   @Test
-  public void testStepFailedExceptionFailsWithExitCodeOne() {
+  public void testStepFailedExceptionFailsWithExitCodeOne() throws IOException {
     stepRunner = new FakeStepRunner(executorService) {
       @Override
       public void runStepsInParallelAndWait(List<Step> steps) throws StepFailedException {
@@ -308,6 +320,7 @@ public class PreDexMergeStepTest {
     // Mock the ProjectFilesystem.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     configureResolveMethod(projectFilesystem);
+    configureCanarySetup(projectFilesystem, 2);
     setExpectedSecondaryDexFiles(projectFilesystem, 2, DexStore.JAR, /* computeSha1 */ false);
 
     // Mock the ExecutionContext.
@@ -364,7 +377,8 @@ public class PreDexMergeStepTest {
         secondaryDexMetadataTxt,
         secondaryDexJarFilesDir,
         dexStore,
-        linearAllocHardLimit) {
+        linearAllocHardLimit,
+        scratchDirectory) {
 
       @Override
       protected StepRunner createStepRunner(ExecutionContext context) {
@@ -419,6 +433,16 @@ public class PreDexMergeStepTest {
         return arg;
       }
     }).anyTimes();
+  }
+
+  private void configureCanarySetup(ProjectFilesystem projectFilesystem, int num)
+      throws IOException {
+    for (int i = 1; i <= num; i++) {
+      Path classFile = scratchDirectory.resolve(
+          "canary_" + i + "/secondary/dex0" + i + "/Canary.class");
+      projectFilesystem.createParentDirs(classFile);
+      projectFilesystem.copyToPath(capture(new Capture<InputStream>()), eq(classFile));
+    }
   }
 
   private String createDxCommandPrefix() {

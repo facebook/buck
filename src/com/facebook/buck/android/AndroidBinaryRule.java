@@ -590,7 +590,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       }
 
       // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-      steps.add(new DxStep(dexFile, filesToDex, PreDexMergeStep.DX_OPTIONS));
+      steps.add(new DxStep(dexFile, filesToDex, PreDexMergeStep.DX_MERGE_OPTIONS));
     } else {
       // At least initially (and possibly always), the logic for merging pre-dexed artifacts will
       // not leverage SmartDexingStep, so mergePreDexedArtifactsIntoMultipleDexFiles() and
@@ -677,6 +677,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // is not safe to invoke dexWithClassesForRDotJava.getLinearAllocEstimate() at this point, but
     // it will be safe by the time the PreDexMergeStep is executed. (By comparison, it is safe to
     // invoke getLinearAllocEstimate() on every element in dexFilesToMerge at this point.)
+    Path preDexScratchDir = Paths.get(secondaryDexScratchDir, "__pre_dex_tmp__");
+    steps.add(new MakeCleanDirectoryStep(preDexScratchDir));
     steps.add(new PreDexMergeStep(dexFilesToMerge,
         dexWithClassesForRDotJava,
         primaryDexPath,
@@ -684,7 +686,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         Paths.get(secondaryDexMetadataDir, "metadata.txt"),
         secondaryDexJarFilesDir,
         dexSplitMode.getDexStore(),
-        linearAllocHardLimit));
+        linearAllocHardLimit,
+        preDexScratchDir));
   }
 
   @VisibleForTesting

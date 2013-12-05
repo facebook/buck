@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.dalvik.CanaryFactory;
 import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -35,6 +37,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
@@ -44,7 +47,7 @@ import java.util.Map;
 class PreDexMergeStep implements Step {
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
-  static EnumSet<DxStep.Option> DX_OPTIONS = EnumSet.of(
+  static EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
       DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
       DxStep.Option.NO_OPTIMIZE);
 
@@ -64,8 +67,12 @@ class PreDexMergeStep implements Step {
   private final DexStore dexStore;
   private final long linearAllocHardLimit;
 
-  // TODO(mbolin): Take a ZipSplitter.CanaryStrategy as a parameter. Or more importantly, apply
-  // CanaryStrategy.INCLUDE_CANARIES by default.
+  /**
+   * Directory under the project filesystem where this step may write temporary data. This directory
+   * must exist and be empty before this step writes to it.
+   */
+  private final Path scratchDirectory;
+
   public PreDexMergeStep(ImmutableList<DexWithClasses> dexFilesToMerge,
       Optional<DexWithClasses> dexWithClassesForRDotJava,
       String primaryDexPath,
@@ -73,7 +80,8 @@ class PreDexMergeStep implements Step {
       Path secondaryDexMetadataTxt,
       String secondaryDexJarFilesDir,
       DexStore dexStore,
-      long linearAllocHardLimit) {
+      long linearAllocHardLimit,
+      Path scratchDirectory) {
     this.dexFilesToMerge = Preconditions.checkNotNull(dexFilesToMerge);
     this.dexWithClassesForRDotJava = Preconditions.checkNotNull(dexWithClassesForRDotJava);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
@@ -83,6 +91,7 @@ class PreDexMergeStep implements Step {
     this.dexStore = Preconditions.checkNotNull(dexStore);
     Preconditions.checkArgument(linearAllocHardLimit > 0);
     this.linearAllocHardLimit = linearAllocHardLimit;
+    this.scratchDirectory = Preconditions.checkNotNull(scratchDirectory);
   }
 
   @Override
@@ -100,8 +109,8 @@ class PreDexMergeStep implements Step {
     List<DexWithClasses> currentSecondaryDexContents = null;
     int currentSecondaryDexSize = 0;
     for (DexWithClasses dexWithClasses : dexFilesToMerge) {
-      // Case 1: Entry must be in the primary dex.
       if (mustBeInPrimaryDex(dexWithClasses)) {
+        // Case 1: Entry must be in the primary dex.
         primaryDexSize += dexWithClasses.getSizeEstimate();
         if (primaryDexSize > linearAllocHardLimit) {
           context.postEvent(LogEvent.severe(
@@ -114,10 +123,11 @@ class PreDexMergeStep implements Step {
           return 1;
         }
         primaryDexContents.add(dexWithClasses);
+      } else {
+        // Case 2: Entry must go in a secondary dex.
 
-      // Case 2: Entry must go in a new, secondary dex.
-      } else if (currentSecondaryDexContents == null ||
-          dexWithClasses.getSizeEstimate() + currentSecondaryDexSize > linearAllocHardLimit) {
+        // If the individual DexWithClasses exceeds the limit for a secondary dex, then we have done
+        // something horribly wrong.
         if (dexWithClasses.getSizeEstimate() > linearAllocHardLimit) {
           context.postEvent(LogEvent.severe(
               "DexWithClasses %s with cost %s exceeds the max cost %s for a secondary dex file.",
@@ -128,14 +138,24 @@ class PreDexMergeStep implements Step {
         }
 
         // If there is no current secondary dex, or dexWithClasses would put the current secondary
-        // dex over the cost threshold, then create a new secondary dex and initialize it with
-        // dexWithClasses.
-        currentSecondaryDexContents = Lists.newArrayList(dexWithClasses);
-        currentSecondaryDexSize = dexWithClasses.getSizeEstimate();
-        secondaryDexesContents.add(currentSecondaryDexContents);
+        // dex over the cost threshold, then create a new secondary dex and initialize it with a
+        // canary.
+        if (currentSecondaryDexContents == null ||
+            dexWithClasses.getSizeEstimate() + currentSecondaryDexSize > linearAllocHardLimit) {
+          DexWithClasses canary;
+          try {
+            canary = createCanary(secondaryDexesContents.size() + 1, context);
+          } catch (IOException e) {
+            context.logError(e, "Failed to create canary for secondary dex.");
+            return 1;
+          }
 
-      // Case 3 :Entry can fit in the current secondary dex.
-      } else {
+          currentSecondaryDexContents = Lists.newArrayList(canary);
+          currentSecondaryDexSize = canary.getSizeEstimate();
+          secondaryDexesContents.add(currentSecondaryDexContents);
+        }
+
+        // Now add the contributions from the dexWithClasses entry.
         currentSecondaryDexContents.add(dexWithClasses);
         currentSecondaryDexSize += dexWithClasses.getSizeEstimate();
       }
@@ -160,7 +180,7 @@ class PreDexMergeStep implements Step {
       dxSteps.add(SmartDexingStep.createDxStepForDxPseudoRule(
           Iterables.transform(secondaryDex, TO_PATH),
           pathToSecondaryDex.toString(),
-          DX_OPTIONS));
+          DX_MERGE_OPTIONS));
     }
 
     // Run the dexing steps in parallel.
@@ -214,8 +234,52 @@ class PreDexMergeStep implements Step {
     return false;
   }
 
+  /**
+   * @see com.facebook.buck.dalvik.CanaryFactory#create(int)
+   * @throws IOException
+   */
+  private DexWithClasses createCanary(int index, ExecutionContext context)
+      throws IOException {
+    FileLike fileLike = CanaryFactory.create(index);
+    String canaryDirName = "canary_" + String.valueOf(index);
+    final Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
+
+    // Strip the .class suffix to get the class name for the DexWithClasses object.
+    String relativePathToClassFile = fileLike.getRelativePath();
+    Preconditions.checkState(relativePathToClassFile.endsWith(".class"));
+    final String className = relativePathToClassFile.replaceFirst("\\.class$", "");
+
+    // Write out the .class file.
+    Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    projectFilesystem.createParentDirs(classFile);
+    try (InputStream inputStream = fileLike.getInput()) {
+      projectFilesystem.copyToPath(inputStream, classFile);
+    }
+
+    return new DexWithClasses() {
+
+      @Override
+      public int getSizeEstimate() {
+        // Because we do not know the units being used for DEX size estimation and the canary should
+        // be very small, assume the size is zero.
+        return 0;
+      }
+
+      @Override
+      public Path getPathToDexFile() {
+        return scratchDirectoryForCanaryClass;
+      }
+
+      @Override
+      public ImmutableSet<String> getClassNames() {
+        return ImmutableSet.of(className);
+      }
+    };
+  }
+
   private static DxStep createDxStep(String outputDexFile, Iterable<DexWithClasses> dexFiles) {
-    return new DxStep(outputDexFile, Iterables.transform(dexFiles, TO_PATH), DX_OPTIONS);
+    return new DxStep(outputDexFile, Iterables.transform(dexFiles, TO_PATH), DX_MERGE_OPTIONS);
   }
 
   @Override

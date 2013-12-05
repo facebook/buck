@@ -30,7 +30,7 @@ import java.util.Arrays;
 /**
  * Helper to create a "canary" class for the secondary DEX. See {@link #create}.
  */
-class CanaryFactory {
+public class CanaryFactory {
 
   private static final String CANARY_PATH_FORMAT = "secondary/dex%02d/Canary.class";
 
@@ -68,8 +68,7 @@ class CanaryFactory {
    *
    * @param index Index of the current zip (to ensure unique names).
    */
-  static FileLike create(final int index)
-      throws IOException {
+  public static FileLike create(final int index) throws IOException {
     final byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
     final String canaryIndexStr = String.format("%02d", index);
     byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charset.forName("UTF-8"));

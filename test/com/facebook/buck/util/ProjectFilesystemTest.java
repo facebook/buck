@@ -31,8 +31,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -144,6 +146,17 @@ public class ProjectFilesystemTest {
     byte[] bytes = content.getBytes();
     filesystem.writeBytesToPath(bytes, Paths.get("hello.txt"));
     assertEquals(content, Files.toString(new File(tmp.getRoot(), "hello.txt"), Charsets.UTF_8));
+  }
+
+  @Test
+  public void testCopyToPath() throws IOException {
+    InputStream inputStream = new ByteArrayInputStream("Hello, world!".getBytes());
+    filesystem.copyToPath(inputStream, Paths.get("bytes.txt"));
+
+    assertEquals(
+        "The bytes on disk should match those from the InputStream.",
+        "Hello, world!",
+        Files.toString(new File(tmp.getRoot(), "bytes.txt"), Charsets.UTF_8));
   }
 
   @Test
