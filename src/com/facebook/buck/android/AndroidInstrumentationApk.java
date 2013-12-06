@@ -91,7 +91,13 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         apkUnderTest.getLinearAllocHardLimit(),
         apkUnderTest.getPrimaryDexClassesFile(),
         apkUnderTest.getCpuFilters(),
-        apkUnderTest.getPreDexDeps(),
+
+        // TODO(mbolin, t3338497): Figure out why AndroidInstrumentationApk.Builder cannot pass in
+        // graphEnhancer.createDepsForPreDexing(ruleResolver) for this value.
+        // For now, do not specify any pre-dex deps so that the traditional dexing
+        // logic is used for an android_instrumentation_apk().
+        /* preDexDeps */ ImmutableSet.<IntermediateDexRule>of(),
+
         uberRDotJavaBuildable,
         aaptPackageResourcesBuildable,
         apkUnderTest.getPreprocessJavaClassesDeps(),

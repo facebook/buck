@@ -301,10 +301,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return this.cpuFilters;
   }
 
-  public ImmutableSet<IntermediateDexRule> getPreDexDeps() {
-    return preDexDeps;
-  }
-
   public UberRDotJavaBuildable getUberRDotJavaBuildable() {
     return uberRDotJavaBuildable;
   }
