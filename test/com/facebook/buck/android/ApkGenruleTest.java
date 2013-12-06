@@ -215,7 +215,7 @@ public class ApkGenruleTest {
     ShellStep genruleCommand = (ShellStep) seventhStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(new ImmutableMap.Builder<String, String>()
-        .put("APK", GEN_DIR + "/fb4a.apk")
+        .put("APK", relativeToAbsolutePathFunction.apply(GEN_DIR + "/fb4a.apk").toString())
         .put("OUT", expectedApkOutput).build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(

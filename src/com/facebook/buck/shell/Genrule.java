@@ -51,6 +51,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -257,7 +258,13 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   @VisibleForTesting
   AbstractGenruleStep createGenruleStep() {
-    return new AbstractGenruleStep(this, new CommandString(cmd, bash, cmdExe), getDeps()) {
+    // The user's command (this.cmd) should be run from the directory that contains only the
+    // symlinked files. This ensures that the user can reference only the files that were declared
+    // as srcs. Without this, a genrule is not guaranteed to be hermetic.
+    File workingDirectory = new File(absolutePathToSrcDirectory.toString());
+
+    return new AbstractGenruleStep(
+        this, new CommandString(cmd, bash, cmdExe), getDeps(), workingDirectory) {
       @Override
       protected void addEnvironmentVariables(
           ExecutionContext context,
@@ -283,7 +290,6 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     // Delete the old temp directory
     commands.add(new MakeCleanDirectoryStep(pathToTmpDirectory));
     // Create a directory to hold all the source files.
-    // TODO(simons): Actually execute the command from here.
     commands.add(new MakeCleanDirectoryStep(pathToSrcDirectory));
 
     addSymlinkCommands(commands);

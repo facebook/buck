@@ -16,8 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -36,6 +35,15 @@ public class GenruleFailingCommandIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
+  // When these tests fail, the failures contain buck output that is easy to confuse with the output
+  // of the instance of buck that's running the test. This prepends each line with "> ".
+  private String quoteOutput(String output) {
+    output = output.trim();
+    output = "> " + output;
+    output = output.replace("\n", "\n> ");
+    return output;
+  }
+
   @Test
   public void testIfCommandExitsZeroThenGenruleFails() throws IOException {
     assumeTrue("This genrule uses the 'bash' argument, which is not supported on Windows. ",
@@ -47,9 +55,22 @@ public class GenruleFailingCommandIntegrationTest {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:fail");
     buildResult.assertExitCode(1);
 
-    // We make sure that we failed for the right reason.
-    assertThat(buildResult.getStderr(),
-        containsString("BUILD FAILED: //:fail failed with exit code 1:\n" +
-        		"/bin/bash -e -c 'false; echo >&2 hi'"));
+    /* We want to make sure we failed for the right reason. The expected should contain something
+     * like the following:
+     *
+     * BUILD FAILED: //:fail failed with exit code 1:
+     * (cd /tmp/junit12345/buck-out/gen/fail__srcs && /bin/bash -e -c 'false; echo >&2 hi')
+     *
+     * We should match all that, except for the specific temp dir.
+     */
+
+    // "(?s)" enables multiline matching for ".*". Parens have to be escaped.
+    String outputPattern =
+        "(?s).*BUILD FAILED: //:fail failed with exit code 1:\n" +
+        "\\(cd [\\w/]*/buck-out/gen/fail__srcs && /bin/bash -e -c 'false; echo >&2 hi'\\).*";
+
+    assertTrue(
+        "Unexpected output:\n" + quoteOutput(buildResult.getStderr()),
+        buildResult.getStderr().matches(outputPattern));
   }
 }
