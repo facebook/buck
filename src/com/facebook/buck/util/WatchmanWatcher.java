@@ -38,6 +38,8 @@ import java.nio.file.WatchEvent;
  */
 public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
+  private static final int DEFAULT_OVERFLOW_THRESHOLD = 200;
+
   private final Supplier<Process> watchmanProcessSupplier;
   private final EventBus eventBus;
   private final ImmutableSet<Path> ignoredPrefixes;
@@ -49,7 +51,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
    * giving up and generating an overflow. The goal is to be able to process a reasonable
    * number of human generated changes quickly, but not spend a long time processing lots
    * of changes after a branch switch which will end up invalidating the entire cache
-   * anyway.
+   * anyway. If overflow is negative calls to postEvents will just generate a single
+   * overflow event.
    */
   private final int overflow;
 
@@ -59,8 +62,23 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     this(createProcessSupplier(),
         fileChangeEventBus,
         excludeDirectories,
-        200 /* overflow */,
+        DEFAULT_OVERFLOW_THRESHOLD,
         createQuery(filesystem));
+  }
+
+  @VisibleForTesting
+  WatchmanWatcher(Supplier<Process> processSupplier,
+                  EventBus fileChangeEventBus,
+                  ImmutableSet<Path> excludeDirectories,
+                  int overflow,
+                  String query) {
+
+    this.watchmanProcessSupplier = Preconditions.checkNotNull(processSupplier);
+    this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
+    this.ignoredPrefixes = Preconditions.checkNotNull(excludeDirectories);
+    this.jsonFactory = new JsonFactory();
+    this.overflow = overflow;
+    this.query = Preconditions.checkNotNull(query);
   }
 
   private static String createQuery(ProjectFilesystem filesystem) {
@@ -86,21 +104,6 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         }
       }
     };
-  }
-
-  @VisibleForTesting
-  WatchmanWatcher(Supplier<Process> processSupplier,
-                  EventBus fileChangeEventBus,
-                  ImmutableSet<Path> excludeDirectories,
-                  int overflow,
-                  String query) {
-
-    this.watchmanProcessSupplier = processSupplier;
-    this.eventBus = fileChangeEventBus;
-    this.ignoredPrefixes = excludeDirectories;
-    this.jsonFactory = new JsonFactory();
-    this.overflow = overflow;
-    this.query = query;
   }
 
   @Override

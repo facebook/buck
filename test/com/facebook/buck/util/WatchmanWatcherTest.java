@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
@@ -36,9 +35,9 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 
@@ -66,7 +65,7 @@ public class WatchmanWatcherTest {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
-                "\"name\": \"/foo/bar/baz\"",
+                "\"name\": \"foo/bar/baz\"",
             "}",
         "]}");
     Capture<WatchEvent<Path>> eventCapture = new Capture<>();
@@ -80,6 +79,9 @@ public class WatchmanWatcherTest {
     assertEquals("Should be modify event.",
         StandardWatchEventKinds.ENTRY_MODIFY,
         eventCapture.getValue().kind());
+    assertEquals("Path should match watchman output.",
+        "foo/bar/baz",
+        eventCapture.getValue().context().toString());
   }
 
   @Test
@@ -87,7 +89,7 @@ public class WatchmanWatcherTest {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
-                "\"name\": \"/foo/bar/baz\",",
+                "\"name\": \"foo/bar/baz\",",
                 "\"new\": true",
             "}",
         "]}");
@@ -99,7 +101,7 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
     verify(eventBus, process);
-    assertEquals("Should be modify event.",
+    assertEquals("Should be create event.",
         StandardWatchEventKinds.ENTRY_CREATE,
         eventCapture.getValue().kind());
   }
@@ -109,7 +111,7 @@ public class WatchmanWatcherTest {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
-                "\"name\": \"/foo/bar/baz\",",
+                "\"name\": \"foo/bar/baz\",",
                 "\"exists\": false",
             "}",
         "]}");
@@ -121,7 +123,7 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
     verify(eventBus, process);
-    assertEquals("Should be modify event.",
+    assertEquals("Should be delete event.",
         StandardWatchEventKinds.ENTRY_DELETE,
         eventCapture.getValue().kind());
   }
@@ -131,7 +133,7 @@ public class WatchmanWatcherTest {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
-                "\"name\": \"/foo/bar/baz\",",
+                "\"name\": \"foo/bar/baz\",",
                 "\"new\": true,",
                 "\"exists\": false",
              "}",
@@ -144,7 +146,7 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
     verify(eventBus, process);
-    assertEquals("Should be modify event.",
+    assertEquals("Should be delete event.",
         StandardWatchEventKinds.ENTRY_DELETE,
         eventCapture.getValue().kind());
   }
@@ -154,20 +156,28 @@ public class WatchmanWatcherTest {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
-                "\"name\": \"/foo/bar/baz\"",
+                "\"name\": \"foo/bar/baz\"",
             "},",
             "{",
-                "\"name\": \"/foo/bar/boz\"",
+                "\"name\": \"foo/bar/boz\"",
             "}",
         "]}");
     EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(anyObject(WatchEvent.class));
-    eventBus.post(anyObject(WatchEvent.class));
+    Capture<WatchEvent<Path>> firstEvent = new Capture<>();
+    Capture<WatchEvent<Path>> secondEvent = new Capture<>();
+    eventBus.post(capture(firstEvent));
+    eventBus.post(capture(secondEvent));
     Process process = createMockProcess(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
     verify(eventBus, process);
+    assertEquals("Path should match watchman output.",
+        "foo/bar/baz",
+        firstEvent.getValue().context().toString());
+    assertEquals("Path should match watchman output.",
+        "foo/bar/boz",
+        secondEvent.getValue().context().toString());
   }
 
   @Test
@@ -175,7 +185,7 @@ public class WatchmanWatcherTest {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
-                "\"name\": \"/foo/bar/baz\"",
+                "\"name\": \"foo/bar/baz\"",
             "}",
         "]}");
     EventBus eventBus = createStrictMock(EventBus.class);
@@ -184,7 +194,7 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         process,
-        ImmutableSet.<Path>of(new File("/foo/bar/").toPath()),
+        ImmutableSet.<Path>of(Paths.get("foo/bar/")),
         200 /* overflow */);
     watcher.postEvents();
     verify(eventBus, process);
@@ -195,7 +205,7 @@ public class WatchmanWatcherTest {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
             "{",
-                "\"name\": \"/foo/bar/baz\"",
+                "\"name\": \"foo/bar/baz\"",
             "}",
         "]}");
     Capture<WatchEvent<Path>> eventCapture = new Capture<>();
@@ -240,7 +250,7 @@ public class WatchmanWatcherTest {
     expect(process.getInputStream()).andReturn(
         new ByteArrayInputStream(output.getBytes(Charsets.US_ASCII)));
     expect(process.getOutputStream()).andReturn(
-        new ByteArrayOutputStream());
+        new ByteArrayOutputStream()).times(2);
     return process;
   }
 }
