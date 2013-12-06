@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.getCurrentArguments;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,17 +26,24 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.android.SmartDexingStep.InputResolver;
+import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
+import org.easymock.EasyMockSupport;
+import org.easymock.IAnswer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -44,11 +53,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class SmartDexingStepTest {
+public class SmartDexingStepTest extends EasyMockSupport {
   @Rule
   public TemporaryFolder tmpDir = new TemporaryFolder();
 
@@ -132,5 +144,87 @@ public class SmartDexingStepTest {
     Files.write(actualHash, outputHashFile.toFile(), Charsets.UTF_8);
 
     assertTrue("Matching input hash should be considered cached", rule.checkIsCached());
+  }
+
+  @Test
+  public void testCreateDxStepForDxPseudoRuleWithXzOutput() {
+    ImmutableList<Path> filesToDex = ImmutableList.of(
+        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    String outputPath = "classes.dex.jar.xz";
+    EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+
+    assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
+    List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
+    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
+    MoreAsserts.assertSteps(
+        "Steps should repack zip entries and then compress using xz.",
+        ImmutableList.of(
+            "/usr/bin/dx " + xmx + "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar",
+            "repack classes.dex.tmp.jar in classes.dex.jar",
+            "rm -f classes.dex.tmp.jar",
+            "xz -z -4 --check=crc32 classes.dex.jar"),
+        steps,
+        createMockedExecutionContext());
+
+    verifyAll();
+  }
+
+  @Test
+  public void testCreateDxStepForDxPseudoRuleWithDexOutput() {
+    ImmutableList<Path> filesToDex = ImmutableList.of(
+        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    String outputPath = "classes.dex";
+    EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+
+    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
+    assertEquals(
+        "/usr/bin/dx " + xmx + "--dex --output classes.dex foo.dex.jar bar.dex.jar",
+        dxStep.getDescription(createMockedExecutionContext()));
+    verifyAll();
+  }
+
+  @Test
+  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() {
+    ImmutableList<Path> filesToDex = ImmutableList.of(
+        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    String outputPath = "classes.dex.jar";
+    EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+
+    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
+    assertEquals(
+        "/usr/bin/dx " + xmx + "--dex --output classes.dex.jar foo.dex.jar bar.dex.jar",
+        dxStep.getDescription(createMockedExecutionContext()));
+    verifyAll();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() {
+    ImmutableList<Path> filesToDex = ImmutableList.of(
+        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    String outputPath = "classes.flex";
+    EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
+    SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+  }
+
+  private ExecutionContext createMockedExecutionContext() {
+    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
+    expect(androidPlatformTarget.getDxExecutable()).andStubReturn(new File("/usr/bin/dx"));
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(projectFilesystem.resolve(anyObject(Path.class))).andAnswer(
+        new IAnswer<Path>() {
+          @Override
+          public Path answer() throws Throwable {
+            return (Path) getCurrentArguments()[0];
+          }
+        }).anyTimes();
+    replayAll();
+
+    return TestExecutionContext.newBuilder()
+        .setAndroidPlatformTarget(Optional.of(androidPlatformTarget))
+        .setProjectFilesystem(projectFilesystem)
+        .build();
   }
 }

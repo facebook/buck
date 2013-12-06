@@ -37,6 +37,11 @@ import javax.annotation.CheckForNull;
 
 public class DxStep extends ShellStep {
 
+  /**
+   */
+  public static final String XMX_OVERRIDE =
+      "";
+
   /** Options to pass to {@code dx}. */
   public static enum Option {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
@@ -107,6 +112,11 @@ public class DxStep extends ShellStep {
     }
 
     builder.add(dx);
+
+    if (!XMX_OVERRIDE.isEmpty()) {
+      builder.add(XMX_OVERRIDE);
+    }
+
     builder.add("--dex");
 
     // --statistics flag, if appropriate.
