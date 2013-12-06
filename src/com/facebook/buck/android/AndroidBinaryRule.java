@@ -506,14 +506,19 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           /* cmd */ Optional.<String>absent(),
           /* bash */ preprocessJavaClassesBash,
           /* cmdExe */ Optional.<String>absent());
-      steps.add(new AbstractGenruleStep(this, commandString, preprocessJavaClassesDeps) {
+      steps.add(new AbstractGenruleStep(
+          this, commandString, preprocessJavaClassesDeps, new File(preprocessJavaClassesInDir)) {
 
         @Override
         protected void addEnvironmentVariables(
             ExecutionContext context,
             ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-          environmentVariablesBuilder.put("IN_JARS_DIR", preprocessJavaClassesInDir);
-          environmentVariablesBuilder.put("OUT_JARS_DIR", preprocessJavaClassesOutDir);
+          Function<String, Path> pathRelativizer =
+              context.getProjectFilesystem().getPathRelativizer();
+          environmentVariablesBuilder.put(
+              "IN_JARS_DIR", pathRelativizer.apply(preprocessJavaClassesInDir).toString());
+          environmentVariablesBuilder.put(
+              "OUT_JARS_DIR", pathRelativizer.apply(preprocessJavaClassesOutDir).toString());
         }
 
       });

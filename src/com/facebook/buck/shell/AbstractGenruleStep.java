@@ -84,13 +84,6 @@ public abstract class AbstractGenruleStep extends ShellStep {
         depsToSubstituteInCommandString);
   }
 
-  public AbstractGenruleStep(
-      BuildRule buildRule,
-      CommandString commandString,
-      Set<BuildRule> depsToSubstituteInCommandString) {
-    this(buildRule, commandString, depsToSubstituteInCommandString, /* workingDirectory */ null);
-  }
-
   public static class CommandString {
     private Optional<String> cmd;
     private Optional<String> bash;
