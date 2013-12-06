@@ -20,6 +20,13 @@ BUCK_BIN_DIRECTORY=$DIR
 # TODO(user): refactor buck_common in to functions that can be called
 source "${BUCK_BIN_DIRECTORY}/buck_common"
 
+# Use watchman if available.
+if command -v watchman &> /dev/null; then
+    echo "Using watchman."
+    BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS -Dbuck.buckd_watcher=Watchman"
+    watchman watch $PROJECT_ROOT &> /dev/null
+fi
+
 # Kill any existing buckd process.
 if [ $BUCKD_RUNNING -eq 0 ]; then
   echo "Killing existing buckd process"

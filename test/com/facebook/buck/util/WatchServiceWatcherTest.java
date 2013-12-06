@@ -43,7 +43,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
-public class ProjectFilesystemWatcherTest {
+public class WatchServiceWatcherTest {
 
   private EventBus eventBus;
   private ProjectFilesystem filesystem;
@@ -52,7 +52,7 @@ public class ProjectFilesystemWatcherTest {
   private WatchKey key;
   private WatchEvent<Path> event;
   private Capture<FileVisitor<Path>> visitor;
-  private ProjectFilesystemWatcher watcher;
+  private WatchServiceWatcher watcher;
 
   @Before
   @SuppressWarnings("unchecked") // Needed to mock generic class.
@@ -82,8 +82,8 @@ public class ProjectFilesystemWatcherTest {
 
     replay(filesystem, eventBus, watchService, path, key, event);
 
-    // Pump ProjectFilesystemWatcher.
-    watcher = new ProjectFilesystemWatcher(
+    // Pump WatchServiceWatcher.
+    watcher = new WatchServiceWatcher(
         filesystem, eventBus, ImmutableSet.<Path>of(), watchService);
     visitor.getValue().preVisitDirectory(path, null);
     watcher.postEvents();
@@ -108,8 +108,8 @@ public class ProjectFilesystemWatcherTest {
     eventBus.post(anyObject(WatchEvent.class));
     replay(filesystem, eventBus, watchService, path, key, event);
 
-    // Pump ProjectFilesystemWatcher.
-    watcher = new ProjectFilesystemWatcher(
+    // Pump WatchServiceWatcher.
+    watcher = new WatchServiceWatcher(
         filesystem, eventBus, ImmutableSet.<Path>of(), watchService);
     visitor.getValue().preVisitDirectory(path, null);
     watcher.postEvents();
@@ -132,8 +132,8 @@ public class ProjectFilesystemWatcherTest {
     expect(key.reset()).andReturn(false);
     replay(filesystem, eventBus, watchService, path, key, event);
 
-    // Pump ProjectFilesystemWatcher.
-    watcher = new ProjectFilesystemWatcher(
+    // Pump WatchServiceWatcher.
+    watcher = new WatchServiceWatcher(
         filesystem, eventBus, ImmutableSet.<Path>of(Paths.get("/")), watchService);
     visitor.getValue().preVisitDirectory(path, null);
     watcher.postEvents();

@@ -41,6 +41,8 @@ import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.WatchServiceWatcher;
+import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
@@ -130,15 +132,26 @@ public final class Main {
           config.getTempFilePatterns(),
           createRuleKeyBuilderFactory(hashCache));
       this.fileEventBus = new EventBus("file-change-events");
-      this.filesystemWatcher = new ProjectFilesystemWatcher(
-          projectFilesystem,
-          fileEventBus,
-          config.getIgnorePaths(),
-          FileSystems.getDefault().newWatchService());
+      this.filesystemWatcher = createWatcher(projectFilesystem);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
       webServer = createWebServer(config, console);
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+    }
+
+    private ProjectFilesystemWatcher createWatcher(ProjectFilesystem projectFilesystem)
+        throws IOException {
+      if (System.getProperty("buck.buckd_watcher", "WatchService").equals("Watchman")) {
+        return new WatchmanWatcher(
+            projectFilesystem,
+            fileEventBus,
+            config.getIgnorePaths());
+      }
+      return new WatchServiceWatcher(
+          projectFilesystem,
+          fileEventBus,
+          config.getIgnorePaths(),
+          FileSystems.getDefault().newWatchService());
     }
 
     private Optional<WebServer> createWebServer(BuckConfig config, Console console) {

@@ -76,6 +76,7 @@ java_library(
     ':exceptions',
     ':io',
     '//lib:guava',
+    '//lib:jackson-core',
     '//lib:jsr305',
     '//src/com/facebook/buck/zip:stream',
   ],
