@@ -144,7 +144,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(ruleResolver,
-        buildRuleFactoryParams(ImmutableMap.<String, Object>of("some_path", "Fish.java")),
+        buildRuleFactoryParams(ImmutableMap.<String, Object>of("somePath", "Fish.java")),
         dto);
 
     assertEquals(Paths.get("example/path", "Fish.java"), dto.somePath);

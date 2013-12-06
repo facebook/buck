@@ -75,7 +75,7 @@ public class BuckPyFunction {
       builder.append("    '")
           .append(param.getName())
           .append("' : ")
-          .append(param.getName())
+          .append(param.getPythonName())
           .append(",\n");
     }
 
@@ -86,7 +86,7 @@ public class BuckPyFunction {
   }
 
   private void appendPythonParameter(StringBuilder builder, ParamInfo param) {
-    builder.append(param.getName());
+    builder.append(param.getPythonName());
     if (param.isOptional()) {
       builder.append("=").append(getPythonDefault(param));
     }
