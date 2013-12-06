@@ -66,9 +66,11 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.reflect.ClassPath;
@@ -594,6 +596,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     addStepsToRecordAbiToDisk(commands, abiKeySupplier, buildableContext);
 
+    JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, commands);
+
     return commands.build();
   }
 
@@ -722,13 +726,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    */
   @Override
   public JavaLibraryRule.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
-    if (abiKeyHash.isPresent()) {
-      return new JavaLibraryRule.Data(abiKeyHash.get());
-    } else {
-      throw new IllegalStateException(String.format(
-          "Should not be initializing %s from disk if the ABI key is not written.", this));
-    }
+    return JavaLibraryRules.initializeFromDisk(this, onDiskBuildInfo);
   }
 
   @Override
@@ -748,6 +746,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   @Override
   public Sha1HashCode getAbiKey() {
     return getBuildOutput().getAbiKey();
+  }
+
+  @Override
+  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
+    return getBuildOutput().getClassNamesToHashes();
   }
 
 

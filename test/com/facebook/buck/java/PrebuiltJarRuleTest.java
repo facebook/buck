@@ -28,13 +28,15 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -46,6 +48,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class PrebuiltJarRuleTest {
@@ -69,29 +72,42 @@ public class PrebuiltJarRuleTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> buildSteps = junitJarRule.getBuildSteps(buildContext, buildableContext);
 
-    // Execute the lone build step.
-    assertEquals("CalculateAbiStep should be the only step.", 1, buildSteps.size());
+    // Execute the CalculateAbiStep.
     Step calculateAbiStep = buildSteps.get(0);
+    assertTrue(calculateAbiStep instanceof PrebuiltJarRule.CalculateAbiStep);
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
     int exitCode = calculateAbiStep.execute(executionContext);
     assertEquals("Step should execute successfully.", 0, exitCode);
+    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
+        "4e031bb61df09069aeb2bffb4019e7a5034a4ee0");
 
     // Hydrate the rule as AbstractCachingBuildRule would.
-    OnDiskBuildInfo onDiskBuildInfo = buildableContext
-        .getMetadataThatWasWrittenToDiskAsOnDiskBuildInfo();
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo()
+        .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, "4e031bb61df09069aeb2bffb4019e7a5034a4ee0")
+        .setFileContentsForPath(Paths.get("buck-out/gen/lib/junit.classes.txt"),
+            ImmutableList.of(
+                "com/example/Bar 1b1221d71c29aacb8e0b5b9eaffcd05e914ac55b",
+                "com/example/Foo cea146e5aa5565a09e6a1ae9137044eb64b2cf45"));
     BuildResult buildResult = new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY,
         CacheResult.MISS);
     junitJarRule.doHydrationAfterBuildStepsFinish(buildResult, onDiskBuildInfo);
 
     // Make sure the ABI key is set as expected.
-    Sha1HashCode abiKey = junitJarRule.getAbiKey();
     HashCode hashForJar = ByteStreams.hash(
         Files.newInputStreamSupplier(
             new File(PATH_TO_JUNIT_JAR)),
         Hashing.sha1());
     assertEquals("ABI key should be the sha1 of the file contents.",
         hashForJar.toString(),
-        abiKey.toString());
+        junitJarRule.getAbiKey().toString());
+
+    assertEquals(
+        "initializing from OnDiskBuildInfo should populate getClassNamesToHashes().",
+        ImmutableSortedMap.<String, HashCode>of(
+            "com/example/Bar", HashCode.fromString("1b1221d71c29aacb8e0b5b9eaffcd05e914ac55b"),
+            "com/example/Foo", HashCode.fromString("cea146e5aa5565a09e6a1ae9137044eb64b2cf45")
+        ),
+        junitJarRule.getClassNamesToHashes());
 
     assertEquals(
         "Executing the step should record the ABI key as metadata.",

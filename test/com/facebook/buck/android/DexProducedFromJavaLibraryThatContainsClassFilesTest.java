@@ -17,13 +17,15 @@
 package com.facebook.buck.android;
 
 import static org.easymock.EasyMock.expect;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
-import com.facebook.buck.java.AccumulateClassNames;
 import com.facebook.buck.java.FakeJavaLibraryRule;
+import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
@@ -42,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
@@ -55,13 +58,18 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException {
-    FakeJavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"));
-    javaLibraryRule.setOutputFile("buck-out/gen/foo/bar.jar");
+    FakeJavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar")) {
+      @Override
+      public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
+        return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
+      }
 
-    AccumulateClassNames accumulateClassNames = createMock(AccumulateClassNames.class);
-    expect(accumulateClassNames.getClassNames()).andReturn(
-        ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe")));
-    expect(accumulateClassNames.getJavaLibraryRule()).andReturn(javaLibraryRule);
+      @Override
+      public Sha1HashCode getAbiKey() {
+        return new Sha1HashCode("f7f34ed13b881c6c6f663533cde4a436ea84435e");
+      }
+    };
+    javaLibraryRule.setOutputFile("buck-out/gen/foo/bar.jar");
 
     BuildContext context = createMock(BuildContext.class);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -70,7 +78,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar", "dex");
     DexProducedFromJavaLibraryThatContainsClassFiles preDex =
-        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, accumulateClassNames);
+        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -110,8 +118,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     verifyAll();
     resetAll();
 
-    Sha1HashCode abiKey = new Sha1HashCode("f7f34ed13b881c6c6f663533cde4a436ea84435e");
-    expect(accumulateClassNames.getAbiKey()).andReturn(abiKey);
     replayAll();
 
     ((EstimateLinearAllocStep) steps.get(2)).setLinearAllocEstimateForTesting(250);
@@ -121,6 +127,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",
         ImmutableSet.of(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")),
         buildableContext.getRecordedArtifacts());
+
+    // The ABI for a DexProducedFromJavaLibraryThatContainsClassFiles should be a function of the
+    // .class file hashes of the JavaLibraryRule that it dexed.
+    Sha1HashCode abiKey = DexProducedFromJavaLibraryThatContainsClassFiles
+        .computeAbiKey(javaLibraryRule.getClassNamesToHashes());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
         abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
@@ -133,8 +144,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreNoClassesToDex() throws IOException {
-    AccumulateClassNames accumulateClassNames = createMock(AccumulateClassNames.class);
-    expect(accumulateClassNames.getClassNames()).andReturn(
+    JavaLibraryRule javaLibrary = createMock(JavaLibraryRule.class);
+    expect(javaLibrary.getClassNamesToHashes()).andReturn(
         ImmutableSortedMap.<String, HashCode>of());
 
     BuildContext context = createMock(BuildContext.class);
@@ -144,7 +155,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     BuildTarget buildTarget = new BuildTarget("//foo", "bar");
     DexProducedFromJavaLibraryThatContainsClassFiles preDex =
-        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, accumulateClassNames);
+        new DexProducedFromJavaLibraryThatContainsClassFiles(buildTarget, javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     verifyAll();
@@ -174,10 +185,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     resetAll();
 
     Sha1HashCode abiKey = new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY);
-    expect(accumulateClassNames.getAbiKey()).andReturn(abiKey);
+    expect(javaLibrary.getClassNamesToHashes()).andReturn(ImmutableSortedMap.<String, HashCode>of());
     replayAll();
 
     Step recordArtifactAndMetadataStep = steps.get(2);
+    assertThat(recordArtifactAndMetadataStep.getShortName(), startsWith("record_"));
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
@@ -190,8 +202,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testObserverMethods() {
-    AccumulateClassNames accumulateClassNames = createMock(AccumulateClassNames.class);
-    expect(accumulateClassNames.getClassNames())
+    JavaLibraryRule accumulateClassNames = createMock(JavaLibraryRule.class);
+    expect(accumulateClassNames.getClassNamesToHashes())
         .andReturn(ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe")))
         .anyTimes();
 
@@ -206,5 +218,34 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     assertTrue(preDexWithClasses.hasOutput());
 
     verifyAll();
+  }
+
+  @Test
+  public void testComputeAbiKey() {
+    ImmutableSortedMap<String, HashCode> classNamesAndHashes = ImmutableSortedMap.of(
+        "com/example/Foo", HashCode.fromString("e4fccb7520b7795e632651323c63217c9f59f72a"),
+        "com/example/Bar", HashCode.fromString("087b7707a5f8e0a2adf5652e3cd2072d89a197dc"),
+        "com/example/Baz", HashCode.fromString("62b1c2510840c0de55c13f66065a98a719be0f19")
+    );
+    String observedSha1 = DexProducedFromJavaLibraryThatContainsClassFiles
+        .computeAbiKey(classNamesAndHashes)
+        .getHash();
+
+    String expectedSha1 = Hashing.sha1().newHasher()
+        .putUnencodedChars("com/example/Bar")
+        .putByte((byte)0)
+        .putUnencodedChars("087b7707a5f8e0a2adf5652e3cd2072d89a197dc")
+        .putByte((byte)0)
+        .putUnencodedChars("com/example/Baz")
+        .putByte((byte)0)
+        .putUnencodedChars("62b1c2510840c0de55c13f66065a98a719be0f19")
+        .putByte((byte)0)
+        .putUnencodedChars("com/example/Foo")
+        .putByte((byte)0)
+        .putUnencodedChars("e4fccb7520b7795e632651323c63217c9f59f72a")
+        .putByte((byte)0)
+        .hash()
+        .toString();
+    assertEquals(expectedSha1, observedSha1);
   }
 }

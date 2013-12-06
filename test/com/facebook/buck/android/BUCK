@@ -4,6 +4,8 @@ java_test(
   deps = [
     '//lib:easymock',
     '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
     '//lib:junit',
     '//lib:jackson-core',
     '//lib:jackson-databind',

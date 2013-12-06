@@ -707,7 +707,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(new MakeCleanDirectoryStep(rDotJavaScratchDir));
 
     final AccumulateClassNamesStep accumulateClassNames = new AccumulateClassNamesStep(
-        pathToCompiledRDotJavaFiles.get(),
+        pathToCompiledRDotJavaFiles,
         rDotJavaScratchDir.resolve("classes.txt"));
     steps.add(accumulateClassNames);
 

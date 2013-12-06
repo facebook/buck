@@ -26,13 +26,13 @@ java_library(
 java_library(
   name = 'rules',
   srcs = [
-    'AccumulateClassNames.java',
     'Classpaths.java',
     'DefaultJavaLibraryRule.java',
     'HasJavaSrcs.java',
     'JavaBinaryRule.java',
     'JavaBinaryBuildRuleFactory.java',
     'JavaLibraryBuildRuleFactory.java',
+    'JavaLibraryRules.java',
     'JavaTestRule.java',
     'JavaTestBuildRuleFactory.java',
     'Keystore.java',

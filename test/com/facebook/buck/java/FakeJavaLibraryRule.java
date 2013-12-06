@@ -30,7 +30,9 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 
 public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRule {
 
@@ -103,6 +105,11 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
 
   @Override
   public Sha1HashCode getAbiKey() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     throw new UnsupportedOperationException();
   }
 }

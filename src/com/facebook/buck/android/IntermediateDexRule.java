@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.AccumulateClassNames;
+import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbiRule;
@@ -50,8 +50,8 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
   }
 
   /**
-   * The ABI key for the deps of this rule should be a hash of the classes.txt file produced by
-   * {@link AccumulateClassNames}.
+   * The ABI key for the deps of this rule should inherit that of the
+   * {@link DexProducedFromJavaLibraryThatContainsClassFiles}.
    */
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
@@ -64,7 +64,7 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
 
   public static class Builder extends AbstractBuildRuleBuilder<IntermediateDexRule> {
 
-    private AccumulateClassNames javaLibraryWithClassesList;
+    private JavaLibraryRule javaLibrary;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -74,25 +74,20 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
     public IntermediateDexRule build(BuildRuleResolver ruleResolver) {
       DexProducedFromJavaLibraryThatContainsClassFiles buildable =
           new DexProducedFromJavaLibraryThatContainsClassFiles(getBuildTarget(),
-              javaLibraryWithClassesList);
+              javaLibrary);
       return new IntermediateDexRule(buildable,
           createBuildRuleParams(ruleResolver));
     }
 
-    public Builder setAccumulateClassNamesDep(AccumulateClassNames javaLibraryWithClassesList) {
-      this.javaLibraryWithClassesList = javaLibraryWithClassesList;
+    public Builder setJavaLibraryRuleToDex(JavaLibraryRule javaLibrary) {
+      this.javaLibrary = javaLibrary;
+      addDep(javaLibrary.getBuildTarget());
       return this;
     }
 
     @Override
     public Builder setBuildTarget(BuildTarget buildTarget) {
       super.setBuildTarget(buildTarget);
-      return this;
-    }
-
-    @Override
-    public Builder addDep(BuildTarget buildTarget) {
-      super.addDep(buildTarget);
       return this;
     }
 

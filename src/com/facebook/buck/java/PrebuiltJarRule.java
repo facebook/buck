@@ -46,21 +46,18 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.InputSupplier;
+import com.google.common.io.Files;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-/**
- * A rule that establishes a pre-compiled JAR file as a dependency.
- */
 public class PrebuiltJarRule extends DoNotUseAbstractBuildable
     implements JavaLibraryRule, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibraryRule.Data> {
@@ -145,14 +142,13 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
+  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
+    return getBuildOutput().getClassNamesToHashes();
+  }
+
+  @Override
   public JavaLibraryRule.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
-    if (abiKeyHash.isPresent()) {
-      return new JavaLibraryRule.Data(abiKeyHash.get());
-    } else {
-      throw new IllegalStateException(String.format(
-          "Should not be initializing %s from disk if the ABI key is not written.", this));
-    }
+    return JavaLibraryRules.initializeFromDisk(this, onDiskBuildInfo);
   }
 
   @Override
@@ -200,14 +196,19 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
       throws IOException {
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
     // Create a step to compute the ABI key.
-    Step calculateAbiStep = new CalculateAbiStep(buildableContext);
-    return ImmutableList.of(calculateAbiStep);
+    steps.add(new CalculateAbiStep(buildableContext));
+
+    JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
+
+    return steps.build();
   }
 
-  private class CalculateAbiStep extends AbstractExecutionStep {
+  class CalculateAbiStep extends AbstractExecutionStep {
 
     private final BuildableContext buildableContext;
 
@@ -218,11 +219,10 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
     @Override
     public int execute(ExecutionContext context) {
-      InputSupplier<? extends InputStream> inputSupplier = context.getProjectFilesystem()
-          .getInputSupplierForRelativePath(binaryJar);
+      File jarFile = context.getProjectFilesystem().getFileForRelativePath(binaryJar);
       HashCode fileSha1;
       try {
-        fileSha1 = ByteStreams.hash(inputSupplier, Hashing.sha1());
+        fileSha1 = Files.hash(jarFile, Hashing.sha1());
       } catch (IOException e) {
         context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
         return 1;

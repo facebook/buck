@@ -101,4 +101,10 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     Path path = Paths.get(pathToOutputFile);
     return projectFilesystem.readLines(path);
   }
+
+  @Override
+  public List<String> getOutputFileContentsByLine(Path pathRelativeToProjectRoot)
+      throws IOException {
+    return projectFilesystem.readLines(pathRelativeToProjectRoot);
+  }
 }

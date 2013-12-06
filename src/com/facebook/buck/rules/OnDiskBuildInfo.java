@@ -20,6 +20,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public interface OnDiskBuildInfo {
@@ -60,4 +61,5 @@ public interface OnDiskBuildInfo {
    */
   public List<String> getOutputFileContentsByLine(Buildable buildable) throws IOException;
 
+  public List<String> getOutputFileContentsByLine(Path path) throws IOException;
 }

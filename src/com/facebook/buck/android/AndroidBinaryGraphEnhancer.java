@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidBinaryRule.PackageType;
 import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.UberRDotJavaBuildable.ResourceCompressionMode;
-import com.facebook.buck.java.AccumulateClassNames;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
@@ -92,26 +91,11 @@ public class AndroidBinaryGraphEnhancer {
         continue;
       }
 
-      // Create a rule to get the list of the classes in the JavaLibraryRule.
-      BuildTarget accumulateClassNamesBuildTarget = new BuildTarget(
-          originalTarget.getBaseName(), originalTarget.getShortName(), "class_names");
-      AccumulateClassNames.Builder accumulateClassNamesBuilder = AccumulateClassNames
-          .newAccumulateClassNamesBuilder(buildRuleBuilderParams)
-          .setBuildTarget(accumulateClassNamesBuildTarget)
-          .setJavaLibraryToDex(javaLibraryRule)
-          .addDep(originalTarget)
-          .addVisibilityPattern(BuildTargetPattern.MATCH_ALL);
-      BuildRule accumulateClassNamesRule = ruleResolver.buildAndAddToIndex(
-          accumulateClassNamesBuilder);
-      AccumulateClassNames accumulateClassNames =
-          (AccumulateClassNames) accumulateClassNamesRule.getBuildable();
-
       // Create the IntermediateDexRule and add it to both the ruleResolver and preDexDeps.
       IntermediateDexRule.Builder preDexBuilder = IntermediateDexRule
           .newPreDexBuilder(buildRuleBuilderParams)
           .setBuildTarget(preDexTarget)
-          .setAccumulateClassNamesDep(accumulateClassNames)
-          .addDep(accumulateClassNamesBuildTarget)
+          .setJavaLibraryRuleToDex(javaLibraryRule)
           .addVisibilityPattern(BuildTargetPattern.MATCH_ALL);
       IntermediateDexRule preDex = ruleResolver.buildAndAddToIndex(preDexBuilder);
       preDexDeps.add(preDex);

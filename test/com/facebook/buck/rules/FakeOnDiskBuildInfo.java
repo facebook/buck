@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +34,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   @Nullable private RuleKey ruleKeyWithoutDeps;
   private Map<String, String> metadata = Maps.newHashMap();
   private Map<Buildable, ImmutableList<String>> outputFileContents = Maps.newHashMap();
+  private Map<Path, ImmutableList<String>> pathsToContents = Maps.newHashMap();
 
   /** @return this */
   public FakeOnDiskBuildInfo setRuleKey(@Nullable RuleKey ruleKey) {
@@ -89,8 +92,26 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
     ImmutableList<String> lines = outputFileContents.get(buildable);
     if (lines != null) {
       return lines;
+    } else if (buildable.getPathToOutputFile() != null) {
+      return getOutputFileContentsByLine(Paths.get(buildable.getPathToOutputFile()));
     } else {
       throw new RuntimeException("No lines for buildable: " + buildable);
+    }
+  }
+
+  /** @return this */
+  public FakeOnDiskBuildInfo setFileContentsForPath(Path path, List<String> lines) {
+    pathsToContents.put(path, ImmutableList.copyOf(lines));
+    return this;
+  }
+
+  @Override
+  public List<String> getOutputFileContentsByLine(Path path) throws IOException {
+    ImmutableList<String> lines = pathsToContents.get(path);
+    if (lines != null) {
+      return lines;
+    } else {
+      throw new RuntimeException("No lines for path: " + path);
     }
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DexProducedFromJavaLibraryThatContainsClassFiles.BuildOutput;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
-import com.facebook.buck.java.AccumulateClassNames;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbiRule;
@@ -43,6 +42,8 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -50,13 +51,13 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
 /**
  * {@link DexProducedFromJavaLibraryThatContainsClassFiles} is a {@link Buildable} that serves a
- * very specific purpose: it takes a {@link JavaLibraryRule} and the list of classes in the
- * {@link JavaLibraryRule} (which is represented by an {@link AccumulateClassNames}), and dexes the
+ * very specific purpose: it takes a {@link JavaLibraryRule} and dexes the
  * output of the {@link JavaLibraryRule} if its list of classes is non-empty. Because it is
  * expected to be used with pre-dexing, we always pass the {@code --force-jumbo} flag to {@code dx}
  * in this buildable.
@@ -73,15 +74,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
 
   private final BuildTarget buildTarget;
-  private final AccumulateClassNames javaLibraryWithClassesList;
+  private final JavaLibraryRule javaLibrary;
 
   @Nullable private BuildOutput buildOutput;
 
   @VisibleForTesting
   DexProducedFromJavaLibraryThatContainsClassFiles(BuildTarget buildTarget,
-      AccumulateClassNames javaLibraryWithClassesList) {
+      JavaLibraryRule javaLibrary) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.javaLibraryWithClassesList = Preconditions.checkNotNull(javaLibraryWithClassesList);
+    this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
   }
 
   @Override
@@ -106,11 +107,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
     steps.add(new MkdirStep(getPathToDex().getParent()));
 
     // If there are classes, run dx.
-    final boolean hasClassesToDx = !javaLibraryWithClassesList.getClassNames().isEmpty();
+    final boolean hasClassesToDx = !javaLibrary.getClassNamesToHashes().isEmpty();
     final Supplier<Integer> linearAllocEstimate;
     if (hasClassesToDx) {
-      JavaLibraryRule javaLibraryRuleToDex = javaLibraryWithClassesList.getJavaLibraryRule();
-      Path pathToOutputFile = Paths.get(javaLibraryRuleToDex.getPathToOutputFile());
+      Path pathToOutputFile = Paths.get(javaLibrary.getPathToOutputFile());
       EstimateLinearAllocStep estimate = new EstimateLinearAllocStep(pathToOutputFile);
       steps.add(estimate);
       linearAllocEstimate = estimate;
@@ -201,15 +201,30 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   ImmutableSortedMap<String, HashCode> getClassNames() {
     // TODO(mbolin): Assert that this Buildable has been built. Currently, there is no way to do
     // that from a Buildable (but there is from an AbstractCachingBuildRule).
-    return javaLibraryWithClassesList.getClassNames();
+    return javaLibrary.getClassNamesToHashes();
   }
 
   int getLinearAllocEstimate() {
     return getBuildOutput().linearAllocEstimate;
   }
 
+  /**
+   * The only dep for this rule should be {@link #javaLibrary}. Therefore, the ABI key for the deps
+   * of this buildable is the hash of the {@code .class} files for {@link #javaLibrary}.
+   */
   Sha1HashCode getAbiKeyForDeps() {
-    return javaLibraryWithClassesList.getAbiKey();
+    return computeAbiKey(javaLibrary.getClassNamesToHashes());
   }
 
+  @VisibleForTesting
+  static Sha1HashCode computeAbiKey(ImmutableSortedMap<String, HashCode> classNames) {
+    Hasher hasher = Hashing.sha1().newHasher();
+    for (Map.Entry<String, HashCode> entry : classNames.entrySet()) {
+      hasher.putUnencodedChars(entry.getKey());
+      hasher.putByte((byte)0);
+      hasher.putUnencodedChars(entry.getValue().toString());
+      hasher.putByte((byte)0);
+    }
+    return new Sha1HashCode(hasher.hash().toString());
+  }
 }

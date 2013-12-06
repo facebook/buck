@@ -64,7 +64,7 @@ public class OnDiskBuildInfoTest extends EasyMockSupport {
 
     replayAll();
 
-    onDiskBuildInfo.getOutputFileContentsByLine(null);
+    onDiskBuildInfo.getOutputFileContentsByLine((Buildable) null);
   }
 
   @Test(expected = NullPointerException.class)
