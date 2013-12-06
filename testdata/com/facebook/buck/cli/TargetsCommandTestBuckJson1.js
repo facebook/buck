@@ -7,9 +7,9 @@
   "name" : "test-library",
   "proguard_config" : null, 
   "resources" : [ ],
-  "source" : "6",
+  "source" : "7",
   "srcs" : [ ],
-  "target" : "6",
+  "target" : "7",
   "type" : "java_library",
   "visibility" : [ "PUBLIC" ]
 }

@@ -51,8 +51,8 @@ public class JavacOptionsTest {
   public void buildsTargetGingerbreadCompatibleJavaVersion() {
     JavacOptions options = JavacOptions.builder().build();
 
-    assertOptionsContains(options, "-source 6");
-    assertOptionsContains(options, "-target 6");
+    assertOptionsContains(options, "-source 7");
+    assertOptionsContains(options, "-target 7");
   }
 
   @Test
