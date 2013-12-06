@@ -26,7 +26,7 @@ public class StepFailedException extends Exception {
   private final Step step;
   private final int exitCode;
 
-  /** Callers should use {@link #createForFailingStep} unless in a unit test. */
+  /** Callers should use {@link #createForFailingStepWithExitCode} unless in a unit test. */
   @VisibleForTesting
   public StepFailedException(String message, Step step, int exitCode) {
     super(message);
