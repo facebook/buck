@@ -112,7 +112,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
         // Parse the rules from the build file.
         List<Map<String, Object>> rawRules;
         try {
-          rawRules = parser.getAllRules(path.toString());
+          rawRules = parser.getAllRules(path);
         } catch (BuildFileParseException e) {
           throw new HumanReadableException(e);
         }
@@ -179,7 +179,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
   }
 
   /**
-   * @param value in a Map returned by {@link ProjectBuildFileParser#getAllRules(String)}.
+   * @param value in a Map returned by {@link ProjectBuildFileParser#getAllRules(Path)}.
    * @return a string that represents the Python equivalent of the value.
    */
   @VisibleForTesting

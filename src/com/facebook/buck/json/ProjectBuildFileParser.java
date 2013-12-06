@@ -194,7 +194,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       throws BuildFileParseException {
     try (ProjectBuildFileParser buildFileParser = factory.createParser(includes)) {
       buildFileParser.setServerMode(false);
-      return buildFileParser.getAllRulesInternal(Optional.<String>absent());
+      return buildFileParser.getAllRulesInternal(Optional.<Path>absent());
     } catch (IOException e) {
       throw BuildFileParseException.createForGenericBuildFileParseError(e);
     }
@@ -205,7 +205,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  public List<Map<String, Object>> getAllRules(String buildFile)
+  public List<Map<String, Object>> getAllRules(Path buildFile)
       throws BuildFileParseException {
     List<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile);
 
@@ -219,7 +219,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  public List<Map<String, Object>> getAllRulesAndMetaRules(String buildFile)
+  public List<Map<String, Object>> getAllRulesAndMetaRules(Path buildFile)
       throws BuildFileParseException {
     try {
       return getAllRulesInternal(Optional.of(buildFile));
@@ -229,7 +229,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   @VisibleForTesting
-  protected List<Map<String, Object>> getAllRulesInternal(Optional<String> buildFile)
+  protected List<Map<String, Object>> getAllRulesInternal(Optional<Path> buildFile)
       throws IOException {
     ensureNotClosed();
     initIfNeeded();
@@ -239,7 +239,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Preconditions.checkState(buildFile.isPresent() == isServerMode);
 
     if (buildFile.isPresent()) {
-      buckPyStdinWriter.write(buildFile.get());
+      buckPyStdinWriter.write(buildFile.get().toString());
       buckPyStdinWriter.newLine();
       buckPyStdinWriter.flush();
     }

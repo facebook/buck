@@ -21,6 +21,7 @@ import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * Thrown if we encounter an unexpected, fatal condition while interacting with the
@@ -52,11 +53,11 @@ public class BuildFileParseException extends Exception
     return new BuildFileParseException(formatMessageWithCause(message, cause));
   }
 
-  static BuildFileParseException createForBuildFileParseError(String buildFilePath,
+  static BuildFileParseException createForBuildFileParseError(Path buildFile,
       IOException cause) {
     String message = String.format("Parse error for %s file %s",
         BUILD_RULES_FILE_NAME,
-        buildFilePath);
+        buildFile);
     return new BuildFileParseException(formatMessageWithCause(message, cause));
   }
 

@@ -508,7 +508,7 @@ public class Parser {
             buildFile);
       }
 
-      parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile.getPath()));
+      parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile.toPath()));
     }
     return parsedBuildFiles.get(normalize(buildFile.toPath()));
   }
