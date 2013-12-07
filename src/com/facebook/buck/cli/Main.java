@@ -402,9 +402,7 @@ public final class Main {
               projectFilesystem,
               config,
               getWebServerIfDaemon(context),
-              executionEnvironment,
-              consoleListener,
-              console);
+              consoleListener);
 
       String[] remainingArgs = new String[args.length - 1];
       System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
@@ -502,10 +500,7 @@ public final class Main {
       ProjectFilesystem projectFilesystem,
       BuckConfig config,
       Optional<WebServer> webServer,
-      ExecutionEnvironment executionEnvironment,
-      AbstractConsoleEventBusListener consoleEventBusListener,
-      Console console) {
-
+      AbstractConsoleEventBusListener consoleEventBusListener) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
