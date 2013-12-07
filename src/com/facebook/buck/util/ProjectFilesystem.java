@@ -49,7 +49,7 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 
 /**
- * An injectable service for interacting with the filesystem.
+ * An injectable service for interacting with the filesystem relative to the project root.
  */
 public class ProjectFilesystem {
 

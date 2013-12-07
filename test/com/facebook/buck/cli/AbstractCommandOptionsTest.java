@@ -17,23 +17,34 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.anyObject;
 
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
+
+import com.facebook.buck.util.FakeHostFilesystem;
+import com.facebook.buck.util.HostFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Properties;
 
 /** Unit test for {@link AbstractCommandOptions}. */
 public class AbstractCommandOptionsTest extends EasyMockSupport {
 
   private final File pathToNdk = new File("/path/to/ndk");
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testConstructor() {
@@ -139,5 +150,84 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
       assertEquals("Either both min_version and max_version are provided or neither are", e.getMessage());
     }
     verifyAll();
+  }
+
+  @Test
+  public void testSdkPathFromPropertiesReturnsAbsentWithNoPropertiesFileOrEnvironment() {
+    Optional<Properties> properties = Optional.absent();
+    HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
+    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
+
+    Optional<File> path = AbstractCommandOptions.findDirectoryByPropertiesThenEnvironmentVariable(
+        properties,
+        hostFilesystem,
+        systemEnvironment,
+        "sdk.dir");
+    assertFalse(path.isPresent());
+  }
+
+  @Test
+  public void testSdkPathFromPropertiesReturnsPathWhenDirectoryIsPresent() {
+    Properties properties = new Properties();
+    properties.setProperty("sdk.dir", "/path/to/sdk");
+    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
+    HostFilesystem hostFilesystem = FakeHostFilesystem.withDirectories("/path/to/sdk");
+
+    Optional<File> path = AbstractCommandOptions.findDirectoryByPropertiesThenEnvironmentVariable(
+        Optional.of(properties),
+        hostFilesystem,
+        systemEnvironment,
+        "sdk.dir");
+    assertEquals(new File("/path/to/sdk"), path.get());
+  }
+
+  @Test
+  public void testSdkPathFromPropertiesRaisesExceptionWhenDirectoryIsNotPresent() {
+    Properties properties = new Properties();
+    properties.setProperty("sdk.dir", "/path/to/sdk");
+    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
+    HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
+
+    thrown.expect(RuntimeException.class);
+    thrown.expectMessage(
+        "Properties file local.properties contains invalid path [/path/to/sdk] for key sdk.dir.");
+
+    AbstractCommandOptions.findDirectoryByPropertiesThenEnvironmentVariable(
+        Optional.of(properties),
+        hostFilesystem,
+        systemEnvironment,
+        "sdk.dir");
+  }
+
+  @Test
+  public void testSdkPathFromEnvironmentReturnsPathWhenDirectoryIsPresent() {
+    Optional<Properties> properties = Optional.absent();
+    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of("ANDROID_SDK", "/path/to/sdk");
+    HostFilesystem hostFilesystem = FakeHostFilesystem.withDirectories("/path/to/sdk");
+
+    Optional<File> path = AbstractCommandOptions.findDirectoryByPropertiesThenEnvironmentVariable(
+        properties,
+        hostFilesystem,
+        systemEnvironment,
+        "sdk.dir",
+        "ANDROID_SDK");
+    assertEquals(new File("/path/to/sdk"), path.get());
+  }
+
+  @Test
+  public void testSdkPathFromEnvironmentRaisesExceptionWhenDirectoryIsNotPresent() {
+    Optional<Properties> properties = Optional.absent();
+    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of("ANDROID_SDK", "/path/to/sdk");
+    HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
+
+    thrown.expect(RuntimeException.class);
+    thrown.expectMessage("Environment variable ANDROID_SDK points to invalid path [/path/to/sdk].");
+
+    AbstractCommandOptions.findDirectoryByPropertiesThenEnvironmentVariable(
+        properties,
+        hostFilesystem,
+        systemEnvironment,
+        "sdk.dir",
+        "ANDROID_SDK");
   }
 }

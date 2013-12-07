@@ -210,7 +210,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
         .setProjectFilesystem(getProjectFilesystem())
         .setConsole(console)
         .setAndroidPlatformTarget(
-            options.findAndroidPlatformTarget(dependencyGraph, getBuckEventBus()))
+            options.findAndroidPlatformTarget(getProjectFilesystem(), dependencyGraph, getBuckEventBus()))
         .setNdkRoot(options.findAndroidNdkDir(getProjectFilesystem()))
         .setEventBus(eventBus)
         .setPlatform(platform)

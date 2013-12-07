@@ -149,7 +149,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
     return new Build(graph,
-        findAndroidSdkDir(),
+        findAndroidSdkDir(projectFilesystem),
         findAndroidNdkDir(projectFilesystem),
         targetDevice,
         projectFilesystem,

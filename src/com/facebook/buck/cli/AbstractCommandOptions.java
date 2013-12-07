@@ -20,6 +20,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.util.HostFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -29,8 +30,11 @@ import com.google.common.base.Preconditions;
 import org.kohsuke.args4j.Option;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -67,6 +71,8 @@ public abstract class AbstractCommandOptions {
   @Nullable // Lazily loaded via getCommandLineBuildTargetNormalizer().
   private CommandLineBuildTargetNormalizer commandLineBuildTargetNormalizer;
 
+  private final static String localPropertiesPath = "local.properties";
+
   AbstractCommandOptions(BuckConfig buckConfig) {
     this.buckConfig = Preconditions.checkNotNull(buckConfig);
   }
@@ -96,9 +102,12 @@ public abstract class AbstractCommandOptions {
   }
 
   /** @return androidSdkDir */
-  public static Optional<File> findAndroidSdkDir() {
+  public static Optional<File> findAndroidSdkDir(ProjectFilesystem projectFilesystem) {
     Optional<File> androidSdkDir = findDirectoryByPropertiesThenEnvironmentVariable(
-        "sdk.dir", "ANDROID_SDK", "ANDROID_HOME");
+          projectFilesystem,
+          "sdk.dir",
+          "ANDROID_SDK",
+          "ANDROID_HOME");
     if (androidSdkDir.isPresent()) {
       Preconditions.checkArgument(androidSdkDir.get().isDirectory(),
           "The location of your Android SDK %s must be a directory",
@@ -110,7 +119,10 @@ public abstract class AbstractCommandOptions {
   /** @return androidNdkDir */
   protected Optional<File> findAndroidNdkDir(ProjectFilesystem projectFilesystem) {
     Optional<File> path =
-      findDirectoryByPropertiesThenEnvironmentVariable("ndk.dir", "ANDROID_NDK");
+      findDirectoryByPropertiesThenEnvironmentVariable(
+          projectFilesystem,
+          "ndk.dir",
+          "ANDROID_NDK");
     if (path.isPresent()) {
       validateNdkVersion(projectFilesystem, path.get());
     }
@@ -159,27 +171,52 @@ public abstract class AbstractCommandOptions {
    * @return If present, the value is confirmed to be a directory.
    */
   public static Optional<File> findDirectoryByPropertiesThenEnvironmentVariable(
+      ProjectFilesystem projectFilesystem,
+      String propertyName,
+      String... environmentVariables) {
+    Optional<Properties> localProperties;
+    try {
+      localProperties = Optional.of(projectFilesystem.readPropertiesFile(localPropertiesPath));
+    } catch (FileNotFoundException e) {
+      localProperties = Optional.absent();
+    } catch (IOException e) {
+      throw new RuntimeException(
+          String.format("Couldn't read properties file [%s].", localPropertiesPath),
+          e);
+    }
+
+    return
+      findDirectoryByPropertiesThenEnvironmentVariable(
+          localProperties,
+          new HostFilesystem(),
+          System.getenv(),
+          propertyName,
+          environmentVariables);
+  }
+
+  @VisibleForTesting
+  static Optional<File> findDirectoryByPropertiesThenEnvironmentVariable(
+      Optional<Properties> localProperties,
+      HostFilesystem hostFilesystem,
+      Map<String, String> systemEnvironment,
       String propertyName,
       String... environmentVariables) {
     // First, try to find a value in local.properties using the specified propertyName.
-    String dirPath = null;
-    File propertiesFile = new File("local.properties");
-    if (propertiesFile.exists()) {
-      Properties localProperties = new Properties();
-      try {
-        localProperties.load(new FileReader(propertiesFile));
-      } catch (IOException e) {
-        throw new RuntimeException(
-            "Failed reading properties from " + propertiesFile.getAbsolutePath(),
-            e);
+    Path dirPath = null;
+    if (localProperties.isPresent()) {
+      String propertyValue = localProperties.get().getProperty(propertyName);
+      if (propertyValue != null) {
+        dirPath = Paths.get(propertyValue);
       }
-      dirPath = localProperties.getProperty(propertyName);
     }
+
+    String dirPathEnvironmentVariable = null;
 
     // If dirPath is not set, try each of the environment variables, in order, to find it.
     for (String environmentVariable : environmentVariables) {
       if (dirPath == null) {
-        dirPath = System.getenv(environmentVariable);
+        dirPath = Paths.get(systemEnvironment.get(environmentVariable));
+        dirPathEnvironmentVariable = environmentVariable;
       } else {
         break;
       }
@@ -189,18 +226,31 @@ public abstract class AbstractCommandOptions {
     if (dirPath == null) {
       return Optional.absent();
     } else {
-      File directory = new File(dirPath);
-      if (!directory.isDirectory()) {
-        throw new RuntimeException(
-            directory.getAbsolutePath() + " was not a directory when trying to find " +
+      if (!hostFilesystem.isDirectory(dirPath)) {
+        String message;
+        if (dirPathEnvironmentVariable != null) {
+          message = String.format(
+              "Environment variable %s points to invalid path [%s].",
+              dirPathEnvironmentVariable,
+              dirPath);
+        } else {
+          message = String.format(
+              "Properties file %s contains invalid path [%s] for key %s.",
+              localPropertiesPath,
+              dirPath,
               propertyName);
+        }
+        throw new RuntimeException(message);
       }
-      return Optional.of(directory);
+      return Optional.of(dirPath.toFile());
     }
   }
 
   protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      DependencyGraph dependencyGraph, BuckEventBus eventBus) {
-    return Build.findAndroidPlatformTarget(dependencyGraph, findAndroidSdkDir(), eventBus);
+      ProjectFilesystem projectFilesystem, DependencyGraph dependencyGraph, BuckEventBus eventBus) {
+    return Build.findAndroidPlatformTarget(
+        dependencyGraph,
+        findAndroidSdkDir(projectFilesystem),
+        eventBus);
   }
 }

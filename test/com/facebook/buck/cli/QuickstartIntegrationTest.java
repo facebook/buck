@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 
@@ -55,7 +56,7 @@ public class QuickstartIntegrationTest {
     quickstartWorkspace.setUp();
 
     // looks at local.properties, ANDROID_SDK, and ANDROID_HOME
-    File androidSdk = AbstractCommandOptions.findAndroidSdkDir().orNull();
+    File androidSdk = AbstractCommandOptions.findAndroidSdkDir(new ProjectFilesystem(new File("."))).orNull();
 
     ProcessResult result = quickstartWorkspace.runBuckCommand("quickstart",
         "--dest-dir",

@@ -1,6 +1,23 @@
+STANDARD_TEST_SRCS = [
+  '*Test.java',
+]
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_test(
   name = 'util',
-  srcs = glob(['*.java']),
+  srcs = glob(STANDARD_TEST_SRCS),
   source_under_test = [
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
