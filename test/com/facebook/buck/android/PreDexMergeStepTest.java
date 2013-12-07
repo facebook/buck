@@ -448,7 +448,7 @@ public class PreDexMergeStepTest {
   private String createDxCommandPrefix() {
     String dxJvmArgs = "";
 
-    return "/usr/bin/dx " + dxJvmArgs + " --dex --no-optimize --output ";
+    return "/usr/bin/dx" + dxJvmArgs + " --dex --no-optimize --output ";
   }
 
   private static DexWithClasses createDexWithClasses(String pathToDexFile,
