@@ -54,6 +54,7 @@ public class JUnitStepTest {
 
     String directoryForTestResults = "buck-out/gen/theresults/";
     boolean isCodeCoverageEnabled = false;
+    boolean isJacocoEnabled = true;
     boolean isDebugEnabled = false;
     String testRunnerClassesDirectory = "build/classes/junit";
 
@@ -63,6 +64,7 @@ public class JUnitStepTest {
         vmArgs,
         directoryForTestResults,
         isCodeCoverageEnabled,
+        isJacocoEnabled,
         isDebugEnabled,
         testRunnerClassesDirectory);
 
@@ -106,6 +108,7 @@ public class JUnitStepTest {
 
     String directoryForTestResults = "buck-out/gen/theresults/";
     boolean isCodeCoverageEnabled = false;
+    boolean isJacocoEnabled = false;
     boolean isDebugEnabled = true;
     String testRunnerClassesDirectory = "build/classes/junit";
 
@@ -115,6 +118,7 @@ public class JUnitStepTest {
         vmArgs,
         directoryForTestResults,
         isCodeCoverageEnabled,
+        isJacocoEnabled,
         isDebugEnabled,
         testRunnerClassesDirectory);
 

@@ -64,6 +64,22 @@ public class JUnitStep extends ShellStep {
   private final String testRunnerClassesDirectory;
 
   /**
+   *  If EMMA is not enabled, then JaCoco is enabled for the code-coverage analysis.
+   */
+  public final boolean isJacocoEnabled;
+
+  public static final String PATH_TO_JACOCO_JARS = System.getProperty("buck.path_to_jacoco_jars",
+      "third-party/java/jacoco-0.6.4/out");
+
+  public static final String PATH_TO_JACOCO_AGENT_JAR = String.format("%s/%s",
+      PATH_TO_JACOCO_JARS,
+      System.getProperty("buck.jacoco_agent_jar", "jacocoagent.jar"));
+
+  public static final String JACOCO_EXEC_COVERAGE_FILE = "jacoco.exec";
+
+  public static final String JACOCO_OUTPUT_DIR = String.format("%s/jacoco", BuckConstant.GEN_DIR);
+
+  /**
    * @param classpathEntries contains the entries that will be listed first in the classpath when
    *     running JUnit. Entries for the bootclasspath for Android will be appended to this list, as
    *     well as an entry for the test runner. classpathEntries must include entries for the tests
@@ -77,12 +93,14 @@ public class JUnitStep extends ShellStep {
       List<String> vmArgs,
       String directoryForTestResults,
       boolean isCodeCoverageEnabled,
+      boolean isJacocoEnabled,
       boolean isDebugEnabled) {
     this(classpathEntries,
         testClassNames,
         vmArgs,
         directoryForTestResults,
         isCodeCoverageEnabled,
+        isJacocoEnabled,
         isDebugEnabled,
         System.getProperty("buck.testrunner_classes",
             new File("build/testrunner/classes").getAbsolutePath()));
@@ -95,6 +113,7 @@ public class JUnitStep extends ShellStep {
       List<String> vmArgs,
       String directoryForTestResults,
       boolean isCodeCoverageEnabled,
+      boolean isJacocoEnabled,
       boolean isDebugEnabled,
       String testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
@@ -102,6 +121,7 @@ public class JUnitStep extends ShellStep {
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.directoryForTestResults = Preconditions.checkNotNull(directoryForTestResults);
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
+    this.isJacocoEnabled = isJacocoEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.testRunnerClassesDirectory = Preconditions.checkNotNull(testRunnerClassesDirectory);
   }
@@ -119,7 +139,14 @@ public class JUnitStep extends ShellStep {
     // Add the output property for EMMA so if the classes are instrumented, coverage.ec will be
     // placed in the EMMA output folder.
     if (isCodeCoverageEnabled) {
-      args.add(String.format("-D%s=%s/coverage.ec", EMMA_COVERAGE_OUT_FILE, EMMA_OUTPUT_DIR));
+      if (!isJacocoEnabled) {
+        args.add(String.format("-D%s=%s/coverage.ec", EMMA_COVERAGE_OUT_FILE, EMMA_OUTPUT_DIR));
+      } else {
+        args.add(String.format("-javaagent:%s=destfile=%s/%s,append=true",
+            PATH_TO_JACOCO_AGENT_JAR,
+            JACOCO_OUTPUT_DIR,
+            JACOCO_EXEC_COVERAGE_FILE));
+      }
     }
 
     if (isDebugEnabled) {
@@ -143,7 +170,7 @@ public class JUnitStep extends ShellStep {
     List<String> classpath = Lists.newArrayList(classpathEntries);
 
     // Add EMMA to the classpath.
-    if (isCodeCoverageEnabled) {
+    if (isCodeCoverageEnabled && !isJacocoEnabled) {
       classpath.add(PATH_TO_EMMA_JAR);
     }
 

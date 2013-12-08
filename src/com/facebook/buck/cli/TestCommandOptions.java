@@ -45,6 +45,9 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Nullable
   private String pathToXmlTestOutput = null;
 
+  @Option(name ="--jacoco", usage = "Whether jacoco should be used for code coverage analysis or emma.")
+  private boolean isJaccoEnabled = false;
+
   @Option(
       name = "--include",
       usage = "Labels to include when running tests, --include L1 L2 ... LN --other_option.",
@@ -111,6 +114,11 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Override
   public boolean isCodeCoverageEnabled() {
     return isCodeCoverageEnabled;
+  }
+
+  @Override
+  public boolean isJacocoEnabled() {
+    return isJaccoEnabled;
   }
 
   @Override

@@ -75,6 +75,7 @@
 
   <target name="clean" description="remove all generated files">
     <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="clean" />
+    <ant inheritAll="false" antfile="third-party/java/jacoco-0.6.4/build.xml" target="clean" />
     <delete dir="${build.dir}" />
   </target>
 
@@ -118,6 +119,7 @@
           depends="compile-testrunner, compile-abi-processor"
           description="compile Java source code">
     <ant inheritAll="false" antfile="third-party/java/emma-2.0.5312/build.xml" target="core.package" />
+    <ant inheritAll="false" antfile="third-party/java/jacoco-0.6.4/build.xml" target="build" />
     <mkdir dir="${classes.dir}" />
     <javac destdir="${classes.dir}"
            classpathref="classpath"

@@ -30,6 +30,9 @@ local.properties
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
 
+# From building Jacoco with Ant.
+/third-party/java/jacoco-0.6.4/report-generator-build/
+
 # OS X
 .DS_Store
 

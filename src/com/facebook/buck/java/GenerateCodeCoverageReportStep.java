@@ -22,8 +22,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.util.Set;
+import java.nio.file.Path;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
 
@@ -35,10 +37,14 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       ImmutableSet.of("html", "xml", "txt");
 
   private final Set<String> srcDirectories;
+  private final Set<Path> classesDirectories;
   private final String outputDirectory;
 
-  public GenerateCodeCoverageReportStep(Set<String> srcDirectories, String outputDirectory) {
+  public GenerateCodeCoverageReportStep(Set<String> srcDirectories,
+      Set<Path> classesDirectories,
+      String outputDirectory) {
     this.srcDirectories = ImmutableSet.copyOf(srcDirectories);
+    this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
     this.outputDirectory = outputDirectory;
   }
 
@@ -70,29 +76,49 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     //   at com.vladium.emma.Processor.run(Processor.java:54)
     //   at com.vladium.emma.report.reportCommand.run(reportCommand.java:130)
     //   ... 1 more
-    args.add("-Xmx1024M");
+    if (!context.isJacocoEnabled()) {
+      args.add("-Xmx1024M");
 
-    args.add("-classpath", JUnitStep.PATH_TO_EMMA_JAR);
+      args.add("-classpath", JUnitStep.PATH_TO_EMMA_JAR);
 
-    args.add("emma", "report");
+      args.add("emma", "report");
 
-    // Add output directory property so code coverage data lands in the specified output directory.
-    args.add(String.format("-D%s=%s", REPORT_OUTPUT_DIR, outputDirectory));
+      // Add output directory property so code coverage data lands in the specified output directory.
+      args.add(String.format("-D%s=%s", REPORT_OUTPUT_DIR, outputDirectory));
 
-    for (String reportFormat : CODE_COVERAGE_OUTPUT_FORMAT) {
-      args.add("-report", reportFormat);
+      for (String reportFormat : CODE_COVERAGE_OUTPUT_FORMAT) {
+        args.add("-report", reportFormat);
+      }
+
+      // Specify the paths to the runtime code coverage data and the metadata files.
+      // coverage.ec: EMMA runtime code coverage data.
+      // coverage.em: EMMA metadata.
+      args.add("-input",
+          String.format("%s/coverage.ec,%s/coverage.em",
+              JUnitStep.EMMA_OUTPUT_DIR, JUnitStep.EMMA_OUTPUT_DIR));
+
+      // Specify the source path so we can see from source file which lines of code are tested.
+      String sourcepathArg = Joiner.on(",").join(srcDirectories);
+      args.add("-sourcepath").add(sourcepathArg);
+    } else {
+      args.add("-classpath",
+          String.format("%s/*:%s/../report-generator-build/",
+              JUnitStep.PATH_TO_JACOCO_JARS, JUnitStep.PATH_TO_JACOCO_JARS));
+
+      args.add(String.format("-Djacoco.output.dir=%s", outputDirectory));
+
+      args.add(String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE));
+
+      args.add(String.format("-Dclasses.dir=%s",
+          Joiner.on(":").join(Iterables.transform(classesDirectories,
+              context.getProjectFilesystem().getAbsolutifier()))));
+
+      args.add(String.format("-Dsrc.dir=%s", "src"));
+
+      // Generate report from JaCoCo exec file using
+      // 'third-party/java/jacoco-0.6.4/report-generator-src/ReportGenerator.java'
+      args.add("ReportGenerator");
     }
-
-    // Specify the paths to the runtime code coverage data and the metadata files.
-    // coverage.ec: EMMA runtime code coverage data.
-    // coverage.em: EMMA metadata.
-    args.add("-input",
-        String.format("%s/coverage.ec,%s/coverage.em",
-            JUnitStep.EMMA_OUTPUT_DIR, JUnitStep.EMMA_OUTPUT_DIR));
-
-    // Specify the source path so we can see from source file which lines of code are tested.
-    String sourcepathArg = Joiner.on(",").join(srcDirectories);
-    args.add("-sourcepath").add(sourcepathArg);
 
     return args.build();
   }

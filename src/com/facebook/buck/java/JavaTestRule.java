@@ -184,6 +184,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
         pathToTestOutput.toString(),
         executionContext.isCodeCoverageEnabled(),
+        executionContext.isJacocoEnabled(),
         executionContext.isDebugEnabled());
     steps.add(junit);
 

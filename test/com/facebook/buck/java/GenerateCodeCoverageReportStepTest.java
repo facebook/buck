@@ -17,11 +17,13 @@
 package com.facebook.buck.java;
 
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -29,6 +31,9 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Set;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class GenerateCodeCoverageReportStepTest {
 
@@ -37,11 +42,26 @@ public class GenerateCodeCoverageReportStepTest {
     Set<String> sourceDirectories = ImmutableSet.of(
         "parentDirectory1/src", "root/parentDirectory/src");
     String outputDirectory = "buck-out/gen/output";
+    Set<Path> classesDirectories = ImmutableSet.of(
+        Paths.get("parentDirectory1/classes"), Paths.get("root/parentDirectory/classes"));
+
+    testJacocoReportGeneratorCommand(sourceDirectories, classesDirectories, outputDirectory);
+    testEmmaCommand(sourceDirectories, classesDirectories, outputDirectory);
+  }
+
+  private void testEmmaCommand(Set<String> sourceDirectories,
+      Set<Path> classesDirectories,
+      String outputDirectory) {
+    GenerateCodeCoverageReportStep step =
+        new GenerateCodeCoverageReportStep(sourceDirectories, classesDirectories, outputDirectory);
 
     ExecutionContext context = createMock(ExecutionContext.class);
+    expect(context.isJacocoEnabled()).andReturn(false).times(1);
     replay(context);
 
     ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();
+
+    shellCommandBuilder = ImmutableList.builder();
 
     shellCommandBuilder.add(
         "java",
@@ -67,11 +87,42 @@ public class GenerateCodeCoverageReportStepTest {
 
     List<String> expectedShellCommand = shellCommandBuilder.build();
 
-    GenerateCodeCoverageReportStep step =
-        new GenerateCodeCoverageReportStep(sourceDirectories, outputDirectory);
+    expectedShellCommand = shellCommandBuilder.build();
 
     MoreAsserts.assertListEquals(expectedShellCommand, step.getShellCommand(context));
+    verify(context);
+  }
 
+  private void testJacocoReportGeneratorCommand(Set<String> sourceDirectories,
+      Set<Path> classesDirectories,
+      String outputDirectory) {
+    GenerateCodeCoverageReportStep step =
+        new GenerateCodeCoverageReportStep(sourceDirectories, classesDirectories, outputDirectory);
+
+    ExecutionContext context = createMock(ExecutionContext.class);
+    expect(context.isJacocoEnabled()).andReturn(true).times(1);
+    expect(context.getProjectFilesystem()).andReturn(new ProjectFilesystem(new File("."))).anyTimes();
+    replay(context);
+
+    ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();
+
+    shellCommandBuilder.add(
+        "java",
+        "-classpath",String.format("%s/*:%s/../report-generator-build/",
+        JUnitStep.PATH_TO_JACOCO_JARS,JUnitStep.PATH_TO_JACOCO_JARS),
+        String.format("-Djacoco.output.dir=%s",outputDirectory),
+        String.format("-Djacoco.exec.data.file=%s",JUnitStep.JACOCO_EXEC_COVERAGE_FILE),
+        String.format("-Dclasses.dir=%s",String.format("%s/%s:%s/%s",
+            new File(".").getAbsolutePath(),
+            "parentDirectory1/classes",
+            new File(".").getAbsolutePath(),
+            "root/parentDirectory/classes")),
+        String.format("-Dsrc.dir=%s", "src"),
+        "ReportGenerator");
+
+    List<String> expectedShellCommand = shellCommandBuilder.build();
+
+    MoreAsserts.assertListEquals(expectedShellCommand, step.getShellCommand(context));
     verify(context);
   }
 }

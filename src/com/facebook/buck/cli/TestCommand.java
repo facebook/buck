@@ -75,6 +75,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -173,8 +174,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   private Step getReportCommand(
       ImmutableSet<JavaLibraryRule> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      String outputDirectory) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
 
     // Add all source directories of java libraries that we are testing to -sourcepath.
     for (JavaLibraryRule rule : rulesUnderTest) {
@@ -183,10 +186,16 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
+      String pathToOutput = rule.getPathToOutputFile();
+      if (pathToOutput == null) {
+        continue;
+      }
+      pathsToClasses.add(Paths.get(pathToOutput));
     }
 
     return new GenerateCodeCoverageReportStep(srcDirectories.build(),
-        JUnitStep.EMMA_OUTPUT_DIR);
+        pathsToClasses.build(),
+        outputDirectory);
   }
 
   /**
@@ -397,12 +406,17 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       rulesUnderTest = getRulesUnderTest(tests);
       if (!rulesUnderTest.isEmpty()) {
         try {
-          stepRunner.runStep(
-              new MakeCleanDirectoryStep(JUnitStep.EMMA_OUTPUT_DIR));
-          stepRunner.runStep(
-              getInstrumentCommand(
-                  rulesUnderTest,
-                  executionContext.getProjectFilesystem()));
+          if (options.isJacocoEnabled()) {
+            stepRunner.runStep(
+                new MakeCleanDirectoryStep(JUnitStep.JACOCO_OUTPUT_DIR));
+          } else {
+            stepRunner.runStep(
+                new MakeCleanDirectoryStep(JUnitStep.EMMA_OUTPUT_DIR));
+            stepRunner.runStep(
+                getInstrumentCommand(
+                    rulesUnderTest,
+                    executionContext.getProjectFilesystem()));
+          }
         } catch (StepFailedException e) {
           console.printBuildFailureWithoutStacktrace(e);
           return 1;
@@ -506,8 +520,15 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
             options.getJavaPackageFinder();
+        String outputDirectory;
+        if (options.isJacocoEnabled()) {
+          outputDirectory = JUnitStep.JACOCO_OUTPUT_DIR;
+        } else {
+          outputDirectory = JUnitStep.EMMA_OUTPUT_DIR;
+        }
         stepRunner.runStep(
-            getReportCommand(rulesUnderTest, defaultJavaPackageFinderOptional, getProjectFilesystem()));
+            getReportCommand(rulesUnderTest,
+                defaultJavaPackageFinderOptional, getProjectFilesystem(), outputDirectory));
       } catch (StepFailedException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;

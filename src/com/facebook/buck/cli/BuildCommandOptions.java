@@ -112,6 +112,10 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     return false;
   }
 
+  public boolean isJacocoEnabled() {
+    return false;
+  }
+
 
   @VisibleForTesting
   int getNumThreads() {
@@ -155,6 +159,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         console,
         buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
+        isJacocoEnabled(),
         isDebugEnabled(),
         getBuildDependencies(),
         eventBus,
