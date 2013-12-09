@@ -71,7 +71,9 @@ public class PartialGraph {
       BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
     Preconditions.checkNotNull(predicate);
 
-    List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem, includes, predicate);
+    List<BuildTarget> targets = parser.filterAllTargetsInProject(filesystem,
+        includes,
+        predicate);
 
     return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
   }

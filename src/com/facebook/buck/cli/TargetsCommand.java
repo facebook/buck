@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -201,7 +203,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       List<Map<String, Object>> rules;
       try {
         File buildFile = buildTarget.getBuildFile(getProjectFilesystem());
-        rules = getParser().parseBuildFile(buildFile, defaultIncludes);
+        rules = getParser().parseBuildFile(buildFile, defaultIncludes,
+            EnumSet.noneOf(ProjectBuildFileParser.Option.class));
       } catch (BuildTargetException e) {
         console.printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
@@ -313,7 +316,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     try {
       ruleObjects = parser.parseBuildFile(
           buildTarget.getBuildFile(getProjectFilesystem()),
-          options.getDefaultIncludes());
+          options.getDefaultIncludes(),
+          EnumSet.noneOf(ProjectBuildFileParser.Option.class));
     } catch (BuildTargetException | BuildFileParseException e) {
       // TODO: this doesn't smell right!
       return null;

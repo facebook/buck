@@ -50,7 +50,7 @@ public class CachedTestRunReportingIntegrationTest {
     workspace.setUp();
 
     // No caching for this run.
-    assertFalse(
+      assertFalse(
         "There should not be any caching for the initial test run.",
         isTestRunCached(workspace, true));
 

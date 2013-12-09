@@ -60,6 +60,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -296,8 +297,9 @@ public class Parser {
     // seed BuildTargets for the traversal.
     eventBus.post(ParseEvent.started(buildTargets));
     DependencyGraph graph = null;
-    try (ProjectBuildFileParser buildFileParser = buildFileParserFactory.createParser(
-        defaultIncludes)) {
+    try (ProjectBuildFileParser buildFileParser =
+             buildFileParserFactory.createParser(defaultIncludes,
+                 EnumSet.of(ProjectBuildFileParser.Option.STRIP_NULL))) {
       if (!isCacheComplete(defaultIncludes)) {
         Set<File> buildTargetFiles = Sets.newHashSet();
         for (BuildTarget buildTarget : buildTargets) {
@@ -320,7 +322,8 @@ public class Parser {
   DependencyGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes) throws IOException {
-    ProjectBuildFileParser parser = buildFileParserFactory.createParser(defaultIncludes);
+    ProjectBuildFileParser parser = buildFileParserFactory.createParser(defaultIncludes,
+        EnumSet.noneOf(ProjectBuildFileParser.Option.class));
     return findAllTransitiveDependencies(toExplore, defaultIncludes, parser);
   }
 
@@ -480,10 +483,11 @@ public class Parser {
 
   public List<Map<String, Object>> parseBuildFile(
       File buildFile,
-      Iterable<String> defaultIncludes)
+      Iterable<String> defaultIncludes,
+      EnumSet<ProjectBuildFileParser.Option> parseOptions)
       throws BuildFileParseException, BuildTargetException, IOException {
     try (ProjectBuildFileParser projectBuildFileParser =
-        buildFileParserFactory.createParser(defaultIncludes)) {
+        buildFileParserFactory.createParser(defaultIncludes, parseOptions)) {
       return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser);
     }
   }
@@ -650,7 +654,8 @@ public class Parser {
       knownBuildTargets.clear();
       parsedBuildFiles.clear();
       parseRawRulesInternal(
-          ProjectBuildFileParser.getAllRulesInProject(buildFileParserFactory, includes));
+          ProjectBuildFileParser.getAllRulesInProject(buildFileParserFactory,
+              includes));
       allBuildFilesParsed = true;
     }
     return filterTargets(filter);

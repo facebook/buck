@@ -21,6 +21,8 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.EnumSet;
+
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final ProjectFilesystem projectFilesystem;
   private final String pythonInterpreter;
@@ -36,11 +38,14 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   }
 
   @Override
-  public ProjectBuildFileParser createParser(Iterable<String> commonIncludes) {
+  public ProjectBuildFileParser createParser(
+      Iterable<String> commonIncludes,
+      EnumSet<ProjectBuildFileParser.Option> parseOptions) {
     return new ProjectBuildFileParser(
         projectFilesystem,
         commonIncludes,
         pythonInterpreter,
-        descriptions);
+        descriptions,
+        parseOptions);
   }
 }

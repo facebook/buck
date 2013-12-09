@@ -344,10 +344,6 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  public boolean hasAttribute(String attributeName) {
-    return instance.containsKey(attributeName);
-  }
-
   public Function<String, String> getResolveFilePathRelativeToBuildFileDirectoryTransform() {
     return resolveFilePathRelativeToBuildFileDirectoryTransform;
   }

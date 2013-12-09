@@ -702,11 +702,17 @@ def add_deps(name, deps=[], build_env=None):
     raise ValueError('Invoked \'add_deps\' on rule %s that has no \'deps\' field' % name)
   rule['deps'] = rule['deps'] + deps
 
+
+def strip_none_entries(rules):
+  return [dict((k,v) for k, v in rule.iteritems() if v is not None) for rule in rules]
+
+
 class BuildFileProcessor:
-  def __init__(self, project_root, includes, server):
+  def __init__(self, project_root, includes, server, strip_none):
     self.project_root = project_root
     self.includes = includes
     self.server = server
+    self.strip_none = strip_none
     self.len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
 
     # Create root_build_env
@@ -748,6 +754,9 @@ class BuildFileProcessor:
              build_env['BUILD_FILE_SYMBOL_TABLE'])
 
     values = build_env['RULES'].values()
+    if self.strip_none:
+     # Filter out keys with a value of "None" from the final rule definition.
+     values = strip_none_entries(values)
     values.append({"__includes": [build_file] + build_env['INCLUDES']})
     if self.server:
       print json.dumps(values)
@@ -774,6 +783,8 @@ def main():
   parser.add_option('--include', action='append', dest='include')
   parser.add_option('--ignore_path', action='append', dest='ignore_paths')
   parser.add_option('--server', action='store_true', dest='server',
+      help='Invoke as a server to parse individual BUCK files on demand.')
+  parser.add_option('--strip_none', action='store_true', dest='strip_none',
       help='Invoke as a server to parse individual BUCK files on demand.')
   (options, args) = parser.parse_args()
 
@@ -802,7 +813,10 @@ def main():
         build_file = os.path.join(dirpath, BUILD_RULES_FILE_NAME)
         build_files.append(build_file)
 
-  buildFileProcessor = BuildFileProcessor(project_root, options.include or [], options.server)
+  buildFileProcessor = BuildFileProcessor(project_root,
+      options.include or [],
+      options.server,
+      options.strip_none)
 
   for build_file in build_files:
     buildFileProcessor.process(build_file)

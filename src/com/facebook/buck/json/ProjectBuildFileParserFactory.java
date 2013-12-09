@@ -16,6 +16,8 @@
 
 package com.facebook.buck.json;
 
+import java.util.EnumSet;
+
 /**
  * Simple concrete factory so that a parser can be constructed on demand of the parse phase
  * and be explicitly shut down afterward.
@@ -27,5 +29,7 @@ public interface ProjectBuildFileParserFactory {
    * @param commonIncludes Common build files to be imported into each build file parsed.
    * @return Parser instance.
    */
-  public ProjectBuildFileParser createParser(Iterable<String> commonIncludes);
+  public ProjectBuildFileParser createParser(
+      Iterable<String> commonIncludes,
+      EnumSet<ProjectBuildFileParser.Option> parseOptions);
 }

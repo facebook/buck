@@ -76,6 +76,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -152,7 +153,9 @@ public class ParserTest extends EasyMockSupport {
 
     return new ProjectBuildFileParserFactory() {
       @Override
-      public ProjectBuildFileParser createParser(Iterable<String> commonIncludes) {
+      public ProjectBuildFileParser createParser(
+          Iterable<String> commonIncludes,
+          EnumSet<ProjectBuildFileParser.Option> parseOptions) {
         return mockBuildFileParser;
       }
     };
@@ -364,7 +367,9 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     try {
-      testParser.parseBuildFilesForTargets(buildTargets, defaultIncludes, BuckEventBusFactory.newInstance());
+      testParser.parseBuildFilesForTargets(buildTargets,
+          defaultIncludes,
+          BuckEventBusFactory.newInstance());
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target " +
@@ -436,7 +441,8 @@ public class ParserTest extends EasyMockSupport {
       throws BuildFileParseException, BuildTargetException, IOException {
     parser.parseBuildFile(buildFile,
         /* defaultIncludes */ ImmutableList.<String>of(),
-        buildFileParserFactory.createParser(/* commonIncludes */ Lists.<String>newArrayList()));
+        buildFileParserFactory.createParser(/* commonIncludes */ Lists.<String>newArrayList(),
+            EnumSet.noneOf(ProjectBuildFileParser.Option.class)));
   }
 
   @Test
@@ -1050,7 +1056,9 @@ public class ParserTest extends EasyMockSupport {
     }
 
     @Override
-    public ProjectBuildFileParser createParser(Iterable<String> commonIncludes) {
+    public ProjectBuildFileParser createParser(
+        Iterable<String> commonIncludes,
+        EnumSet<ProjectBuildFileParser.Option> parseOptions) {
       return new TestProjectBuildFileParser();
     }
 
@@ -1060,7 +1068,8 @@ public class ParserTest extends EasyMockSupport {
             projectFilesystem,
             ImmutableList.of("//java/com/facebook/defaultIncludeFile"),
             "python",
-            buildRuleTypes.getAllDescriptions());
+            buildRuleTypes.getAllDescriptions(),
+            EnumSet.noneOf(ProjectBuildFileParser.Option.class));
       }
 
       @Override
