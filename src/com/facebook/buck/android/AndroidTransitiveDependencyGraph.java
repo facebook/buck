@@ -211,6 +211,7 @@ public class AndroidTransitiveDependencyGraph {
         nativeLibAssetsDirectories.build(),
         manifestFiles.build(),
         details.resDirectories,
+        details.whitelistedStringDirs,
         details.rDotJavaPackages,
         proguardConfigs.build());
   }

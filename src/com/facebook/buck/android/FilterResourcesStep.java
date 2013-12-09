@@ -68,6 +68,7 @@ public class FilterResourcesStep implements Step {
   private final ImmutableBiMap<String, String> inResDirToOutResDirMap;
   private final boolean filterDrawables;
   private final boolean filterStrings;
+  private final ImmutableSet<Path> whitelistedStringDirs;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
   @Nullable
   private final Set<Filters.Density> targetDensities;
@@ -82,6 +83,8 @@ public class FilterResourcesStep implements Step {
    * @param inResDirToOutResDirMap set of {@code res} directories to filter
    * @param filterDrawables whether to filter drawables (images)
    * @param filterStrings whether to filter non-english strings
+   * @param whitelistedStringDirs set of directories containing string resource files that must not
+   *     be filtered out.
    * @param filteredDirectoryCopier refer {@link FilteredDirectoryCopier}
    *
    * @param targetDensities densities we're interested in keeping (e.g. {@code mdpi}, {@code hdpi}
@@ -96,6 +99,7 @@ public class FilterResourcesStep implements Step {
       ImmutableBiMap<String, String> inResDirToOutResDirMap,
       boolean filterDrawables,
       boolean filterStrings,
+      ImmutableSet<Path> whitelistedStringDirs,
       FilteredDirectoryCopier filteredDirectoryCopier,
       @Nullable Set<Filters.Density> targetDensities,
       @Nullable DrawableFinder drawableFinder,
@@ -107,6 +111,7 @@ public class FilterResourcesStep implements Step {
     this.inResDirToOutResDirMap = Preconditions.checkNotNull(inResDirToOutResDirMap);
     this.filterDrawables = filterDrawables;
     this.filterStrings = filterStrings;
+    this.whitelistedStringDirs = Preconditions.checkNotNull(whitelistedStringDirs);
     this.filteredDirectoryCopier = Preconditions.checkNotNull(filteredDirectoryCopier);
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
@@ -154,13 +159,19 @@ public class FilterResourcesStep implements Step {
         public boolean apply(File input) {
           // TODO(user): Change the predicate to accept a relative Path instead of File.
           String inputPath = input.getAbsolutePath();
-          if (NON_ENGLISH_STRING_PATH.matcher(inputPath).matches()) {
-            Path pathRelativeToProjectRoot = filesystem.getRootPath().toAbsolutePath().normalize()
-                .relativize(Paths.get(inputPath));
-            nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
-            return false;
+          Path pathRelativeToProjectRoot = filesystem.getRootPath().toAbsolutePath().normalize()
+              .relativize(Paths.get(inputPath));
+
+          if (!NON_ENGLISH_STRING_PATH.matcher(pathRelativeToProjectRoot.toString()).matches()) {
+            return true;
           }
-          return true;
+          for (Path whitelistedStringDir : whitelistedStringDirs) {
+            if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
+              return true;
+            }
+          }
+          nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
+          return false;
         }
       });
     }
@@ -184,21 +195,6 @@ public class FilterResourcesStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return "Filtering drawable and string resources.";
-  }
-
-  @VisibleForTesting
-  Set<Filters.Density> getTargetDensities() {
-    return targetDensities;
-  }
-
-  @VisibleForTesting
-  boolean isFilterStrings() {
-    return filterStrings;
-  }
-
-  @VisibleForTesting
-  ImmutableBiMap<String, String> getInResDirToOutResDirMap() {
-    return inResDirToOutResDirMap;
   }
 
   /**
@@ -382,6 +378,7 @@ public class FilterResourcesStep implements Step {
     private ImmutableBiMap<String, String> inResDirToOutResDirMap;
     private ResourceFilter resourceFilter;
     private boolean filterStrings = false;
+    private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
 
     private Builder() {
     }
@@ -401,11 +398,17 @@ public class FilterResourcesStep implements Step {
       return this;
     }
 
+    public Builder setWhitelistedStringDirs(ImmutableSet<Path> whitelistedStringDirs) {
+      this.whitelistedStringDirs = whitelistedStringDirs;
+      return this;
+    }
+
     public FilterResourcesStep build() {
       return new FilterResourcesStep(
           inResDirToOutResDirMap,
           resourceFilter.isEnabled(),
           filterStrings,
+          whitelistedStringDirs,
           DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),

@@ -75,5 +75,7 @@ public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<An
           manifestFile.get());
       builder.setManifestFile(manifestFilePath);
     }
+
+    builder.setHasWhitelistedStrings(params.getBooleanAttribute("has_whitelisted_strings"));
   }
 }

@@ -37,5 +37,10 @@ public interface HasAndroidResourceDeps {
    */
   String getRes();
 
+  /**
+   * @return boolean indicating whether this resource rule has whitelisted strings.
+   */
+  boolean hasWhitelistedStrings();
+
   BuildTarget getBuildTarget();
 }

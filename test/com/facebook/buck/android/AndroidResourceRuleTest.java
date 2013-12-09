@@ -58,7 +58,8 @@ public class AndroidResourceRuleTest {
             "java/src/com/facebook/base/assets/drawable/F.xml",
             "java/src/com/facebook/base/assets/drawable/B.xml",
             "java/src/com/facebook/base/assets/drawable/D.xml"),
-        "java/src/com/facebook/base/AndroidManifest.xml");
+        "java/src/com/facebook/base/AndroidManifest.xml",
+        /* hasWhitelisted */ false);
 
     // Test getInputsToCompareToOutput().
     MoreAsserts.assertIterablesEquals(

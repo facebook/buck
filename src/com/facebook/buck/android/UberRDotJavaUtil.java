@@ -189,21 +189,28 @@ public class UberRDotJavaUtil {
      */
     public final ImmutableSet<String> resDirectories;
 
+    public final ImmutableSet<String> whitelistedStringDirs;
+
     public final ImmutableSet<String> rDotJavaPackages;
 
     @Beta
     public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
       ImmutableSet.Builder<String> resDirectoryBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
+      ImmutableSet.Builder<String> whitelistedStringDirsBuilder = ImmutableSet.builder();
       for (HasAndroidResourceDeps androidResource : androidResourceDeps) {
         String resDirectory = androidResource.getRes();
         if (resDirectory != null) {
           resDirectoryBuilder.add(resDirectory);
           rDotJavaPackageBuilder.add(androidResource.getRDotJavaPackage());
+          if (androidResource.hasWhitelistedStrings()) {
+            whitelistedStringDirsBuilder.add(resDirectory);
+          }
         }
       }
       resDirectories = resDirectoryBuilder.build();
       rDotJavaPackages = rDotJavaPackageBuilder.build();
+      whitelistedStringDirs = whitelistedStringDirsBuilder.build();
     }
   }
 

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesStep.ImageScaler;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
 import com.facebook.buck.util.MorePaths;
@@ -40,6 +41,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -68,10 +71,11 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testFilterResourcesCommand() throws IOException {
+  public void testFilterDrawables() throws IOException {
 
     // Mock a ProjectFilesystem. This will be called into by the image downscaling step.
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(filesystem.getRootPath()).andStubReturn(Paths.get("."));
     EasyMock
       .expect(filesystem.getFileForRelativePath(EasyMock.<String>anyObject()))
       .andAnswer(new IAnswer<File>(){
@@ -123,6 +127,7 @@ public class FilterResourcesStepTest {
         inResDirToOutResDirMap,
         /* filterDrawables */ true,
         /* filterStrings */ true,
+        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
         copier,
         ImmutableSet.of(targetDensity),
         finder,
@@ -197,6 +202,35 @@ public class FilterResourcesStepTest {
     // We shouldn't need the execution context, should call copyDirs once on the copier,
     // and we're calling finder.findDrawables twice.
     EasyMock.verify(copier, context, finder, filesystem, scaler);
+  }
+
+  @Test
+  public void testFilterStrings() throws IOException {
+    FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
+    Capture<Predicate<File>> capturedPredicate = new Capture<>();
+    copier.copyDirs(EasyMock.<Map<String, String>>anyObject(), EasyMock.capture(capturedPredicate));
+    EasyMock.replay(copier);
+
+    FilterResourcesStep step = new FilterResourcesStep(
+        /* inResDirToOutResDirMap */ ImmutableBiMap.<String, String>of(),
+        /* filterDrawables */ false,
+        /* filterStrings */ true,
+        /* whitelistedStringDirs */ ImmutableSet.<Path>of(Paths.get("com/whitelisted/res")),
+        copier,
+        /* targetDensities */ null,
+        /* drawableFinder */ null,
+        /* imageScaler */ null);
+
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    Predicate<File> filePredicate = capturedPredicate.getValue();
+
+    assertTrue(filePredicate.apply(new File("com/example/res/drawables/image.png")));
+    assertTrue(filePredicate.apply(new File("com/example/res/values/strings.xml")));
+    assertTrue(filePredicate.apply(new File("com/whitelisted/res/values-af/strings.xml")));
+
+    assertFalse(filePredicate.apply(new File("com/example/res/values-af/strings.xml")));
+
+    EasyMock.verify(copier);
   }
 
   @Test

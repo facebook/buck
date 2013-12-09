@@ -99,13 +99,16 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   @Nullable
   private final String manifestFile;
 
+  private final boolean hasWhitelistedStrings;
+
   protected AndroidResourceRule(BuildRuleParams buildRuleParams,
       @Nullable String res,
       ImmutableSortedSet<String> resSrcs,
       @Nullable String rDotJavaPackage,
       @Nullable String assets,
       ImmutableSortedSet<String> assetsSrcs,
-      @Nullable String manifestFile) {
+      @Nullable String manifestFile,
+      boolean hasWhitelistedStrings) {
     super(buildRuleParams);
     this.res = res;
     this.resSrcs = Preconditions.checkNotNull(resSrcs);
@@ -113,6 +116,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     this.assets = assets;
     this.assetsSrcs = Preconditions.checkNotNull(assetsSrcs);
     this.manifestFile = manifestFile;
+    this.hasWhitelistedStrings = hasWhitelistedStrings;
 
     if (res == null) {
       pathToTextSymbolsDir = null;
@@ -147,6 +151,11 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   @Nullable
   public String getRes() {
     return res;
+  }
+
+  @Override
+  public boolean hasWhitelistedStrings() {
+    return hasWhitelistedStrings;
   }
 
   @Nullable
@@ -227,7 +236,8 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
         .set("res", resSrcs)
         .set("rDotJavaPackage", rDotJavaPackage)
         .set("assets", assetsSrcs)
-        .set("manifestFile", manifestFile);
+        .set("manifestFile", manifestFile)
+        .set("hasWhitelistedStrings", hasWhitelistedStrings);
   }
 
   public static Builder newAndroidResourceRuleBuilder(AbstractBuildRuleBuilderParams params) {
@@ -251,6 +261,8 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     @Nullable
     private String manifestFile = null;
 
+    private boolean hasWhitelistedStrings = false;
+
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
     }
@@ -269,7 +281,8 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
           rDotJavaPackage,
           assetsDirectory,
           assetsSrcs.build(),
-          manifestFile);
+          manifestFile,
+          hasWhitelistedStrings);
     }
 
     @Override
@@ -317,6 +330,11 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
 
     public Builder setManifestFile(String manifestFile) {
       this.manifestFile = manifestFile;
+      return this;
+    }
+
+    public Builder setHasWhitelistedStrings(boolean hasWhitelistedStrings) {
+      this.hasWhitelistedStrings = hasWhitelistedStrings;
       return this;
     }
   }

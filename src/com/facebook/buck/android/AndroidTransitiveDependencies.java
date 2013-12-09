@@ -23,6 +23,7 @@ public class AndroidTransitiveDependencies {
   public final ImmutableSet<String> nativeLibAssetsDirectories;
   public final ImmutableSet<String> manifestFiles;
   public final ImmutableSet<String> resDirectories;
+  public final ImmutableSet<String> whitelistedStringDirs;
   public final ImmutableSet<String> rDotJavaPackages;
   public final ImmutableSet<String> proguardConfigs;
 
@@ -31,6 +32,7 @@ public class AndroidTransitiveDependencies {
                                        ImmutableSet<String> nativeLibAssetsDirectories,
                                        ImmutableSet<String> manifestFiles,
                                        ImmutableSet<String> resDirectories,
+                                       ImmutableSet<String> whitelistedStringDirs,
                                        ImmutableSet<String> rDotJavaPackages,
                                        ImmutableSet<String> proguardConfigs) {
     this.assetsDirectories = ImmutableSet.copyOf(assetsDirectories);
@@ -38,6 +40,7 @@ public class AndroidTransitiveDependencies {
     this.nativeLibAssetsDirectories = ImmutableSet.copyOf(nativeLibAssetsDirectories);
     this.manifestFiles = ImmutableSet.copyOf(manifestFiles);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
+    this.whitelistedStringDirs = ImmutableSet.copyOf(whitelistedStringDirs);
     this.rDotJavaPackages = ImmutableSet.copyOf(rDotJavaPackages);
     this.proguardConfigs = ImmutableSet.copyOf(proguardConfigs);
   }
