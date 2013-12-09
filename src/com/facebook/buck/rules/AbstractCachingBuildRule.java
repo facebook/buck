@@ -28,6 +28,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
@@ -53,6 +54,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Beta
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
+
+  /**
+   * This {@link Predicate} returns {@code true} if none of the {@link BuildRuleSuccess} objects
+   * are built locally.
+   */
+  private static final Predicate<List<BuildRuleSuccess>> RULES_NOT_BUILT_LOCALLY_PREDICATE =
+      new Predicate<List<BuildRuleSuccess>>() {
+        @Override
+        public boolean apply(List<BuildRuleSuccess> ruleSuccesses) {
+          for (BuildRuleSuccess success : ruleSuccesses) {
+            if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY) {
+              return false;
+            }
+          }
+          return true;
+        }
+      };
 
   private final Buildable buildable;
 
@@ -199,10 +217,11 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
               // Record the start of the build.
               eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
               startOfBuildWasRecordedOnTheEventBus = true;
+              boolean shouldTryToFetchFromCache = RULES_NOT_BUILT_LOCALLY_PREDICATE.apply(deps);
 
               try {
                 BuildResult result = buildOnceDepsAreBuilt(
-                    context, onDiskBuildInfo, buildInfoRecorder.get());
+                    context, onDiskBuildInfo, buildInfoRecorder.get(), shouldTryToFetchFromCache);
                 if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                   recordBuildRuleSuccess(result);
                 } else {
@@ -314,10 +333,14 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
    * All exit paths through this method should resolve {@link #buildRuleResult} before exiting. To
    * that end, this method should never throw an exception, or else Buck will hang waiting for
    * {@link #buildRuleResult} to be resolved.
+   *
+   * @param shouldTryToFetchFromCache Making requests to Cassandra can be expensive, so we do not
+   *      attempt to fetch from the cache if any of the transitive dependencies gets rebuilt.
    */
   private BuildResult buildOnceDepsAreBuilt(final BuildContext context,
       OnDiskBuildInfo onDiskBuildInfo,
-      BuildInfoRecorder buildInfoRecorder) throws IOException {
+      BuildInfoRecorder buildInfoRecorder,
+      boolean shouldTryToFetchFromCache) throws IOException {
     // Compute the current RuleKey and compare it to the one stored on disk.
     RuleKey ruleKey = getRuleKey();
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();
@@ -384,13 +407,18 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       }
     }
 
-    // Before deciding to build, check the ArtifactCache.
-    // The fetched file is now a ZIP file, so it needs to be unzipped.
-    CacheResult cacheResult = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-        buildInfoRecorder,
-        context.getArtifactCache(),
-        context.getProjectRoot(),
-        context);
+    CacheResult cacheResult;
+    if (shouldTryToFetchFromCache) {
+      // Before deciding to build, check the ArtifactCache.
+      // The fetched file is now a ZIP file, so it needs to be unzipped.
+      cacheResult = tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+          buildInfoRecorder,
+          context.getArtifactCache(),
+          context.getProjectRoot(),
+          context);
+    } else {
+      cacheResult = CacheResult.MISS;
+    }
 
     // Run the steps to build this rule since it was not found in the cache.
     if (cacheResult.isSuccess()) {

@@ -27,20 +27,25 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -191,7 +196,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // The dependent rule will be built immediately with a distinct rule key.
     expect(dep.build(context)).andReturn(
-        Futures.immediateFuture(new BuildRuleSuccess(dep, BuildRuleSuccess.Type.BUILT_LOCALLY)));
+        Futures.immediateFuture(new BuildRuleSuccess(dep, BuildRuleSuccess.Type.FETCHED_FROM_CACHE)));
     expect(dep.getRuleKey()).andReturn(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208"));
 
     // Add a build step so we can verify that the steps are executed.
@@ -224,7 +229,61 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         events.get(1));
   }
 
-  /**
+  @Test
+  public void testDoNotFetchFromCacheIfDepBuiltLocally()
+      throws ExecutionException, InterruptedException, IOException, StepFailedException {
+    BuildRule dep1 = new FutureReturningFakeBuildRule(
+        "//java/com/example:rule1",
+        Strings.repeat("a", 40),
+        BuildRuleSuccess.Type.BUILT_LOCALLY);
+    BuildRule dep2 = new FutureReturningFakeBuildRule(
+        "//java/com/example:rule2",
+        Strings.repeat("b", 40),
+        BuildRuleSuccess.Type.FETCHED_FROM_CACHE);
+
+    final List<String> strings = Lists.newArrayList();
+    Step buildStep = new AbstractExecutionStep("test_step") {
+      @Override
+      public int execute(ExecutionContext context) {
+        strings.add("Step was executed.");
+        return 0;
+      }
+    };
+    AbstractCachingBuildRule cachingBuildRule = createRule(
+        ImmutableSet.of(dep1, dep2),
+        ImmutableList.of(Paths.get("/dev/null")),
+        ImmutableList.of(buildStep),
+        "buck-out/gen/src/com/facebook/orca/some_file");
+
+    // Inject artifactCache to verify that its fetch method is never called.
+    ArtifactCache artifactCache = new NoopArtifactCache() {
+      @Override
+      public CacheResult fetch(RuleKey ruleKey, File output) {
+        throw new RuntimeException("Artifact cache must not be accessed while building the rule.");
+      }
+    };
+    BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
+        .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
+        .setJavaPackageFinder(new JavaPackageFinder() {
+          @Override
+          public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot) {
+            return null;
+          }
+
+          @Override
+          public String findJavaPackageForPath(String pathRelativeToProjectRoot) {
+            return null;
+          }
+        })
+        .setArtifactCache(artifactCache)
+        .build();
+
+    BuildRuleSuccess result = cachingBuildRule.build(buildContext).get();
+    assertEquals(result.getType(), BuildRuleSuccess.Type.BUILT_LOCALLY);
+    MoreAsserts.assertListEquals(Lists.newArrayList("Step was executed."), strings);
+  }
+
+   /**
    * Rebuild a rule where one if its dependencies has been modified such that its RuleKey has
    * changed, but its ABI is the same.
    */
@@ -402,6 +461,24 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         inputs,
         pathToOutputFile,
         buildSteps);
+  }
+
+  private static class FutureReturningFakeBuildRule extends FakeBuildRule {
+
+    private final BuildRuleSuccess ruleSuccess;
+
+    public FutureReturningFakeBuildRule(String buildTarget,
+        String ruleKeyHash,
+        BuildRuleSuccess.Type successType) {
+      super(BuildRuleType.ANDROID_RESOURCE, BuildTargetFactory.newInstance(buildTarget));
+      super.setRuleKey(new RuleKey(ruleKeyHash));
+      this.ruleSuccess = new BuildRuleSuccess(this, successType);
+    }
+
+    @Override
+    public ListenableFuture<BuildRuleSuccess> build(BuildContext context) {
+      return Futures.immediateFuture(ruleSuccess);
+    }
   }
 
   private static class BuildableAbstractCachingBuildRule extends DoNotUseAbstractBuildable
