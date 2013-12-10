@@ -219,7 +219,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         finished.getStep().getShortName(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.of("description", finished.getDescription()),
+        ImmutableMap.of(
+            "description", finished.getDescription(),
+            "exit_code", Integer.toString(finished.getExitCode())),
         finished);
   }
 

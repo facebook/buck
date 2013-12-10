@@ -216,6 +216,11 @@ public class ChromeTraceBuildListenerTest {
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(7).getPhase());
 
     assertEquals("fakeStep", resultMap.get(8).getName());
+    assertEquals(
+        ImmutableMap.of(
+            "description", "I'm a Fake Step!",
+            "exit_code", "0"),
+        resultMap.get(8).getArgs());
     assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(8).getPhase());
 
     // BuildRuleEvent.Finished
