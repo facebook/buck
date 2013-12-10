@@ -57,6 +57,7 @@ final class Module implements Comparable<Module> {
   @JsonProperty String name;
   @JsonProperty String pathToImlFile;
   @JsonProperty List<SourceFolder> sourceFolders = Lists.newArrayList();
+  @JsonProperty Boolean isRootModule = false;
 
   /**
    * &lt;excludeFolder> elements must be sorted alphabetically in an .iml file.

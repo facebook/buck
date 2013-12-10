@@ -653,6 +653,7 @@ public class Project {
         module.excludeFolders.add(
             new SourceFolder(String.format("file://$MODULE_DIR$/%s", path), false));
       }
+      module.isRootModule = true;
     }
   }
 

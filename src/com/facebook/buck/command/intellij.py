@@ -309,7 +309,10 @@ def write_all_modules(modules):
 
   for module in modules:
     relative_path = module['pathToImlFile']
-    xml += '\n      <module fileurl="file://$PROJECT_DIR$/%s" filepath="$PROJECT_DIR$/%s" />' % (relative_path, relative_path)
+    xml += '\n      <module fileurl="file://$PROJECT_DIR$/%s" filepath="$PROJECT_DIR$/%s" %s/>' % (
+        relative_path,
+        relative_path,
+        'group="modules"' if not module['isRootModule'] else '')
   xml += ALL_MODULES_XML_END
 
   # Write the modules to a file.
