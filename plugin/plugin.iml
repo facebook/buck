@@ -5,8 +5,9 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$" />
     </content>
-    <orderEntry type="jdk" jdkName="IDEA IC-12" jdkType="IDEA JDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Java-WebSocket-1.3.0" level="project" />
     <orderEntry type="library" name="buck-lib" level="project" />
