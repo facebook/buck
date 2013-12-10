@@ -230,4 +230,19 @@ public class AbstractCommandOptionsTest extends EasyMockSupport {
         "sdk.dir",
         "ANDROID_SDK");
   }
+
+  @Test
+  public void testSdkPathFromEnvironmentReturnsAbsentWhenEnvironmentUnset() {
+    Optional<Properties> properties = Optional.absent();
+    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
+    HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
+
+    Optional<File> path = AbstractCommandOptions.findDirectoryByPropertiesThenEnvironmentVariable(
+        properties,
+        hostFilesystem,
+        systemEnvironment,
+        "sdk.dir",
+        "ANDROID_SDK");
+    assertFalse(path.isPresent());
+  }
 }

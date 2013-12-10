@@ -215,8 +215,11 @@ public abstract class AbstractCommandOptions {
     // If dirPath is not set, try each of the environment variables, in order, to find it.
     for (String environmentVariable : environmentVariables) {
       if (dirPath == null) {
-        dirPath = Paths.get(systemEnvironment.get(environmentVariable));
-        dirPathEnvironmentVariable = environmentVariable;
+        String environmentVariableValue = systemEnvironment.get(environmentVariable);
+        if (environmentVariableValue != null) {
+          dirPath = Paths.get(environmentVariableValue);
+          dirPathEnvironmentVariable = environmentVariable;
+        }
       } else {
         break;
       }
