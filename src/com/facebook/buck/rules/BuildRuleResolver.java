@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -41,6 +42,14 @@ public class BuildRuleResolver {
   @VisibleForTesting
   public BuildRuleResolver(Map<BuildTarget, BuildRule> buildRuleIndex) {
     this.buildRuleIndex = Preconditions.checkNotNull(buildRuleIndex);
+  }
+
+  @VisibleForTesting
+  public BuildRuleResolver(Set<? extends BuildRule> startingSet) {
+    this.buildRuleIndex = Maps.newConcurrentMap();
+    for (BuildRule buildRule : startingSet) {
+      this.buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
+    }
   }
 
   /**

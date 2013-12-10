@@ -92,6 +92,12 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
     this.outputFile = outputFile;
   }
 
+  @Override
+  @Nullable
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+    return null;
+  }
+
   public void setRuleKey(RuleKey ruleKey) {
     this.ruleKey = ruleKey;
   }

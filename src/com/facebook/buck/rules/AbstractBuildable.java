@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.collect.ImmutableSortedSet;
+
 import javax.annotation.Nullable;
 
 /**
@@ -31,6 +33,12 @@ public abstract class AbstractBuildable implements Buildable {
   @Nullable
   @Override
   public abstract String getPathToOutputFile();
+
+  @Override
+  @Nullable
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+    return null;
+  }
 
   protected static abstract class Builder extends AbstractBuildRuleBuilder<AbstractCachingBuildRule> {
 

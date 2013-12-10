@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.util.List;
@@ -64,4 +66,18 @@ public interface Buildable {
    */
   @Nullable
   public String getPathToOutputFile();
+
+  /**
+   * A {@link Buildable} may employ graph enhancement to alter its dependencies. If it does this, it
+   * must return the new dependencies via this method.
+   *
+   * @param ruleResolver that can be used to get the {@link BuildRule} that corresponds to a
+   *     {@link BuildTarget} if the rule for the target has already been constructed.
+   * @return The {@code deps} for the {@link BuildRule} that contains this {@link Buildable}. These
+   *     may differ from the {@code deps} specified in the original build file due to graph
+   *     enhancement. If the {@code deps} are unchanged, then this method should return
+   *     {@code null}.
+   */
+  @Nullable
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver);
 }

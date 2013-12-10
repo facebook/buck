@@ -90,6 +90,17 @@ public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> 
 
     Buildable buildable = description.createBuildable(params, arg);
 
+    // Check for graph enhancement.
+    ImmutableSortedSet<BuildRule> enhancedDeps = buildable.getEnhancedDeps(ruleResolver);
+    if (enhancedDeps != null) {
+      params = new BuildRuleParams(
+          params.getBuildTarget(),
+          enhancedDeps,
+          params.getVisibilityPatterns(),
+          params.getPathRelativizer(),
+          params.getRuleKeyBuilderFactory());
+    }
+
     return new DescribedRule(description.getBuildRuleType(), buildable, params);
   }
 }
