@@ -114,4 +114,9 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
       throw new RuntimeException("No lines for path: " + path);
     }
   }
+
+  @Override
+  public void makeOutputFileExecutable(Buildable buildable) {
+    throw new UnsupportedOperationException();
+  }
 }

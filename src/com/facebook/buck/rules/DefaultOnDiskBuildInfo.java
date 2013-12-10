@@ -26,6 +26,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonStreamParser;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -106,5 +107,11 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   public List<String> getOutputFileContentsByLine(Path pathRelativeToProjectRoot)
       throws IOException {
     return projectFilesystem.readLines(pathRelativeToProjectRoot);
+  }
+
+  @Override
+  public void makeOutputFileExecutable(Buildable buildable) {
+    File file = projectFilesystem.getFileForRelativePath(buildable.getPathToOutputFile());
+    file.setExecutable(true /* executable */, false /* ownerOnly */);
   }
 }

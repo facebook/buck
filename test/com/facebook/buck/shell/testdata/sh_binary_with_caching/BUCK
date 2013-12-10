@@ -1,0 +1,13 @@
+sh_binary(
+  name = 'example_sh',
+  main = 'example.sh',
+)
+
+genrule(
+  name = 'run_example',
+  cmd = '$(exe :example_sh) arg1 arg2 > $OUT',
+  out = 'example_out.txt',
+  deps = [
+    ':example_sh',
+  ],
+)

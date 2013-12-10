@@ -52,7 +52,7 @@ package com.facebook.buck.rules;
  *
  * &#64;Override
  * public T getBuildOutput() {
- *   Preconditions.checkState(buildOutput == null, "buildOutput must already be set for %s.", this);
+ *   Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
  *   return buildOutput;
  * }
  * </pre>
