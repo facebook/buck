@@ -82,11 +82,6 @@ public final class Main {
    */
   public static final int BUSY_EXIT_CODE = 2;
 
-  /**
-   * Client disconnected.
-   */
-  public static final int CLIENT_DISCONNECT_EXIT_CODE = 3;
-
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
   private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
 
@@ -188,7 +183,7 @@ public final class Main {
     private void watchClient(final NGContext context) {
       context.addClientListener(new NGClientListener() {
         @Override
-        public void clientDisconnected() {
+        public void clientDisconnected() throws InterruptedException {
 
           // Synchronize on parser object so that the main command processing thread is not
           // interrupted mid way through a Parser cache update by the Thread.interrupt() call
@@ -198,7 +193,7 @@ public final class Main {
           synchronized (parser) {
             // Client should no longer be connected, but printing helps detect false disconnections.
             context.err.println("Client disconnected.");
-            System.exit(CLIENT_DISCONNECT_EXIT_CODE);
+            throw new InterruptedException("Client disconnected.");
           }
         }
       });

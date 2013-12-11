@@ -17,4 +17,4 @@ you will additionally need to "make ng.exe".
 For more information, see [the nailgun website](http://martiansoftware.com/nailgun/).
 
 Buck currently uses https://github.com/martylamb/nailgun at
-9cf2720e6c4c7b798b3ee3b724768b0d4df52793
+4cac9ae177a9a7e641615b106140093c3d28771a
