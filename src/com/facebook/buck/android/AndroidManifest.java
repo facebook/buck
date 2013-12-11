@@ -20,20 +20,28 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * {@link AndroidManifest} is a {@link Buildable} that can generate an Android manifest from a
@@ -66,41 +74,61 @@ public class AndroidManifest extends AbstractBuildable {
   private final BuildTarget buildTarget;
   private final SourcePath skeletonFile;
 
-  protected AndroidManifest(BuildTarget buildTarget, SourcePath skeletonFile) {
+  /** These must be sorted so {@link #getInputsToCompareToOutput} returns a consistent value. */
+  private final ImmutableSortedSet<String> manifestFiles;
+
+  private final Path pathToOutputFile;
+
+  protected AndroidManifest(BuildTarget buildTarget,
+      SourcePath skeletonFile,
+      Set<String> manifestFiles) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
+    this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
+    this.pathToOutputFile = Paths.get(
+        BuckConstant.GEN_DIR,
+        buildTarget.getBasePath(),
+        "AndroidManifest__" + buildTarget.getShortName() + "__.xml");
   }
 
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(skeletonFile));
+    Iterable<String> sourcePaths = SourcePaths.filterInputsToCompareToOutput(Collections.singleton(
+        skeletonFile));
+    return Iterables.concat(sourcePaths, manifestFiles);
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.
-        set("skeleton", skeletonFile.asReference());
+    return builder
+        .set("skeleton", skeletonFile.asReference())
+        .set("manifestFiles", manifestFiles);
   }
 
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 
+  public SourcePath getSkeletonFile() {
+    return skeletonFile;
+  }
+
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    DependencyGraph graph = context.getDependencyGraph();
-    ImmutableList<HasAndroidResourceDeps> depsWithAndroidResources = getAndroidResourceDeps(graph);
-
-    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
-        AndroidTransitiveDependencyGraph.createForAndroidManifest(this, graph);
-    AndroidTransitiveDependencies transitiveDependencies =
-        transitiveDependencyGraph.findDependencies(depsWithAndroidResources);
-
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
+
+    // Clear out the old file, if it exists.
+    commands.add(new RmStep(pathToOutputFile,
+        /* shouldForceDeletion */ true,
+        /* shouldRecurse */ false));
+
+    // Make sure the directory for the output file exists.
+    commands.add(new MkdirStep(pathToOutputFile.getParent()));
+
     commands.add(new GenerateManifestStep(
         skeletonFile.resolve(context).toString(),
-        transitiveDependencies.manifestFiles,
+        manifestFiles,
         getPathToOutputFile()));
 
     return commands.build();
@@ -108,19 +136,20 @@ public class AndroidManifest extends AbstractBuildable {
 
   @Override
   public String getPathToOutputFile() {
-    BuildTarget target = buildTarget;
-    return String.format("%s/%sAndroidManifest__%s__.xml",
-        BuckConstant.GEN_DIR,
-        target.getBasePathWithSlash(),
-        target.getShortName());
+    return pathToOutputFile.toString();
   }
 
-  /**
-   * @return a list of {@link AndroidResourceRule}s that should be passed,
-   * in order, to {@code aapt} when generating the {@code R.java} files for this APK.
-   */
-  private ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps(DependencyGraph graph) {
-    BuildRule self = graph.findBuildRuleByTarget(buildTarget);
-    return UberRDotJavaUtil.getAndroidResourceDeps(self);
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getEnhancedDeps(BuildRuleResolver ruleResolver) {
+    SourcePath skeletonFile = getSkeletonFile();
+    if (skeletonFile instanceof BuildTargetSourcePath) {
+      BuildTarget skeletonTarget = ((BuildTargetSourcePath) skeletonFile).getTarget();
+      BuildRule skeletonRule = ruleResolver.get(skeletonTarget);
+      return ImmutableSortedSet.<BuildRule>of(skeletonRule);
+    } else {
+      return ImmutableSortedSet.<BuildRule>of();
+    }
   }
+
 }

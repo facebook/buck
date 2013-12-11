@@ -22,7 +22,10 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidManifestDescription implements Description<AndroidManifestDescription.Arg> {
@@ -41,12 +44,36 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    return new AndroidManifest(params.getBuildTarget(), args.skeleton);
+    ImmutableSet<String> manifestFiles = findManifestFiles(args);
+
+    return new AndroidManifest(params.getBuildTarget(), args.skeleton, manifestFiles);
   }
 
   public static class Arg {
     public SourcePath skeleton;
 
+    /**
+     * A collection of dependencies that includes android_library rules. The manifest files of the
+     * android_library rules will be filtered out to become dependent source files for the
+     * {@link AndroidManifest}.
+     */
     public Optional<ImmutableSortedSet<BuildRule>> deps;
+  }
+
+  @VisibleForTesting
+  static ImmutableSet<String> findManifestFiles(Arg args) {
+    // TODO(mbolin): This looks like an inefficient way to get the manifest files. It's not clear
+    // that the order actually matters. In fact, we currently ignore topological sort order
+    // because we alpha-sort things. The only thing we have to protect against (which this does)
+    // is reaching android_library rules that are only accessible through genrules.
+    ImmutableList<HasAndroidResourceDeps> depsWithAndroidResources = UberRDotJavaUtil
+        .getAndroidResourceDeps(args.deps.get());
+
+    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
+        new AndroidTransitiveDependencyGraph(args.deps.get());
+    AndroidTransitiveDependencies transitiveDependencies =
+        transitiveDependencyGraph.findDependencies(depsWithAndroidResources);
+
+    return transitiveDependencies.manifestFiles;
   }
 }
