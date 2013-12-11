@@ -54,6 +54,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -305,6 +306,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
+      Path pathToSrcsList = Paths.get(BuckConstant.GEN_DIR,
+          getBuildTarget().getBasePath(),
+          "__" + getBuildTarget().getShortName() + "__srcs");
+      commands.add(new MkdirStep(pathToSrcsList.getParent()));
+
       final JavacInMemoryStep javac = new JavacInMemoryStep(
           outputDirectory,
           getJavaSrcs(),
@@ -314,7 +320,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           Optional.of(getPathToAbiOutputFile()),
           Optional.of(getFullyQualifiedName()),
           buildDependencies,
-          suggestBuildRules);
+          suggestBuildRules,
+          Optional.of(pathToSrcsList));
       commands.add(javac);
 
       // Create a supplier that extracts the ABI key from javac after it executes.

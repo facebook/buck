@@ -96,6 +96,8 @@ public class JavacInMemoryStep implements Step {
 
   private final Optional<SuggestBuildRules> suggestBuildRules;
 
+  private final Optional<Path> pathToSrcsList;
+
   /**
    * Will be {@code true} once {@link #buildWithClasspath(ExecutionContext, Set)} has been invoked.
    */
@@ -139,7 +141,8 @@ public class JavacInMemoryStep implements Step {
       Optional<String> pathToOutputAbiFile,
       Optional<String> invokingRule,
       BuildDependencies buildDependencies,
-      Optional<SuggestBuildRules> suggestBuildRules) {
+      Optional<SuggestBuildRules> suggestBuildRules,
+      Optional<Path> pathToSrcsList) {
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.transitiveClasspathEntries = ImmutableSet.copyOf(transitiveClasspathEntries);
@@ -150,6 +153,7 @@ public class JavacInMemoryStep implements Step {
     this.invokingRule = Preconditions.checkNotNull(invokingRule);
     this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
     this.suggestBuildRules = Preconditions.checkNotNull(suggestBuildRules);
+    this.pathToSrcsList = Preconditions.checkNotNull(pathToSrcsList);
   }
 
   /**
@@ -300,6 +304,20 @@ public class JavacInMemoryStep implements Step {
       return 1;
     }
 
+    if (pathToSrcsList.isPresent()) {
+      // write javaSourceFilePaths to classes file
+      // for buck user to have a list of all .java files to be compiled
+      // since we do not print them out to console in case of error
+      try {
+        context.getProjectFilesystem().writeLinesToPath(javaSourceFilePaths, pathToSrcsList.get());
+      } catch (IOException e) {
+        context.logError(e,
+            "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+            pathToSrcsList.get());
+        return 1;
+      }
+    }
+
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
     List<String> options = getOptions(context, buildClasspathEntries);
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
@@ -383,7 +401,12 @@ public class JavacInMemoryStep implements Step {
     StringBuilder builder = new StringBuilder("javac ");
     Joiner.on(" ").appendTo(builder, getOptions(context, getClasspathEntries()));
     builder.append(" ");
-    Joiner.on(" ").appendTo(builder, javaSourceFilePaths);
+
+    if (pathToSrcsList.isPresent()) {
+      builder.append("@").append(pathToSrcsList.get());
+    } else {
+      Joiner.on(" ").appendTo(builder, javaSourceFilePaths);
+    }
 
     return builder.toString();
   }

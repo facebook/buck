@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -31,17 +32,26 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class JavacInMemoryStepIntegrationTest {
-
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
+
+  private Path pathToSrcsList;
+
+  @Before
+  public void setUp() {
+    pathToSrcsList = Paths.get(tmp.getRoot().getPath(), "srcs_list");
+  }
 
   @Test
   public void testGetDescription() throws IOException {
@@ -56,7 +66,7 @@ public class JavacInMemoryStepIntegrationTest {
             "-A%s=%s " +
         		"-d %s " +
             "-classpath '' " +
-            "Example.java",
+            "@" + pathToSrcsList.toString(),
         		AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
         		AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
         		AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,
@@ -100,6 +110,19 @@ public class JavacInMemoryStepIntegrationTest {
     }
   }
 
+  @Test
+  public void testClassesFile() throws IOException {
+    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
+    ExecutionContext executionContext = createExecutionContext();
+    int exitCode = javac.execute(executionContext);
+    assertEquals("javac should exit with code 0.", exitCode, 0);
+
+    File srcsListFile = pathToSrcsList.toFile();
+    assertTrue(srcsListFile.exists());
+    assertTrue(srcsListFile.isFile());
+    assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
+  }
+
   private JavacInMemoryStep createJavac(boolean withSyntaxError) throws IOException {
     File exampleJava = tmp.newFile("Example.java");
     Files.write(Joiner.on('\n').join(
@@ -123,7 +146,8 @@ public class JavacInMemoryStepIntegrationTest {
         Optional.of(pathToOutputAbiFile),
         Optional.<String>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
-        Optional.<JavacInMemoryStep.SuggestBuildRules>absent());
+        Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
+        Optional.of(pathToSrcsList));
   }
 
   private ExecutionContext createExecutionContext() {

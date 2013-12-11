@@ -36,8 +36,10 @@ import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class JavacInMemoryStepTest extends EasyMockSupport {
+  private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
 
   @Test
   public void testFindFailedImports() throws Exception {
@@ -74,12 +76,12 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
     JavacInMemoryStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);
     JavacInMemoryStep transitive = createTestStep(BuildDependencies.TRANSITIVE);
 
-    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar foobar.java",
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
         firstOrder.getDescription(context));
-    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar foobar.java",
+    assertEquals("javac -target 6 -source 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
         warn.getDescription(context));
     assertEquals("javac -target 6 -source 6 -g -d . -classpath bar.jar" + File.pathSeparator +
-        "foo.jar foobar.java",
+        "foo.jar @" + PATH_TO_SRCS_LIST,
         transitive.getDescription(context));
   }
 
@@ -93,6 +95,7 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
           /* pathToOutputAbiFile */ Optional.<String>absent(),
           /* invokingRule */ Optional.<String>absent(),
           /* buildDependencies */ buildDependencies,
-          /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent());
+          /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
+          /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST));
   }
 }

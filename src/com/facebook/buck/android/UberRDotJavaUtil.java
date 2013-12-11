@@ -39,6 +39,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -280,6 +281,7 @@ public class UberRDotJavaUtil {
         /* pathToOutputAbiFile */ Optional.<String>absent(),
         Optional.<String>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
-        Optional.<JavacInMemoryStep.SuggestBuildRules>absent());
+        Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
+        /* pathToSrcsList */ Optional.<Path>absent());
   }
 }
