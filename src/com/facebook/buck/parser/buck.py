@@ -356,7 +356,7 @@ def android_library(
 def android_resource(
     name,
     res=None,
-    whitelisted=False,
+    has_whitelisted_strings=False,
     package=None,
     assets=None,
     manifest=None,
@@ -377,7 +377,7 @@ def android_resource(
     'type' : 'android_resource',
     'name' : name,
     'res' : res,
-    'whitelisted' : whitelisted,
+    'has_whitelisted_strings' : has_whitelisted_strings,
     'res_srcs' : res_srcs,
     'package' : package,
     'assets' : assets,
