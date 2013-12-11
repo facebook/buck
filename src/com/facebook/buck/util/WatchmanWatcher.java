@@ -26,7 +26,9 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
+import com.google.common.io.ByteStreams;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -84,7 +86,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private static String createQuery(ProjectFilesystem filesystem) {
     return "[\"query\", \""
         + MorePaths.absolutify(filesystem.getRootPath()).toString()
-        + ", {\"since\": \"n:buckd\", \"fields\": [\"name\", \"exists\", \"new\"]}]";
+        + "\", {\"since\": \"n:buckd\", \"fields\": [\"name\", \"exists\", \"new\"]}]";
   }
 
   private static Supplier<Process> createProcessSupplier() {
@@ -167,6 +169,18 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
           break;
       }
       token = jsonParser.nextToken();
+    }
+    int watchmanExitCode;
+    try {
+      watchmanExitCode = watchmanProcess.waitFor();
+    } catch (InterruptedException e) {
+      throw Throwables.propagate(e);
+    }
+    if (watchmanExitCode != 0) {
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      ByteStreams.copy(watchmanProcess.getErrorStream(), buffer);
+      throw new RuntimeException(
+          "Watchman failed with exit code " + watchmanExitCode + ": " + buffer.toString());
     }
   }
 

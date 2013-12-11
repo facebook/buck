@@ -23,6 +23,8 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -53,7 +55,7 @@ public class WatchmanWatcherTest {
         "\"files\": []",
         "}");
     EventBus eventBus = createStrictMock(EventBus.class);
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
@@ -71,7 +73,7 @@ public class WatchmanWatcherTest {
     Capture<WatchEvent<Path>> eventCapture = new Capture<>();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
@@ -96,7 +98,7 @@ public class WatchmanWatcherTest {
     Capture<WatchEvent<Path>> eventCapture = new Capture<>();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
@@ -118,7 +120,7 @@ public class WatchmanWatcherTest {
     Capture<WatchEvent<Path>> eventCapture = new Capture<>();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
@@ -141,7 +143,7 @@ public class WatchmanWatcherTest {
     Capture<WatchEvent<Path>> eventCapture = new Capture<>();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
@@ -167,7 +169,7 @@ public class WatchmanWatcherTest {
     Capture<WatchEvent<Path>> secondEvent = new Capture<>();
     eventBus.post(capture(firstEvent));
     eventBus.post(capture(secondEvent));
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(eventBus, process);
     watcher.postEvents();
@@ -189,7 +191,7 @@ public class WatchmanWatcherTest {
             "}",
         "]}");
     EventBus eventBus = createStrictMock(EventBus.class);
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
@@ -211,7 +213,7 @@ public class WatchmanWatcherTest {
     Capture<WatchEvent<Path>> eventCapture = new Capture<>();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
-    Process process = createMockProcess(watchmanOutput);
+    Process process = createProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
@@ -223,6 +225,21 @@ public class WatchmanWatcherTest {
     assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
         eventCapture.getValue().kind());
+  }
+
+  @Test
+  public void whenWatchmanFailsThenHumanReadableExceptionThrown() throws IOException {
+    String watchmanOutput = "";
+    EventBus eventBus = createStrictMock(EventBus.class);
+    Process process = createWaitForProcessMock(watchmanOutput, 1);
+    replay(process);
+    WatchmanWatcher watcher = createWatcher(eventBus, process);
+    try {
+      watcher.postEvents();
+      fail("Should have thrown RuntimeException.");
+    } catch (RuntimeException e) {
+      assertTrue("Should be Watchman failure.", e.getMessage().startsWith("Watchman failed"));
+    }
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus, Process process) {
@@ -245,12 +262,30 @@ public class WatchmanWatcherTest {
         "" /* query */);
   }
 
-  private Process createMockProcess(String output) {
+  private Process createProcessMock(String output) {
     Process process = createMock(Process.class);
     expect(process.getInputStream()).andReturn(
         new ByteArrayInputStream(output.getBytes(Charsets.US_ASCII)));
     expect(process.getOutputStream()).andReturn(
         new ByteArrayOutputStream()).times(2);
+    return process;
+  }
+
+  private Process createWaitForProcessMock(String output) {
+    return createWaitForProcessMock(output, 0);
+  }
+
+  private Process createWaitForProcessMock(String output, int exitCode) {
+    Process process = createProcessMock(output);
+    if (exitCode != 0) {
+      expect(process.getErrorStream()).andReturn(
+          new ByteArrayInputStream("".getBytes(Charsets.US_ASCII)));
+    }
+    try {
+      expect(process.waitFor()).andReturn(exitCode);
+    } catch (InterruptedException e) {
+      fail("Should not throw exception.");
+    }
     return process;
   }
 }
