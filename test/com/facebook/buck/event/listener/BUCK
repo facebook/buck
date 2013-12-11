@@ -25,6 +25,7 @@ java_test(
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util:network',
