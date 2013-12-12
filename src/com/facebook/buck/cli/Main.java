@@ -394,7 +394,6 @@ public final class Main {
 
       ImmutableList<BuckEventListener> eventListeners =
           addEventListeners(buildEventBus,
-              clock,
               projectFilesystem,
               config,
               getWebServerIfDaemon(context),
@@ -423,7 +422,7 @@ public final class Main {
 
       buildEventBus.post(CommandEvent.finished(commandName, isDaemon, exitCode));
       for (BuckEventListener eventListener : eventListeners) {
-        eventListener.outputTrace();
+        eventListener.outputTrace(buildId);
       }
       artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
 
@@ -492,7 +491,6 @@ public final class Main {
 
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEvents,
-      Clock clock,
       ProjectFilesystem projectFilesystem,
       BuckConfig config,
       Optional<WebServer> webServer,
@@ -500,7 +498,7 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(new ChromeTraceBuildListener(projectFilesystem, clock, config.getMaxTraces()))
+            .add(new ChromeTraceBuildListener(projectFilesystem, config.getMaxTraces()))
             .add(consoleEventBusListener);
 
     if (webServer.isPresent()) {

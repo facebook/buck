@@ -92,8 +92,7 @@ public class ChromeTraceBuildListenerTest {
     }
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem,
-        new IncrementingFakeClock(),
-        3);
+        /* tracesToKeep */ 3);
 
     listener.deleteOldTraces();
 
@@ -118,8 +117,7 @@ public class ChromeTraceBuildListenerTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(projectFilesystem,
-        new IncrementingFakeClock(),
-        42);
+        /* tracesToKeep */ 42);
 
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
 
@@ -177,7 +175,7 @@ public class ChromeTraceBuildListenerTest {
 
     eventBus.post(BuildEvent.finished(buildTargets, 0));
     eventBus.post(CommandEvent.finished("party", true, 0));
-    listener.outputTrace();
+    listener.outputTrace("BUILD_ID");
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");
 

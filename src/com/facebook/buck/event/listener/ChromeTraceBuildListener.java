@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.step.StepEvent;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
@@ -62,15 +61,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   private final ProjectFilesystem projectFilesystem;
   private final int tracesToKeep;
-  private final Clock clock;
-  private ConcurrentLinkedQueue<ChromeTraceEvent> eventList = new ConcurrentLinkedQueue<ChromeTraceEvent>();
+  private ConcurrentLinkedQueue<ChromeTraceEvent> eventList =
+      new ConcurrentLinkedQueue<ChromeTraceEvent>();
 
-  public ChromeTraceBuildListener(ProjectFilesystem projectFilesystem,
-      Clock clock,
-      int tracesToKeep) {
+  public ChromeTraceBuildListener(ProjectFilesystem projectFilesystem, int tracesToKeep) {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.tracesToKeep = tracesToKeep;
-    this.clock = clock;
   }
 
   @VisibleForTesting
@@ -104,11 +100,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace() {
+  public void outputTrace(String buildId) {
+    Preconditions.checkNotNull(buildId);
     try {
       String tracePath = String.format("%s/build.%s.trace",
           BuckConstant.BUCK_TRACE_DIR,
-          Long.toString(clock.currentTimeMillis()));
+          buildId);
       File traceOutput = projectFilesystem.getFileForRelativePath(tracePath);
       projectFilesystem.createParentDirs(tracePath);
 

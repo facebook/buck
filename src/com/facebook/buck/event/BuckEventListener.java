@@ -19,6 +19,7 @@ package com.facebook.buck.event;
 public interface BuckEventListener {
   /**
    * Output any trace data collected to the backing store.
+   * @param buildId for the trace to be written.
    */
-  public void outputTrace();
+  public void outputTrace(String buildId);
 }

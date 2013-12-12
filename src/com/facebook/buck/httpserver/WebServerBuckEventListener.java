@@ -40,7 +40,7 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace() {}
+  public void outputTrace(String buildId) {}
 
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {

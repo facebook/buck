@@ -176,7 +176,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Override
-  public void outputTrace() {}
+  public void outputTrace(String buildId) {}
 
   @Override
   public void close() throws IOException {
