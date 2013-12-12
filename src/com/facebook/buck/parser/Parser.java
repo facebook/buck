@@ -358,7 +358,9 @@ public class Parser {
             for (BuildTarget buildTargetForDep : buildRuleBuilder.getDeps()) {
               try {
                 if (!knownBuildTargets.containsKey(buildTargetForDep)) {
-                  parseBuildFileContainingTarget(buildTargetForDep,
+                  parseBuildFileContainingTarget(
+                      buildTarget,
+                      buildTargetForDep,
                       defaultIncludes,
                       buildFileParser);
                 }
@@ -452,6 +454,7 @@ public class Parser {
    * {@link #filterAllTargetsInProject}, then this method should not be called.
    */
   private void parseBuildFileContainingTarget(
+      BuildTarget sourceTarget,
       BuildTarget buildTarget,
       Iterable<String> defaultIncludes,
       ProjectBuildFileParser buildFileParser)
@@ -462,8 +465,10 @@ public class Parser {
       // parse. This must be the result of traversing a non-existent dep in a build rule, so an
       // error is reported to the user. Unfortunately, the source of the build file where the
       // non-existent rule was declared is not known at this point, which is why it is not included
-      // in the error message.
-      throw new HumanReadableException("No such build target: %s.", buildTarget);
+      // in the error message. The best we can do is tell the user the target that included target
+      // as a dep.
+      throw new HumanReadableException(
+          "Unable to locate dependency \"%s\" for target \"%s\"", buildTarget, sourceTarget);
     }
 
     File buildFile = buildTarget.getBuildFile(projectFilesystem);
