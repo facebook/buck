@@ -75,7 +75,6 @@ java_library(
     '//third-party/java/astyanax:log4j',
     '//third-party/java/astyanax:slf4j-api',
     '//third-party/java/astyanax:slf4j-log4j12',
-    '//third-party/java/neo4j:neo4j',
   ],
   visibility = [
     '//test/com/facebook/buck/cli:',

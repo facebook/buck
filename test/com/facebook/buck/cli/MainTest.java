@@ -98,7 +98,6 @@ public class MainTest {
         "  clean       deletes any generated files",
         "  install     builds and installs an APK",
         "  project     generates project configuration files for an IDE",
-        "  query       queries the dependency graph",
         "  quickstart  generates a default project directory",
         "  targets     prints the list of buildable targets",
         "  test        builds and runs the tests for the specified target",
