@@ -343,7 +343,8 @@ public final class Main {
     BuckConfig config = createBuckConfig(projectFilesystem, platform);
     Verbosity verbosity = VerbosityParser.parse(args);
     Optional<String> color;
-    if (context.isPresent() && (context.get().getEnv() != null)) {
+    final boolean isDaemon = context.isPresent();
+    if (isDaemon && (context.get().getEnv() != null)) {
       String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
       color = Optional.fromNullable(colorString);
     } else {
@@ -354,7 +355,7 @@ public final class Main {
 
     // Create or get and invalidate cached command parameters.
     Parser parser;
-    if (context.isPresent()) {
+    if (isDaemon) {
       // Wire up daemon to new client and console and get cached Parser.
       Daemon daemon = getDaemon(projectFilesystem, config, console);
       daemon.watchClient(context.get());
@@ -405,7 +406,7 @@ public final class Main {
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
-      buildEventBus.post(CommandEvent.started(commandName, context.isPresent()));
+      buildEventBus.post(CommandEvent.started(commandName, isDaemon));
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
       // running commands such as `buck clean`.
@@ -420,7 +421,7 @@ public final class Main {
           parser,
           platform));
 
-      buildEventBus.post(CommandEvent.finished(commandName, context.isPresent(), exitCode));
+      buildEventBus.post(CommandEvent.finished(commandName, isDaemon, exitCode));
       for (BuckEventListener eventListener : eventListeners) {
         eventListener.outputTrace();
       }
