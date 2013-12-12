@@ -43,6 +43,7 @@ import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchServiceWatcher;
 import com.facebook.buck.util.WatchmanWatcher;
+import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
@@ -91,6 +92,9 @@ public final class Main {
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
   private static final int ARTIFACT_CACHE_TIMEOUT_IN_SECONDS = 15;
+
+  private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
+      new TimeSpan(100, TimeUnit.MILLISECONDS);
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
@@ -524,7 +528,8 @@ public final class Main {
     if (console.getAnsi().isAnsiTerminal()) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(console, clock, executionEnvironment);
-      superConsole.startRenderScheduler(100, TimeUnit.MILLISECONDS);
+      superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
+          SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
     }
     return new SimpleConsoleEventBusListener(console, clock);
