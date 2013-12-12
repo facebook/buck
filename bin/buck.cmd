@@ -123,10 +123,6 @@ set BUCK_JAVA_CLASSPATH=^
 %BUCK_DIRECTORY%\third-party\java\gson\gson-2.2.4.jar;^
 %BUCK_DIRECTORY%\third-party\java\jetty\jetty-all-9.0.4.v20130625.jar;^
 %BUCK_DIRECTORY%\third-party\java\jetty\servlet-api.jar;^
-%BUCK_DIRECTORY%\third-party\java\neo4j\geronimo-jta_1.1_spec-1.1.1.jar;^
-%BUCK_DIRECTORY%\third-party\java\neo4j\lucene-core-3.6.2.jar;^
-%BUCK_DIRECTORY%\third-party\java\neo4j\neo4j-kernel-2.0.0-M05.jar;^
-%BUCK_DIRECTORY%\third-party\java\neo4j\neo4j-lucene-index-2.0.0-M05.jar;^
 %BUCK_DIRECTORY%\third-party\java\xz-java-1.3\xz-1.3.jar
 
 "%JAVA%" ^
