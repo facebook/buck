@@ -18,7 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.ProjectFilesystem;
 
+import java.util.List;
+
 public interface BinaryBuildRule {
 
-  public String getExecutableCommand(ProjectFilesystem projectFilesystem);
+  public List<String> getExecutableCommand(ProjectFilesystem projectFilesystem);
 }

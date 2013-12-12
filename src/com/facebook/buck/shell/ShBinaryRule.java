@@ -108,8 +108,11 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public String getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return projectFilesystem.getFileForRelativePath(output.toString()).getAbsolutePath();
+  public List<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
+    return ImmutableList.of(projectFilesystem
+          .getFileForRelativePath(output.toString())
+          .getAbsolutePath()
+          .toString());
   }
 
   public static Builder newShBinaryBuilder(AbstractBuildRuleBuilderParams params) {

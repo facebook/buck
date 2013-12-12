@@ -29,12 +29,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class JavaBinaryRuleTest {
 
@@ -81,8 +83,7 @@ public class JavaBinaryRuleTest {
     String expectedClasspath =
         basePath + javaBinaryRule.getPathToOutputFile();
 
-    String expectedCommand = String.format("java -jar %s",
-        expectedClasspath);
+    List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     Function<String, Path> pathRelativizer = new Function<String, Path>() {
       @Override

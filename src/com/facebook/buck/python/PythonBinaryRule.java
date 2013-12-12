@@ -72,14 +72,13 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
   }
 
   @Override
-  public String getExecutableCommand(ProjectFilesystem projectFilesystem) {
+  public List<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     String pythonPath = Joiner.on(':').join(
         Iterables.transform(
             getPythonPathEntries(),
             projectFilesystem.getAbsolutifier()));
-    return String.format("PYTHONPATH=%s python %s",
-        pythonPath,
-        projectFilesystem.getPathRelativizer().apply(main));
+    return ImmutableList.of(String.format("PYTHONPATH=%s", pythonPath), "python",
+        projectFilesystem.getPathRelativizer().apply(main).toString());
   }
 
   @VisibleForTesting

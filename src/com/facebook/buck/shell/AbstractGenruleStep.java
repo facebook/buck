@@ -26,6 +26,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -255,7 +256,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
       String cmd,
       Buildable matchingRule) {
     if (matchingRule instanceof BinaryBuildRule) {
-      return ((BinaryBuildRule) matchingRule).getExecutableCommand(filesystem);
+      return Joiner.on(' ').join(((BinaryBuildRule) matchingRule).getExecutableCommand(filesystem));
     }
 
     File output = filesystem.getFileForRelativePath(matchingRule.getPathToOutputFile());
