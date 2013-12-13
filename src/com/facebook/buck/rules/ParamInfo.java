@@ -101,7 +101,12 @@ class ParamInfo implements Comparable<ParamInfo> {
     // TODO(simons): Check for a wildcard here.
     if (List.class.isAssignableFrom(rawType) || Set.class.isAssignableFrom(rawType)) {
       this.containerType = rawType;
-      this.type = determineGenericType(genericType);
+      if (!(genericType instanceof ParameterizedType)) {
+        throw new IllegalArgumentException(String.format(
+            "Unable to detect type held in Collection. Field name was %s. Class was %s",
+            field.getName(), genericType));
+      }
+      this.type = unwrapGenericType(genericType);
     } else if (Optional.class.isAssignableFrom(rawType)) {
       this.type = unwrapGenericType(genericType);
 
@@ -159,13 +164,18 @@ class ParamInfo implements Comparable<ParamInfo> {
     }
 
     if (types[0] instanceof WildcardType) {
-      throw new IllegalStateException("Generic types must be specific: " + type);
+      WildcardType wild = (WildcardType) types[0];
+
+      if (Object.class.equals(wild.getUpperBounds()[0])) {
+        throw new IllegalArgumentException("Generic types must be specific: " + type);
+      }
+      return Primitives.wrap((Class<?>) wild.getUpperBounds()[0]);
     }
 
     if (types[0] instanceof ParameterizedType) {
       return unwrapGenericType(types[0]);
     }
-    return (Class<?>) types[0];
+    return Primitives.wrap((Class<?>) types[0]);
   }
 
   private String determinePyName(String javaName, @Nullable Hint hint) {
@@ -173,28 +183,6 @@ class ParamInfo implements Comparable<ParamInfo> {
       return hint.name();
     }
     return LOWER_CAMEL.to(LOWER_UNDERSCORE, javaName);
-  }
-
-  private Class<?> determineGenericType(Type genericType) {
-    if (!(genericType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException("Collection type was not generic");
-    }
-
-    Type[] types = ((ParameterizedType) genericType).getActualTypeArguments();
-    if (types.length != 1) {
-      throw new IllegalArgumentException("Unable to determine generic type");
-    }
-
-    if (types[0] instanceof WildcardType) {
-      WildcardType wild = (WildcardType) types[0];
-
-      if (Object.class.equals(wild.getUpperBounds()[0])) {
-        throw new IllegalArgumentException("Generic types must be specific: " + genericType);
-      }
-      return Primitives.wrap((Class<?>) wild.getUpperBounds()[0]);
-    }
-
-    return Primitives.wrap((Class<?>) types[0]);
   }
 
   public void setFromParams(
