@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="soy-no-guava">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/closure-templates/soy-2012-12-21-no-guava.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/closure-templates/soy-2012-12-21-no-guava.jar!/" />
+    </SOURCES>
+  </library>
+</component>

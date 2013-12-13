@@ -1,0 +1,7 @@
+prebuilt_jar(
+  name = 'closure-templates',
+  binary_jar = 'soy-2012-12-21-no-guava.jar',
+  visibility = [
+    '//src/com/facebook/buck/httpserver:',
+  ],
+)

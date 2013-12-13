@@ -1,0 +1,2 @@
+zap com.google.common.**
+zap javax.annotation.**
