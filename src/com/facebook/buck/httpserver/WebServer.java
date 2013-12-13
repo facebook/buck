@@ -16,23 +16,43 @@
 
 package com.facebook.buck.httpserver;
 
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * A WebSocket server that reports events of buck.
  */
 public class WebServer {
 
+  private static final String STATIC_CONTEXT_PATH = "/static";
+  private static final String TRACE_CONTEXT_PATH = "/trace";
+  private static final String TRACE_DATA_CONTEXT_PATH = "/tracedata";
+
   private final int port;
+  private final ProjectFilesystem projectFilesystem;
+  private final String staticContentDirectory;
   private final Server server;
   private final StreamingWebSocketServlet streamingWebSocketServlet;
 
-  public WebServer(int port) {
+  public WebServer(int port,
+      ProjectFilesystem projectFilesystem,
+      String staticContentDirectory) {
     this.port = port;
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.staticContentDirectory = Preconditions.checkNotNull(staticContentDirectory);
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet();
   }
@@ -54,6 +74,38 @@ public class WebServer {
       return;
     }
 
+    // Package up all of the handlers into a ContextHandlerCollection to serve as the handler for
+    // the server.
+    List<Handler> handlers = createHandlers();
+    ContextHandlerCollection contexts = new ContextHandlerCollection();
+    contexts.setHandlers(handlers.toArray(new Handler[] {}));
+    server.setHandler(contexts);
+
+    try {
+      server.start();
+    } catch (Exception e) {
+      throw new WebServerException("Cannot start Websocket server.", e);
+    }
+  }
+
+  private List<Handler> createHandlers() {
+    Map<String, Handler> contextPathToHandler = Maps.newHashMap();
+
+    ResourceHandler resourceHandler = new ResourceHandler();
+    resourceHandler.setResourceBase(staticContentDirectory);
+    contextPathToHandler.put(STATIC_CONTEXT_PATH, resourceHandler);
+    contextPathToHandler.put(TRACE_CONTEXT_PATH, new TraceHandler());
+    contextPathToHandler.put(TRACE_DATA_CONTEXT_PATH, new TraceDataHandler(projectFilesystem));
+
+    ImmutableList.Builder<Handler> handlers = ImmutableList.builder();
+    for (Map.Entry<String, Handler> entry : contextPathToHandler.entrySet()) {
+      String contextPath = entry.getKey();
+      Handler handler = entry.getValue();
+      ContextHandler contextHandler = new ContextHandler(contextPath);
+      contextHandler.setHandler(handler);
+      handlers.add(contextHandler);
+    }
+
     // Create a handler that acts as a WebSocket server.
     ServletContextHandler servletContextHandler = new ServletContextHandler(
         /* parent */ server,
@@ -61,18 +113,8 @@ public class WebServer {
         /* sessions */ true,
         /* security */ false);
     servletContextHandler.addServlet(new ServletHolder(streamingWebSocketServlet), "/echo");
-
-    // Package up all of the handlers into a ContextHandlerCollection to serve as the handler for
-    // the server.
-    ContextHandlerCollection contexts = new ContextHandlerCollection();
-    Handler[] handlers = new Handler[] {servletContextHandler};
-    contexts.setHandlers(handlers);
-    server.setHandler(contexts);
-    try {
-      server.start();
-    } catch (Exception e) {
-      throw new WebServerException("Can not start Websocket server.", e);
-    }
+    handlers.add(servletContextHandler);
+    return handlers.build();
   }
 
   public synchronized void stop() throws WebServerException {
@@ -82,7 +124,7 @@ public class WebServer {
     try {
       server.stop();
     } catch (Exception e) {
-      throw new WebServerException("Can not stop Websocket server.", e);
+      throw new WebServerException("Cannot stop Websocket server.", e);
     }
   }
 

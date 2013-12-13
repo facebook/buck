@@ -16,6 +16,7 @@ java_library(
     ':servlet-api',
   ],
   visibility = [
-    '//src/com/facebook/buck/httpserver:httpserver',
+    '//src/com/facebook/buck/httpserver:',
+    '//test/com/facebook/buck/httpserver:',
   ],
 )

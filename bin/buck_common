@@ -290,6 +290,7 @@ BUCK_JAVA_ARGS="\
 -Dbuck.path_to_python_interp=${PYTHON_INTERP_FALLBACK} \
 -Dbuck.path_to_buck_py=${PATH_TO_BUCK_PY} \
 -Dbuck.path_to_intellij_py=${BUCK_DIRECTORY}/src/com/facebook/buck/command/intellij.py \
+-Dbuck.path_to_static_content=${BUCK_DIRECTORY}/webserver/static \
 -Dbuck.git_commit=${BUCK_CURRENT_VERSION} \
 -Dbuck.git_commit_timestamp=${BUCK_VERSION_TIMESTAMP} \
 -Dbuck.git_dirty=${BUCK_REPOSITORY_DIRTY} \

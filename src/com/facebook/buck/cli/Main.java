@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
@@ -96,6 +97,19 @@ public final class Main {
   private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
       new TimeSpan(100, TimeUnit.MILLISECONDS);
 
+  /**
+   * Events may be piped through the {@link BuckEventBus} after the {@link Command} has
+   * finished executing. We add a small delay so that the listeners have a chance to process these
+   * events before we invoke {@link System#exit(int)}.
+   */
+  private static final TimeSpan DELAY_BEFORE_SHUTDOWN = new TimeSpan(500, TimeUnit.MILLISECONDS);
+
+  /**
+   * Path to a directory of static content that should be served by the {@link WebServer}.
+   */
+  private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
+      "buck.path_to_static_content", "webserver/static");
+
   private final PrintStream stdOut;
   private final PrintStream stdErr;
 
@@ -134,7 +148,7 @@ public final class Main {
       this.filesystemWatcher = createWatcher(projectFilesystem);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
-      webServer = createWebServer(config, console);
+      webServer = createWebServer(config, console, projectFilesystem);
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
     }
 
@@ -153,7 +167,9 @@ public final class Main {
           FileSystems.getDefault().newWatchService());
     }
 
-    private Optional<WebServer> createWebServer(BuckConfig config, Console console) {
+    private Optional<WebServer> createWebServer(BuckConfig config,
+        Console console,
+        ProjectFilesystem projectFilesystem) {
       // Enable the web httpserver if it is given by command line parameter or specified in
       // .buckconfig. The presence of a port number is sufficient.
       Optional<String> serverPort = Optional.fromNullable(System.getProperty("buck.httpserver.port"));
@@ -165,7 +181,7 @@ public final class Main {
         String rawPort = serverPort.get();
         try {
           int port = Integer.parseInt(rawPort, 10);
-          webServer = Optional.of(new WebServer(port));
+          webServer = Optional.of(new WebServer(port, projectFilesystem, STATIC_CONTENT_DIRECTORY));
         } catch (NumberFormatException e) {
           console.printErrorText(String.format("Could not parse port for httpserver: %s.", rawPort));
           webServer = Optional.absent();
@@ -359,14 +375,16 @@ public final class Main {
 
     // Create or get and invalidate cached command parameters.
     Parser parser;
+    Daemon daemon;
     if (isDaemon) {
       // Wire up daemon to new client and console and get cached Parser.
-      Daemon daemon = getDaemon(projectFilesystem, config, console);
+      daemon = getDaemon(projectFilesystem, config, console);
       daemon.watchClient(context.get());
       daemon.watchFileSystem(console);
-      daemon.initWebServer(); // TODO(user): avoid webserver initialization on each command?
+      daemon.initWebServer();
       parser = daemon.getParser();
     } else {
+      daemon = null;
       // Initialize logging and create new Parser for new process.
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
       parser = new Parser(projectFilesystem,
@@ -429,6 +447,22 @@ public final class Main {
         eventListener.outputTrace(buildId);
       }
       artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
+
+      // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
+      if (isDaemon && daemon.webServer.isPresent()) {
+        int port = daemon.webServer.get().getPort();
+        buildEventBus.post(LogEvent.info(
+            "See trace at http://localhost:%s/trace/%s", port, buildId));
+
+        // Give SuperConsoleEventBusListener enough time to redraw before shutting down.
+        // TODO(mbolin): Add a flush() method to the listeners so we do not have to add a delay,
+        // which may be either too long or too short.
+        try {
+          Thread.sleep(DELAY_BEFORE_SHUTDOWN.getTimeSpanInMillis());
+        } catch (InterruptedException e) {
+          e.printStackTrace(console.getStdErr());
+        }
+      }
 
       return exitCode;
     }

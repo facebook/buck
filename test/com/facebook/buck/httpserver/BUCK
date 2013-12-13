@@ -1,0 +1,15 @@
+java_test(
+  name = 'httpserver',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/httpserver:httpserver',
+  ],
+  deps = [
+    '//lib:easymock',
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/httpserver:httpserver',
+    '//src/com/facebook/buck/util:io',
+    '//third-party/java/jetty:jetty',
+  ],
+)
