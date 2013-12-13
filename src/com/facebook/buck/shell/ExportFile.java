@@ -21,18 +21,22 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -74,13 +78,18 @@ import java.util.List;
 // TODO(simons): Extend to also allow exporting a rule.
 public class ExportFile extends AbstractBuildable {
 
-  private final Path src;
+  private final SourcePath src;
   private final Path out;
 
   @VisibleForTesting
   ExportFile(final BuildRuleParams params, ExportFileDescription.Arg args) {
     final BuildTarget target = params.getBuildTarget();
-    this.src = args.src.or(Paths.get(target.getBasePath(), target.getShortName()));
+    if (args.src.isPresent()) {
+      this.src = args.src.get();
+    } else {
+      this.src = new FileSourcePath(
+          String.format("%s%s", target.getBasePathWithSlash(), target.getShortName()));
+    }
 
     final String outName = args.out.or(target.getShortName());
     this.out = Paths.get(BuckConstant.GEN_DIR, target.getBasePath(), outName);
@@ -88,14 +97,14 @@ public class ExportFile extends AbstractBuildable {
 
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
-    return ImmutableSet.of(src.toString());
+    return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(src));
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    // TODO(simons): How should src and out factor into this?
     return builder
-        .set("src", src.toString());
+        .set("out", out.toString())
+        .setSourcePaths("src", ImmutableSortedSet.of(src));
   }
 
   @Override
@@ -105,7 +114,7 @@ public class ExportFile extends AbstractBuildable {
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
         .add(new MkdirStep(out.getParent()))
-        .add(new CopyStep(src, out));
+        .add(new CopyStep(src.resolve(context), out));
 
     return builder.build();
   }

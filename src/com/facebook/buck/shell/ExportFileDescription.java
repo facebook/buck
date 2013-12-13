@@ -19,9 +19,8 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-
-import java.nio.file.Path;
 
 public class ExportFileDescription implements Description<ExportFileDescription.Arg> {
 
@@ -43,7 +42,7 @@ public class ExportFileDescription implements Description<ExportFileDescription.
   }
 
   public class Arg {
-    public Optional<Path> src;
+    public Optional<? extends SourcePath> src;
     public Optional<String> out;
   }
 }

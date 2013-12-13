@@ -15,18 +15,24 @@
  */
 package com.facebook.buck.shell;
 
+import static com.facebook.buck.testutil.MoreAsserts.assertIterablesEquals;
+import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
@@ -37,6 +43,7 @@ import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -46,7 +53,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -103,7 +109,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.of(Paths.get("chips"));
+    args.src = Optional.of(new FileSourcePath("chips"));
     args.out = Optional.of("fish");
     ExportFile exportFile = new ExportFile(params, args);
 
@@ -117,6 +123,25 @@ public class ExportFileTest {
         steps,
         TestExecutionContext.newInstance());
     assertEquals("buck-out/gen/fish", exportFile.getPathToOutputFile());
+  }
+
+  @Test
+  public void shouldSetInputsFromSourcePaths() {
+    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
+    args.src = Optional.of(new FileSourcePath("chips"));
+    args.out = Optional.of("cake");
+    ExportFile exportFile = new ExportFile(params, args);
+
+    assertIterablesEquals(singleton("chips"), exportFile.getInputsToCompareToOutput());
+
+    args.src = Optional.of(
+        new BuildTargetSourcePath(BuildTargetFactory.newInstance("//example:one")));
+    exportFile = new ExportFile(params, args);
+    assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
+
+    args.src = Optional.absent();
+    exportFile = new ExportFile(params, args);
+    assertIterablesEquals(singleton("example.html"), exportFile.getInputsToCompareToOutput());
   }
 
   private BuildContext getBuildContext(File root) {
