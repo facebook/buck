@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 
 /**
  * This is a union type that represents either a success or a failure. This exists so that
- * {@link AbstractCachingBuildRule#buildOnceDepsAreBuilt(BuildContext, OnDiskBuildInfo, BuildInfoRecorder)}
+ * {@link AbstractCachingBuildRule#buildOnceDepsAreBuilt(BuildContext, OnDiskBuildInfo, BuildInfoRecorder, boolean)}
  * can return a strongly typed value.
  */
 public class BuildResult {

@@ -161,7 +161,7 @@ public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> 
       Object value) {
 
     if (value instanceof Optional) {
-      value = ((Optional) value).orNull();
+      value = ((Optional<?>) value).orNull();
     }
 
     if (value instanceof BuildTargetSourcePath) {
