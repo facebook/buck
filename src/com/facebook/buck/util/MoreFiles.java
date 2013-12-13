@@ -34,10 +34,42 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
 public final class MoreFiles {
+
+  private static class FileAccessedEntry {
+    public final File file;
+    public final FileTime lastAccessTime;
+
+    public File getFile() {
+      return file;
+    }
+
+    public FileTime getLastAccessTime() {
+      return lastAccessTime;
+    }
+
+    private FileAccessedEntry(File file, FileTime lastAccessTime) {
+      this.file = file;
+      this.lastAccessTime = lastAccessTime;
+    }
+  }
+
+  /**
+   * Sorts by the lastAccessTime in descending order (more recently accessed files are first).
+   */
+  private final static Comparator<FileAccessedEntry> SORT_BY_LAST_ACCESSED_TIME_DESC =
+      new Comparator<FileAccessedEntry>() {
+    @Override
+    public int compare(FileAccessedEntry a, FileAccessedEntry b) {
+      return b.getLastAccessTime().compareTo(a.getLastAccessTime());
+    }
+  };
 
   /** Utility class: do not instantiate. */
   private MoreFiles() {}
@@ -159,4 +191,28 @@ public final class MoreFiles {
     }
     return diffLines;
   }
+
+  /**
+   * Does an in-place sort of the specified {@code files} array. Most recently accessed files will
+   * be at the front of the array when sorted.
+   */
+  public static void sortFilesByAccessTime(File[] files) {
+    FileAccessedEntry[] fileAccessedEntries = new FileAccessedEntry[files.length];
+    for (int i = 0; i < files.length; ++i) {
+      FileTime lastAccess;
+      try {
+        lastAccess = java.nio.file.Files.readAttributes(files[i].toPath(),
+            BasicFileAttributes.class).lastAccessTime();
+      } catch (IOException e) {
+        lastAccess = FileTime.fromMillis(files[i].lastModified());
+      }
+      fileAccessedEntries[i] = new FileAccessedEntry(files[i], lastAccess);
+    }
+    Arrays.sort(fileAccessedEntries, SORT_BY_LAST_ACCESSED_TIME_DESC);
+
+    for (int i = 0; i < files.length; i++) {
+      files[i] = fileAccessedEntries[i].getFile();
+    }
+  }
+
 }

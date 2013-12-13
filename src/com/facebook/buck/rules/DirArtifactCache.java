@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.collect.ArrayIterable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -29,45 +30,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DirArtifactCache implements ArtifactCache {
-  private class FileAccessedEntry {
-    public final File file;
-    public final FileTime lastAccessTime;
-
-    public File getFile() {
-      return file;
-    }
-
-    public FileTime getLastAccessTime() {
-      return lastAccessTime;
-    }
-
-    private FileAccessedEntry(File file, FileTime lastAccessTime) {
-      this.file = file;
-      this.lastAccessTime = lastAccessTime;
-    }
-  }
-
 
   private final static Logger logger = Logger.getLogger(DirArtifactCache.class.getName());
-
-  /**
-   * Sorts by the lastAccessTime in descending order (more recently accessed files are first).
-   */
-  private final static Comparator<FileAccessedEntry> SORT_BY_LAST_ACCESSED_TIME_DESC =
-      new Comparator<FileAccessedEntry>() {
-    @Override
-    public int compare(FileAccessedEntry a, FileAccessedEntry b) {
-      return b.getLastAccessTime().compareTo(a.getLastAccessTime());
-    }
-  };
 
   private final File cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
@@ -157,9 +125,9 @@ public class DirArtifactCache implements ArtifactCache {
     if (!maxCacheSizeBytes.isPresent()) {
       return;
     }
-    for (FileAccessedEntry fileAccessedEntry : findFilesToDelete()) {
+    for (File fileAccessedEntry : findFilesToDelete()) {
       try {
-        Files.deleteIfExists(fileAccessedEntry.getFile().toPath());
+        Files.deleteIfExists(fileAccessedEntry.toPath());
       } catch (IOException e) {
         // Eat any IOExceptions while attempting to clean up the cache directory.  If the file is
         // now in use, we no longer want to delete it.
@@ -168,34 +136,23 @@ public class DirArtifactCache implements ArtifactCache {
     }
   }
 
-  private Iterable<FileAccessedEntry> findFilesToDelete() {
+  private Iterable<File> findFilesToDelete() {
     Preconditions.checkState(maxCacheSizeBytes.isPresent());
     long maxSizeBytes = maxCacheSizeBytes.get();
 
-    File[] artifacts = cacheDir.listFiles();
-    FileAccessedEntry[] fileAccessedEntries = new FileAccessedEntry[artifacts.length];
-    for (int i = 0; i < artifacts.length; ++i) {
-      FileTime lastAccess;
-      try {
-        lastAccess =
-            Files.readAttributes(artifacts[i].toPath(), BasicFileAttributes.class).lastAccessTime();
-      } catch (IOException e) {
-        lastAccess = FileTime.fromMillis(artifacts[i].lastModified());
-      }
-      fileAccessedEntries[i] = new FileAccessedEntry(artifacts[i], lastAccess);
-    }
-    Arrays.sort(fileAccessedEntries, SORT_BY_LAST_ACCESSED_TIME_DESC);
+    File[] files = cacheDir.listFiles();
+    MoreFiles.sortFilesByAccessTime(files);
 
     // Finds the first N from the list ordered by last access time who's combined size is less than
     // maxCacheSizeBytes.
     long currentSizeBytes = 0;
-    for (int i = 0; i < fileAccessedEntries.length; ++i) {
-      FileAccessedEntry file = fileAccessedEntries[i];
-      currentSizeBytes += file.getFile().length();
+    for (int i = 0; i < files.length; ++i) {
+      File file = files[i];
+      currentSizeBytes += file.length();
       if (currentSizeBytes > maxSizeBytes) {
-        return ArrayIterable.of(fileAccessedEntries, i, fileAccessedEntries.length);
+        return ArrayIterable.of(files, i, files.length);
       }
     }
-    return ImmutableList.<FileAccessedEntry>of();
+    return ImmutableList.<File>of();
   }
 }

@@ -29,6 +29,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -190,5 +191,31 @@ public class MoreFilesTest {
         "| BBB | yyy |",
         "| CCC | zzz |"
     ));
+  }
+
+  @Test
+  public void testSortFilesByAccessTime() throws IOException {
+    File dir = tmp.newFolder();
+    File fileW = new File(dir, "w");
+    File fileX = new File(dir, "x");
+    File fileY = new File(dir, "y");
+    File fileZ = new File(dir, "z");
+
+    Files.write("w", fileW, Charsets.UTF_8);
+    Files.write("x", fileX, Charsets.UTF_8);
+    Files.write("y", fileY, Charsets.UTF_8);
+    Files.write("z", fileZ, Charsets.UTF_8);
+
+    java.nio.file.Files.setAttribute(fileW.toPath(), "lastAccessTime", FileTime.fromMillis(9000));
+    java.nio.file.Files.setAttribute(fileX.toPath(), "lastAccessTime", FileTime.fromMillis(0));
+    java.nio.file.Files.setAttribute(fileY.toPath(), "lastAccessTime", FileTime.fromMillis(1000));
+    java.nio.file.Files.setAttribute(fileZ.toPath(), "lastAccessTime", FileTime.fromMillis(2000));
+
+    File[] files = dir.listFiles();
+    MoreFiles.sortFilesByAccessTime(files);
+    assertEquals(
+        "Files short be sorted from most recently accessed to least recently accessed.",
+        ImmutableList.of(fileW, fileZ, fileY, fileX),
+        Arrays.asList(files));
   }
 }
