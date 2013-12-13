@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.testutil.MoreAsserts.assertSetEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +34,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -46,6 +48,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
@@ -134,6 +137,119 @@ public class DescribedRuleTest {
 
     assertTrue(ok.get());
     // No need to verify the mocks as they're not being used as mocks
+  }
+
+  @Test
+  public void addingASourcePathShouldAmendTheDepsOfARule() throws NoSuchBuildTargetException {
+    // The allowable variations. We don't populate Collection<Optional<SourcePath>>.
+    class Dto {
+      public SourcePath path;
+      public Optional<SourcePath> other;
+      public ImmutableSet<SourcePath> paths;
+      public Optional<List<SourcePath>> optionalPaths;
+    }
+
+    Description<Dto> description = new Description<Dto>() {
+      @Override
+      public BuildRuleType getBuildRuleType() {
+        return new BuildRuleType("example");
+      }
+
+      @Override
+      public Dto createUnpopulatedConstructorArg() {
+        return new Dto();
+      }
+
+      @Override
+      public Buildable createBuildable(BuildRuleParams params, Dto args) {
+        return new ExampleBuildable("hello world");
+      }
+    };
+
+    BuildRuleType type = new BuildRuleType("fake");
+    BuildRule depRule1 = new FakeBuildRule(type, BuildTargetFactory.newInstance("//example:dep1"));
+    BuildRule depRule2 = new FakeBuildRule(type, BuildTargetFactory.newInstance("//example:dep2"));
+    BuildRule depRule3 = new FakeBuildRule(type, BuildTargetFactory.newInstance("//example:dep3"));
+    BuildRule depRule4 = new FakeBuildRule(type, BuildTargetFactory.newInstance("//example:dep4"));
+
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        ImmutableMap.of(
+            depRule1.getBuildTarget(), depRule1,
+            depRule2.getBuildTarget(), depRule2,
+            depRule3.getBuildTarget(), depRule3,
+            depRule4.getBuildTarget(), depRule4));
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+    BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
+        ImmutableMap.of(
+            "path", "//example:dep1",
+            "other", "//example:dep2",
+            "paths", ImmutableList.of("//example:dep3"),
+            "optionalPaths", ImmutableList.of("//example:dep4")),
+        filesystem,
+        new BuildFileTree(ImmutableSet.<String>of()),
+        new BuildTargetParser(filesystem),
+        BuildTargetFactory.newInstance("//one/two:example"),
+        new FakeRuleKeyBuilderFactory(),
+        /* ignore file existence checks */ true
+    );
+
+    DescribedRuleFactory<Dto> factory = new DescribedRuleFactory<>(description);
+    DescribedRuleBuilder<Dto> builder = factory.newInstance(factoryParams);
+    DescribedRule rule = builder.build(ruleResolver);
+
+    ImmutableSortedSet<BuildRule> deps = rule.getDeps();
+    assertSetEquals(
+        "Should have added all resolved SourcePaths as dependencies",
+        ImmutableSet.of(depRule1, depRule2, depRule3, depRule4), deps);
+  }
+
+  @Test
+  public void ensureThatIfOnlyACollectionOfSourcePathsAreDeclaredTheyGetAddedAsDeps() throws NoSuchBuildTargetException {
+    class Dto {
+      public Set<SourcePath> paths;
+    }
+
+    Description<Dto> description = new Description<Dto>() {
+      @Override
+      public BuildRuleType getBuildRuleType() {
+        return new BuildRuleType("example");
+      }
+
+      @Override
+      public Dto createUnpopulatedConstructorArg() {
+        return new Dto();
+      }
+
+      @Override
+      public Buildable createBuildable(BuildRuleParams params, Dto args) {
+        return new ExampleBuildable("hello world");
+      }
+    };
+
+    BuildRuleType type = new BuildRuleType("fake");
+    BuildRule depRule1 = new FakeBuildRule(type, BuildTargetFactory.newInstance("//example:dep1"));
+
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        ImmutableMap.of(depRule1.getBuildTarget(), depRule1));
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+    BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
+        ImmutableMap.of("paths", ImmutableList.of("//example:dep1")),
+        filesystem,
+        new BuildFileTree(ImmutableSet.<String>of()),
+        new BuildTargetParser(filesystem),
+        BuildTargetFactory.newInstance("//one/two:example"),
+        new FakeRuleKeyBuilderFactory(),
+        /* ignore file existence checks */ true
+    );
+
+    DescribedRuleFactory<Dto> factory = new DescribedRuleFactory<>(description);
+    DescribedRuleBuilder<Dto> builder = factory.newInstance(factoryParams);
+    DescribedRule rule = builder.build(ruleResolver);
+
+    ImmutableSortedSet<BuildRule> deps = rule.getDeps();
+    assertSetEquals(ImmutableSet.of(depRule1), deps);
   }
 
   private static class ExampleBuildable extends AbstractBuildable {

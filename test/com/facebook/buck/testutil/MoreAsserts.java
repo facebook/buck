@@ -51,8 +51,23 @@ public final class MoreAsserts {
     Set<E> missing = Sets.difference(expected, actual);
     Set<E> extra = Sets.difference(actual, expected);
     boolean setsEqual = missing.isEmpty() && extra.isEmpty();
-    Assert.assertTrue(String.format("%nMissing elements:%n%s" +
-        "%nExtraneous elements:%n%s", missing, extra), setsEqual);
+    Assert.assertTrue(
+        String.format("%nMissing elements:%n%s%nExtraneous elements:%n%s", missing, extra),
+        setsEqual);
+  }
+
+  /**
+   * Asserts that two sets have the same contents.
+   * On failure, prints a readable diff of the two sets for easy debugging.
+   */
+  public static <E> void assertSetEquals(String userMessage, Set<E> expected, Set<E> actual) {
+    Set<E> missing = Sets.difference(expected, actual);
+    Set<E> extra = Sets.difference(actual, expected);
+    boolean setsEqual = missing.isEmpty() && extra.isEmpty();
+    Assert.assertTrue(
+        String.format("%s %nMissing elements:%n%s%nExtraneous elements:%n%s",
+            userMessage, missing, extra),
+        setsEqual);
   }
 
   /**
