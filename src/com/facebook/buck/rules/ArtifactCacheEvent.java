@@ -98,7 +98,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return String.format("Artifact%sCacheStarted",
           CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, getOperation().toString()));
     }
@@ -127,7 +127,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return String.format("Artifact%sCacheFinished",
           CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, getOperation().toString()));
     }

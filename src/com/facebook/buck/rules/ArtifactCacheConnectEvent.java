@@ -59,14 +59,14 @@ public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implem
 
   public static class Started extends ArtifactCacheConnectEvent {
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "ArtifactCacheConnectStarted";
     }
   }
 
   public static class Finished extends ArtifactCacheConnectEvent {
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "ArtifactCacheConnectFinished";
     }
   }

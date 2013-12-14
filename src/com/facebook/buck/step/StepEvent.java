@@ -84,7 +84,7 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "StepStarted";
     }
   }
@@ -102,7 +102,7 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "StepFinished";
     }
 

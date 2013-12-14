@@ -17,7 +17,6 @@
 package com.facebook.buck.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -88,9 +87,6 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   public String toString() {
     return String.format("%s(%s)", getEventName(), getValueString());
   }
-
-  @JsonProperty("type")
-  abstract protected String getEventName();
 
   @JsonIgnore
   abstract protected String getValueString();

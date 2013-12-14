@@ -74,7 +74,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "UninstallStarted";
     }
   }
@@ -93,7 +93,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "UninstallFinished";
     }
 

@@ -219,7 +219,7 @@ public final class Main {
       });
     }
 
-    private void watchFileSystem(Console console) throws IOException {
+    private void watchFileSystem(Console console, CommandEvent commandEvent) throws IOException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
       // as a single, atomic Parser cache update and are not interleaved with Parser cache
@@ -228,6 +228,7 @@ public final class Main {
       synchronized (parser) {
         parser.setConsole(console);
         hashCache.setConsole(console);
+        fileEventBus.post(commandEvent);
         filesystemWatcher.postEvents();
       }
     }
@@ -267,13 +268,6 @@ public final class Main {
   }
 
   @Nullable volatile private static Daemon daemon;
-
-  /**
-   * Get existing Daemon.
-   */
-  private Daemon getDaemon() {
-    return Preconditions.checkNotNull(daemon);
-  }
 
   /**
    * Get or create Daemon.
@@ -371,29 +365,6 @@ public final class Main {
       color = Optional.absent();
     }
     final Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi(color));
-    KnownBuildRuleTypes knownBuildRuleTypes = new KnownBuildRuleTypes();
-
-    // Create or get and invalidate cached command parameters.
-    Parser parser;
-    Daemon daemon;
-    if (isDaemon) {
-      // Wire up daemon to new client and console and get cached Parser.
-      daemon = getDaemon(projectFilesystem, config, console);
-      daemon.watchClient(context.get());
-      daemon.watchFileSystem(console);
-      daemon.initWebServer();
-      parser = daemon.getParser();
-    } else {
-      daemon = null;
-      // Initialize logging and create new Parser for new process.
-      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
-      parser = new Parser(projectFilesystem,
-          knownBuildRuleTypes,
-          console,
-          config.getPythonInterpreter(),
-          config.getTempFilePatterns(),
-          createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
-    }
 
     // Find and execute command.
     Optional<Command> command = Command.getCommandForName(args[0], console);
@@ -407,7 +378,6 @@ public final class Main {
     }
 
     Clock clock = new DefaultClock();
-
     String buildId = MoreStrings.createRandomString();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
     try (BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
@@ -418,7 +388,7 @@ public final class Main {
           addEventListeners(buildEventBus,
               projectFilesystem,
               config,
-              getWebServerIfDaemon(context),
+              getWebServerIfDaemon(context, projectFilesystem, config, console),
               consoleListener);
 
       String[] remainingArgs = new String[args.length - 1];
@@ -427,11 +397,32 @@ public final class Main {
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
-      buildEventBus.post(CommandEvent.started(commandName, isDaemon));
+      CommandEvent commandEvent = CommandEvent.started(commandName, isDaemon);
+      buildEventBus.post(commandEvent);
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
       // running commands such as `buck clean`.
       ArtifactCacheFactory artifactCacheFactory = new LoggingArtifactCacheFactory(buildEventBus);
+
+      // Create or get Parser and invalidate cached command parameters.
+      Parser parser;
+      if (isDaemon) {
+        // Wire up daemon to new client and console and get cached Parser.
+        Daemon daemon = getDaemon(projectFilesystem, config, console);
+        daemon.watchClient(context.get());
+        daemon.watchFileSystem(console, commandEvent);
+        daemon.initWebServer(); // TODO(user): avoid webserver initialization on each command?
+        parser = daemon.getParser();
+      } else {
+        // Initialize logging and create new Parser for new process.
+        JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+        parser = new Parser(projectFilesystem,
+            new KnownBuildRuleTypes(),
+            console,
+            config.getPythonInterpreter(),
+            config.getTempFilePatterns(),
+            createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
+      }
 
       int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
           console,
@@ -468,9 +459,13 @@ public final class Main {
     }
   }
 
-  private Optional<WebServer> getWebServerIfDaemon(Optional<NGContext> context) {
+  private Optional<WebServer> getWebServerIfDaemon(
+      Optional<NGContext> context,
+      ProjectFilesystem projectFilesystem,
+      BuckConfig config,
+      Console console) throws IOException {
     if (context.isPresent()) {
-      return getDaemon().getWebServer();
+      return getDaemon(projectFilesystem, config, console).getWebServer();
     }
     return Optional.absent();
   }

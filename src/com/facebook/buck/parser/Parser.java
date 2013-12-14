@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -138,9 +140,12 @@ public class Parser {
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
    * TODO(user): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
    */
-  private static class BuildFileTreeCache implements InputSupplier<BuildFileTree> {
+  @VisibleForTesting
+  static class BuildFileTreeCache implements InputSupplier<BuildFileTree> {
     private final InputSupplier<BuildFileTree> supplier;
     private @Nullable BuildFileTree buildFileTree;
+    private String currentBuildId = MoreStrings.createRandomString();
+    private String buildTreeBuildId = MoreStrings.createRandomString();
 
     /**
      * @param buildFileTreeSupplier each call to get() must reconstruct the tree from disk.
@@ -150,10 +155,14 @@ public class Parser {
     }
 
     /**
-     * Discard the cached BuildFileTree.
+     * Invalidate the current build file tree if it was not created during this build.
+     * If the BuildFileTree was created during the current build it is still valid and
+     * recreating it would generate an identical tree.
      */
-    public void invalidate() {
-      buildFileTree = null;
+    public void invalidateIfStale() {
+      if (!currentBuildId.equals(buildTreeBuildId)) {
+        buildFileTree = null;
+      }
     }
 
     /**
@@ -162,9 +171,22 @@ public class Parser {
     @Override
     public BuildFileTree getInput() throws IOException {
       if (buildFileTree == null) {
+        buildTreeBuildId = currentBuildId;
         buildFileTree = supplier.getInput();
       }
       return buildFileTree;
+    }
+
+    /**
+     * Stores the current build id, which is used to determine when the BuildFileTree is invalid.
+     */
+    public void onCommandStartedEvent(BuckEvent event) {
+      // Ideally, the type of event would be CommandEvent.Started, but that would introduce
+      // a dependency on com.facebook.buck.cli.
+      Preconditions.checkArgument(event.getEventName().equals("CommandStarted"),
+          "event should be of type CommandEvent.Started, but was: %s.",
+          event);
+      currentBuildId = event.getBuildId();
     }
   }
   private final BuildFileTreeCache buildFileTreeCache;
@@ -693,6 +715,20 @@ public class Parser {
   }
 
   /**
+   * Called when a new command is executed and used to signal to the BuildFileTreeCache
+   * that reconstructing the build file tree may result in a different BuildFileTree.
+   */
+  @Subscribe
+  public synchronized void onCommandStartedEvent(BuckEvent event) {
+    // Ideally, the type of event would be CommandEvent.Started, but that would introduce
+    // a dependency on com.facebook.buck.cli.
+    Preconditions.checkArgument(event.getEventName().equals("CommandStarted"),
+        "event should be of type CommandEvent.Started, but was: %s.",
+        event);
+    buildFileTreeCache.onCommandStartedEvent(event);
+  }
+
+  /**
    * Called when file change events are posted to the file change EventBus to invalidate cached
    * build rules if required.
    */
@@ -711,7 +747,7 @@ public class Parser {
         if (path.endsWith(BuckConstant.BUILD_RULES_FILE_NAME)) {
 
           // If a build file has been added or removed, reconstruct the build file tree.
-          buildFileTreeCache.invalidate();
+          buildFileTreeCache.invalidateIfStale();
         }
 
         // Added or removed files can affect globs, so invalidate the package build file
@@ -727,7 +763,7 @@ public class Parser {
     } else {
 
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
-      buildFileTreeCache.invalidate();
+      buildFileTreeCache.invalidateIfStale();
       invalidateCache();
     }
   }

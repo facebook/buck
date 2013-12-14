@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 
 public interface BuckEvent {
@@ -49,4 +50,7 @@ public interface BuckEvent {
    * This should be used to pair start events to finished events.
    */
   boolean eventsArePair(BuckEvent event);
+
+  @JsonProperty("type")
+  public String getEventName();
 }

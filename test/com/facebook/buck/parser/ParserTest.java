@@ -19,11 +19,16 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.parser.RawRulePredicates.alwaysFalse;
 import static com.facebook.buck.parser.RawRulePredicates.alwaysTrue;
 import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
@@ -981,6 +986,48 @@ public class ParserTest extends EasyMockSupport {
     parser.filterAllTargetsInProject(filesystem, Lists.<String>newArrayList(), alwaysTrue());
 
     assertEquals("Should have replaced build rules", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic class.
+  public void whenBuildFileTreeCacheInvalidatedTwiceDuringASingleBuildThenBuildFileTreeBuiltOnce()
+      throws IOException {
+    BuckEvent mockEvent = createMock(BuckEvent.class);
+    expect(mockEvent.getEventName()).andReturn("CommandStarted").anyTimes();
+    expect(mockEvent.getBuildId()).andReturn("BUILD1");
+    BuildFileTree mockBuildFileTree = createMock(BuildFileTree.class);
+    InputSupplier<BuildFileTree> mockSupplier = createMock(InputSupplier.class);
+    expect(mockSupplier.getInput()).andReturn(mockBuildFileTree).once();
+    replay(mockEvent, mockSupplier, mockBuildFileTree);
+    Parser.BuildFileTreeCache cache = new Parser.BuildFileTreeCache(mockSupplier);
+    cache.onCommandStartedEvent(mockEvent);
+    cache.invalidateIfStale();
+    cache.getInput();
+    cache.invalidateIfStale();
+    cache.getInput();
+    verify(mockEvent, mockSupplier);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // Needed to mock generic class.
+  public void whenBuildFileTreeCacheInvalidatedDuringTwoBuildsThenBuildFileTreeBuiltTwice()
+      throws IOException {
+    BuckEvent mockEvent = createMock(BuckEvent.class);
+    expect(mockEvent.getEventName()).andReturn("CommandStarted").anyTimes();
+    expect(mockEvent.getBuildId()).andReturn("BUILD1");
+    expect(mockEvent.getBuildId()).andReturn("BUILD2");
+    BuildFileTree mockBuildFileTree = createMock(BuildFileTree.class);
+    InputSupplier<BuildFileTree> mockSupplier = createMock(InputSupplier.class);
+    expect(mockSupplier.getInput()).andReturn(mockBuildFileTree).times(2);
+    replay(mockEvent, mockSupplier, mockBuildFileTree);
+    Parser.BuildFileTreeCache cache = new Parser.BuildFileTreeCache(mockSupplier);
+    cache.onCommandStartedEvent(mockEvent);
+    cache.invalidateIfStale();
+    cache.getInput();
+    cache.onCommandStartedEvent(mockEvent);
+    cache.invalidateIfStale();
+    cache.getInput();
+    verify(mockEvent, mockSupplier);
   }
 
   private Map<BuildTarget, BuildRuleBuilder<?>> emptyBuildTargets() {

@@ -90,7 +90,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "RunComplete";
     }
 

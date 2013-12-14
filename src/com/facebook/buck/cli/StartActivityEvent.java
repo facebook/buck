@@ -85,7 +85,7 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "StartActivityStarted";
     }
   }
@@ -103,7 +103,7 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "StartActivityFinished";
     }
 

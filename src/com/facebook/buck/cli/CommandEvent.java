@@ -77,7 +77,7 @@ public abstract class CommandEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "CommandStarted";
     }
   }
@@ -95,7 +95,7 @@ public abstract class CommandEvent extends AbstractBuckEvent {
     }
 
     @Override
-    protected String getEventName() {
+    public String getEventName() {
       return "CommandFinished";
     }
 
