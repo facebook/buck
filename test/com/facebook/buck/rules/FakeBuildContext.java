@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -51,7 +50,6 @@ public class FakeBuildContext {
         .setArtifactCache(new NoopArtifactCache())
         .setEventBus(BuckEventBusFactory.newInstance())
         .setBuildDependencies(BuildDependencies.FIRST_ORDER_ONLY)
-        .setAndroidBootclasspathForAndroidPlatformTarget(Optional.<AndroidPlatformTarget>absent())
-        .setConsole(new TestConsole());
+        .setAndroidBootclasspathForAndroidPlatformTarget(Optional.<AndroidPlatformTarget>absent());
   }
 }

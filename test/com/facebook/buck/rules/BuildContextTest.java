@@ -16,21 +16,24 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.event.BuckEventBusFactory.CapturingLogEventListener;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -44,21 +47,21 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setStepRunner(EasyMock.createMock(StepRunner.class));
-    builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
-    builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
-    builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
+    builder.setDependencyGraph(createMock(DependencyGraph.class));
+    builder.setStepRunner(createMock(StepRunner.class));
+    builder.setProjectFilesystem(createMock(ProjectFilesystem.class));
+    builder.setArtifactCache(createMock(ArtifactCache.class));
+    builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
 
-    AndroidPlatformTarget androidPlatformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
+    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     List<Path> entries = ImmutableList.of(
         Paths.get("add-ons/addon-google_apis-google-15/libs/effects.jar"),
         Paths.get("add-ons/addon-google_apis-google-15/libs/maps.jar"),
         Paths.get("add-ons/addon-google_apis-google-15/libs/usb.jar"));
-    EasyMock.expect(androidPlatformTarget.getBootclasspathEntries()).andReturn(entries);
+    expect(androidPlatformTarget.getBootclasspathEntries()).andReturn(entries);
 
-    EasyMock.replay(androidPlatformTarget);
+    replay(androidPlatformTarget);
 
     builder.setAndroidBootclasspathForAndroidPlatformTarget(Optional.of(androidPlatformTarget));
 
@@ -76,7 +79,7 @@ public class BuildContextTest {
     // to verify that memoization is working as expected.
     androidBootclasspathSupplier.get();
 
-    EasyMock.verify(androidPlatformTarget);
+    verify(androidPlatformTarget);
   }
 
   @Test(expected = HumanReadableException.class)
@@ -84,11 +87,11 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setStepRunner(EasyMock.createMock(StepRunner.class));
-    builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
-    builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
-    builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
+    builder.setDependencyGraph(createMock(DependencyGraph.class));
+    builder.setStepRunner(createMock(StepRunner.class));
+    builder.setProjectFilesystem(createMock(ProjectFilesystem.class));
+    builder.setArtifactCache(createMock(ArtifactCache.class));
+    builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
 
     BuildContext context = builder.build();
@@ -104,11 +107,11 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setDependencyGraph(EasyMock.createMock(DependencyGraph.class));
-    builder.setStepRunner(EasyMock.createMock(StepRunner.class));
-    builder.setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class));
-    builder.setArtifactCache(EasyMock.createMock(ArtifactCache.class));
-    builder.setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class));
+    builder.setDependencyGraph(createMock(DependencyGraph.class));
+    builder.setStepRunner(createMock(StepRunner.class));
+    builder.setProjectFilesystem(createMock(ProjectFilesystem.class));
+    builder.setArtifactCache(createMock(ArtifactCache.class));
+    builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
 
     // Set to absent value.
@@ -125,29 +128,38 @@ public class BuildContextTest {
 
   @Test
   public void testLogBuildInfo() {
-    TestConsole console = new TestConsole();
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    CapturingLogEventListener listener = new CapturingLogEventListener();
+    eventBus.register(listener);
     BuildContext buildContext = BuildContext.builder()
-        .setDependencyGraph(EasyMock.createMock(DependencyGraph.class))
-        .setStepRunner(EasyMock.createMock(StepRunner.class))
-        .setProjectFilesystem(EasyMock.createMock(ProjectFilesystem.class))
-        .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
-        .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
-        .setConsole(console)
-        .setEventBus(BuckEventBusFactory.newInstance())
+        .setDependencyGraph(createMock(DependencyGraph.class))
+        .setStepRunner(createMock(StepRunner.class))
+        .setProjectFilesystem(createMock(ProjectFilesystem.class))
+        .setArtifactCache(createMock(ArtifactCache.class))
+        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
+        .setEventBus(eventBus)
         .build();
 
-    console.setVerbosity(Verbosity.STANDARD_INFORMATION);
     buildContext.logBuildInfo("My name is %s and I can count to %d.", "Michael", 10);
-    assertEquals(
-        "Nothing is written when Verbosity is its default value.",
-        "",
-        console.getTextWrittenToStdErr());
+    assertEquals(ImmutableList.of("My name is Michael and I can count to 10."),
+        listener.getLogMessages());
+  }
 
-    console.setVerbosity(Verbosity.COMMANDS_AND_OUTPUT);
-    buildContext.logBuildInfo("My name is %s and I can count to %d.", "Sarah", 20);
-    assertEquals(
-        "Information is only logged to the console when the verbosity is increased.",
-        "My name is Sarah and I can count to 20.\n",
-        console.getTextWrittenToStdErr());
+  @Test
+  public void testLogError() {
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    CapturingLogEventListener listener = new CapturingLogEventListener();
+    eventBus.register(listener);
+    BuildContext buildContext = BuildContext.builder()
+        .setDependencyGraph(createMock(DependencyGraph.class))
+        .setStepRunner(createMock(StepRunner.class))
+        .setProjectFilesystem(createMock(ProjectFilesystem.class))
+        .setArtifactCache(createMock(ArtifactCache.class))
+        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
+        .setEventBus(eventBus)
+        .build();
+
+    buildContext.logError(new RuntimeException(), "Error detail: %s", "BUILD_ID");
+    assertEquals(ImmutableList.of("Error detail: BUILD_ID"), listener.getLogMessages());
   }
 }

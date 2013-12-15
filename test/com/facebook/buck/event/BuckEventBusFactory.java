@@ -87,7 +87,7 @@ public class BuckEventBusFactory {
       logEvents.add(event);
     }
 
-    public List<String> getErrorMessages() {
+    public List<String> getLogMessages() {
       return FluentIterable.from(logEvents).transform(Functions.toStringFunction()).toList();
     }
   }

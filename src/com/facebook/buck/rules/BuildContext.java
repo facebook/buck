@@ -18,11 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.ThrowableLogEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.AndroidPlatformTarget;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -48,7 +48,6 @@ public class BuildContext {
   private final Supplier<String> androidBootclasspathSupplier;
   private final BuildDependencies buildDependencies;
   private final Function<SourcePath, Path> sourcePathResolver;
-  @Nullable private final Console console;
 
   private BuildContext(
       DependencyGraph dependencyGraph,
@@ -58,8 +57,7 @@ public class BuildContext {
       JavaPackageFinder javaPackageFinder,
       BuckEventBus events,
       Supplier<String> androidBootclasspathSupplier,
-      BuildDependencies buildDependencies,
-      @Nullable Console console) {
+      BuildDependencies buildDependencies) {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
     this.stepRunner = Preconditions.checkNotNull(stepRunner);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
@@ -74,7 +72,6 @@ public class BuildContext {
         return sourcePath.resolve(BuildContext.this);
       }
     };
-    this.console = console;
   }
 
   public Path getProjectRoot() {
@@ -154,17 +151,12 @@ public class BuildContext {
     return new BuildInfoRecorder(buildTarget, projectFilesystem, ruleKey, ruleKeyWithoutDeps);
   }
 
-  /**
-   * This should be used exclusively for unzipping artifacts.
-   */
-  ProcessExecutor createProcessExecutorForUnzippingArtifact() {
-    return new ProcessExecutor(console);
+  public void logBuildInfo(String format, Object... args) {
+    events.post(LogEvent.fine(format, args));
   }
 
-  public void logBuildInfo(String format, Object... args) {
-    if (console != null && console.getVerbosity().shouldPrintOutput()) {
-      console.getStdErr().printf(format + '\n', args);
-    }
+  public void logError(Throwable error, String msg, Object... formatArgs) {
+    events.post(ThrowableLogEvent.create(error, msg, formatArgs));
   }
 
   public static Builder builder() {
@@ -181,7 +173,6 @@ public class BuildContext {
     private BuckEventBus events = null;
     private Supplier<String> androidBootclasspathSupplier = null;
     private BuildDependencies buildDependencies = BuildDependencies.getDefault();
-    private Console console = null;
 
     private Builder() {}
 
@@ -197,8 +188,7 @@ public class BuildContext {
           javaPackgeFinder,
           events,
           androidBootclasspathSupplier,
-          buildDependencies,
-          console);
+          buildDependencies);
     }
 
     public Builder setDependencyGraph(DependencyGraph dependencyGraph) {
@@ -264,11 +254,6 @@ public class BuildContext {
           throw new NoAndroidSdkException();
         }
       };
-    }
-
-    public Builder setConsole(Console console) {
-      this.console = console;
-      return this;
     }
   }
 }

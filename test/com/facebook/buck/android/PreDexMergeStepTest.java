@@ -240,7 +240,7 @@ public class PreDexMergeStepTest {
         "There should be 100 from the R.class dex, 200 from dex1.dex.jar, and 1 from dex2.dex.jar.",
         ImmutableList.of("DexWithClasses buck-out/gen/dex2.dex.jar with cost 1 puts the linear "
             + "alloc estimate for the primary dex at 301, exceeding the maximum of 300."),
-        listener.getErrorMessages());
+        listener.getLogMessages());
   }
 
   @Test
@@ -265,7 +265,7 @@ public class PreDexMergeStepTest {
     assertEquals(
         ImmutableList.of("DexWithClasses buck-out/gen/dex1.dex.jar with cost 350 exceeds the max " +
             "cost 300 for a secondary dex file."),
-        listener.getErrorMessages());
+        listener.getLogMessages());
   }
 
   @Test
@@ -297,7 +297,7 @@ public class PreDexMergeStepTest {
     int exitCode = preDexMergeStep.execute(context);
     assertEquals(1, exitCode);
     assertEquals(ImmutableList.of("Failed when writing metadata.txt multi-dex."),
-        listener.getErrorMessages());
+        listener.getLogMessages());
 
     EasyMock.verify(projectFilesystem);
   }
