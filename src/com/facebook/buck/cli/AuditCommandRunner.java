@@ -20,6 +20,7 @@ import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class AuditCommandRunner implements CommandRunner {
@@ -33,19 +34,17 @@ public class AuditCommandRunner implements CommandRunner {
   }
 
   @Override
-  public int runCommand(BuckConfig buckConfig, String... args) throws IOException {
-    if (args.length == 0) {
+  public int runCommand(BuckConfig buckConfig, List<String> args) throws IOException {
+    if (args.isEmpty()) {
       console.printBuildFailure("No audit command is given.");
       printUsage();
       return 1;
     }
 
-    String auditCmd = args[0];
+    String auditCmd = args.get(0);
     if (getAuditCommands().containsKey(auditCmd)) {
       CommandRunner cmd = getAuditCommands().get(auditCmd);
-      String[] newArgs = new String[args.length - 1];
-      System.arraycopy(args, 1, newArgs, 0, newArgs.length);
-      return cmd.runCommand(buckConfig, newArgs);
+      return cmd.runCommand(buckConfig, args.subList(1, args.size()));
     } else {
       console.printBuildFailure("Unknown audit command: " + auditCmd);
       printUsage();

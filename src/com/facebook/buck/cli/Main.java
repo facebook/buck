@@ -67,6 +67,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -391,9 +393,7 @@ public final class Main {
               getWebServerIfDaemon(context, projectFilesystem, config, console),
               consoleListener);
 
-      String[] remainingArgs = new String[args.length - 1];
-      System.arraycopy(args, 1, remainingArgs, 0, remainingArgs.length);
-
+      List<String> remainingArgs = ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length));
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
