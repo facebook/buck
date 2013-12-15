@@ -45,4 +45,34 @@ public class EscaperTest {
     assertEquals("'a\nb'", Escaper.escapeAsBashString("a\nb"));
     assertEquals("'a\tb'", Escaper.escapeAsBashString("a\tb"));
   }
+
+  @Test
+  public void testHex() {
+    assertEquals("41", Escaper.hex('A'));
+    assertEquals('A', Integer.parseInt(Escaper.hex('A'), /* radix */ 16));
+
+    assertEquals("61", Escaper.hex('a'));
+    assertEquals('a', Integer.parseInt(Escaper.hex('a'), /* radix */ 16));
+  }
+
+  @Test
+  public void testEscapeMetaCharactersInPythonString() {
+    String metaChars = "\n\r\t\b\f";
+    assertEquals("\"\\n\\r\\t\\b\\f\"", Escaper.escapeAsPythonString(metaChars));
+  }
+
+  @Test
+  public void testEscapeQuotesInPythonString() {
+    String metaChars = "\"'\"";
+    assertEquals("\"\\\"\\'\\\"\"", Escaper.escapeAsPythonString(metaChars));
+  }
+
+  @Test
+  public void testEscapeUnicodeCharacters() {
+    assertEquals("\"\\u0001\"", Escaper.escapeAsPythonString(String.valueOf('\u0001')));
+    assertEquals("\"\\u0010\"", Escaper.escapeAsPythonString(String.valueOf('\u0010')));
+    assertEquals("\"\\u0080\"", Escaper.escapeAsPythonString(String.valueOf('\u0080')));
+    assertEquals("\"\\u0100\"", Escaper.escapeAsPythonString(String.valueOf('\u0100')));
+    assertEquals("\"\\u1000\"", Escaper.escapeAsPythonString(String.valueOf('\u1000')));
+  }
 }

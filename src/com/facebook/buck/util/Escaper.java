@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -25,8 +26,7 @@ import java.nio.file.Path;
 public final class Escaper {
 
   /** Utility class: do not instantiate. */
-  private Escaper() {
-  }
+  private Escaper() {}
 
   private static CharMatcher BASH_SPECIAL_CHARS = CharMatcher.anyOf("<>|!?*[]$\\(){}\"'`&;=")
       .or(CharMatcher.WHITESPACE);
@@ -140,7 +140,8 @@ public final class Escaper {
 
   }
 
-  private static String hex(char ch) {
+  @VisibleForTesting
+  static String hex(char ch) {
     return Integer.toHexString(ch).toUpperCase();
   }
 }
