@@ -141,7 +141,9 @@ public class ChromeTraceBuildListenerTest {
     EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     eventBus.register(listener);
 
-    eventBus.post(CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), true));
+    eventBus.post(CommandEvent.started("party",
+        ImmutableList.of("arg1", "arg2"),
+        /* isDaemon */ true));
     eventBus.post(ArtifactCacheConnectEvent.started());
     eventBus.post(ArtifactCacheConnectEvent.finished());
     eventBus.post(BuildEvent.started(buildTargets));
@@ -174,7 +176,10 @@ public class ChromeTraceBuildListenerTest {
     rawEventBus.post(stepFinished);
 
     eventBus.post(BuildEvent.finished(buildTargets, 0));
-    eventBus.post(CommandEvent.finished("party", ImmutableList.of("arg1", "arg2"), true, 0));
+    eventBus.post(CommandEvent.finished("party",
+        ImmutableList.of("arg1", "arg2"),
+        /* isDaemon */ true,
+        /* exitCode */ 0));
     listener.outputTrace("BUILD_ID");
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");
@@ -189,6 +194,11 @@ public class ChromeTraceBuildListenerTest {
 
     assertEquals("party", resultMap.get(0).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(0).getPhase());
+    assertEquals(
+        ImmutableMap.of(
+            "command_args", "arg1 arg2"
+            ),
+        resultMap.get(0).getArgs());
 
     assertEquals("artifact_connect", resultMap.get(1).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(1).getPhase());
@@ -235,6 +245,12 @@ public class ChromeTraceBuildListenerTest {
 
     assertEquals("party", resultMap.get(11).getName());
     assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(11).getPhase());
+    assertEquals(
+        ImmutableMap.of(
+            "command_args", "arg1 arg2",
+            "daemon", "true"
+            ),
+        resultMap.get(11).getArgs());
 
     verify(context);
   }

@@ -139,7 +139,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         started.getCommandName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.<String, String>of(
+            "command_args", Joiner.on(' ').join(started.getArgs())
+            ),
         started);
   }
 
@@ -149,6 +151,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         finished.getCommandName(),
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of(
+            "command_args", Joiner.on(' ').join(finished.getArgs()),
             "daemon", Boolean.toString(finished.isDaemon())),
         finished);
   }
