@@ -55,22 +55,6 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
     return ImmutableSet.copyOf(Sets.difference(nodes, incomingEdges.keySet()));
   }
 
-  public String toDebugString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append("Number of nodes: " + nodes.size() + "\n");
-    for (T node : nodes) {
-      for (T sink : getOutgoingNodesFor(node)) {
-        builder.append(String.format("%s => %s\n", node, sink));
-      }
-    }
-    return builder.toString();
-  }
-
-  /** @return the number of nodes in the graph */
-  public int getNodeCount() {
-    return nodes.size();
-  }
-
   /** @return an unmodifiable view of the nodes in this graph */
   public Iterable<T> getNodes() {
     return nodes;
