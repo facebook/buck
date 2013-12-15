@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.util.Set;
+
 public class MutableDirectedGraphTest {
 
   @Test
@@ -34,17 +36,21 @@ public class MutableDirectedGraphTest {
     assertFalse(graph.containsNode("A"));
     assertFalse(graph.containsEdge("A", "B"));
     assertTrue(graph.isAcyclic());
+    assertEquals(ImmutableSet.of(), graph.getNodes());
   }
 
   @Test
   public void testCreateGraphWithOneEdge() {
     MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
+    Set<String> nodesView = graph.getNodes();
+    assertEquals(ImmutableSet.of(), nodesView);
     graph.addEdge("A", "B");
     assertEquals(2, graph.getNodeCount());
     assertEquals(1, graph.getEdgeCount());
     assertTrue(graph.containsEdge("A", "B"));
     assertEquals(ImmutableSet.of("A"), graph.getNodesWithNoIncomingEdges());
     assertTrue(graph.isAcyclic());
+    assertEquals(ImmutableSet.of("A", "B"), nodesView);
   }
 
   /**
@@ -119,5 +125,18 @@ public class MutableDirectedGraphTest {
     graph.addNode("B");
     graph.addNode("C");
     assertTrue(graph.isAcyclic());
+  }
+
+  @Test
+  public void testCopyConstructor() {
+    MutableDirectedGraph<String> originalGraph = new MutableDirectedGraph<>();
+    originalGraph.addEdge("A", "B");
+
+    MutableDirectedGraph<String> copyOfGraph = new MutableDirectedGraph<>(originalGraph);
+    assertEquals(ImmutableSet.of("A", "B"), copyOfGraph.getNodes());
+
+    originalGraph.addEdge("B", "C");
+    assertEquals(2, originalGraph.getEdgeCount());
+    assertEquals(1, copyOfGraph.getEdgeCount());
   }
 }
