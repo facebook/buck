@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Events tracking the start and stop of a buck command.
@@ -26,15 +28,27 @@ import com.google.common.base.Objects;
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class CommandEvent extends AbstractBuckEvent {
   private final String commandName;
+  private final ImmutableList<String> args;
   private final boolean isDaemon;
 
-  protected CommandEvent(String commandName, boolean isDaemon) {
-    this.commandName = commandName;
+  /**
+   * @param commandName The name of the Buck subcommand, such as {@code build} or {@code test}.
+   * @param args The arguments passed to the subcommand. These are often build targets.
+   * @param isDaemon Whether the daemon was in use.
+   */
+  private CommandEvent(String commandName, ImmutableList<String> args, boolean isDaemon) {
+    this.commandName = Preconditions.checkNotNull(commandName);
+    this.args = Preconditions.checkNotNull(args);
     this.isDaemon = isDaemon;
   }
 
   public String getCommandName() {
     return commandName;
+  }
+
+  /** @return Arguments passed to {@link #getCommandName()}. */
+  public ImmutableList<String> getArgs() {
+    return args;
   }
 
   public boolean isDaemon() {
@@ -55,25 +69,29 @@ public abstract class CommandEvent extends AbstractBuckEvent {
     CommandEvent that = (CommandEvent)event;
 
     return Objects.equal(getCommandName(), that.getCommandName()) &&
+        Objects.equal(getArgs(), that.getArgs()) &&
         Objects.equal(isDaemon(), that.isDaemon());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getCommandName(), isDaemon());
+    return Objects.hashCode(getCommandName(), getArgs(), isDaemon());
   }
 
-  public static Started started(String commandName, boolean isDaemon) {
-    return new Started(commandName, isDaemon);
+  public static Started started(String commandName, ImmutableList<String> args, boolean isDaemon) {
+    return new Started(commandName, args, isDaemon);
   }
 
-  public static Finished finished(String commandName, boolean isDaemon, int exitCode) {
-    return new Finished(commandName, isDaemon, exitCode);
+  public static Finished finished(String commandName,
+      ImmutableList<String> args,
+      boolean isDaemon,
+      int exitCode) {
+    return new Finished(commandName, args, isDaemon, exitCode);
   }
 
   public static class Started extends CommandEvent {
-    protected Started(String commandName, boolean isDaemon) {
-      super(commandName, isDaemon);
+    private Started(String commandName, ImmutableList<String> args, boolean isDaemon) {
+      super(commandName, args, isDaemon);
     }
 
     @Override
@@ -85,8 +103,11 @@ public abstract class CommandEvent extends AbstractBuckEvent {
   public static class Finished extends CommandEvent {
     private final int exitCode;
 
-    protected Finished(String commandName, boolean isDaemon, int exitCode) {
-      super(commandName, isDaemon);
+    private Finished(String commandName,
+        ImmutableList<String> args,
+        boolean isDaemon,
+        int exitCode) {
+      super(commandName, args, isDaemon);
       this.exitCode = exitCode;
     }
 
@@ -111,7 +132,7 @@ public abstract class CommandEvent extends AbstractBuckEvent {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getCommandName(), isDaemon(), getExitCode());
+      return Objects.hashCode(getCommandName(), getArgs(), isDaemon(), getExitCode());
     }
   }
 }

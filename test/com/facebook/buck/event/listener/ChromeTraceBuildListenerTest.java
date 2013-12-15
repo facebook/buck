@@ -141,7 +141,7 @@ public class ChromeTraceBuildListenerTest {
     EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     eventBus.register(listener);
 
-    eventBus.post(CommandEvent.started("party", true));
+    eventBus.post(CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), true));
     eventBus.post(ArtifactCacheConnectEvent.started());
     eventBus.post(ArtifactCacheConnectEvent.finished());
     eventBus.post(BuildEvent.started(buildTargets));
@@ -174,7 +174,7 @@ public class ChromeTraceBuildListenerTest {
     rawEventBus.post(stepFinished);
 
     eventBus.post(BuildEvent.finished(buildTargets, 0));
-    eventBus.post(CommandEvent.finished("party", true, 0));
+    eventBus.post(CommandEvent.finished("party", ImmutableList.of("arg1", "arg2"), true, 0));
     listener.outputTrace("BUILD_ID");
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");

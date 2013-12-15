@@ -20,17 +20,25 @@ import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Test;
 
 public class CommandEventTest {
   @Test
   public void testEquals() throws Exception {
-    CommandEvent startedDaemon = configureTestEvent(CommandEvent.started("build", true));
-    CommandEvent startedDaemonTwo = configureTestEvent(CommandEvent.started("build", true));
-    CommandEvent startedNoDaemon = configureTestEvent(CommandEvent.started("build", false));
-    CommandEvent finishedDaemon = configureTestEvent(CommandEvent.finished("build", true, 0));
-    CommandEvent finishedDaemonFailed = configureTestEvent(CommandEvent.finished("build", true, 1));
-    CommandEvent finishedDifferentName = configureTestEvent(CommandEvent.finished("test", true, 0));
+    CommandEvent startedDaemon = configureTestEvent(
+        CommandEvent.started("build", ImmutableList.of("sample-app"), true));
+    CommandEvent startedDaemonTwo = configureTestEvent(
+        CommandEvent.started("build", ImmutableList.of("sample-app"), true));
+    CommandEvent startedNoDaemon = configureTestEvent(
+        CommandEvent.started("build", ImmutableList.of("sample-app"), false));
+    CommandEvent finishedDaemon = configureTestEvent(
+        CommandEvent.finished("build", ImmutableList.of("sample-app"), true, 0));
+    CommandEvent finishedDaemonFailed = configureTestEvent(
+        CommandEvent.finished("build", ImmutableList.of("sample-app"), true, 1));
+    CommandEvent finishedDifferentName = configureTestEvent(
+        CommandEvent.finished("test", ImmutableList.of("sample-app"), true, 0));
 
     assertEquals(startedDaemon, startedDaemonTwo);
     assertNotEquals(startedDaemon, startedNoDaemon);

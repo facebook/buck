@@ -68,7 +68,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -393,11 +392,12 @@ public final class Main {
               getWebServerIfDaemon(context, projectFilesystem, config, console),
               consoleListener);
 
-      List<String> remainingArgs = ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length));
+      ImmutableList<String> remainingArgs = ImmutableList.copyOf(
+          Arrays.copyOfRange(args, 1, args.length));
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
-      CommandEvent commandEvent = CommandEvent.started(commandName, isDaemon);
+      CommandEvent commandEvent = CommandEvent.started(commandName, remainingArgs, isDaemon);
       buildEventBus.post(commandEvent);
 
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
@@ -433,7 +433,7 @@ public final class Main {
           parser,
           platform));
 
-      buildEventBus.post(CommandEvent.finished(commandName, isDaemon, exitCode));
+      buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
       for (BuckEventListener eventListener : eventListeners) {
         eventListener.outputTrace(buildId);
       }
