@@ -32,7 +32,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -167,22 +166,6 @@ public final class BuildRuleFactoryParams {
 
       return fullPath;
     }
-  }
-
-  public String resolveAndCreateFilePathRelativeToBuildFileDirectory(String path) {
-    if (!path.startsWith(GENFILE_PREFIX)) {
-      String fullPath = resolvePathAgainstBuildTargetBase(path);
-      File file = filesystem.getFileForRelativePath(fullPath);
-      if (!file.isFile()) {
-        try {
-          file.createNewFile();
-        } catch (IOException e) {
-          throw new RuntimeException(String.format("Unable to create file '%s' at path '%s'",
-              path, target.getBasePath()));
-        }
-      }
-    }
-    return resolveFilePathRelativeToBuildFileDirectory(path);
   }
 
   private void checkFullPath(String fullPath) {
