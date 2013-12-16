@@ -20,7 +20,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -31,7 +30,6 @@ public class ExportFileIntegrationTest {
   @Rule public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  @Ignore("Demonstrate bug in described rules")
   public void exportFileWillPopulateDepsCorrectlyWhenSourceParameterIsASourcePath()
       throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

@@ -99,7 +99,7 @@ public class DescribedRuleTest {
     };
 
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+    ProjectFilesystem filesystem = createForgivingProjectFilesystem();
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         // "name" maps to the DTO, which is returned in the EchoStep
         ImmutableMap.of("name", "cheese"),
@@ -179,7 +179,7 @@ public class DescribedRuleTest {
             depRule3.getBuildTarget(), depRule3,
             depRule4.getBuildTarget(), depRule4));
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+    ProjectFilesystem filesystem = createForgivingProjectFilesystem();
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         ImmutableMap.of(
             "path", "//example:dep1",
@@ -233,7 +233,7 @@ public class DescribedRuleTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         ImmutableMap.of(depRule1.getBuildTarget(), depRule1));
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+    ProjectFilesystem filesystem = createForgivingProjectFilesystem();
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         ImmutableMap.of("paths", ImmutableList.of("//example:dep1")),
         filesystem,
@@ -250,6 +250,15 @@ public class DescribedRuleTest {
 
     ImmutableSortedSet<BuildRule> deps = rule.getDeps();
     assertSetEquals(ImmutableSet.of(depRule1), deps);
+  }
+
+  private ProjectFilesystem createForgivingProjectFilesystem() {
+    return new ProjectFilesystem(new File(".")) {
+      @Override
+      public boolean exists(String pathRelativeToProjectRoot) {
+        return true;
+      }
+    };
   }
 
   private static class ExampleBuildable extends AbstractBuildable {
