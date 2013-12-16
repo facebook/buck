@@ -56,7 +56,7 @@ public class GenerateShellScriptStep implements Step {
   public int execute(ExecutionContext context) {
     List<String> lines = Lists.newArrayList();
     // Run with -e so the script will fail if any of the steps fail.
-    lines.add("#!/bin/sh");
+    lines.add("#!/bin/bash");
     lines.add("set -e");
 
     // This script can be cached and used on machines other than the one where it was created. That
