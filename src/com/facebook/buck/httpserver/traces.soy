@@ -1,0 +1,20 @@
+{namespace buck}
+
+/**
+ * @param traces 
+ */
+{template .trace}
+{call buck.header}{param title: 'Traces' /}{/call}
+
+<h1>Traces</h1>
+
+<div>
+  {foreach $trace in $traces}
+  <div class="row row-{index($trace) % 2}">
+    <a href="/trace/{$trace.id}" target="_blank">{$trace.name}</a> {$trace.dateTime}
+  </div>
+  {/foreach}
+</div>
+
+{call buck.footer /}
+{/template}

@@ -1,0 +1,27 @@
+{namespace buck}
+
+/**
+ * @param title
+ */
+{template .header}
+<!doctype html>
+<html>
+<head>
+  <title>{$title}</title>
+  <link rel="stylesheet" href="/static/theme.css" type="text/css">
+</head>
+<body>
+
+// Common navbar.
+<div class="navbar">
+  <a href="/">Buck</a>
+</div>
+<div class="content">
+{/template}
+
+/***/
+{template .footer}
+</div>
+</body>
+</html>
+{/template}

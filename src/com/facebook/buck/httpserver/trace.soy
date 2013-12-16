@@ -1,0 +1,35 @@
+{namespace buck}
+
+/**
+ * @param traceId
+ */
+{template .trace}
+{call buck.header}
+  {param title}
+    Trace {$traceId}
+  {/param}
+{/call}
+
+<link type="text/css" rel="stylesheet" href="/static/trace_viewer.css">
+
+<div>
+  <a href="/traces">All Traces</a>
+</div>
+
+<script src="/static/trace_viewer.js"></script>
+<script>
+{literal}
+var onTraceLoaded = function(trace) {
+  var model = new tracing.TraceModel();
+  model.importTraces([trace]);
+
+  var viewEl = tracing.TimelineView();
+  viewEl.model = model;
+  document.body.appendChild(viewEl);
+};
+{/literal}
+</script>
+<script src="/tracedata/{$traceId}?callback=onTraceLoaded"></script>
+
+{call buck.footer /}
+{/template}

@@ -1,0 +1,43 @@
+body {
+  font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+  font-size: 11px;
+  color: rgb(51, 51, 51);
+  margin: 0;
+}
+
+.content {
+  margin: 5px;
+}
+
+h1 {
+  font-size: 16px;
+}
+
+a {
+  color: #3b5998;
+}
+
+.navbar {
+  color: white;
+  font-size: 14px;
+  background-color: rgb(55, 70, 101);
+  font-weight: bold;
+  padding: 5px;
+}
+
+.navbar a {
+  color: white;
+}
+
+.row {
+  height: 14px;
+  padding: 6px 7px;
+}
+
+.row-0 {
+  background-color: white;
+}
+
+.row-1 {
+  background-color: rgb(242, 242, 242);
+}

@@ -1,0 +1,23 @@
+{namespace buck}
+
+/**
+ * Root of the web server. Contains links into the rest of the site. 
+ */
+{template .index}
+{call buck.header}{param title: 'Buck' /}{/call}
+
+<h1>Local Build</h1>
+
+<ul>
+  <li><a href="/traces">Traces</a>
+</ul>
+
+<h1>Resources</h1>
+
+<ul>
+  <li><a href="http://facebook.github.io/buck/">Documentation</a>
+  <li><a href="https://github.com/facebook/buck">Source code on GitHub</a>
+</ul>
+
+{call buck.footer /}
+{/template}

@@ -72,39 +72,40 @@ class TraceDataHandler extends AbstractHandler {
     String path = baseRequest.getPathInfo();
     Matcher matcher = ID_PATTERN.matcher(path);
 
-    if (matcher.matches()) {
-      String id = matcher.group(1);
-      String pathToTrace = getPathToTrace(id);
-
-      response.setContentType(MediaType.JAVASCRIPT_UTF_8.toString());
-      response.setStatus(HttpServletResponse.SC_OK);
-
-      boolean hasValidCallbackParam = false;
-      Writer responseWriter = response.getWriter();
-      String callback = baseRequest.getParameter("callback");
-      if (callback != null) {
-        Matcher callbackMatcher = CALLBACK_PATTERN.matcher(callback);
-        if (callbackMatcher.matches()) {
-          hasValidCallbackParam = true;
-          responseWriter.write(callback);
-          responseWriter.write("(");
-        }
-      }
-
-      InputSupplier<? extends InputStream> inputSupplier = projectFilesystem
-          .getInputSupplierForRelativePath(pathToTrace);
-      InputStreamReader inputStreamReader = new InputStreamReader(inputSupplier.getInput());
-      CharStreams.copy(inputStreamReader, responseWriter);
-
-      if (hasValidCallbackParam) {
-        responseWriter.write(");\n");
-      }
-
-      response.flushBuffer();
-      baseRequest.setHandled(true);
-    } else {
+    if (!matcher.matches()) {
       Responses.writeFailedResponse(baseRequest, response);
+      return;
     }
+
+    String id = matcher.group(1);
+    String pathToTrace = getPathToTrace(id);
+
+    response.setContentType(MediaType.JAVASCRIPT_UTF_8.toString());
+    response.setStatus(HttpServletResponse.SC_OK);
+
+    boolean hasValidCallbackParam = false;
+    Writer responseWriter = response.getWriter();
+    String callback = baseRequest.getParameter("callback");
+    if (callback != null) {
+      Matcher callbackMatcher = CALLBACK_PATTERN.matcher(callback);
+      if (callbackMatcher.matches()) {
+        hasValidCallbackParam = true;
+        responseWriter.write(callback);
+        responseWriter.write("(");
+      }
+    }
+
+    InputSupplier<? extends InputStream> inputSupplier = projectFilesystem
+        .getInputSupplierForRelativePath(pathToTrace);
+    InputStreamReader inputStreamReader = new InputStreamReader(inputSupplier.getInput());
+    CharStreams.copy(inputStreamReader, responseWriter);
+
+    if (hasValidCallbackParam) {
+      responseWriter.write(");\n");
+    }
+
+    response.flushBuffer();
+    baseRequest.setHandled(true);
   }
 
   private static String getPathToTrace(String id) {

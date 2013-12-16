@@ -16,12 +16,14 @@
 
 package com.facebook.buck.httpserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.net.MediaType;
 import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.data.SoyMapData;
 import com.google.template.soy.tofu.SoyTofu;
 
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
@@ -92,6 +94,11 @@ class TemplateHandler extends AbstractHandler {
     } else {
       return null;
     }
+  }
+
+  @VisibleForTesting
+  TemplateHandlerDelegate getDelegate() {
+    return delegate;
   }
 
   /**

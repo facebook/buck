@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -37,8 +38,10 @@ import java.util.Map;
  */
 public class WebServer {
 
+  private static final String INDEX_CONTEXT_PATH = "/";
   private static final String STATIC_CONTEXT_PATH = "/static";
   private static final String TRACE_CONTEXT_PATH = "/trace";
+  private static final String TRACES_CONTEXT_PATH = "/traces";
   private static final String TRACE_DATA_CONTEXT_PATH = "/tracedata";
 
   private final int port;
@@ -76,9 +79,9 @@ public class WebServer {
 
     // Package up all of the handlers into a ContextHandlerCollection to serve as the handler for
     // the server.
-    List<Handler> handlers = createHandlers();
+    List<? extends Handler> handlers = createHandlers();
     ContextHandlerCollection contexts = new ContextHandlerCollection();
-    contexts.setHandlers(handlers.toArray(new Handler[] {}));
+    contexts.setHandlers(handlers.toArray(new Handler[0]));
     server.setHandler(contexts);
 
     try {
@@ -88,16 +91,21 @@ public class WebServer {
     }
   }
 
-  private List<Handler> createHandlers() {
+  @VisibleForTesting
+  List<ContextHandler> createHandlers() {
     Map<String, Handler> contextPathToHandler = Maps.newHashMap();
+
+    contextPathToHandler.put(INDEX_CONTEXT_PATH, new TemplateHandler(new IndexHandlerDelegate()));
 
     ResourceHandler resourceHandler = new ResourceHandler();
     resourceHandler.setResourceBase(staticContentDirectory);
     contextPathToHandler.put(STATIC_CONTEXT_PATH, resourceHandler);
-    contextPathToHandler.put(TRACE_CONTEXT_PATH, new TraceHandler());
+    contextPathToHandler.put(TRACE_CONTEXT_PATH, new TemplateHandler(new TraceHandlerDelegate()));
+    contextPathToHandler.put(TRACES_CONTEXT_PATH, new TemplateHandler(
+        new TracesHandlerDelegate(projectFilesystem)));
     contextPathToHandler.put(TRACE_DATA_CONTEXT_PATH, new TraceDataHandler(projectFilesystem));
 
-    ImmutableList.Builder<Handler> handlers = ImmutableList.builder();
+    ImmutableList.Builder<ContextHandler> handlers = ImmutableList.builder();
     for (Map.Entry<String, Handler> entry : contextPathToHandler.entrySet()) {
       String contextPath = entry.getKey();
       Handler handler = entry.getValue();

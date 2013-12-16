@@ -17,9 +17,12 @@
 package com.facebook.buck.httpserver;
 
 import static org.easymock.EasyMock.expect;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import org.easymock.EasyMockSupport;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
@@ -31,13 +34,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class TraceHandlerTest extends EasyMockSupport {
+public class TraceHandlerDelegateTest extends EasyMockSupport {
 
   @Test
-  @SuppressWarnings("PMD.AddEmptyString")
   public void testHandleGet() throws IOException, ServletException {
     Request baseRequest = createMock(Request.class);
-    expect(baseRequest.getMethod()).andReturn("GET");
     expect(baseRequest.getPathInfo()).andReturn("/abcdef");
     baseRequest.setHandled(true);
     HttpServletRequest request = createMock(HttpServletRequest.class);
@@ -50,7 +51,7 @@ public class TraceHandlerTest extends EasyMockSupport {
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
-    TraceHandler traceHandler = new TraceHandler();
+    Handler traceHandler = new TemplateHandler(new TraceHandlerDelegate());
 
     replayAll();
     traceHandler.handle("/trace/abcdef",
@@ -59,27 +60,19 @@ public class TraceHandlerTest extends EasyMockSupport {
         response);
     verifyAll();
 
-    String expectedHtml = "<!doctype html>" +
-        "<html>" +
-        "<head>" +
-        "  <link type='text/css' rel='stylesheet' href='/static/trace_viewer.css'>" +
-        "</head>" +
-        "<body>" +
-        "  <script src='/static/trace_viewer.js'></script>" +
-        "  <script>" +
-        "  var onTraceLoaded = function(trace) {" +
-        "    var model = new tracing.TraceModel();" +
-        "    model.importTraces([trace]);" +
-        "" +
-        "    var viewEl = tracing.TimelineView();" +
-        "    viewEl.model = model;" +
-        "    document.body.appendChild(viewEl);" +
-        "  };" +
-        "  </script>" +
-        "  <script src='/tracedata/abcdef?callback=onTraceLoaded'></script>" +
-        "</body>" +
-        "</html>";
-    assertEquals(expectedHtml, stringWriter.toString());
+    String expectedScriptTag = "<script src=\"/tracedata/abcdef?callback=onTraceLoaded\">";
+    assertThat(stringWriter.toString(), containsString(expectedScriptTag));
   }
 
+  @Test
+  public void testMalformedPathInfoReturnsError() throws IOException {
+    Request baseRequest = createMock(Request.class);
+    expect(baseRequest.getPathInfo()).andReturn("/..upADirectory");
+    replayAll();
+
+    TraceHandlerDelegate traceHandler = new TraceHandlerDelegate();
+    assertNull(traceHandler.getDataForRequest(baseRequest));
+
+    verifyAll();
+  }
 }
