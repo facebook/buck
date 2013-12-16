@@ -204,16 +204,14 @@ else
 fi
 
 # Make sure that Buck has been built.
-if [ ! -e "build/buck.jar" ]; then
+if [ ! -e "build/successful-build" ]; then
 
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCKD_PID_FILE" ]; then
     echo "Killing buckd before building buck"
     kill `cat "$BUCKD_PID_FILE"` || true
   fi
 
-  echo "No sign of buck.jar -- building Buck!"
-  # Note the jar file will not be used,
-  # but serves to represent whether everything has been built.
+  echo "Buck does not appear to have been built -- building Buck!"
   checkForAnt
   (
     set -e

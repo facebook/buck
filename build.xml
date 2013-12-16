@@ -77,8 +77,8 @@
   </target>
 
   <!-- Default target so that a command line build can 
-       do more than one thing. -->
-  <target name="default" depends="jar, dx, client" />
+       do more than one thing.  'success' must be the last dependency. -->
+  <target name="default" depends="compile, dx, client, success" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
@@ -156,6 +156,13 @@
         <attribute name="Main-Class" value="com.facebook.buck.cli.Main" />
       </manifest>
     </jar>
+  </target>
+
+  <!-- The buck wrapper script checks the output file from this target
+       to determine whether Buck needs to be built. -->
+  <target name="success"
+          description="Run after a successful build to indicate that a rebuild is unnecessary.">
+    <touch file="${build.dir}/successful-build" />
   </target>
 
   <path id="tests.classpath">
