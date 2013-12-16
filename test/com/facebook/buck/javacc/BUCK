@@ -1,0 +1,19 @@
+java_test(
+  name = 'javacc',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//third-party/java/javacc:javacc',
+  ],
+  deps = [
+    '//lib:junit',
+    ':simple1',
+  ],
+)
+
+include_defs('//third-party/java/javacc/DEFS')
+
+make_javacc_parser_library(
+  name = 'simple1',
+  srcs = glob(['*.jj']),
+)
+

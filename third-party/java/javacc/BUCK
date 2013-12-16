@@ -1,0 +1,16 @@
+prebuilt_jar(
+  name = 'javacc',
+  binary_jar = 'javacc-6.0.jar',
+  source_jar = 'javacc-6.0-sources.jar',
+  visibility = [ 'PUBLIC' ],
+)
+
+sh_binary(
+  name = 'javacc_sh',
+  main = 'javacc.sh',
+  visibility = [ 'PUBLIC' ],
+)
+
+# to create a java library from .jj and .java source files, use:
+#   include_defs('//third-party/java/javacc/DEFS')
+#   make_javacc_parser_library(name, srcs, [deps], [visibility])
