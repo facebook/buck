@@ -76,6 +76,8 @@ public class GenerateShellScriptStep implements Step {
     lines.add("cd $BUCK_TMP_ROOT");
 
     // Symlink the resources to the $BUCK_TMP_ROOT directory.
+    String scriptToRunEscapedRelativePath = Escaper.escapeAsBashString(scriptToRun);
+    lines.add("SCRIPT_TO_RUN=" + scriptToRunEscapedRelativePath);
     createSymlinkCommands(resources, lines);
 
     // Make everything in $BUCK_TMP_ROOT read-only.
@@ -83,10 +85,9 @@ public class GenerateShellScriptStep implements Step {
     lines.add("find $BUCK_TMP_ROOT -type f -exec chmod 444 {} \\;");
 
     // Forward the args to this generated script to scriptToRun and execute it. Expose the temporary
-    // directory to the scriptToRun as $BUCK_PROJECT_ROOT.
-    lines.add(String.format(
-        "BUCK_PROJECT_ROOT=$BUCK_TMP_ROOT \"$BUCK_REAL_ROOT\"/%s \"$@\"",
-        Escaper.escapeAsBashString(scriptToRun)));
+    // directory to the scriptToRun as $BUCK_PROJECT_ROOT. Run all this inside the temporary
+    // directory, so we don't leak absolute filepaths from the repo.
+    lines.add("BUCK_PROJECT_ROOT=$BUCK_TMP_ROOT \"$BUCK_TMP_ROOT/$SCRIPT_TO_RUN\" \"$@\"");
 
     // Write the contents to the file.
     File output = context.getProjectFilesystem().getFileForRelativePath(outputFile.toString());
@@ -107,17 +108,21 @@ public class GenerateShellScriptStep implements Step {
   }
 
   private void createSymlinkCommands(Iterable<Path> paths, List<String> lines) {
+    // Create an array of paths to be symlinked.
+    lines.add("SYMLINK_PATHS=(");
     for (Path path : paths) {
       Preconditions.checkArgument(basePath.toString().isEmpty()
           || path.startsWith(basePath), "%s should start with %s", path, basePath);
 
-      if (path.getNameCount() > 1) {
-        lines.add(String.format("mkdir -p %s", Escaper.escapeAsBashString(path.getParent())));
-      }
-      String escapedPath = Escaper.escapeAsBashString(path);
-      lines.add(String.format("ln -s \"$BUCK_REAL_ROOT\"/%s $BUCK_TMP_ROOT/%s",
-          escapedPath, escapedPath));
+      lines.add("  " + Escaper.escapeAsBashString(path));
     }
+    // Symlink the scriptToRun alongside its dependencies.
+    lines.add("  \"$SCRIPT_TO_RUN\"");
+    lines.add(")");
+    lines.add("for path in \"${SYMLINK_PATHS[@]}\"; do");
+    lines.add("  mkdir -p \"$(dirname \"$path\")\"");
+    lines.add("  ln -s \"$BUCK_REAL_ROOT/$path\" \"$path\"");
+    lines.add("done");
   }
 
   @Override
