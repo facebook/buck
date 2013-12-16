@@ -1,5 +1,14 @@
 
 
+function gitFetchFailed()
+{
+  echo >&2
+  echo >&2 "Failed to fetch Buck updates from git."
+  echo >&2 "You can disable this by creating a '.nobuckcheck' file in your repository,"
+  echo >&2 "but this might lead to strange bugs or build failures."
+  exit 1
+}
+
 function checkForAnt()
 {
   if [ -z `command -v ant` ]; then
@@ -65,9 +74,9 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
   # If the hash is in not in the user's repository, do a `git fetch`.
   if ! git cat-file -e "$BUCK_REQUIRED_VERSION"; then
     if [ -e "${BUCK_REQUIRED_BRANCH}" ]; then
-      git fetch --all
+      git fetch --all || gitFetchFailed
     else
-      git fetch origin $BUCK_REQUIRED_BRANCH
+      git fetch origin $BUCK_REQUIRED_BRANCH || gitFetchFailed
     fi
   fi
 
