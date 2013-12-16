@@ -164,6 +164,7 @@ public class DaemonIntegrationTest {
       context.in = inputStream;
       context.out = new CapturingPrintStream();
       context.err = new CapturingPrintStream();
+      context.setExitStream(new CapturingPrintStream());
 
       // NGSecurityManager is used to convert System.exit() calls in to NGExitExceptions.
       SecurityManager originalSecurityManager = System.getSecurityManager();

@@ -99,13 +99,6 @@ public final class Main {
       new TimeSpan(100, TimeUnit.MILLISECONDS);
 
   /**
-   * Events may be piped through the {@link BuckEventBus} after the {@link Command} has
-   * finished executing. We add a small delay so that the listeners have a chance to process these
-   * events before we invoke {@link System#exit(int)}.
-   */
-  private static final TimeSpan DELAY_BEFORE_SHUTDOWN = new TimeSpan(500, TimeUnit.MILLISECONDS);
-
-  /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
    */
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
@@ -368,9 +361,10 @@ public final class Main {
     final Console console = new Console(verbosity, stdOut, stdErr, config.createAnsi(color));
 
     // Find and execute command.
+    int exitCode;
     Optional<Command> command = Command.getCommandForName(args[0], console);
     if (!command.isPresent()) {
-      int exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
+      exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
         return usage();
       } else {
@@ -378,22 +372,30 @@ public final class Main {
       }
     }
 
-    Clock clock = new DefaultClock();
+    // No more early outs: acquire the command semaphore and become the only executing command.
+    if (!commandSemaphore.tryAcquire()) {
+      return BUSY_EXIT_CODE;
+    }
+    ImmutableList<BuckEventListener> eventListeners;
     String buildId = MoreStrings.createRandomString();
+    Clock clock = new DefaultClock();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
-    try (BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-         AbstractConsoleEventBusListener consoleListener =
-             createConsoleEventListener(clock, console, executionEnvironment))  {
-
-      ImmutableList<BuckEventListener> eventListeners =
-          addEventListeners(buildEventBus,
-              projectFilesystem,
-              config,
-              getWebServerIfDaemon(context, projectFilesystem, config, console),
-              consoleListener);
+    try (AbstractConsoleEventBusListener consoleListener =
+             createConsoleEventListener(clock, console, executionEnvironment);
+         BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
+      Optional<WebServer> webServer = getWebServerIfDaemon(context,
+          projectFilesystem,
+          config,
+          console);
+      eventListeners = addEventListeners(buildEventBus,
+          projectFilesystem,
+          config,
+          webServer,
+          consoleListener);
 
       ImmutableList<String> remainingArgs = ImmutableList.copyOf(
           Arrays.copyOfRange(args, 1, args.length));
+
       Command executingCommand = command.get();
       String commandName = executingCommand.name().toLowerCase();
 
@@ -411,7 +413,7 @@ public final class Main {
         Daemon daemon = getDaemon(projectFilesystem, config, console);
         daemon.watchClient(context.get());
         daemon.watchFileSystem(console, commandEvent);
-        daemon.initWebServer(); // TODO(user): avoid webserver initialization on each command?
+        daemon.initWebServer();
         parser = daemon.getParser();
       } else {
         // Initialize logging and create new Parser for new process.
@@ -424,39 +426,38 @@ public final class Main {
             createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
       }
 
-      int exitCode = executingCommand.execute(remainingArgs, config, new CommandRunnerParams(
-          console,
-          projectFilesystem,
-          new KnownBuildRuleTypes(),
-          artifactCacheFactory,
-          buildEventBus,
-          parser,
-          platform));
+      exitCode = executingCommand.execute(remainingArgs,
+          config,
+          new CommandRunnerParams(
+              console,
+              projectFilesystem,
+              new KnownBuildRuleTypes(),
+              artifactCacheFactory,
+              buildEventBus,
+              parser,
+              platform));
 
-      buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
-      for (BuckEventListener eventListener : eventListeners) {
-        eventListener.outputTrace(buildId);
-      }
+      // TODO(user): allocate artifactCacheFactory in the try-with-resources block to avoid leaks.
       artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
 
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
-      if (isDaemon && daemon.webServer.isPresent()) {
-        int port = daemon.webServer.get().getPort();
+      if (webServer.isPresent()) {
+        int port = webServer.get().getPort();
         buildEventBus.post(LogEvent.info(
             "See trace at http://localhost:%s/trace/%s", port, buildId));
-
-        // Give SuperConsoleEventBusListener enough time to redraw before shutting down.
-        // TODO(mbolin): Add a flush() method to the listeners so we do not have to add a delay,
-        // which may be either too long or too short.
-        try {
-          Thread.sleep(DELAY_BEFORE_SHUTDOWN.getTimeSpanInMillis());
-        } catch (InterruptedException e) {
-          e.printStackTrace(console.getStdErr());
-        }
       }
-
-      return exitCode;
+      buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
+    } finally {
+      commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
+    if (isDaemon) {
+      context.get().in.close(); // Avoid client exit triggering client disconnection handling.
+      context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
+    }
+    for (BuckEventListener eventListener : eventListeners) {
+      eventListener.outputTrace(buildId);
+    }
+    return exitCode;
   }
 
   private Optional<WebServer> getWebServerIfDaemon(
@@ -603,9 +604,6 @@ public final class Main {
   int tryRunMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
       throws IOException {
     // TODO(user): enforce write command exclusion, but allow concurrent read only commands?
-    if (!commandSemaphore.tryAcquire()) {
-      return BUSY_EXIT_CODE;
-    }
     try {
       return runMainWithExitCode(projectRoot, context, args);
     } catch (HumanReadableException e) {
@@ -615,8 +613,6 @@ public final class Main {
           new Ansi(platform));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return FAIL_EXIT_CODE;
-    } finally {
-      commandSemaphore.release();
     }
   }
 

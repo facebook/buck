@@ -99,7 +99,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   /**
    * Shuts down the thread pool and cancels the fixed interval runnable.
    */
-  private void stopRenderScheduler() {
+  private synchronized void stopRenderScheduler() {
     renderScheduler.shutdownNow();
   }
 
@@ -305,8 +305,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Override
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     stopRenderScheduler();
+    render(); // Ensure final frame is rendered.
   }
 }
 
