@@ -1,0 +1,14 @@
+
+genrule(
+  name = 'magic',
+  out = 'some-file.txt',
+  bash = 'touch $OUT',
+  cmd_exe = 'copy /y nul %OUT%',
+)
+
+export_file(
+  name = 'file',
+  src = ':magic',
+  out = 'more.txt',
+)
+
