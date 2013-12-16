@@ -308,3 +308,9 @@ if [ "$BUCK_DEBUG_MODE" ]; then
   arg="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
   BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS $arg"
 fi
+
+# To debug the Soy templates in the buckd web server,
+# set BUCK_DEBUG_SOY in your environment to anything non-empty.
+if [ "$BUCK_DEBUG_SOY" ]; then
+  BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS -Dbuck.soy.debug=true"
+fi
