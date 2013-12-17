@@ -41,6 +41,7 @@ import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -53,52 +54,19 @@ import java.util.Set;
  */
 public class KnownBuildRuleTypes {
 
-  private final Set<Description<?>> descriptions = Sets.newConcurrentHashSet();
-  private Map<BuildRuleType, BuildRuleFactory<?>> factories = Maps.newConcurrentMap();
-  private Map<String, BuildRuleType> types = Maps.newConcurrentMap();
+  private final ImmutableSet<Description<?>> descriptions;
+  private final ImmutableMap<BuildRuleType, BuildRuleFactory<?>> factories;
+  private final ImmutableMap<String, BuildRuleType> types;
+  private static final KnownBuildRuleTypes DEFAULT = createDefaultBuilder().build();
 
-  public KnownBuildRuleTypes() {
-    register(new AndroidManifestDescription());
-    register(new ExportFileDescription());
-    register(new GenAidlDescription());
-    register(new PythonLibraryDescription());
 
-    // TODO(simons): Consider whether we actually want to have default rules
-    register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
-    register(BuildRuleType.ANDROID_INSTRUMENTATION_APK, new AndroidInstrumentationApkRuleFactory());
-    register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
-    register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
-    register(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory());
-    register(BuildRuleType.GENRULE, new GenruleBuildRuleFactory());
-    register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
-    register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
-    register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
-    register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
-    register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
-    register(BuildRuleType.NDK_LIBRARY, new NdkLibraryBuildRuleFactory());
-    register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
-    register(BuildRuleType.PREBUILT_NATIVE_LIBRARY, new PrebuiltNativeLibraryBuildRuleFactory());
-    register(BuildRuleType.PROJECT_CONFIG, new ProjectConfigRuleFactory());
-    register(BuildRuleType.PYTHON_BINARY, new PythonBinaryBuildRuleFactory());
-    register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
-    register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
-    register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());
+  private KnownBuildRuleTypes(Set<Description<?>> descriptions,
+      Map<BuildRuleType, BuildRuleFactory<?>> factories,
+      Map<String, BuildRuleType> types) {
+    this.descriptions = ImmutableSet.copyOf(descriptions);
+    this.factories = ImmutableMap.copyOf(factories);
+    this.types = ImmutableMap.copyOf(types);
   }
-
-  public void register(BuildRuleType type, BuildRuleFactory<?> factory) {
-    Preconditions.checkNotNull(type);
-    types.put(type.getName(), type);
-    factories.put(type, factory);
-  }
-
-  public void register(Description<?> description) {
-    Preconditions.checkNotNull(description);
-    BuildRuleType type = description.getBuildRuleType();
-    types.put(type.getName(), type);
-    factories.put(type, new DescribedRuleFactory<>(description));
-    descriptions.add(description);
-  }
-
 
   public BuildRuleType getBuildRuleType(String named) {
     BuildRuleType type = types.get(named);
@@ -119,5 +87,78 @@ public class KnownBuildRuleTypes {
 
   public ImmutableSet<Description<?>> getAllDescriptions() {
     return ImmutableSet.copyOf(descriptions);
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static KnownBuildRuleTypes getDefault() {
+    return DEFAULT;
+  }
+
+  public static Builder createDefaultBuilder() {
+    Builder builder = builder();
+
+    builder.register(new AndroidManifestDescription());
+    builder.register(new ExportFileDescription());
+    builder.register(new GenAidlDescription());
+    builder.register(new PythonLibraryDescription());
+
+    // TODO(simons): Consider whether we actually want to have default rules
+    builder.register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());
+    builder.register(BuildRuleType.ANDROID_INSTRUMENTATION_APK,
+        new AndroidInstrumentationApkRuleFactory());
+    builder.register(BuildRuleType.ANDROID_LIBRARY, new AndroidLibraryBuildRuleFactory());
+    builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
+    builder.register(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory());
+    builder.register(BuildRuleType.GENRULE, new GenruleBuildRuleFactory());
+    builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
+    builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
+    builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
+    builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
+    builder.register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
+    builder.register(BuildRuleType.NDK_LIBRARY, new NdkLibraryBuildRuleFactory());
+    builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
+    builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,
+        new PrebuiltNativeLibraryBuildRuleFactory());
+    builder.register(BuildRuleType.PROJECT_CONFIG, new ProjectConfigRuleFactory());
+    builder.register(BuildRuleType.PYTHON_BINARY, new PythonBinaryBuildRuleFactory());
+    builder.register(BuildRuleType.ROBOLECTRIC_TEST, new RobolectricTestBuildRuleFactory());
+    builder.register(BuildRuleType.SH_BINARY, new ShBinaryBuildRuleFactory());
+    builder.register(BuildRuleType.SH_TEST, new ShTestBuildRuleFactory());
+
+    return builder;
+  }
+
+  public static class Builder {
+    private final Set<Description<?>> descriptions;
+    private final Map<BuildRuleType, BuildRuleFactory<?>> factories;
+    private final Map<String, BuildRuleType> types;
+
+    protected Builder() {
+      this.descriptions = Sets.newConcurrentHashSet();
+      this.factories = Maps.newConcurrentMap();
+      this.types = Maps.newConcurrentMap();
+    }
+
+    public void register(BuildRuleType type, BuildRuleFactory<?> factory) {
+      Preconditions.checkNotNull(type);
+      Preconditions.checkNotNull(factory);
+      types.put(type.getName(), type);
+      factories.put(type, factory);
+    }
+
+    public void register(Description<?> description) {
+      Preconditions.checkNotNull(description);
+      BuildRuleType type = description.getBuildRuleType();
+      types.put(type.getName(), type);
+      factories.put(type, new DescribedRuleFactory<>(description));
+      descriptions.add(description);
+    }
+
+    public KnownBuildRuleTypes build() {
+      return new KnownBuildRuleTypes(descriptions, factories, types);
+    }
   }
 }

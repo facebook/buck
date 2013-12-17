@@ -169,7 +169,7 @@ public class ProjectCommandTest {
       super(new CommandRunnerParams(
           new TestConsole(),
           new ProjectFilesystem(new File(".")),
-          new KnownBuildRuleTypes(),
+          KnownBuildRuleTypes.getDefault(),
           new InstanceArtifactCacheFactory(artifactCache),
           BuckEventBusFactory.newInstance(),
           BuckTestConstant.PYTHON_INTERPRETER,

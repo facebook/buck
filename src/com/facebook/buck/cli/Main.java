@@ -133,7 +133,7 @@ public final class Main {
       this.console = Preconditions.checkNotNull(console);
       this.hashCache = new DefaultFileHashCache(projectFilesystem, console);
       this.parser = new Parser(projectFilesystem,
-          new KnownBuildRuleTypes(),
+          KnownBuildRuleTypes.getDefault(),
           console,
           config.getPythonInterpreter(),
           config.getTempFilePatterns(),
@@ -419,7 +419,7 @@ public final class Main {
         // Initialize logging and create new Parser for new process.
         JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
         parser = new Parser(projectFilesystem,
-            new KnownBuildRuleTypes(),
+            KnownBuildRuleTypes.getDefault(),
             console,
             config.getPythonInterpreter(),
             config.getTempFilePatterns(),
@@ -431,7 +431,7 @@ public final class Main {
           new CommandRunnerParams(
               console,
               projectFilesystem,
-              new KnownBuildRuleTypes(),
+              KnownBuildRuleTypes.getDefault(),
               artifactCacheFactory,
               buildEventBus,
               parser,

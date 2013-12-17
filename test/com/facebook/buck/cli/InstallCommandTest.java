@@ -88,7 +88,7 @@ public class InstallCommandTest {
   private InstallCommand createInstallCommand() {
     Console console = new TestConsole();
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
-    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     return new InstallCommand(new CommandRunnerParams(

@@ -141,7 +141,7 @@ public class ParserTest extends EasyMockSupport {
     File root = tempDir.getRoot();
     filesystem = new ProjectFilesystem(root);
 
-    buildRuleTypes = new KnownBuildRuleTypes();
+    buildRuleTypes = KnownBuildRuleTypes.getDefault();
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             filesystem,
@@ -219,7 +219,7 @@ public class ParserTest extends EasyMockSupport {
 
     Parser parser = new Parser(
         new ProjectFilesystem(new File(".")),
-        new KnownBuildRuleTypes(),
+        KnownBuildRuleTypes.getDefault(),
         new TestConsole(),
         BuckTestConstant.PYTHON_INTERPRETER,
         tempFilePatterns,

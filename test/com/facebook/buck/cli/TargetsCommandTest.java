@@ -110,7 +110,7 @@ public class TargetsCommandTest {
   public void setUp() {
     console = new TestConsole();
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectRoot);
-    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     targetsCommand =

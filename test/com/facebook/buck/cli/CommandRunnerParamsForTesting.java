@@ -57,7 +57,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
   public static class Builder {
 
     private ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
-    private KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
+    private KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
     private ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(
         new NoopArtifactCache());
     private Console console = new TestConsole();

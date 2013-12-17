@@ -230,7 +230,7 @@ public class AuditOwnerCommandTest {
 
   private AuditOwnerCommand createAuditOwnerCommand(ProjectFilesystem filesystem) {
     Console console = new TestConsole();
-    KnownBuildRuleTypes buildRuleTypes = new KnownBuildRuleTypes();
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     return new AuditOwnerCommand(new CommandRunnerParams(
