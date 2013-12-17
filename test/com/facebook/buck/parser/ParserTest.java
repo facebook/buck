@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.parser.RawRulePredicates.alwaysFalse;
 import static com.facebook.buck.parser.RawRulePredicates.alwaysTrue;
 import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
-import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
