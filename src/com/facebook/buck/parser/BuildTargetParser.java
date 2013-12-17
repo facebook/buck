@@ -46,7 +46,7 @@ public class BuildTargetParser {
    *     {@code //first-party/orca/orcaapp:assets} and {@code :assets} refer to the same target.
    *     However, from the command line the context is obtained by calling
    *     {@link ParseContext#fullyQualified()} and relative names are not recognized.
-   * @param parseContext how targets should be interpretted, such in the context of a specific build
+   * @param parseContext how targets should be interpreted, such in the context of a specific build
    *     file or only as fully-qualified names (as is the case for targets from the command line).
    */
   public BuildTarget parse(String buildTargetName, ParseContext parseContext)

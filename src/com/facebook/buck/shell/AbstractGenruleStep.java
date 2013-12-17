@@ -162,7 +162,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     for (Map.Entry<String, String> environmentVariable : allEnvironmentVariables.entrySet()) {
       // We check for the presence of the variable without adornment for $ or %% so it works on both
       // Windows and non-Windows environments. Eventually, we will require $ in the command string
-      // and modify the command directly rather than using envrionment variables.
+      // and modify the command directly rather than using environment variables.
       String environmentVariableName = environmentVariable.getKey();
       if (command.contains(environmentVariableName)) {
         // I hate this $DEPS variable so much...

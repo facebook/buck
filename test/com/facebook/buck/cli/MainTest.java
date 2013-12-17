@@ -99,6 +99,7 @@ public class MainTest {
         "  install     builds and installs an APK",
         "  project     generates project configuration files for an IDE",
         "  quickstart  generates a default project directory",
+        "  run         runs a target as a command",
         "  targets     prints the list of buildable targets",
         "  test        builds and runs the tests for the specified target",
         "  uninstall   uninstalls an APK",

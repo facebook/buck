@@ -50,6 +50,9 @@ public enum Command {
   QUICKSTART(
       "generates a default project directory",
       QuickstartCommand.class),
+  RUN(
+      "runs a target as a command",
+      RunCommand.class),
   TARGETS(
       "prints the list of buildable targets",
       TargetsCommand.class),
