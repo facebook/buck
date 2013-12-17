@@ -38,12 +38,19 @@ public class AndroidResourceDetails {
 
   public final ImmutableSet<String> rDotJavaPackages;
 
+  /**
+   * @param androidResources A sequence of {@code android_resource} rules, ordered such that
+   *     resources from rules that appear earlier in the list will take precedence over resources
+   *     from rules that appear later in the list in the event of the conflict. This matches the
+   *     order the directories should be passed to {@code aapt} to have the same precedence
+   *     resolution.
+   */
   @Beta
-  public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
+  public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResources) {
     ImmutableSet.Builder<String> resDirectoryBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> whitelistedStringDirsBuilder = ImmutableSet.builder();
-    for (HasAndroidResourceDeps androidResource : androidResourceDeps) {
+    for (HasAndroidResourceDeps androidResource : androidResources) {
       String resDirectory = androidResource.getRes();
       if (resDirectory != null) {
         resDirectoryBuilder.add(resDirectory);

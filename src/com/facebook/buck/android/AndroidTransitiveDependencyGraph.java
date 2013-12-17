@@ -79,7 +79,7 @@ public class AndroidTransitiveDependencyGraph {
     final ImmutableSet.Builder<String> pathsToThirdPartyJarsBuilder = ImmutableSet.builder();
 
     AndroidResourceDetails details =
-        createAndroidResourceDetails(androidResourceDeps);
+        findAndroidResourceDetails(androidResourceDeps);
 
     // Update pathsToDex.
     ImmutableSet<Map.Entry<JavaLibraryRule, String>> classpath =
@@ -140,7 +140,7 @@ public class AndroidTransitiveDependencyGraph {
         pathToCompiledRDotJavaFilesOptional);
   }
 
-  public AndroidResourceDetails createAndroidResourceDetails(
+  public AndroidResourceDetails findAndroidResourceDetails(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
     // This is not part of the AbstractDependencyVisitor traversal because
     // AndroidResourceRule.getAndroidResourceDeps() does a topological sort whereas

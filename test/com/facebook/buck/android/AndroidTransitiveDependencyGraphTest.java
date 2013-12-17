@@ -57,7 +57,6 @@ public class AndroidTransitiveDependencyGraphTest {
         .setBinaryJar("third_party/jsr-305/jsr305.jar")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
-
     BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
         NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/native_library:library"))
@@ -128,6 +127,10 @@ public class AndroidTransitiveDependencyGraphTest {
             "transitive dependencies",
         ImmutableSet.of("assets/"),
         transitiveDeps.assetsDirectories);
+    assertEquals(
+        "There should be one NativeLibraryBuildable that is an asset.",
+        ImmutableSet.of(new BuildTarget("//java/com/facebook/prebuilt_native_library", "library")),
+        transitiveDeps.nativeTargetsWithAssets);
     assertEquals(
         "Because manifest file was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",

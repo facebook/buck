@@ -33,22 +33,24 @@ abstract class AndroidResourceDepsFinder {
 
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
   private final ImmutableSet<BuildRule> buildRulesToExcludeFromDex;
+  private final AndroidTransitiveDependencies androidTransitiveDependencies;
 
   /*
-   * Currently, androidResources and androidTransitiveDependencies are expensive to compute, so we
-   * calculate them lazily.
+   * Currently, androidResources are expensive to compute, so we calculate them lazily.
    */
 
   @Nullable
   private volatile ImmutableList<HasAndroidResourceDeps> androidResources;
 
-  @Nullable
-  private volatile AndroidTransitiveDependencies androidTransitiveDependencies;
-
   public AndroidResourceDepsFinder(AndroidTransitiveDependencyGraph transitiveDependencyGraph,
       ImmutableSet<BuildRule> buildRulesToExcludeFromDex) {
     this.transitiveDependencyGraph = Preconditions.checkNotNull(transitiveDependencyGraph);
     this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
+    this.androidTransitiveDependencies = transitiveDependencyGraph.findDependencies();
+  }
+
+  public AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
+    return androidTransitiveDependencies;
   }
 
   public ImmutableList<HasAndroidResourceDeps> getAndroidResources() {
@@ -71,19 +73,8 @@ abstract class AndroidResourceDepsFinder {
     return findMyAndroidResourceDepsUnsorted();
   }
 
-  public AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
-    if (androidTransitiveDependencies == null) {
-      synchronized (this) {
-        if (androidTransitiveDependencies == null) {
-          androidTransitiveDependencies = transitiveDependencyGraph.findDependencies();
-        }
-      }
-    }
-    return androidTransitiveDependencies;
-  }
-
   public AndroidResourceDetails getAndroidResourceDetails() {
-    return transitiveDependencyGraph.createAndroidResourceDetails(getAndroidResources());
+    return transitiveDependencyGraph.findAndroidResourceDetails(getAndroidResources());
   }
 
   public AndroidDexTransitiveDependencies getAndroidDexTransitiveDependencies(
