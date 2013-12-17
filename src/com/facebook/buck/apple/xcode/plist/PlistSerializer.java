@@ -46,6 +46,7 @@ public class PlistSerializer implements PlistVisitor<Node> {
     this.doc = doc;
   }
 
+  @Override
   public Node visit(PlistArray array) {
     Element element = doc.createElement("array");
     for (PlistValue item : array) {
@@ -54,6 +55,7 @@ public class PlistSerializer implements PlistVisitor<Node> {
     return element;
   }
 
+  @Override
   public Node visit(PlistDictionary dictionary) {
     Element elem = doc.createElement("dict");
     for (Map.Entry<String, PlistValue> entry : dictionary) {
@@ -65,6 +67,7 @@ public class PlistSerializer implements PlistVisitor<Node> {
     return elem;
   }
 
+  @Override
   public Node visit(PlistScalar scalar) {
     Element elem;
     switch (scalar.getType()) {
