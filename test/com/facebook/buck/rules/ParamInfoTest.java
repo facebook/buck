@@ -33,6 +33,7 @@ public class ParamInfoTest {
   @Test
   public void shouldReportWildcardsWithUpperBoundsAsUpperBound() throws NoSuchFieldException {
     class Example<X extends SourcePath> {
+      @SuppressWarnings("unused")
       public X path;
     }
 
@@ -46,6 +47,7 @@ public class ParamInfoTest {
   @Test
   public void anOptionalFieldMayBeWildcardedWithAnUpperBound() throws NoSuchFieldException {
     class Example {
+      @SuppressWarnings("unused")
       public Optional<? extends SourcePath> path;
     }
 
@@ -59,6 +61,7 @@ public class ParamInfoTest {
   @Test(expected = IllegalArgumentException.class)
   public void wildcardedFieldsWithNoUpperBoundAreNotAllowed() throws NoSuchFieldException {
     class Example {
+      @SuppressWarnings("unused")
       public Optional<?> bad;
     }
 
@@ -69,6 +72,7 @@ public class ParamInfoTest {
   @Test(expected = IllegalArgumentException.class)
   public void superTypesForGenericsAreNotAllowedEither() throws NoSuchFieldException {
     class Example {
+      @SuppressWarnings("unused")
       public Optional<? super SourcePath> bad;
     }
 

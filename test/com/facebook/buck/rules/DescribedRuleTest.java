@@ -142,6 +142,7 @@ public class DescribedRuleTest {
   @Test
   public void addingASourcePathShouldAmendTheDepsOfARule() throws NoSuchBuildTargetException {
     // The allowable variations. We don't populate Collection<Optional<SourcePath>>.
+    @SuppressWarnings("unused")
     class Dto {
       public SourcePath path;
       public Optional<SourcePath> other;
@@ -207,6 +208,7 @@ public class DescribedRuleTest {
   @Test
   public void ensureThatIfOnlyACollectionOfSourcePathsAreDeclaredTheyGetAddedAsDeps() throws NoSuchBuildTargetException {
     class Dto {
+      @SuppressWarnings("unused")
       public Set<SourcePath> paths;
     }
 
