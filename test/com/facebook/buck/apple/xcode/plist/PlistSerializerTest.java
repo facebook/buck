@@ -16,10 +16,12 @@
 
 package com.facebook.buck.apple.xcode.plist;
 
+import static org.hamcrest.xml.HasXPath.hasXPath;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
 import org.junit.Test;
 import org.w3c.dom.Document;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.xml.HasXPath.hasXPath;
 
 public class PlistSerializerTest {
   @Test
@@ -75,5 +77,19 @@ public class PlistSerializerTest {
     assertThat(document, hasXPath("/plist/array/*[1]/self::string[. = \"foo\"]"));
     assertThat(document, hasXPath("/plist/array/*[2]/self::integer[. = \"4\"]"));
     assertThat(document, hasXPath("/plist/array/*[3]/self::false"));
+  }
+
+  @Test
+  public void testSerializeToString() {
+    PlistDictionary dictionary = PlistDictionary.of("meaningOfLife", PlistScalar.of(42));
+    String pListXml = PlistSerializer.serializeToString(dictionary);
+    assertEquals(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" +
+        "<plist>" +
+          "<dict>" +
+            "<key>meaningOfLife</key><integer>42</integer>" +
+          "</dict>" +
+        "</plist>",
+        pListXml);
   }
 }
