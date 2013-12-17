@@ -20,6 +20,31 @@ BUCK_BIN_DIRECTORY=$DIR
 # TODO(user): refactor buck_common in to functions that can be called
 source "${BUCK_BIN_DIRECTORY}/buck_common"
 
+function killBuckdIfRunning()
+{
+  # Kill any existing buckd process.
+  if [ $BUCKD_RUNNING -eq 0 ]; then
+    echo "Killing existing buckd process"
+    kill `cat $BUCKD_PID_FILE 2> /dev/null` &> /dev/null || true
+  fi
+}
+
+# Parse flags.
+for arg in "$@"
+do
+case $arg in
+  --help)
+  echo "Specify --kill to kill buckd."
+  exit 0
+  ;;
+
+  --kill)
+  killBuckdIfRunning
+  exit 0
+  ;;
+esac
+done
+
 # Use watchman if available.
 if command -v watchman &> /dev/null; then
     echo "Using watchman."
@@ -27,11 +52,7 @@ if command -v watchman &> /dev/null; then
     watchman watch $PROJECT_ROOT &> /dev/null
 fi
 
-# Kill any existing buckd process.
-if [ $BUCKD_RUNNING -eq 0 ]; then
-  echo "Killing existing buckd process"
-  kill `cat $BUCKD_PID_FILE 2> /dev/null` &> /dev/null || true
-fi
+killBuckdIfRunning
 
 # Find an unused port.
 for BUCKD_PORT in $(seq 2000 65000); do
