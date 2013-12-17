@@ -55,7 +55,8 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       final AdbOptions adbOptions,
       final TargetDeviceOptions deviceOptions,
       final UninstallOptions uninstallOptions,
-      ExecutionContext context) {
+      ExecutionContext context,
+      BuckConfig buckConfig) {
     getBuckEventBus().post(UninstallEvent.started(packageName));
     boolean success = adbCall(adbOptions, deviceOptions, context, new AdbCallable() {
       @Override
@@ -67,7 +68,8 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       public String toString() {
         return "uninstall apk";
       }
-    });
+    },
+    buckConfig);
     getBuckEventBus().post(UninstallEvent.finished(packageName, success));
     return success;
   }

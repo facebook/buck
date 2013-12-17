@@ -92,7 +92,8 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
         options.adbOptions(),
         options.targetDeviceOptions(),
         options.uninstallOptions(),
-        context) ? 0 : 1;
+        context,
+        options.getBuckConfig()) ? 0 : 1;
   }
 
   @Override

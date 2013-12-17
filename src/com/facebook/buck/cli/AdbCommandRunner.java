@@ -199,7 +199,8 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   protected boolean adbCall(AdbOptions options,
                             TargetDeviceOptions deviceOptions,
                             ExecutionContext context,
-                            AdbCallable adbCallable) {
+                            AdbCallable adbCallable,
+                            BuckConfig buckConfig) {
 
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
@@ -211,7 +212,14 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     // Build list of matching devices.
     List<IDevice> devices = filterDevices(adb.getDevices(), options, deviceOptions);
     if (devices == null) {
-      return false;
+      if (buckConfig.getRestartAdbOnFailure()) {
+        console.printErrorText("No devices found with adb, restarting adb-server.");
+        adb.restart();
+        devices = filterDevices(adb.getDevices(), options, deviceOptions);
+      }
+
+      if (devices == null)
+        return false;
     }
 
     int adbThreadCount = options.getAdbThreadCount();

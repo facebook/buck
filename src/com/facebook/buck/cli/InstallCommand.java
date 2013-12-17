@@ -90,7 +90,8 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
           options.adbOptions(),
           options.targetDeviceOptions(),
           options.uninstallOptions(),
-          build.getExecutionContext());
+          build.getExecutionContext(),
+          options.getBuckConfig());
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
@@ -170,7 +171,8 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
           public String toString() {
             return "start activity";
           }
-        });
+        },
+        options.getBuckConfig());
     getBuckEventBus().post(StartActivityEvent.finished(androidBinaryRule.getBuildTarget(),
         activityToRun,
         success));
@@ -239,7 +241,8 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
           public String toString() {
             return "install apk";
           }
-        });
+        },
+        options.getBuckConfig());
     getBuckEventBus().post(InstallEvent.finished(buildRule.getBuildTarget(), success));
 
     return success;
