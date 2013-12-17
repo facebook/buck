@@ -1,0 +1,8 @@
+java_library(
+  name = 'plist',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+  ],
+  visibility = ['PUBLIC'],
+)

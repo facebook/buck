@@ -1,0 +1,15 @@
+java_test(
+  name = 'plist',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/apple/xcode/plist:plist',
+  ],
+  deps = [
+    '//lib:easymock',
+    '//lib:guava',
+    '//lib:junit',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
+    '//src/com/facebook/buck/apple/xcode/plist:plist',
+  ],
+)
