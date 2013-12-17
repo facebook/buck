@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.Step;
-import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -37,7 +36,6 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -170,43 +168,6 @@ public class UberRDotJavaUtil {
           return (HasAndroidResourceDeps)rule;
         }
       };
-
-  /**
-   * Aggregate information about a list of {@link AndroidResourceRule}s.
-   */
-  public static class AndroidResourceDetails {
-    /**
-     * The {@code res} directories associated with the {@link AndroidResourceRule}s.
-     * <p>
-     * An {@link Iterator} over this collection will reflect the order of the original list of
-     * {@link AndroidResourceRule}s that were specified.
-     */
-    public final ImmutableSet<String> resDirectories;
-
-    public final ImmutableSet<String> whitelistedStringDirs;
-
-    public final ImmutableSet<String> rDotJavaPackages;
-
-    @Beta
-    public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
-      ImmutableSet.Builder<String> resDirectoryBuilder = ImmutableSet.builder();
-      ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
-      ImmutableSet.Builder<String> whitelistedStringDirsBuilder = ImmutableSet.builder();
-      for (HasAndroidResourceDeps androidResource : androidResourceDeps) {
-        String resDirectory = androidResource.getRes();
-        if (resDirectory != null) {
-          resDirectoryBuilder.add(resDirectory);
-          rDotJavaPackageBuilder.add(androidResource.getRDotJavaPackage());
-          if (androidResource.hasWhitelistedStrings()) {
-            whitelistedStringDirsBuilder.add(resDirectory);
-          }
-        }
-      }
-      resDirectories = resDirectoryBuilder.build();
-      rDotJavaPackages = rDotJavaPackageBuilder.build();
-      whitelistedStringDirs = whitelistedStringDirsBuilder.build();
-    }
-  }
 
   static JavacInMemoryStep createJavacInMemoryCommandForRDotJavaFiles(
       Set<String> javaSourceFilePaths, String outputDirectory) {

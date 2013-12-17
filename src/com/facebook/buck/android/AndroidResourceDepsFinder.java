@@ -75,12 +75,15 @@ abstract class AndroidResourceDepsFinder {
     if (androidTransitiveDependencies == null) {
       synchronized (this) {
         if (androidTransitiveDependencies == null) {
-          androidTransitiveDependencies = transitiveDependencyGraph.findDependencies(
-              getAndroidResources());
+          androidTransitiveDependencies = transitiveDependencyGraph.findDependencies();
         }
       }
     }
     return androidTransitiveDependencies;
+  }
+
+  public AndroidResourceDetails getAndroidResourceDetails() {
+    return transitiveDependencyGraph.createAndroidResourceDetails(getAndroidResources());
   }
 
   public AndroidDexTransitiveDependencies getAndroidDexTransitiveDependencies(

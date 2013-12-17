@@ -328,6 +328,7 @@ public class AaptPackageResources extends AbstractBuildable {
     public Builder setAllParams(
         SourcePath manifest,
         UberRDotJavaBuildable uberRDotJavaBuildable,
+        ImmutableSet<BuildTarget> nativeTargetsWithAssets,
         PackageType packageType,
         ImmutableSet<TargetCpuType> cpuFilters) {
       this.manifest = manifest;
@@ -338,6 +339,9 @@ public class AaptPackageResources extends AbstractBuildable {
       addDep(uberRDotJavaBuildable.getBuildTarget());
       if (manifest instanceof BuildTargetSourcePath) {
         addDep(((BuildTargetSourcePath) manifest).getTarget());
+      }
+      for (BuildTarget nativeTarget : nativeTargetsWithAssets) {
+        addDep(nativeTarget);
       }
 
       return this;

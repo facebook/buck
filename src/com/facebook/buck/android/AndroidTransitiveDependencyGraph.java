@@ -78,7 +78,7 @@ public class AndroidTransitiveDependencyGraph {
     // final APK.
     final ImmutableSet.Builder<String> pathsToThirdPartyJarsBuilder = ImmutableSet.builder();
 
-    UberRDotJavaUtil.AndroidResourceDetails details =
+    AndroidResourceDetails details =
         createAndroidResourceDetails(androidResourceDeps);
 
     // Update pathsToDex.
@@ -140,8 +140,15 @@ public class AndroidTransitiveDependencyGraph {
         pathToCompiledRDotJavaFilesOptional);
   }
 
-  public AndroidTransitiveDependencies findDependencies(
+  public AndroidResourceDetails createAndroidResourceDetails(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
+    // This is not part of the AbstractDependencyVisitor traversal because
+    // AndroidResourceRule.getAndroidResourceDeps() does a topological sort whereas
+    // AbstractDependencyVisitor does only a breadth-first search.
+    return new AndroidResourceDetails(androidResourceDeps);
+  }
+
+  public AndroidTransitiveDependencies findDependencies() {
 
     // Paths to assets/ directories that should be included in the final APK.
     final ImmutableSet.Builder<String> assetsDirectories = ImmutableSet.builder();
@@ -154,14 +161,13 @@ public class AndroidTransitiveDependencyGraph {
     // as raw files under /assets/lib/ directory in the APK.
     final ImmutableSet.Builder<String> nativeLibAssetsDirectories = ImmutableSet.builder();
 
+    final ImmutableSet.Builder<BuildTarget> nativeTargetsWithAssets = ImmutableSet.builder();
+
     // Path to the module's manifest file
     final ImmutableSet.Builder<String> manifestFiles = ImmutableSet.builder();
 
     // Path to the module's proguard_config
     final ImmutableSet.Builder<String> proguardConfigs = ImmutableSet.builder();
-
-    UberRDotJavaUtil.AndroidResourceDetails details =
-        createAndroidResourceDetails(androidResourceDeps);
 
     // Visit all of the transitive dependencies to populate the above collections.
     new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
@@ -174,6 +180,7 @@ public class AndroidTransitiveDependencyGraph {
           NativeLibraryBuildable nativeLibraryRule = (NativeLibraryBuildable) rule.getBuildable();
           if (nativeLibraryRule.isAsset()) {
             nativeLibAssetsDirectories.add(nativeLibraryRule.getLibraryPath());
+            nativeTargetsWithAssets.add(rule.getBuildTarget());
           } else {
             nativeLibsDirectories.add(nativeLibraryRule.getLibraryPath());
           }
@@ -206,21 +213,12 @@ public class AndroidTransitiveDependencyGraph {
       }
     }.start();
 
-    return new AndroidTransitiveDependencies(assetsDirectories.build(),
+    return new AndroidTransitiveDependencies(
         nativeLibsDirectories.build(),
         nativeLibAssetsDirectories.build(),
+        assetsDirectories.build(),
+        nativeTargetsWithAssets.build(),
         manifestFiles.build(),
-        details.resDirectories,
-        details.whitelistedStringDirs,
-        details.rDotJavaPackages,
         proguardConfigs.build());
-  }
-
-  private UberRDotJavaUtil.AndroidResourceDetails createAndroidResourceDetails(
-      ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
-    // This is not part of the AbstractDependencyVisitor traversal because
-    // AndroidResourceRule.getAndroidResourceDeps() does a topological sort whereas
-    // AbstractDependencyVisitor does only a breadth-first search.
-    return new UberRDotJavaUtil.AndroidResourceDetails(androidResourceDeps);
   }
 }

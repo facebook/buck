@@ -57,6 +57,7 @@ RULES_SRCS = [
   'AndroidManifestDescription.java',
   'AndroidResourceBuildRuleFactory.java',
   'AndroidResourceDepsFinder.java',
+  'AndroidResourceDetails.java',
   'AndroidResourceRule.java',
   'AndroidTransitiveDependencies.java',
   'AndroidTransitiveDependencyGraph.java',

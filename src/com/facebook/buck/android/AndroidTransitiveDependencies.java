@@ -15,33 +15,30 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class AndroidTransitiveDependencies {
-  public final ImmutableSet<String> assetsDirectories;
   public final ImmutableSet<String> nativeLibsDirectories;
   public final ImmutableSet<String> nativeLibAssetsDirectories;
+  public final ImmutableSet<String> assetsDirectories;
+  public final ImmutableSet<BuildTarget> nativeTargetsWithAssets;
   public final ImmutableSet<String> manifestFiles;
-  public final ImmutableSet<String> resDirectories;
-  public final ImmutableSet<String> whitelistedStringDirs;
-  public final ImmutableSet<String> rDotJavaPackages;
   public final ImmutableSet<String> proguardConfigs;
 
-  public AndroidTransitiveDependencies(ImmutableSet<String> assetsDirectories,
-                                       ImmutableSet<String> nativeLibsDirectories,
-                                       ImmutableSet<String> nativeLibAssetsDirectories,
-                                       ImmutableSet<String> manifestFiles,
-                                       ImmutableSet<String> resDirectories,
-                                       ImmutableSet<String> whitelistedStringDirs,
-                                       ImmutableSet<String> rDotJavaPackages,
-                                       ImmutableSet<String> proguardConfigs) {
-    this.assetsDirectories = ImmutableSet.copyOf(assetsDirectories);
-    this.nativeLibsDirectories = ImmutableSet.copyOf(nativeLibsDirectories);
-    this.nativeLibAssetsDirectories = ImmutableSet.copyOf(nativeLibAssetsDirectories);
-    this.manifestFiles = ImmutableSet.copyOf(manifestFiles);
-    this.resDirectories = ImmutableSet.copyOf(resDirectories);
-    this.whitelistedStringDirs = ImmutableSet.copyOf(whitelistedStringDirs);
-    this.rDotJavaPackages = ImmutableSet.copyOf(rDotJavaPackages);
-    this.proguardConfigs = ImmutableSet.copyOf(proguardConfigs);
+  public AndroidTransitiveDependencies(
+      ImmutableSet<String> nativeLibsDirectories,
+      ImmutableSet<String> nativeLibAssetsDirectories,
+      ImmutableSet<String> assetsDirectories,
+      ImmutableSet<BuildTarget> nativeTargetsWithAssets,
+      ImmutableSet<String> manifestFiles,
+      ImmutableSet<String> proguardConfigs) {
+    this.nativeLibsDirectories = Preconditions.checkNotNull(nativeLibsDirectories);
+    this.nativeLibAssetsDirectories = Preconditions.checkNotNull(nativeLibAssetsDirectories);
+    this.assetsDirectories = Preconditions.checkNotNull(assetsDirectories);
+    this.nativeTargetsWithAssets = Preconditions.checkNotNull(nativeTargetsWithAssets);
+    this.manifestFiles = Preconditions.checkNotNull(manifestFiles);
+    this.proguardConfigs = Preconditions.checkNotNull(proguardConfigs);
   }
 }

@@ -156,14 +156,15 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
       throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    AndroidTransitiveDependencies transitiveDependencies = getAndroidTransitiveDependencies();
-    final Set<String> rDotJavaPackages = transitiveDependencies.rDotJavaPackages;
+    AndroidResourceDetails androidResourceDetails =
+        androidResourceDepsFinder.getAndroidResourceDetails();
+    final Set<String> rDotJavaPackages = androidResourceDetails.rDotJavaPackages;
     final ImmutableSet<String> resDirectories;
     final Supplier<ImmutableSet<String>> nonEnglishStringFiles;
     if (requiresResourceFilter()) {
       final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
-          transitiveDependencies.resDirectories,
-          transitiveDependencies.whitelistedStringDirs);
+          androidResourceDetails.resDirectories,
+          androidResourceDetails.whitelistedStringDirs);
       steps.add(filterResourcesStep);
 
       resDirectories = filterResourcesStep.getOutputResourceDirs();
@@ -179,7 +180,7 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
         buildableContext.recordArtifactsInDirectory(Paths.get(outputResourceDir));
       }
     } else {
-      resDirectories = transitiveDependencies.resDirectories;
+      resDirectories = androidResourceDetails.resDirectories;
       nonEnglishStringFiles = Suppliers.ofInstance(ImmutableSet.<String>of());
     }
 
