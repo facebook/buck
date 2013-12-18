@@ -28,7 +28,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
@@ -54,23 +53,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Beta
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
-
-  /**
-   * This {@link Predicate} returns {@code true} if none of the {@link BuildRuleSuccess} objects
-   * are built locally.
-   */
-  private static final Predicate<List<BuildRuleSuccess>> RULES_NOT_BUILT_LOCALLY_PREDICATE =
-      new Predicate<List<BuildRuleSuccess>>() {
-        @Override
-        public boolean apply(List<BuildRuleSuccess> ruleSuccesses) {
-          for (BuildRuleSuccess success : ruleSuccesses) {
-            if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY) {
-              return false;
-            }
-          }
-          return true;
-        }
-      };
 
   private final Buildable buildable;
 
@@ -217,11 +199,12 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
               // Record the start of the build.
               eventBus.post(BuildRuleEvent.started(AbstractCachingBuildRule.this));
               startOfBuildWasRecordedOnTheEventBus = true;
-              boolean shouldTryToFetchFromCache = RULES_NOT_BUILT_LOCALLY_PREDICATE.apply(deps);
 
               try {
-                BuildResult result = buildOnceDepsAreBuilt(
-                    context, onDiskBuildInfo, buildInfoRecorder.get(), shouldTryToFetchFromCache);
+                BuildResult result = buildOnceDepsAreBuilt(context,
+                    onDiskBuildInfo,
+                    buildInfoRecorder.get(),
+                    shouldTryToFetchFromCache(deps));
                 if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                   recordBuildRuleSuccess(result);
                 } else {
@@ -247,10 +230,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
               // Do the post to the event bus immediately after the future is set so that the
               // build time measurement is as accurate as possible.
-              eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
-                  result.getStatus(),
-                  result.getCacheResult(),
-                  Optional.of(result.getSuccess())));
+              logBuildRuleFinished(result);
 
               // Finally, upload to the artifact cache.
               if (result.getSuccess().shouldUploadResultingArtifact()) {
@@ -271,16 +251,20 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
               // Note that startOfBuildWasRecordedOnTheEventBus will be false if onSuccess() was
               // never invoked.
               if (startOfBuildWasRecordedOnTheEventBus) {
-                eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
-                    result.getStatus(),
-                    result.getCacheResult(),
-                    Optional.<BuildRuleSuccess.Type>absent()));
+                logBuildRuleFinished(result);
               }
 
               // It seems possible (albeit unlikely) that something could go wrong in
               // recordBuildRuleSuccess() after buildRuleResult has been resolved such that Buck
               // would attempt to resolve the future again, which would fail.
               buildRuleResult.setException(result.getFailure());
+            }
+
+            private void logBuildRuleFinished(BuildResult result) {
+              eventBus.post(BuildRuleEvent.finished(AbstractCachingBuildRule.this,
+                  result.getStatus(),
+                  result.getCacheResult(),
+                  Optional.fromNullable(result.getSuccess())));
             }
           },
           context.getExecutor());
@@ -292,6 +276,18 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     }
 
     return buildRuleResult;
+  }
+
+  /**
+   * Returns {@code true} if none of the {@link BuildRuleSuccess} objects are built locally.
+   */
+  private static boolean shouldTryToFetchFromCache(List<BuildRuleSuccess> ruleSuccesses) {
+    for (BuildRuleSuccess success : ruleSuccesses) {
+      if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @VisibleForTesting
@@ -417,7 +413,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
           context.getProjectRoot(),
           context);
     } else {
-      cacheResult = CacheResult.MISS;
+      cacheResult = CacheResult.SKIP;
     }
 
     // Run the steps to build this rule since it was not found in the cache.
@@ -443,7 +439,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       buildInfoRecorder.recordArtifact(pathToArtifact);
     }
 
-    return new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY, CacheResult.MISS);
+    return new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY, cacheResult);
   }
 
   private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(

@@ -28,6 +28,9 @@ public enum CacheResult {
 
   /** Artifact was not fetched successfully. */
   MISS(/* success */ false),
+
+  /** Artifact cache not queried because some of the dependencies were re-built. */
+  SKIP(/* success */ false),
   ;
 
   private boolean success;

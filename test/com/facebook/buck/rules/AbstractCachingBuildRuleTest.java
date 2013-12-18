@@ -17,10 +17,12 @@
 package com.facebook.buck.rules;
 
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.rules.BuildRuleEvent.Finished;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEvent;
@@ -261,6 +263,10 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         throw new RuntimeException("Artifact cache must not be accessed while building the rule.");
       }
     };
+
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    eventBus.register(listener);
     BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
         .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
         .setJavaPackageFinder(new JavaPackageFinder() {
@@ -275,11 +281,21 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
           }
         })
         .setArtifactCache(artifactCache)
+        .setEventBus(eventBus)
         .build();
 
     BuildRuleSuccess result = cachingBuildRule.build(buildContext).get();
     assertEquals(result.getType(), BuildRuleSuccess.Type.BUILT_LOCALLY);
     MoreAsserts.assertListEquals(Lists.newArrayList("Step was executed."), strings);
+
+    Finished finishedEvent = null;
+    for (BuckEvent event : listener.getEvents()) {
+      if (event instanceof Finished) {
+        finishedEvent = (Finished) event;
+      }
+    }
+    assertNotNull("BuildRule did not fire a BuildRuleEvent.Finished event.", finishedEvent);
+    assertEquals(CacheResult.SKIP, finishedEvent.getCacheResult());
   }
 
    /**
