@@ -334,7 +334,7 @@ public class ProjectFilesystem {
     return Files.readLines(file, Charsets.UTF_8);
   }
 
-  public InputSupplier<? extends InputStream> getInputSupplierForRelativePath(String path) {
+  public InputSupplier<? extends InputStream> getInputSupplierForRelativePath(Path path) {
     File file = getFileForRelativePath(path);
     return Files.newInputStreamSupplier(file);
   }

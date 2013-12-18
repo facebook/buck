@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,7 +80,7 @@ class TraceDataHandler extends AbstractHandler {
     }
 
     String id = matcher.group(1);
-    String pathToTrace = getPathToTrace(id);
+    Path pathToTrace = getPathToTrace(id);
 
     response.setContentType(MediaType.JAVASCRIPT_UTF_8.toString());
     response.setStatus(HttpServletResponse.SC_OK);
@@ -108,9 +110,7 @@ class TraceDataHandler extends AbstractHandler {
     baseRequest.setHandled(true);
   }
 
-  private static String getPathToTrace(String id) {
-    String pathToTrace = String.format(BuckConstant.BUCK_TRACE_DIR + "/build.%s.trace", id);
-    return pathToTrace;
+  private static Path getPathToTrace(String id) {
+    return Paths.get(BuckConstant.BUCK_TRACE_DIR, String.format("/build.%s.trace", id));
   }
-
 }

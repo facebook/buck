@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -171,8 +172,8 @@ public class ApkBuilderStep implements Step {
         pathToKeystorePropertiesFile,
         projectFilesystem);
     KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
-    InputStream inputStream = projectFilesystem.getInputSupplierForRelativePath(pathToKeystore)
-        .getInput();
+    InputStream inputStream = projectFilesystem.getInputSupplierForRelativePath(
+        Paths.get(pathToKeystore)).getInput();
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
     keystore.load(inputStream, keystorePassword);
 
