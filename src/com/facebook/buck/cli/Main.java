@@ -381,7 +381,7 @@ public final class Main {
     Clock clock = new DefaultClock();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
     try (AbstractConsoleEventBusListener consoleListener =
-             createConsoleEventListener(clock, console, executionEnvironment);
+             createConsoleEventListener(clock, console, verbosity, executionEnvironment);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
       Optional<WebServer> webServer = getWebServerIfDaemon(context,
           projectFilesystem,
@@ -554,8 +554,11 @@ public final class Main {
   }
 
   private AbstractConsoleEventBusListener createConsoleEventListener(
-      Clock clock, Console console, ExecutionEnvironment executionEnvironment) {
-    if (console.getAnsi().isAnsiTerminal()) {
+      Clock clock,
+      Console console,
+      Verbosity verbosity,
+      ExecutionEnvironment executionEnvironment) {
+    if (console.getAnsi().isAnsiTerminal() && !verbosity.shouldPrintCommand()) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(console, clock, executionEnvironment);
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
