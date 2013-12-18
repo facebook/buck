@@ -27,6 +27,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -39,8 +40,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -157,6 +160,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
     stderrConsumer.start();
 
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
+
+    Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
+    buckPyStdoutParser = new BuildFileToJsonParser(reader, isServerMode);
   }
 
   private ImmutableList<String> buildArgs() throws IOException {
@@ -258,21 +264,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckPyStdinWriter.flush();
     }
 
-    // Construct the parser lazily because Jackson expects that when the parser is made it is
-    // safe to immediately begin reading from the underlying stream to detect the encoding.
-    // For our server use case, the server will produce no output until directed to by a
-    // request for a particular build file.
-    //
-    // TODO: Jackson has a severe bug which assumes that it is safe to require at least 4 bytes
-    // of input due to JSON's BOM concept (see detectEncoding).  buck.py, and many other
-    // facilities, do not write a BOM header and therefore may end up producing insufficient
-    // bytes to unwedge the parser's construction.  For example, if the first BUCK file
-    // submitted outputted no rules (that is, "[]"), then this line would hang waiting for
-    // more input!
-    if (buckPyStdoutParser == null) {
-      buckPyStdoutParser = new BuildFileToJsonParser(buckPyProcess.getInputStream());
-    }
-
     return buckPyStdoutParser.nextRules();
   }
 
@@ -285,6 +276,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     try {
       if (isInitialized) {
+        try {
+          buckPyStdoutParser.close();
+        } catch (IOException e) {
+          // This is bad, but we swallow this so we can still close the other objects.
+        }
+
         if (isServerMode) {
           // Allow buck.py to terminate gracefully.
           try {
@@ -312,7 +309,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
             }
           }
         } catch (IOException e) {
-          // Eat an exceptions from deleting the temporary buck.py file.
+          // Eat any exceptions from deleting the temporary buck.py file.
         }
 
       }

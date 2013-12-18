@@ -16,18 +16,20 @@
 
 package com.facebook.buck.json;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.google.common.base.Preconditions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
@@ -37,142 +39,128 @@ import java.util.Map;
  * sort of nested arrays or objects are allowed in the output as Parser is implemented
  * today. This simplification makes it easier to leverage Jackson's streaming JSON API.
  */
-public class BuildFileToJsonParser {
+public class BuildFileToJsonParser implements AutoCloseable {
 
-  private final JsonParser parser;
+  private final Gson gson;
+  private final JsonReader reader;
 
-  public BuildFileToJsonParser(String json) throws IOException {
-    JsonFactory jsonFactory = new JsonFactory();
-    this.parser = jsonFactory.createJsonParser(json);
+  /**
+   * The parser below uses these objects for stateful purposes with the ultimate goal
+   * of populating the parsed rules into `currentObjects`.
+   *
+   * The parser is expecting two different styles of output:
+   *   1. Server mode: [{"key": "value"}, {"key": "value"}, ...]
+   *   2. Regular mode: {"key": "value"}, {"key": "value"}, ...
+   *
+   * Server mode output is a necessary short-term step to keep logic in the main Parser
+   * consistent (expecting to be able to correlate a set of rules with the specific BUCK file
+   * that generated them).  This requirement creates an unnecessary performance weakness
+   * in this design where we cannot parallelize buck.py's parsing of BUCK files with buck's
+   * processing of the result into a DAG.  Once this can be addressed, server mode should be
+   * eliminated.
+   */
+  private final boolean isServerMode;
+
+  /**
+   * @param jsonReader That contains the JSON data.
+   */
+  public BuildFileToJsonParser(Reader jsonReader, boolean isServerMode) {
+    this.gson = new Gson();
+    this.reader = new JsonReader(jsonReader);
+    this.isServerMode = isServerMode;
+
+    // This is used to read one line at a time.
+    reader.setLenient(true);
   }
 
-  public BuildFileToJsonParser(InputStream json) throws IOException {
-    JsonFactory jsonFactory = new JsonFactory();
-    this.parser = jsonFactory.createJsonParser(json);
-  }
-
-  public BuildFileToJsonParser(Reader json) throws IOException {
-    JsonFactory jsonFactory = new JsonFactory();
-    this.parser = jsonFactory.createJsonParser(json);
+  @VisibleForTesting
+  public BuildFileToJsonParser(String json, boolean isServerMode) {
+    this(new StringReader(json), isServerMode);
   }
 
   /**
    * Access the next set of rules from the build file processor.  Note that for non-server
    * invocations, this will collect all of the rules into one enormous list.
    *
-   * @return List of rules expressed as a <em>very</em> simple mapping of JSON field names
-   *     to Java primitives.
+   * @return The parsed JSON, represented as Java collections. Ideally, we would use Gson's object
+   *     model directly to avoid the overhead of converting between object models. That would
+   *     require updating all code that depends on this method, which may be a lot of work. Also,
+   *     bear in mind that using the Java collections decouples clients of this method from the JSON
+   *     parser that we use.
    */
-  public List<Map<String, Object>> nextRules() throws IOException {
-    // The parser below uses these objects for stateful purposes with the ultimate goal
-    // of populating the parsed rules into `currentObjects`.
-    //
-    // The parser is expecting two different styles of output:
-    //   1. Server mode: [{"key": "value"}, {"key": "value"}, ...]
-    //   2. Regular mode: {"key": "value"}, {"key": "value"}, ...
-    //
-    // Server mode output is a necessary short-term step to keep logic in the main Parser
-    // consistent (expecting to be able to correlate a set of rules with the specific BUCK file
-    // that generated them).  This requirement creates an unnecessary performance weakness
-    // in this design where we cannot parallelize buck.py's parsing of BUCK files with buck's
-    // processing of the result into a DAG.  Once this can be addressed, server mode should be
-    // eliminated.
-    List<Map<String, Object>> currentObjects = null;
-    String currentFieldName = null;
-    List<String> currentArray = null;
-    Map<String, Object> currentObject = null;
+  @SuppressWarnings("unchecked")
+  List<Map<String, Object>> nextRules() throws IOException {
+    List<Map<String, Object>> items = Lists.newArrayList();
 
-    while (true) {
-      JsonToken token = parser.nextToken();
-      if (token == null) {
-        if (currentObject != null) {
-          throw new EOFException("unexpected end-of-stream");
-        } else if (currentObjects == null) {
-          // This happens when buck.py failed to produce any output for this build rule (python
-          // parse error or raised exception, I bet).
-          throw new EOFException("missing build rules");
-        } else {
-          return currentObjects;
-        }
+    if (isServerMode) {
+      reader.beginArray();
+
+      while (reader.hasNext()) {
+        JsonObject json = gson.fromJson(reader, JsonObject.class);
+        items.add((Map<String, Object>) toRawTypes(json));
       }
 
-      switch (token) {
-      case START_OBJECT:
-        // The syntax differs very slightly between server mode and not.  If we encounter
-        // an object not inside of an array, we aren't in server mode and so we can just read
-        // all the objects until exhaustion.
-        if (currentObjects == null) {
-          currentObjects = Lists.newArrayList();
-        }
-        currentObject = Maps.newHashMap();
-        break;
-
-      case END_OBJECT:
-        currentObjects.add(currentObject);
-        currentObject = null;
-        break;
-
-      case START_ARRAY:
-        // Heuristic to detect whether we are in the above server mode or regular mode.  If we
-        // encounter START_ARRAY before START_OBJECT, it must be server mode so we should build
-        // `currentObjects` now.  Otherwise, this is the start of a new sub-array within
-        // an object.
-        if (currentObjects == null) {
-          currentObjects = Lists.newArrayList();
-        } else {
-          currentArray = Lists.newArrayList();
-        }
-        break;
-
-      case END_ARRAY:
-        if (currentArray != null) {
-          currentObject.put(currentFieldName, currentArray);
-          currentArray = null;
-          currentFieldName = null;
-          break;
-        } else {
-          // Must be in server mode and we finished parsing a single BUCK file.
-          return currentObjects;
-        }
-
-      case FIELD_NAME:
-        currentFieldName = parser.getText().intern();
-        break;
-
-      case VALUE_STRING:
-        if (currentArray == null) {
-          currentObject.put(currentFieldName, parser.getText());
-          currentFieldName = null;
-        } else {
-          currentArray.add(parser.getText());
-        }
-        break;
-
-      case VALUE_TRUE:
-      case VALUE_FALSE:
-        Preconditions.checkState(currentArray == null, "Unexpected boolean in JSON array");
-        currentObject.put(currentFieldName, token == JsonToken.VALUE_TRUE);
-        currentFieldName = null;
-        break;
-
-      case VALUE_NUMBER_INT:
-        Preconditions.checkState(currentArray == null, "Unexpected int in JSON array");
-        currentObject.put(currentFieldName, parser.getLongValue());
-        currentFieldName = null;
-        break;
-
-      case VALUE_NULL:
-        if (currentArray == null) {
-          currentObject.put(currentFieldName, null);
-          currentFieldName = null;
-        } else {
-          currentArray.add(null);
-        }
-        break;
-
-      default:
-        throw new JsonParseException("Unexpected token: " + token, parser.getCurrentLocation());
+      reader.endArray();
+    } else {
+      while (reader.peek() != JsonToken.END_DOCUMENT) {
+        JsonObject json = gson.fromJson(reader, JsonObject.class);
+        items.add((Map<String, Object>) toRawTypes(json));
       }
     }
+
+    return items;
+  }
+
+  /**
+   * @return One of: String, Boolean, Long, Number, List<Object>, Map<String, Object>.
+   */
+  @VisibleForTesting
+  static Object toRawTypes(JsonElement json) {
+    // Cases are ordered from most common to least common.
+    if (json.isJsonPrimitive()) {
+      JsonPrimitive primitive = json.getAsJsonPrimitive();
+      if (primitive.isString()) {
+        return primitive.getAsString();
+      } else if (primitive.isBoolean()) {
+        return primitive.getAsBoolean();
+      } else if (primitive.isNumber()) {
+        Number number = primitive.getAsNumber();
+        // Number is likely an instance of class com.google.gson.internal.LazilyParsedNumber.
+        if (number.longValue() == number.doubleValue()) {
+          return number.longValue();
+        } else {
+          return number;
+        }
+      } else {
+        throw new IllegalStateException("Unknown primitive type: " + primitive);
+      }
+    } else if (json.isJsonArray()) {
+      JsonArray array = json.getAsJsonArray();
+      List<Object> out = Lists.newArrayListWithCapacity(array.size());
+      for (JsonElement item : array) {
+        out.add(toRawTypes(item));
+      }
+      return out;
+    } else if (json.isJsonObject()) {
+      Map<String, Object> out = Maps.newHashMap();
+      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
+        // On a large project, without invoking intern(), we have seen `buck targets` OOM. When this
+        // happened, according to the .hprof file generated using -XX:+HeapDumpOnOutOfMemoryError,
+        // 39.6% of the memory was spent on char[] objects while 14.5% was spent on Strings.
+        // (Another 10.5% was spent on java.util.HashMap$Entry.) Introducing intern() stopped the
+        // OOM from happening.
+        out.put(entry.getKey().intern(), toRawTypes(entry.getValue()));
+      }
+      return out;
+    } else if (json.isJsonNull()) {
+      return null;
+    } else {
+      throw new IllegalStateException("Unknown type: " + json);
+    }
+  }
+
+  @Override
+  public void close() throws IOException {
+    reader.close();
   }
 }

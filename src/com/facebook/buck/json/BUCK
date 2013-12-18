@@ -3,13 +3,13 @@ java_library(
   srcs = glob(['*.java']),
   deps = [
     '//lib:guava',
-    '//lib:jackson-core',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//third-party/java/gson:gson',
   ],
   visibility = [
     'PUBLIC',
