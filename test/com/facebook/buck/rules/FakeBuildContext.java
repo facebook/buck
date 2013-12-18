@@ -23,6 +23,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Facilitates creating a fake {@link BuildContext} for unit tests.
@@ -44,8 +45,9 @@ public class FakeBuildContext {
         .newBuilder()
         .setProjectFilesystem(projectFilesystem)
         .build();
+
     return BuildContext.builder()
-        .setStepRunner(new DefaultStepRunner(executionContext))
+        .setStepRunner(new DefaultStepRunner(executionContext, MoreExecutors.sameThreadExecutor()))
         .setProjectFilesystem(projectFilesystem)
         .setArtifactCache(new NoopArtifactCache())
         .setEventBus(BuckEventBusFactory.newInstance())
