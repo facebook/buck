@@ -16,14 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -105,6 +103,25 @@ public enum Command {
       return commandRunner.runCommand(buckConfig, args);
   }
 
+  public static class ParseResult {
+    private final Optional<Command> command;
+    private final Optional<String> errorText;
+
+    public Optional<String> getErrorText() {
+      return errorText;
+    }
+
+    public Optional<Command> getCommand() {
+
+      return command;
+    }
+
+    public ParseResult(Optional<Command> command, Optional<String> errorText) {
+      this.command = Preconditions.checkNotNull(command);
+      this.errorText = Preconditions.checkNotNull(errorText);
+    }
+  }
+
   /**
    * @return a non-empty {@link Optional} if {@code name} corresponds to a
    *     command or its levenshtein distance to the closest command isn't larger
@@ -112,27 +129,25 @@ public enum Command {
    *     empty {@link Optional}. This will return the latter if the user tries
    *     to run something like {@code buck --help}.
    */
-  public static Optional<Command> getCommandForName(String name, Console console) {
+  public static ParseResult parseCommandName(String name) {
     Preconditions.checkNotNull(name);
-    Preconditions.checkNotNull(console);
 
-    Command command;
+    Command command = null;
+    String errorText = null;
     try {
       command = valueOf(name.toUpperCase());
     } catch (IllegalArgumentException e) {
       Optional<Command> fuzzyCommand = fuzzyMatch(name.toUpperCase());
 
       if (fuzzyCommand.isPresent()) {
-        PrintStream stdErr = console.getStdErr();
-        stdErr.printf("(Cannot find command '%s', assuming command '%s'.)\n",
+        errorText = String.format("(Cannot find command '%s', assuming command '%s'.)\n",
             name,
             fuzzyCommand.get().name().toLowerCase());
+        command = fuzzyCommand.get();
       }
-
-      return fuzzyCommand;
     }
 
-    return Optional.of(command);
+    return new ParseResult(Optional.fromNullable(command), Optional.fromNullable(errorText));
   }
 
   private static Optional<Command> fuzzyMatch(String name) {

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.testutil.TestConsole;
 import com.google.common.base.Optional;
 
 import static org.junit.Assert.assertEquals;
@@ -28,54 +27,51 @@ import org.junit.Test;
 public class CommandTest {
 
   /**
-   * Testing the fuzzy command matching feature in {@link Command#getCommandForName}.
+   * Testing the fuzzy command matching feature in {@link Command#parseCommandName}.
    */
   @Test
   public void testFuzzyCommandMatch() {
-    TestConsole console;
-    console = new TestConsole();
-
-    assertEquals(Optional.of(Command.BUILD), Command.getCommandForName("buil", console));
-    assertEquals(Optional.of(Command.BUILD), Command.getCommandForName("biuld", console));
-    assertEquals(Optional.of(Command.AUDIT), Command.getCommandForName("audir", console));
-    assertEquals(Optional.of(Command.AUDIT), Command.getCommandForName("auditt", console));
-    assertEquals(Optional.of(Command.TEST), Command.getCommandForName("test", console));
-    assertEquals(Optional.of(Command.TEST), Command.getCommandForName("twst", console));
-    assertEquals(Optional.of(Command.TEST), Command.getCommandForName("tset", console));
-    assertEquals(Optional.of(Command.INSTALL), Command.getCommandForName("imstall", console));
-    assertEquals(Optional.of(Command.INSTALL), Command.getCommandForName("sintall", console));
-    assertEquals(Optional.of(Command.INSTALL), Command.getCommandForName("sintalle", console));
-    assertEquals(Optional.of(Command.TARGETS), Command.getCommandForName("tragets", console));
-    assertEquals(Optional.of(Command.TARGETS), Command.getCommandForName("taegers", console));
+    assertEquals(Optional.of(Command.BUILD), Command.parseCommandName("buil").getCommand());
+    assertEquals(Optional.of(Command.BUILD), Command.parseCommandName("biuld").getCommand());
+    assertEquals(Optional.of(Command.AUDIT), Command.parseCommandName("audir").getCommand());
+    assertEquals(Optional.of(Command.AUDIT), Command.parseCommandName("auditt").getCommand());
+    assertEquals(Optional.of(Command.TEST), Command.parseCommandName("test").getCommand());
+    assertEquals(Optional.of(Command.TEST), Command.parseCommandName("twst").getCommand());
+    assertEquals(Optional.of(Command.TEST), Command.parseCommandName("tset").getCommand());
+    assertEquals(Optional.of(Command.INSTALL), Command.parseCommandName("imstall").getCommand());
+    assertEquals(Optional.of(Command.INSTALL), Command.parseCommandName("sintall").getCommand());
+    assertEquals(Optional.of(Command.INSTALL), Command.parseCommandName("sintalle").getCommand());
+    assertEquals(Optional.of(Command.TARGETS), Command.parseCommandName("tragets").getCommand());
+    assertEquals(Optional.of(Command.TARGETS), Command.parseCommandName("taegers").getCommand());
     assertEquals(
         "'yyyyyyy' shouldn't match any current command.", 
         Optional.absent(), 
-        Command.getCommandForName("yyyyyyy", console));
+        Command.parseCommandName("yyyyyyy").getCommand());
 
     // Boundary cases
     assertEquals(
         "'unsintakk' is of distance 4 to the closest command 'uninstall' since\n" +
-        "4 / length('uninstall') = 4 / 9 is smaller than Coomand.MAX_ERROR_RATIO (0.5),\n" + 
+        "4 / length('uninstall') = 4 / 9 is smaller than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect it matches uninstall.\n",
         Optional.of(Command.UNINSTALL), 
-        Command.getCommandForName("unsintakk", console));
+        Command.parseCommandName("unsintakk").getCommand());
     assertEquals(
         "'insatkk' is of distance 4 to the closest command 'install' since\n" +
-        "4 / length('install') = 4 / 7 is larger than Coomand.MAX_ERROR_RATIO (0.5),\n" +
+        "4 / length('install') = 4 / 7 is larger than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect Optional.absent() gets returned.\n",
         Optional.absent(), 
-        Command.getCommandForName("insatkk", console));
+        Command.parseCommandName("insatkk").getCommand());
     assertEquals(
         "'atrgest' is of distance 4 to the closest command 'targets' since\n" +
-        "4 / length('targets') = 4 / 7 is larger than Coomand.MAX_ERROR_RATIO (0.5),\n" +
+        "4 / length('targets') = 4 / 7 is larger than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect Optional.absent() gets returned.\n",
         Optional.absent(), 
-        Command.getCommandForName("atrgest", console));
+        Command.parseCommandName("atrgest").getCommand());
     assertEquals(
         "'unsintskk' is of distance 5 to the closest command 'uninstall' since\n" +
-        "5 / length('uninstall') = 5 / 9 is larger than Coomand.MAX_ERROR_RATIO (0.5),\n" + 
+        "5 / length('uninstall') = 5 / 9 is larger than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect Optional.absent() gets returned.\n",
         Optional.absent(), 
-        Command.getCommandForName("unsintskk", console));
+        Command.parseCommandName("unsintskk").getCommand());
   }
 }
