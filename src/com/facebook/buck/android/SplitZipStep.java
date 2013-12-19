@@ -179,6 +179,7 @@ public class SplitZipStep implements Step {
       throws IOException {
     final Function<String, String> deobfuscate = createProguardDeobfuscator(context);
     final ImmutableSet<String> primaryDexClassNames = getPrimaryDexClassNames(context);
+    final ClassNameFilter primaryDexFilter = ClassNameFilter.fromConfiguration(primaryDexPatterns);
 
     return new Predicate<String>() {
       @Override
@@ -199,12 +200,7 @@ public class SplitZipStep implements Step {
           return true;
         }
 
-        for (String substr : SplitZipStep.this.primaryDexPatterns) {
-          if (internalClassName.contains(substr)) {
-            return true;
-          }
-        }
-        return false;
+        return primaryDexFilter.matches(internalClassName);
       }
     };
   }

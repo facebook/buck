@@ -61,7 +61,7 @@ class PreDexMergeStep implements Step {
   private final ImmutableList<DexWithClasses> dexFilesToMerge;
   private final Optional<DexWithClasses> dexWithClassesForRDotJava;
   private final String primaryDexPath;
-  private final ImmutableSet<String> primaryDexPatterns;
+  private final ClassNameFilter primaryDexFilter;
   private final Path secondaryDexMetadataTxt;
   private final String secondaryDexJarFilesDir;
   private final DexStore dexStore;
@@ -85,7 +85,8 @@ class PreDexMergeStep implements Step {
     this.dexFilesToMerge = Preconditions.checkNotNull(dexFilesToMerge);
     this.dexWithClassesForRDotJava = Preconditions.checkNotNull(dexWithClassesForRDotJava);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
-    this.primaryDexPatterns = Preconditions.checkNotNull(primaryDexPatterns);
+    this.primaryDexFilter = ClassNameFilter.fromConfiguration(
+        Preconditions.checkNotNull(primaryDexPatterns));
     this.secondaryDexMetadataTxt = Preconditions.checkNotNull(secondaryDexMetadataTxt);
     this.secondaryDexJarFilesDir = Preconditions.checkNotNull(secondaryDexJarFilesDir);
     this.dexStore = Preconditions.checkNotNull(dexStore);
@@ -225,10 +226,8 @@ class PreDexMergeStep implements Step {
 
   private boolean mustBeInPrimaryDex(DexWithClasses dexWithClasses) {
     for (String className : dexWithClasses.getClassNames()) {
-      for (String pattern : primaryDexPatterns) {
-        if (className.contains(pattern)) {
-          return true;
-        }
+      if (primaryDexFilter.matches(className)) {
+        return true;
       }
     }
     return false;
