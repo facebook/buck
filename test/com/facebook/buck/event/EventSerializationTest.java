@@ -32,6 +32,7 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
@@ -117,7 +118,8 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildRule\":{\"type\":{\"name\":\"java_library\",\"testRule\":false}," +
-        "\"name\":\"//fake:rule\"},\"type\":\"BuildRuleStarted\"}", message);
+        "\"name\":\"//fake:rule\"},\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleStarted\"}",
+        message);
   }
 
   @Test
@@ -130,8 +132,8 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"status\":\"SUCCESS\",\"cacheResult\":\"MISS\",\"buildRule\":{\"type\":" +
-        "{\"name\":\"java_library\",\"testRule\":false},\"name\":\"//fake:rule\"},\"type\":" +
-        "\"BuildRuleFinished\"}", message);
+        "{\"name\":\"java_library\",\"testRule\":false},\"name\":\"//fake:rule\"}," +
+        "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleFinished\"}", message);
   }
 
   @Test
@@ -180,10 +182,12 @@ public class EventSerializationTest {
 
   private BuildRule generateFakeBuildRule() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
-    return new FakeBuildRule(BuildRuleType.JAVA_LIBRARY,
+    FakeBuildRule result = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY,
         buildTarget,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
+    result.setRuleKey(new RuleKey("aaaa"));
+    return result;
   }
 
   private TestResults generateFakeTestResults() {
