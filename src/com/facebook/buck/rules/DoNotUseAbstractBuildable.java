@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
  * {@link AbstractBuildable}:
  * <ol>
  *   <li>Change the class the rule extends.</li>
- *   <li>Modifying its Builder to extend AbstractBuilder.Builder (this is important!)</li>
+ *   <li>Modifying its Builder to extend AbstractBuildable.Builder (this is important!)</li>
  *   <li>Fix compilation errors</li>
  *   <li>Check for usages in the buck code base (particularly instanceof checks and casts)</li>
  *   <li>...</li>

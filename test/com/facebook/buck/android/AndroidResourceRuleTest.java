@@ -41,7 +41,7 @@ public class AndroidResourceRuleTest {
 
   @Test
   public void testGetInputsToCompareToOutput() {
-    // Create an android_library rule with all sorts of input files that it depends on. If any of
+    // Create an android_resource rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(

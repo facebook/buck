@@ -63,6 +63,8 @@ public interface Buildable {
    * {@link #getBuildSteps(BuildContext, BuildableContext)} method. The use of this method should be
    * restricted to things like {@code buck targets --show_output}.
    *
+   * If the {@link Buildable} outputs multiple files, this returns null.
+   *
    * @return the relative path to the primary output of the build rule. If non-null, this path must
    *     identify a single file (as opposed to a directory).
    */

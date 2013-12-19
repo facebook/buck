@@ -17,9 +17,11 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -32,6 +34,13 @@ public class FakeBuildContext {
 
   /** Utility class: do not instantiate. */
   private FakeBuildContext() {}
+
+  /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
+  public static BuildContext NOOP_CONTEXT = newBuilder(new FakeProjectFilesystem())
+      .setDependencyGraph(new DependencyGraph(new MutableDirectedGraph<BuildRule>()))
+      .setJavaPackageFinder(new FakeJavaPackageFinder())
+      .setArtifactCache(new NoopArtifactCache())
+      .build();
 
   /**
    * User still needs to invoke {@link BuildContext.Builder#setDependencyGraph(DependencyGraph)} and
