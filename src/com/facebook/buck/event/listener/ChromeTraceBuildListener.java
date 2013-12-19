@@ -178,17 +178,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   public void ruleStarted(BuildRuleEvent.Started started) {
     BuildRule buildRule = started.getBuildRule();
 
-    String ruleKey;
-    try {
-      ruleKey = buildRule.getRuleKey().toString();
-    } catch (IOException e) {
-      ruleKey = "INACCESSIBLE: " + e.getMessage();
-    }
-
     writeChromeTraceEvent("buck",
         buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of("rule_key", ruleKey),
+        ImmutableMap.<String, String>of("rule_key", started.getRuleKeySafe()),
         started);
   }
 

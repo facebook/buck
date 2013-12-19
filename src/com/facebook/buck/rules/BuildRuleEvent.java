@@ -59,6 +59,19 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     return rule.hashCode();
   }
 
+  /**
+   * @return The string representation of the rulekey or the error text.
+   */
+  public String getRuleKeySafe() {
+    String ruleKey;
+    try {
+      ruleKey = rule.getRuleKey().toString();
+    } catch (IOException e) {
+      ruleKey = "INACCESSIBLE: " + e.getMessage();
+    }
+    return ruleKey;
+  }
+
   public static Started started(BuildRule rule) {
     return new Started(rule);
   }
