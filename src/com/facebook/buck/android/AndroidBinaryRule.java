@@ -156,7 +156,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final boolean useAndroidProguardConfigWithOptimizations;
   private final Optional<SourcePath> proguardConfig;
   private final ResourceCompressionMode resourceCompressionMode;
-  private final ImmutableSet<String> primaryDexSubstrings;
+  private final ImmutableSet<String> primaryDexPatterns;
   private final long linearAllocHardLimit;
 
   /**
@@ -199,7 +199,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       boolean useAndroidProguardConfigWithOptimizations,
       Optional<SourcePath> proguardConfig,
       ResourceCompressionMode resourceCompressionMode,
-      Set<String> primaryDexSubstrings,
+      Set<String> primaryDexPatterns,
       long linearAllocHardLimit,
       Optional<SourcePath> primaryDexClassesFile,
       Set<TargetCpuType> cpuFilters,
@@ -221,7 +221,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
-    this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
+    this.primaryDexPatterns = ImmutableSet.copyOf(primaryDexPatterns);
     this.linearAllocHardLimit = linearAllocHardLimit;
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.outputGenDirectory = String.format("%s/%s",
@@ -264,7 +264,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
         .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
         .set("resourceCompressionMode", resourceCompressionMode.toString())
-        .set("primaryDexSubstrings", primaryDexSubstrings)
+        .set("primaryDexPatterns", primaryDexPatterns)
         .set("linearAllocHardLimit", linearAllocHardLimit)
         .set("primaryDexClassesFile", primaryDexClassesFile.transform(SourcePath.TO_REFERENCE))
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
@@ -683,7 +683,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(new PreDexMergeStep(dexFilesToMerge,
         dexWithClassesForRDotJava,
         primaryDexPath,
-        primaryDexSubstrings,
+        primaryDexPatterns,
         Paths.get(secondaryDexMetadataDir, "metadata.txt"),
         secondaryDexJarFilesDir,
         dexSplitMode.getDexStore(),
@@ -952,7 +952,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           secondaryZipDir,
           "secondary-%d.jar",
           proguardMappingFile,
-          primaryDexSubstrings,
+          primaryDexPatterns,
           primaryDexClassesFile.transform(sourcePathResolver),
           dexSplitMode.getDexSplitStrategy(),
           dexSplitMode.getDexStore(),
@@ -1029,8 +1029,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return useAndroidProguardConfigWithOptimizations;
   }
 
-  ImmutableSet<String> getPrimaryDexSubstrings() {
-    return primaryDexSubstrings;
+  ImmutableSet<String> getPrimaryDexPatterns() {
+    return primaryDexPatterns;
   }
 
   long getLinearAllocHardLimit() {
@@ -1077,7 +1077,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
-    private ImmutableSet.Builder<String> primaryDexSubstrings = ImmutableSet.builder();
+    private ImmutableSet.Builder<String> primaryDexPatterns = ImmutableSet.builder();
     private long linearAllocHardLimit = 0;
     private Optional<SourcePath> primaryDexClassesFile = Optional.absent();
     private FilterResourcesStep.ResourceFilter resourceFilter = ResourceFilter.EMPTY_FILTER;
@@ -1166,7 +1166,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           useAndroidProguardConfigWithOptimizations,
           proguardConfig,
           resourceCompressionMode,
-          primaryDexSubstrings.build(),
+          primaryDexPatterns.build(),
           linearAllocHardLimit,
           primaryDexClassesFile,
           cpuFilters.build(),
@@ -1254,8 +1254,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       return this;
     }
 
-    public Builder addPrimaryDexSubstrings(Iterable<String> primaryDexSubstrings) {
-      this.primaryDexSubstrings.addAll(primaryDexSubstrings);
+    public Builder addPrimaryDexPatterns(Iterable<String> primaryDexPatterns) {
+      this.primaryDexPatterns.addAll(primaryDexPatterns);
       return this;
     }
 

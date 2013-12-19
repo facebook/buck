@@ -64,7 +64,7 @@ public class PreDexMergeStepTest {
   private static final Path secondaryDexMetadataTxt =
       Paths.get("buck-out/gen/app/__app_metadata.txt");
 
-  private static final ImmutableSet<String> DEFAULT_PRIMARY_DEX_SUBSTRINGS_FOR_TEST =
+  private static final ImmutableSet<String> DEFAULT_PRIMARY_DEX_PATTERNS_FOR_TEST =
       ImmutableSet.of("com/example/init/Init");
 
   private static final ImmutableList<DexWithClasses> SAMPLE_DEX_FILES_TO_MERGE = ImmutableList.of(
@@ -355,8 +355,8 @@ public class PreDexMergeStepTest {
 
   /**
    * Creates a new {@link PreDexMergeStep} with the specified parameters. The new
-   * {@link PreDexMergeStep} will use {@link #DEFAULT_PRIMARY_DEX_SUBSTRINGS_FOR_TEST} for the
-   * {@code primaryDexSubstrings} param, and
+   * {@link PreDexMergeStep} will use {@link #DEFAULT_PRIMARY_DEX_PATTERNS_FOR_TEST} for the
+   * {@code primaryDexPattern} param, and
    * {@link PreDexMergeStep#createStepRunner(ExecutionContext)} will return {@link #stepRunner}.
    */
   private PreDexMergeStep createPreDexMergeStep(ImmutableList<DexWithClasses> dexFilesToMerge,
@@ -373,7 +373,7 @@ public class PreDexMergeStepTest {
         dexFilesToMerge,
         /* dexWithClassesForRDotJava */ Optional.of(rDotJavaDex),
         primaryDexPath,
-        DEFAULT_PRIMARY_DEX_SUBSTRINGS_FOR_TEST,
+        DEFAULT_PRIMARY_DEX_PATTERNS_FOR_TEST,
         secondaryDexMetadataTxt,
         secondaryDexJarFilesDir,
         dexStore,

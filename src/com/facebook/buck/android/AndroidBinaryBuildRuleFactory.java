@@ -106,9 +106,9 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
       builder.setResourceCompressionMode(resourceCompression.get());
     }
 
-    // primary_dex_substrings
-    List<String> primaryDexSubstrings = params.getOptionalListAttribute("primary_dex_substrings");
-    builder.addPrimaryDexSubstrings(primaryDexSubstrings);
+    // primary_dex_patterns
+    List<String> primaryDexPatterns = params.getOptionalListAttribute("primary_dex_patterns");
+    builder.addPrimaryDexPatterns(primaryDexPatterns);
 
     // linear_alloc_hard_limit
     long linearAllocHardLimit = params.getRequiredLongAttribute("linear_alloc_hard_limit");

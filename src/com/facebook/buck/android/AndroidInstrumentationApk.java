@@ -87,7 +87,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getResourceCompressionMode(),
-        apkUnderTest.getPrimaryDexSubstrings(),
+        apkUnderTest.getPrimaryDexPatterns(),
         apkUnderTest.getLinearAllocHardLimit(),
         apkUnderTest.getPrimaryDexClassesFile(),
         apkUnderTest.getCpuFilters(),

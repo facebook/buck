@@ -78,7 +78,7 @@ public class SplitZipStep implements Step {
   private final String secondaryJarDir;
   private final String secondaryJarPattern;
   private final Optional<Path> proguardMappingFile;
-  private final ImmutableSet<String> primaryDexSubstrings;
+  private final ImmutableSet<String> primaryDexPatterns;
   private final Optional<Path> primaryDexClassesFile;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
   private final DexStore dexStore;
@@ -96,7 +96,7 @@ public class SplitZipStep implements Step {
    *     be empty if no secondary jar files are needed.
    * @param secondaryJarPattern Filename pattern for secondary jar files.  Pattern contains one %d
    *     argument representing the enumerated secondary zip count (starting at 1).
-   * @param primaryDexSubstrings Set of substrings that, when matched, will cause individual input
+   * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output).
    * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter} will be used. Also,
@@ -109,7 +109,7 @@ public class SplitZipStep implements Step {
       String secondaryJarDir,
       String secondaryJarPattern,
       Optional<Path> proguardMappingFile,
-      Set<String> primaryDexSubstrings,
+      Set<String> primaryDexPatterns,
       Optional<Path> primaryDexClassesFile,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
@@ -122,7 +122,7 @@ public class SplitZipStep implements Step {
     this.secondaryJarDir = Preconditions.checkNotNull(secondaryJarDir);
     this.secondaryJarPattern = Preconditions.checkNotNull(secondaryJarPattern);
     this.proguardMappingFile = Preconditions.checkNotNull(proguardMappingFile);
-    this.primaryDexSubstrings = ImmutableSet.copyOf(primaryDexSubstrings);
+    this.primaryDexPatterns = ImmutableSet.copyOf(primaryDexPatterns);
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.dexStore = Preconditions.checkNotNull(dexStore);
@@ -199,7 +199,7 @@ public class SplitZipStep implements Step {
           return true;
         }
 
-        for (String substr : SplitZipStep.this.primaryDexSubstrings) {
+        for (String substr : SplitZipStep.this.primaryDexPatterns) {
           if (internalClassName.contains(substr)) {
             return true;
           }

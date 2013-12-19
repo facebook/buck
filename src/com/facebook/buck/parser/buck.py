@@ -422,7 +422,7 @@ def android_binary(
       use_android_proguard_config_with_optimizations=False,
       proguard_config=None,
       resource_compression=None,
-      primary_dex_substrings=None,
+      primary_dex_patterns=None,
       primary_dex_classes_file=None,
       # By default, assume we have 5MB of linear alloc,
       # 1MB of which is taken up by the framework, so that leaves 4MB.
@@ -451,7 +451,7 @@ def android_binary(
         use_android_proguard_config_with_optimizations,
     'proguard_config' : proguard_config,
     'resource_compression' : resource_compression,
-    'primary_dex_substrings' : primary_dex_substrings,
+    'primary_dex_patterns' : primary_dex_patterns,
     'primary_dex_classes_file' : primary_dex_classes_file,
     'linear_alloc_hard_limit' : linear_alloc_hard_limit,
     'resource_filter' : resource_filter,
