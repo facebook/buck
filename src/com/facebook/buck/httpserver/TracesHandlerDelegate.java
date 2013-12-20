@@ -16,10 +16,8 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyListData;
 import com.google.template.soy.data.SoyMapData;
@@ -28,11 +26,8 @@ import org.eclipse.jetty.server.Request;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,18 +52,12 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
   private static final Pattern TRACE_FILE_NAME_PATTERN = Pattern.compile(
       "build\\.([0-9a-zA-Z]+)\\.trace");
   private static final String TRACE_TO_IGNORE = "build.trace";
-  private static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-    @Override
-    protected DateFormat initialValue() {
-      return new SimpleDateFormat("EEE, MMM d h:mm a");
-    }
-  };
 
-  private final ProjectFilesystem projectFilesystem;
+  private final TracesHelper tracesHelper;
 
-  TracesHandlerDelegate(ProjectFilesystem projectFilesystem) {
+  TracesHandlerDelegate(TracesHelper tracesHelper) {
     super(ImmutableSet.of("traces.soy"));
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.tracesHelper = tracesHelper;
   }
 
   @Override
@@ -83,7 +72,7 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   @VisibleForTesting
   SoyListData getTraces() {
-    File[] traceFiles = projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR);
+    File[] traceFiles = tracesHelper.listTraceFiles();
     Arrays.sort(traceFiles, SORT_BY_LAST_MODIFIED);
 
     SoyListData traces = new SoyListData();
@@ -101,17 +90,13 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
         trace.put("id", matcher.group(1));
       }
 
-      // TODO(mbolin): Read the args to `buck` out of the Chrome Trace. Then include them
-      // in the SoyMapData for the trace.
-
-      long lastModifiedTime = file.lastModified();
-      String dateTime;
-      if (lastModifiedTime != 0) {
-        dateTime = DATE_FORMAT.get().format(new Date(lastModifiedTime));
+      TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(file);
+      trace.put("dateTime", traceAttributes.getFormattedDateTime());
+      if (traceAttributes.getCommand().isPresent()) {
+        trace.put("command", traceAttributes.getCommand().get());
       } else {
-        dateTime = "";
+        trace.put("command", "");
       }
-      trace.put("dateTime", dateTime);
 
       traces.add(trace);
     }

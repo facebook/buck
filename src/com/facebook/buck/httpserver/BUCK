@@ -16,8 +16,8 @@ java_library(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//third-party/java/closure-templates:closure-templates',
+    '//third-party/java/gson:gson',
     '//third-party/java/jetty:jetty',
-    '//third-party/java/closure-templates:closure-templates',
   ],
   resources = glob(['*.soy']),
   visibility = [

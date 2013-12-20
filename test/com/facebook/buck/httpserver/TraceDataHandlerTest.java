@@ -84,7 +84,8 @@ public class TraceDataHandlerTest extends EasyMockSupport {
             return new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes());
           }
         });
-    TraceDataHandler traceDataHandler = new TraceDataHandler(projectFilesystem);
+    TraceDataHandler traceDataHandler = new TraceDataHandler(
+        new TracesHelper(projectFilesystem));
 
     replayAll();
     traceDataHandler.handle("/trace/abcdef",
@@ -124,7 +125,8 @@ public class TraceDataHandlerTest extends EasyMockSupport {
             return new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes());
           }
         });
-    TraceDataHandler traceDataHandler = new TraceDataHandler(projectFilesystem);
+    TraceDataHandler traceDataHandler = new TraceDataHandler(
+        new TracesHelper(projectFilesystem));
 
     replayAll();
     traceDataHandler.handle("/trace/abcdef?callback=my.callback",

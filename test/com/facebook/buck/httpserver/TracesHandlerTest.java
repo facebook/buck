@@ -19,8 +19,8 @@ package com.facebook.buck.httpserver;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.google.common.base.Optional;
 
 import org.easymock.EasyMockSupport;
 import org.eclipse.jetty.server.Request;
@@ -49,15 +49,23 @@ public class TracesHandlerTest extends EasyMockSupport {
     expect(d.lastModified()).andStubReturn(3000L);
     expect(d.getName()).andStubReturn("build.d.trace");
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR)).andReturn(
-        new File[] {a, b, c, d});
+    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    expect(tracesHelper.getTraceAttributesFor(a)).andReturn(
+        new TraceAttributes(Optional.of("buck build buck"), 1000L));
+    expect(tracesHelper.getTraceAttributesFor(b)).andReturn(
+        new TraceAttributes(Optional.of("buck test --all --code-coverage"), 4000L));
+    expect(tracesHelper.getTraceAttributesFor(c)).andReturn(
+        new TraceAttributes(Optional.<String>absent(), 2000L));
+    expect(tracesHelper.getTraceAttributesFor(d)).andReturn(
+        new TraceAttributes(Optional.of("buck test --all --code-coverage"), 3000L));
+
+    expect(tracesHelper.listTraceFiles()).andReturn(new File[] {a, b, c, d});
 
     Request baseRequest = createMock(Request.class);
 
     replayAll();
 
-    TracesHandlerDelegate delegate = new TracesHandlerDelegate(projectFilesystem);
+    TracesHandlerDelegate delegate = new TracesHandlerDelegate(tracesHelper);
     TemplateHandler tracesHandler = new TemplateHandler(delegate);
     String html = tracesHandler.createHtmlForResponse(baseRequest);
 
