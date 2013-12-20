@@ -30,8 +30,7 @@ a {
 }
 
 .row {
-  height: 14px;
-  padding: 6px 7px;
+  height: 18px;
 }
 
 .row-0 {
@@ -40,4 +39,12 @@ a {
 
 .row-1 {
   background-color: rgb(242, 242, 242);
+}
+
+th {
+  text-align: left;
+}
+
+th, td {
+  padding: 6px 4px;
 }

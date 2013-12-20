@@ -31,6 +31,7 @@ import java.io.IOException;
 
 public class TracesHandlerTest extends EasyMockSupport {
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
   public void testHandleGet() throws IOException {
     File a = createMock(File.class);
@@ -57,7 +58,7 @@ public class TracesHandlerTest extends EasyMockSupport {
     expect(tracesHelper.getTraceAttributesFor(c)).andReturn(
         new TraceAttributes(Optional.<String>absent(), 2000L));
     expect(tracesHelper.getTraceAttributesFor(d)).andReturn(
-        new TraceAttributes(Optional.of("buck test --all --code-coverage"), 3000L));
+        new TraceAttributes(Optional.of("buck test //test/com/facebook/buck/cli:cli"), 3000L));
 
     expect(tracesHelper.listTraceFiles()).andReturn(new File[] {a, b, c, d});
 
@@ -69,17 +70,23 @@ public class TracesHandlerTest extends EasyMockSupport {
     TemplateHandler tracesHandler = new TemplateHandler(delegate);
     String html = tracesHandler.createHtmlForResponse(baseRequest);
 
-    int indexB = html.indexOf("<a href=\"/trace/b\" target=\"_blank\">build.b.trace</a>");
+    int indexB = html.indexOf("<a href=\"/trace/b\" target=\"_blank\"><tt>build.b.trace</tt></a>");
     assertTrue(indexB > 0);
+    int indexBCommand = html.indexOf("buck test --all --code-coverage");
+    assertTrue(indexBCommand > 0);
 
-    int indexD = html.indexOf("<a href=\"/trace/d\" target=\"_blank\">build.d.trace</a>");
+    int indexD = html.indexOf("<a href=\"/trace/d\" target=\"_blank\"><tt>build.d.trace</tt></a>");
     assertTrue(indexD > indexB);
+    int indexDCommand = html.indexOf("buck test //test/com/facebook/buck/cli:cli");
+    assertTrue(indexDCommand > indexBCommand);
 
-    int indexC = html.indexOf("<a href=\"/trace/c\" target=\"_blank\">build.c.trace</a>");
+    int indexC = html.indexOf("<a href=\"/trace/c\" target=\"_blank\"><tt>build.c.trace</tt></a>");
     assertTrue(indexC > indexD);
 
-    int indexA = html.indexOf("<a href=\"/trace/a\" target=\"_blank\">build.a.trace</a>");
+    int indexA = html.indexOf("<a href=\"/trace/a\" target=\"_blank\"><tt>build.a.trace</tt></a>");
     assertTrue(indexA > indexC);
+    int indexACommand = html.indexOf("buck build buck");
+    assertTrue(indexACommand > indexDCommand);
 
     verifyAll();
   }

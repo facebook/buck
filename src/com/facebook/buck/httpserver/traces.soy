@@ -8,13 +8,29 @@
 
 <h1>Traces</h1>
 
-<div>
+<table cellspacing="0">
+  <tr>
+    <th>Time</th>
+    <th>Viewer</th>
+    <th>Command</th>
+  </tr>
+
   {foreach $trace in $traces}
-  <div class="row row-{index($trace) % 2}">
-    <a href="/trace/{$trace.id}" target="_blank">{$trace.name}</a> {$trace.dateTime}
-  </div>
+  <tr class="row row-{index($trace) % 2}">
+    <td>
+      {$trace.dateTime}
+    </td>
+    <td>
+      <a href="/trace/{$trace.id}" target="_blank"><tt>{$trace.name}</tt></a>
+    </td>
+    <td>
+      {if $trace.command}
+        <code>{$trace.command}</code>
+      {/if}
+    </td>
+  </tr>
   {/foreach}
-</div>
+</table>
 
 {call buck.footer /}
 {/template}
