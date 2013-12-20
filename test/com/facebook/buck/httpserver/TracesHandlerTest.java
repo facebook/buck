@@ -70,20 +70,20 @@ public class TracesHandlerTest extends EasyMockSupport {
     TemplateHandler tracesHandler = new TemplateHandler(delegate);
     String html = tracesHandler.createHtmlForResponse(baseRequest);
 
-    int indexB = html.indexOf("<a href=\"/trace/b\" target=\"_blank\"><tt>build.b.trace</tt></a>");
+    int indexB = html.indexOf("<a href=\"/trace/b\"><tt>build.b.trace</tt></a>");
     assertTrue(indexB > 0);
     int indexBCommand = html.indexOf("buck test --all --code-coverage");
     assertTrue(indexBCommand > 0);
 
-    int indexD = html.indexOf("<a href=\"/trace/d\" target=\"_blank\"><tt>build.d.trace</tt></a>");
+    int indexD = html.indexOf("<a href=\"/trace/d\"><tt>build.d.trace</tt></a>");
     assertTrue(indexD > indexB);
     int indexDCommand = html.indexOf("buck test //test/com/facebook/buck/cli:cli");
     assertTrue(indexDCommand > indexBCommand);
 
-    int indexC = html.indexOf("<a href=\"/trace/c\" target=\"_blank\"><tt>build.c.trace</tt></a>");
+    int indexC = html.indexOf("<a href=\"/trace/c\"><tt>build.c.trace</tt></a>");
     assertTrue(indexC > indexD);
 
-    int indexA = html.indexOf("<a href=\"/trace/a\" target=\"_blank\"><tt>build.a.trace</tt></a>");
+    int indexA = html.indexOf("<a href=\"/trace/a\"><tt>build.a.trace</tt></a>");
     assertTrue(indexA > indexC);
     int indexACommand = html.indexOf("buck build buck");
     assertTrue(indexACommand > indexDCommand);
