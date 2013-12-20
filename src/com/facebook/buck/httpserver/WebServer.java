@@ -100,9 +100,11 @@ public class WebServer {
     ResourceHandler resourceHandler = new ResourceHandler();
     resourceHandler.setResourceBase(staticContentDirectory);
     contextPathToHandler.put(STATIC_CONTEXT_PATH, resourceHandler);
-    contextPathToHandler.put(TRACE_CONTEXT_PATH, new TemplateHandler(new TraceHandlerDelegate()));
 
+    // Handlers for traces.
     TracesHelper tracesHelper = new TracesHelper(projectFilesystem);
+    contextPathToHandler.put(TRACE_CONTEXT_PATH, new TemplateHandler(
+        new TraceHandlerDelegate(tracesHelper)));
     contextPathToHandler.put(TRACES_CONTEXT_PATH, new TemplateHandler(
         new TracesHandlerDelegate(tracesHelper)));
     contextPathToHandler.put(TRACE_DATA_CONTEXT_PATH, new TraceDataHandler(tracesHelper));

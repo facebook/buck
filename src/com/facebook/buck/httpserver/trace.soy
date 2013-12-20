@@ -1,6 +1,8 @@
 {namespace buck}
 
 /**
+ * @param command
+ * @param dateTime
  * @param traceId
  */
 {template .trace}
@@ -13,7 +15,12 @@
 <link type="text/css" rel="stylesheet" href="/static/trace_viewer.css">
 
 <div>
-  <a href="/traces">All Traces</a>
+  {if $command}
+    Trace for <tt><strong>{$command}</strong></tt> from {$dateTime}.
+    &nbsp;
+  {/if}
+  
+  (<a href="/traces">All Traces</a>)
 </div>
 
 <script src="/static/trace_viewer.js"></script>

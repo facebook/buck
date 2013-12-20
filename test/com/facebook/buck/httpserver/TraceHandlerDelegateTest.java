@@ -21,6 +21,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.google.common.base.Optional;
+
 import org.easymock.EasyMockSupport;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -51,7 +54,10 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
-    Handler traceHandler = new TemplateHandler(new TraceHandlerDelegate());
+    TracesHelper tracesHelper = createMock(TracesHelper.class);
+    expect(tracesHelper.getTraceAttributesFor("abcdef")).andReturn(
+        new TraceAttributes(Optional.of("buck build buck"), 2000L));
+    Handler traceHandler = new TemplateHandler(new TraceHandlerDelegate(tracesHelper));
 
     replayAll();
     traceHandler.handle("/trace/abcdef",
@@ -61,16 +67,22 @@ public class TraceHandlerDelegateTest extends EasyMockSupport {
     verifyAll();
 
     String expectedScriptTag = "<script src=\"/tracedata/abcdef?callback=onTraceLoaded\">";
-    assertThat(stringWriter.toString(), containsString(expectedScriptTag));
+    String html = stringWriter.toString();
+    assertThat(html, containsString(expectedScriptTag));
+    assertThat(html, containsString("buck build buck"));
   }
 
   @Test
   public void testMalformedPathInfoReturnsError() throws IOException {
     Request baseRequest = createMock(Request.class);
     expect(baseRequest.getPathInfo()).andReturn("/..upADirectory");
+
+    // Nothing on the helper should be invoked because the handler will error-out first.
+    TracesHelper tracesHelper = createMock(TracesHelper.class);
+
     replayAll();
 
-    TraceHandlerDelegate traceHandler = new TraceHandlerDelegate();
+    TraceHandlerDelegate traceHandler = new TraceHandlerDelegate(tracesHelper);
     assertNull(traceHandler.getDataForRequest(baseRequest));
 
     verifyAll();

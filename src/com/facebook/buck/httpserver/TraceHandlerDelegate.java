@@ -16,6 +16,8 @@
 
 package com.facebook.buck.httpserver;
 
+import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
 
@@ -31,8 +33,11 @@ import javax.annotation.Nullable;
  */
 public class TraceHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
-  TraceHandlerDelegate() {
+  private final TracesHelper tracesHelper;
+
+  TraceHandlerDelegate(TracesHelper tracesHelper) {
     super(ImmutableSet.of("trace.soy"));
+    this.tracesHelper = Preconditions.checkNotNull(tracesHelper);
   }
 
   @Override
@@ -45,11 +50,22 @@ public class TraceHandlerDelegate extends AbstractTemplateHandlerDelegate {
   public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
     String path = baseRequest.getPathInfo();
     Matcher matcher = TraceDataHandler.ID_PATTERN.matcher(path);
-    if (matcher.matches()) {
-      String id = matcher.group(1);
-      return new SoyMapData("traceId", id);
-    } else {
+    if (!matcher.matches()) {
       return null;
     }
+
+    SoyMapData templateData = new SoyMapData();
+
+    String id = matcher.group(1);
+    templateData.put("traceId", id);
+
+    // Read the args to `buck` out of the Chrome Trace.
+    TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(id);
+    templateData.put("dateTime", traceAttributes.getFormattedDateTime());
+    if (traceAttributes.getCommand().isPresent()) {
+      templateData.put("command", traceAttributes.getCommand().get());
+    }
+
+    return templateData;
   }
 }
