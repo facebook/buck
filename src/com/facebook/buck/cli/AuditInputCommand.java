@@ -24,8 +24,12 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultimap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -76,7 +80,40 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
       return 1;
     }
 
+    if (options.shouldGenerateJsonOutput()) {
+      return printJsonInputs(partialGraph);
+    }
     return printInputs(partialGraph);
+  }
+
+  @VisibleForTesting
+  int printJsonInputs(PartialGraph partialGraph) throws IOException {
+    final Multimap<String, String> targetInputs = TreeMultimap.create();
+
+    new AbstractBottomUpTraversal<BuildRule, Void>(partialGraph.getDependencyGraph()) {
+
+      @Override
+      public void visit(BuildRule rule) {
+        for (Path input : rule.getInputs()) {
+          // TODO (t3437464) remove `toString` once Jackson supports serializing Path instances
+          targetInputs.put(rule.getFullyQualifiedName(), input.toString());
+        }
+      }
+
+      @Override
+      public Void getResult() {
+       return null;
+      }
+
+    }.traverse();
+    ObjectMapper mapper = new ObjectMapper();
+
+    // Note: using `asMap` here ensures that the keys are sorted
+    mapper.writeValue(
+        console.getStdOut(),
+        targetInputs.asMap());
+
+    return 0;
   }
 
   private int printInputs(final PartialGraph partialGraph) {
