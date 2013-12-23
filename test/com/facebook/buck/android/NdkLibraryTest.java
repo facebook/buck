@@ -35,6 +35,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -43,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -101,11 +101,15 @@ public class NdkLibraryTest {
     expect(projectFilesystem.getAbsolutifier()).andReturn(pathTransform);
     Path binDir = Paths.get(BuckConstant.BIN_DIR, "java/src/com/facebook/base/__libbase/libs");
     expect(projectFilesystem.resolve(binDir)).andReturn(Paths.get("/foo/" + binDir));
-    File ndkDir = createMock(File.class);
-    expect(executionContext.getNdkRoot()).andReturn(Optional.of(ndkDir));
-    expect(ndkDir.getAbsolutePath()).andReturn("/ndk-r8b");
+    Path ndkDir = createMock(Path.class);
+    AndroidPlatformTarget mockPlatformTarget = createMock(AndroidPlatformTarget.class);
+    expect(mockPlatformTarget.getNdkDirectory()).andReturn(Optional.of(ndkDir));
+    expect(executionContext.getAndroidPlatformTarget()).andReturn(mockPlatformTarget);
+    Path ndkBuildDir = createMock(Path.class);
+    expect(ndkDir.resolve("ndk-build")).andReturn(ndkBuildDir);
+    expect(ndkBuildDir.toAbsolutePath()).andReturn(Paths.get("/ndk-r8b/ndk-build"));
 
-    replay(executionContext, projectFilesystem, ndkDir);
+    replay(executionContext, projectFilesystem, mockPlatformTarget, ndkDir, ndkBuildDir);
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(

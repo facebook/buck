@@ -26,7 +26,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -65,7 +64,7 @@ public class NdkBuildStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    Optional<File> ndkRoot = context.getNdkRoot();
+    Optional<Path> ndkRoot = context.getAndroidPlatformTarget().getNdkDirectory();
     if (!ndkRoot.isPresent()) {
       throw new HumanReadableException("Must define a local.properties file"
           + " with a property named 'ndk.dir' that points to the absolute path of"
@@ -74,7 +73,7 @@ public class NdkBuildStep extends ShellStep {
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(
-        ndkRoot.get().getAbsolutePath() + "/ndk-build",
+        ndkRoot.get().resolve("ndk-build").toAbsolutePath().toString(),
         "-j",
         Integer.toString(this.maxJobCount),
         "-C",

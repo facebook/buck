@@ -23,6 +23,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.NullFileHashCache;
@@ -48,11 +49,13 @@ class CommandRunnerParams {
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
+  private final AndroidDirectoryResolver androidDirectoryResolver;
 
   @VisibleForTesting
   CommandRunnerParams(
       Console console,
       ProjectFilesystem projectFilesystem,
+      AndroidDirectoryResolver androidDirectoryResolver,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
@@ -60,6 +63,7 @@ class CommandRunnerParams {
       Platform platform) {
     this(console,
         projectFilesystem,
+        androidDirectoryResolver,
         buildRuleTypes,
         artifactCacheFactory,
         eventBus,
@@ -80,6 +84,7 @@ class CommandRunnerParams {
   public CommandRunnerParams(
       Console console,
       ProjectFilesystem projectFilesystem,
+      AndroidDirectoryResolver androidDirectoryResolver,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
@@ -92,6 +97,7 @@ class CommandRunnerParams {
     this.eventBus = Preconditions.checkNotNull(eventBus);
     this.parser = Preconditions.checkNotNull(parser);
     this.platform = Preconditions.checkNotNull(platform);
+    this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
   }
 
   public Ansi getAnsi() {
@@ -124,6 +130,10 @@ class CommandRunnerParams {
 
   public BuckEventBus getBuckEventBus() {
     return eventBus;
+  }
+
+  public AndroidDirectoryResolver getAndroidDirectoryResolver() {
+    return androidDirectoryResolver;
   }
 
   public Platform getPlatform() {

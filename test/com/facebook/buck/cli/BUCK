@@ -44,9 +44,11 @@ java_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:environment',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/util:testutil',
   ],
   visibility = [
     'PUBLIC',

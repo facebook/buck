@@ -31,22 +31,31 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
 public class AndroidPlatformTargetTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
+  @Rule public TemporaryFolder projectRoot = new TemporaryFolder();
 
   @Test
   public void testCreateFromDefaultDirectoryStructure() {
     String name = "Example Inc.:Google APIs:16";
-    File androidSdkDir = new File("/home/android");
+    Path androidSdkDir = Paths.get("/home/android");
     String platformDirectoryPath = "platforms/android-16";
     Set<String> additionalJarPaths = ImmutableSet.of();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir),
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */"");
+
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
         .createFromDefaultDirectoryStructure(
-            name, androidSdkDir, platformDirectoryPath, additionalJarPaths);
+            name, androidDirectoryResolver, platformDirectoryPath, additionalJarPaths);
     assertEquals(name, androidPlatformTarget.getName());
-    assertEquals(ImmutableList.of(java.nio.file.Paths.get("/home/android/platforms/android-16/android.jar")),
+    assertEquals(ImmutableList.of(Paths.get("/home/android/platforms/android-16/android.jar")),
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(new File("/home/android/platforms/android-16/android.jar"),
         androidPlatformTarget.getAndroidJar());
@@ -58,17 +67,22 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getProguardConfig());
     assertEquals(new File("/home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
-    assertEquals(new File(androidSdkDir, "platform-tools/aapt"),
+    assertEquals(androidSdkDir.resolve("platform-tools/aapt").toFile(),
         androidPlatformTarget.getAaptExecutable());
-    assertEquals(new File(androidSdkDir, "platform-tools/aidl"),
+    assertEquals(androidSdkDir.resolve("platform-tools/aidl").toFile(),
         androidPlatformTarget.getAidlExecutable());
-    assertEquals(new File(androidSdkDir, "platform-tools/dx"),
+    assertEquals(androidSdkDir.resolve("platform-tools/dx").toFile(),
         androidPlatformTarget.getDxExecutable());
   }
 
   @Test
   public void testInstalledNewerBuildToolsViaOldUpgradePath() throws IOException {
     File androidSdkDir = tempDir.newFolder();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /** androidNdkDir */ Optional.<Path>absent(),
+            /** ndkVersion */"");
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromOldUpgradePath = new File(buildToolsDir, "17.0.0");
@@ -81,7 +95,7 @@ public class AndroidPlatformTargetTest {
 
     String platformId = "Google Inc.:Google APIs:17";
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
-        AndroidPlatformTarget.getTargetForId(platformId, androidSdkDir);
+        AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
 
     assertTrue(androidPlatformTargetOption.isPresent());
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
@@ -110,6 +124,11 @@ public class AndroidPlatformTargetTest {
   @Test
   public void testInstalledNewerBuildToolsViaFreshDownload() throws IOException {
     File androidSdkDir = tempDir.newFolder();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /** androidNdkDir */ Optional.<Path>absent(),
+            /** ndkVersion */"");
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromFreshDownload = new File(buildToolsDir, "android-4.2.2");
@@ -122,7 +141,7 @@ public class AndroidPlatformTargetTest {
 
     String platformId = "Google Inc.:Google APIs:17";
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
-        AndroidPlatformTarget.getTargetForId(platformId, androidSdkDir);
+        AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
 
     assertTrue(androidPlatformTargetOption.isPresent());
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
@@ -151,6 +170,11 @@ public class AndroidPlatformTargetTest {
   @Test
   public void testChoosesCorrectBuildToolsDirectory() throws IOException {
     File androidSdkDir = tempDir.newFolder();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /** androidNdkDir */ Optional.<Path>absent(),
+            /** ndkVersion */"");
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
@@ -167,7 +191,7 @@ public class AndroidPlatformTargetTest {
     new File(buildToolsDir, "16.0.0").mkdir();
 
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
-        AndroidPlatformTarget.getTargetForId("Google Inc.:Google APIs:17", androidSdkDir);
+        AndroidPlatformTarget.getTargetForId("Google Inc.:Google APIs:17", androidDirectoryResolver);
     assertTrue(androidPlatformTargetOption.isPresent());
 
     assertEquals(
@@ -180,9 +204,13 @@ public class AndroidPlatformTargetTest {
   public void testThrowsExceptionWhenAddOnsDirectoryIsMissing() throws IOException {
     File androidSdkDir = tempDir.newFolder();
     String platformId = "Google Inc.:Google APIs:17";
-
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /** androidNdkDir */ Optional.<Path>absent(),
+            /** ndkVersion */"");
     try {
-      AndroidPlatformTarget.getTargetForId(platformId, androidSdkDir);
+      AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(

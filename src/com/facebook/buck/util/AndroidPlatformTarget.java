@@ -59,6 +59,9 @@ public class AndroidPlatformTarget {
   private final File proguardJar;
   private final File proguardConfig;
   private final File optimizedProguardConfig;
+  private final Optional<String> ndkVersion;
+  private final Optional<Path> ndkDirectory;
+
 
   private AndroidPlatformTarget(
       String name,
@@ -72,7 +75,9 @@ public class AndroidPlatformTarget {
       File androidFrameworkIdlFile,
       File proguardJar,
       File proguardConfig,
-      File optimizedProguardConfig) {
+      File optimizedProguardConfig,
+      Optional<String> ndkVersion,
+      Optional<Path> ndkDirectory) {
     this.name = Preconditions.checkNotNull(name);
     this.androidJar = Preconditions.checkNotNull(androidJar);
     this.bootclasspathEntries = ImmutableList.copyOf(bootclasspathEntries);
@@ -85,6 +90,8 @@ public class AndroidPlatformTarget {
     this.proguardJar = Preconditions.checkNotNull(proguardJar);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.optimizedProguardConfig = Preconditions.checkNotNull(optimizedProguardConfig);
+    this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
+    this.ndkDirectory = Preconditions.checkNotNull(ndkDirectory);
   }
 
   public String getName() {
@@ -143,22 +150,30 @@ public class AndroidPlatformTarget {
     return optimizedProguardConfig;
   }
 
+  public Optional<String> getNdkVersion() {
+    return ndkVersion;
+  }
+
+  public Optional<Path> getNdkDirectory() {
+    return ndkDirectory;
+  }
+
   /**
    * @param platformId for the platform, such as "Google Inc.:Google APIs:16"
-   * @param androidSdkDir directory where the user's Android SDK is installed
    */
   public static Optional<AndroidPlatformTarget> getTargetForId(
       String platformId,
-      File androidSdkDir) {
+      AndroidDirectoryResolver androidDirectoryResolver) {
     Preconditions.checkNotNull(platformId);
-    Preconditions.checkNotNull(androidSdkDir);
+    Preconditions.checkNotNull(androidDirectoryResolver);
 
     Pattern platformPattern = Pattern.compile("Google Inc\\.:Google APIs:(\\d+)");
     Matcher platformMatcher = platformPattern.matcher(platformId);
     if (platformMatcher.matches()) {
       try {
         int apiLevel = Integer.parseInt(platformMatcher.group(1));
-        return Optional.of(new AndroidWithGoogleApisFactory().newInstance(androidSdkDir, apiLevel));
+        return Optional.of(
+            new AndroidWithGoogleApisFactory().newInstance(androidDirectoryResolver, apiLevel));
       } catch (NumberFormatException e) {
         return Optional.absent();
       }
@@ -167,12 +182,15 @@ public class AndroidPlatformTarget {
     }
   }
 
-  public static AndroidPlatformTarget getDefaultPlatformTarget(File androidSdkDir) {
-    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidSdkDir).get();
+  public static AndroidPlatformTarget getDefaultPlatformTarget(
+      AndroidDirectoryResolver androidDirectoryResolver) {
+    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver).get();
   }
 
   private static interface Factory {
-    public AndroidPlatformTarget newInstance(File androidSdkDir, int apiLevel);
+    public AndroidPlatformTarget newInstance(
+        AndroidDirectoryResolver androidDirectoryResolver,
+        int apiLevel);
   }
 
   /**
@@ -200,12 +218,14 @@ public class AndroidPlatformTarget {
   @VisibleForTesting
   static AndroidPlatformTarget createFromDefaultDirectoryStructure(
       String name,
-      File androidSdkDir,
+      AndroidDirectoryResolver androidDirectoryResolver,
       String platformDirectoryPath,
       Set<String> additionalJarPaths) {
+    File androidSdkDir = androidDirectoryResolver.findAndroidSdkDir().toFile();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException("Path to Android SDK must be absolute but was: %s.", androidSdkDir);
     }
+
     File platformDirectory = new File(androidSdkDir, platformDirectoryPath);
     File androidJar = new File(platformDirectory, "android.jar");
     LinkedList<Path> bootclasspathEntries = resolvePaths(androidSdkDir, additionalJarPaths);
@@ -253,6 +273,13 @@ public class AndroidPlatformTarget {
     File optimizedProguardConfig =
         new File(androidSdkDir, "tools/proguard/proguard-android-optimize.txt");
 
+
+    Optional<Path> ndkDirectory = androidDirectoryResolver.findAndroidNdkDir();
+    Optional<String> ndkVersion = Optional.absent();
+    if (ndkDirectory.isPresent()) {
+      ndkVersion = Optional.of(androidDirectoryResolver.getNdkVersion(ndkDirectory.get()));
+    }
+
     return new AndroidPlatformTarget(
         name,
         androidJar,
@@ -265,7 +292,9 @@ public class AndroidPlatformTarget {
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
-        optimizedProguardConfig);
+        optimizedProguardConfig,
+        ndkVersion,
+        ndkDirectory);
   }
 
   private static File pickNewestBuildToolsDir(Set<File> directories) {
@@ -318,8 +347,11 @@ public class AndroidPlatformTarget {
   private static class AndroidWithGoogleApisFactory implements Factory {
 
     @Override
-    public AndroidPlatformTarget newInstance(File androidSdkDir, int apiLevel) {
+    public AndroidPlatformTarget newInstance(
+        AndroidDirectoryResolver androidDirectoryResolver,
+        int apiLevel) {
       String addonPath = String.format("/add-ons/addon-google_apis-google-%d/libs/", apiLevel);
+      File androidSdkDir = androidDirectoryResolver.findAndroidSdkDir().toFile();
       File addonDirectory = new File(androidSdkDir.getPath() + addonPath);
       String[] addonFiles;
 
@@ -345,7 +377,7 @@ public class AndroidPlatformTarget {
 
       return createFromDefaultDirectoryStructure(
           String.format("Google Inc.:Google APIs:%d", apiLevel),
-          androidSdkDir,
+          androidDirectoryResolver,
           String.format("platforms/android-%d", apiLevel),
           additionalJarPaths);
     }

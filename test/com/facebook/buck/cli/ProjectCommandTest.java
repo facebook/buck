@@ -44,6 +44,7 @@ import com.facebook.buck.rules.ProjectConfigRule;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -170,6 +171,7 @@ public class ProjectCommandTest {
       super(new CommandRunnerParams(
           new TestConsole(),
           new ProjectFilesystem(new File(".")),
+          new FakeAndroidDirectoryResolver(),
           KnownBuildRuleTypes.getDefault(),
           new InstanceArtifactCacheFactory(artifactCache),
           BuckEventBusFactory.newInstance(),

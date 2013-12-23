@@ -27,6 +27,7 @@ java_test(
     '//src/com/facebook/buck/util:util',
   ],
   deps = [
+    ':testutil',
     '//lib:easymock',
     '//lib:guava',
     '//lib:hamcrest-core',

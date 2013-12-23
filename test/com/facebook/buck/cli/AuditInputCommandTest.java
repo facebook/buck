@@ -34,6 +34,7 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
@@ -67,6 +68,7 @@ public class AuditInputCommandTest {
     auditInputCommand = new AuditInputCommand(new CommandRunnerParams(
         console,
         projectFilesystem,
+        new FakeAndroidDirectoryResolver(),
         buildRuleTypes,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,

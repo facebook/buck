@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -51,6 +52,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
+  private final AndroidDirectoryResolver androidDirectoryResolver;
 
   /** This is constructed lazily. */
   @Nullable private T options;
@@ -67,6 +69,8 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.parser = Preconditions.checkNotNull(params.getParser());
     this.eventBus = Preconditions.checkNotNull(params.getBuckEventBus());
     this.platform = Preconditions.checkNotNull(params.getPlatform());
+    this.androidDirectoryResolver =
+        Preconditions.checkNotNull(params.getAndroidDirectoryResolver());
   }
 
   abstract T createOptions(BuckConfig buckConfig);
@@ -132,6 +136,10 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
    */
   protected CommandRunnerParams getCommandRunnerParams() {
     return commandRunnerParams;
+  }
+
+  public AndroidDirectoryResolver getAndroidDirectoryResolver() {
+    return androidDirectoryResolver;
   }
 
   public ProjectFilesystem getProjectFilesystem() {
@@ -210,8 +218,9 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
         .setProjectFilesystem(getProjectFilesystem())
         .setConsole(console)
         .setAndroidPlatformTarget(
-            options.findAndroidPlatformTarget(getProjectFilesystem(), dependencyGraph, getBuckEventBus()))
-        .setNdkRoot(options.findAndroidNdkDir(getProjectFilesystem()))
+            options.findAndroidPlatformTarget(androidDirectoryResolver,
+                dependencyGraph,
+                getBuckEventBus()))
         .setEventBus(eventBus)
         .setPlatform(platform)
         .build();

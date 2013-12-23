@@ -33,7 +33,9 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 
@@ -88,12 +90,14 @@ public class InstallCommandTest {
   private InstallCommand createInstallCommand() {
     Console console = new TestConsole();
     ProjectFilesystem filesystem = new ProjectFilesystem(new File("."));
+    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     return new InstallCommand(new CommandRunnerParams(
         console,
         filesystem,
+        androidDirectoryResolver,
         buildRuleTypes,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,

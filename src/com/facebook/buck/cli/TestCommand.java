@@ -318,6 +318,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Build build = options.createBuild(options.getBuckConfig(),
         graph,
         getProjectFilesystem(),
+        getAndroidDirectoryResolver(),
         artifactCache,
         console,
         getBuckEventBus(),

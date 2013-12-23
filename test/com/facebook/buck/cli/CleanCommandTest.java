@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 
@@ -101,6 +102,7 @@ public class CleanCommandTest extends EasyMockSupport {
     CommandRunnerParams params = new CommandRunnerParams(
         new TestConsole(),
         createMock(ProjectFilesystem.class),
+        new FakeAndroidDirectoryResolver(),
         createMock(KnownBuildRuleTypes.class),
         new InstanceArtifactCacheFactory(createMock(ArtifactCache.class)),
         createMock(BuckEventBus.class),

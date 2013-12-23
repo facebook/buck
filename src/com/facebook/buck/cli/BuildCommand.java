@@ -107,6 +107,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         options.getBuckConfig(),
         dependencyGraph,
         getProjectFilesystem(),
+        getAndroidDirectoryResolver(),
         artifactCache,
         console,
         getBuckEventBus(),

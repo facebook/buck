@@ -38,6 +38,7 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -636,5 +637,76 @@ public class BuckConfigTest {
     BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfig.createFromReader(reader, projectFilesystem, parser, Platform.detect());
+  }
+
+  public BuckConfig createNdkBuckConfig(String minNdkVersion, String maxNdkVersion)
+      throws IOException {
+    ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
+    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
+    EasyMock.replay(filesystem, parser);
+    ImmutableList.Builder<String> configStringBuilder = ImmutableList.builder();
+    configStringBuilder.add("[ndk]");
+    if (!Strings.isNullOrEmpty(minNdkVersion)) {
+      configStringBuilder.add("  min_version = " + minNdkVersion);
+    }
+    if (!Strings.isNullOrEmpty(maxNdkVersion)) {
+      configStringBuilder.add("  max_version = " + maxNdkVersion);
+    }
+    Reader reader = new StringReader(Joiner.on('\n').join(configStringBuilder.build()));
+    return BuckConfig.createFromReader(reader, filesystem, parser, Platform.detect());
+  }
+
+  @Test
+  public void testNdkExactVersion() throws IOException {
+    BuckConfig buckConfig = createNdkBuckConfig("r8", "r8");
+
+    buckConfig.validateNdkVersion(Paths.get("ndkDir"), "r8");
+  }
+
+  @Test
+  public void testNdkWideVersion() throws IOException {
+    BuckConfig buckConfig = createNdkBuckConfig("r8", "r8e");
+
+    buckConfig.validateNdkVersion(Paths.get("ndkDir"), "r8");
+  }
+
+  @Test
+  public void testNdkTooOldVersion() throws IOException {
+    BuckConfig buckConfig = createNdkBuckConfig("r8", "r8e");
+    Path pathToNdk = Paths.get("ndkDir");
+
+    try {
+      buckConfig.validateNdkVersion(pathToNdk, "r7");
+      fail("Should not be valid");
+    } catch (HumanReadableException e) {
+      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r7 from " + pathToNdk.toAbsolutePath(), e.getMessage());
+    }
+  }
+
+  @Test
+  public void testNdkTooNewVersion() throws IOException {
+    BuckConfig buckConfig = createNdkBuckConfig("r8", "r8e");
+    Path pathToNdk = Paths.get("ndkDir");
+
+    try {
+      buckConfig.validateNdkVersion(pathToNdk, "r9");
+      fail("Should not be valid");
+    } catch (HumanReadableException e) {
+      assertEquals("Supported NDK versions are between r8 and r8e but Buck is configured to use r9 from " + pathToNdk.toAbsolutePath(), e.getMessage());
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testNdkOnlyMinVersion() throws IOException {
+    BuckConfig buckConfig = createNdkBuckConfig("r8", "");
+    Path pathToNdk = Paths.get("ndkDir");
+
+    try {
+      buckConfig.validateNdkVersion(pathToNdk, "r42");
+      fail("Should not be valid");
+    } catch (HumanReadableException e) {
+      assertEquals("Either both min_version and max_version are provided or neither are", e.getMessage());
+    }
   }
 }

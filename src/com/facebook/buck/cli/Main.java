@@ -33,8 +33,10 @@ import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
@@ -69,6 +71,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
@@ -437,7 +440,9 @@ public final class Main {
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
-      KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getConfigured(config, new ProcessExecutor(console));
+      KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getConfigured(
+          config,
+          new ProcessExecutor(console));
       if (isDaemon) {
         parser = getParserFromDaemon(context, projectFilesystem, config, console, commandEvent);
 
@@ -452,11 +457,21 @@ public final class Main {
             createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
       }
 
+      AndroidDirectoryResolver androidDirectoryResolver =
+          new DefaultAndroidDirectoryResolver(projectFilesystem);
+      Optional<Path> ndkDir = androidDirectoryResolver.findAndroidNdkDir();
+      if (ndkDir.isPresent()) {
+        config.validateNdkVersion(
+            ndkDir.get(),
+            androidDirectoryResolver.getNdkVersion(ndkDir.get()));
+      }
+
       exitCode = executingCommand.execute(remainingArgs,
           config,
           new CommandRunnerParams(
               console,
               projectFilesystem,
+              androidDirectoryResolver,
               buildRuleTypes,
               artifactCacheFactory,
               buildEventBus,

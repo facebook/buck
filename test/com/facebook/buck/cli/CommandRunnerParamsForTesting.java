@@ -22,7 +22,9 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 
@@ -33,6 +35,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
   public CommandRunnerParamsForTesting(
       Console console,
       ProjectFilesystem projectFilesystem,
+      AndroidDirectoryResolver androidDirectoryResolver,
       KnownBuildRuleTypes buildRuleTypes,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
@@ -40,6 +43,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       Platform platform) {
     super(console,
         projectFilesystem,
+        androidDirectoryResolver,
         buildRuleTypes,
         artifactCacheFactory,
         eventBus,
@@ -57,6 +61,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
   public static class Builder {
 
     private ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
+    private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     private KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
     private ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(
         new NoopArtifactCache());
@@ -69,6 +74,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       return new CommandRunnerParamsForTesting(
           console,
           projectFilesystem,
+          androidDirectoryResolver,
           buildRuleTypes,
           artifactCacheFactory,
           eventBus,

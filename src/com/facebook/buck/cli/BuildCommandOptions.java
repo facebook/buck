@@ -22,6 +22,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -140,6 +141,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   Build createBuild(BuckConfig buckConfig,
       DependencyGraph graph,
       ProjectFilesystem projectFilesystem,
+      AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCache artifactCache,
       Console console,
       BuckEventBus eventBus,
@@ -149,10 +151,9 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
     return new Build(graph,
-        findAndroidSdkDir(projectFilesystem),
-        findAndroidNdkDir(projectFilesystem),
         targetDevice,
         projectFilesystem,
+        androidDirectoryResolver,
         artifactCache,
         getListeningExecutorService(),
         getBuckConfig().createDefaultJavaPackageFinder(),

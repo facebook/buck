@@ -39,7 +39,6 @@ public class ExecutionContext {
   private final ProjectFilesystem projectFilesystem;
   private final Console console;
   private final Optional<AndroidPlatformTarget> androidPlatformTarget;
-  private final Optional<File> ndkRoot;
   private final Optional<TargetDevice> targetDevice;
   private final long defaultTestTimeoutMillis;
   private final boolean isCodeCoverageEnabled;
@@ -53,7 +52,6 @@ public class ExecutionContext {
       ProjectFilesystem projectFilesystem,
       Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<File> ndkRoot,
       Optional<TargetDevice> targetDevice,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
@@ -65,7 +63,6 @@ public class ExecutionContext {
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.console = Preconditions.checkNotNull(console);
     this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
-    this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
     this.targetDevice = Preconditions.checkNotNull(targetDevice);
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
@@ -85,7 +82,6 @@ public class ExecutionContext {
         getProjectFilesystem(),
         new Console(console.getVerbosity(), newStdout, newStderr, console.getAnsi()),
         getAndroidPlatformTargetOptional(),
-        getNdkRoot(),
         getTargetDeviceOptional(),
         getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
@@ -166,10 +162,6 @@ public class ExecutionContext {
     return androidPlatformTarget;
   }
 
-  public Optional<File> getNdkRoot() {
-    return ndkRoot;
-  }
-
   public Optional<TargetDevice> getTargetDeviceOptional() {
     return targetDevice;
   }
@@ -207,7 +199,6 @@ public class ExecutionContext {
     private ProjectFilesystem projectFilesystem = null;
     private Console console = null;
     private Optional<AndroidPlatformTarget> androidPlatformTarget = Optional.absent();
-    private Optional<File> ndkRoot = Optional.absent();
     private Optional<TargetDevice> targetDevice = Optional.absent();
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
@@ -223,7 +214,6 @@ public class ExecutionContext {
           projectFilesystem,
           console,
           androidPlatformTarget,
-          ndkRoot,
           targetDevice,
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
@@ -237,7 +227,6 @@ public class ExecutionContext {
       setProjectFilesystem(executionContext.getProjectFilesystem());
       setConsole(executionContext.getConsole());
       setAndroidPlatformTarget(executionContext.getAndroidPlatformTargetOptional());
-      setNdkRoot(executionContext.getNdkRoot());
       setTargetDevice(executionContext.getTargetDeviceOptional());
       setDefaultTestTimeoutMillis(executionContext.getDefaultTestTimeoutMillis());
       setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled());
@@ -260,11 +249,6 @@ public class ExecutionContext {
 
     public Builder setAndroidPlatformTarget(Optional<AndroidPlatformTarget> androidPlatformTarget) {
       this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
-      return this;
-    }
-
-    public Builder setNdkRoot(Optional<File> ndkRoot) {
-      this.ndkRoot = Preconditions.checkNotNull(ndkRoot);
       return this;
     }
 

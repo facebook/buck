@@ -36,6 +36,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -45,8 +46,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -71,15 +72,13 @@ public class Build {
   private BuildContext buildContext;
 
   /**
-   * @param androidSdkDir where the user's Android SDK is installed.
    * @param buildDependencies How to include dependencies when building rules.
    */
   public Build(
       DependencyGraph dependencyGraph,
-      Optional<File> androidSdkDir,
-      Optional<File> ndkRoot,
       Optional<TargetDevice> targetDevice,
       ProjectFilesystem projectFilesystem,
+      AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCache artifactCache,
       ListeningExecutorService listeningExecutorService,
       JavaPackageFinder javaPackageFinder,
@@ -94,12 +93,11 @@ public class Build {
     this.dependencyGraph = Preconditions.checkNotNull(dependencyGraph);
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
-        dependencyGraph, androidSdkDir, eventBus);
+        dependencyGraph, androidDirectoryResolver, eventBus);
     this.executionContext = ExecutionContext.builder()
         .setProjectFilesystem(projectFilesystem)
         .setConsole(console)
         .setAndroidPlatformTarget(androidPlatformTarget)
-        .setNdkRoot(ndkRoot)
         .setTargetDevice(targetDevice)
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
@@ -133,18 +131,15 @@ public class Build {
   }
 
   public static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      DependencyGraph dependencyGraph, Optional<File> androidSdkDirOption, BuckEventBus eventBus) {
-    if (androidSdkDirOption.isPresent()) {
-      File androidSdkDir = androidSdkDirOption.get();
-      return findAndroidPlatformTarget(dependencyGraph, androidSdkDir, eventBus);
-    } else {
-      // If the Android SDK has not been specified, then no AndroidPlatformTarget can be found.
-      return Optional.<AndroidPlatformTarget>absent();
+      final DependencyGraph dependencyGraph,
+      final AndroidDirectoryResolver androidDirectoryResolver,
+      final BuckEventBus eventBus) {
+    Optional<Path> androidSdkDirOption =
+        androidDirectoryResolver.findAndroidSdkDirSafe();
+    if (!androidSdkDirOption.isPresent()) {
+      return Optional.absent();
     }
-  }
 
-  private static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      final DependencyGraph dependencyGraph, final File androidSdkDir, final BuckEventBus eventBus) {
     // Traverse the dependency graph to determine androidPlatformTarget.
     TraversableGraph<BuildRule> graph = dependencyGraph;
     AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>> traversal =
@@ -182,7 +177,7 @@ public class Build {
         Optional<AndroidPlatformTarget> result;
         if (androidPlatformTargetId != null) {
           Optional<AndroidPlatformTarget> target = AndroidPlatformTarget.getTargetForId(
-              androidPlatformTargetId, androidSdkDir);
+              androidPlatformTargetId, androidDirectoryResolver);
           if (target.isPresent()) {
             result = target;
           } else {
@@ -190,7 +185,7 @@ public class Build {
           }
         } else if (isEncounteredAndroidRuleInTraversal) {
           AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
-              .getDefaultPlatformTarget(androidSdkDir);
+              .getDefaultPlatformTarget(androidDirectoryResolver);
           eventBus.post(LogEvent.warning("No Android platform target specified. Using default: %s",
               androidPlatformTarget.getName()));
           result = Optional.of(androidPlatformTarget);
