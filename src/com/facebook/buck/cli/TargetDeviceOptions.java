@@ -26,6 +26,13 @@ import javax.annotation.Nullable;
 
 public class TargetDeviceOptions {
 
+  /**
+   * If this environment variable is set, the device with the specified serial
+   * number is targeted. The -s option overrides this.
+   */
+  @VisibleForTesting
+  static final String SERIAL_NUMBER_ENV = "ANDROID_SERIAL";
+
   @VisibleForTesting public static final String EMULATOR_MODE_SHORT_ARG = "-e";
   @VisibleForTesting static final String EMULATOR_MODE_LONG_ARG = "--emulator";
   @Option(
@@ -55,6 +62,28 @@ public class TargetDeviceOptions {
   @Nullable
   private String serialNumber;
 
+  public TargetDeviceOptions() {
+    this(getSerialNumberFromEnv());
+  }
+
+  @VisibleForTesting
+  TargetDeviceOptions(String serial) {
+    this.serialNumber = serial;
+  }
+
+  @VisibleForTesting
+  @Nullable
+  static String getSerialNumberFromEnv() {
+    String serial;
+    try {
+      serial = System.getenv(SERIAL_NUMBER_ENV);
+    } catch (SecurityException ex) {
+      serial = null;
+    }
+
+    return serial;
+  }
+    
   public boolean isEmulatorsOnlyModeEnabled() {
     return useEmulatorsOnlyMode;
   }

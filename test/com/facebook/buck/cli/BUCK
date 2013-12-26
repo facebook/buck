@@ -27,7 +27,7 @@ java_library(
 
 java_library(
   name = 'testutil',
-  srcs = glob(['**/*.java'], excludes = FAKE_BUCK_CONFIG_SRCS + STANDARD_TEST_SRCS),
+  srcs = glob(['*.java'], excludes = FAKE_BUCK_CONFIG_SRCS + STANDARD_TEST_SRCS),
   deps = [
     ':FakeBuckConfig',
     '//lib:args4j',

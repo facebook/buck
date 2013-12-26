@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.testdata;
+package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.cli.TargetDeviceOptions;
 import com.facebook.buck.step.TargetDevice;
 
 import org.junit.Test;
@@ -30,7 +29,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 public class TargetDeviceOptionsTest {
-
   @Test
   public void shouldReturnAnAbsentOptionalIfNoTargetDeviceOptionsSet() {
     TargetDeviceOptions options = buildOptions();
@@ -66,6 +64,25 @@ public class TargetDeviceOptionsTest {
 
     assertFalse(device.isEmulator());
     assertEquals("1234", device.getIdentifier());
+  }
+
+  @Test
+  public void serialFlagOverridesEnvironment() {
+    TargetDeviceOptions options = new TargetDeviceOptions("1234");
+
+    TargetDevice device = options.getTargetDeviceOptional().get();
+
+    assertEquals("1234", device.getIdentifier());
+
+    try {
+      new CmdLineParser(options).parseArgument("-s", "5678");
+    } catch (CmdLineException e) {
+      fail("Unable to parse arguments");
+    }
+
+    device = options.getTargetDeviceOptional().get();
+
+    assertEquals("5678", device.getIdentifier());
   }
 
   private TargetDeviceOptions buildOptions(String... args) {
