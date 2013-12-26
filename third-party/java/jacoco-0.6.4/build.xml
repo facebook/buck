@@ -14,7 +14,7 @@
 
   <target name="build">
     <mkdir dir="${jacoco.build.dir}" />
-    <javac srcdir="${jacoco.src.dir}" destdir="${jacoco.build.dir}" classpathref="jacoco.classpath" />
+    <javac srcdir="${jacoco.src.dir}" destdir="${jacoco.build.dir}" classpathref="jacoco.classpath" includeantruntime="false" />
   </target>
 
 </project>
