@@ -53,7 +53,6 @@ public final class BuildRuleFactoryParams {
   public final BuildTargetPatternParser buildTargetPatternParser;
   public final BuildTarget target;
   private final ParseContext buildFileParseContext;
-  private final ParseContext visibilityParseContext;
   private final boolean ignoreFileExistenceChecks;
   private final AbstractBuildRuleBuilderParams abstractBuildRuleFactoryParams;
 
@@ -90,7 +89,6 @@ public final class BuildRuleFactoryParams {
     this.buildTargetParser = buildTargetParser;
     this.buildTargetPatternParser = new BuildTargetPatternParser(filesystem);
     this.target = Preconditions.checkNotNull(target);
-    this.visibilityParseContext = ParseContext.forVisibilityArgument();
     this.buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
     this.ignoreFileExistenceChecks = ignoreFileExistenceChecks;
 
@@ -108,11 +106,6 @@ public final class BuildRuleFactoryParams {
   /** This is package-private so that only AbstractBuildRuleFactory can access it. */
   AbstractBuildRuleBuilderParams getAbstractBuildRuleFactoryParams() {
     return abstractBuildRuleFactoryParams;
-  }
-
-  public BuildTarget parseVisibilityTarget(String visibilityTarget)
-      throws NoSuchBuildTargetException {
-    return buildTargetParser.parse(visibilityTarget, visibilityParseContext);
   }
 
   /**
