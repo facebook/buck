@@ -1,0 +1,6 @@
+prebuilt_jar(
+  name = 'dd-plist',
+  binary_jar = 'dd-plist.jar',
+  source_jar = 'dd-plist-sources.jar',
+  visibility = [ 'PUBLIC' ],
+)

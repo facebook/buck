@@ -1,0 +1,12 @@
+java_test(
+  name = 'ddplist',
+  srcs = glob(['*.java']),
+  resources = glob(['test-files/*.plist']),
+  source_under_test = [
+    '//third-party/java/dd-plist:dd-plist',
+  ],
+  deps = [
+    '//lib:junit',
+    '//third-party/java/dd-plist:dd-plist',
+   ],
+)
