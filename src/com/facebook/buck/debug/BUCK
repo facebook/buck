@@ -1,0 +1,13 @@
+java_library(
+  name = 'debug',
+  srcs = [
+    'DebugLog.java',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

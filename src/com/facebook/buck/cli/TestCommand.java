@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.debug.DebugLog;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
@@ -104,6 +105,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   @Override
   int runCommandWithOptionsInternal(final TestCommandOptions options) throws IOException {
+    DebugLog.log("Beginning tests");
+
     // If the user asked to run all of the tests, use a special method for that that is optimized to
     // parse all of the build files and traverse the dependency graph to find all of the tests to
     // run.
@@ -112,6 +115,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         return runAllTests(options);
       } catch (BuildTargetException | BuildFileParseException e) {
         console.printBuildFailureWithoutStacktrace(e);
+        DebugLog.log("Failing test run due to runAllTests exception: " + e.toString());
         return 1;
       }
     }
@@ -120,6 +124,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     int exitCode = buildCommand.runCommandWithOptions(options);
     if (exitCode != 0) {
+      DebugLog.log("Failing test run due to build failure");
       return exitCode;
     }
 
@@ -315,6 +320,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getCommandRunnerParams().getPlatform());
     int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(build, console);
     if (exitCode != 0) {
+      DebugLog.log("Failing test run due to executeBuildAndPrintAnyFailuresToConsole failure");
       return exitCode;
     }
 
@@ -419,6 +425,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           }
         } catch (StepFailedException e) {
           console.printBuildFailureWithoutStacktrace(e);
+          DebugLog.log("Failing test run due to code coverage exception: " + e.toString());
           return 1;
         }
       }
@@ -497,9 +504,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       completedResults = uberFuture.get();
     } catch (InterruptedException e) {
       e.printStackTrace(getStdErr());
+      DebugLog.log("Failing test run due to interrupted exception: " + e.toString());
       return 1;
     } catch (ExecutionException e) {
       e.printStackTrace(getStdErr());
+      DebugLog.log("Failing test run due to execution exception: " + e.toString());
       return 1;
     }
 
@@ -531,6 +540,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                 defaultJavaPackageFinderOptional, getProjectFilesystem(), outputDirectory));
       } catch (StepFailedException e) {
         console.printBuildFailureWithoutStacktrace(e);
+        DebugLog.log("Failing test run due to coverage step exception: " + e.toString());
         return 1;
       }
     }
@@ -541,6 +551,17 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         return !results.isSuccess();
       }
     });
+
+    if (failures) {
+      StringBuilder message = new StringBuilder();
+      message.append("Failing test run due to failed tests:\n");
+      for (TestResults completedResult : completedResults) {
+        if (!completedResult.isSuccess()) {
+          message.append("  ").append(completedResult.getBuildTarget()).append("\n");
+        }
+      }
+      DebugLog.log(message.toString());
+    }
 
     return failures ? 1 : 0;
   }
