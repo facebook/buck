@@ -27,6 +27,7 @@ import com.facebook.buck.android.NdkLibraryBuildRuleFactory;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
@@ -109,6 +110,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ExportFileDescription());
     builder.register(new GenAidlDescription());
     builder.register(new IosLibraryDescription());
+    builder.register(new IosTestDescription());
     builder.register(new PythonLibraryDescription());
     builder.register(new XcodeNativeDescription());
 
