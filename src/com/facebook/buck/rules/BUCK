@@ -9,6 +9,7 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/parcelable:rules',
     '//src/com/facebook/buck/parser:project',
