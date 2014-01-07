@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -424,7 +423,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // The only remaining option is to build locally.
     try {
       executeCommandsNowThatDepsAreBuilt(context, onDiskBuildInfo, buildInfoRecorder);
-    } catch (IOException | StepFailedException e) {
+    } catch (Exception e) {
       return new BuildResult(e);
     }
 
@@ -506,7 +505,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   private void executeCommandsNowThatDepsAreBuilt(BuildContext context,
       OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder)
-      throws IOException, StepFailedException {
+      throws Exception {
     context.logBuildInfo("[BUILDING %s]", getFullyQualifiedName());
 
     // Get and run all of the commands.
