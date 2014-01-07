@@ -5,6 +5,7 @@ java_test(
     # The sample bytes are a class file. We use the ".properties" extension so that IJ will copy
     # the file to the output dir when compiling, allowing us to test in the IDE.
     'sample-bytes.properties',
+    'macbeth.properties',
   ],
   deps = [
     '//lib:easymock',

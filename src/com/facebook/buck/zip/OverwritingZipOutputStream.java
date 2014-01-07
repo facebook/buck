@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -80,7 +79,10 @@ public class OverwritingZipOutputStream extends CustomZipOutputStream {
     if (file.exists() && !file.delete()) {
       throw new ZipException("Unable to delete existing file: " + entry.getName());
     }
-    currentOutput = new BufferedOutputStream(new FileOutputStream(file));
+    // TODO(simons): Re-enable buffering. t3494093.
+    // Uncomment this and run ZipOutputStreamTest to see an interesting failure.
+//    currentOutput = new BufferedOutputStream(new FileOutputStream(file));
+    currentOutput = new FileOutputStream(file);
   }
 
   @Override
@@ -105,7 +107,10 @@ public class OverwritingZipOutputStream extends CustomZipOutputStream {
       EntryAccounting entry = mapEntry.getValue();
       entry.setOffset(currentOffset);
       currentOffset += entry.writeLocalFileHeader(delegate);
-      currentOffset += Files.copy(mapEntry.getKey().toPath(), delegate);
+
+      // Don't update the offset, as entry.close will write the file header, which contains the
+      // correct size of the output.
+      Files.copy(mapEntry.getKey().toPath(), delegate);
       currentOffset += entry.close(delegate);
     }
 

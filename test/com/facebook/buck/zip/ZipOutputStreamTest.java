@@ -18,6 +18,7 @@ package com.facebook.buck.zip;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Calendar.SEPTEMBER;
 import static java.util.zip.Deflater.BEST_COMPRESSION;
 import static java.util.zip.Deflater.NO_COMPRESSION;
@@ -25,6 +26,7 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -146,7 +148,6 @@ public class ZipOutputStreamTest {
 
     assertArrayEquals(expected, seen);
   }
-
 
   @Test
   public void shouldBeAbleToAddTwoZeroLengthFiles() throws IOException {
@@ -388,5 +389,59 @@ public class ZipOutputStreamTest {
 
     entry.setCompressionLevel(BEST_COMPRESSION);
     assertEquals(ZipEntry.DEFLATED, entry.getMethod());
+  }
+
+  @Test
+  public void canWriteContentToStoredZips() throws IOException {
+    File overwriteZip = File.createTempFile("overwrite", ".zip");
+
+    byte[] input = "I like cheese".getBytes(UTF_8);
+
+    try (
+      CustomZipOutputStream overwrite = ZipOutputStreams.newOutputStream(
+          overwriteZip, OVERWRITE_EXISTING);
+      CustomZipOutputStream appending = ZipOutputStreams.newOutputStream(output, APPEND_TO_ZIP)
+    ) {
+      CustomZipEntry entry = new CustomZipEntry("cheese.txt");
+      entry.setCompressionLevel(NO_COMPRESSION);
+      entry.setTime(0);
+      overwrite.putNextEntry(entry);
+      appending.putNextEntry(entry);
+      overwrite.write(input);
+      appending.write(input);
+    }
+  }
+
+  @Test
+  public void packingALargeFileShouldGenerateTheSameOutputWhenOverwritingAsWhenAppending()
+      throws IOException {
+    File reference = File.createTempFile("reference", ".zip");
+    String packageName = getClass().getPackage().getName().replace(".", "/");
+    URL sample = Resources.getResource(packageName + "/macbeth.properties");
+    byte[] input = Resources.toByteArray(sample);
+
+    try (
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING);
+        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
+    ) {
+      CustomZipEntry entry = new CustomZipEntry("macbeth.properties");
+      entry.setTime(System.currentTimeMillis());
+      out.putNextEntry(entry);
+      ref.putNextEntry(entry);
+      out.write(input);
+      ref.write(input);
+    }
+
+    byte[] seen = Files.readAllBytes(output.toPath());
+    byte[] expected = Files.readAllBytes(reference.toPath());
+
+    // Make sure the output is valid.
+    try (ZipInputStream in = new ZipInputStream(new FileInputStream(output))) {
+      ZipEntry entry = in.getNextEntry();
+      assertEquals("macbeth.properties", entry.getName());
+      assertNull(in.getNextEntry());
+    }
+
+    assertArrayEquals(expected, seen);
   }
 }
