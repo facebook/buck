@@ -34,7 +34,7 @@ public interface AbstractBuildRuleBuilderParams {
    * makes it easier to create a fake {@link AbstractBuildRuleBuilderParams} for testing that
    * could be implemented by {@link Functions#identity()}.
    */
-  public Function<String, Path> getPathRelativizer();
+  public Function<Path, Path> getPathRelativizer();
 
   public RuleKeyBuilderFactory getRuleKeyBuilderFactory();
 }

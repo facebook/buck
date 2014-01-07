@@ -62,14 +62,14 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
   private final InstallableBuildRule apk;
-  private final Function<String, Path> relativeToAbsolutePathFunction;
+  private final Function<Path, Path> relativeToAbsolutePathFunction;
 
   private ApkGenrule(BuildRuleParams buildRuleParams,
       List<String> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
-      Function<String, Path> relativeToAbsolutePathFunction,
+      Function<Path, Path> relativeToAbsolutePathFunction,
       InstallableBuildRule apk) {
     super(buildRuleParams,
         srcs,
@@ -129,8 +129,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(context, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
-    String apkAbsolutePath =
-        relativeToAbsolutePathFunction.apply(apk.getApkPath().toString()).toString();
+    String apkAbsolutePath = relativeToAbsolutePathFunction.apply(apk.getApkPath()).toString();
     environmentVariablesBuilder.put("APK", apkAbsolutePath);
   }
 

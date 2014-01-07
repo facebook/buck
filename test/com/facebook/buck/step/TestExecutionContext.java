@@ -48,8 +48,8 @@ public class TestExecutionContext {
         return path;
       }
       @Override
-      public Function<String, Path> getPathRelativizer() {
-        return IdentityPathRelativizer.getIdentityRelativizer();
+      public Function<Path, Path> getAbsolutifier() {
+        return IdentityPathRelativizer.getIdentityAbsolutifier();
       }
     })
     .build();

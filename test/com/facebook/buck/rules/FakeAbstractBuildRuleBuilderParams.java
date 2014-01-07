@@ -34,8 +34,8 @@ public class FakeAbstractBuildRuleBuilderParams implements AbstractBuildRuleBuil
   }
 
   @Override
-  public Function<String, Path> getPathRelativizer() {
-    return IdentityPathRelativizer.getIdentityRelativizer();
+  public Function<Path, Path> getPathRelativizer() {
+    return IdentityPathRelativizer.getIdentityAbsolutifier();
   }
 
   @Override

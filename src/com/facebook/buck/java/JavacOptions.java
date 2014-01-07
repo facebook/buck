@@ -19,15 +19,15 @@ package com.facebook.buck.java;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -64,14 +64,14 @@ public class JavacOptions {
   }
 
   public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
-      Function<String, Path> pathRelativizer) {
+      Function<Path, Path> pathRelativizer) {
     appendOptionsToList(optionsBuilder,
         pathRelativizer,
         AnnotationProcessingDataDecorators.identity());
   }
 
   public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
-      final Function<String, Path> pathRelativizer,
+      final Function<Path, Path> pathRelativizer,
       AnnotationProcessingDataDecorator decorator) {
     Preconditions.checkNotNull(optionsBuilder);
 
@@ -105,13 +105,13 @@ public class JavacOptions {
       // Create a path relativizer that relativizes all processor paths, except for
       // AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH, which will already be
       // an absolute path.
-      Function<String, Path> pathRelativizerThatOmitsAbiProcessor =
-          new Function<String, Path>() {
+      Function<Path, Path> pathRelativizerThatOmitsAbiProcessor =
+          new Function<Path, Path>() {
         @Override
-        public Path apply(String searchPathElement) {
+        public Path apply(Path searchPathElement) {
           if (AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH.equals(
               searchPathElement)) {
-            return Paths.get(searchPathElement);
+            return searchPathElement;
           } else {
             return pathRelativizer.apply(searchPathElement);
           }
@@ -121,8 +121,9 @@ public class JavacOptions {
       // Specify processorpath to search for processors.
       optionsBuilder.add("-processorpath",
           Joiner.on(':').join(
-              Iterables.transform(annotationProcessingData.getSearchPathElements(),
-                  pathRelativizerThatOmitsAbiProcessor)));
+              FluentIterable.from(annotationProcessingData.getSearchPathElements())
+                .transform(pathRelativizerThatOmitsAbiProcessor)
+                .transform(Functions.toStringFunction())));
 
       // Specify names of processors.
       if (!annotationProcessingData.getNames().isEmpty()) {

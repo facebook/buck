@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Iterator;
 
 public class AndroidBinaryGraphEnhancerTest {
@@ -43,10 +42,10 @@ public class AndroidBinaryGraphEnhancerTest {
   @Test
   public void testCreateDepsForPreDexing() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    Function<String, Path> pathRelativizer = new Function<String, Path>() {
+    Function<Path, Path> pathRelativizer = new Function<Path, Path>() {
       @Override
-      public Path apply(String input) {
-        return Paths.get(input);
+      public Path apply(Path input) {
+        return input;
       }
     };
     RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();

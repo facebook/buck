@@ -61,7 +61,7 @@ public class DescribedRuleTest {
         BuildTargetFactory.newInstance("//one:example"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of(),
-        IdentityPathRelativizer.getIdentityRelativizer(),
+        IdentityPathRelativizer.getIdentityAbsolutifier(),
         new FakeRuleKeyBuilderFactory()
     );
 

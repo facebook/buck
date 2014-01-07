@@ -63,6 +63,11 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
     ExecutionContext context = ExecutionContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
           @Override
+          public Function<Path, Path> getAbsolutifier() {
+            return IdentityPathRelativizer.getIdentityAbsolutifier();
+          }
+
+          @Override
           public Function<String, Path> getPathRelativizer() {
             return IdentityPathRelativizer.getIdentityRelativizer();
           }

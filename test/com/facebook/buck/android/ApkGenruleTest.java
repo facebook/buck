@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
+import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -72,11 +73,11 @@ import java.util.Map;
  */
 public class ApkGenruleTest {
 
-  private static final Function<String, Path> relativeToAbsolutePathFunction =
-      new Function<String, Path>() {
+  private static final Function<Path, Path> relativeToAbsolutePathFunction =
+      new Function<Path, Path>() {
         @Override
-        public Path apply(String path) {
-          return Paths.get("/opt/local/fbandroid", path);
+        public Path apply(Path path) {
+          return Paths.get("/opt/local/fbandroid").resolve(path);
         }
       };
 
@@ -215,7 +216,7 @@ public class ApkGenruleTest {
     ShellStep genruleCommand = (ShellStep) seventhStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(new ImmutableMap.Builder<String, String>()
-        .put("APK", relativeToAbsolutePathFunction.apply(GEN_DIR + "/fb4a.apk").toString())
+        .put("APK", relativeToAbsolutePathFunction.apply(GEN_PATH.resolve("fb4a.apk")).toString())
         .put("OUT", expectedApkOutput).build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
@@ -230,8 +231,8 @@ public class ApkGenruleTest {
         .setConsole(new TestConsole())
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
           @Override
-          public Function<String, Path> getPathRelativizer() {
-            return IdentityPathRelativizer.getIdentityRelativizer();
+          public Function<Path, Path> getAbsolutifier() {
+            return IdentityPathRelativizer.getIdentityAbsolutifier();
           }
 
           @Override

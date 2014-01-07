@@ -382,7 +382,7 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  public Function<String, Path> getPathRelativizer() {
+  public Function<Path, Path> getPathRelativizer() {
     return abstractBuildRuleFactoryParams.getPathRelativizer();
   }
 

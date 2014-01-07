@@ -22,13 +22,17 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 
@@ -46,7 +50,7 @@ import javax.annotation.Nullable;
 public class AnnotationProcessingParams implements AnnotationProcessingData {
   public final static AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       null,
-      ImmutableSet.<String>of(),
+      ImmutableSet.<Path>of(),
       ImmutableSet.<String>of(),
       ImmutableSet.<String>of(),
       ImmutableSortedSet.<BuildRule>of(),
@@ -54,7 +58,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
   @Nullable
   private final BuildTarget ownerTarget;
-  private final ImmutableSortedSet<String> searchPathElements;
+  private final ImmutableSortedSet<Path> searchPathElements;
   private final ImmutableSortedSet<String> names;
   private final ImmutableSortedSet<String> parameters;
   private final ImmutableSortedSet<BuildRule> rules;
@@ -62,7 +66,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
   private AnnotationProcessingParams(
       @Nullable BuildTarget ownerTarget,
-      Set<String> searchPathElements,
+      Set<Path> searchPathElements,
       Set<String> names,
       Set<String> parameters,
       Set<BuildRule> rules,
@@ -88,7 +92,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
   }
 
   @Override
-  public ImmutableSortedSet<String> getSearchPathElements() {
+  public ImmutableSortedSet<Path> getSearchPathElements() {
     return searchPathElements;
   }
 
@@ -177,7 +181,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         return EMPTY;
       }
 
-      Set<String> searchPathElements = Sets.newHashSet();
+      Set<Path> searchPathElements = Sets.newHashSet();
       ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
 
       for (BuildTarget target : targets) {
@@ -191,11 +195,14 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
           String pathToOutput = rule.getBuildable().getPathToOutputFile();
           if (pathToOutput != null) {
-            searchPathElements.add(pathToOutput);
+            searchPathElements.add(Paths.get(pathToOutput));
           }
         } else if (rule instanceof HasClasspathEntries) {
           HasClasspathEntries javaLibraryRule = (HasClasspathEntries)rule;
-          searchPathElements.addAll(javaLibraryRule.getTransitiveClasspathEntries().values());
+          searchPathElements.addAll(
+              FluentIterable.from(javaLibraryRule.getTransitiveClasspathEntries().values())
+                  .transform(MorePaths.TO_PATH)
+                  .toSet());
         } else {
           throw new HumanReadableException(
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +

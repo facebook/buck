@@ -44,11 +44,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -126,7 +126,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   private final Path absolutePathToTmpDirectory;
   private final Path pathToSrcDirectory;
   private final Path absolutePathToSrcDirectory;
-  protected final Function<String, Path> relativeToAbsolutePathFunction;
+  protected final Function<Path, Path> relativeToAbsolutePathFunction;
 
   protected Genrule(BuildRuleParams buildRuleParams,
       List<String> srcs,
@@ -134,13 +134,18 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
       Optional<String> bash,
       Optional<String> cmdExe,
       String out,
-      Function<String, Path> relativeToAbsolutePathFunction) {
+      final Function<Path, Path> relativeToAbsolutePathFunction) {
     super(buildRuleParams);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);
     this.cmdExe = Preconditions.checkNotNull(cmdExe);
-    this.srcsToAbsolutePaths = Maps.toMap(srcs, relativeToAbsolutePathFunction);
+    this.srcsToAbsolutePaths = FluentIterable.from(srcs).toMap(new Function<String, Path>() {
+      @Override
+      public Path apply(String src) {
+        return relativeToAbsolutePathFunction.apply(Paths.get(src));
+      }
+    });
 
     Preconditions.checkNotNull(out);
     this.pathToOutDirectory = Paths.get(
@@ -153,16 +158,14 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
         buildRuleParams.getBuildTarget().getBasePathWithSlash(),
         String.format("%s__tmp", getBuildTarget().getShortName()));
     // TODO(simons): pathToTmpDirectory.toAbsolutePath() should be enough
-    this.absolutePathToTmpDirectory = relativeToAbsolutePathFunction.apply(
-        pathToTmpDirectory.toString());
+    this.absolutePathToTmpDirectory = relativeToAbsolutePathFunction.apply(pathToTmpDirectory);
 
     this.pathToSrcDirectory = Paths.get(
         BuckConstant.GEN_DIR,
         buildRuleParams.getBuildTarget().getBasePathWithSlash(),
         String.format("%s__srcs", getBuildTarget().getShortName()));
     // TODO(simons): And here.
-    this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(
-        pathToSrcDirectory.toString());
+    this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 
     this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
   }
@@ -174,7 +177,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   /** @return the absolute path to the output file */
   public String getAbsoluteOutputFilePath() {
-    return relativeToAbsolutePathFunction.apply(getPathToOutputFile()).toString();
+    return relativeToAbsolutePathFunction.apply(Paths.get(getPathToOutputFile())).toString();
   }
 
   @Override
@@ -208,7 +211,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     }
 
     environmentVariablesBuilder.put(
-        "GEN_DIR", relativeToAbsolutePathFunction.apply(BuckConstant.GEN_DIR).toString());
+        "GEN_DIR", relativeToAbsolutePathFunction.apply(BuckConstant.GEN_PATH).toString());
     environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
@@ -247,7 +250,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
         }
         appendTo.add("$GEN_DIR" + relativePath);
       } else {
-        appendTo.add(relativeToAbsolutePathFunction.apply(output).toString());
+        appendTo.add(relativeToAbsolutePathFunction.apply(Paths.get(output)).toString());
       }
     }
 
@@ -344,7 +347,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
     protected String out;
 
-    private Function<String, Path> relativeToAbsolutePathFunctionForTesting = null;
+    private Function<Path, Path> relativeToAbsolutePathFunctionForTesting = null;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -365,7 +368,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
           getRelativeToAbsolutePathFunction(buildRuleParams));
     }
 
-    protected Function<String, Path> getRelativeToAbsolutePathFunction(BuildRuleParams params) {
+    protected Function<Path, Path> getRelativeToAbsolutePathFunction(BuildRuleParams params) {
       return (relativeToAbsolutePathFunctionForTesting == null)
           ? params.getPathRelativizer()
           : relativeToAbsolutePathFunctionForTesting;
@@ -411,7 +414,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
     @VisibleForTesting
     public Builder setRelativeToAbsolutePathFunctionForTesting(
-        Function<String, Path> relativeToAbsolutePathFunction) {
+        Function<Path, Path> relativeToAbsolutePathFunction) {
       this.relativeToAbsolutePathFunctionForTesting = relativeToAbsolutePathFunction;
       return this;
     }

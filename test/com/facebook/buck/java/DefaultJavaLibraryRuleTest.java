@@ -1277,7 +1277,7 @@ public class DefaultJavaLibraryRuleTest {
               buildTarget,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
               /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
-              projectFilesystem.getPathRelativizer(),
+              projectFilesystem.getAbsolutifier(),
               new FakeRuleKeyBuilderFactory()),
           ImmutableSet.of(src),
           /* resources */ ImmutableSet.<SourcePath>of(),

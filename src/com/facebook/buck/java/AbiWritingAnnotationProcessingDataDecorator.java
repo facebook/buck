@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -37,9 +39,8 @@ public class AbiWritingAnnotationProcessingDataDecorator
     implements AnnotationProcessingDataDecorator {
 
   @VisibleForTesting
-  static final String ABI_PROCESSOR_CLASSPATH = System.getProperty(
-      "buck.abi_processor_classes",
-      new File("build/abi_processor/classes").getAbsolutePath());
+  static final Path ABI_PROCESSOR_CLASSPATH = Paths.get(System.getProperty(
+      "buck.abi_processor_classes", new File("build/abi_processor/classes").getAbsolutePath()));
 
   private final File outputFile;
 
@@ -57,8 +58,8 @@ public class AbiWritingAnnotationProcessingDataDecorator
       }
 
       @Override
-      public ImmutableSortedSet<String> getSearchPathElements() {
-        return ImmutableSortedSet.<String>naturalOrder()
+      public ImmutableSortedSet<Path> getSearchPathElements() {
+        return ImmutableSortedSet.<Path>naturalOrder()
             .addAll(delegate.getSearchPathElements())
             .add(ABI_PROCESSOR_CLASSPATH)
             .build();

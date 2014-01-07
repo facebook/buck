@@ -38,7 +38,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   protected Set<BuildTarget> deps = Sets.newHashSet();
   protected Set<BuildTargetPattern> visibilityPatterns = Sets.newHashSet();
 
-  private final Function<String, Path> pathRelativizer;
+  private final Function<Path, Path> pathRelativizer;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   protected AbstractBuildRuleBuilder(AbstractBuildRuleBuilderParams params) {

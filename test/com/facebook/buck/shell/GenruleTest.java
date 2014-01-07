@@ -90,6 +90,14 @@ public class GenruleTest {
         }
       };
 
+  private static final Function<Path, Path> ABSOLUTIFIER =
+      new Function<Path, Path>() {
+        @Override
+        public Path apply(Path input) {
+          return getAbsolutePathInBase(input.toString());
+        }
+      };
+
   private ProjectFilesystem fakeFilesystem;
 
   @Before
@@ -148,7 +156,7 @@ public class GenruleTest {
             buildTarget);
     GenruleBuildRuleFactory factory = new GenruleBuildRuleFactory();
     Builder builder = factory.newInstance(params);
-    builder.setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction);
+    builder.setRelativeToAbsolutePathFunctionForTesting(ABSOLUTIFIER);
     Genrule genrule = ruleResolver.buildAndAddToIndex(builder);
 
     // Verify all of the observers of the Genrule.
@@ -426,7 +434,7 @@ public class GenruleTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     Genrule rule = ruleResolver.buildAndAddToIndex(
         Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction)
+        .setRelativeToAbsolutePathFunctionForTesting(ABSOLUTIFIER)
         .setBuildTarget(target)
         .setBash(Optional.of("ignored"))
         .addSrc("in-dir.txt")
@@ -480,7 +488,7 @@ public class GenruleTest {
         String.format("//%s:genrule", contextBasePath));
 
     Builder ruleBuilder = Genrule.newGenruleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setRelativeToAbsolutePathFunctionForTesting(relativeToAbsolutePathFunction)
+        .setRelativeToAbsolutePathFunctionForTesting(ABSOLUTIFIER)
         .setBuildTarget(target)
         .setBash(Optional.of(originalCmd))
         .setOut("example-file");

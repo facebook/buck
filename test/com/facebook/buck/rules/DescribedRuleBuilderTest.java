@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.testutil.IdentityPathRelativizer.getIdentityAbsolutifier;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -23,7 +24,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -104,7 +104,8 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.exists("my")).andStubReturn(true);
     EasyMock.expect(projectFilesystem.exists("my/BUCK")).andStubReturn(true);
-    EasyMock.expect(projectFilesystem.getPathRelativizer()).andStubReturn(MorePaths.TO_PATH);
+    EasyMock.expect(projectFilesystem.getAbsolutifier()).andStubReturn(getIdentityAbsolutifier());
+
     replayAll();
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         instance,

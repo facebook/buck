@@ -118,7 +118,7 @@ public class JavacOptionsTest {
     ImmutableList.Builder<String> paramBuilder = ImmutableList.builder();
 
     options.appendOptionsToList(
-        paramBuilder, /* pathRelativizer */ IdentityPathRelativizer.getIdentityRelativizer());
+        paramBuilder, /* pathAbsolutifier */ IdentityPathRelativizer.getIdentityAbsolutifier());
 
     ImmutableList<String> params = paramBuilder.build();
     return " " + Joiner.on(" ").join(params) + " ";

@@ -38,7 +38,7 @@ public class FakeBuildRuleParams extends BuildRuleParams {
     super(buildTarget,
         deps,
         visibilityPatterns,
-        /* pathRelativizer */ IdentityPathRelativizer.getIdentityRelativizer(),
+        /* pathRelativizer */ IdentityPathRelativizer.getIdentityAbsolutifier(),
         new FakeRuleKeyBuilderFactory());
   }
 

@@ -34,4 +34,13 @@ public class IdentityPathRelativizer {
       }
     };
   }
+
+  public static Function<Path, Path> getIdentityAbsolutifier() {
+    return new Function<Path, Path>() {
+      @Override
+      public Path apply(Path input) {
+        return input;
+      }
+    };
+  }
 }

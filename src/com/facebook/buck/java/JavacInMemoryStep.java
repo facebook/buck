@@ -177,7 +177,7 @@ public class JavacInMemoryStep implements Step {
       decorator = AnnotationProcessingDataDecorators.identity();
     }
     javacOptions.appendOptionsToList(builder,
-        context.getProjectFilesystem().getPathRelativizer(),
+        context.getProjectFilesystem().getAbsolutifier(),
         decorator);
 
     // verbose flag, if appropriate.

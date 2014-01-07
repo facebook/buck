@@ -53,8 +53,8 @@ public class RobolectricTestBuildRuleFactoryTest {
 
     // Set up mocks.
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.getPathRelativizer()).andReturn(
-        IdentityPathRelativizer.getIdentityRelativizer());
+    EasyMock.expect(projectFilesystem.getAbsolutifier()).andReturn(
+        IdentityPathRelativizer.getIdentityAbsolutifier());
     BuildTargetParser buildTargetParser = new BuildTargetParser(projectFilesystem) {
       @Override
       public BuildTarget parse(String buildTargetName, ParseContext parseContext)
