@@ -30,18 +30,20 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class RobolectricTestRuleTest {
 
   private class ResourceRule implements HasAndroidResourceDeps {
-    private final String resourceDirectory;
+    private final Path resourceDirectory;
 
-    public ResourceRule(String resourceDirectory) {
+    public ResourceRule(Path resourceDirectory) {
       this.resourceDirectory = resourceDirectory;
     }
 
     @Override
-    public String getPathToTextSymbolsFile() {
+    public Path getPathToTextSymbolsFile() {
       return null;
     }
 
@@ -51,7 +53,7 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
-    public String getRes() {
+    public Path getRes() {
       return resourceDirectory;
     }
 
@@ -73,7 +75,7 @@ public class RobolectricTestRuleTest {
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder =
         ImmutableList.builder();
     for (int i = 0; i < 10; i++) {
-      resDepsBuilder.add(new ResourceRule("java/src/com/facebook/base/" + i + "/res"));
+      resDepsBuilder.add(new ResourceRule(Paths.get("java/src/com/facebook/base/" + i + "/res")));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -86,7 +88,7 @@ public class RobolectricTestRuleTest {
 
     String result = testRule.getRobolectricResourceDirectories(resDeps);
     for (HasAndroidResourceDeps dep : resDeps) {
-      assertTrue(result.contains(dep.getRes()));
+      assertTrue(result.contains(dep.getRes().toString()));
     }
   }
 
@@ -94,9 +96,9 @@ public class RobolectricTestRuleTest {
   public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    String resDep1 = "res1";
-    String resDep2 = "res2";
-    String resDep3 = "res3";
+    Path resDep1 = Paths.get("res1");
+    Path resDep2 = Paths.get("res2");
+    Path resDep3 = Paths.get("res3");
     StringBuilder expectedVmArgBuilder = new StringBuilder();
     expectedVmArgBuilder.append("-D")
         .append(RobolectricTestRule.LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME)

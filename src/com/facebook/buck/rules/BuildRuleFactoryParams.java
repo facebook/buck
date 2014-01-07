@@ -182,7 +182,7 @@ public final class BuildRuleFactoryParams {
     return new File(resolvePathAgainstBuildTargetBase(path));
   }
 
-  public String resolveDirectoryPathRelativeToBuildFileDirectory(String path) {
+  public Path resolveDirectoryPathRelativeToBuildFileDirectory(String path) {
     Preconditions.checkNotNull(path);
     Preconditions.checkArgument(!path.startsWith(GENFILE_PREFIX));
 
@@ -196,7 +196,7 @@ public final class BuildRuleFactoryParams {
       throw new RuntimeException("Not a directory: " + fullPath);
     }
 
-    return fullPath;
+    return Paths.get(fullPath);
   }
 
   private String resolvePathAgainstBuildTargetBase(String path) {

@@ -30,13 +30,14 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Set;
 
 public class GenRDotJavaStep extends ShellStep {
 
-  private final Set<String> resDirectories;
+  private final Set<Path> resDirectories;
   private final File androidManifest;
-  private final String genDirectoryPath;
+  private final Path genDirectoryPath;
   private final boolean isTempRDotJava;
   private final ImmutableSet<String> extraLibraryPackages;
 
@@ -60,8 +61,8 @@ public class GenRDotJavaStep extends ShellStep {
    * @param extraLibraryPackages
    */
   public GenRDotJavaStep(
-      Set<String> resDirectories,
-      String genDirectoryPath,
+      Set<Path> resDirectories,
+      Path genDirectoryPath,
       String libraryPackage,
       boolean isTempRDotJava,
       Set<String> extraLibraryPackages) {
@@ -109,11 +110,11 @@ public class GenRDotJavaStep extends ShellStep {
     }
 
     // Add all of the res/ directories.
-    for (String res : resDirectories) {
-      builder.add("-S").add(res);
+    for (Path res : resDirectories) {
+      builder.add("-S").add(res.toString());
     }
 
-    builder.add("--output-text-symbols").add(genDirectoryPath);
+    builder.add("--output-text-symbols").add(genDirectoryPath.toString());
     if (isTempRDotJava) {
       builder.add("--non-constant-id");
     }
@@ -124,7 +125,7 @@ public class GenRDotJavaStep extends ShellStep {
 
     // Add the remaining flags.
     builder.add("-M").add(androidManifest.getAbsolutePath());
-    builder.add("-m").add("-J").add(genDirectoryPath);
+    builder.add("-m").add("-J").add(genDirectoryPath.toString());
     builder.add("--auto-add-overlay");
     builder.add("-I").add(androidPlatformTarget.getAndroidJar().getAbsolutePath());
 

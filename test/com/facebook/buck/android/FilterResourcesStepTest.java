@@ -53,11 +53,11 @@ public class FilterResourcesStepTest {
   private final static String second = "/second-path/res";
   private final static String third = "/third-path/res";
 
-  private final static ImmutableBiMap<String, String> inResDirToOutResDirMap =
+  private final static ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
       ImmutableBiMap.of(
-          first, "/dest/1",
-          second, "/dest/2",
-          third, "/dest/3");
+          Paths.get(first), Paths.get("/dest/1"),
+          Paths.get(second), Paths.get("/dest/2"),
+          Paths.get(third), Paths.get("/dest/3"));
   private static Set<String> qualifiers = ImmutableSet.of("mdpi", "hdpi", "xhdpi");
   private final Filters.Density targetDensity = Filters.Density.MDPI;
   private final File baseDestination = new File("/dest");
@@ -106,7 +106,7 @@ public class FilterResourcesStepTest {
     // Create mock FilteredDirectoryCopier to find what we're calling on it.
     FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
     // We'll want to see what the filtering command passes to the copier.
-    Capture<Map<String, String>> dirMapCapture = new Capture<>();
+    Capture<Map<Path, Path>> dirMapCapture = new Capture<>();
     Capture<Predicate<File>> predCapture = new Capture<>();
     copier.copyDirs(EasyMock.capture(dirMapCapture),
         EasyMock.capture(predCapture));
@@ -140,9 +140,9 @@ public class FilterResourcesStepTest {
         @Override
         public Set<String> answer() throws Throwable {
           ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-          for (String dir : (Iterable<String>) EasyMock.getCurrentArguments()[0]) {
+          for (Path dir : (Iterable<Path>) EasyMock.getCurrentArguments()[0]) {
             for (String qualifier : qualifiers) {
-              builder.add(getDrawableFile(dir, qualifier, "some.png"));
+              builder.add(getDrawableFile(dir.toString(), qualifier, "some.png"));
             }
           }
 
@@ -161,8 +161,8 @@ public class FilterResourcesStepTest {
         @Override
         public Set<String> answer() throws Throwable {
           ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-          for (String dir : (Iterable<String>) EasyMock.getCurrentArguments()[0]) {
-            builder.add(getDrawableFile(dir, targetDensity.toString(), "some.png"));
+          for (Path dir : (Iterable<Path>) EasyMock.getCurrentArguments()[0]) {
+            builder.add(getDrawableFile(dir.toString(), targetDensity.toString(), "some.png"));
           }
 
           builder.add(scaleSource);
@@ -173,15 +173,15 @@ public class FilterResourcesStepTest {
     EasyMock.replay(finder);
 
     // We'll use this to verify the source->destination mappings created by the command.
-    ImmutableMap.Builder<String, String> dirMapBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, Path> dirMapBuilder = ImmutableMap.builder();
 
-    Iterator<String> destIterator = inResDirToOutResDirMap.values().iterator();
-    for (String dir : inResDirToOutResDirMap.keySet()) {
-      String nextDestination = destIterator.next();
+    Iterator<Path> destIterator = inResDirToOutResDirMap.values().iterator();
+    for (Path dir : inResDirToOutResDirMap.keySet()) {
+      Path nextDestination = destIterator.next();
       dirMapBuilder.put(dir, nextDestination);
 
       // Verify that destination path requirements are observed.
-      assertEquals(baseDestination, new File(nextDestination).getParentFile());
+      assertEquals(baseDestination, nextDestination.getParent().toFile());
     }
 
     // Execute command.
@@ -208,11 +208,11 @@ public class FilterResourcesStepTest {
   public void testFilterStrings() throws IOException {
     FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
     Capture<Predicate<File>> capturedPredicate = new Capture<>();
-    copier.copyDirs(EasyMock.<Map<String, String>>anyObject(), EasyMock.capture(capturedPredicate));
+    copier.copyDirs(EasyMock.<Map<Path, Path>>anyObject(), EasyMock.capture(capturedPredicate));
     EasyMock.replay(copier);
 
     FilterResourcesStep step = new FilterResourcesStep(
-        /* inResDirToOutResDirMap */ ImmutableBiMap.<String, String>of(),
+        /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
         /* filterDrawables */ false,
         /* filterStrings */ true,
         /* whitelistedStringDirs */ ImmutableSet.<Path>of(Paths.get("com/whitelisted/res")),

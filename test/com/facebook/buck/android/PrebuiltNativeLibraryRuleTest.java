@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 
 public class PrebuiltNativeLibraryRuleTest {
@@ -54,11 +55,11 @@ public class PrebuiltNativeLibraryRuleTest {
     // Create an android_library rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
     PrebuiltNativeLibrary nativeLibraryRule = new PrebuiltNativeLibrary(
-        "java/src/com/facebook/base/libs",
+        Paths.get("java/src/com/facebook/base/libs"),
         false,
         traverser);
 
-    assertEquals(nativeLibraryRule.getLibraryPath(), "java/src/com/facebook/base/libs");
+    assertEquals(nativeLibraryRule.getLibraryPath(), Paths.get("java/src/com/facebook/base/libs"));
     assertFalse(nativeLibraryRule.isAsset());
 
     // Test getInputsToCompareToOutput().

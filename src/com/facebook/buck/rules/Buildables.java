@@ -21,6 +21,7 @@ import com.facebook.buck.util.DirectoryTraversers;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -39,21 +40,22 @@ public class Buildables {
   /**
    * Helper function for {@link Buildable}s to create their lists of files for caching.
    */
-  public static void addInputsToSortedSet(@Nullable String pathToDirectory,
-      ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes,
-      DirectoryTraverser traverser) {
+  public static void addInputsToSortedSet(@Nullable Path pathToDirectory,
+                                          ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes,
+                                          DirectoryTraverser traverser) {
     if (pathToDirectory == null) {
       return;
     }
 
     Set<String> files;
     try {
-      files = DirectoryTraversers.getInstance().findFiles(pathToDirectory, traverser);
+      files = DirectoryTraversers.getInstance().findFiles(pathToDirectory.toString(), traverser);
     } catch (IOException e) {
       throw new RuntimeException("Exception while traversing " + pathToDirectory + ".", e);
     }
 
     inputsToConsiderForCachingPurposes.addAll(files);
   }
+
 
 }

@@ -21,6 +21,8 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
+import java.nio.file.Path;
+
 public class PrebuiltNativeLibraryBuildRuleFactory
     extends AbstractBuildRuleFactory<PrebuiltNativeLibrary.Builder> {
 
@@ -34,7 +36,7 @@ public class PrebuiltNativeLibraryBuildRuleFactory
       BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     // native_libs
     String nativeLibs = params.getRequiredStringAttribute("native_libs");
-    String nativeLibsDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(nativeLibs);
+    Path nativeLibsDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(nativeLibs);
     builder.setNativeLibsDirectory(nativeLibsDir);
     builder.setIsAsset(params.getBooleanAttribute("is_asset"));
   }

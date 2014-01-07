@@ -19,18 +19,20 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
+
 public class AndroidTransitiveDependencies {
-  public final ImmutableSet<String> nativeLibsDirectories;
-  public final ImmutableSet<String> nativeLibAssetsDirectories;
-  public final ImmutableSet<String> assetsDirectories;
+  public final ImmutableSet<Path> nativeLibsDirectories;
+  public final ImmutableSet<Path> nativeLibAssetsDirectories;
+  public final ImmutableSet<Path> assetsDirectories;
   public final ImmutableSet<BuildTarget> nativeTargetsWithAssets;
   public final ImmutableSet<String> manifestFiles;
   public final ImmutableSet<String> proguardConfigs;
 
   public AndroidTransitiveDependencies(
-      ImmutableSet<String> nativeLibsDirectories,
-      ImmutableSet<String> nativeLibAssetsDirectories,
-      ImmutableSet<String> assetsDirectories,
+      ImmutableSet<Path> nativeLibsDirectories,
+      ImmutableSet<Path> nativeLibAssetsDirectories,
+      ImmutableSet<Path> assetsDirectories,
       ImmutableSet<BuildTarget> nativeTargetsWithAssets,
       ImmutableSet<String> manifestFiles,
       ImmutableSet<String> proguardConfigs) {

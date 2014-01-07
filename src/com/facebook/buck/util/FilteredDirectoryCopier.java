@@ -20,6 +20,7 @@ import com.google.common.base.Predicate;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 
 public interface FilteredDirectoryCopier {
@@ -29,7 +30,7 @@ public interface FilteredDirectoryCopier {
    * @param sourcesToDestinations mapping from source to destination directories
    * @param pred predicate to test against
    */
-  public abstract void copyDirs(Map<String, String> sourcesToDestinations,
+  public abstract void copyDirs(Map<Path, Path> sourcesToDestinations,
       Predicate<File> pred) throws IOException;
 
   /**
@@ -39,8 +40,8 @@ public interface FilteredDirectoryCopier {
    * @param pred a predicate to determine which files should be copied.
    */
   public abstract void copyDir(
-      String srcDir,
-      String destDir,
+      Path srcDir,
+      Path destDir,
       Predicate<File> pred) throws IOException;
 
 }

@@ -151,15 +151,15 @@ public class AndroidTransitiveDependencyGraph {
   public AndroidTransitiveDependencies findDependencies() {
 
     // Paths to assets/ directories that should be included in the final APK.
-    final ImmutableSet.Builder<String> assetsDirectories = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> assetsDirectories = ImmutableSet.builder();
 
     // Paths to native libs directories (often named libs/) that should be included as raw files
     // directories in the final APK.
-    final ImmutableSet.Builder<String> nativeLibsDirectories = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> nativeLibsDirectories = ImmutableSet.builder();
 
     // Paths to native libs directories that are to be treated as assets and so should be included
     // as raw files under /assets/lib/ directory in the APK.
-    final ImmutableSet.Builder<String> nativeLibAssetsDirectories = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> nativeLibAssetsDirectories = ImmutableSet.builder();
 
     final ImmutableSet.Builder<BuildTarget> nativeTargetsWithAssets = ImmutableSet.builder();
 
@@ -192,7 +192,7 @@ public class AndroidTransitiveDependencyGraph {
           }
         } else if (rule instanceof AndroidResourceRule) {
           AndroidResourceRule androidRule = (AndroidResourceRule) rule;
-          String assetsDirectory = androidRule.getAssets();
+          Path assetsDirectory = androidRule.getAssets();
           if (assetsDirectory != null) {
             assetsDirectories.add(assetsDirectory);
           }

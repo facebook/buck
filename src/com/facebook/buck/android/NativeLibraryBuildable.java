@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.Buildable;
 
+import java.nio.file.Path;
+
 /**
  * {@link Buildable} that contains various {@code .so} files for Android, organized by target CPU
  * architecture.
@@ -40,6 +42,5 @@ public interface NativeLibraryBuildable {
    * @return A path relative to the project root that should does <em>not</em> include a trailing
    *     slash.
    */
-  // TODO(mbolin): Return a Path instead of a String.
-  public String getLibraryPath();
+  public Path getLibraryPath();
 }

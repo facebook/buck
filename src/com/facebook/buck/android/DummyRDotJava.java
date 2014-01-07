@@ -45,6 +45,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -101,7 +102,7 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
       steps.add(new WriteFileStep(javaCode, rDotJavaFile));
       javaSourceFilePaths.add(rDotJavaFile);
     } else {
-      Map<String, String> symbolsFileToRDotJavaPackage = Maps.newHashMap();
+      Map<Path, String> symbolsFileToRDotJavaPackage = Maps.newHashMap();
       for (HasAndroidResourceDeps res : androidResourceDeps) {
         String rDotJavaPackage = res.getRDotJavaPackage();
         symbolsFileToRDotJavaPackage.put(res.getPathToTextSymbolsFile(), rDotJavaPackage);

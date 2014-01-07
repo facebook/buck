@@ -449,7 +449,7 @@ public class Project {
         NdkLibrary ndkLibrary = (NdkLibrary) projectRule.getBuildable();
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-        module.nativeLibs = Paths.get(relativePath).relativize(Paths.get(ndkLibrary.getLibraryPath())).toString();
+        module.nativeLibs = Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
       } else if (projectRule instanceof AndroidResourceRule) {
         AndroidResourceRule androidResourceRule = (AndroidResourceRule)projectRule;
         module.resFolder = createRelativePath(androidResourceRule.getRes(), target);
@@ -887,14 +887,14 @@ public class Project {
    * @param pathRelativeToProjectRoot if {@code null}, then this method returns {@code null}
    * @param target
    */
-  private static String createRelativePath(@Nullable String pathRelativeToProjectRoot,
+  private static String createRelativePath(@Nullable Path pathRelativeToProjectRoot,
       BuildTarget target) {
     if (pathRelativeToProjectRoot == null) {
       return null;
     }
     String directoryPath = target.getBasePath();
     Preconditions.checkArgument(pathRelativeToProjectRoot.startsWith(directoryPath));
-    return pathRelativeToProjectRoot.substring(directoryPath.length());
+    return pathRelativeToProjectRoot.toString().substring(directoryPath.length());
   }
 
   private void writeJsonConfig(File jsonTempFile, List<Module> modules) throws IOException {

@@ -335,21 +335,20 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @VisibleForTesting
-  static void copyNativeLibrary(String sourceDir,
+  static void copyNativeLibrary(Path sourceDir,
       String destinationDir,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableList.Builder<Step> steps) {
-    Path sourceDirPath = Paths.get(sourceDir);
     Path destinationDirPath = Paths.get(destinationDir);
 
     if (cpuFilters.isEmpty()) {
-      steps.add(new CopyStep(sourceDirPath, destinationDirPath, true));
+      steps.add(new CopyStep(sourceDir, destinationDirPath, true));
     } else {
       for (TargetCpuType cpuType : cpuFilters) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
 
-        final Path libSourceDir = sourceDirPath.resolve(abiDirectoryComponent.get());
+        final Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
         Path libDestinationDir = destinationDirPath.resolve(abiDirectoryComponent.get());
 
         final MkdirStep mkDirStep = new MkdirStep(libDestinationDir);
@@ -419,7 +418,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       String pathForNativeLibs = getPathForNativeLibs();
       String libSubdirectory = pathForNativeLibs + "/lib";
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (String nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
+      for (Path nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
         copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
       }
       nativeLibraryDirectories = ImmutableSet.of(libSubdirectory);

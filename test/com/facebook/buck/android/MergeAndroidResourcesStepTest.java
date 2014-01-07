@@ -30,6 +30,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -184,9 +186,9 @@ public class MergeAndroidResourcesStepTest {
 
   // sortSymbols has a goofy API.  This will help.
   private static class RDotTxtEntryBuilder {
-    private final ImmutableMap.Builder<String, String> filePathToContents =
+    private final ImmutableMap.Builder<Path, String> filePathToContents =
         ImmutableMap.builder();
-    private final ImmutableMap.Builder<String, String> filePathToPackageName =
+    private final ImmutableMap.Builder<Path, String> filePathToPackageName =
         ImmutableMap.builder();
 
     public RDotTxtEntryBuilder() {
@@ -197,11 +199,11 @@ public class MergeAndroidResourcesStepTest {
       filePathToPackageName.put(entry.filePath, entry.packageName);
     }
 
-    public Function<String, Readable> buildReadableMapper() {
-      final ImmutableMap<String, String> builtInstance = filePathToContents.build();
-      return new Function<String, Readable>() {
+    public Function<Path, Readable> buildReadableMapper() {
+      final ImmutableMap<Path, String> builtInstance = filePathToContents.build();
+      return new Function<Path, Readable>() {
         @Override
-        public Readable apply(String filePath) {
+        public Readable apply(Path filePath) {
           String content = builtInstance.get(filePath);
           if (content == null) {
             throw new RuntimeException("No content for " + filePath);
@@ -212,19 +214,19 @@ public class MergeAndroidResourcesStepTest {
       };
     }
 
-    public Map<String, String> buildFilePathToPackageNameSet() {
+    public Map<Path, String> buildFilePathToPackageNameSet() {
       return filePathToPackageName.build();
     }
   }
 
   private static class RDotTxtEntry {
     public String packageName;
-    public String filePath;
+    public Path filePath;
     public String contents;
 
     public RDotTxtEntry(String packageName, String filePath, String contents) {
       this.packageName = packageName;
-      this.filePath = filePath;
+      this.filePath = Paths.get(filePath);
       this.contents = contents;
     }
   }

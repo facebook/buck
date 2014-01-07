@@ -37,6 +37,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class JavaLibraryGraphEnhancerTest {
 
   @Test
@@ -61,12 +63,12 @@ public class JavaLibraryGraphEnhancerTest {
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes("android_res/com/example/res1"));
+            .setRes(Paths.get("android_res/com/example/res1")));
     AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes("android_res/com/example/res2"));
+            .setRes(Paths.get("android_res/com/example/res2")));
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
         buildTarget,

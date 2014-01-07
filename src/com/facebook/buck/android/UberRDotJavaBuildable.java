@@ -45,6 +45,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
@@ -159,7 +160,7 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
     AndroidResourceDetails androidResourceDetails =
         androidResourceDepsFinder.getAndroidResourceDetails();
     final Set<String> rDotJavaPackages = androidResourceDetails.rDotJavaPackages;
-    final ImmutableSet<String> resDirectories;
+    final ImmutableSet<Path> resDirectories;
     final Supplier<ImmutableSet<String>> nonEnglishStringFiles;
     if (requiresResourceFilter()) {
       final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
@@ -176,8 +177,8 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
               .toSet();
         }
       };
-      for (String outputResourceDir : resDirectories) {
-        buildableContext.recordArtifactsInDirectory(Paths.get(outputResourceDir));
+      for (Path outputResourceDir : resDirectories) {
+        buildableContext.recordArtifactsInDirectory(outputResourceDir);
       }
     } else {
       resDirectories = androidResourceDetails.resDirectories;
@@ -192,7 +193,8 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
     steps.add(new AbstractExecutionStep("record_build_output") {
       @Override
       public int execute(ExecutionContext context) {
-        buildableContext.addMetadata(RES_DIRECTORIES_KEY, resDirectories);
+        buildableContext.addMetadata(
+            RES_DIRECTORIES_KEY, Iterables.transform(resDirectories, Functions.toStringFunction()));
         buildableContext.addMetadata(NON_ENGLISH_STRING_FILES_KEY, nonEnglishStringFiles.get());
         return 0;
       }
@@ -263,17 +265,17 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
    *     inside these directories.
    */
   @VisibleForTesting
-  FilterResourcesStep createFilterResourcesStep(Set<String> resourceDirectories,
+  FilterResourcesStep createFilterResourcesStep(Set<Path> resourceDirectories,
       ImmutableSet<String> whitelistedStringDirs) {
-    ImmutableBiMap.Builder<String, String> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
+    ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
     String resDestinationBasePath = getResDestinationBasePath();
     int count = 0;
-    for (String resDir : resourceDirectories) {
+    for (Path resDir : resourceDirectories) {
       filteredResourcesDirMapBuilder.put(resDir,
-          Paths.get(resDestinationBasePath, String.valueOf(count++)).toString());
+          Paths.get(resDestinationBasePath, String.valueOf(count++)));
     }
 
-    ImmutableBiMap<String, String> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
+    ImmutableBiMap<Path, Path> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
     FilterResourcesStep.Builder filterResourcesStepBuilder = FilterResourcesStep.builder()
         .setInResToOutResDirMap(resSourceToDestDirMap)
         .setResourceFilter(resourceFilter);
@@ -292,12 +294,12 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
    * will be written to {@link #getPathToCompiledRDotJavaFiles()}.
    */
   private void generateAndCompileRDotJavaFiles(
-      Set<String> resDirectories,
+      Set<Path> resDirectories,
       Set<String> rDotJavaPackages,
       ImmutableList.Builder<Step> commands,
       BuildableContext buildableContext) {
     // Create the path where the R.java files will be generated.
-    String rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
+    Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
     commands.add(new MakeCleanDirectoryStep(rDotJavaSrc));
 
     // Generate the R.java files.
@@ -324,7 +326,7 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
     commands.add(javac);
 
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
-    buildableContext.recordArtifactsInDirectory(Paths.get(rDotJavaSrc));
+    buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
     buildableContext.recordArtifactsInDirectory(Paths.get(rDotJavaBin));
   }
 
@@ -344,11 +346,11 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
    * The {@code R.txt} file will be in the root of the directory whereas the {@code R.java} files
    * will be under a directory path that matches the corresponding package structure.
    */
-  String getPathToGeneratedRDotJavaSrcFiles() {
-    return String.format("%s/%s__%s_uber_rdotjava_src__",
+  Path getPathToGeneratedRDotJavaSrcFiles() {
+    return Paths.get(String.format("%s/%s__%s_uber_rdotjava_src__",
         BuckConstant.BIN_DIR,
         buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        buildTarget.getShortName()));
   }
 
   private String getResDestinationBasePath() {

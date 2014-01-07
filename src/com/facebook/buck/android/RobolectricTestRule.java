@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -57,10 +58,10 @@ public class RobolectricTestRule extends JavaTestRule {
   final static String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_res_directories";
 
-  private final static Function<HasAndroidResourceDeps, String> RESOURCE_DIRECTORY_FUNCTION =
-      new Function<HasAndroidResourceDeps, String>() {
+  private final static Function<HasAndroidResourceDeps, Path> RESOURCE_DIRECTORY_FUNCTION =
+      new Function<HasAndroidResourceDeps, Path>() {
     @Override
-    public String apply(HasAndroidResourceDeps input) {
+    public Path apply(HasAndroidResourceDeps input) {
       return input.getRes();
     }
   };

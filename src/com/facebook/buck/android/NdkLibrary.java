@@ -99,8 +99,8 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
   }
 
   @Override
-  public String getLibraryPath() {
-    return genDirectory.toString();
+  public Path getLibraryPath() {
+    return genDirectory;
   }
 
   @Override

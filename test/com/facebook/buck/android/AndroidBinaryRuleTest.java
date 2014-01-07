@@ -154,8 +154,8 @@ public class AndroidBinaryRuleTest {
           BuildTargetFactory.newInstance(buildTarget + "_resources");
       AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
           AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-          .setAssetsDirectory(assetDirectory)
-          .setRes(resDirectory)
+          .setAssetsDirectory(Paths.get(assetDirectory))
+          .setRes(resDirectory == null ? null : Paths.get(resDirectory))
           .setBuildTarget(resourceOnebuildTarget));
 
       androidLibraryRuleBuilder.addDep(androidResourceRule.getBuildTarget());
@@ -168,7 +168,7 @@ public class AndroidBinaryRuleTest {
           PrebuiltNativeLibrary.newPrebuiltNativeLibrary(
               new FakeAbstractBuildRuleBuilderParams())
           .setBuildTarget(nativeLibOnebuildTarget)
-          .setNativeLibsDirectory(nativeLibsDirectory));
+          .setNativeLibsDirectory(Paths.get(nativeLibsDirectory)));
 
       androidLibraryRuleBuilder.addDep(nativeLibsRule.getBuildTarget());
     }
@@ -348,7 +348,7 @@ public class AndroidBinaryRuleTest {
         .setResourceCompressionMode("enabled_with_strings_as_assets");
 
     AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
-    Set<String> resourceDirectories = ImmutableSet.of("one", "two");
+    Set<Path> resourceDirectories = ImmutableSet.of(Paths.get("one"), Paths.get("two"));
 
     FilterResourcesStep filterResourcesStep = buildRule.getUberRDotJavaBuildable()
         .createFilterResourcesStep(resourceDirectories,
@@ -356,8 +356,8 @@ public class AndroidBinaryRuleTest {
 
     assertEquals(
         ImmutableSet.of(
-            "buck-out/bin/__filtered__target#uber_r_dot_java__/0",
-            "buck-out/bin/__filtered__target#uber_r_dot_java__/1"),
+            Paths.get("buck-out/bin/__filtered__target#uber_r_dot_java__/0"),
+            Paths.get("buck-out/bin/__filtered__target#uber_r_dot_java__/1")),
         filterResourcesStep.getOutputResourceDirs());
   }
 
@@ -392,7 +392,8 @@ public class AndroidBinaryRuleTest {
 
     // Invoke copyNativeLibrary to populate the steps.
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    AndroidBinaryRule.copyNativeLibrary(sourceDir, destinationDir, cpuFilters, stepsBuilder);
+    AndroidBinaryRule.copyNativeLibrary(
+        Paths.get(sourceDir), destinationDir, cpuFilters, stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
     assertEquals(steps.size(), expectedCommandDescriptions.size());

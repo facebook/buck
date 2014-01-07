@@ -105,7 +105,7 @@ public class ProjectTest {
     ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
-        .setRes("android_res/base/res")
+        .setRes(Paths.get("android_res/base/res"))
         .setRDotJavaPackage("com.facebook")
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 

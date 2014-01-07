@@ -47,19 +47,19 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
   }
 
   @Override
-  public void copyDirs(Map<String, String> sourcesToDestinations,
+  public void copyDirs(Map<Path, Path> sourcesToDestinations,
       Predicate<File> pred) throws IOException {
-    for (Map.Entry<String, String> e : sourcesToDestinations.entrySet()) {
+    for (Map.Entry<Path, Path> e : sourcesToDestinations.entrySet()) {
       copyDir(e.getKey(), e.getValue(), pred);
     }
   }
 
   @Override
   public void copyDir(
-      String srcDir,
-      String destDir,
+      Path srcDir,
+      Path destDir,
       final Predicate<File> pred) throws IOException {
-    final Path dest = MorePaths.absolutify(MorePaths.newPathInstance(destDir));
+    final Path dest = MorePaths.absolutify(destDir);
 
     // Remove existing contents if any.
     if (dest.toFile().exists()) {
@@ -68,7 +68,7 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
     Files.createDirectories(dest);
 
     // Copy filtered contents.
-    new DirectoryTraversal(new File(srcDir)) {
+    new DirectoryTraversal(srcDir.toFile()) {
       @Override
       public void visit(File srcFile, String relativePath) throws IOException {
         if (pred.apply(srcFile)) {

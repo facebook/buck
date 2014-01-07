@@ -63,7 +63,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   private final Path manifestFile;
 
   @Nullable
-  private final String metaInfDirectory;
+  private final Path metaInfDirectory;
 
   private final DirectoryTraverser directoryTraverser;
 
@@ -71,7 +71,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
       BuildRuleParams buildRuleParams,
       @Nullable String mainClass,
       @Nullable Path manifestFile,
-      @Nullable String metaInfDirectory,
+      @Nullable Path metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
     super(buildRuleParams);
     this.mainClass = mainClass;
@@ -137,7 +137,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
       commands.add(createStagingRoot);
 
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
-          metaInfDirectory, stagingTarget);
+          metaInfDirectory.toString(), stagingTarget);
       commands.add(link);
 
       includePaths = ImmutableSet.<String>builder()
@@ -191,7 +191,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
 
     private String mainClass;
     private Path manifestFile;
-    private String metaInfDirectory;
+    private Path metaInfDirectory;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -228,7 +228,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
       return this;
     }
 
-    public Builder setMetaInfDirectory(String metaInfDirectory) {
+    public Builder setMetaInfDirectory(Path metaInfDirectory) {
       this.metaInfDirectory = metaInfDirectory;
       return this;
     }

@@ -41,7 +41,7 @@ public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<An
       // if (!buildDirectory.equals(res.getParentFile())) {
       //   throw new RuntimeException(res + " is not an immediate child of " + buildDirectory);
       // }
-      String resDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(res.get());
+      Path resDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(res.get());
       builder.setRes(resDir);
     }
 
@@ -60,7 +60,7 @@ public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<An
     // assets
     Optional<String> assets = params.getOptionalStringAttribute("assets");
     if (assets.isPresent()) {
-      String assetsDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(assets.get());
+      Path assetsDir = params.resolveDirectoryPathRelativeToBuildFileDirectory(assets.get());
       builder.setAssetsDirectory(assetsDir);
     }
 

@@ -130,7 +130,7 @@ public class AaptPackageResources extends AbstractBuildable {
       steps.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
       steps.add(new CompileStringsStep(
           uberRDotJavaBuildable.getNonEnglishStringFiles(),
-          Paths.get(uberRDotJavaBuildable.getPathToGeneratedRDotJavaSrcFiles()),
+          uberRDotJavaBuildable.getPathToGeneratedRDotJavaSrcFiles(),
           tmpStringsDirPath));
     }
 
@@ -188,7 +188,7 @@ public class AaptPackageResources extends AbstractBuildable {
     if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
       String nativeLibAssetsDir = assetsDirectory.get() + "/lib";
       steps.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
-      for (String nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
+      for (Path nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
         AndroidBinaryRule.copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, cpuFilters, steps);
       }
     }
@@ -241,7 +241,7 @@ public class AaptPackageResources extends AbstractBuildable {
    */
   @VisibleForTesting
   Optional<String> createAllAssetsDirectory(
-      Set<String> assetsDirectories,
+      Set<Path> assetsDirectories,
       ImmutableList.Builder<Step> steps,
       DirectoryTraverser traverser) throws IOException {
     if (assetsDirectories.isEmpty()) {
@@ -255,8 +255,8 @@ public class AaptPackageResources extends AbstractBuildable {
     final ImmutableMap.Builder<String, File> allAssets = ImmutableMap.builder();
 
     File destinationDirectory = new File(destination);
-    for (String assetsDirectory : assetsDirectories) {
-      traverser.traverse(new DirectoryTraversal(new File(assetsDirectory)) {
+    for (Path assetsDirectory : assetsDirectories) {
+      traverser.traverse(new DirectoryTraversal(assetsDirectory.toFile()) {
         @Override
         public void visit(File file, String relativePath) {
           allAssets.put(relativePath, file);

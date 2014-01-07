@@ -43,6 +43,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -76,7 +77,7 @@ public class AaptPackageResourcesTest {
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<String> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
-        /* assetsDirectories */ ImmutableSet.<String>of(),
+        /* assetsDirectories */ ImmutableSet.<Path>of(),
         commands,
         traverser);
     EasyMock.verify(uberRDotJava);
@@ -124,7 +125,7 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<TargetCpuType>of());
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
-    Set<String> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
+    Set<Path> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DirectoryTraverser traverser = new DirectoryTraverser() {
       @Override
@@ -196,7 +197,7 @@ public class AaptPackageResourcesTest {
         BuildTargetFactory.newInstance("//facebook/base:libraryTwo_resources"));
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
-    Set<String> assetsDirectories = ImmutableSet.of(
+    Set<Path> assetsDirectories = ImmutableSet.of(
         resourceOne.getAssets(),
         resourceTwo.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();

@@ -29,6 +29,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -55,12 +56,12 @@ public class DummyRDotJavaTest {
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes("android_res/com/example/res1"));
+            .setRes(Paths.get("android_res/com/example/res1")));
     AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes("android_res/com/example/res2"));
+            .setRes(Paths.get("android_res/com/example/res2")));
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         ImmutableList.<HasAndroidResourceDeps>of(resourceRule1, resourceRule2),
@@ -132,12 +133,14 @@ public class DummyRDotJavaTest {
       List<AndroidResourceRule> resourceRules,
       String rDotJavaSourceFolder) {
     List<String> sortedSymbolsFiles = FluentIterable.from(resourceRules)
-        .transform(new Function<AndroidResourceRule, String>() {
+        .transform(new Function<AndroidResourceRule, Path>() {
           @Override
-          public String apply(AndroidResourceRule input) {
+          public Path apply(AndroidResourceRule input) {
             return input.getPathToTextSymbolsFile();
           }
-        }).toList();
+        })
+        .transform(Functions.toStringFunction())
+        .toList();
     return "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles) +
         " -o " + rDotJavaSourceFolder;
   }

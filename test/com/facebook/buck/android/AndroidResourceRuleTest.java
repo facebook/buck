@@ -49,13 +49,13 @@ public class AndroidResourceRuleTest {
         ImmutableSortedSet.<BuildRule>of());
     AndroidResourceRule androidResourceRule = new AndroidResourceRule(
         buildRuleParams,
-        "java/src/com/facebook/base/res",
+        Paths.get("java/src/com/facebook/base/res"),
         ImmutableSortedSet.of(
             Paths.get("java/src/com/facebook/base/res/drawable/E.xml"),
             Paths.get("java/src/com/facebook/base/res/drawable/A.xml"),
             Paths.get("java/src/com/facebook/base/res/drawable/C.xml")),
         "com.facebook",
-        "java/src/com/facebook/base/assets",
+        Paths.get("java/src/com/facebook/base/assets"),
         ImmutableSortedSet.of(
             Paths.get("java/src/com/facebook/base/assets/drawable/F.xml"),
             Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
@@ -100,27 +100,27 @@ public class AndroidResourceRuleTest {
     AndroidResourceRule c = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
-            .setRes("res_c")
+            .setRes(Paths.get("res_c"))
             .setRDotJavaPackage("com.facebook"));
 
     AndroidResourceRule b = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
-        .setRes("res_b")
+        .setRes(Paths.get("res_b"))
         .setRDotJavaPackage("com.facebook")
         .addDep(BuildTargetFactory.newInstance("//:c")));
 
     AndroidResourceRule d = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
-            .setRes("res_d")
+            .setRes(Paths.get("res_d"))
             .setRDotJavaPackage("com.facebook")
             .addDep(BuildTargetFactory.newInstance("//:c")));
 
     AndroidResourceRule a = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
-        .setRes("res_a")
+        .setRes(Paths.get("res_a"))
         .setRDotJavaPackage("com.facebook")
         .addDep(BuildTargetFactory.newInstance("//:b"))
         .addDep(BuildTargetFactory.newInstance("//:c"))

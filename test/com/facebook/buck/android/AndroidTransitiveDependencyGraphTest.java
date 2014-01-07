@@ -69,7 +69,7 @@ public class AndroidTransitiveDependencyGraphTest {
     BuildRule prebuiltNativeLibraryBuild = ruleResolver.buildAndAddToIndex(
         PrebuiltNativeLibrary.newPrebuiltNativeLibrary(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/prebuilt_native_library:library"))
-        .setNativeLibsDirectory("/java/com/facebook/prebuilt_native_library/libs")
+        .setNativeLibsDirectory(Paths.get("/java/com/facebook/prebuilt_native_library/libs"))
         .setIsAsset(true)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
@@ -85,7 +85,7 @@ public class AndroidTransitiveDependencyGraphTest {
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
         .setManifestFile(Paths.get("java/src/com/facebook/module/AndroidManifest.xml"))
-        .setAssetsDirectory("assets/"));
+        .setAssetsDirectory(Paths.get("assets")));
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     ruleResolver.buildAndAddToIndex(
@@ -127,7 +127,7 @@ public class AndroidTransitiveDependencyGraphTest {
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
-        ImmutableSet.of("assets/"),
+        ImmutableSet.of(Paths.get("assets")),
         transitiveDeps.assetsDirectories);
     assertEquals(
         "There should be one NativeLibraryBuildable that is an asset.",

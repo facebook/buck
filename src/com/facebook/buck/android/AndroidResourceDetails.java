@@ -20,6 +20,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Iterator;
 
 /**
@@ -32,7 +33,7 @@ public class AndroidResourceDetails {
    * An {@link Iterator} over this collection will reflect the order of the original list of
    * {@link AndroidResourceRule}s that were specified.
    */
-  public final ImmutableSet<String> resDirectories;
+  public final ImmutableSet<Path> resDirectories;
 
   public final ImmutableSet<String> whitelistedStringDirs;
 
@@ -47,16 +48,16 @@ public class AndroidResourceDetails {
    */
   @Beta
   public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResources) {
-    ImmutableSet.Builder<String> resDirectoryBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> resDirectoryBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> whitelistedStringDirsBuilder = ImmutableSet.builder();
     for (HasAndroidResourceDeps androidResource : androidResources) {
-      String resDirectory = androidResource.getRes();
+      Path resDirectory = androidResource.getRes();
       if (resDirectory != null) {
         resDirectoryBuilder.add(resDirectory);
         rDotJavaPackageBuilder.add(androidResource.getRDotJavaPackage());
         if (androidResource.hasWhitelistedStrings()) {
-          whitelistedStringDirsBuilder.add(resDirectory);
+          whitelistedStringDirsBuilder.add(resDirectory.toString());
         }
       }
     }
