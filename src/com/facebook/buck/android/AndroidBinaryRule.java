@@ -386,13 +386,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   /** The APK at this path is the final one that points to an APK that a user should install. */
   @Override
-  public String getApkPath() {
-    return getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk");
+  public Path getApkPath() {
+    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
   }
 
   @Override
   public String getPathToOutputFile() {
-    return getApkPath();
+    return getApkPath().toString();
   }
 
   @Override
@@ -454,7 +454,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       apkToAlign = signedApkPath;
     }
 
-    String apkPath = getApkPath();
+    Path apkPath = getApkPath();
     ZipalignStep zipalign = new ZipalignStep(apkToAlign, apkPath);
     steps.add(zipalign);
 
@@ -898,7 +898,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * @param classpathEntriesToDex Full set of classpath entries that must make
    *     their way into the final APK structure (but not necessarily into the
    *     primary dex).
-   * @param secondaryDexDirectoriesBuilder The contract for updating this builder must match that
+   * @param secondaryDexDirectories The contract for updating this builder must match that
    *     of {@link #mergePreDexedArtifactsIntoMultipleDexFiles}.
    * @param steps List of steps to add to.
    * @param primaryDexPath Output path for the primary dex file.

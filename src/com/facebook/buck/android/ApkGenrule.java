@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -109,8 +110,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   }
 
   @Override
-  public String getApkPath() {
-    return getPathToOutputFile();
+  public Path getApkPath() {
+    return Paths.get(getPathToOutputFile());
   }
 
   @Override
@@ -128,7 +129,8 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(context, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
-    String apkAbsolutePath = relativeToAbsolutePathFunction.apply(apk.getApkPath()).toString();
+    String apkAbsolutePath =
+        relativeToAbsolutePathFunction.apply(apk.getApkPath().toString()).toString();
     environmentVariablesBuilder.put("APK", apkAbsolutePath);
   }
 

@@ -173,10 +173,7 @@ public class AndroidBinaryRuleTest {
       androidLibraryRuleBuilder.addDep(nativeLibsRule.getBuildTarget());
     }
 
-    JavaLibraryRule androidLibraryRule = ruleResolver.buildAndAddToIndex(
-        androidLibraryRuleBuilder);
-
-    return androidLibraryRule;
+    return ruleResolver.buildAndAddToIndex(androidLibraryRuleBuilder);
   }
 
   @Test
@@ -223,7 +220,7 @@ public class AndroidBinaryRuleTest {
         .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
-    assertEquals(GEN_DIR + "/fb4a.apk", ruleInRootDirectory.getApkPath());
+    assertEquals(Paths.get(GEN_DIR + "/fb4a.apk"), ruleInRootDirectory.getApkPath());
 
     AndroidBinaryRule ruleInNonRootDirectory = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
@@ -231,7 +228,8 @@ public class AndroidBinaryRuleTest {
         .setManifest(new FileSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setTarget("Google Inc.:Google APIs:16"));
-    assertEquals(GEN_DIR + "/java/com/example/fb4a.apk", ruleInNonRootDirectory.getApkPath());
+    assertEquals(
+        Paths.get(GEN_DIR + "/java/com/example/fb4a.apk"), ruleInNonRootDirectory.getApkPath());
   }
 
   @Test

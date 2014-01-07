@@ -226,7 +226,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       ExecutionContext context) {
     getBuckEventBus().post(InstallEvent.started(buildRule.getBuildTarget()));
 
-    final File apk = new File(buildRule.getApkPath());
+    final File apk = buildRule.getApkPath().toFile();
     final boolean installViaSd = options.shouldInstallViaSd();
     boolean success = adbCall(options.adbOptions(),
         options.targetDeviceOptions(),
