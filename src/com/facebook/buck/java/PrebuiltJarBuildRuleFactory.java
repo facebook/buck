@@ -21,6 +21,8 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
+import java.nio.file.Path;
+
 
 public class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory<PrebuiltJarRule.Builder> {
 
@@ -32,8 +34,7 @@ public class PrebuiltJarBuildRuleFactory extends AbstractBuildRuleFactory<Prebui
   @Override
   protected void amendBuilder(PrebuiltJarRule.Builder builder, BuildRuleFactoryParams params) {
     // binary_jar
-    String binaryJar = params.getRequiredStringAttribute("binary_jar");
-    String binaryJarFile = params.resolveFilePathRelativeToBuildFileDirectory(binaryJar);
+    Path binaryJarFile = params.getRequiredFileAsPathRelativeToProjectRoot("binary_jar");
     builder.setBinaryJar(binaryJarFile);
 
     // source_jar

@@ -34,6 +34,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 
 public class AndroidResourceRuleTest {
 
@@ -49,16 +51,16 @@ public class AndroidResourceRuleTest {
         buildRuleParams,
         "java/src/com/facebook/base/res",
         ImmutableSortedSet.of(
-            "java/src/com/facebook/base/res/drawable/E.xml",
-            "java/src/com/facebook/base/res/drawable/A.xml",
-            "java/src/com/facebook/base/res/drawable/C.xml"),
+            Paths.get("java/src/com/facebook/base/res/drawable/E.xml"),
+            Paths.get("java/src/com/facebook/base/res/drawable/A.xml"),
+            Paths.get("java/src/com/facebook/base/res/drawable/C.xml")),
         "com.facebook",
         "java/src/com/facebook/base/assets",
         ImmutableSortedSet.of(
-            "java/src/com/facebook/base/assets/drawable/F.xml",
-            "java/src/com/facebook/base/assets/drawable/B.xml",
-            "java/src/com/facebook/base/assets/drawable/D.xml"),
-        "java/src/com/facebook/base/AndroidManifest.xml",
+            Paths.get("java/src/com/facebook/base/assets/drawable/F.xml"),
+            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
+            Paths.get("java/src/com/facebook/base/assets/drawable/D.xml")),
+        Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
         /* hasWhitelisted */ false);
 
     // Test getInputsToCompareToOutput().

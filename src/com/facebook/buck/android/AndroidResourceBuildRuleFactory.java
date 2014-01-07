@@ -22,6 +22,8 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
+import java.nio.file.Path;
+
 public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<AndroidResourceRule.Builder> {
 
   @Override
@@ -45,7 +47,7 @@ public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<An
 
     // res_srcs
     for (String resSrc : params.getOptionalListAttribute("res_srcs")) {
-      String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(resSrc);
+      Path relativePath = params.resolveFilePathRelativeToBuildFileDirectory(resSrc);
       builder.addResSrc(relativePath);
     }
 
@@ -64,14 +66,14 @@ public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<An
 
     // assets_srcs
     for (String assetsSrc : params.getOptionalListAttribute("assets_srcs")) {
-      String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(assetsSrc);
+      Path relativePath = params.resolveFilePathRelativeToBuildFileDirectory(assetsSrc);
       builder.addAssetsSrc(relativePath);
     }
 
     // manifest
     Optional<String> manifestFile = params.getOptionalStringAttribute("manifest");
     if (manifestFile.isPresent()) {
-      String manifestFilePath = params.resolveFilePathRelativeToBuildFileDirectory(
+      Path manifestFilePath = params.resolveFilePathRelativeToBuildFileDirectory(
           manifestFile.get());
       builder.setManifestFile(manifestFilePath);
     }

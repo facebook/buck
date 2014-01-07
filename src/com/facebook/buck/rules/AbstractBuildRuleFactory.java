@@ -63,7 +63,7 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
     // srcs
     if (builder instanceof SrcsAttributeBuilder) {
       for (String src : params.getOptionalListAttribute("srcs")) {
-        String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(src);
+        String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(src).toString();
         ((SrcsAttributeBuilder)builder).addSrc(relativePath);
       }
     }

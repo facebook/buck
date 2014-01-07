@@ -95,7 +95,7 @@ public final class BuildRuleFactoryParams {
     this.resolveFilePathRelativeToBuildFileDirectoryTransform = new Function<String, String>() {
       @Override
       public String apply(String input) {
-        return resolveFilePathRelativeToBuildFileDirectory(input);
+        return resolveFilePathRelativeToBuildFileDirectory(input).toString();
       }
     };
 
@@ -115,7 +115,7 @@ public final class BuildRuleFactoryParams {
    */
   public Path getRequiredFileAsPathRelativeToProjectRoot(String attributeName) {
     String localPath = getRequiredStringAttribute(attributeName);
-    return Paths.get(resolveFilePathRelativeToBuildFileDirectory(localPath));
+    return resolveFilePathRelativeToBuildFileDirectory(localPath);
   }
 
   /**
@@ -127,14 +127,12 @@ public final class BuildRuleFactoryParams {
    * path relative to the parallel build file directory in the generated files directory. In that
    * case, its existence will not be verified.
    */
-  public String resolveFilePathRelativeToBuildFileDirectory(String path) {
+  public Path resolveFilePathRelativeToBuildFileDirectory(String path) {
     if (path.startsWith(GENFILE_PREFIX)) {
       path = path.substring(GENFILE_PREFIX.length());
-      return String.format("%s/%s",
-          BuckConstant.GEN_DIR,
-          resolvePathAgainstBuildTargetBase(path));
+      return Paths.get(BuckConstant.GEN_DIR, resolvePathAgainstBuildTargetBase(path));
     } else {
-      String fullPath = resolvePathAgainstBuildTargetBase(path);
+      Path fullPath = Paths.get(resolvePathAgainstBuildTargetBase(path));
       File file = filesystem.getFileForRelativePath(fullPath);
 
       // TODO(mbolin): Eliminate this temporary exemption for symbolic links.
@@ -155,7 +153,7 @@ public final class BuildRuleFactoryParams {
         throw new RuntimeException(file + " is not a descendant of " + target.getBasePath());
       }
 
-      checkFullPath(fullPath);
+      checkFullPath(fullPath.toString());
 
       return fullPath;
     }
@@ -239,8 +237,8 @@ public final class BuildRuleFactoryParams {
       builder.addDep(buildTarget);
       return new BuildTargetSourcePath(buildTarget);
     } else {
-      String relativePath = resolveFilePathRelativeToBuildFileDirectory(resource);
-      return new FileSourcePath(relativePath);
+      Path relativePath = resolveFilePathRelativeToBuildFileDirectory(resource);
+      return new FileSourcePath(relativePath.toString());
     }
   }
 

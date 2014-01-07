@@ -510,7 +510,7 @@ public class ConstructorArgMarshallerTest {
             "path", raw,
             "sourcePath", raw));
 
-    Path expected = Paths.get(params.resolveFilePathRelativeToBuildFileDirectory(raw));
+    Path expected = params.resolveFilePathRelativeToBuildFileDirectory(raw);
 
     marshaller.populate(
         ruleResolver,

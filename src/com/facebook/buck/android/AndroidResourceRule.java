@@ -36,13 +36,16 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -80,7 +83,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   @Nullable
   private final String res;
 
-  private final ImmutableSortedSet<String> resSrcs;
+  private final ImmutableSortedSet<Path> resSrcs;
 
   @Nullable
   private final String rDotJavaPackage;
@@ -88,7 +91,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   @Nullable
   private final String assets;
 
-  private final ImmutableSortedSet<String> assetsSrcs;
+  private final ImmutableSortedSet<Path> assetsSrcs;
 
   @Nullable
   private final String pathToTextSymbolsDir;
@@ -97,17 +100,17 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   private final String pathToTextSymbolsFile;
 
   @Nullable
-  private final String manifestFile;
+  private final Path manifestFile;
 
   private final boolean hasWhitelistedStrings;
 
   protected AndroidResourceRule(BuildRuleParams buildRuleParams,
       @Nullable String res,
-      ImmutableSortedSet<String> resSrcs,
+      ImmutableSortedSet<Path> resSrcs,
       @Nullable String rDotJavaPackage,
       @Nullable String assets,
-      ImmutableSortedSet<String> assetsSrcs,
-      @Nullable String manifestFile,
+      ImmutableSortedSet<Path> assetsSrcs,
+      @Nullable Path manifestFile,
       boolean hasWhitelistedStrings) {
     super(buildRuleParams);
     this.res = res;
@@ -136,12 +139,13 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     ImmutableList.Builder<String> inputsToConsiderForCachingPurposes = ImmutableList.builder();
 
     // This should include the res/ and assets/ folders.
-    inputsToConsiderForCachingPurposes.addAll(resSrcs);
-    inputsToConsiderForCachingPurposes.addAll(assetsSrcs);
+    inputsToConsiderForCachingPurposes.addAll(
+        FluentIterable.from(Iterables.concat(resSrcs, assetsSrcs))
+            .transform(Functions.toStringFunction()));
 
     // manifest file is optional.
     if (manifestFile != null) {
-      inputsToConsiderForCachingPurposes.add(manifestFile);
+      inputsToConsiderForCachingPurposes.add(manifestFile.toString());
     }
 
     return inputsToConsiderForCachingPurposes.build();
@@ -164,7 +168,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   }
 
   @Nullable
-  public String getManifestFile() {
+  public Path getManifestFile() {
     return manifestFile;
   }
 
@@ -233,10 +237,10 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     // TODO(#2493457): This rule uses the aapt binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aapt is used.
     return super.appendToRuleKey(builder)
-        .set("res", resSrcs)
+        .setInputs("res", resSrcs.iterator())
         .set("rDotJavaPackage", rDotJavaPackage)
-        .set("assets", assetsSrcs)
-        .set("manifestFile", manifestFile)
+        .setInputs("assets", assetsSrcs.iterator())
+        .setInput("manifestFile", manifestFile)
         .set("hasWhitelistedStrings", hasWhitelistedStrings);
   }
 
@@ -248,7 +252,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     @Nullable
     private String res = null;
 
-    private ImmutableSortedSet.Builder<String> resSrcs = ImmutableSortedSet.naturalOrder();
+    private ImmutableSortedSet.Builder<Path> resSrcs = ImmutableSortedSet.naturalOrder();
 
     @Nullable
     private String rDotJavaPackage = null;
@@ -256,10 +260,10 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     @Nullable
     private String assetsDirectory = null;
 
-    private ImmutableSortedSet.Builder<String> assetsSrcs = ImmutableSortedSet.naturalOrder();
+    private ImmutableSortedSet.Builder<Path> assetsSrcs = ImmutableSortedSet.naturalOrder();
 
     @Nullable
-    private String manifestFile = null;
+    private Path manifestFile = null;
 
     private boolean hasWhitelistedStrings = false;
 
@@ -308,7 +312,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
       return this;
     }
 
-    public Builder addResSrc(String resSrc) {
+    public Builder addResSrc(Path resSrc) {
       this.resSrcs.add(resSrc);
       return this;
     }
@@ -323,12 +327,12 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
       return this;
     }
 
-    public Builder addAssetsSrc(String assetsSrc) {
+    public Builder addAssetsSrc(Path assetsSrc) {
       this.assetsSrcs.add(assetsSrc);
       return this;
     }
 
-    public Builder setManifestFile(String manifestFile) {
+    public Builder setManifestFile(Path manifestFile) {
       this.manifestFile = manifestFile;
       return this;
     }

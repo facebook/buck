@@ -29,6 +29,8 @@ import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class ShTestRuleTest extends EasyMockSupport {
 
   @After
@@ -41,7 +43,7 @@ public class ShTestRuleTest extends EasyMockSupport {
   public void testHasTestResultFiles() {
     ShTestRule shTest = new ShTestRule(
         new FakeBuildRuleParams(new BuildTarget("//test/com/example", "my_sh_test")),
-        "run_test.sh",
+        Paths.get("run_test.sh"),
         /* labels */ ImmutableSet.<String>of());
 
     ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);

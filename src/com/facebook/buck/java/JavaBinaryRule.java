@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -59,7 +60,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   private final String mainClass;
 
   @Nullable
-  private final String manifestFile;
+  private final Path manifestFile;
 
   @Nullable
   private final String metaInfDirectory;
@@ -69,7 +70,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   JavaBinaryRule(
       BuildRuleParams buildRuleParams,
       @Nullable String mainClass,
-      @Nullable String manifestFile,
+      @Nullable Path manifestFile,
       @Nullable String metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
     super(buildRuleParams);
@@ -91,7 +92,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
 
     return super.appendToRuleKey(builder)
         .set("mainClass", mainClass)
-        .set("manifestFile", manifestFile)
+        .setInput("manifestFile", manifestFile)
         .set("metaInfDirectory", metaInfFiles.build());
   }
 
@@ -111,7 +112,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
     ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
 
     if (manifestFile != null) {
-      builder.add(manifestFile);
+      builder.add(manifestFile.toString());
     }
 
     addMetaInfContents(builder);
@@ -189,7 +190,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   public static class Builder extends AbstractBuildRuleBuilder<JavaBinaryRule> {
 
     private String mainClass;
-    private String manifestFile;
+    private Path manifestFile;
     private String metaInfDirectory;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
@@ -222,7 +223,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
       return this;
     }
 
-    public Builder setManifest(String manifestFile) {
+    public Builder setManifest(Path manifestFile) {
       this.manifestFile = manifestFile;
       return this;
     }

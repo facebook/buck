@@ -1169,7 +1169,7 @@ public class DefaultJavaLibraryRuleTest {
       public BuildRule createRule(BuildTarget target) {
         return new PrebuiltJarRule(
             new FakeBuildRuleParams(target),
-            "MyJar",
+            Paths.get("MyJar"),
             Optional.<String>absent(),
             Optional.<String>absent());
       }

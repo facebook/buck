@@ -101,7 +101,7 @@ public class AndroidTransitiveDependencyGraph {
         // Update pathsToThirdPartyJars.
         if (rule instanceof PrebuiltJarRule) {
           PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule) rule;
-          pathsToThirdPartyJarsBuilder.add(prebuiltJarRule.getBinaryJar());
+          pathsToThirdPartyJarsBuilder.add(prebuiltJarRule.getBinaryJar().toString());
         }
         return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
       }
@@ -196,9 +196,9 @@ public class AndroidTransitiveDependencyGraph {
           if (assetsDirectory != null) {
             assetsDirectories.add(assetsDirectory);
           }
-          String manifestFile = androidRule.getManifestFile();
+          Path manifestFile = androidRule.getManifestFile();
           if (manifestFile != null) {
-            manifestFiles.add(manifestFile);
+            manifestFiles.add(manifestFile.toString());
           }
         } else if (rule instanceof DefaultJavaLibraryRule) {
           DefaultJavaLibraryRule defaultJavaLibraryRule = (DefaultJavaLibraryRule)rule;

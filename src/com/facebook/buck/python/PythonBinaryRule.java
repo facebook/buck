@@ -48,9 +48,9 @@ import java.util.List;
 public class PythonBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
-  private final String main;
+  private final Path main;
 
-  protected PythonBinaryRule(BuildRuleParams buildRuleParams, String main) {
+  protected PythonBinaryRule(BuildRuleParams buildRuleParams, Path main) {
     super(buildRuleParams);
     this.main = Preconditions.checkNotNull(main);
   }
@@ -58,7 +58,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
-        .set("main", main);
+        .setInput("main", main);
   }
 
   @Override
@@ -78,7 +78,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
             getPythonPathEntries(),
             projectFilesystem.getAbsolutifier()));
     return ImmutableList.of(String.format("PYTHONPATH=%s", pythonPath), "python",
-        projectFilesystem.getPathRelativizer().apply(main).toString());
+        projectFilesystem.getAbsolutifier().apply(main).toString());
   }
 
   @VisibleForTesting
@@ -112,7 +112,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
     if (main != null) {
-      return ImmutableList.of(main);
+      return ImmutableList.of(main.toString());
     } else {
       return ImmutableList.of();
     }
@@ -132,7 +132,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
 
   public static class Builder extends AbstractBuildRuleBuilder<PythonBinaryRule> {
 
-    private String main;
+    private Path main;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -143,7 +143,7 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
       return new PythonBinaryRule(createBuildRuleParams(ruleResolver), main);
     }
 
-    public Builder setMain(String main) {
+    public Builder setMain(Path main) {
       this.main = main;
       return this;
     }

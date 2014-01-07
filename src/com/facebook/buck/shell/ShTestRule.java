@@ -55,12 +55,12 @@ import java.util.concurrent.Callable;
  */
 public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
-  private final String test;
+  private final Path test;
   private final ImmutableSet<String> labels;
 
   protected ShTestRule(
       BuildRuleParams buildRuleParams,
-      String test,
+      Path test,
       Set<String> labels) {
     super(buildRuleParams);
     this.test = Preconditions.checkNotNull(test);
@@ -70,7 +70,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
-        .set("test", test);
+        .setInput("test", test);
   }
 
   @Override
@@ -80,7 +80,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
-    return ImmutableSet.of(test);
+    return ImmutableSet.of(test.toString());
   }
 
   @Override
@@ -90,7 +90,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
   @Override
   public ImmutableSet<String> getContacts() {
-    return ImmutableSet.<String>of();
+    return ImmutableSet.of();
   }
 
   @Override
@@ -158,7 +158,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   public static class Builder extends AbstractBuildRuleBuilder<ShTestRule> implements
       LabelsAttributeBuilder {
 
-    private String test;
+    private Path test;
     private ImmutableSet<String> labels = ImmutableSet.of();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
@@ -171,7 +171,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
       return new ShTestRule(buildRuleParams, test, labels);
     }
 
-    public Builder setTest(String test) {
+    public Builder setTest(Path test) {
       this.test = test;
       return this;
     }

@@ -857,7 +857,7 @@ public class Project {
     String name;
     if (rule instanceof PrebuiltJarRule) {
       PrebuiltJarRule prebuiltJarRule = (PrebuiltJarRule)rule;
-      String binaryJar = prebuiltJarRule.getBinaryJar();
+      String binaryJar = prebuiltJarRule.getBinaryJar().toString();
       return getIntellijNameForBinaryJar(binaryJar);
     } else {
       String basePath = rule.getBuildTarget().getBasePath();
@@ -1030,7 +1030,7 @@ public class Project {
 
     private SerializablePrebuiltJarRule(PrebuiltJarRule rule) {
       this.name = getIntellijNameForRule(rule, null /* basePathToAliasMap */);
-      this.binaryJar = rule.getBinaryJar();
+      this.binaryJar = rule.getBinaryJar().toString();
       this.sourceJar = rule.getSourceJar().orNull();
       this.javadocUrl = rule.getJavadocUrl().orNull();
     }

@@ -43,6 +43,7 @@ public interface Buildable {
    * cases the inputs may be ordered in any way the rule feels most appropriate.
    */
   // TODO(simons): Use the Description's constructor arg to generate these.
+  // TODO(simons): These inputs are files and should be represented as Paths
   public Iterable<String> getInputsToCompareToOutput();
 
   /**
@@ -65,6 +66,7 @@ public interface Buildable {
    *     identify a single file (as opposed to a directory).
    */
   @Nullable
+  // TODO(simons): Return a Path
   public String getPathToOutputFile();
 
   /**

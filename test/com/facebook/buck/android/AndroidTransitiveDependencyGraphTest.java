@@ -33,6 +33,8 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class AndroidTransitiveDependencyGraphTest {
 
   /**
@@ -48,13 +50,13 @@ public class AndroidTransitiveDependencyGraphTest {
     PrebuiltJarRule guavaRule = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-        .setBinaryJar("third_party/guava/guava-10.0.1.jar")
+        .setBinaryJar(Paths.get("third_party/guava/guava-10.0.1.jar"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     PrebuiltJarRule jsr305Rule = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/jsr-305:jsr-305"))
-        .setBinaryJar("third_party/jsr-305/jsr305.jar")
+        .setBinaryJar(Paths.get("third_party/jsr-305/jsr305.jar"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
@@ -82,7 +84,7 @@ public class AndroidTransitiveDependencyGraphTest {
     AndroidResourceRule manifestRule = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/facebook:res"))
-        .setManifestFile("java/src/com/facebook/module/AndroidManifest.xml")
+        .setManifestFile(Paths.get("java/src/com/facebook/module/AndroidManifest.xml"))
         .setAssetsDirectory("assets/"));
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");

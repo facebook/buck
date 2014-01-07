@@ -22,6 +22,8 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
+import java.nio.file.Path;
+
 
 public class JavaBinaryBuildRuleFactory extends AbstractBuildRuleFactory<JavaBinaryRule.Builder> {
 
@@ -42,7 +44,7 @@ public class JavaBinaryBuildRuleFactory extends AbstractBuildRuleFactory<JavaBin
     // manifest_file
     Optional<String> manifestFile = params.getOptionalStringAttribute("manifest_file");
     if (manifestFile.isPresent()) {
-      String manifestFilePath = params.resolveFilePathRelativeToBuildFileDirectory(
+      Path manifestFilePath = params.resolveFilePathRelativeToBuildFileDirectory(
           manifestFile.get());
       builder.setManifest(manifestFilePath);
     }

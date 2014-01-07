@@ -73,6 +73,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.SortedMap;
 
@@ -267,7 +268,7 @@ public class TargetsCommandTest {
     ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//empty:empty"))
-        .setBinaryJar("")
+        .setBinaryJar(Paths.get("spoof"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())

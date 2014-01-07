@@ -46,14 +46,14 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
 public class PrebuiltJarRuleTest {
 
-  private static final String PATH_TO_JUNIT_JAR = "lib/junit-4.11.jar";
+  private static final Path PATH_TO_JUNIT_JAR = Paths.get("lib/junit-4.11.jar");
 
   private PrebuiltJarRule junitJarRule;
 
@@ -95,7 +95,7 @@ public class PrebuiltJarRuleTest {
     // Make sure the ABI key is set as expected.
     HashCode hashForJar = ByteStreams.hash(
         Files.newInputStreamSupplier(
-            new File(PATH_TO_JUNIT_JAR)),
+            PATH_TO_JUNIT_JAR.toFile()),
         Hashing.sha1());
     assertEquals("ABI key should be the sha1 of the file contents.",
         hashForJar.toString(),

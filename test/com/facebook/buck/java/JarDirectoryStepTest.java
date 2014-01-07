@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -130,7 +131,7 @@ public class JarDirectoryStepTest {
         "output.jar",
         ImmutableSet.of("input.jar"),
         /* main class */ null,
-        "manifest");
+        Paths.get("manifest"));
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(tmp))
         .build();

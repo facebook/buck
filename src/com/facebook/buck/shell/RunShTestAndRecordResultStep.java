@@ -21,8 +21,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -31,27 +29,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class RunShTestAndRecordResultStep implements Step {
 
-  private String pathToShellScript;
+  private Path pathToShellScript;
   private String pathToTestResultFile;
 
-  public RunShTestAndRecordResultStep(String pathToShellScript, String pathToTestResultFile) {
+  public RunShTestAndRecordResultStep(Path pathToShellScript, String pathToTestResultFile) {
     this.pathToShellScript = Preconditions.checkNotNull(pathToShellScript);
     this.pathToTestResultFile = Preconditions.checkNotNull(pathToTestResultFile);
   }
 
   @Override
   public String getShortName() {
-    return pathToShellScript;
+    return pathToShellScript.toString();
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return pathToShellScript;
+    return pathToShellScript.toString();
   }
 
   @Override
@@ -60,7 +58,7 @@ public class RunShTestAndRecordResultStep implements Step {
     if (context.getPlatform() == Platform.WINDOWS) {
       // Ignore sh_test on Windows.
       summary = new TestResultSummary(
-          pathToShellScript,
+          getShortName(),
           "sh_test",
           /* isSuccess */ true,
           /* duration*/ 0,
@@ -72,13 +70,13 @@ public class RunShTestAndRecordResultStep implements Step {
       ShellStep test = new ShellStep() {
         @Override
         public String getShortName() {
-          return pathToShellScript;
+          return pathToShellScript.toString();
         }
 
         @Override
         protected ImmutableList<String> getShellCommandInternal(
             ExecutionContext context) {
-          return ImmutableList.of(pathToShellScript);
+          return ImmutableList.of(pathToShellScript.toString());
         }
 
         @Override
@@ -97,7 +95,7 @@ public class RunShTestAndRecordResultStep implements Step {
 
       // Write test result.
       summary = new TestResultSummary(
-          pathToShellScript,
+          getShortName(),
           "sh_test",
           /* isSuccess */ exitCode == 0,
           test.getDuration(),
@@ -112,14 +110,8 @@ public class RunShTestAndRecordResultStep implements Step {
       mapper.writeValue(
           Files.newWriter(new File(pathToTestResultFile), Charsets.UTF_8),
           summary);
-    } catch (JsonGenerationException e) {
-      Throwables.propagate(e);
-    } catch (JsonMappingException e) {
-      Throwables.propagate(e);
-    } catch (FileNotFoundException e) {
-      Throwables.propagate(e);
     } catch (IOException e) {
-      Throwables.propagate(e);
+      throw Throwables.propagate(e);
     }
 
     // Even though the test may have failed, this command executed successfully, so its exit code

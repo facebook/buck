@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
@@ -70,7 +71,7 @@ public class JarDirectoryStep implements Step {
 
   /** If specified, the Manifest file to use for the generated JAR file.  */
   @Nullable
-  private final String manifestFile;
+  private final Path manifestFile;
 
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
@@ -89,7 +90,7 @@ public class JarDirectoryStep implements Step {
   public JarDirectoryStep(String pathToOutputFile,
                           Set<String> entriesToJar,
                           @Nullable String mainClass,
-                          @Nullable String manifestFile) {
+                          @Nullable Path manifestFile) {
     this.pathToOutputFile = Preconditions.checkNotNull(pathToOutputFile);
     this.entriesToJar = ImmutableSet.copyOf(entriesToJar);
     this.mainClass = mainClass;

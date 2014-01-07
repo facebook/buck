@@ -47,6 +47,8 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class BuildRuleFactoryParamsTest {
 
@@ -98,7 +100,7 @@ public class BuildRuleFactoryParamsTest {
         buildTarget,
         new FakeRuleKeyBuilderFactory());
 
-    assertEquals("build.xml",
+    assertEquals(Paths.get("build.xml"),
         params.resolveFilePathRelativeToBuildFileDirectory("build.xml"));
   }
 
@@ -113,7 +115,7 @@ public class BuildRuleFactoryParamsTest {
         parser,
         buildTarget,
         new FakeRuleKeyBuilderFactory());
-    assertEquals("src/com/facebook/A.java",
+    assertEquals(Paths.get("src/com/facebook/A.java"),
         params.resolveFilePathRelativeToBuildFileDirectory("A.java"));
   }
 
@@ -174,8 +176,8 @@ public class BuildRuleFactoryParamsTest {
         buildTarget,
         new FakeRuleKeyBuilderFactory());
     // File exists, is in a subdir but does not cross a buck package boundary
-    String relativePath = params.resolveFilePathRelativeToBuildFileDirectory("nobuild/C.java");
-    assertEquals("src/com/facebook/nobuild/C.java", relativePath);
+    Path relativePath = params.resolveFilePathRelativeToBuildFileDirectory("nobuild/C.java");
+    assertEquals("src/com/facebook/nobuild/C.java", relativePath.toString());
   }
 
   @Test

@@ -21,6 +21,8 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 
+import java.nio.file.Path;
+
 public class ShTestBuildRuleFactory extends AbstractBuildRuleFactory<ShTestRule.Builder> {
 
   @Override
@@ -33,7 +35,7 @@ public class ShTestBuildRuleFactory extends AbstractBuildRuleFactory<ShTestRule.
       throws NoSuchBuildTargetException {
     // test
     String test = params.getRequiredStringAttribute("test");
-    String testPath = params.resolveFilePathRelativeToBuildFileDirectory(test);
+    Path testPath = params.resolveFilePathRelativeToBuildFileDirectory(test);
     builder.setTest(testPath);
   }
 

@@ -70,7 +70,7 @@ public class PythonBinaryRuleTest {
     BuildTarget pyBinaryTarget = BuildTargetFactory.newInstance("//:py_binary");
     PythonBinaryRule pyBinary = ruleResolver.buildAndAddToIndex(
         PythonBinaryRule.newPythonBinaryBuilder(new FakeAbstractBuildRuleBuilderParams())
-            .setMain("foo")
+            .setMain(Paths.get("foo"))
             .addDep(javaLibraryTarget)
             .addDep(pyLibraryTarget)
             .setBuildTarget(pyBinaryTarget)

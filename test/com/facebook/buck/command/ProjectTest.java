@@ -61,6 +61,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -69,7 +70,7 @@ import javax.annotation.Nullable;
 
 public class ProjectTest {
 
-  private static final String PATH_TO_GUAVA_JAR = "third_party/guava/guava-10.0.1.jar";
+  private static final Path PATH_TO_GUAVA_JAR = Paths.get("third_party/guava/guava-10.0.1.jar");
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   private PrebuiltJarRule guava;
@@ -225,7 +226,7 @@ public class ProjectTest {
   public void testGenerateRelativeGenPath() {
     String basePathOfModuleWithSlash = "android_res/com/facebook/gifts/";
     Path expectedRelativePathToGen =
-        java.nio.file.Paths.get("/../../../../buck-out/android/android_res/com/facebook/gifts/gen");
+        Paths.get("/../../../../buck-out/android/android_res/com/facebook/gifts/gen");
     assertEquals(
         expectedRelativePathToGen, Project.generateRelativeGenPath(basePathOfModuleWithSlash));
   }
@@ -427,17 +428,17 @@ public class ProjectTest {
     PrebuiltJarRule cglib = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:cglib"))
-            .setBinaryJar("third_party/java/easymock/cglib.jar"));
+            .setBinaryJar(Paths.get("third_party/java/easymock/cglib.jar")));
 
     PrebuiltJarRule objenesis = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:objenesis"))
-        .setBinaryJar("third_party/java/easymock/objenesis.jar"));
+        .setBinaryJar(Paths.get("third_party/java/easymock/objenesis.jar")));
 
     PrebuiltJarRule easymock = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/easymock:easymock"))
-            .setBinaryJar("third_party/java/easymock/easymock.jar")
+            .setBinaryJar(Paths.get("third_party/java/easymock/easymock.jar"))
             .addDep(BuildTargetFactory.newInstance("//third_party/java/easymock:cglib"))
             .addDep(BuildTargetFactory.newInstance("//third_party/java/easymock:objenesis")));
 
@@ -487,7 +488,7 @@ public class ProjectTest {
     PrebuiltJarRule guava = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/guava:guava"))
-            .setBinaryJar("third_party/java/guava.jar")
+            .setBinaryJar(Paths.get("third_party/java/guava.jar"))
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     ruleResolver.buildAndAddToIndex(
@@ -546,7 +547,7 @@ public class ProjectTest {
     PrebuiltJarRule httpCore = ruleResolver.buildAndAddToIndex(
         PrebuiltJarRule.newPrebuiltJarRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//third_party/java/httpcore:httpcore"))
-        .setBinaryJar("httpcore-4.0.1.jar")
+        .setBinaryJar(Paths.get("httpcore-4.0.1.jar"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // The support-v4 library is loaded as a java_library() rather than a prebuilt_jar() because it

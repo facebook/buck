@@ -40,8 +40,8 @@ import java.util.List;
 
 public class JavaBinaryRuleTest {
 
-  private static final String PATH_TO_GUAVA_JAR = "third_party/guava/guava-10.0.1.jar";
-  private static final String PATH_TO_GENERATOR_JAR = "third_party/guava/generator.jar";
+  private static final Path PATH_TO_GUAVA_JAR = Paths.get("third_party/guava/guava-10.0.1.jar");
+  private static final Path PATH_TO_GENERATOR_JAR = Paths.get("third_party/guava/generator.jar");
 
   @Test
   public void testGetExecutableCommand() {
@@ -98,6 +98,6 @@ public class JavaBinaryRuleTest {
 
     assertFalse(
         "Library rules that are used exclusively by genrules should not be part of the classpath.",
-        expectedClasspath.contains(PATH_TO_GENERATOR_JAR));
+        expectedClasspath.contains(PATH_TO_GENERATOR_JAR.toString()));
   }
 }
