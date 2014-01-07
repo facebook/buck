@@ -26,6 +26,7 @@ import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryBuildRuleFactory;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
 import com.facebook.buck.android.RobolectricTestBuildRuleFactory;
+import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
@@ -104,6 +105,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ExportFileDescription());
     builder.register(new GenAidlDescription());
     builder.register(new PythonLibraryDescription());
+    builder.register(new XcodeNativeDescription());
 
     // TODO(simons): Consider whether we actually want to have default rules
     builder.register(BuildRuleType.ANDROID_BINARY, new AndroidBinaryBuildRuleFactory());

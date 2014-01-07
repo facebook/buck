@@ -1,0 +1,18 @@
+java_test(
+  name = 'rules',
+  srcs = glob(['*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/apple:rules',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/apple:rules',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:rule_pattern',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
+  ]
+)
