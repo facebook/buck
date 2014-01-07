@@ -36,6 +36,7 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public class GenerateManifestStep implements Step {
@@ -43,12 +44,12 @@ public class GenerateManifestStep implements Step {
   private static final int BASE_SDK_LEVEL = 1;
 
   private String skeletonManifestPath;
-  private ImmutableSet<String> libraryManifestPaths;
+  private ImmutableSet<Path> libraryManifestPaths;
   private String outManifestPath;
 
   public GenerateManifestStep(
       String skeletonManifestPath,
-      ImmutableSet<String> libraryManifestPaths,
+      ImmutableSet<Path> libraryManifestPaths,
       String outManifestPath) {
     this.skeletonManifestPath = Preconditions.checkNotNull(skeletonManifestPath);
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
@@ -80,8 +81,8 @@ public class GenerateManifestStep implements Step {
 
     List<File> libraryManifestFiles = Lists.newArrayList();
 
-    for (String path : libraryManifestPaths) {
-      libraryManifestFiles.add(new File(path));
+    for (Path path : libraryManifestPaths) {
+      libraryManifestFiles.add(path.toFile());
     }
 
     File skeletonManifestFile = new File(skeletonManifestPath);

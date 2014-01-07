@@ -24,18 +24,19 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 public class GenProGuardConfigStep extends ShellStep {
 
-  private final String androidManifestPath;
+  private final Path androidManifestPath;
   private final Set<String> resDirectories;
-  private final String proguardConfigurationPath;
+  private final Path proguardConfigurationPath;
 
   public GenProGuardConfigStep(
-      String androidManifestPath,
+      Path androidManifestPath,
       Set<String> resDirectories,
-      String proguardConfigurationPath) {
+      Path proguardConfigurationPath) {
     this.androidManifestPath = Preconditions.checkNotNull(androidManifestPath);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
     this.proguardConfigurationPath = Preconditions.checkNotNull(proguardConfigurationPath);
@@ -54,7 +55,7 @@ public class GenProGuardConfigStep extends ShellStep {
     args.add(androidPlatformTarget.getAaptExecutable().getAbsolutePath()).add("package");
 
     // Specify where the ProGuard config should be written.
-    args.add("-G").add(proguardConfigurationPath);
+    args.add("-G").add(proguardConfigurationPath.toString());
 
     // Add all of the res/ directories.
     for (String res : resDirectories) {
@@ -62,7 +63,7 @@ public class GenProGuardConfigStep extends ShellStep {
     }
 
     // Add the remaining flags.
-    args.add("-M").add(androidManifestPath);
+    args.add("-M").add(androidManifestPath.toString());
     args.add("--auto-add-overlay");
     args.add("-I").add(androidPlatformTarget.getAndroidJar().getAbsolutePath());
 

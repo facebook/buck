@@ -65,7 +65,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   private final Function<Path, Path> relativeToAbsolutePathFunction;
 
   private ApkGenrule(BuildRuleParams buildRuleParams,
-      List<String> srcs,
+      List<Path> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,

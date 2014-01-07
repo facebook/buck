@@ -88,7 +88,7 @@ public class ApkGenruleTest {
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(libAndroidTarget)
-        .addSrc("java/com/facebook/util/Facebook.java"));
+        .addSrc(Paths.get("java/com/facebook/util/Facebook.java")));
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     ruleResolver.buildAndAddToIndex(
@@ -204,12 +204,12 @@ public class ApkGenruleTest {
         thirdMkdirCommand.getPath());
 
     MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
-    assertEquals("src/com/facebook/signer.py", linkSource1.getSource());
-    assertEquals(relativePathToSrcDir + "/signer.py", linkSource1.getTarget());
+    assertEquals(Paths.get("src/com/facebook/signer.py"), linkSource1.getSource());
+    assertEquals(Paths.get(relativePathToSrcDir + "/signer.py"), linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
-    assertEquals("src/com/facebook/key.properties", linkSource2.getSource());
-    assertEquals(relativePathToSrcDir + "/key.properties", linkSource2.getTarget());
+    assertEquals(Paths.get("src/com/facebook/key.properties"), linkSource2.getSource());
+    assertEquals(Paths.get(relativePathToSrcDir + "/key.properties"), linkSource2.getTarget());
 
     Step seventhStep = steps.get(6);
     assertTrue(seventhStep instanceof ShellStep);

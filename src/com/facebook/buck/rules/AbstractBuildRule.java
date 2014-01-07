@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -178,7 +179,7 @@ abstract class AbstractBuildRule implements BuildRule {
   /**
    * @return Whether the input path directs to a file in the buck generated files folder.
    */
-  public static boolean isGeneratedFile(String pathRelativeToProjectRoot) {
-    return pathRelativeToProjectRoot.startsWith(BuckConstant.GEN_DIR);
+  public static boolean isGeneratedFile(Path pathRelativeToProjectRoot) {
+    return pathRelativeToProjectRoot.startsWith(BuckConstant.GEN_PATH);
   }
 }

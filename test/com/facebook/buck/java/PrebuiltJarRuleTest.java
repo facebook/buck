@@ -62,7 +62,7 @@ public class PrebuiltJarRuleTest {
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(new BuildTarget("//lib", "junit"));
     junitJarRule = new PrebuiltJarRule(buildRuleParams,
         PATH_TO_JUNIT_JAR,
-        Optional.of("lib/junit-4.11-sources.jar"),
+        Optional.of(Paths.get("lib/junit-4.11-sources.jar")),
         Optional.of("http://junit-team.github.io/junit/javadoc/latest/"));
   }
 

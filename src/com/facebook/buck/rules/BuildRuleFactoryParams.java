@@ -56,7 +56,7 @@ public final class BuildRuleFactoryParams {
   private final boolean ignoreFileExistenceChecks;
   private final AbstractBuildRuleBuilderParams abstractBuildRuleFactoryParams;
 
-  private final Function<String, String> resolveFilePathRelativeToBuildFileDirectoryTransform;
+  private final Function<String, Path> resolveFilePathRelativeToBuildFileDirectoryTransform;
 
   public BuildRuleFactoryParams(
       Map<String, ?> instance,
@@ -92,10 +92,10 @@ public final class BuildRuleFactoryParams {
     this.buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
     this.ignoreFileExistenceChecks = ignoreFileExistenceChecks;
 
-    this.resolveFilePathRelativeToBuildFileDirectoryTransform = new Function<String, String>() {
+    this.resolveFilePathRelativeToBuildFileDirectoryTransform = new Function<String, Path>() {
       @Override
-      public String apply(String input) {
-        return resolveFilePathRelativeToBuildFileDirectory(input).toString();
+      public Path apply(String input) {
+        return resolveFilePathRelativeToBuildFileDirectory(input);
       }
     };
 
@@ -318,7 +318,7 @@ public final class BuildRuleFactoryParams {
     }
   }
 
-  public Function<String, String> getResolveFilePathRelativeToBuildFileDirectoryTransform() {
+  public Function<String, Path> getResolveFilePathRelativeToBuildFileDirectoryTransform() {
     return resolveFilePathRelativeToBuildFileDirectoryTransform;
   }
 

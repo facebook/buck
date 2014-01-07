@@ -63,8 +63,8 @@ public class SymlinkFileStepTest {
     target.delete();
 
     SymlinkFileStep step = new SymlinkFileStep(
-        /* source */ source.getName(),
-        /* target */ target.getName(),
+        /* source */ Paths.get(source.getName()),
+        /* target */ Paths.get(target.getName()),
         useAbsolutePaths);
     step.execute(context);
     // Run twice to ensure we can overwrite an existing symlink
@@ -105,8 +105,8 @@ public class SymlinkFileStepTest {
 
     tmpDir.newFile("dummy");
     SymlinkFileStep symlinkStep = new SymlinkFileStep(
-        /* source */ "dummy",
-        /* target */ "my_symlink",
+        /* source */ Paths.get("dummy"),
+        /* target */ Paths.get("my_symlink"),
         /* useAbsolutePaths*/ true);
     int exitCode = symlinkStep.execute(executionContext);
     assertEquals(0, exitCode);

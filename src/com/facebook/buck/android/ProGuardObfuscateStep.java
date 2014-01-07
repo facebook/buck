@@ -37,6 +37,7 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
@@ -53,8 +54,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
    *     exec()'s ARG_MAX limit.
    */
   public static Step create(
-      String generatedProGuardConfig,
-      Set<String> customProguardConfigs,
+      Path generatedProGuardConfig,
+      Set<Path> customProguardConfigs,
       boolean useProguardOptimizations,
       Map<String, String> inputAndOutputEntries,
       Set<String> additionalLibraryJarsForProguard,
@@ -179,8 +180,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
    */
   private static class CommandLineHelperStep extends AbstractExecutionStep {
 
-    private final String generatedProGuardConfig;
-    private final Set<String> customProguardConfigs;
+    private final Path generatedProGuardConfig;
+    private final Set<Path> customProguardConfigs;
     private final Map<String, String> inputAndOutputEntries;
     private final Set<String> additionalLibraryJarsForProguard;
     private final boolean useAndroidProguardConfigWithOptimizations;
@@ -199,8 +200,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
      * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
      */
     private CommandLineHelperStep(
-        String generatedProGuardConfig,
-        Set<String> customProguardConfigs,
+        Path generatedProGuardConfig,
+        Set<Path> customProguardConfigs,
         boolean useProguardOptimizations,
         Map<String, String> inputAndOutputEntries,
         Set<String> additionalLibraryJarsForProguard,
@@ -251,10 +252,10 @@ public final class ProGuardObfuscateStep extends ShellStep {
       } else {
         args.add("-include").add(androidPlatformTarget.getProguardConfig().getAbsolutePath());
       }
-      for (String proguardConfig : customProguardConfigs) {
-        args.add("-include").add(proguardConfig);
+      for (Path proguardConfig : customProguardConfigs) {
+        args.add("-include").add(proguardConfig.toString());
       }
-      args.add("-include").add(generatedProGuardConfig);
+      args.add("-include").add(generatedProGuardConfig.toString());
 
       // -injars and -outjars paired together for each input.
       for (Map.Entry<String, String> inputOutputEntry : inputAndOutputEntries.entrySet()) {

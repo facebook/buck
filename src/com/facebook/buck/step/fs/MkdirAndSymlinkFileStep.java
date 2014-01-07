@@ -22,19 +22,19 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 /**
  * Ensures the directory of the target path is created before a file is symlinked to it.
  */
 public final class MkdirAndSymlinkFileStep extends CompositeStep {
 
-  private final String source;
-  private final String target;
+  private final Path source;
+  private final Path target;
 
-  public MkdirAndSymlinkFileStep(String source, String target) {
+  public MkdirAndSymlinkFileStep(Path source, Path target) {
     super(ImmutableList.of(
-        new MkdirStep(Paths.get(target).getParent().toString()),
+        new MkdirStep(target.getParent()),
         new SymlinkFileStep(source, target, /* useAbsolutePaths */ true)
     ));
     this.source = Preconditions.checkNotNull(source);
@@ -42,12 +42,12 @@ public final class MkdirAndSymlinkFileStep extends CompositeStep {
   }
 
   @VisibleForTesting
-  public String getSource() {
+  public Path getSource() {
     return source;
   }
 
   @VisibleForTesting
-  public String getTarget() {
+  public Path getTarget() {
     return target;
   }
 

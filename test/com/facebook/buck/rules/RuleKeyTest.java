@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 /**
  * Unit test for {@link RuleKey}.
@@ -80,7 +81,7 @@ public class RuleKeyTest {
         // "not idempotent", which screws up this test.
         // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that file
         // access can be mocked appropriately during a unit test.
-        .addSrc("src/com/facebook/buck/cli/Main.java");
+        .addSrc(Paths.get("src/com/facebook/buck/cli/Main.java"));
     DefaultJavaLibraryRule libraryNoCommon = ruleResolver1.buildAndAddToIndex(
         javaLibraryBuilder);
 

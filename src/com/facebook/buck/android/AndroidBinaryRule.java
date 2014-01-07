@@ -413,6 +413,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies();
 
     // Copy the transitive closure of files in native_libs to a single directory, if any.
+    // TODO(simons): It's a Path
     ImmutableSet<String> nativeLibraryDirectories;
     if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
       String pathForNativeLibs = getPathForNativeLibs();
@@ -828,7 +829,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   ImmutableSet<String> addProguardCommands(
       BuildContext context,
       Set<String> classpathEntriesToDex,
-      Set<String> depsProguardConfigs,
+      Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,
       Set<String> resDirectories) {
     final ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesMap =
@@ -847,7 +848,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(new MakeCleanDirectoryStep(proguardDirectory));
 
     // Generate a file of ProGuard config options using aapt.
-    String generatedProGuardConfig = proguardDirectory + "/proguard.txt";
+    Path generatedProGuardConfig = proguardDirectory.resolve("proguard.txt");
     GenProGuardConfigStep genProGuardConfig = new GenProGuardConfigStep(
         aaptPackageResourcesBuildable.getAndroidManifestXml(),
         resDirectories,
@@ -855,10 +856,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(genProGuardConfig);
 
     // Create list of proguard Configs for the app project and its dependencies
-    ImmutableSet.Builder<String> proguardConfigsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(proguardConfig.get().resolve(context).toString());
+      proguardConfigsBuilder.add(proguardConfig.get().resolve(context));
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.

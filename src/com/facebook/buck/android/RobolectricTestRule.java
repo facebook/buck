@@ -67,12 +67,12 @@ public class RobolectricTestRule extends JavaTestRule {
   };
 
   protected RobolectricTestRule(BuildRuleParams buildRuleParams,
-      Set<String> srcs,
+      Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Set<String> labels,
       Set<String> contacts,
-      Optional<String> proguardConfig,
+      Optional<Path> proguardConfig,
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<JavaLibraryRule> sourceUnderTest) {

@@ -31,6 +31,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,13 +76,13 @@ public class AndroidManifest extends AbstractBuildable {
   private final SourcePath skeletonFile;
 
   /** These must be sorted so {@link #getInputsToCompareToOutput} returns a consistent value. */
-  private final ImmutableSortedSet<String> manifestFiles;
+  private final ImmutableSortedSet<Path> manifestFiles;
 
   private final Path pathToOutputFile;
 
   protected AndroidManifest(BuildTarget buildTarget,
       SourcePath skeletonFile,
-      Set<String> manifestFiles) {
+      Set<Path> manifestFiles) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.skeletonFile = Preconditions.checkNotNull(skeletonFile);
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
@@ -95,14 +96,15 @@ public class AndroidManifest extends AbstractBuildable {
   public Iterable<String> getInputsToCompareToOutput() {
     Iterable<String> sourcePaths = SourcePaths.filterInputsToCompareToOutput(Collections.singleton(
         skeletonFile));
-    return Iterables.concat(sourcePaths, manifestFiles);
+    return Iterables.concat(
+        sourcePaths, Iterables.transform(manifestFiles, Functions.toStringFunction()));
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder
         .set("skeleton", skeletonFile.asReference())
-        .set("manifestFiles", manifestFiles);
+        .setInputs("manifestFiles", manifestFiles.iterator());
   }
 
   public BuildTarget getBuildTarget() {

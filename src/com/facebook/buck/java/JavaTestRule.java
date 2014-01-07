@@ -80,12 +80,12 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   private final ImmutableSet<String> contacts;
 
   protected JavaTestRule(BuildRuleParams buildRuleParams,
-      Set<String> srcs,
+      Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Set<String> labels,
       Set<String> contacts,
-      Optional<String> proguardConfig,
+      Optional<Path> proguardConfig,
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<JavaLibraryRule> sourceUnderTest) {
@@ -166,9 +166,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     if (getProperties().is(ANDROID)) {
       Preconditions.checkState(optionalDummyRDotJava.isPresent(),
           "DummyRDotJava must have been created by the BuildRuleBuilder!");
-      String rDotJavaClasspathEntry = optionalDummyRDotJava.get().getRDotJavaBinFolder();
+      Path rDotJavaClasspathEntry = optionalDummyRDotJava.get().getRDotJavaBinFolder();
       ImmutableSet.Builder<String> classpathEntriesBuilder = ImmutableSet.builder();
-      classpathEntriesBuilder.add(rDotJavaClasspathEntry);
+      classpathEntriesBuilder.add(rDotJavaClasspathEntry.toString());
       classpathEntriesBuilder.addAll(getTransitiveClasspathEntries().values());
       classpathEntries = classpathEntriesBuilder.build();
     } else {
@@ -325,13 +325,14 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      * @param jarFile jar where the generated .class files were written
      */
     @VisibleForTesting
-    static Set<String> getClassNamesForSources(Set<String> sources, @Nullable Path jarFile) {
+    static Set<String> getClassNamesForSources(Set<Path> sources, @Nullable Path jarFile) {
       if (jarFile == null) {
         return ImmutableSet.of();
       }
 
       final Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
-      for (String source : sources) {
+      for (Path path : sources) {
+        String source = path.toString();
         int lastSlashIndex = source.lastIndexOf('/');
         if (lastSlashIndex >= 0) {
           source = source.substring(lastSlashIndex + 1);
@@ -435,7 +436,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
 
     @Override
-    public Builder addSrc(String src) {
+    public Builder addSrc(Path src) {
       super.addSrc(src);
       return this;
     }

@@ -66,7 +66,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private final Path binaryJar;
-  private final Optional<String> sourceJar;
+  private final Optional<Path> sourceJar;
   private final Optional<String> javadocUrl;
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       transitiveClasspathEntriesSupplier;
@@ -79,7 +79,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   PrebuiltJarRule(BuildRuleParams buildRuleParams,
       Path classesJar,
-      Optional<String> sourceJar,
+      Optional<Path> sourceJar,
       Optional<String> javadocUrl) {
     super(buildRuleParams);
     this.binaryJar = Preconditions.checkNotNull(classesJar);
@@ -124,7 +124,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
     return binaryJar;
   }
 
-  public Optional<String> getSourceJar() {
+  public Optional<Path> getSourceJar() {
     return sourceJar;
   }
 
@@ -182,7 +182,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public ImmutableSortedSet<String> getJavaSrcs() {
+  public ImmutableSortedSet<Path> getJavaSrcs() {
     return ImmutableSortedSet.of();
   }
 
@@ -246,7 +246,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
         .setInput("binaryJar", binaryJar)
-        .set("sourceJar", sourceJar)
+        .setInput("sourceJar", sourceJar.orNull())
         .set("javadocUrl", javadocUrl);
   }
 
@@ -257,7 +257,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   public static class Builder extends AbstractBuildRuleBuilder<PrebuiltJarRule> {
 
     private Path binaryJar;
-    private Optional<String> sourceJar = Optional.absent();
+    private Optional<Path> sourceJar = Optional.absent();
     private Optional<String> javadocUrl = Optional.absent();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
@@ -295,7 +295,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
       return this;
     }
 
-    public Builder setSourceJar(Optional<String> sourceJar) {
+    public Builder setSourceJar(Optional<Path> sourceJar) {
       this.sourceJar = Preconditions.checkNotNull(sourceJar);
       return this;
     }

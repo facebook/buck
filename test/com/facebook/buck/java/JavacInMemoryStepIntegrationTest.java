@@ -134,12 +134,12 @@ public class JavacInMemoryStepIntegrationTest {
         exampleJava,
         Charsets.UTF_8);
 
-    String pathToOutputDirectory = "out";
-    tmp.newFolder(pathToOutputDirectory);
-    String pathToOutputAbiFile = "abi";
+    Path pathToOutputDirectory = Paths.get("out");
+    tmp.newFolder(pathToOutputDirectory.toString());
+    Path pathToOutputAbiFile = Paths.get("abi");
     return new JavacInMemoryStep(
         pathToOutputDirectory,
-        /* javaSourceFilePaths */ ImmutableSet.of("Example.java"),
+        /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("Example.java")),
         /* transitive classpathEntries */ ImmutableSet.<String>of(),
         /* declated classpathEntries */ ImmutableSet.<String>of(),
         JavacOptions.builder().build(),

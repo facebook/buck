@@ -27,6 +27,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
+
 @Beta
 public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilder<?>>
     implements BuildRuleFactory<T> {
@@ -63,7 +65,7 @@ public abstract class AbstractBuildRuleFactory<T extends AbstractBuildRuleBuilde
     // srcs
     if (builder instanceof SrcsAttributeBuilder) {
       for (String src : params.getOptionalListAttribute("srcs")) {
-        String relativePath = params.resolveFilePathRelativeToBuildFileDirectory(src).toString();
+        Path relativePath = params.resolveFilePathRelativeToBuildFileDirectory(src);
         ((SrcsAttributeBuilder)builder).addSrc(relativePath);
       }
     }

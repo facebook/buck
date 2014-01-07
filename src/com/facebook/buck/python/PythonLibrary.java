@@ -117,9 +117,7 @@ public class PythonLibrary extends AbstractBuildable {
 
       directories.add(targetPath.getParent());
       symlinkSteps.add(
-          new SymlinkFileStep(srcPath.toString(),
-              targetPath.toString(),
-              /* useAbsolutePaths */ false));
+          new SymlinkFileStep(srcPath, targetPath, /* useAbsolutePaths */ false));
 
       buildableContext.recordArtifact(targetPath);
     }

@@ -99,7 +99,7 @@ public class DummyRDotJavaTest {
   public void testRDotJavaBinFolder() {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(ImmutableList.<HasAndroidResourceDeps>of(),
         BuildTargetFactory.newInstance("//java/com/example:library"));
-    assertEquals("buck-out/bin/java/com/example/__library_rdotjava_bin__",
+    assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
   }
 
@@ -122,10 +122,12 @@ public class DummyRDotJavaTest {
 
   private static String javacInMemoryDescription(String rDotJavaClassesFolder,
                                                  String pathToAbiOutputFile) {
-    Set<String> javaSourceFiles =
-        ImmutableSet.of("buck-out/bin/java/base/__rule_rdotjava_src__/com.facebook/R.java");
+    Set<Path> javaSourceFiles = ImmutableSet.of(
+        Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com.facebook/R.java"));
     return UberRDotJavaUtil.createJavacInMemoryCommandForRDotJavaFiles(
-        javaSourceFiles, rDotJavaClassesFolder, Optional.of(pathToAbiOutputFile))
+        javaSourceFiles,
+        Paths.get(rDotJavaClassesFolder),
+        Optional.of(Paths.get(pathToAbiOutputFile)))
         .getDescription(TestExecutionContext.newInstance());
   }
 

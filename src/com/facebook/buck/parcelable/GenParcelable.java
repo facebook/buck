@@ -33,12 +33,15 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -48,11 +51,11 @@ public class GenParcelable extends AbstractBuildable {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
 
-  private final ImmutableSortedSet<String> srcs;
+  private final ImmutableSortedSet<Path> srcs;
   private final String outputDirectory;
 
   private GenParcelable(BuildRuleParams buildRuleParams,
-                        Set<String> srcs) {
+                        Set<Path> srcs) {
     this.srcs = ImmutableSortedSet.copyOf(srcs);
 
     this.outputDirectory = String.format("%s/%s/__%s__",
@@ -69,7 +72,7 @@ public class GenParcelable extends AbstractBuildable {
 
   @Override
   public Iterable<String> getInputsToCompareToOutput() {
-    return srcs;
+    return Iterables.transform(srcs, Functions.toStringFunction());
   }
 
   @Override
@@ -79,10 +82,10 @@ public class GenParcelable extends AbstractBuildable {
 
       @Override
       public int execute(ExecutionContext context) {
-        for (String src : srcs) {
+        for (Path src : srcs) {
           try {
             // Generate the Java code for the Parcelable class.
-            ParcelableClass parcelableClass = Parser.parse(new File(src));
+            ParcelableClass parcelableClass = Parser.parse(src.toFile());
             String generatedJava = new Generator(parcelableClass).generate();
 
             // Write the generated Java code to a file.
@@ -125,7 +128,7 @@ public class GenParcelable extends AbstractBuildable {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder
-        .set("srcs", srcs)
+        .setInputs("srcs", srcs.iterator())
         .set("outputDirectory", outputDirectory);
   }
 
@@ -136,14 +139,14 @@ public class GenParcelable extends AbstractBuildable {
   public static class Builder extends AbstractBuildable.Builder implements
       SrcsAttributeBuilder {
 
-    private ImmutableSortedSet.Builder<String> srcs = ImmutableSortedSet.naturalOrder();
+    private ImmutableSortedSet.Builder<Path> srcs = ImmutableSortedSet.naturalOrder();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
     }
 
     @Override
-    public Builder addSrc(String relativePathToSrc) {
+    public Builder addSrc(Path relativePathToSrc) {
       srcs.add(relativePathToSrc);
       return this;
     }

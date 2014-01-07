@@ -34,11 +34,13 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
+import java.nio.file.Path;
+
 public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRule {
 
   private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private ImmutableSortedSet<String> srcs = ImmutableSortedSet.of();
+  private ImmutableSortedSet<Path> srcs = ImmutableSortedSet.of();
 
   public FakeJavaLibraryRule(
       BuildTarget target,
@@ -89,12 +91,13 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
   }
 
   @Override
-  public ImmutableSortedSet<String> getJavaSrcs() {
+  public ImmutableSortedSet<Path> getJavaSrcs() {
     return srcs;
   }
 
-  public FakeJavaLibraryRule setJavaSrcs(ImmutableSortedSet<String> srcs) {
-    this.srcs = Preconditions.checkNotNull(srcs);
+  public FakeJavaLibraryRule setJavaSrcs(ImmutableSortedSet<Path> srcs) {
+    Preconditions.checkNotNull(srcs);
+    this.srcs = ImmutableSortedSet.copyOf(srcs);
     return this;
   }
 

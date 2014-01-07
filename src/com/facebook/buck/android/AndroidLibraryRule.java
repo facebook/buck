@@ -38,6 +38,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -49,17 +50,17 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
    * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
    * generation logic.
    */
-  private final Optional<String> manifestFile;
+  private final Optional<Path> manifestFile;
 
   @VisibleForTesting
   public AndroidLibraryRule(BuildRuleParams buildRuleParams,
-      Set<String> srcs,
+      Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<DummyRDotJava> optionalDummyRDotJava,
-      Optional<String> proguardConfig,
+      Optional<Path> proguardConfig,
       Set<BuildRule> exportedDeps,
       JavacOptions javacOptions,
-      Optional<String> manifestFile) {
+      Optional<Path> manifestFile) {
     super(buildRuleParams,
         srcs,
         resources,
@@ -80,14 +81,14 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     return PROPERTIES;
   }
 
-  public Optional<String> getManifestFile() {
+  public Optional<Path> getManifestFile() {
     return manifestFile;
   }
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
      return super.appendToRuleKey(builder)
-         .set("manifest", manifestFile.orNull());
+         .setInput("manifest", manifestFile.orNull());
   }
 
   @Override
@@ -95,7 +96,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     if (manifestFile.isPresent()) {
       return ImmutableList.<String>builder()
           .addAll(super.getInputsToCompareToOutput())
-          .add(manifestFile.get())
+          .add(manifestFile.get().toString())
           .build();
     } else {
       return super.getInputsToCompareToOutput();
@@ -107,7 +108,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
-    private Optional<String> manifestFile = Optional.absent();
+    private Optional<Path> manifestFile = Optional.absent();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -151,7 +152,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     }
 
     @Override
-    public AndroidLibraryRule.Builder addSrc(String src) {
+    public AndroidLibraryRule.Builder addSrc(Path src) {
       return (AndroidLibraryRule.Builder)super.addSrc(src);
     }
 
@@ -166,7 +167,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       return annotationProcessingBuilder;
     }
 
-    public Builder setManifestFile(Optional<String> manifestFile) {
+    public Builder setManifestFile(Optional<Path> manifestFile) {
       this.manifestFile = Preconditions.checkNotNull(manifestFile);
       return this;
     }

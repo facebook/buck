@@ -92,12 +92,12 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
 
   private JavacInMemoryStep createTestStep(BuildDependencies buildDependencies) {
     return new JavacInMemoryStep(
-          /* outputDirectory */ ".",
-          /* javaSourceFilePaths */ ImmutableSet.of("foobar.java"),
+          /* outputDirectory */ Paths.get("."),
+          /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
           /* transitiveClasspathEntries */ ImmutableSet.of("bar.jar", "foo.jar"),
           /* declaredClasspathEntries */ ImmutableSet.of("foo.jar"),
           /* JavacOptions */ JavacOptions.DEFAULTS,
-          /* pathToOutputAbiFile */ Optional.<String>absent(),
+          /* pathToOutputAbiFile */ Optional.<Path>absent(),
           /* invokingRule */ Optional.<String>absent(),
           /* buildDependencies */ buildDependencies,
           /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),

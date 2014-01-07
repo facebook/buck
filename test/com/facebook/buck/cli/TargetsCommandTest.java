@@ -273,13 +273,13 @@ public class TargetsCommandTest {
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javasrc:java-library"))
-        .addSrc("javasrc/JavaLibrary.java")
+        .addSrc(Paths.get("javasrc/JavaLibrary.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
         .addDep(BuildTargetFactory.newInstance("//empty:empty")));
     ruleResolver.buildAndAddToIndex(
         JavaTestRule.newJavaTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//javatest:test-java-library"))
-        .addSrc("javatest/TestJavaLibrary.java")
+        .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
         .addDep(BuildTargetFactory.newInstance("//javasrc:java-library")));
 
     List<String> targets = Lists.newArrayList();

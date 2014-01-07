@@ -170,15 +170,15 @@ public class UberRDotJavaUtil {
       };
 
   static JavacInMemoryStep createJavacInMemoryCommandForRDotJavaFiles(
-      Set<String> javaSourceFilePaths, String outputDirectory) {
+      Set<Path> javaSourceFilePaths, Path outputDirectory) {
     return createJavacInMemoryCommandForRDotJavaFiles(
-        javaSourceFilePaths, outputDirectory, Optional.<String>absent());
+        javaSourceFilePaths, outputDirectory, Optional.<Path>absent());
   }
 
   static JavacInMemoryStep createJavacInMemoryCommandForRDotJavaFiles(
-      Set<String> javaSourceFilePaths,
-      String outputDirectory,
-      Optional<String> pathToOutputAbiFile) {
+      Set<Path> javaSourceFilePaths,
+      Path outputDirectory,
+      Optional<Path> pathToOutputAbiFile) {
 
     ImmutableSet<String> classpathEntries = ImmutableSet.of();
     return new JavacInMemoryStep(

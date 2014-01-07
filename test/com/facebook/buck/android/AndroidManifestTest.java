@@ -39,6 +39,7 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -80,7 +81,7 @@ public class AndroidManifestTest {
     assertEquals(
         new GenerateManifestStep(
             "java/com/example/AndroidManifestSkeleton.xml",
-            /* libraryManifestPaths */ ImmutableSet.<String>of(),
+            /* libraryManifestPaths */ ImmutableSet.<Path>of(),
             BuckConstant.GEN_DIR + "/java/com/example/AndroidManifest__manifest__.xml"),
         generateManifestStep);
 

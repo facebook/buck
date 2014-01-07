@@ -38,15 +38,19 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.facebook.buck.util.DirectoryTraverser;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -124,31 +128,33 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    String outputDirectory = getOutputDirectory();
+    Path outputDirectory = getOutputDirectory();
     Step mkdir = new MkdirStep(outputDirectory);
     commands.add(mkdir);
 
-    ImmutableSet<String> includePaths;
+    ImmutableSet<Path> includePaths;
     if (metaInfDirectory != null) {
-      String stagingRoot = outputDirectory + "/meta_inf_staging";
-      String stagingTarget = stagingRoot + "/META-INF";
+      Path stagingRoot = outputDirectory.resolve("meta_inf_staging");
+      Path stagingTarget = stagingRoot.resolve("META-INF");
 
       MakeCleanDirectoryStep createStagingRoot = new MakeCleanDirectoryStep(stagingRoot);
       commands.add(createStagingRoot);
 
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
-          metaInfDirectory.toString(), stagingTarget);
+          metaInfDirectory, stagingTarget);
       commands.add(link);
 
-      includePaths = ImmutableSet.<String>builder()
+      includePaths = ImmutableSet.<Path>builder()
           .add(stagingRoot)
-          .addAll(getTransitiveClasspathEntries().values())
+          .addAll(Iterables.transform(getTransitiveClasspathEntries().values(), MorePaths.TO_PATH))
           .build();
     } else {
-      includePaths = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
+      includePaths = FluentIterable.from(getTransitiveClasspathEntries().values())
+          .transform(MorePaths.TO_PATH)
+          .toSet();
     }
 
-    String outputFile = getOutputFile();
+    Path outputFile = Paths.get(getOutputFile());
     Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile);
     commands.add(jar);
 
@@ -160,8 +166,8 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
     return Classpaths.getClasspathEntries(getDeps());
   }
 
-  private String getOutputDirectory() {
-    return String.format("%s/%s", BuckConstant.GEN_DIR, getBuildTarget().getBasePath());
+  private Path getOutputDirectory() {
+    return Paths.get(String.format("%s/%s", BuckConstant.GEN_DIR, getBuildTarget().getBasePath()));
   }
 
   @Override

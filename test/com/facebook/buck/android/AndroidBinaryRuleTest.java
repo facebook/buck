@@ -117,14 +117,14 @@ public class AndroidBinaryRuleTest {
 
     GenProGuardConfigStep expectedGenProguard =
         new GenProGuardConfigStep(
-            "buck-out/bin/java/src/com/facebook/base/__manifest_apk#aapt_package__/AndroidManifest.xml",
+            Paths.get("buck-out/bin/java/src/com/facebook/base/__manifest_apk#aapt_package__/AndroidManifest.xml"),
             ImmutableSet.<String>of(),
-            "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt");
+            Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
 
     Step expectedObfuscation =
         ProGuardObfuscateStep.create(
-          "buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt",
-          ImmutableSet.<String>of(),
+          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
+          ImmutableSet.<Path>of(),
           false,
           ImmutableMap.of(
               "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar",
@@ -146,7 +146,7 @@ public class AndroidBinaryRuleTest {
     BuildTarget libraryOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
     AndroidLibraryRule.Builder androidLibraryRuleBuilder = AndroidLibraryRule
         .newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .addSrc(buildTarget.split(":")[1] + ".java")
+        .addSrc(Paths.get(buildTarget.split(":")[1] + ".java"))
         .setBuildTarget(libraryOnebuildTarget);
 
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {

@@ -64,9 +64,9 @@ public class NdkLibraryTest {
         NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance(
             String.format("//%s:base", basePath)))
-        .addSrc(basePath + "/Application.mk")
-        .addSrc(basePath + "/main.cpp")
-        .addSrc(basePath + "/Android.mk")
+        .addSrc(Paths.get(basePath + "/Application.mk"))
+        .addSrc(Paths.get(basePath + "/main.cpp"))
+        .addSrc(Paths.get(basePath + "/Android.mk"))
         .addFlag("flag1")
         .addFlag("flag2")
         .setIsAsset(true)

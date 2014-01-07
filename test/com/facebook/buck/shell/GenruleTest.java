@@ -216,12 +216,12 @@ public class GenruleTest {
         thirdMkdirCommand.getPath());
 
     MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
-    assertEquals("src/com/facebook/katana/convert_to_katana.py", linkSource1.getSource());
-    assertEquals(pathToSrcDir + "/convert_to_katana.py", linkSource1.getTarget());
+    assertEquals(Paths.get("src/com/facebook/katana/convert_to_katana.py"), linkSource1.getSource());
+    assertEquals(Paths.get(pathToSrcDir + "/convert_to_katana.py"), linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
-    assertEquals("src/com/facebook/katana/AndroidManifest.xml", linkSource2.getSource());
-    assertEquals(pathToSrcDir + "/AndroidManifest.xml", linkSource2.getTarget());
+    assertEquals(Paths.get("src/com/facebook/katana/AndroidManifest.xml"), linkSource2.getSource());
+    assertEquals(Paths.get(pathToSrcDir + "/AndroidManifest.xml"), linkSource2.getTarget());
 
     Step sixthStep = steps.get(6);
     assertTrue(sixthStep instanceof ShellStep);
@@ -437,9 +437,9 @@ public class GenruleTest {
         .setRelativeToAbsolutePathFunctionForTesting(ABSOLUTIFIER)
         .setBuildTarget(target)
         .setBash(Optional.of("ignored"))
-        .addSrc("in-dir.txt")
-        .addSrc("foo/bar.html")
-        .addSrc("other/place.txt")
+        .addSrc(Paths.get("in-dir.txt"))
+        .addSrc(Paths.get("foo/bar.html"))
+        .addSrc(Paths.get("other/place.txt"))
         .setOut("example-file"));
 
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
@@ -450,16 +450,16 @@ public class GenruleTest {
 
     assertEquals(3, commands.size());
     MkdirAndSymlinkFileStep linkCmd = (MkdirAndSymlinkFileStep) commands.get(0);
-    assertEquals("in-dir.txt", linkCmd.getSource());
-    assertEquals(baseTmpPath + "in-dir.txt", linkCmd.getTarget());
+    assertEquals(Paths.get("in-dir.txt"), linkCmd.getSource());
+    assertEquals(Paths.get(baseTmpPath + "in-dir.txt"), linkCmd.getTarget());
 
     linkCmd = (MkdirAndSymlinkFileStep) commands.get(1);
-    assertEquals("foo/bar.html", linkCmd.getSource());
-    assertEquals(baseTmpPath + "foo/bar.html", linkCmd.getTarget());
+    assertEquals(Paths.get("foo/bar.html"), linkCmd.getSource());
+    assertEquals(Paths.get(baseTmpPath + "foo/bar.html"), linkCmd.getTarget());
 
     linkCmd = (MkdirAndSymlinkFileStep) commands.get(2);
-    assertEquals("other/place.txt", linkCmd.getSource());
-    assertEquals(baseTmpPath + "other/place.txt", linkCmd.getTarget());
+    assertEquals(Paths.get("other/place.txt"), linkCmd.getSource());
+    assertEquals(Paths.get(baseTmpPath + "other/place.txt"), linkCmd.getTarget());
   }
 
   private JavaBinaryRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
@@ -469,7 +469,7 @@ public class GenruleTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL)
-        .addSrc("java/com/facebook/util/ManifestGenerator.java"));
+        .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java")));
 
     JavaBinaryRule javaBinary = ruleResolver.buildAndAddToIndex(
         JavaBinaryRule.newJavaBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())

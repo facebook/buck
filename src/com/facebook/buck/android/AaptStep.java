@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -34,18 +35,19 @@ import java.util.Set;
  */
 public class AaptStep extends ShellStep {
 
-  private final String androidManifest;
+  private final Path androidManifest;
+  // TODO(simons): Set<Path>
   private final Set<String> resDirectories;
-  private final Optional<String> assetsDirectory;
+  private final Optional<Path> assetsDirectory;
   private final String pathToOutputApkFile;
 
   @SuppressWarnings("unused")
   private final boolean isCrunchPngFiles;
 
   public AaptStep(
-      String androidManifest,
+      Path androidManifest,
       Set<String> resDirectories,
-      Optional<String> assetsDirectory,
+      Optional<Path> assetsDirectory,
       String pathToOutputApkFile,
       boolean isCrunchPngFiles) {
     this.androidManifest = Preconditions.checkNotNull(androidManifest);
@@ -95,10 +97,10 @@ public class AaptStep extends ShellStep {
     // flag multiple times; however, in practice, when it is specified multiple times, only one of
     // the folders is included in the final APK.
     if (assetsDirectory.isPresent()) {
-      builder.add("-A", assetsDirectory.get());
+      builder.add("-A", assetsDirectory.get().toString());
     }
 
-    builder.add("-M").add(androidManifest);
+    builder.add("-M").add(androidManifest.toString());
     builder.add("-I", androidPlatformTarget.getAndroidJar().getAbsolutePath());
     builder.add("-F", pathToOutputApkFile);
 

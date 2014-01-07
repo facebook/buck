@@ -25,6 +25,7 @@ import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
@@ -34,10 +35,10 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
   private final boolean ruleInputsAreCached;
 
   protected FakeDefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
-                                       Set<String> srcs,
+                                       Set<Path> srcs,
                                        Set<SourcePath> resources,
                                        Optional<DummyRDotJava> optionalDummyRDotJava,
-                                       Optional<String> proguardConfig,
+                                       Optional<Path> proguardConfig,
                                        AnnotationProcessingParams annotationProcessingParams,
                                        Set<BuildRule> exportedDeps,
                                        boolean ruleInputsAreCached) {

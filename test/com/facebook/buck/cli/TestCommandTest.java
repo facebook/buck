@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.BuckConstant.GEN_DIR;
+import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
@@ -70,6 +70,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -93,10 +95,10 @@ public class TestCommandTest {
    */
   @Test
   public void testGeneratedSourceFile() {
-    String pathToGenFile = GEN_DIR + "/GeneratedFile.java";
+    Path pathToGenFile = GEN_PATH.resolve("GeneratedFile.java");
     assertTrue(JavaTestRule.isGeneratedFile(pathToGenFile));
 
-    ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
+    ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
     JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
@@ -123,10 +125,10 @@ public class TestCommandTest {
    */
   @Test
   public void testNonGeneratedSourceFile() {
-    String pathToNonGenFile = "package/src/SourceFile1.java";
+    Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
     assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
 
-    ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
@@ -168,10 +170,10 @@ public class TestCommandTest {
    */
   @Test
   public void testUnifiedSourceFile() {
-    String pathToNonGenFile = "java/package/SourceFile1.java";
+    Path pathToNonGenFile = Paths.get("java/package/SourceFile1.java");
     assertFalse(JavaTestRule.isGeneratedFile(pathToNonGenFile));
 
-    ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     JavaLibraryRule javaLibraryRule = new FakeJavaLibraryRule(new BuildTarget("//foo", "bar"))
         .setJavaSrcs(javaSrcs);
 
@@ -200,11 +202,11 @@ public class TestCommandTest {
    */
   @Test
   public void testMixedSourceFile() {
-    String pathToGenFile = (GEN_DIR + "/com/facebook/GeneratedFile.java");
-    String pathToNonGenFile1 = ("package/src/SourceFile1.java");
-    String pathToNonGenFile2 = ("package/src-gen/SourceFile2.java");
+    Path pathToGenFile = GEN_PATH.resolve("com/facebook/GeneratedFile.java");
+    Path pathToNonGenFile1 = Paths.get("package/src/SourceFile1.java");
+    Path pathToNonGenFile2 = Paths.get("package/src-gen/SourceFile2.java");
 
-    ImmutableSortedSet<String> javaSrcs = ImmutableSortedSet.of(
+    ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(
         pathToGenFile, pathToNonGenFile1, pathToNonGenFile2);
 
     File parentFile1 = createMock(File.class);

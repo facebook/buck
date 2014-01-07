@@ -211,7 +211,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       JavaLibraryRule rule,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem projectFilesystem) {
-    ImmutableSet<String> javaSrcPaths = rule.getJavaSrcs();
+    ImmutableSet<Path> javaSrcPaths = rule.getJavaSrcs();
 
     // A Java library rule with just resource files has an empty javaSrcPaths.
     if (javaSrcPaths.isEmpty()) {
@@ -231,7 +231,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // folders for the source paths.
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
-    for (String javaSrcPath : javaSrcPaths) {
+    for (Path javaSrcPath : javaSrcPaths) {
       if (!JavaTestRule.isGeneratedFile(javaSrcPath)) {
 
         // If the source path is already under a known source folder, then we can skip this

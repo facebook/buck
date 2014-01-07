@@ -312,13 +312,13 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
     commands.add(genRDotJava);
 
     // Create the path where the R.java files will be compiled.
-    String rDotJavaBin = getPathToCompiledRDotJavaFiles();
+    Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
     commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
     // Compile the R.java files.
-    Set<String> javaSourceFilePaths = Sets.newHashSet();
+    Set<Path> javaSourceFilePaths = Sets.newHashSet();
     for (String rDotJavaPackage : rDotJavaPackages) {
-      String path = rDotJavaSrc + "/" + rDotJavaPackage.replace('.', '/') + "/R.java";
+      Path path = rDotJavaSrc.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java");
       javaSourceFilePaths.add(path);
     }
     JavacInMemoryStep javac = UberRDotJavaUtil.createJavacInMemoryCommandForRDotJavaFiles(
@@ -327,18 +327,18 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
 
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
     buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
-    buildableContext.recordArtifactsInDirectory(Paths.get(rDotJavaBin));
+    buildableContext.recordArtifactsInDirectory(rDotJavaBin);
   }
 
   /**
    * @return path to the directory where the {@code R.class} files can be found after this rule is
    *     built.
    */
-  public String getPathToCompiledRDotJavaFiles() {
-    return String.format("%s/%s__%s_uber_rdotjava_bin__",
+  public Path getPathToCompiledRDotJavaFiles() {
+    return Paths.get(String.format("%s/%s__%s_uber_rdotjava_bin__",
         BuckConstant.BIN_DIR,
         buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        buildTarget.getShortName()));
   }
 
   /**

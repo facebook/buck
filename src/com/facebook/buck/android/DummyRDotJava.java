@@ -82,11 +82,11 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
   public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
       throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    final String rDotJavaSrcFolder = getRDotJavaSrcFolder(buildTarget);
+    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(buildTarget);
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
-    Set<String> javaSourceFilePaths = Sets.newHashSet();
+    Set<Path> javaSourceFilePaths = Sets.newHashSet();
     if (androidResourceDeps.isEmpty()) {
       // In this case, the user is likely running a Robolectric test that does not happen to
       // depend on any resources. However, if Robolectric doesn't find an R.java file, it flips
@@ -97,8 +97,8 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
       String rDotJavaPackage = "com.facebook";
       String javaCode = MergeAndroidResourcesStep.generateJavaCodeForPackageWithoutResources(
           rDotJavaPackage);
-      steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder + "/com/facebook"));
-      String rDotJavaFile = rDotJavaSrcFolder + "/com/facebook/R.java";
+      steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder.resolve("com/facebook")));
+      Path rDotJavaFile = rDotJavaSrcFolder.resolve("com/facebook/R.java");
       steps.add(new WriteFileStep(javaCode, rDotJavaFile));
       javaSourceFilePaths.add(rDotJavaFile);
     } else {
@@ -106,7 +106,7 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
       for (HasAndroidResourceDeps res : androidResourceDeps) {
         String rDotJavaPackage = res.getRDotJavaPackage();
         symbolsFileToRDotJavaPackage.put(res.getPathToTextSymbolsFile(), rDotJavaPackage);
-        String rDotJavaFilePath = MergeAndroidResourcesStep.getOutputFilePath(
+        Path rDotJavaFilePath = MergeAndroidResourcesStep.getOutputFilePath(
             rDotJavaSrcFolder, rDotJavaPackage);
         javaSourceFilePaths.add(rDotJavaFilePath);
       }
@@ -115,12 +115,12 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
     }
 
     // Clear out the directory where the .class files will be generated.
-    final String rDotJavaClassesFolder = getRDotJavaBinFolder();
+    final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
     steps.add(new MakeCleanDirectoryStep(rDotJavaClassesFolder));
 
-    String pathToAbiOutputDir = getPathToAbiOutputDir(buildTarget);
+    Path pathToAbiOutputDir = getPathToAbiOutputDir(buildTarget);
     steps.add(new MakeCleanDirectoryStep(pathToAbiOutputDir));
-    String pathToAbiOutputFile = pathToAbiOutputDir + "/abi";
+    Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi");
 
     // Compile the .java files.
     final JavacInMemoryStep javacInMemoryStep =
@@ -139,7 +139,7 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
       }
     });
 
-    buildableContext.recordArtifactsInDirectory(Paths.get(rDotJavaClassesFolder));
+    buildableContext.recordArtifactsInDirectory(rDotJavaClassesFolder);
     return steps.build();
   }
 
@@ -148,26 +148,25 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
     return builder;
   }
 
-  // TODO(user): Use Path instead of String in this file
-  private static String getRDotJavaSrcFolder(BuildTarget buildTarget) {
-    return String.format("%s/%s__%s_rdotjava_src__",
+  private static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {
+    return Paths.get(String.format("%s/%s__%s_rdotjava_src__",
         BuckConstant.BIN_DIR,
         buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        buildTarget.getShortName()));
   }
 
-  private static String getRDotJavaBinFolder(BuildTarget buildTarget) {
-    return String.format("%s/%s__%s_rdotjava_bin__",
+  private static Path getRDotJavaBinFolder(BuildTarget buildTarget) {
+    return Paths.get(String.format("%s/%s__%s_rdotjava_bin__",
         BuckConstant.BIN_DIR,
         buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        buildTarget.getShortName()));
   }
 
-  private static String getPathToAbiOutputDir(BuildTarget buildTarget) {
-    return String.format("%s/%s__%s_dummyrdotjava_abi__",
+  private static Path getPathToAbiOutputDir(BuildTarget buildTarget) {
+    return Paths.get(String.format("%s/%s__%s_dummyrdotjava_abi__",
         BuckConstant.GEN_DIR,
         buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        buildTarget.getShortName()));
   }
 
   public static Builder newDummyRDotJavaBuildableBuilder(AbstractBuildRuleBuilderParams params) {
@@ -180,7 +179,7 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
     return null;
   }
 
-  public String getRDotJavaBinFolder() {
+  public Path getRDotJavaBinFolder() {
     return getRDotJavaBinFolder(buildTarget);
   }
 

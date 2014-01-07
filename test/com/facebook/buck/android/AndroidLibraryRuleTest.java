@@ -33,6 +33,9 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class AndroidLibraryRuleTest {
 
   @Test
@@ -66,8 +69,8 @@ public class AndroidLibraryRuleTest {
     return (AndroidLibraryRule)params.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
-            .addSrc("java/src/com/foo/Foo.java")
-            .setManifestFile((Optional.of("java/src/com/foo/AndroidManifest.xml")))
+            .addSrc(Paths.get("java/src/com/foo/Foo.java"))
+            .setManifestFile((Optional.of(Paths.get("java/src/com/foo/AndroidManifest.xml"))))
             .addExportedDep(new BuildTarget("//java/src/com/bar", "bar"))
             .addDep(new BuildTarget("//java/src/com/bar", "bar")));
   }
@@ -76,8 +79,8 @@ public class AndroidLibraryRuleTest {
     return (AndroidLibraryRule)params.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/src/com/bar:bar"))
-            .addSrc("java/src/com/bar/Bar.java")
-            .setManifestFile((Optional.<String>absent()))
+            .addSrc(Paths.get("java/src/com/bar/Bar.java"))
+            .setManifestFile((Optional.<Path>absent()))
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
   }
 }

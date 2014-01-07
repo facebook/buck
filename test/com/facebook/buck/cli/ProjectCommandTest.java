@@ -61,6 +61,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringReader;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -77,7 +78,7 @@ public class ProjectCommandTest {
     DefaultJavaLibraryRule javaLibraryRule = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(javaLibraryTargetName)
-        .addSrc("javasrc/JavaLibrary.java"));
+        .addSrc(Paths.get("javasrc/JavaLibrary.java")));
 
     String projectConfigTargetName = "//javasrc:project-config";
     ProjectConfigRule ruleConfig = ruleResolver.buildAndAddToIndex(

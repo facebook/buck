@@ -27,6 +27,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public class AndroidManifestDescription implements Description<AndroidManifestDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("android_manifest");
@@ -43,7 +45,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
 
   @Override
   public Buildable createBuildable(BuildRuleParams params, Arg args) {
-    ImmutableSet<String> manifestFiles = findManifestFiles(args);
+    ImmutableSet<Path> manifestFiles = findManifestFiles(args);
 
     return new AndroidManifest(params.getBuildTarget(), args.skeleton, manifestFiles);
   }
@@ -60,7 +62,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
   }
 
   @VisibleForTesting
-  static ImmutableSet<String> findManifestFiles(Arg args) {
+  static ImmutableSet<Path> findManifestFiles(Arg args) {
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =
         new AndroidTransitiveDependencyGraph(args.deps.get());
     AndroidTransitiveDependencies transitiveDependencies =

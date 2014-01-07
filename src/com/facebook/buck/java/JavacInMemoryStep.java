@@ -21,14 +21,17 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -72,13 +75,13 @@ import javax.tools.ToolProvider;
  */
 public class JavacInMemoryStep implements Step {
 
-  private final String outputDirectory;
+  private final Path outputDirectory;
 
-  private final Set<String> javaSourceFilePaths;
+  private final Set<Path> javaSourceFilePaths;
 
   private final JavacOptions javacOptions;
 
-  private final Optional<String> pathToOutputAbiFile;
+  private final Optional<Path> pathToOutputAbiFile;
 
   @Nullable
   private File abiKeyFile;
@@ -133,12 +136,12 @@ public class JavacInMemoryStep implements Step {
   }
 
   public JavacInMemoryStep(
-      String outputDirectory,
-      Set<String> javaSourceFilePaths,
+      Path outputDirectory,
+      Set<Path> javaSourceFilePaths,
       Set<String> transitiveClasspathEntries,
       Set<String> declaredClasspathEntries,
       JavacOptions javacOptions,
-      Optional<String> pathToOutputAbiFile,
+      Optional<Path> pathToOutputAbiFile,
       Optional<String> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
@@ -186,13 +189,15 @@ public class JavacInMemoryStep implements Step {
     }
 
     // Specify the output directory.
-    Function<String, Path> pathRelativizer = filesystem.getPathRelativizer();
+    Function<Path, Path> pathRelativizer = filesystem.getAbsolutifier();
     builder.add("-d").add(pathRelativizer.apply(outputDirectory).toString());
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {
       String classpath = Joiner.on(File.pathSeparator).join(
-          Iterables.transform(buildClasspathEntries, pathRelativizer));
+          FluentIterable.from(buildClasspathEntries)
+          .transform(MorePaths.TO_PATH)
+          .transform(pathRelativizer));
       builder.add("-classpath", classpath);
     } else {
       builder.add("-classpath", "''");
@@ -298,7 +303,7 @@ public class JavacInMemoryStep implements Step {
     Iterable<? extends JavaFileObject> compilationUnits;
     try {
       compilationUnits = createCompilationUnits(
-          fileManager, context.getProjectFilesystem().getPathRelativizer());
+          fileManager, context.getProjectFilesystem().getAbsolutifier());
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return 1;
@@ -309,7 +314,9 @@ public class JavacInMemoryStep implements Step {
       // for buck user to have a list of all .java files to be compiled
       // since we do not print them out to console in case of error
       try {
-        context.getProjectFilesystem().writeLinesToPath(javaSourceFilePaths, pathToSrcsList.get());
+        context.getProjectFilesystem().writeLinesToPath(
+            Iterables.transform(javaSourceFilePaths, Functions.toStringFunction()),
+            pathToSrcsList.get());
       } catch (IOException e) {
         context.logError(e,
             "Cannot write list of .java files to compile to %s file! Terminating compilation.",
@@ -370,17 +377,17 @@ public class JavacInMemoryStep implements Step {
 
   private Iterable<? extends JavaFileObject> createCompilationUnits(
       StandardJavaFileManager fileManager,
-      Function<String, Path> pathRelativizer) throws IOException {
+      Function<Path, Path> absolutifier) throws IOException {
     List<JavaFileObject> compilationUnits = Lists.newArrayList();
-    for (String path : javaSourceFilePaths) {
-      if (path.endsWith(".java")) {
+    for (Path path : javaSourceFilePaths) {
+      if (path.toString().endsWith(".java")) {
         // For an ordinary .java file, create a corresponding JavaFileObject.
         Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
-            pathRelativizer.apply(path).toFile());
+            absolutifier.apply(path).toFile());
         compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-      } else if (path.endsWith(".src.zip")) {
+      } else if (path.toString().endsWith(".src.zip")) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ZipFile zipFile = new ZipFile(pathRelativizer.apply(path).toFile());
+        ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
              entries.hasMoreElements();
             ) {
@@ -417,12 +424,12 @@ public class JavacInMemoryStep implements Step {
   }
 
   @VisibleForTesting
-  Set<String> getSrcs() {
+  Set<Path> getSrcs() {
     return javaSourceFilePaths;
   }
 
   public String getOutputDirectory() {
-    return outputDirectory;
+    return outputDirectory.toString();
   }
 
   /**

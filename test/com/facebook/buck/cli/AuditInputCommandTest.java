@@ -46,6 +46,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class AuditInputCommandTest {
@@ -97,12 +98,12 @@ public class AuditInputCommandTest {
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:test-java-library"))
-            .addSrc("src/com/facebook/TestJavaLibrary.java"));
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java")));
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-library"))
-            .addSrc("src/com/facebook/TestAndroidLibrary.java")
-            .addSrc("src/com/facebook/AndroidLibraryTwo.java")
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addSrc(Paths.get("src/com/facebook/AndroidLibraryTwo.java"))
             .addDep(BuildTargetFactory.newInstance("//:test-java-library")));
 
     List<BuildTarget> buildTargets = Lists.transform(targets, new Function<String, BuildTarget>() {

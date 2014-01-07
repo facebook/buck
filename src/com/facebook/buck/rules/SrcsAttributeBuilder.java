@@ -17,8 +17,9 @@
 package com.facebook.buck.rules;
 
 
+import java.nio.file.Path;
 
 public interface SrcsAttributeBuilder {
 
-  public AbstractBuildRuleBuilder<?> addSrc(String relativePathToSrc);
+  public AbstractBuildRuleBuilder<?> addSrc(Path relativePathToSrc);
 }

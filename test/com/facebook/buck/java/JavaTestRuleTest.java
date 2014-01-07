@@ -39,7 +39,7 @@ public class JavaTestRuleTest {
   @Test
   public void testGetClassNamesForSources() {
     Path classesFolder = Paths.get("testdata/javatestrule/default.jar");
-    Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
+    Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
@@ -47,7 +47,7 @@ public class JavaTestRuleTest {
   @Test
   public void testGetClassNamesForSourcesWithInnerClasses() {
     Path classesFolder = Paths.get("testdata/javatestrule/case1.jar");
-    Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
+    Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
@@ -55,7 +55,7 @@ public class JavaTestRuleTest {
   @Test
   public void testGetClassNamesForSourcesWithMultipleTopLevelClasses() {
     Path classesFolder = Paths.get("testdata/javatestrule/case2.jar");
-    Set<String> sources = ImmutableSet.of("src/com/facebook/DummyTest.java");
+    Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
@@ -63,9 +63,9 @@ public class JavaTestRuleTest {
   @Test
   public void testGetClassNamesForSourcesWithImperfectHeuristic() {
     Path classesFolder = Paths.get("testdata/javatestrule/case2fail.jar");
-    Set<String> sources = ImmutableSet.of(
-        "src/com/facebook/feed/DummyTest.java",
-        "src/com/facebook/nav/OtherDummyTest.java");
+    Set<Path> sources = ImmutableSet.of(
+        Paths.get("src/com/facebook/feed/DummyTest.java"),
+        Paths.get("src/com/facebook/nav/OtherDummyTest.java"));
     Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals("Ideally, if the implementation of getClassNamesForSources() were tightened up,"
         + " the set would not include com.facebook.feed.OtherDummyTest because"
@@ -129,7 +129,7 @@ public class JavaTestRuleTest {
     return JavaTestRule.newJavaTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)
-        .addSrc("ExampleTest.java")
+        .addSrc(Paths.get("ExampleTest.java"))
         .build(new BuildRuleResolver());
   }
 

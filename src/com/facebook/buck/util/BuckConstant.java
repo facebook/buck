@@ -37,6 +37,7 @@ public class BuckConstant {
   public static final Path GEN_PATH = BUCK_OUTPUT_PATH.resolve("gen");
 
   public static final String BIN_DIR = BUCK_OUTPUT_DIRECTORY + "/bin";
+  public static final Path BIN_PATH = BUCK_OUTPUT_PATH.resolve("bin");
 
   public static final String ANNOTATION_DIR = BUCK_OUTPUT_DIRECTORY + "/annotation";
 

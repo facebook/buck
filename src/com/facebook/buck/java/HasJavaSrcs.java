@@ -18,6 +18,8 @@ package com.facebook.buck.java;
 
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 /**
  * A build rule should implement this interface if it has a 'srcs' attribute that lists Java source
  * files.
@@ -28,5 +30,5 @@ public interface HasJavaSrcs {
    * @return the set of paths (which may be relative paths) to the expanded version of the 'srcs'
    *     attribute for a build rule
    */
-  public ImmutableSortedSet<String> getJavaSrcs();
+  public ImmutableSortedSet<Path> getJavaSrcs();
 }

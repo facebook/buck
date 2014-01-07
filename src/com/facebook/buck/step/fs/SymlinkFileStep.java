@@ -24,15 +24,14 @@ import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class SymlinkFileStep implements Step {
 
-  private final String existingFile;
-  private final String desiredLink;
+  private final Path existingFile;
+  private final Path desiredLink;
   private final boolean useAbsolutePaths;
 
-  public SymlinkFileStep(String existingFile, String desiredLink, boolean useAbsolutePaths) {
+  public SymlinkFileStep(Path existingFile, Path desiredLink, boolean useAbsolutePaths) {
     this.existingFile = Preconditions.checkNotNull(existingFile);
     this.desiredLink = Preconditions.checkNotNull(desiredLink);
     this.useAbsolutePaths = useAbsolutePaths;
@@ -45,7 +44,7 @@ public class SymlinkFileStep implements Step {
     // This could be either an absolute or relative path.
     // TODO ideally all symbolic links should be relative, consider eliminating the absolute option.
     return (useAbsolutePaths ? getAbsolutePath(existingFile, context) :
-        MorePaths.getRelativePath(Paths.get(existingFile), Paths.get(desiredLink).getParent()));
+        MorePaths.getRelativePath(existingFile, desiredLink.getParent()));
   }
 
   /**
@@ -55,8 +54,8 @@ public class SymlinkFileStep implements Step {
     return getAbsolutePath(desiredLink, context);
   }
 
-  private static Path getAbsolutePath(String path, ExecutionContext context) {
-    return context.getProjectFilesystem().getPathRelativizer().apply(path);
+  private static Path getAbsolutePath(Path path, ExecutionContext context) {
+    return context.getProjectFilesystem().getAbsolutifier().apply(path);
   }
 
   @Override

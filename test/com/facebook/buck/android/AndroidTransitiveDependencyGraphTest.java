@@ -62,7 +62,7 @@ public class AndroidTransitiveDependencyGraphTest {
     BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
         NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/native_library:library"))
-            .addSrc("Android.mk")
+            .addSrc(Paths.get("Android.mk"))
             .setIsAsset(false)
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
@@ -136,7 +136,7 @@ public class AndroidTransitiveDependencyGraphTest {
     assertEquals(
         "Because manifest file was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
-        ImmutableSet.of("java/src/com/facebook/module/AndroidManifest.xml"),
+        ImmutableSet.of(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")),
         transitiveDeps.manifestFiles);
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
@@ -163,7 +163,7 @@ public class AndroidTransitiveDependencyGraphTest {
     ruleResolver.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(androidLibraryKeystoreTarget)
-        .addSrc("java/com/facebook/keystore/Base.java")
+        .addSrc(Paths.get("java/com/facebook/keystore/Base.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildTarget keystoreTarget = new BuildTarget("//keystore", "debug");
@@ -179,7 +179,7 @@ public class AndroidTransitiveDependencyGraphTest {
     ruleResolver.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(androidLibraryTarget)
-        .addSrc("java/com/facebook/base/Base.java")
+        .addSrc(Paths.get("java/com/facebook/base/Base.java"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     AndroidBinaryRule androidBinaryRule = ruleResolver.buildAndAddToIndex(

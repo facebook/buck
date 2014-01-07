@@ -41,6 +41,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -112,13 +114,13 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
    */
-  protected final ImmutableList<String> srcs;
+  protected final ImmutableList<Path> srcs;
 
   protected final Optional<String> cmd;
   protected final Optional<String> bash;
   protected final Optional<String> cmdExe;
 
-  protected final Map<String, Path> srcsToAbsolutePaths;
+  protected final Map<Path, Path> srcsToAbsolutePaths;
 
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
@@ -129,7 +131,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   protected final Function<Path, Path> relativeToAbsolutePathFunction;
 
   protected Genrule(BuildRuleParams buildRuleParams,
-      List<String> srcs,
+      List<Path> srcs,
       Optional<String> cmd,
       Optional<String> bash,
       Optional<String> cmdExe,
@@ -140,10 +142,10 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     this.cmd = Preconditions.checkNotNull(cmd);
     this.bash = Preconditions.checkNotNull(bash);
     this.cmdExe = Preconditions.checkNotNull(cmdExe);
-    this.srcsToAbsolutePaths = FluentIterable.from(srcs).toMap(new Function<String, Path>() {
+    this.srcsToAbsolutePaths = FluentIterable.from(srcs).toMap(new Function<Path, Path>() {
       @Override
-      public Path apply(String src) {
-        return relativeToAbsolutePathFunction.apply(Paths.get(src));
+      public Path apply(Path src) {
+        return relativeToAbsolutePathFunction.apply(src);
       }
     });
 
@@ -182,7 +184,9 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   @Override
   public ImmutableSortedSet<String> getInputsToCompareToOutput() {
-    return ImmutableSortedSet.copyOf(srcs);
+    return FluentIterable.from(srcs)
+        .transform(Functions.toStringFunction())
+        .toSortedSet(Ordering.natural());
   }
 
   @Override
@@ -193,7 +197,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
-        .set("srcs", srcs)
+        .setInputs("srcs", srcs.iterator())
         .set("cmd", cmd)
         .set("bash", bash)
         .set("cmd_exe", cmdExe);
@@ -309,8 +313,8 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     int basePathLength = basePath.length();
 
     // Symlink all sources into the temp directory so that they can be used in the genrule.
-    for (Map.Entry<String, Path> entry : srcsToAbsolutePaths.entrySet()) {
-      String localPath = entry.getKey();
+    for (Map.Entry<Path, Path> entry : srcsToAbsolutePaths.entrySet()) {
+      String localPath = entry.getKey().toString();
 
       Path canonicalPath;
       canonicalPath = MorePaths.absolutify(entry.getValue());
@@ -326,7 +330,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
         }
       }
 
-      String destination = pathToSrcDirectory + "/" + localPath;
+      Path destination = pathToSrcDirectory.resolve(localPath);
       commands.add(new MkdirAndSymlinkFileStep(entry.getKey(), destination));
     }
   }
@@ -339,7 +343,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   public static class Builder extends AbstractBuildRuleBuilder<Genrule>
       implements SrcsAttributeBuilder {
 
-    protected List<String> srcs = Lists.newArrayList();
+    protected List<Path> srcs = Lists.newArrayList();
 
     protected Optional<String> cmd;
     protected Optional<String> bash;
@@ -375,7 +379,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     }
 
     @Override
-    public Builder addSrc(String src) {
+    public Builder addSrc(Path src) {
       srcs.add(src);
       return this;
     }

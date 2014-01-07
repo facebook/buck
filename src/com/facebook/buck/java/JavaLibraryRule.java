@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
+import java.nio.file.Path;
+
 public interface JavaLibraryRule extends Buildable, HasClasspathEntries, JavaAbiRule {
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
@@ -46,7 +48,7 @@ public interface JavaLibraryRule extends Buildable, HasClasspathEntries, JavaAbi
    */
   public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries();
 
-  public ImmutableSortedSet<String> getJavaSrcs();
+  public ImmutableSortedSet<Path> getJavaSrcs();
 
   public AnnotationProcessingData getAnnotationProcessingData();
 

@@ -63,7 +63,7 @@ public class PythonBinaryRuleTest {
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(javaLibraryTarget)
-            .addSrc("java/src/com/javalib/Bar.java")
+            .addSrc(Paths.get("java/src/com/javalib/Bar.java"))
             .addDep(orphanPyLibraryTarget)
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 

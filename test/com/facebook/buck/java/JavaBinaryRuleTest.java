@@ -65,7 +65,7 @@ public class JavaBinaryRuleTest {
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
-        .addSrc("java/com/facebook/base/Base.java")
+        .addSrc(Paths.get("java/com/facebook/base/Base.java"))
         .addDep(BuildTargetFactory.newInstance("//third_party/guava:guava")));
 
     // java_binary //java/com/facebook/base:Main

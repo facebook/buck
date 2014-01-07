@@ -30,6 +30,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class GenerateManifestStepTest {
 
@@ -38,8 +40,8 @@ public class GenerateManifestStepTest {
 
   @Before
   public void setUp() {
-    manifestPath = testDataPath("AndroidManifest.xml");
-    skeletonPath = testDataPath("AndroidManifestSkeleton.xml");
+    manifestPath = testDataPath("AndroidManifest.xml").toString();
+    skeletonPath = testDataPath("AndroidManifestSkeleton.xml").toString();
   }
 
   @After
@@ -49,11 +51,11 @@ public class GenerateManifestStepTest {
 
   @Test
   public void testManifestGeneration() throws IOException {
-    String expectedOutputPath = testDataPath("AndroidManifest.expected.xml");
-    String libraryManifestA = testDataPath("AndroidManifestA.xml");
-    String libraryManifestB = testDataPath("AndroidManifestB.xml");
-    String libraryManifestC = testDataPath("AndroidManifestC.xml");
-    ImmutableSet.Builder<String> libraryManifestFiles = ImmutableSet.builder();
+    String expectedOutputPath = testDataPath("AndroidManifest.expected.xml").toString();
+    Path libraryManifestA = testDataPath("AndroidManifestA.xml");
+    Path libraryManifestB = testDataPath("AndroidManifestB.xml");
+    Path libraryManifestC = testDataPath("AndroidManifestC.xml");
+    ImmutableSet.Builder<Path> libraryManifestFiles = ImmutableSet.builder();
     libraryManifestFiles.add(libraryManifestA);
     libraryManifestFiles.add(libraryManifestB);
     libraryManifestFiles.add(libraryManifestC);
@@ -72,7 +74,7 @@ public class GenerateManifestStepTest {
     assertEquals(expected, output);
   }
 
-  private String testDataPath(String fileName) {
-    return "testdata/com/facebook/buck/shell/" + fileName;
+  private Path testDataPath(String fileName) {
+    return Paths.get("testdata/com/facebook/buck/shell", fileName);
   }
 }

@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
@@ -111,12 +110,12 @@ public class AndroidTransitiveDependencyGraph {
     ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
     Optional<Path> pathToCompiledRDotJavaFilesOptional;
     if (!rDotJavaPackages.isEmpty()) {
-      String pathToCompiledRDotJavaFiles = uberRDotJavaBuildable.getPathToCompiledRDotJavaFiles();
-      pathsToDexBuilder.add(pathToCompiledRDotJavaFiles);
+      Path pathToCompiledRDotJavaFiles = uberRDotJavaBuildable.getPathToCompiledRDotJavaFiles();
+      pathsToDexBuilder.add(pathToCompiledRDotJavaFiles.toString());
 
       // TODO: Ultimately, pathToCompiledRDotJavaFiles should be pre-dexed so that it does not need
       // its own field in AndroidDexTransitiveDependencies.
-      pathToCompiledRDotJavaFilesOptional = Optional.of(Paths.get(pathToCompiledRDotJavaFiles));
+      pathToCompiledRDotJavaFilesOptional = Optional.of(pathToCompiledRDotJavaFiles);
     } else {
       pathToCompiledRDotJavaFilesOptional = Optional.absent();
     }
@@ -164,10 +163,10 @@ public class AndroidTransitiveDependencyGraph {
     final ImmutableSet.Builder<BuildTarget> nativeTargetsWithAssets = ImmutableSet.builder();
 
     // Path to the module's manifest file
-    final ImmutableSet.Builder<String> manifestFiles = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> manifestFiles = ImmutableSet.builder();
 
     // Path to the module's proguard_config
-    final ImmutableSet.Builder<String> proguardConfigs = ImmutableSet.builder();
+    final ImmutableSet.Builder<Path> proguardConfigs = ImmutableSet.builder();
 
     // Visit all of the transitive dependencies to populate the above collections.
     new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
@@ -198,7 +197,7 @@ public class AndroidTransitiveDependencyGraph {
           }
           Path manifestFile = androidRule.getManifestFile();
           if (manifestFile != null) {
-            manifestFiles.add(manifestFile.toString());
+            manifestFiles.add(manifestFile);
           }
         } else if (rule instanceof DefaultJavaLibraryRule) {
           DefaultJavaLibraryRule defaultJavaLibraryRule = (DefaultJavaLibraryRule)rule;

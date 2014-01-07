@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 
 public class AndroidBinaryGraphEnhancerTest {
@@ -56,21 +57,21 @@ public class AndroidBinaryGraphEnhancerTest {
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
             new DefaultBuildRuleBuilderParams(pathRelativizer, ruleKeyBuilderFactory))
             .setBuildTarget(javaDep1BuildTarget)
-            .addSrc("java/com/example/Dep1.java"));
+            .addSrc(Paths.get("java/com/example/Dep1.java")));
 
     BuildTarget javaDep2BuildTarget = new BuildTarget("//java/com/example", "dep2");
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
             new DefaultBuildRuleBuilderParams(pathRelativizer, ruleKeyBuilderFactory))
             .setBuildTarget(javaDep2BuildTarget)
-            .addSrc("java/com/example/Dep2.java"));
+            .addSrc(Paths.get("java/com/example/Dep2.java")));
 
     BuildTarget javaLibBuildTarget = new BuildTarget("//java/com/example", "lib");
     DefaultJavaLibraryRule javaLib = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(
             new DefaultBuildRuleBuilderParams(pathRelativizer, ruleKeyBuilderFactory))
             .setBuildTarget(javaLibBuildTarget)
-            .addSrc("java/com/example/Lib.java")
+            .addSrc(Paths.get("java/com/example/Lib.java"))
             .addDep(javaDep1BuildTarget)
             .addDep(javaDep2BuildTarget));
 

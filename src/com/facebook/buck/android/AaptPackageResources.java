@@ -116,9 +116,8 @@ public class AaptPackageResources extends AbstractBuildable {
 
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
-    steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context).toString(),
-        getAndroidManifestXml()));
-    buildableContext.recordArtifact(Paths.get(getAndroidManifestXml()));
+    steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
+    buildableContext.recordArtifact(getAndroidManifestXml());
 
     final AndroidTransitiveDependencies transitiveDependencies = uberRDotJavaBuildable
         .getAndroidTransitiveDependencies();
@@ -176,7 +175,7 @@ public class AaptPackageResources extends AbstractBuildable {
     };
     steps.add(collectAssets);
 
-    Optional<String> assetsDirectory;
+    Optional<Path> assetsDirectory;
     if (transitiveDependencies.assetsDirectories.isEmpty()
         && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
         && !isStoreStringsAsAssets()) {
@@ -194,7 +193,7 @@ public class AaptPackageResources extends AbstractBuildable {
     }
 
     if (isStoreStringsAsAssets()) {
-      Path stringAssetsDir = Paths.get(assetsDirectory.get()).resolve("strings");
+      Path stringAssetsDir = assetsDirectory.get().resolve("strings");
       steps.add(new MakeCleanDirectoryStep(stringAssetsDir));
       steps.add(new CopyStep(
           getPathForTmpStringAssetsDirectory(),
@@ -222,13 +221,13 @@ public class AaptPackageResources extends AbstractBuildable {
    * Therefore, commands created by this method should use this method instead of
    * {@link #getManifest()}.
    */
-  String getAndroidManifestXml() {
+  Path getAndroidManifestXml() {
     return getBinPath("__manifest_%s__/AndroidManifest.xml");
   }
 
   private boolean isStoreStringsAsAssets() {
     return uberRDotJavaBuildable.isStoreStringsAsAssets();
-  };
+  }
 
   /**
    * Given a set of assets directories to include in the APK (which may be empty), return the path
@@ -240,7 +239,7 @@ public class AaptPackageResources extends AbstractBuildable {
    * be an empty {@link Optional}.
    */
   @VisibleForTesting
-  Optional<String> createAllAssetsDirectory(
+  Optional<Path> createAllAssetsDirectory(
       Set<Path> assetsDirectories,
       ImmutableList.Builder<Step> steps,
       DirectoryTraverser traverser) throws IOException {
@@ -250,11 +249,11 @@ public class AaptPackageResources extends AbstractBuildable {
 
     // Due to a limitation of aapt, only one assets directory can be specified, so if multiple are
     // specified in Buck, then all of the contents must be symlinked to a single directory.
-    String destination = getPathToAllAssetsDirectory();
+    Path destination = getPathToAllAssetsDirectory();
     steps.add(new MakeCleanDirectoryStep(destination));
     final ImmutableMap.Builder<String, File> allAssets = ImmutableMap.builder();
 
-    File destinationDirectory = new File(destination);
+    File destinationDirectory = destination.toFile();
     for (Path assetsDirectory : assetsDirectories) {
       traverser.traverse(new DirectoryTraversal(assetsDirectory.toFile()) {
         @Override
@@ -266,8 +265,8 @@ public class AaptPackageResources extends AbstractBuildable {
 
     for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
       steps.add(new MkdirAndSymlinkFileStep(
-          MorePaths.newPathInstance(entry.getValue()).toString(),
-          MorePaths.newPathInstance(destinationDirectory + "/" + entry.getKey()).toString()));
+          MorePaths.newPathInstance(entry.getValue()),
+          MorePaths.newPathInstance(destinationDirectory + "/" + entry.getKey())));
     }
 
     return Optional.of(destination);
@@ -283,19 +282,19 @@ public class AaptPackageResources extends AbstractBuildable {
   }
 
   @VisibleForTesting
-  String getPathToAllAssetsDirectory() {
+  Path getPathToAllAssetsDirectory() {
     return getBinPath("__assets_%s__");
   }
 
   private Path getPathForTmpStringAssetsDirectory() {
-    return Paths.get(getBinPath("__strings_%s__"));
+    return getBinPath("__strings_%s__");
   }
 
-  private String getBinPath(String format) {
-    return String.format("%s/%s" + format,
+  private Path getBinPath(String format) {
+    return Paths.get(String.format("%s/%s" + format,
         BuckConstant.BIN_DIR,
         buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+        buildTarget.getShortName()));
   }
 
   public static Builder newAaptPackageResourcesBuildableBuilder(

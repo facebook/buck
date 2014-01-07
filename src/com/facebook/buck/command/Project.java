@@ -1031,7 +1031,11 @@ public class Project {
     private SerializablePrebuiltJarRule(PrebuiltJarRule rule) {
       this.name = getIntellijNameForRule(rule, null /* basePathToAliasMap */);
       this.binaryJar = rule.getBinaryJar().toString();
-      this.sourceJar = rule.getSourceJar().orNull();
+      if (rule.getSourceJar().isPresent()) {
+        this.sourceJar = rule.getSourceJar().get().toString();
+      } else {
+        this.sourceJar = null;
+      }
       this.javadocUrl = rule.getJavadocUrl().orNull();
     }
 
