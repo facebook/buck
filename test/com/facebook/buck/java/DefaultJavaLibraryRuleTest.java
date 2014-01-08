@@ -298,7 +298,7 @@ public class DefaultJavaLibraryRuleTest {
     assertEquals(
         "Generated files should not be included in getInputsToCompareToOutput() because they " +
         "should not be part of the RuleKey computation.",
-        ImmutableList.of("library/data.txt"),
+        ImmutableList.of(Paths.get("library/data.txt")),
         javaRule.getInputsToCompareToOutput());
   }
 

@@ -16,10 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Collection;
 
 /**
  * Utilities for dealing with {@link SourcePath}s.
@@ -33,7 +36,7 @@ public class SourcePaths {
    * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that are suitable to
    * be returned by {@link Buildable#getInputsToCompareToOutput()}.
    */
-  public static Iterable<String> filterInputsToCompareToOutput(
+  public static Collection<Path> filterInputsToCompareToOutput(
       Iterable<? extends SourcePath> sources) {
     // Currently, the only implementation of SourcePath that should be included in the Iterable
     // returned by getInputsToCompareToOutput() is FileSourcePath, so it is safe to filter by that
@@ -41,9 +44,11 @@ public class SourcePaths {
     //
     // BuildTargetSourcePath should not be included in the output because it refers to a generated
     // file, and generated files are not hashed as part of a RuleKey.
-    return Iterables.transform(
-        Iterables.filter(sources, FileSourcePath.class),
-        SourcePath.TO_REFERENCE);
+    return FluentIterable.from(sources)
+        .filter(FileSourcePath.class)
+        .transform(SourcePath.TO_REFERENCE)
+        .transform(MorePaths.TO_PATH)
+        .toList();
   }
 
   public static Iterable<Path> toPaths(Iterable<SourcePath> sourcePaths,

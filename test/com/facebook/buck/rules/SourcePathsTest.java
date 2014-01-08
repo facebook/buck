@@ -22,12 +22,15 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class SourcePathsTest {
 
   @Test
   public void testEmptyListAsInputToFilterInputsToCompareToOutput() {
     Iterable<SourcePath> sourcePaths = ImmutableList.of();
-    Iterable<String> inputs = SourcePaths.filterInputsToCompareToOutput(sourcePaths);
+    Iterable<Path> inputs = SourcePaths.filterInputsToCompareToOutput(sourcePaths);
     MoreAsserts.assertIterablesEquals(ImmutableList.<String>of(), inputs);
   }
 
@@ -37,10 +40,11 @@ public class SourcePathsTest {
         new FileSourcePath("java/com/facebook/Main.java"),
         new FileSourcePath("java/com/facebook/BuckConfig.java"),
         new BuildTargetSourcePath(BuildTargetFactory.newInstance("//java/com/facebook:facebook")));
-    Iterable<String> inputs = SourcePaths.filterInputsToCompareToOutput(sourcePaths);
+    Iterable<Path> inputs = SourcePaths.filterInputsToCompareToOutput(sourcePaths);
     MoreAsserts.assertIterablesEquals(
         "Iteration order should be preserved: results should not be alpha-sorted.",
-        ImmutableList.of("java/com/facebook/Main.java", "java/com/facebook/BuckConfig.java"),
+        ImmutableList.of(
+            Paths.get("java/com/facebook/Main.java"), Paths.get("java/com/facebook/BuckConfig.java")),
         inputs);
   }
 }

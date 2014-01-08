@@ -189,20 +189,20 @@ public class AndroidBinaryRuleTest {
     BuildContext context = createMock(BuildContext.class);
     replay(context);
 
-    MoreAsserts.assertListEquals(
+    MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should include manifest.",
-        ImmutableList.of("java/src/com/facebook/AndroidManifest.xml"),
-            ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
-                .getInputsToCompareToOutput());
+        ImmutableList.of(Paths.get("java/src/com/facebook/AndroidManifest.xml")),
+        ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
+            .getInputsToCompareToOutput());
 
     SourcePath proguardConfig = new FileSourcePath("java/src/com/facebook/proguard.cfg");
     androidBinaryRuleBuilder.setBuildTarget(new BuildTarget("//java/src/com/facebook", "app2"));
     androidBinaryRuleBuilder.setProguardConfig(Optional.of(proguardConfig));
-    MoreAsserts.assertListEquals(
+    MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should include Proguard config, if present.",
         ImmutableList.of(
-            "java/src/com/facebook/AndroidManifest.xml",
-            "java/src/com/facebook/proguard.cfg"),
+            Paths.get("java/src/com/facebook/AndroidManifest.xml"),
+            Paths.get("java/src/com/facebook/proguard.cfg")),
             ruleResolver.buildAndAddToIndex(androidBinaryRuleBuilder)
                 .getInputsToCompareToOutput());
 
@@ -414,8 +414,8 @@ public class AndroidBinaryRuleTest {
     ruleResolver.buildAndAddToIndex(
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
-        .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties")
+        .setStore(Paths.get("keystore/debug.keystore"))
+        .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
     return keystoreTarget;
   }

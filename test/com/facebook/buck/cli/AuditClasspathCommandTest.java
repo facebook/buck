@@ -122,8 +122,8 @@ public class AuditClasspathCommandTest {
     ruleResolver.buildAndAddToIndex(
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreBuildTarget)
-        .setStore("debug.keystore")
-        .setProperties("keystore.properties"));
+        .setStore(Paths.get("debug.keystore"))
+        .setProperties(Paths.get("keystore.properties")));
     ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//:test-android-binary"))

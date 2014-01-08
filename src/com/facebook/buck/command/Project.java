@@ -466,7 +466,8 @@ public class Project {
 
         // getKeystore() returns a path relative to the project root, but an IntelliJ module
         // expects the path to the keystore to be relative to the module root.
-        module.keystorePath = Paths.get(relativePath).relativize(Paths.get(keystoreProperties.getKeystore())).toString();
+        module.keystorePath = Paths.get(relativePath).relativize(keystoreProperties.getKeystore())
+            .toString();
       } else {
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;

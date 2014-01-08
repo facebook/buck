@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class KeystoreTest {
@@ -44,8 +45,8 @@ public class KeystoreTest {
     return Keystore
         .newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(BuildTargetFactory.newInstance("//keystores:debug"))
-        .setStore("keystores/debug.keystore")
-        .setProperties("keystores/debug.keystore.properties")
+        .setStore(Paths.get("keystores/debug.keystore"))
+        .setProperties(Paths.get("keystores/debug.keystore.properties"))
         .build(ruleResolver);
   }
 
@@ -56,10 +57,11 @@ public class KeystoreTest {
 
     Keystore keystore = (Keystore) rule.getBuildable();
     MoreAsserts.assertIterablesEquals(
-        ImmutableList.of("keystores/debug.keystore", "keystores/debug.keystore.properties"),
+        ImmutableList.of(Paths.get("keystores/debug.keystore"), Paths.get("keystores/debug.keystore.properties")),
         keystore.getInputsToCompareToOutput());
-    assertEquals("keystores/debug.keystore", keystore.getPathToStore());
-    assertEquals("keystores/debug.keystore.properties", keystore.getPathToPropertiesFile());
+    assertEquals(Paths.get("keystores/debug.keystore"), keystore.getPathToStore());
+    assertEquals(Paths.get("keystores/debug.keystore.properties"),
+        keystore.getPathToPropertiesFile());
   }
 
   @Test

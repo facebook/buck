@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 
 public class AndroidLibraryRule extends DefaultJavaLibraryRule {
@@ -92,11 +92,11 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   @Override
-  public List<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     if (manifestFile.isPresent()) {
-      return ImmutableList.<String>builder()
+      return ImmutableList.<Path>builder()
           .addAll(super.getInputsToCompareToOutput())
-          .add(manifestFile.get().toString())
+          .add(manifestFile.get())
           .build();
     } else {
       return super.getInputsToCompareToOutput();

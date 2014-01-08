@@ -59,7 +59,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -83,6 +82,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -121,7 +121,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   private final Optional<Path> outputJar;
 
-  private final List<String> inputsToConsiderForCachingPurposes;
+  private final List<Path> inputsToConsiderForCachingPurposes;
 
   private final Optional<Path> proguardConfig;
 
@@ -201,10 +201,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     // Note that both srcs and resources are sorted so that the list order is consistent even if
     // the iteration order of the sets passed to the constructor changes. See
     // AbstractBuildRule.getInputsToCompareToOutput() for details.
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(Iterables.transform(this.srcs, Functions.toStringFunction()));
-    builder.addAll(SourcePaths.filterInputsToCompareToOutput(resources));
-    inputsToConsiderForCachingPurposes = builder.build();
+    inputsToConsiderForCachingPurposes = ImmutableList.<Path>builder()
+        .addAll(srcs)
+        .addAll(SourcePaths.filterInputsToCompareToOutput(resources))
+        .build();
 
     outputClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
@@ -496,7 +496,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   @Override
   @Nullable
-  public List<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return inputsToConsiderForCachingPurposes;
   }
 

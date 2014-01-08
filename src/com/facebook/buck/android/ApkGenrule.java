@@ -35,11 +35,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -115,7 +115,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
   }
 
   @Override
-  public ImmutableSortedSet<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
   }
 

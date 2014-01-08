@@ -41,13 +41,13 @@ public class Buildables {
    * Helper function for {@link Buildable}s to create their lists of files for caching.
    */
   public static void addInputsToSortedSet(@Nullable Path pathToDirectory,
-                                          ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes,
+                                          ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes,
                                           DirectoryTraverser traverser) {
     if (pathToDirectory == null) {
       return;
     }
 
-    Set<String> files;
+    Set<Path> files;
     try {
       files = DirectoryTraversers.getInstance().findFiles(pathToDirectory.toString(), traverser);
     } catch (IOException e) {

@@ -79,6 +79,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -395,13 +396,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @Override
-  public List<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     sourcePaths.add(manifest);
 
     Optionals.addIfPresent(proguardConfig, sourcePaths);
 
-    ImmutableList.Builder<String> inputs = ImmutableList.builder();
+    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
     inputs.addAll(SourcePaths.filterInputsToCompareToOutput(sourcePaths.build()));
     return inputs.build();
   }

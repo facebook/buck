@@ -51,6 +51,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -131,7 +132,7 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
   }
 

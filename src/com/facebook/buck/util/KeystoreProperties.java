@@ -20,23 +20,24 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Properties;
 
 public class KeystoreProperties {
 
-  private final String keystore;
+  private final Path keystore;
   private final String storepass;
   private final String keypass;
   private final String alias;
 
-  public KeystoreProperties(String keystore, String storepass, String keypass, String alias) {
+  public KeystoreProperties(Path keystore, String storepass, String keypass, String alias) {
     this.keystore = Preconditions.checkNotNull(keystore);
     this.storepass = Preconditions.checkNotNull(storepass);
     this.keypass = Preconditions.checkNotNull(keypass);
     this.alias = Preconditions.checkNotNull(alias);
   }
 
-  public String getKeystore() {
+  public Path getKeystore() {
     return keystore;
   }
 
@@ -53,8 +54,8 @@ public class KeystoreProperties {
   }
 
   public static KeystoreProperties createFromPropertiesFile(
-      String pathToStore,
-      String pathToKeystorePropertiesFile,
+      Path pathToStore,
+      Path pathToKeystorePropertiesFile,
       ProjectFilesystem projectFilesystem) throws IOException {
     Properties properties = projectFilesystem.readPropertiesFile(pathToKeystorePropertiesFile);
 
@@ -73,7 +74,7 @@ public class KeystoreProperties {
    */
   private static String getOrThrowException(Properties properties,
       String propertyName,
-      String pathToKeystorePropertiesFile) {
+      Path pathToKeystorePropertiesFile) {
     String value = Strings.nullToEmpty(properties.getProperty(propertyName)).trim();
     if (value.isEmpty()) {
       throw new HumanReadableException(

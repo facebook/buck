@@ -47,6 +47,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +75,7 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return ImmutableSet.of();
   }
 

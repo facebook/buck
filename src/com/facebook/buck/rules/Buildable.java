@@ -21,6 +21,8 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -43,8 +45,7 @@ public interface Buildable {
    * cases the inputs may be ordered in any way the rule feels most appropriate.
    */
   // TODO(simons): Use the Description's constructor arg to generate these.
-  // TODO(simons): These inputs are files and should be represented as Paths
-  public Iterable<String> getInputsToCompareToOutput();
+  public Collection<Path> getInputsToCompareToOutput();
 
   /**
    * When this method is invoked, all of its dependencies will have been built.

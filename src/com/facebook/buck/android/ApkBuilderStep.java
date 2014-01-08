@@ -35,7 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -65,8 +65,8 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<String> nativeLibraryDirectories;
   private final ImmutableSet<String> zipFiles;
   private final ImmutableSet<String> jarFilesThatMayContainResources;
-  private final String pathToKeystore;
-  private final String pathToKeystorePropertiesFile;
+  private final Path pathToKeystore;
+  private final Path pathToKeystorePropertiesFile;
   private final boolean debugMode;
 
   /**
@@ -90,8 +90,8 @@ public class ApkBuilderStep implements Step {
       ImmutableSet<String> nativeLibraryDirectories,
       ImmutableSet<String> zipFiles,
       ImmutableSet<String> jarFilesThatMayContainResources,
-      String pathToKeystore,
-      String pathToKeystorePropertiesFile,
+      Path pathToKeystore,
+      Path pathToKeystorePropertiesFile,
       boolean debugMode) {
     this.resourceApk = Preconditions.checkNotNull(resourceApk);
     this.pathToOutputApkFile = Preconditions.checkNotNull(pathToOutputApkFile);
@@ -172,8 +172,8 @@ public class ApkBuilderStep implements Step {
         pathToKeystorePropertiesFile,
         projectFilesystem);
     KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
-    InputStream inputStream = projectFilesystem.getInputSupplierForRelativePath(
-        Paths.get(pathToKeystore)).getInput();
+    InputStream inputStream = projectFilesystem.getInputSupplierForRelativePath(pathToKeystore)
+        .getInput();
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
     keystore.load(inputStream, keystorePassword);
 

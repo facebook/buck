@@ -47,6 +47,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -272,7 +274,7 @@ public class DescribedRuleTest {
     }
 
     @Override
-    public Iterable<String> getInputsToCompareToOutput() {
+    public Collection<Path> getInputsToCompareToOutput() {
       return ImmutableSet.of();
     }
 

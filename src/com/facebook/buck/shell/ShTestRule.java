@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -79,8 +80,8 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
-    return ImmutableSet.of(test.toString());
+  public Collection<Path> getInputsToCompareToOutput() {
+    return ImmutableSet.of(test);
   }
 
   @Override

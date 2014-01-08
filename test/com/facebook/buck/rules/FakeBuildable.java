@@ -20,6 +20,8 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -30,7 +32,7 @@ public class FakeBuildable extends AbstractBuildable {
   private String pathToOutputFile;
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
   }
 

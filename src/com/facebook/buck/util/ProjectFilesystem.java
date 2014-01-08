@@ -160,7 +160,7 @@ public class ProjectFilesystem {
     return getFileForRelativePath(pathRelativeToProjectRoot).delete();
   }
 
-  public Properties readPropertiesFile(String pathToPropertiesFileRelativeToProjectRoot)
+  public Properties readPropertiesFile(Path pathToPropertiesFileRelativeToProjectRoot)
       throws IOException {
     Properties properties = new Properties();
     File propertiesFile = getFileForRelativePath(pathToPropertiesFileRelativeToProjectRoot);

@@ -82,9 +82,9 @@ public class NdkLibraryTest {
 
     MoreAsserts.assertListEquals(
         ImmutableList.of(
-            basePath + "/Android.mk",
-            basePath + "/Application.mk",
-            basePath + "/main.cpp"),
+            Paths.get(basePath + "/Android.mk"),
+            Paths.get(basePath + "/Application.mk"),
+            Paths.get(basePath + "/main.cpp")),
         ImmutableList.copyOf(ndkLibrary.getInputsToCompareToOutput()));
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());

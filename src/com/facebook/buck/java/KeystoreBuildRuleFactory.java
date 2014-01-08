@@ -32,8 +32,8 @@ public class KeystoreBuildRuleFactory extends AbstractTestRuleFactory<Keystore.B
   @Override
   protected void amendBuilder(Builder builder, BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
-    builder.setStore(params.getRequiredFileAsPathRelativeToProjectRoot("store").toString());
-    builder.setProperties(params.getRequiredFileAsPathRelativeToProjectRoot("properties").toString());
+    builder.setStore(params.getRequiredFileAsPathRelativeToProjectRoot("store"));
+    builder.setProperties(params.getRequiredFileAsPathRelativeToProjectRoot("properties"));
   }
 
 }

@@ -68,9 +68,9 @@ public class PrebuiltNativeLibraryRuleTest {
         "consistent even if the iteration order of the sets passed to the AndroidLibraryRule " +
         "changes.",
         ImmutableList.of(
-          "java/src/com/facebook/base/libs/armeabi/bar.so",
-          "java/src/com/facebook/base/libs/armeabi/foo.so",
-          "java/src/com/facebook/base/libs/armeabi/libilbc-codec.so"),
+            Paths.get("java/src/com/facebook/base/libs/armeabi/bar.so"),
+            Paths.get("java/src/com/facebook/base/libs/armeabi/foo.so"),
+            Paths.get("java/src/com/facebook/base/libs/armeabi/libilbc-codec.so")),
           nativeLibraryRule.getInputsToCompareToOutput());
   }
 }

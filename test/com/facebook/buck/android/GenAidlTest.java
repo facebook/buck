@@ -55,11 +55,11 @@ public class GenAidlTest {
   public void testSimpleGenAidlRule() throws IOException {
     BuildContext context = null;
 
-    String pathToAidl = "java/com/example/base/IWhateverService.aidl";
+    Path pathToAidl = Paths.get("java/com/example/base/IWhateverService.aidl");
     String importPath = "java/com/example/base/";
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
-    Buildable genAidlRule = new GenAidl(target, Paths.get(pathToAidl), importPath);
+    Buildable genAidlRule = new GenAidl(target, pathToAidl, importPath);
 
     GenAidlDescription description = new GenAidlDescription();
     assertEquals(GenAidlDescription.TYPE, description.getBuildRuleType());

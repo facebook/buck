@@ -68,13 +68,13 @@ public class AndroidResourceRuleTest {
         "getInputsToCompareToOutput() should return an alphabetically sorted list of all input " +
         "files that contribute to this android_resource() rule.",
         ImmutableList.of(
-            "java/src/com/facebook/base/res/drawable/A.xml",
-            "java/src/com/facebook/base/res/drawable/C.xml",
-            "java/src/com/facebook/base/res/drawable/E.xml",
-            "java/src/com/facebook/base/assets/drawable/B.xml",
-            "java/src/com/facebook/base/assets/drawable/D.xml",
-            "java/src/com/facebook/base/assets/drawable/F.xml",
-            "java/src/com/facebook/base/AndroidManifest.xml"),
+            Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
+            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
+            Paths.get("java/src/com/facebook/base/assets/drawable/D.xml"),
+            Paths.get("java/src/com/facebook/base/assets/drawable/F.xml"),
+            Paths.get("java/src/com/facebook/base/res/drawable/A.xml"),
+            Paths.get("java/src/com/facebook/base/res/drawable/C.xml"),
+            Paths.get("java/src/com/facebook/base/res/drawable/E.xml")),
         androidResourceRule.getInputsToCompareToOutput());
   }
 
@@ -145,8 +145,8 @@ public class AndroidResourceRuleTest {
     ruleResolver.buildAndAddToIndex(
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
-        .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties")
+        .setStore(Paths.get("keystore/debug.keystore"))
+        .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
     AndroidBinaryRule e = ruleResolver.buildAndAddToIndex(
         AndroidBinaryRule.newAndroidBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())

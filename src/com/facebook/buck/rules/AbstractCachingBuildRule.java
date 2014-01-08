@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.Beta;
@@ -106,8 +105,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   @Override
   public Iterable<Path> getInputs() {
     if (inputsToCompareToOutputs == null) {
-      inputsToCompareToOutputs = MorePaths.asPaths(
-          buildable.getInputsToCompareToOutput());
+      inputsToCompareToOutputs = buildable.getInputsToCompareToOutput();
     }
     return inputsToCompareToOutputs;
   }

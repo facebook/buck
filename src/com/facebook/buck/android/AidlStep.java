@@ -30,12 +30,12 @@ import java.util.Set;
 
 public class AidlStep extends ShellStep {
 
-  private final String aidlFilePath;
+  private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
 
   public AidlStep(
-      String aidlFilePath,
+      Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
     this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
@@ -70,7 +70,7 @@ public class AidlStep extends ShellStep {
     // base output folder for generated files
     args.add("-o" + projectFilesystem.resolve(destinationDirectory));
 
-    args.add(aidlFilePath);
+    args.add(aidlFilePath.toString());
 
     return args.build();
   }

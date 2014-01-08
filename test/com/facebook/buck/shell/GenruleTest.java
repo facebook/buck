@@ -167,9 +167,9 @@ public class GenruleTest {
         getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
         genrule.getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
-    ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
-        "src/com/facebook/katana/convert_to_katana.py",
-        "src/com/facebook/katana/AndroidManifest.xml");
+    ImmutableSortedSet<Path> inputsToCompareToOutputs = ImmutableSortedSet.of(
+        Paths.get("src/com/facebook/katana/convert_to_katana.py"),
+        Paths.get("src/com/facebook/katana/AndroidManifest.xml"));
     assertEquals(inputsToCompareToOutputs,
         genrule.getInputsToCompareToOutput());
 

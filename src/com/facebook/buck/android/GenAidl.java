@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -64,12 +65,12 @@ public class GenAidl extends AbstractBuildable {
   private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 
   private final BuildTarget buildTarget;
-  private final String aidlFilePath;
+  private final Path aidlFilePath;
   private final String importPath;
 
   GenAidl(BuildTarget buildTarget, Path aidlFilePath, String importPath) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath).toString();
+    this.aidlFilePath = Preconditions.checkNotNull(aidlFilePath);
     this.importPath = Preconditions.checkNotNull(importPath);
   }
 
@@ -90,12 +91,12 @@ public class GenAidl extends AbstractBuildable {
     // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aidl is used.
     return builder
-        .set("aidlFilePath", aidlFilePath)
+        .setInput("aidlFilePath", aidlFilePath)
         .set("importPath", importPath);
   }
 
   @Override
-  public ImmutableList<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of(aidlFilePath);
   }
 

@@ -55,6 +55,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -133,8 +134,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
-    return ImmutableList.of(getBinaryJar().toString());
+  public Collection<Path> getInputsToCompareToOutput() {
+    return ImmutableList.of(getBinaryJar());
   }
 
   @Override

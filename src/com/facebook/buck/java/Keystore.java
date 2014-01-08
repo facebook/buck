@@ -30,6 +30,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -37,10 +39,10 @@ import javax.annotation.Nullable;
 public class Keystore extends AbstractBuildable {
 
   private final BuildTarget buildTarget;
-  private final String pathToStore;
-  private final String pathToProperties;
+  private final Path pathToStore;
+  private final Path pathToProperties;
 
-  protected Keystore(BuildTarget buildTarget, String store, String properties) {
+  protected Keystore(BuildTarget buildTarget, Path store, Path properties) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.pathToStore = Preconditions.checkNotNull(store);
     this.pathToProperties = Preconditions.checkNotNull(properties);
@@ -53,26 +55,26 @@ public class Keystore extends AbstractBuildable {
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of(pathToStore, pathToProperties);
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder
-        .set("store", pathToStore)
-        .set("properties", pathToProperties);
+        .setInput("store", pathToStore)
+        .setInput("properties", pathToProperties);
   }
 
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 
-  public String getPathToStore() {
+  public Path getPathToStore() {
     return pathToStore;
   }
 
-  public String getPathToPropertiesFile() {
+  public Path getPathToPropertiesFile() {
     return pathToProperties;
   }
 
@@ -89,8 +91,8 @@ public class Keystore extends AbstractBuildable {
 
   public static class Builder extends AbstractBuildable.Builder {
 
-    private String pathToStore;
-    private String pathToProperties;
+    private Path pathToStore;
+    private Path pathToProperties;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -112,12 +114,12 @@ public class Keystore extends AbstractBuildable {
       return new Keystore(params.getBuildTarget(), pathToStore, pathToProperties);
     }
 
-    public Builder setStore(String pathToStore) {
+    public Builder setStore(Path pathToStore) {
       this.pathToStore = pathToStore;
       return this;
     }
 
-    public Builder setProperties(String pathToProperties) {
+    public Builder setProperties(Path pathToProperties) {
       this.pathToProperties = pathToProperties;
       return this;
     }

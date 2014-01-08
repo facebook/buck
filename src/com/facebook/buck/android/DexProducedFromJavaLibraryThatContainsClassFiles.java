@@ -48,6 +48,7 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -86,7 +87,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     // The deps of this rule already capture all of the inputs that should affect the cache key.
     return ImmutableList.of();
   }

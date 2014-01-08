@@ -46,17 +46,16 @@ public class AndroidLibraryRuleTest {
     BuildContext context = createMock(BuildContext.class);
     replay(context);
 
-    MoreAsserts.assertListEquals(
+    MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should include manifest and src.",
         ImmutableList.of(
-            "java/src/com/foo/Foo.java",
-            "java/src/com/foo/AndroidManifest.xml"),
+            Paths.get("java/src/com/foo/Foo.java"),
+            Paths.get("java/src/com/foo/AndroidManifest.xml")),
         androidLibraryRuleBuilderFoo.getInputsToCompareToOutput());
 
-    MoreAsserts.assertListEquals(
+    MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should include only src.",
-        ImmutableList.of(
-            "java/src/com/bar/Bar.java"),
+        ImmutableList.of(Paths.get("java/src/com/bar/Bar.java")),
         androidLibraryRuleBuilderBar.getInputsToCompareToOutput());
 
     assertEquals(

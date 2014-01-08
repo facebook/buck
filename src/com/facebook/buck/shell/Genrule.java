@@ -41,7 +41,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -50,13 +49,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -183,10 +182,8 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   }
 
   @Override
-  public ImmutableSortedSet<String> getInputsToCompareToOutput() {
-    return FluentIterable.from(srcs)
-        .transform(Functions.toStringFunction())
-        .toSortedSet(Ordering.natural());
+  public Collection<Path> getInputsToCompareToOutput() {
+    return ImmutableSortedSet.copyOf(srcs);
   }
 
   @Override

@@ -94,8 +94,8 @@ public class ApkGenruleTest {
     ruleResolver.buildAndAddToIndex(
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
-        .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties")
+        .setStore(Paths.get("keystore/debug.keystore"))
+        .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     ruleResolver.buildAndAddToIndex(
@@ -155,9 +155,9 @@ public class ApkGenruleTest {
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();
-    ImmutableSortedSet<String> inputsToCompareToOutputs = ImmutableSortedSet.of(
-        "src/com/facebook/key.properties",
-        "src/com/facebook/signer.py");
+    ImmutableSortedSet<Path> inputsToCompareToOutputs = ImmutableSortedSet.of(
+        Paths.get("src/com/facebook/key.properties"),
+        Paths.get("src/com/facebook/signer.py"));
     assertEquals(inputsToCompareToOutputs,
         apkGenrule.getInputsToCompareToOutput());
 

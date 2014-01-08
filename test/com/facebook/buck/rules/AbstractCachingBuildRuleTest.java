@@ -69,6 +69,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -539,7 +540,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public Iterable<String> getInputsToCompareToOutput() {
+    public Collection<Path> getInputsToCompareToOutput() {
       throw new UnsupportedOperationException();
     }
 
@@ -590,7 +591,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public Iterable<String> getInputsToCompareToOutput() {
+    public Collection<Path> getInputsToCompareToOutput() {
       throw new UnsupportedOperationException("method should not be called");
     }
 

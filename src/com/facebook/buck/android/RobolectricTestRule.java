@@ -43,6 +43,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -99,7 +100,7 @@ public class RobolectricTestRule extends JavaTestRule {
   }
 
   @Override
-  public List<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
   }
 

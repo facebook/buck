@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -85,7 +86,7 @@ public class XcodeNative extends AbstractBuildable {
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     // TODO(user): Somehow enumerate all files referenced by the xcode project.
     return SourcePaths.filterInputsToCompareToOutput(Collections.singleton(projectContainerPath));
   }

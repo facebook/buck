@@ -35,6 +35,7 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class AndroidInstrumentationApkTest {
@@ -84,8 +85,8 @@ public class AndroidInstrumentationApkTest {
         Keystore.newKeystoreBuilder(
             new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(new BuildTarget("//keystores", "debug"))
-            .setProperties("keystores/debug.properties")
-            .setStore("keystores/debug.keystore")
+            .setProperties(Paths.get("keystores/debug.properties"))
+            .setStore(Paths.get("keystores/debug.keystore"))
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.

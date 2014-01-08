@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -87,8 +88,8 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
-    ImmutableSortedSet.Builder<String> inputsToConsiderForCachingPurposes = ImmutableSortedSet
+  public Collection<Path> getInputsToCompareToOutput() {
+    ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes = ImmutableSortedSet
         .naturalOrder();
 
     Buildables.addInputsToSortedSet(getLibraryPath(),

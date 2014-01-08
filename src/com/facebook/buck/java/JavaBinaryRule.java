@@ -51,6 +51,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -85,19 +86,19 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
   }
 
-  private void addMetaInfContents(ImmutableSortedSet.Builder<String> files) {
+  private void addMetaInfContents(ImmutableSortedSet.Builder<Path> files) {
     Buildables.addInputsToSortedSet(metaInfDirectory, files, directoryTraverser);
   }
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    ImmutableSortedSet.Builder<String> metaInfFiles = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Path> metaInfFiles = ImmutableSortedSet.naturalOrder();
     addMetaInfContents(metaInfFiles);
 
     return super.appendToRuleKey(builder)
         .set("mainClass", mainClass)
         .setInput("manifestFile", manifestFile)
-        .set("metaInfDirectory", metaInfFiles.build());
+        .setInputs("metaInfDirectory", metaInfFiles.build().iterator());
   }
 
   @Override
@@ -111,12 +112,12 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
-    ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
 
     if (manifestFile != null) {
-      builder.add(manifestFile.toString());
+      builder.add(manifestFile);
     }
 
     addMetaInfContents(builder);

@@ -43,6 +43,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 public class PythonBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule {
@@ -110,9 +111,9 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
+  public Collection<Path> getInputsToCompareToOutput() {
     if (main != null) {
-      return ImmutableList.of(main.toString());
+      return ImmutableList.of(main);
     } else {
       return ImmutableList.of();
     }

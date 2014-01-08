@@ -177,8 +177,8 @@ public class ProjectTest {
     ruleResolver.buildAndAddToIndex(
         Keystore.newKeystoreBuilder(new FakeAbstractBuildRuleBuilderParams())
         .setBuildTarget(keystoreTarget)
-        .setStore("keystore/debug.keystore")
-        .setProperties("keystore/debug.keystore.properties")
+        .setStore(Paths.get("keystore/debug.keystore"))
+        .setProperties(Paths.get("keystore/debug.keystore.properties"))
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     // android_binary //foo:app
@@ -722,7 +722,7 @@ public class ProjectTest {
     keystoreProperties.put("key.store.password", "android");
     keystoreProperties.put("key.alias.password", "android");
     EasyMock.expect(projectFilesystem.readPropertiesFile(
-        "keystore/debug.keystore.properties"))
+        Paths.get("keystore/debug.keystore.properties")))
         .andReturn(keystoreProperties).anyTimes();
 
     ImmutableMap<String, String> basePathToAliasMap = ImmutableMap.of();

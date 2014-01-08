@@ -34,16 +34,15 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SrcsAttributeBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -159,8 +158,8 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
-    return Iterables.transform(this.sources, Functions.toStringFunction());
+  public Collection<Path> getInputsToCompareToOutput() {
+    return this.sources;
   }
 
   public static Builder newNdkLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {

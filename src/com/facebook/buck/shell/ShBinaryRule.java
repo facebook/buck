@@ -38,11 +38,11 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -76,9 +76,11 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public Iterable<String> getInputsToCompareToOutput() {
-    return Iterables.concat(ImmutableList.of(main.toString()),
-        SourcePaths.filterInputsToCompareToOutput(resources));
+  public Collection<Path> getInputsToCompareToOutput() {
+    return ImmutableList.<Path>builder()
+        .add(main)
+        .addAll(SourcePaths.filterInputsToCompareToOutput(resources))
+        .build();
   }
 
   @Override

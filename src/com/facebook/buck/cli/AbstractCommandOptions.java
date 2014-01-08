@@ -71,7 +71,7 @@ public abstract class AbstractCommandOptions {
   @Nullable // Lazily loaded via getCommandLineBuildTargetNormalizer().
   private CommandLineBuildTargetNormalizer commandLineBuildTargetNormalizer;
 
-  private final static String localPropertiesPath = "local.properties";
+  private final static Path localPropertiesPath = Paths.get("local.properties");
 
   AbstractCommandOptions(BuckConfig buckConfig) {
     this.buckConfig = Preconditions.checkNotNull(buckConfig);

@@ -40,6 +40,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -60,7 +61,7 @@ public class AndroidManifestTest {
     AndroidManifest androidManifestRule = (AndroidManifest) buildRule.getBuildable();
 
     assertEquals(
-        ImmutableList.of("java/com/example/AndroidManifestSkeleton.xml"),
+        ImmutableList.of(Paths.get("java/com/example/AndroidManifestSkeleton.xml")),
         ImmutableList.copyOf(androidManifestRule.getInputsToCompareToOutput()));
     assertEquals(
         BuckConstant.GEN_DIR + "/java/com/example/AndroidManifest__manifest__.xml",
