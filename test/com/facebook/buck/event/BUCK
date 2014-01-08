@@ -8,6 +8,8 @@ java_test(
     ':testutil',
     '//lib:guava',
     '//lib:junit',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
     '//lib:jackson-core',
     '//lib:jackson-databind',
     '//src/com/facebook/buck/event:event',

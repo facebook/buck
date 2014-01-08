@@ -23,7 +23,6 @@ import com.google.common.base.Supplier;
 import com.google.common.eventbus.AsyncEventBus;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -94,14 +93,34 @@ public class BuckEventBus implements Closeable {
     return buildId;
   }
 
+  /**
+   * Attempt to release resources (specifically, threads) held by this bus.
+   * This is meant for cleaning up after an exception.  {@link #shutdown()} should be used under
+   * normal circumstances to wait for all jobs to complete.
+   */
   @Override
-  public void close() throws IOException {
+  public void close() {
+    executorService.shutdown();
+  }
+
+  /**
+   * Shutdown the bus and wait a reasonable interval for it to terminate.
+   *
+   * @return {@code true} iff it successfully terminated.
+   */
+  public boolean shutdown(long timeout, TimeUnit unit) {
     executorService.shutdown();
     try {
-      executorService.awaitTermination(15, TimeUnit.SECONDS);
+      // Give the eventBus some time to finish dispatching all events and inform the caller
+      // if they don't finish during that time.
+      return executorService.awaitTermination(timeout, unit);
     } catch (InterruptedException e) {
-      // Give the eventBus 15 seconds to finish dispatching all events, but if they should fail
-      // to finish in that amount of time just eat it, the end user doesn't care.
+      Thread.currentThread().interrupt();
+      return false;
     }
+  }
+
+  public String executorSummary() {
+    return executorService.toString();
   }
 }

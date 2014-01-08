@@ -95,6 +95,7 @@ public final class Main {
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
   private static final int ARTIFACT_CACHE_TIMEOUT_IN_SECONDS = 15;
+  private static final int EVENT_BUS_SHUTDOWN_TIMEOUT_SECS = 15;
 
   private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
       new TimeSpan(100, TimeUnit.MILLISECONDS);
@@ -466,7 +467,16 @@ public final class Main {
         buildEventBus.post(LogEvent.info(
             "See trace at http://localhost:%s/trace/%s", port, buildId));
       }
+
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
+      boolean busShutDown = buildEventBus.shutdown(
+          EVENT_BUS_SHUTDOWN_TIMEOUT_SECS, TimeUnit.SECONDS);
+      if (!busShutDown) {
+        stdErr.println("The BuckEventBus failed to shut down within the standard timeout.");
+        stdErr.println("Your build might have succeeded, but some messages were probably lost.");
+        stdErr.println("Here's some debugging information:");
+        stdErr.println(buildEventBus.executorSummary());
+      }
     } finally {
       commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
