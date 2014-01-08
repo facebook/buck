@@ -91,14 +91,14 @@ public class NdkLibraryTest {
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    Function<String, Path> pathTransform = new Function<String, Path>() {
+    Function<Path, Path> pathTransform = new Function<Path, Path>() {
       @Override
-      public Path apply(String pathRelativeTo) {
-        return Paths.get("/foo/", pathRelativeTo);
+      public Path apply(Path pathRelativeTo) {
+        return Paths.get("/foo/", pathRelativeTo.toString());
       }
     };
     expect(executionContext.getProjectFilesystem()).andReturn(projectFilesystem);
-    expect(projectFilesystem.getPathRelativizer()).andReturn(pathTransform);
+    expect(projectFilesystem.getAbsolutifier()).andReturn(pathTransform);
     Path binDir = Paths.get(BuckConstant.BIN_DIR, "java/src/com/facebook/base/__libbase/libs");
     expect(projectFilesystem.resolve(binDir)).andReturn(Paths.get("/foo/" + binDir));
     File ndkDir = createMock(File.class);

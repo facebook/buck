@@ -30,7 +30,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void rmdir(String path) {
+  public void rmdir(Path path) {
   }
 
   @Override

@@ -67,6 +67,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -516,7 +517,7 @@ public final class Main {
     try {
       int i = 0;
       for (String path : paths) {
-        String urlString = "file://" + projectFilesystem.getPathRelativizer().apply(path);
+        String urlString = "file://" + projectFilesystem.getAbsolutifier().apply(Paths.get(path));
         urlsArray[i] = new URL(urlString);
         i++;
       }

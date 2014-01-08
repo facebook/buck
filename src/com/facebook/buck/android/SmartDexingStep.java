@@ -199,7 +199,7 @@ public class SmartDexingStep implements Step {
       ProjectFilesystem projectFilesystem) throws IOException {
     for (File secondaryOutput : secondaryOutputDir.listFiles()) {
       if (!producedArtifacts.contains(secondaryOutput)) {
-        projectFilesystem.rmdir(secondaryOutput.getAbsolutePath());
+        projectFilesystem.rmdir(secondaryOutput.getAbsoluteFile().toPath());
       }
     }
   }

@@ -64,14 +64,14 @@ public class CleanCommand extends AbstractCommandRunner<CleanCommandOptions> {
       // Delete directories that were created for the purpose of `buck project`.
       // TODO(mbolin): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
-      projectFilesystem.rmdir(Project.ANDROID_GEN_DIR);
-      projectFilesystem.rmdir(BuckConstant.ANNOTATION_DIR);
+      projectFilesystem.rmdir(Project.ANDROID_GEN_PATH);
+      projectFilesystem.rmdir(BuckConstant.ANNOTATION_PATH);
     } else {
       // On Windows, you have to close all files that will be deleted.
       // Because buck clean will delete build.log, you must close it first.
       JavaUtilsLoggingBuildListener.closeLogFile();
-      projectFilesystem.rmdir(BuckConstant.BIN_DIR);
-      projectFilesystem.rmdir(BuckConstant.GEN_DIR);
+      projectFilesystem.rmdir(BuckConstant.BIN_PATH);
+      projectFilesystem.rmdir(BuckConstant.GEN_PATH);
     }
 
     return 0;

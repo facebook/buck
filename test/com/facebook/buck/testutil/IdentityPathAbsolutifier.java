@@ -19,21 +19,11 @@ package com.facebook.buck.testutil;
 import com.google.common.base.Function;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-public class IdentityPathRelativizer {
+public class IdentityPathAbsolutifier {
 
   /** Utility class: do not instantiate. */
-  private IdentityPathRelativizer() {}
-
-  public static Function<String, Path> getIdentityRelativizer() {
-    return new Function<String, Path>() {
-      @Override
-      public Path apply(String input) {
-        return Paths.get(input);
-      }
-    };
-  }
+  private IdentityPathAbsolutifier() {}
 
   public static Function<Path, Path> getIdentityAbsolutifier() {
     return new Function<Path, Path>() {

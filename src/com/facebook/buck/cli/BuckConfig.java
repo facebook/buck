@@ -560,7 +560,7 @@ class BuckConfig {
     if (!cacheDir.isEmpty() && cacheDir.charAt(0) == '/') {
       return Paths.get(cacheDir);
     }
-    return projectFilesystem.getPathRelativizer().apply(cacheDir);
+    return projectFilesystem.getAbsolutifier().apply(Paths.get(cacheDir));
   }
 
   public Optional<Long> getCacheDirMaxSizeBytes() {

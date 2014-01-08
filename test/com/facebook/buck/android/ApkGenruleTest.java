@@ -49,7 +49,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.testutil.IdentityPathRelativizer;
+import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -232,7 +232,7 @@ public class ApkGenruleTest {
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
           @Override
           public Function<Path, Path> getAbsolutifier() {
-            return IdentityPathRelativizer.getIdentityAbsolutifier();
+            return IdentityPathAbsolutifier.getIdentityAbsolutifier();
           }
 
           @Override

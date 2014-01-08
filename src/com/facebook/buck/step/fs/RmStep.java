@@ -74,7 +74,7 @@ public class RmStep implements Step {
     if (shouldRecurse) {
       // Delete a folder recursively
       try {
-        projectFilesystem.rmdir(toDelete.toString());
+        projectFilesystem.rmdir(toDelete);
       } catch (IOException e) {
         if (shouldForceDeletion) {
           return 0;

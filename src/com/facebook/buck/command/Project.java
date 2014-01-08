@@ -106,6 +106,7 @@ public class Project {
    * users to target
    */
   public static final String ANDROID_GEN_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/android";
+  public static final Path ANDROID_GEN_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("android");
 
   /**
    * Prefix for build targets whose output will be in {@link #ANDROID_GEN_DIR}.

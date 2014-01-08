@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.testutil.IdentityPathRelativizer;
+import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -339,8 +339,8 @@ public class BuckConfigTest {
   @Test
   public void testIgnorePaths() throws IOException {
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getPathRelativizer())
-        .andReturn(IdentityPathRelativizer.getIdentityRelativizer())
+    EasyMock.expect(filesystem.getAbsolutifier())
+        .andReturn(IdentityPathAbsolutifier.getIdentityAbsolutifier())
         .times(2);
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.replay(filesystem, parser);
@@ -370,8 +370,8 @@ public class BuckConfigTest {
   @Test
   public void testIgnorePathsWithRelativeCacheDir() throws IOException {
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getPathRelativizer())
-        .andReturn(IdentityPathRelativizer.getIdentityRelativizer());
+    EasyMock.expect(filesystem.getAbsolutifier())
+        .andReturn(IdentityPathAbsolutifier.getIdentityAbsolutifier());
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
     EasyMock.replay(filesystem, parser);
 

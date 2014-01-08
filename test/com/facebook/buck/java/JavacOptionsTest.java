@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.testutil.IdentityPathRelativizer;
+import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -118,7 +118,7 @@ public class JavacOptionsTest {
     ImmutableList.Builder<String> paramBuilder = ImmutableList.builder();
 
     options.appendOptionsToList(
-        paramBuilder, /* pathAbsolutifier */ IdentityPathRelativizer.getIdentityAbsolutifier());
+        paramBuilder, /* pathAbsolutifier */ IdentityPathAbsolutifier.getIdentityAbsolutifier());
 
     ImmutableList<String> params = paramBuilder.build();
     return " " + Joiner.on(" ").join(params) + " ";

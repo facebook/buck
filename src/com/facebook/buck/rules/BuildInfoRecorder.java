@@ -101,7 +101,7 @@ public class BuildInfoRecorder {
    * {@link BuildInfo#getPathToMetadataDirectory(BuildTarget)}.
    */
   public void writeMetadataToDisk() throws IOException {
-    projectFilesystem.rmdir(pathToMetadataDirectory.toString());
+    projectFilesystem.rmdir(pathToMetadataDirectory);
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {

@@ -49,7 +49,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.testutil.IdentityPathRelativizer;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
@@ -271,11 +270,6 @@ public class GenruleTest {
     return ExecutionContext.builder()
         .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
-          @Override
-          public Function<String, Path> getPathRelativizer() {
-            return IdentityPathRelativizer.getIdentityRelativizer();
-          }
-
           @Override
           public Path resolve(Path path) {
             return path;

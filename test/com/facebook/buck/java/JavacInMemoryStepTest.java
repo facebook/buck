@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.testutil.IdentityPathRelativizer;
+import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -64,12 +64,7 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
         .setProjectFilesystem(new ProjectFilesystem(new File(".")) {
           @Override
           public Function<Path, Path> getAbsolutifier() {
-            return IdentityPathRelativizer.getIdentityAbsolutifier();
-          }
-
-          @Override
-          public Function<String, Path> getPathRelativizer() {
-            return IdentityPathRelativizer.getIdentityRelativizer();
+            return IdentityPathAbsolutifier.getIdentityAbsolutifier();
           }
         })
         .setConsole(new TestConsole())

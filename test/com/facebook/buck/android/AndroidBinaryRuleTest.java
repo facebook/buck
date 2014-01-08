@@ -380,17 +380,6 @@ public class AndroidBinaryRuleTest {
       }
 
       @Override
-      public Function<String, Path> getPathRelativizer() {
-        return new Function<String, Path>() {
-
-          @Override
-          public Path apply(String input) {
-            return Paths.get(input);
-          }
-        };
-      }
-
-      @Override
       public Path resolve(Path path) {
         return path;
       }

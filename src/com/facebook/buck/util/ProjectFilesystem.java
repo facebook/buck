@@ -63,7 +63,6 @@ public class ProjectFilesystem {
   // the Function<String, String> can go away, as Function<Path, Path> should be used exclusively.
 
   private final Function<Path, Path> pathAbsolutifier;
-  private final Function<String, Path> pathRelativizer;
 
   private final ImmutableSet<Path> ignorePaths;
 
@@ -83,12 +82,6 @@ public class ProjectFilesystem {
       @Override
       public Path apply(Path path) {
         return resolve(path);
-      }
-    };
-    this.pathRelativizer = new Function<String, Path>() {
-      @Override
-      public Path apply(String relativePath) {
-        return MorePaths.absolutify(getFileForRelativePath(relativePath).toPath());
       }
     };
     this.ignorePaths = MorePaths.filterForSubpaths(ignorePaths, this.pathToRoot);
@@ -198,13 +191,6 @@ public class ProjectFilesystem {
    */
   public File[] listFiles(Path pathRelativeToProjectRoot) {
     return getFileForRelativePath(pathRelativeToProjectRoot).listFiles();
-  }
-
-  /**
-   * Recursively delete everything under the specified path.
-   */
-  public void rmdir(String path) throws IOException {
-    MoreFiles.rmdir(pathRelativizer.apply(path));
   }
 
   /**
@@ -346,16 +332,6 @@ public class ProjectFilesystem {
   public String computeSha1(Path pathRelativeToProjectRoot) throws IOException {
     File fileToHash = getFileForRelativePath(pathRelativeToProjectRoot);
     return Files.hash(fileToHash, Hashing.sha1()).toString();
-  }
-
-  /**
-   * @return a function that takes a path relative to the project root and resolves it to an
-   *     absolute path. This is particularly useful for {@link com.facebook.buck.step.Step}s that do
-   *     not extend {@link com.facebook.buck.shell.ShellStep} because they are not guaranteed to be
-   *     run from the project root.
-   */
-  public Function<String, Path> getPathRelativizer() {
-    return pathRelativizer;
   }
 
   /**
