@@ -27,6 +27,7 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -51,16 +52,16 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
       "xz"
   );
 
-  private final String inputDirectoryPath;
-  private final String outputZipPath;
+  private final Path inputDirectoryPath;
+  private final Path outputZipPath;
   private final long maxDeflatedBytes;
 
-  public ZipDirectoryWithMaxDeflateStep(String inputDirectoryPath, String outputZipPath) {
+  public ZipDirectoryWithMaxDeflateStep(Path inputDirectoryPath, Path outputZipPath) {
     this(inputDirectoryPath, outputZipPath, 0);
   }
 
-  public ZipDirectoryWithMaxDeflateStep(String inputDirectoryPath,
-                                        String outputZipPath,
+  public ZipDirectoryWithMaxDeflateStep(Path inputDirectoryPath,
+                                        Path outputZipPath,
                                         long maxDeflatedBytes) {
     Preconditions.checkState(maxDeflatedBytes >= 0);
 
@@ -71,7 +72,7 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    File inputDirectory = new File(inputDirectoryPath);
+    File inputDirectory = inputDirectoryPath.toFile();
     Preconditions.checkState(inputDirectory.exists() && inputDirectory.isDirectory(),
         "%s must be a directory.",
         inputDirectoryPath);
@@ -83,7 +84,7 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
 
       if (!zipEntries.isEmpty()) {
         try (CustomZipOutputStream outputStream =
-                 ZipOutputStreams.newOutputStream(new File(outputZipPath))
+                 ZipOutputStreams.newOutputStream(outputZipPath.toFile())
         ) {
           for (Map.Entry<File, ZipEntry> zipEntry : zipEntries.entrySet()) {
             outputStream.putNextEntry(zipEntry.getValue());

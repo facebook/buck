@@ -67,8 +67,7 @@ public interface Buildable {
    *     identify a single file (as opposed to a directory).
    */
   @Nullable
-  // TODO(simons): Return a Path
-  public String getPathToOutputFile();
+  public Path getPathToOutputFile();
 
   /**
    * A {@link Buildable} may employ graph enhancement to alter its dependencies. If it does this, it

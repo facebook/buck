@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -103,7 +102,7 @@ public class TracesHelper {
    */
   TraceAttributes getTraceAttributesFor(File traceFile) {
     long lastModifiedTime = traceFile.lastModified();
-    Path pathToTrace = Paths.get(BuckConstant.BUCK_TRACE_DIR, traceFile.getName());
+    Path pathToTrace = BuckConstant.BUCK_TRACE_DIR.resolve(traceFile.getName());
     Optional<String> command = parseCommandFrom(pathToTrace);
     return new TraceAttributes(command, lastModifiedTime);
   }
@@ -139,6 +138,6 @@ public class TracesHelper {
   }
 
   private static Path getPathToTrace(String id) {
-    return Paths.get(BuckConstant.BUCK_TRACE_DIR, String.format("/build.%s.trace", id));
+    return BuckConstant.BUCK_TRACE_DIR.resolve(String.format("build.%s.trace", id));
   }
 }

@@ -75,7 +75,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -337,20 +336,19 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   @VisibleForTesting
   static void copyNativeLibrary(Path sourceDir,
-      String destinationDir,
+      Path destinationDir,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableList.Builder<Step> steps) {
-    Path destinationDirPath = Paths.get(destinationDir);
 
     if (cpuFilters.isEmpty()) {
-      steps.add(new CopyStep(sourceDir, destinationDirPath, true));
+      steps.add(new CopyStep(sourceDir, destinationDir, true));
     } else {
       for (TargetCpuType cpuType : cpuFilters) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
 
         final Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
-        Path libDestinationDir = destinationDirPath.resolve(abiDirectoryComponent.get());
+        Path libDestinationDir = destinationDir.resolve(abiDirectoryComponent.get());
 
         final MkdirStep mkDirStep = new MkdirStep(libDestinationDir);
         final CopyStep copyStep = new CopyStep(libSourceDir, libDestinationDir, true);
@@ -391,8 +389,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   @Override
-  public String getPathToOutputFile() {
-    return getApkPath().toString();
+  public Path getPathToOutputFile() {
+    return getApkPath();
   }
 
   @Override
@@ -414,11 +412,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies();
 
     // Copy the transitive closure of files in native_libs to a single directory, if any.
-    // TODO(simons): It's a Path
-    ImmutableSet<String> nativeLibraryDirectories;
+    ImmutableSet<Path> nativeLibraryDirectories;
     if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
-      String pathForNativeLibs = getPathForNativeLibs();
-      String libSubdirectory = pathForNativeLibs + "/lib";
+      Path pathForNativeLibs = getPathForNativeLibs();
+      Path libSubdirectory = pathForNativeLibs.resolve("lib");
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
       for (Path nativeLibDir : transitiveDependencies.nativeLibsDirectories) {
         copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
@@ -431,7 +428,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Create the .dex files and create the unsigned APK using ApkBuilder.
     AndroidDexTransitiveDependencies dexTransitiveDependencies =
         findDexTransitiveDependencies();
-    String signedApkPath = getSignedApkPath();
+    Path signedApkPath = getSignedApkPath();
     addDxAndApkBuilderSteps(context,
         steps,
         transitiveDependencies,
@@ -441,10 +438,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         aaptPackageResourcesBuildable.getResourceApkPath(),
         signedApkPath);
 
-    String apkToAlign;
+    Path apkToAlign;
     // Optionally, compress the resources file in the .apk.
     if (this.isCompressResources()) {
-      String compressedApkPath = getCompressedResourcesApkPath();
+      Path compressedApkPath = getCompressedResourcesApkPath();
       apkToAlign = compressedApkPath;
       RepackZipEntriesStep arscComp = new RepackZipEntriesStep(
           signedApkPath,
@@ -472,29 +469,28 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       final AndroidTransitiveDependencies transitiveDependencies,
       final AndroidDexTransitiveDependencies dexTransitiveDependencies,
       ImmutableSet<String> resDirectories,
-      ImmutableSet<String> nativeLibraryDirectories,
-      String resourceApkPath,
-      String unsignedApkPath) {
+      ImmutableSet<Path> nativeLibraryDirectories,
+      Path resourceApkPath,
+      Path unsignedApkPath) {
     // Execute preprocess_java_classes_binary, if appropriate.
-    ImmutableSet<String> classpathEntriesToDex;
+    ImmutableSet<Path> classpathEntriesToDex;
     if (preprocessJavaClassesBash.isPresent()) {
       // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
       // directory. Expect parallel outputs in the output directory and update classpathEntriesToDex
       // to reflect that.
-      final String preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
-      final String preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
+      final Path preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
+      final Path preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
       steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesInDir));
       steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       steps.add(new SymlinkFilesIntoDirectoryStep(
-          Paths.get("."),
-          dexTransitiveDependencies.classpathEntriesToDex,
-          Paths.get(preprocessJavaClassesInDir)
-          ));
+          context.getProjectRoot(),
+          Iterables.transform(dexTransitiveDependencies.classpathEntriesToDex, MorePaths.TO_PATH),
+          preprocessJavaClassesInDir));
       classpathEntriesToDex = FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
-          .transform(new Function<String, String>() {
+          .transform(new Function<String, Path>() {
             @Override
-            public String apply(String classpathEntry) {
-              return Paths.get(preprocessJavaClassesOutDir, classpathEntry).toString();
+            public Path apply(String classpathEntry) {
+              return preprocessJavaClassesOutDir.resolve(classpathEntry);
             }
           })
           .toSet();
@@ -504,24 +500,25 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           /* bash */ preprocessJavaClassesBash,
           /* cmdExe */ Optional.<String>absent());
       steps.add(new AbstractGenruleStep(
-          this, commandString, preprocessJavaClassesDeps, new File(preprocessJavaClassesInDir)) {
+          this, commandString, preprocessJavaClassesDeps, preprocessJavaClassesInDir.toFile()) {
 
         @Override
         protected void addEnvironmentVariables(
             ExecutionContext context,
             ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-          Function<String, Path> pathRelativizer =
-              context.getProjectFilesystem().getPathRelativizer();
+          Function<Path, Path> aboslutifier = context.getProjectFilesystem().getAbsolutifier();
           environmentVariablesBuilder.put(
-              "IN_JARS_DIR", pathRelativizer.apply(preprocessJavaClassesInDir).toString());
+              "IN_JARS_DIR", aboslutifier.apply(preprocessJavaClassesInDir).toString());
           environmentVariablesBuilder.put(
-              "OUT_JARS_DIR", pathRelativizer.apply(preprocessJavaClassesOutDir).toString());
+              "OUT_JARS_DIR", aboslutifier.apply(preprocessJavaClassesOutDir).toString());
         }
 
       });
 
     } else {
-      classpathEntriesToDex = dexTransitiveDependencies.classpathEntriesToDex;
+      classpathEntriesToDex = FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
+          .transform(MorePaths.TO_PATH)
+          .toSet();
     }
 
     // Execute proguard if desired (transforms input classpaths).
@@ -537,9 +534,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Create the final DEX (or set of DEX files in the case of split dex).
     // The APK building command needs to take a directory of raw files, so we create a directory
     // that can only contain .dex files from this build rule.
-    String dexDir = getBinPath(".dex/%s");
+    Path dexDir = getBinPath(".dex/%s");
     steps.add(new MkdirStep(dexDir));
-    String dexFile = String.format("%s/classes.dex", dexDir);
+    Path dexFile = dexDir.resolve("classes.dex");
 
     // Create dex artifacts. If split-dex is used, the assets/ directory should contain entries
     // that look something like the following:
@@ -557,7 +554,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // The scratch directories that contain the metadata.txt and secondary-N.dex.jar files must be
     // listed in secondaryDexDirectoriesBuilder so that their contents will be compressed
     // appropriately for Froyo.
-    ImmutableSet.Builder<String> secondaryDexDirectoriesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder = ImmutableSet.builder();
     if (preDexDeps.isEmpty()) {
       addDexingSteps(
           classpathEntriesToDex,
@@ -605,16 +602,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           steps,
           dexFile);
     }
-    ImmutableSet<String> secondaryDexDirectories = secondaryDexDirectoriesBuilder.build();
+    ImmutableSet<Path> secondaryDexDirectories = secondaryDexDirectoriesBuilder.build();
 
     // Due to limitations of Froyo, we need to ensure that all secondary zip files are STORED in
     // the final APK, not DEFLATED.  The only way to ensure this with ApkBuilder is to zip up the
     // the files properly and then add the zip files to the apk.
-    ImmutableSet.Builder<String> secondaryDexZips = ImmutableSet.builder();
-    for (String secondaryDexDirectory : secondaryDexDirectories) {
-      Preconditions.checkState(secondaryDexDirectory.endsWith("/"));
+    ImmutableSet.Builder<Path> secondaryDexZips = ImmutableSet.builder();
+    for (Path secondaryDexDirectory : secondaryDexDirectories) {
       // String the trailing slash from the directory name and add the zip extension.
-      String zipFile = secondaryDexDirectory.replaceAll("/$", "") + ".zip";
+      Path zipFile = Paths.get(secondaryDexDirectory.toString().replaceAll("/$", "") + ".zip");
 
       secondaryDexZips.add(zipFile);
       steps.add(new ZipDirectoryWithMaxDeflateStep(secondaryDexDirectory,
@@ -649,11 +645,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private void mergePreDexedArtifactsIntoMultipleDexFiles(
       ImmutableSet<IntermediateDexRule> preDexDeps,
       Optional<Path> pathToCompiledRDotJavaFiles,
-      ImmutableSet.Builder<String> secondaryDexDirectoriesBuilder,
+      ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder,
       ImmutableList.Builder<Step> steps,
-      String primaryDexPath) {
+      Path primaryDexPath) {
     // Run dx on the R.class files, if they exist.
-    Path rDotJavaScratchDir = Paths.get(getBinPath("__%s_r_dot_java_scratch__"));
+    Path rDotJavaScratchDir = getBinPath("__%s_r_dot_java_scratch__");
     Optional<DexWithClasses> dexWithClassesForRDotJava = createDexWithClassesForRDotJava(
         pathToCompiledRDotJavaFiles, rDotJavaScratchDir, steps);
 
@@ -664,14 +660,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .toList();
 
     // Create all of the output paths needed for the PreDexMergeStep.
-    String secondaryDexScratchDir = getBinPath("__%s_secondary_dex__/");
-    String secondaryDexMetadataScratchDir = secondaryDexScratchDir + "metadata/";
-    String secondaryDexJarFilesScratchDir = secondaryDexScratchDir + "jarfiles/";
+    Path secondaryDexScratchDir = getBinPath("__%s_secondary_dex__");
+    Path secondaryDexMetadataScratchDir = secondaryDexScratchDir.resolve("metadata");
+    Path secondaryDexJarFilesScratchDir = secondaryDexScratchDir.resolve("jarfiles");
     secondaryDexDirectoriesBuilder.add(secondaryDexMetadataScratchDir);
     secondaryDexDirectoriesBuilder.add(secondaryDexJarFilesScratchDir);
 
-    String secondaryDexMetadataDir = secondaryDexMetadataScratchDir + SECONDARY_DEX_SUBDIR;
-    String secondaryDexJarFilesDir = secondaryDexJarFilesScratchDir + SECONDARY_DEX_SUBDIR;
+    Path secondaryDexMetadataDir = secondaryDexMetadataScratchDir.resolve(SECONDARY_DEX_SUBDIR);
+    Path secondaryDexJarFilesDir = secondaryDexJarFilesScratchDir.resolve(SECONDARY_DEX_SUBDIR);
     steps.add(new MakeCleanDirectoryStep(secondaryDexMetadataDir));
     steps.add(new MakeCleanDirectoryStep(secondaryDexJarFilesDir));
 
@@ -679,13 +675,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // is not safe to invoke dexWithClassesForRDotJava.getLinearAllocEstimate() at this point, but
     // it will be safe by the time the PreDexMergeStep is executed. (By comparison, it is safe to
     // invoke getLinearAllocEstimate() on every element in dexFilesToMerge at this point.)
-    Path preDexScratchDir = Paths.get(secondaryDexScratchDir, "__pre_dex_tmp__");
+    Path preDexScratchDir = secondaryDexScratchDir.resolve("__pre_dex_tmp__");
     steps.add(new MakeCleanDirectoryStep(preDexScratchDir));
     steps.add(new PreDexMergeStep(dexFilesToMerge,
         dexWithClassesForRDotJava,
         primaryDexPath,
         primaryDexPatterns,
-        Paths.get(secondaryDexMetadataDir, "metadata.txt"),
+        secondaryDexMetadataDir.resolve("metadata.txt"),
         secondaryDexJarFilesDir,
         dexSplitMode.getDexStore(),
         linearAllocHardLimit,
@@ -710,7 +706,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     final Path rDotJavaDex = rDotJavaScratchDir.resolve("classes.dex.jar");
 
-    steps.add(new DxStep(rDotJavaDex.toString(),
+    steps.add(new DxStep(rDotJavaDex,
         /* filesToDex */ Collections.singleton(pathToCompiledRDotJavaFiles.get()),
         EnumSet.of(DxStep.Option.NO_OPTIMIZE)));
 
@@ -774,7 +770,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   /**
    * All native libs are copied to this directory before running aapt.
    */
-  private String getPathForNativeLibs() {
+  private Path getPathForNativeLibs() {
     return getBinPath("__native_libs_%s__");
   }
 
@@ -789,13 +785,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   /** The APK at this path will be signed, but not zipaligned. */
-  private String getSignedApkPath() {
-    return getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".signed.apk");
+  private Path getSignedApkPath() {
+    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".signed.apk"));
   }
 
   /** The APK at this path will have compressed resources, but will not be zipaligned. */
-  private String getCompressedResourcesApkPath() {
-    return getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".compressed.apk");
+  private Path getCompressedResourcesApkPath() {
+    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".compressed.apk"));
   }
 
   /**
@@ -804,21 +800,21 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * short name.
    * {@code format} should not start with a slash.
    */
-  private String getBinPath(String format) {
-    return String.format("%s/%s" + format,
+  private Path getBinPath(String format) {
+    return Paths.get(String.format("%s/%s" + format,
         BuckConstant.BIN_DIR,
         getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName());
+        getBuildTarget().getShortName()));
   }
 
   @VisibleForTesting
-  Path getProguardOutputFromInputClasspath(String classpathEntry) {
+  Path getProguardOutputFromInputClasspath(Path classpathEntry) {
     // Hehe, this is so ridiculously fragile.
-    Preconditions.checkArgument(classpathEntry.charAt(0) != '/',
+    Preconditions.checkArgument(!classpathEntry.isAbsolute(),
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
-    String obfuscatedName = Files.getNameWithoutExtension(classpathEntry) + "-obfuscated.jar";
-    Path dirName = MorePaths.newPathInstance(new File(classpathEntry).getParent());
+    String obfuscatedName = Files.getNameWithoutExtension(classpathEntry.toString()) + "-obfuscated.jar";
+    Path dirName = classpathEntry.getParent();
     Path outputJar = getPathForProGuardDirectory().resolve(dirName).resolve(obfuscatedName);
     return outputJar;
   }
@@ -827,9 +823,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * @return the resulting set of ProGuarded classpath entries to dex.
    */
   @VisibleForTesting
-  ImmutableSet<String> addProguardCommands(
+  ImmutableSet<Path> addProguardCommands(
       BuildContext context,
-      Set<String> classpathEntriesToDex,
+      Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,
       Set<String> resDirectories) {
@@ -866,12 +862,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Transform our input classpath to a set of output locations for each input classpath.
     // TODO(devjasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
-    final ImmutableMap<String, String> inputOutputEntries = FluentIterable
+    final ImmutableMap<Path, Path> inputOutputEntries = FluentIterable
         .from(classpathEntriesToDex)
-        .toMap(new Function<String, String>() {
+        .toMap(new Function<Path, Path>() {
           @Override
-          public String apply(String classpathEntry) {
-            return getProguardOutputFromInputClasspath(classpathEntry).toString();
+          public Path apply(Path classpathEntry) {
+            return getProguardOutputFromInputClasspath(classpathEntry);
           }
         });
 
@@ -883,7 +879,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         useAndroidProguardConfigWithOptimizations,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
-        proguardDirectory.toString());
+        proguardDirectory);
     steps.add(obfuscateCommand);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
@@ -906,14 +902,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    */
   @VisibleForTesting
   void addDexingSteps(
-      Set<String> classpathEntriesToDex,
-      ImmutableSet.Builder<String> secondaryDexDirectories,
+      Set<Path> classpathEntriesToDex,
+      ImmutableSet.Builder<Path> secondaryDexDirectories,
       ImmutableList.Builder<Step> steps,
-      String primaryDexPath,
+      Path primaryDexPath,
       Function<SourcePath, Path> sourcePathResolver) {
-    final Set<String> primaryInputsToDex;
-    final Optional<String> secondaryDexDir;
-    final Optional<String> secondaryInputsDir;
+    final Set<Path> primaryInputsToDex;
+    final Optional<Path> secondaryDexDir;
+    final Optional<Path> secondaryInputsDir;
 
     if (shouldSplitDex()) {
       Optional<Path> proguardMappingFile = Optional.absent();
@@ -925,26 +921,26 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // in assets.
 
       // Intermediate directory holding the primary split-zip jar.
-      String splitZipDir = getBinPath("__%s_split_zip__");
+      Path splitZipDir = getBinPath("__%s_split_zip__");
       steps.add(new MakeCleanDirectoryStep(splitZipDir));
-      String primaryJarPath = splitZipDir + "/primary.jar";
+      Path primaryJarPath = splitZipDir.resolve("primary.jar");
 
-      String secondaryJarMetaDirParent = splitZipDir + "/secondary_meta/";
-      String secondaryJarMetaDir = secondaryJarMetaDirParent + SECONDARY_DEX_SUBDIR;
+      Path secondaryJarMetaDirParent = splitZipDir.resolve("secondary_meta");
+      Path secondaryJarMetaDir = secondaryJarMetaDirParent.resolve(SECONDARY_DEX_SUBDIR);
       steps.add(new MakeCleanDirectoryStep(secondaryJarMetaDir));
-      String secondaryJarMeta = secondaryJarMetaDir + "/metadata.txt";
+      Path secondaryJarMeta = secondaryJarMetaDir.resolve("metadata.txt");
 
       // Intermediate directory holding _ONLY_ the secondary split-zip jar files.  This is
       // important because SmartDexingCommand will try to dx every entry in this directory.  It
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
-      String secondaryZipDir = getBinPath("__%s_secondary_zip__");
+      Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
       steps.add(new MakeCleanDirectoryStep(secondaryZipDir));
 
       // Run the split-zip command which is responsible for dividing the large set of input
       // classpaths into a more compact set of jar files such that no one jar file when dexed will
       // yield a dex artifact too large for dexopt or the dx method limit to handle.
-      String zipSplitReportDir = getBinPath("__%s_split_zip_report__");
+      Path zipSplitReportDir = getBinPath("__%s_split_zip_report__");
       steps.add(new MakeCleanDirectoryStep(zipSplitReportDir));
       SplitZipStep splitZipCommand = new SplitZipStep(
           classpathEntriesToDex,
@@ -964,8 +960,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
       // Add the secondary dex directory that has yet to be created, but will be by the
       // smart dexing command.  Smart dex will handle "cleaning" this directory properly.
-      String secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
-      secondaryDexDir = Optional.of(secondaryDexParentDir + SECONDARY_DEX_SUBDIR);
+      Path secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
+      secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR));
       steps.add(new MkdirStep(secondaryDexDir.get()));
 
       secondaryDexDirectories.add(secondaryJarMetaDirParent);
@@ -984,7 +980,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
-    Path successDir = Paths.get(getBinPath("__%s_smart_dex__/.success"));
+    Path successDir = getBinPath("__%s_smart_dex__/.success");
     steps.add(new MkdirStep(successDir));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if

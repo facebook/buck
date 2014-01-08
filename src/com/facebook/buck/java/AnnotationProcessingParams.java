@@ -79,11 +79,11 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
     this.processOnly = processOnly;
   }
 
-  private String getGeneratedSrcFolder() {
-    return String.format("%s/%s__%s_gen__",
+  private Path getGeneratedSrcFolder() {
+    return Paths.get(String.format("%s/%s__%s_gen__",
         BuckConstant.ANNOTATION_DIR,
         ownerTarget.getBasePathWithSlash(),
-        ownerTarget.getShortName());
+        ownerTarget.getShortName()));
   }
 
   @Override
@@ -133,7 +133,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
 
   @Override
   @Nullable
-  public String getGeneratedSourceFolderName() {
+  public Path getGeneratedSourceFolderName() {
     if ((ownerTarget != null) && !isEmpty()) {
       return getGeneratedSrcFolder();
     } else {
@@ -193,9 +193,9 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
         // We're using raw strings here to avoid circular dependencies.
         // TODO(simons): don't use raw strings.
         if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
-          String pathToOutput = rule.getBuildable().getPathToOutputFile();
+          Path pathToOutput = rule.getBuildable().getPathToOutputFile();
           if (pathToOutput != null) {
-            searchPathElements.add(Paths.get(pathToOutput));
+            searchPathElements.add(pathToOutput);
           }
         } else if (rule instanceof HasClasspathEntries) {
           HasClasspathEntries javaLibraryRule = (HasClasspathEntries)rule;

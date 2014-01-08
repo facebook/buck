@@ -21,7 +21,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * A {@link SourcePath} that utilizes the output from a {@link BuildTarget} as the file it
@@ -46,12 +45,12 @@ public class BuildTargetSourcePath extends AbstractSourcePath {
       throw new HumanReadableException("Cannot resolve: %s", buildTarget);
     }
 
-    String path = rule.getBuildable().getPathToOutputFile();
+    Path path = rule.getBuildable().getPathToOutputFile();
     if (path == null) {
       throw new HumanReadableException("No known output for: %s", buildTarget);
     }
 
-    return Paths.get(path);
+    return path;
   }
 
   @Override

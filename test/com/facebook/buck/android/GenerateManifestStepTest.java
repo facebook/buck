@@ -35,18 +35,18 @@ import java.nio.file.Paths;
 
 public class GenerateManifestStepTest {
 
-  private String skeletonPath;
-  private String manifestPath;
+  private Path skeletonPath;
+  private Path manifestPath;
 
   @Before
   public void setUp() {
-    manifestPath = testDataPath("AndroidManifest.xml").toString();
-    skeletonPath = testDataPath("AndroidManifestSkeleton.xml").toString();
+    manifestPath = testDataPath("AndroidManifest.xml");
+    skeletonPath = testDataPath("AndroidManifestSkeleton.xml");
   }
 
   @After
   public void tearDown() {
-    new File(manifestPath).delete();
+    manifestPath.toFile().delete();
   }
 
   @Test
@@ -69,7 +69,7 @@ public class GenerateManifestStepTest {
     manifestCommand.execute(context);
 
     String expected = Files.toString(new File(expectedOutputPath), Charsets.UTF_8);
-    String output = Files.toString(new File(manifestPath), Charsets.UTF_8);
+    String output = Files.toString(manifestPath.toFile(), Charsets.UTF_8);
 
     assertEquals(expected, output);
   }

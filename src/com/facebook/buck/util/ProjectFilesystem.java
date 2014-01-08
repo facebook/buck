@@ -106,7 +106,7 @@ public class ProjectFilesystem {
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */
   public Path resolve(Path path) {
-    return pathToRoot.resolve(path).toAbsolutePath();
+    return pathToRoot.resolve(path).toAbsolutePath().normalize();
   }
 
   /**
@@ -139,6 +139,10 @@ public class ProjectFilesystem {
   }
 
   public boolean exists(String pathRelativeToProjectRoot) {
+    return exists(Paths.get(pathRelativeToProjectRoot));
+  }
+
+  public boolean exists(Path pathRelativeToProjectRoot) {
     return getFileForRelativePath(pathRelativeToProjectRoot).exists();
   }
 
@@ -156,7 +160,7 @@ public class ProjectFilesystem {
    * @param pathRelativeToProjectRoot path to the file
    * @return true if the file was successfully deleted, false otherwise
    */
-  public boolean deleteFileAtPath(String pathRelativeToProjectRoot) {
+  public boolean deleteFileAtPath(Path pathRelativeToProjectRoot) {
     return getFileForRelativePath(pathRelativeToProjectRoot).delete();
   }
 
@@ -192,7 +196,7 @@ public class ProjectFilesystem {
   /**
    * Allows {@link java.io.File#listFiles} to be faked in tests.
    */
-  public File[] listFiles(String pathRelativeToProjectRoot) {
+  public File[] listFiles(Path pathRelativeToProjectRoot) {
     return getFileForRelativePath(pathRelativeToProjectRoot).listFiles();
   }
 

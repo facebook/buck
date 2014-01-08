@@ -30,13 +30,15 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ZipDirectoryWithMaxDeflateStepTest {
   private File outputApk;
   private File emptyTempDir;
-  private final String zipDirectory = "testdata/com/facebook/buck/zip/zipdirectorytest";
+  private final Path zipDirectory = Paths.get("testdata/com/facebook/buck/zip/zipdirectorytest");
   private File emptyOutputDir;
 
   @Before
@@ -57,7 +59,7 @@ public class ZipDirectoryWithMaxDeflateStepTest {
   public void testZipDirectory() throws IOException {
 
     ZipDirectoryWithMaxDeflateStep zipCommand = new ZipDirectoryWithMaxDeflateStep(
-        zipDirectory, outputApk.getAbsolutePath(), 128);
+        zipDirectory, outputApk.toPath(), 128);
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.replay(executionContext);
@@ -92,7 +94,7 @@ public class ZipDirectoryWithMaxDeflateStepTest {
     File emptyOutput = new File(emptyOutputDir.getAbsolutePath() + "/output.zip");
 
     ZipDirectoryWithMaxDeflateStep zipCommand = new ZipDirectoryWithMaxDeflateStep(
-        emptyTempDir.getAbsolutePath(), emptyOutput.getAbsolutePath(), 128);
+        emptyTempDir.toPath(), emptyOutput.toPath(), 128);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 

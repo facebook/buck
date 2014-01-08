@@ -52,8 +52,8 @@ public class GenerateCodeCoverageReportStepTest {
   private void testEmmaCommand(Set<String> sourceDirectories,
       Set<Path> classesDirectories,
       String outputDirectory) {
-    GenerateCodeCoverageReportStep step =
-        new GenerateCodeCoverageReportStep(sourceDirectories, classesDirectories, outputDirectory);
+    GenerateCodeCoverageReportStep step = new GenerateCodeCoverageReportStep(
+        sourceDirectories, classesDirectories, Paths.get(outputDirectory));
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(context.isJacocoEnabled()).andReturn(false).times(1);
@@ -96,8 +96,8 @@ public class GenerateCodeCoverageReportStepTest {
   private void testJacocoReportGeneratorCommand(Set<String> sourceDirectories,
       Set<Path> classesDirectories,
       String outputDirectory) {
-    GenerateCodeCoverageReportStep step =
-        new GenerateCodeCoverageReportStep(sourceDirectories, classesDirectories, outputDirectory);
+    GenerateCodeCoverageReportStep step = new GenerateCodeCoverageReportStep(
+        sourceDirectories, classesDirectories, Paths.get(outputDirectory));
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(context.isJacocoEnabled()).andReturn(true).times(1);
@@ -113,9 +113,9 @@ public class GenerateCodeCoverageReportStepTest {
         String.format("-Djacoco.output.dir=%s",outputDirectory),
         String.format("-Djacoco.exec.data.file=%s",JUnitStep.JACOCO_EXEC_COVERAGE_FILE),
         String.format("-Dclasses.dir=%s",String.format("%s/%s:%s/%s",
-            new File(".").getAbsolutePath(),
+            new File(".").getAbsoluteFile().toPath().normalize(),
             "parentDirectory1/classes",
-            new File(".").getAbsolutePath(),
+            new File(".").getAbsoluteFile().toPath().normalize(),
             "root/parentDirectory/classes")),
         String.format("-Dsrc.dir=%s", "src"),
         "ReportGenerator");

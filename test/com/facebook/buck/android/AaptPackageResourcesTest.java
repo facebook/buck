@@ -237,7 +237,7 @@ public class AaptPackageResourcesTest {
     assertEquals(BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__"),
         allAssetsDirectory.get());
     List<? extends Step> expectedCommands = ImmutableList.of(
-        new MakeCleanDirectoryStep(BIN_DIR + "/facebook/base/__assets_apk#aapt_package__"),
+        new MakeCleanDirectoryStep(BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__")),
         new MkdirAndSymlinkFileStep(
             Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"),
             BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),

@@ -85,13 +85,13 @@ public class JavaBinaryRuleTest {
 
     List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    Function<String, Path> pathRelativizer = new Function<String, Path>() {
+    Function<Path, Path> pathRelativizer = new Function<Path, Path>() {
       @Override
-      public Path apply(String path) {
-        return Paths.get(basePath, path);
+      public Path apply(Path path) {
+        return Paths.get(basePath).resolve(path);
       }
     };
-    expect(projectFilesystem.getPathRelativizer()).andReturn(pathRelativizer);
+    expect(projectFilesystem.getAbsolutifier()).andReturn(pathRelativizer);
     replay(projectFilesystem);
     assertEquals(expectedCommand, javaBinaryRule.getExecutableCommand(projectFilesystem));
     verify(projectFilesystem);

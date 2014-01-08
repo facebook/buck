@@ -25,10 +25,10 @@ import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -40,8 +40,8 @@ import java.util.zip.ZipInputStream;
  */
 public class RepackZipEntriesStep implements Step {
 
-  private final String inputFile;
-  private final String outputFile;
+  private final Path inputFile;
+  private final Path outputFile;
   private final ImmutableSet<String> entries;
   private final int compressionLevel;
 
@@ -53,8 +53,8 @@ public class RepackZipEntriesStep implements Step {
    * @param entries files to repack (e.g. {@code ImmutableSet.of("resources.arsc")})
    */
   public RepackZipEntriesStep(
-      String inputFile,
-      String outputFile,
+      Path inputFile,
+      Path outputFile,
       ImmutableSet<String> entries) {
     this(inputFile, outputFile, entries, ZipStep.MAX_COMPRESSION_LEVEL);
   }
@@ -67,8 +67,8 @@ public class RepackZipEntriesStep implements Step {
    * @param compressionLevel 0 to 9
    */
   public RepackZipEntriesStep(
-      String inputFile,
-      String outputFile,
+      Path inputFile,
+      Path outputFile,
       ImmutableSet<String> entries,
       int compressionLevel) {
     this.inputFile = inputFile;
@@ -80,8 +80,8 @@ public class RepackZipEntriesStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try (
-        ZipInputStream in = new ZipInputStream(new BufferedInputStream(new FileInputStream(inputFile)));
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(new File(outputFile));
+        ZipInputStream in = new ZipInputStream(new BufferedInputStream(new FileInputStream(inputFile.toFile())));
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile.toFile())
     ) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
         CustomZipEntry customEntry = new CustomZipEntry(entry);

@@ -133,7 +133,8 @@ public class AndroidTransitiveDependencyGraph {
     Set<String> pathsToThirdPartyJars =
         Sets.difference(pathsToThirdPartyJarsBuilder.build(), noDxPaths);
 
-    return new AndroidDexTransitiveDependencies(classpathEntries,
+    return new AndroidDexTransitiveDependencies(
+        classpathEntries,
         pathsToThirdPartyJars,
         noDxPaths,
         pathToCompiledRDotJavaFilesOptional);

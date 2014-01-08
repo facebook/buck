@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
+import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -28,19 +29,19 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.shell.Genrule.Builder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -82,14 +83,6 @@ public class GenruleTest {
 
   private static final String BASE_PATH = getAbsolutePathFor("/opt/local/fbandroid");
 
-  private static final Function<String, Path> relativeToAbsolutePathFunction =
-      new Function<String, Path>() {
-        @Override
-        public Path apply(String path) {
-          return getAbsolutePathInBase(path);
-        }
-      };
-
   private static final Function<Path, Path> ABSOLUTIFIER =
       new Function<Path, Path>() {
         @Override
@@ -103,8 +96,8 @@ public class GenruleTest {
   @Before
   public void newFakeFilesystem() {
     fakeFilesystem = EasyMock.createNiceMock(ProjectFilesystem.class);
-    EasyMock.expect(fakeFilesystem.getPathRelativizer())
-        .andReturn(relativeToAbsolutePathFunction)
+    EasyMock.expect(fakeFilesystem.getAbsolutifier())
+        .andReturn(ABSOLUTIFIER)
         .times(0,  1);
     EasyMock.replay(fakeFilesystem);
   }
@@ -161,7 +154,7 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(BuildRuleType.GENRULE, genrule.getType());
-    assertEquals(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml",
+    assertEquals(GEN_PATH.resolve("src/com/facebook/katana/AndroidManifest.xml"),
         genrule.getPathToOutputFile());
     assertEquals(
         getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
@@ -243,8 +236,8 @@ public class GenruleTest {
     BuildTarget depTarget = new BuildTarget("//foo", "bar");
     BuildRule dep = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY, depTarget) {
       @Override
-      public String getPathToOutputFile() {
-        return "buck-out/gen/foo/bar.jar";
+      public Path getPathToOutputFile() {
+        return Paths.get("buck-out/gen/foo/bar.jar");
       }
     };
     BuildRuleResolver ruleResolver = new BuildRuleResolver(ImmutableMap.of(depTarget, dep));
@@ -375,7 +368,7 @@ public class GenruleTest {
   @Test
   public void replaceLocationOfFullyQualifiedBuildTarget() {
     ProjectFilesystem filesystem = EasyMock.createNiceMock(ProjectFilesystem.class);
-    EasyMock.expect(filesystem.getPathRelativizer()).andStubReturn(relativeToAbsolutePathFunction);
+    EasyMock.expect(filesystem.getAbsolutifier()).andStubReturn(ABSOLUTIFIER);
     EasyMock.replay(filesystem);
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver();

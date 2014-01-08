@@ -199,9 +199,9 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
 
   @Override
   @Nullable
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     if (pathToTextSymbolsFile != null) {
-      return pathToTextSymbolsFile.toString();
+      return pathToTextSymbolsFile;
     } else {
       return null;
     }

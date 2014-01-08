@@ -38,6 +38,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Unit test for {@link XzStep}.
@@ -49,9 +51,9 @@ public class XzStepTest {
 
   @Test
   public void testXzStepDefaultDestinationFile() {
-    final String sourceFile = "/path/to/source.file";
+    final Path sourceFile = Paths.get("/path/to/source.file");
     XzStep step = new XzStep(sourceFile);
-    assertEquals(sourceFile + ".xz", step.getDestinationFile());
+    assertEquals(Paths.get(sourceFile + ".xz"), step.getDestinationFile());
   }
 
   @Test
@@ -62,14 +64,14 @@ public class XzStepTest {
     final File destinationFile = tmp.newFile("xzstep.data.xz");
 
     XzStep step = new XzStep(
-        sourceFile.getPath(),
-        destinationFile.getPath(),
+        sourceFile.toPath(),
+        destinationFile.toPath(),
         /* compressionLevel -- for faster testing */ 1,
         /* keep */ false,
         XZ.CHECK_CRC32);
 
     ProjectFilesystem fs = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(fs.deleteFileAtPath(sourceFile.getPath())).andReturn(true);
+    EasyMock.expect(fs.deleteFileAtPath(sourceFile.toPath())).andReturn(true);
     EasyMock.replay(fs);
 
     ExecutionContext context = TestExecutionContext.newBuilder()

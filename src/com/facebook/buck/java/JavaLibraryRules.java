@@ -24,7 +24,6 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +51,7 @@ public class JavaLibraryRules {
       Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(javaLibraryRule);
       steps.add(new MkdirStep(pathToClassHashes.getParent()));
       steps.add(new AccumulateClassNamesStep(
-          Optional.fromNullable(javaLibraryRule.getPathToOutputFile()).transform(MorePaths.TO_PATH),
+          Optional.fromNullable(javaLibraryRule.getPathToOutputFile()),
           pathToClassHashes));
       buildableContext.recordArtifact(pathToClassHashes);
   }

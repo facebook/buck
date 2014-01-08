@@ -149,7 +149,7 @@ public final class BuildRuleFactoryParams {
 
       // First, verify that the path is a descendant of the directory containing the build file.
       String basePath = target.getBasePath();
-      if (!basePath.isEmpty() && !fullPath.startsWith(basePath + '/')) {
+      if (!basePath.isEmpty() && !fullPath.startsWith(basePath)) {
         throw new RuntimeException(file + " is not a descendant of " + target.getBasePath());
       }
 

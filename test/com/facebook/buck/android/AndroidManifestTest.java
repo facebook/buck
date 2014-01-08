@@ -64,7 +64,7 @@ public class AndroidManifestTest {
         ImmutableList.of(Paths.get("java/com/example/AndroidManifestSkeleton.xml")),
         ImmutableList.copyOf(androidManifestRule.getInputsToCompareToOutput()));
     assertEquals(
-        BuckConstant.GEN_DIR + "/java/com/example/AndroidManifest__manifest__.xml",
+        BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml"),
         androidManifestRule.getPathToOutputFile());
   }
 
@@ -81,9 +81,9 @@ public class AndroidManifestTest {
     Step generateManifestStep = steps.get(2);
     assertEquals(
         new GenerateManifestStep(
-            "java/com/example/AndroidManifestSkeleton.xml",
+            Paths.get("java/com/example/AndroidManifestSkeleton.xml"),
             /* libraryManifestPaths */ ImmutableSet.<Path>of(),
-            BuckConstant.GEN_DIR + "/java/com/example/AndroidManifest__manifest__.xml"),
+            BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml")),
         generateManifestStep);
 
     EasyMock.verify(buildContext);

@@ -33,7 +33,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class TracesHelperTest extends EasyMockSupport {
 
@@ -46,7 +45,7 @@ public class TracesHelperTest extends EasyMockSupport {
     expect(traceFile.lastModified()).andStubReturn(1000L);
     String name = "build.a.trace";
     expect(traceFile.getName()).andStubReturn(name);
-    Path pathToTraceFile = Paths.get(BuckConstant.BUCK_TRACE_DIR, name);
+    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
     expect(projectFilesystem.getFileForRelativePath(pathToTraceFile)).andStubReturn(traceFile);
     String buckBuildJson =
         "[" +
@@ -90,7 +89,7 @@ public class TracesHelperTest extends EasyMockSupport {
     expect(traceFile.lastModified()).andStubReturn(2000L);
     String name = "build.b.trace";
     expect(traceFile.getName()).andStubReturn(name);
-    Path pathToTraceFile = Paths.get(BuckConstant.BUCK_TRACE_DIR, name);
+    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
     expect(projectFilesystem.getFileForRelativePath(pathToTraceFile)).andStubReturn(traceFile);
     String buckBuildJson =
         "[" +
@@ -129,7 +128,7 @@ public class TracesHelperTest extends EasyMockSupport {
     expect(traceFile.lastModified()).andStubReturn(2000L);
     String name = "build.c.trace";
     expect(traceFile.getName()).andStubReturn(name);
-    Path pathToTraceFile = Paths.get(BuckConstant.BUCK_TRACE_DIR, name);
+    Path pathToTraceFile = BuckConstant.BUCK_TRACE_DIR.resolve(name);
     expect(projectFilesystem.getFileForRelativePath(pathToTraceFile)).andStubReturn(traceFile);
     String buckBuildJson =
         "[" +

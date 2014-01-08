@@ -76,7 +76,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -159,11 +158,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Add all JAR files produced by java libraries that we are testing to -instrpath.
     for (JavaLibraryRule path : rulesUnderTest) {
-      String pathToOutput = path.getPathToOutputFile();
+      Path pathToOutput = path.getPathToOutputFile();
       if (pathToOutput == null) {
         continue;
       }
-      pathsToInstrumentedClasses.add(projectFilesystem.getPathRelativizer().apply(pathToOutput));
+      pathsToInstrumentedClasses.add(projectFilesystem.getAbsolutifier().apply(pathToOutput));
     }
 
     // Run EMMA instrumentation. This will instrument the classes we generated in the build command.
@@ -180,7 +179,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       ImmutableSet<JavaLibraryRule> rulesUnderTest,
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem projectFilesystem,
-      String outputDirectory) {
+      Path outputDirectory) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
     ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
 
@@ -191,11 +190,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      String pathToOutput = rule.getPathToOutputFile();
+      Path pathToOutput = rule.getPathToOutputFile();
       if (pathToOutput == null) {
         continue;
       }
-      pathsToClasses.add(Paths.get(pathToOutput));
+      pathsToClasses.add(pathToOutput);
     }
 
     return new GenerateCodeCoverageReportStep(srcDirectories.build(),
@@ -529,7 +528,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
             options.getJavaPackageFinder();
-        String outputDirectory;
+        Path outputDirectory;
         if (options.isJacocoEnabled()) {
           outputDirectory = JUnitStep.JACOCO_OUTPUT_DIR;
         } else {

@@ -195,8 +195,8 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testDeleteFileAtPath() throws IOException {
-    String path = "foo.txt";
-    File file = tmp.newFile(path);
+    Path path = Paths.get("foo.txt");
+    File file = tmp.newFile(path.toString());
     assertTrue(file.exists());
     filesystem.deleteFileAtPath(path);
     assertFalse(file.exists());

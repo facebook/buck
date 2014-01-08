@@ -86,7 +86,7 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   @Override
   public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
       throws IOException {
-    MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(output.getParent().toString());
+    MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(output.getParent());
 
     // Generate an .sh file that builds up an environment and invokes the user's script.
     // This generated .sh file will be returned by getExecutableCommand().
@@ -105,8 +105,8 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public String getPathToOutputFile() {
-    return output.toString();
+  public Path getPathToOutputFile() {
+    return output;
   }
 
   @Override

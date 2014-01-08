@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 import javax.annotation.Nullable;
 
 /**
@@ -32,7 +34,7 @@ public abstract class AbstractBuildable implements Buildable {
 
   @Nullable
   @Override
-  public abstract String getPathToOutputFile();
+  public abstract Path getPathToOutputFile();
 
   @Override
   @Nullable

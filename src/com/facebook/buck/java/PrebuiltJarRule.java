@@ -239,8 +239,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public String getPathToOutputFile() {
-    return getBinaryJar().toString();
+  public Path getPathToOutputFile() {
+    return getBinaryJar();
   }
 
   @Override

@@ -500,7 +500,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
       implements InitializableFromDisk<Object> {
 
     private final Iterable<Path> inputs;
-    private final String pathToOutputFile;
+    private final Path pathToOutputFile;
     private final List<Step> buildSteps;
 
     @Nullable
@@ -513,7 +513,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         List<Step> buildSteps) {
       super(params);
       this.inputs = inputs;
-      this.pathToOutputFile = pathToOutputFile;
+      this.pathToOutputFile = pathToOutputFile == null ? null : Paths.get(pathToOutputFile);
       this.buildSteps = buildSteps;
     }
 
@@ -529,7 +529,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     @Override
     @Nullable
-    public String getPathToOutputFile() {
+    public Path getPathToOutputFile() {
       return pathToOutputFile;
     }
 

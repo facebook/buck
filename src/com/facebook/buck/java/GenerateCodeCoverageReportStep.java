@@ -36,13 +36,14 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   static final ImmutableSet<String> CODE_COVERAGE_OUTPUT_FORMAT =
       ImmutableSet.of("html", "xml", "txt");
 
+  // TODO(simons): Convert to a Path.
   private final Set<String> srcDirectories;
   private final Set<Path> classesDirectories;
-  private final String outputDirectory;
+  private final Path outputDirectory;
 
   public GenerateCodeCoverageReportStep(Set<String> srcDirectories,
       Set<Path> classesDirectories,
-      String outputDirectory) {
+      Path outputDirectory) {
     this.srcDirectories = ImmutableSet.copyOf(srcDirectories);
     this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
     this.outputDirectory = outputDirectory;

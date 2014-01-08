@@ -178,7 +178,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
   /** @return the absolute path to the output file */
   public String getAbsoluteOutputFilePath() {
-    return relativeToAbsolutePathFunction.apply(Paths.get(getPathToOutputFile())).toString();
+    return relativeToAbsolutePathFunction.apply(getPathToOutputFile()).toString();
   }
 
   @Override
@@ -187,8 +187,8 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   }
 
   @Override
-  public String getPathToOutputFile() {
-    return pathToOutFile.toString();
+  public Path getPathToOutputFile() {
+    return pathToOutFile;
   }
 
   @Override
@@ -235,7 +235,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
 
     Buildable buildable = Preconditions.checkNotNull(rule.getBuildable());
 
-    String output = buildable.getPathToOutputFile();
+    Path output = buildable.getPathToOutputFile();
     if (output != null) {
       // TODO(mbolin): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
@@ -244,14 +244,11 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
       // it with a shell variable. This way the character count is much lower when run
       // from the shell but anyone reading the environment variable will get the
       // full paths due to variable interpolation
-      if (output.startsWith(BuckConstant.GEN_DIR)) {
-        String relativePath = output.substring(BuckConstant.GEN_DIR.length());
-        if (relativePath.charAt(0) != '/') {
-          relativePath = "/" + relativePath;
-        }
-        appendTo.add("$GEN_DIR" + relativePath);
+      if (output.startsWith(BuckConstant.GEN_PATH)) {
+        Path relativePath = output.subpath(BuckConstant.GEN_PATH.getNameCount(), output.getNameCount());
+        appendTo.add("$GEN_DIR/" + relativePath);
       } else {
-        appendTo.add(relativeToAbsolutePathFunction.apply(Paths.get(output)).toString());
+        appendTo.add(relativeToAbsolutePathFunction.apply(output).toString());
       }
     }
 

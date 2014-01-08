@@ -34,6 +34,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A {@link Step} to compress a file with XZ / LZMA2.
@@ -44,8 +46,8 @@ import java.io.OutputStream;
  */
 public class XzStep implements Step {
 
-  private final String sourceFile;
-  private final String destinationFile;
+  private final Path sourceFile;
+  private final Path destinationFile;
   private final int compressionLevel;
   private final boolean keep;
   private final int check;
@@ -63,8 +65,8 @@ public class XzStep implements Step {
    */
   @VisibleForTesting
   XzStep(
-      String sourceFile,
-      String destinationFile,
+      Path sourceFile,
+      Path destinationFile,
       int compressionLevel,
       boolean keep,
       int check) {
@@ -85,10 +87,10 @@ public class XzStep implements Step {
    *
    * @param sourceFile file to compress
    */
-  public XzStep(String sourceFile) {
+  public XzStep(Path sourceFile) {
     this(
         sourceFile,
-        sourceFile + ".xz",
+        Paths.get(sourceFile + ".xz"),
         /* compressionLevel */ 4,
         /* keep */ false,
         XZ.CHECK_CRC32);
@@ -97,9 +99,9 @@ public class XzStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try (
-        InputStream in = new BufferedInputStream(new FileInputStream(sourceFile));
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(getDestinationFile()));
-        XZOutputStream xzOut = new XZOutputStream(out, new LZMA2Options(compressionLevel), check);
+        InputStream in = new BufferedInputStream(new FileInputStream(sourceFile.toFile()));
+        OutputStream out = new BufferedOutputStream(new FileOutputStream(getDestinationFile().toFile()));
+        XZOutputStream xzOut = new XZOutputStream(out, new LZMA2Options(compressionLevel), check)
     ) {
       ByteStreams.copy(in, xzOut);
       xzOut.finish();
@@ -113,7 +115,7 @@ public class XzStep implements Step {
     return 0;
   }
 
-  public String getDestinationFile() {
+  public Path getDestinationFile() {
     return destinationFile;
   }
 

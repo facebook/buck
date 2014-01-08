@@ -121,7 +121,7 @@ public class ExportFile extends AbstractBuildable {
   }
 
   @Override
-  public String getPathToOutputFile() {
-    return out.toString();
+  public Path getPathToOutputFile() {
+    return out;
   }
 }

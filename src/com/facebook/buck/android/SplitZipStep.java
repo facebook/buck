@@ -72,17 +72,17 @@ public class SplitZipStep implements Step {
   @VisibleForTesting
   static final Pattern classFilePattern = Pattern.compile("^([\\w/$]+)\\.class");
 
-  private final Set<String> inputPathsToSplit;
-  private final String secondaryJarMetaPath;
-  private final String primaryJarPath;
-  private final String secondaryJarDir;
+  private final Set<Path> inputPathsToSplit;
+  private final Path secondaryJarMetaPath;
+  private final Path primaryJarPath;
+  private final Path secondaryJarDir;
   private final String secondaryJarPattern;
   private final Optional<Path> proguardMappingFile;
   private final ImmutableSet<String> primaryDexPatterns;
   private final Optional<Path> primaryDexClassesFile;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
   private final DexStore dexStore;
-  private final String pathToReportDir;
+  private final Path pathToReportDir;
   private final boolean useLinearAllocSplitDex;
   private final long linearAllocHardLimit;
 
@@ -103,17 +103,17 @@ public class SplitZipStep implements Step {
    *     {@code linearAllocHardLimit} must have a positive value in this case.
    */
   public SplitZipStep(
-      Set<String> inputPathsToSplit,
-      String secondaryJarMetaPath,
-      String primaryJarPath,
-      String secondaryJarDir,
+      Set<Path> inputPathsToSplit,
+      Path secondaryJarMetaPath,
+      Path primaryJarPath,
+      Path secondaryJarDir,
       String secondaryJarPattern,
       Optional<Path> proguardMappingFile,
       Set<String> primaryDexPatterns,
       Optional<Path> primaryDexClassesFile,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
-      String pathToReportDir,
+      Path pathToReportDir,
       boolean useLinearAllocSplitDex,
       long linearAllocHardLimit) {
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
@@ -145,13 +145,13 @@ public class SplitZipStep implements Step {
       }
 
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-      File primaryJarFile = new File(primaryJarPath);
+      File primaryJarFile = primaryJarPath.toFile();
       Collection<File> secondaryZips = zipSplitterFactory.newInstance(
           FluentIterable.from(inputPathsToSplit)
-              .transform(context.getProjectFilesystem().getPathRelativizer())
+              .transform(context.getProjectFilesystem().getAbsolutifier())
               .toSet(),
           primaryJarFile,
-          new File(secondaryJarDir),
+          secondaryJarDir.toFile(),
           secondaryJarPattern,
           requiredInPrimaryZip,
           dexSplitStrategy,
@@ -159,7 +159,7 @@ public class SplitZipStep implements Step {
           projectFilesystem.getFileForRelativePath(pathToReportDir))
           .execute();
 
-      BufferedWriter secondaryMetaInfoWriter = Files.newWriter(new File(secondaryJarMetaPath),
+      BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
           Charsets.UTF_8);
       try {
         writeMetaList(secondaryMetaInfoWriter, secondaryZips, dexStore);

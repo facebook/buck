@@ -85,7 +85,7 @@ public class ExportFileTest {
             "cp example.html buck-out/gen/example.html"),
         steps,
         TestExecutionContext.newInstance());
-    assertEquals("buck-out/gen/example.html", exportFile.getPathToOutputFile());
+    assertEquals(Paths.get("buck-out/gen/example.html"), exportFile.getPathToOutputFile());
   }
 
   @Test
@@ -104,7 +104,7 @@ public class ExportFileTest {
             "cp example.html buck-out/gen/fish"),
         steps,
         TestExecutionContext.newInstance());
-    assertEquals("buck-out/gen/fish", exportFile.getPathToOutputFile());
+    assertEquals(Paths.get("buck-out/gen/fish"), exportFile.getPathToOutputFile());
   }
 
   @Test
@@ -123,7 +123,7 @@ public class ExportFileTest {
             "cp chips buck-out/gen/fish"),
         steps,
         TestExecutionContext.newInstance());
-    assertEquals("buck-out/gen/fish", exportFile.getPathToOutputFile());
+    assertEquals(Paths.get("buck-out/gen/fish"), exportFile.getPathToOutputFile());
   }
 
   @Test

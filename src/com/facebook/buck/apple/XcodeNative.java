@@ -80,9 +80,9 @@ public class XcodeNative extends AbstractBuildable {
 
   @Nullable
   @Override
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     // This returns where the build product ends up residing, rather than where it comes from.
-    return pathToOutputFile.toString();
+    return pathToOutputFile;
   }
 
   @Override

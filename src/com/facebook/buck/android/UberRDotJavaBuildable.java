@@ -137,7 +137,7 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
   }
 
   @Override
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     return null;
   }
 

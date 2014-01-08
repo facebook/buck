@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   private final BuildRuleType type;
 
   @Nullable
-  private String outputFile;
+  private Path outputFile;
 
   @Nullable
   private RuleKey ruleKey;
@@ -85,12 +86,12 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule, Build
   }
 
   @Override
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     return outputFile;
   }
 
   public void setOutputFile(String outputFile) {
-    this.outputFile = outputFile;
+    this.outputFile = Paths.get(outputFile);
   }
 
   @Override

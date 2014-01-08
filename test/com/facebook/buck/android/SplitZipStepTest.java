@@ -96,17 +96,17 @@ public class SplitZipStepTest {
   public void testRequiredInPrimaryZipPredicate() throws IOException {
     Path primaryDexClassesFile = Paths.get("the/manifest.txt");
     SplitZipStep splitZipStep = new SplitZipStep(
-        /* inputPathsToSplit */ ImmutableSet.<String>of(),
-        /* secondaryJarMetaPath */ "",
-        /* primaryJarPath */ "",
-        /* secondaryJarDir */ "",
+        /* inputPathsToSplit */ ImmutableSet.<Path>of(),
+        /* secondaryJarMetaPath */ Paths.get(""),
+        /* primaryJarPath */ Paths.get(""),
+        /* secondaryJarDir */ Paths.get(""),
         /* secondaryJarPattern */ "",
         /* proguardMappingFile */ Optional.<Path>absent(),
         /* primaryDexPatterns */ ImmutableSet.of("List"),
         Optional.of(primaryDexClassesFile),
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         DexStore.JAR,
-        /* pathToReportDir */ "",
+        /* pathToReportDir */ Paths.get(""),
         /* useLinearAllocSplitDex */ true,
         /* linearAllocHardLimit */ 4 * 1024 * 1024);
     List<String> linesInManifestFile = ImmutableList.of(
@@ -157,17 +157,17 @@ public class SplitZipStepTest {
     Path proguardMappingFile = Paths.get("the/mapping.txt");
     Path primaryDexClassesFile = Paths.get("the/manifest.txt");
     SplitZipStep splitZipStep = new SplitZipStep(
-        /* inputPathsToSplit */ ImmutableSet.<String>of(),
-        /* secondaryJarMetaPath */ "",
-        /* primaryJarPath */ "",
-        /* secondaryJarDir */ "",
+        /* inputPathsToSplit */ ImmutableSet.<Path>of(),
+        /* secondaryJarMetaPath */ Paths.get(""),
+        /* primaryJarPath */ Paths.get(""),
+        /* secondaryJarDir */ Paths.get(""),
         /* secondaryJarPattern */ "",
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
         /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
         Optional.of(primaryDexClassesFile),
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         DexStore.JAR,
-        /* pathToReportDir */ "",
+        /* pathToReportDir */ Paths.get(""),
         /* useLinearAllocSplitDex */ true,
         /* linearAllocHardLimit */ 4 * 1024 * 1024);
     List<String> linesInMappingFile = ImmutableList.of(

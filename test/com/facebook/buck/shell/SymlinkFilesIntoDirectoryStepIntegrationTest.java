@@ -60,7 +60,7 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
         .build();
     SymlinkFilesIntoDirectoryStep symlinkStep = new SymlinkFilesIntoDirectoryStep(
         tmp.getRoot().toPath(),
-        ImmutableSet.of("a.txt", "foo/b.txt", "foo/bar/c.txt"),
+        ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
         outputFolder.toPath());
     int exitCode = symlinkStep.execute(executionContext);
     assertEquals(0, exitCode);

@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
@@ -26,13 +26,15 @@ import com.facebook.buck.rules.FileSourcePath;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class XcodeNativeTest {
 
   private BuildRuleParams params;
 
   @Before
   public void createFixtures() {
-    params = new FakeBuildRuleParams(new BuildTarget("//", "xcode_native_test"));
+    params = new FakeBuildRuleParams(BuildTargetFactory.newInstance("//:xcode_native_test"));
   }
 
   @Test
@@ -48,6 +50,6 @@ public class XcodeNativeTest {
     assertEquals("0", xcodeNative.getTargetGid());
     assertEquals(new FileSourcePath("foo.xcodeproj"), xcodeNative.getProjectContainerPath());
 
-    assertEquals("buck-out/gen/libfoo.a", xcodeNative.getPathToOutputFile());
+    assertEquals(Paths.get("buck-out/gen/libfoo.a"), xcodeNative.getPathToOutputFile());
   }
 }

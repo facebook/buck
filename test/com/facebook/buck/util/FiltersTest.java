@@ -31,6 +31,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -65,7 +67,7 @@ public class FiltersTest {
   private static final String XXHDPI_FR = "res/drawable-fr-xxhdpi/";
   private static final String XXXHDPI_FR = "res/drawable-fr-xxxhdpi/";
 
-  private Set<String> candidates;
+  private Set<Path> candidates;
 
   /**
    * Create set of candidates.
@@ -75,7 +77,7 @@ public class FiltersTest {
    */
   @Before
   public void setUp() {
-    candidates = ImmutableSet.<String>builder()
+    candidates = ImmutableSet.<Path>builder()
         .addAll(paths("dmhx.png", DRAWABLE, MDPI, HDPI, XHDPI))
         .addAll(paths("dmh.png", DRAWABLE, MDPI, HDPI))
         .addAll(paths("dmx.png", DRAWABLE, MDPI, XHDPI))
@@ -105,10 +107,10 @@ public class FiltersTest {
    * @param options of the form e.g. {@code "res/drawable-mdpi/"}
    * @return list of strings
    */
-  private static List<String> paths(String name, String... options) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+  private static List<Path> paths(String name, String... options) {
+    ImmutableList.Builder<Path> builder = ImmutableList.builder();
     for (String option : options) {
-      builder.add(option + name);
+      builder.add(Paths.get(option + name));
     }
     return builder.build();
   }
@@ -117,14 +119,14 @@ public class FiltersTest {
    * @return {@code allPaths} minus {@pathsToKeep}
    */
   @SafeVarargs
-  private final Set<File> pathsToRemove(Iterable<String> allPaths, Iterable<String>... pathsToKeep) {
-    Set<String> pathsToRemove = Sets.newHashSet(allPaths);
-    for (String path : Iterables.concat(pathsToKeep)) {
+  private final Set<File> pathsToRemove(Iterable<Path> allPaths, Iterable<Path>... pathsToKeep) {
+    Set<Path> pathsToRemove = Sets.newHashSet(allPaths);
+    for (Path path : Iterables.concat(pathsToKeep)) {
       pathsToRemove.remove(path);
     }
     Set<File> result = Sets.newHashSet();
-    for (String pathToRemove : pathsToRemove) {
-      result.add(new File(pathToRemove).getAbsoluteFile());
+    for (Path pathToRemove : pathsToRemove) {
+      result.add(pathToRemove.toFile().getAbsoluteFile());
     }
     return result;
   }
@@ -133,7 +135,7 @@ public class FiltersTest {
   @SuppressWarnings("unchecked")
   public void testMdpiFilterRemovesUnneededResources() {
     Set<File> mdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
-    Iterable<String> keepPaths = Iterables.concat(
+    Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
         paths("dmx.png", MDPI),
@@ -162,7 +164,7 @@ public class FiltersTest {
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterRemovesUnneededResources() {
     Set<File> lmdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), false);
-    Iterable<String> keepPaths = Iterables.concat(
+    Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
         paths("dmx.png", MDPI),
@@ -191,7 +193,7 @@ public class FiltersTest {
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterWithDownscale() {
     Set<File> lmdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), true);
-    Iterable<String> keepPaths = Iterables.concat(
+    Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
         paths("dmx.png", MDPI),
@@ -220,7 +222,7 @@ public class FiltersTest {
   @SuppressWarnings("unchecked")
   public void testHdpiFilterRemovesUnneededResources() {
     Set<File> hdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.HDPI), false);
-    Iterable<String> keepPaths = Iterables.concat(
+    Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", HDPI),
         paths("dmh.png", HDPI),
         paths("dmx.png", XHDPI),
@@ -249,7 +251,7 @@ public class FiltersTest {
   @SuppressWarnings("unchecked")
   public void testXhdpiFilterRemovesUnneededResources() {
     Set<File> xhdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.XHDPI), false);
-    Iterable<String> keepPaths = Iterables.concat(
+    Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", XHDPI),
         paths("dmh.png", HDPI),
         paths("dmx.png", XHDPI),
@@ -278,7 +280,7 @@ public class FiltersTest {
   @SuppressWarnings("unchecked")
   public void testXxhdpiFilterRemovesUnneededResources() {
     Set<File> xxhdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.XXHDPI), false);
-    Iterable<String> keepPaths = Iterables.concat(
+    Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", XHDPI),
         paths("dmh.png", HDPI),
         paths("dmx.png", XHDPI),
@@ -309,8 +311,8 @@ public class FiltersTest {
     Predicate<File> predicate = Filters.createImageDensityFilter(
          candidates, ImmutableSet.of(Density.MDPI), false);
     assertFalse(candidates.isEmpty());
-    for (String candidate : candidates) {
-      File file = new File(candidate);
+    for (Path candidate : candidates) {
+      File file = candidate.toFile();
       assertEquals(!filesToRemove.contains(file.getAbsoluteFile()), predicate.apply(file));
     }
   }

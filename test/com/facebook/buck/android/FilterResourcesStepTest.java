@@ -62,12 +62,12 @@ public class FilterResourcesStepTest {
   private final Filters.Density targetDensity = Filters.Density.MDPI;
   private final File baseDestination = new File("/dest");
 
-  private final String scaleSource = getDrawableFile(first, "xhdpi", "other.png");
-  private final String scaleDest = getDrawableFile(first, "mdpi", "other.png");
+  private final Path scaleSource = getDrawableFile(first, "xhdpi", "other.png");
+  private final Path scaleDest = getDrawableFile(first, "mdpi", "other.png");
 
-  private String getDrawableFile(String dir, String qualifier, String filename) {
+  private Path getDrawableFile(String dir, String qualifier, String filename) {
     return MorePaths.newPathInstance(
-        new File(dir, String.format("drawable-%s/%s", qualifier, filename))).toString();
+        new File(dir, String.format("drawable-%s/%s", qualifier, filename)));
   }
 
   @Test
@@ -77,16 +77,16 @@ public class FilterResourcesStepTest {
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(filesystem.getRootPath()).andStubReturn(Paths.get("."));
     EasyMock
-      .expect(filesystem.getFileForRelativePath(EasyMock.<String>anyObject()))
+      .expect(filesystem.getFileForRelativePath(EasyMock.<Path>anyObject()))
       .andAnswer(new IAnswer<File>(){
           @Override
           public File answer() throws Throwable {
-             return new File(String.valueOf(EasyMock.getCurrentArguments()[0]));
+             return ((Path) EasyMock.getCurrentArguments()[0]).toFile();
           }})
       .anyTimes();
     filesystem.createParentDirs(scaleDest);
     EasyMock.expect(filesystem.deleteFileAtPath(scaleSource)).andReturn(true);
-    String scaleSourceDir = new File(scaleSource).getParent();
+    Path scaleSourceDir = scaleSource.getParent();
     EasyMock.expect(filesystem.listFiles(scaleSourceDir)).andReturn(new File[0]);
     EasyMock.expect(filesystem.deleteFileAtPath(scaleSourceDir)).andReturn(true);
     EasyMock.replay(filesystem);
@@ -135,11 +135,11 @@ public class FilterResourcesStepTest {
 
     EasyMock
       .expect(finder.findDrawables(inResDirToOutResDirMap.keySet()))
-      .andAnswer(new IAnswer<Set<String>>() {
+      .andAnswer(new IAnswer<Set<Path>>() {
         @SuppressWarnings("unchecked")
         @Override
-        public Set<String> answer() throws Throwable {
-          ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        public Set<Path> answer() throws Throwable {
+          ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
           for (Path dir : (Iterable<Path>) EasyMock.getCurrentArguments()[0]) {
             for (String qualifier : qualifiers) {
               builder.add(getDrawableFile(dir.toString(), qualifier, "some.png"));
@@ -156,11 +156,11 @@ public class FilterResourcesStepTest {
     // Called by the downscaling step.
     EasyMock
       .expect(finder.findDrawables(inResDirToOutResDirMap.values()))
-      .andAnswer(new IAnswer<Set<String>>() {
+      .andAnswer(new IAnswer<Set<Path>>() {
         @SuppressWarnings("unchecked")
         @Override
-        public Set<String> answer() throws Throwable {
-          ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        public Set<Path> answer() throws Throwable {
+          ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
           for (Path dir : (Iterable<Path>) EasyMock.getCurrentArguments()[0]) {
             builder.add(getDrawableFile(dir.toString(), targetDensity.toString(), "some.png"));
           }
@@ -191,11 +191,11 @@ public class FilterResourcesStepTest {
     assertEquals(dirMapBuilder.build(), dirMapCapture.getValue());
 
     // Ensure the right filter is created.
-    Set<String> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet());
+    Set<Path> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet());
     Predicate<File> expectedPred = Filters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
     Predicate<File> capturedPred = predCapture.getValue();
-    for (String drawablePath : drawables) {
-      File drawableFile = new File(drawablePath);
+    for (Path drawablePath : drawables) {
+      File drawableFile = drawablePath.toFile();
       assertEquals(expectedPred.apply(drawableFile), capturedPred.apply(drawableFile));
     }
 

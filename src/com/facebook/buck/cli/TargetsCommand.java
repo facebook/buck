@@ -138,7 +138,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       String output = target.getKey();
       if (showOutput) {
         BuildRule buildRule = target.getValue();
-        String outputPath = buildRule.getBuildable().getPathToOutputFile();
+        Path outputPath = buildRule.getBuildable().getPathToOutputFile();
         if (outputPath != null) {
           output += " " + outputPath;
         }
@@ -227,7 +227,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         continue;
       }
 
-      String outputPath;
+      Path outputPath;
       Buildable buildable = buildRule.getBuildable();
       if (buildable != null) {
         outputPath = buildable.getPathToOutputFile();
@@ -239,7 +239,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
 
       if (outputPath != null) {
-        targetRule.put("buck.output_file", outputPath);
+        targetRule.put("buck.output_file", outputPath.toString());
       }
 
       // Sort the rule items, both so we have a stable order for unit tests and

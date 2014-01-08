@@ -155,7 +155,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
           .toSet();
     }
 
-    Path outputFile = Paths.get(getOutputFile());
+    Path outputFile = getOutputFile();
     Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile);
     commands.add(jar);
 
@@ -172,12 +172,13 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   }
 
   @Override
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     return getOutputFile();
   }
 
-  String getOutputFile() {
-    return String.format("%s/%s.jar", getOutputDirectory(), getBuildTarget().getShortName());
+  Path getOutputFile() {
+    return Paths.get(
+        String.format("%s/%s.jar", getOutputDirectory(), getBuildTarget().getShortName()));
   }
 
   public static Builder newJavaBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
@@ -191,7 +192,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
         getBuildTarget().getFullyQualifiedName());
 
     return ImmutableList.of("java", "-jar",
-        projectFilesystem.getPathRelativizer().apply(getOutputFile()).toString());
+        projectFilesystem.getAbsolutifier().apply(getOutputFile()).toString());
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<JavaBinaryRule> {

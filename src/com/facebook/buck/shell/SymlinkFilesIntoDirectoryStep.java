@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
 
 /**
  * {@link Step} that takes a collection of entries in a directory and creates a set of read-only
@@ -35,7 +34,7 @@ import java.util.Set;
 public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
 
   private final Path srcDir;
-  private final ImmutableSet<String> entries;
+  private final ImmutableSet<Path> entries;
   private final Path outDir;
 
   /**
@@ -43,7 +42,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
    * @param entries that exist in {@code srcDir}.
    * @param outDir relative to the project root where the symlinks will be created.
    */
-  public SymlinkFilesIntoDirectoryStep(Path srcDir, Set<String> entries, Path outDir) {
+  public SymlinkFilesIntoDirectoryStep(Path srcDir, Iterable<Path> entries, Path outDir) {
     super("symlinking files into " + outDir);
     this.srcDir = Preconditions.checkNotNull(srcDir);
     this.entries = ImmutableSet.copyOf(entries);
@@ -58,7 +57,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
     Path outDir = projectFilesystem.resolve(this.outDir);
     Path srcDir = projectFilesystem.resolve(this.srcDir);
 
-    for (String entry : entries) {
+    for (Path entry : entries) {
       Path link = outDir.resolve(entry);
       Path target = srcDir.resolve(entry);
       try {

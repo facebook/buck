@@ -58,12 +58,12 @@ public class ApkBuilderStep implements Step {
    */
   private static final String JARSIGNER_KEY_STORE_TYPE = "jks";
 
-  private final String resourceApk;
-  private final String dexFile;
-  private final String pathToOutputApkFile;
+  private final Path resourceApk;
+  private final Path dexFile;
+  private final Path pathToOutputApkFile;
   private final ImmutableSet<String> assetDirectories;
-  private final ImmutableSet<String> nativeLibraryDirectories;
-  private final ImmutableSet<String> zipFiles;
+  private final ImmutableSet<Path> nativeLibraryDirectories;
+  private final ImmutableSet<Path> zipFiles;
   private final ImmutableSet<String> jarFilesThatMayContainResources;
   private final Path pathToKeystore;
   private final Path pathToKeystorePropertiesFile;
@@ -83,12 +83,12 @@ public class ApkBuilderStep implements Step {
    *     information about the keystore used to sign the APK.
    */
   public ApkBuilderStep(
-      String resourceApk,
-      String pathToOutputApkFile,
-      String dexFile,
+      Path resourceApk,
+      Path pathToOutputApkFile,
+      Path dexFile,
       ImmutableSet<String> javaResourcesDirectories,
-      ImmutableSet<String> nativeLibraryDirectories,
-      ImmutableSet<String> zipFiles,
+      ImmutableSet<Path> nativeLibraryDirectories,
+      ImmutableSet<Path> zipFiles,
       ImmutableSet<String> jarFilesThatMayContainResources,
       Path pathToKeystore,
       Path pathToKeystorePropertiesFile,
@@ -124,13 +124,13 @@ public class ApkBuilderStep implements Step {
           privateKeyAndCertificate.certificate,
           output);
       builder.setDebugMode(debugMode);
-      for (String nativeLibraryDirectory : nativeLibraryDirectories) {
+      for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(projectFilesystem.getFileForRelativePath(nativeLibraryDirectory));
       }
       for (String assetDirectory : assetDirectories) {
         builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));
       }
-      for (String zipFile : zipFiles) {
+      for (Path zipFile : zipFiles) {
         File zipFileOnDisk = projectFilesystem.getFileForRelativePath(zipFile);
         if (zipFileOnDisk.exists() && zipFileOnDisk.isFile()) {
           builder.addZipFile(zipFileOnDisk);
@@ -199,9 +199,9 @@ public class ApkBuilderStep implements Step {
         "com.android.sdklib.build.ApkBuilderMain",
         pathToOutputApkFile,
         Joiner.on(' ').join(Iterables.transform(nativeLibraryDirectories,
-            new Function<String, String>() {
+            new Function<Path, String>() {
               @Override
-              public String apply(String s) {
+              public String apply(Path s) {
                 return "-nf " + s;
               }
             })),

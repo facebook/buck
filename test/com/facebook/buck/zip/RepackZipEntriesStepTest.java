@@ -62,8 +62,8 @@ public class RepackZipEntriesStepTest {
   public void shouldLeaveZipAloneIfEntriesToCompressIsEmpty() throws IOException {
     File out = new File(parent, "output.zip");
     RepackZipEntriesStep step = new RepackZipEntriesStep(
-        zipFile.getAbsolutePath(),
-        out.getAbsolutePath(),
+        zipFile.toPath(),
+        out.toPath(),
         ImmutableSet.<String>of());
     step.execute(TestExecutionContext.newInstance());
 
@@ -76,8 +76,8 @@ public class RepackZipEntriesStepTest {
   public void repackWithHigherCompressionResultsInFewerBytes() throws IOException {
     File out = new File(parent, "output.zip");
     RepackZipEntriesStep step = new RepackZipEntriesStep(
-        zipFile.getAbsolutePath(),
-        out.getAbsolutePath(),
+        zipFile.toPath(),
+        out.toPath(),
         ImmutableSet.of("file"));
     step.execute(TestExecutionContext.newInstance());
 
@@ -88,8 +88,8 @@ public class RepackZipEntriesStepTest {
   public void justStoringEntriesLeadsToMoreBytesInOuputZip() throws IOException {
     File out = new File(parent, "output.zip");
     RepackZipEntriesStep step = new RepackZipEntriesStep(
-        zipFile.getAbsolutePath(),
-        out.getAbsolutePath(),
+        zipFile.toPath(),
+        out.toPath(),
         ImmutableSet.of("file"),
         ZipStep.MIN_COMPRESSION_LEVEL);
     step.execute(TestExecutionContext.newInstance());

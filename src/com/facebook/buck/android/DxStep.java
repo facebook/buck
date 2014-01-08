@@ -66,7 +66,7 @@ public class DxStep extends ShellStep {
     }
   };
 
-  private final String outputDexFile;
+  private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
   private final Supplier<String> getPathToCustomDx;
@@ -76,7 +76,7 @@ public class DxStep extends ShellStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    */
-  public DxStep(String outputDexFile, Iterable<Path> filesToDex) {
+  public DxStep(Path outputDexFile, Iterable<Path> filesToDex) {
     this(outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
   }
 
@@ -86,12 +86,12 @@ public class DxStep extends ShellStep {
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
    */
-  public DxStep(String outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options) {
+  public DxStep(Path outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options) {
     this(outputDexFile, filesToDex, options, DEFAULT_GET_CUSTOM_DX);
   }
 
   @VisibleForTesting
-  DxStep(String outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options,
+  DxStep(Path outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options,
       Supplier<String> getPathToCustomDx) {
     this.outputDexFile = Preconditions.checkNotNull(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
@@ -137,7 +137,7 @@ public class DxStep extends ShellStep {
       builder.add("--verbose");
     }
 
-    builder.add("--output", outputDexFile);
+    builder.add("--output", outputDexFile.toString());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     for (Path fileToDex : filesToDex) {
       builder.add(projectFilesystem.resolve(fileToDex).toString());

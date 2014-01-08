@@ -106,7 +106,7 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
 
   @Override
   @Nullable
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     // An ndk_library() does not have a "primary output" at this time.
     return null;
   }

@@ -97,9 +97,9 @@ public class JavacOptions {
     if (!annotationProcessingData.isEmpty()) {
 
       // Specify where to generate sources so IntelliJ can pick them up.
-      String generateTo = annotationProcessingData.getGeneratedSourceFolderName();
+      Path generateTo = annotationProcessingData.getGeneratedSourceFolderName();
       if (generateTo != null) {
-        optionsBuilder.add("-s").add(generateTo);
+        optionsBuilder.add("-s").add(generateTo.toString());
       }
 
       // Create a path relativizer that relativizes all processor paths, except for

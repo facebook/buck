@@ -51,7 +51,7 @@ public interface AnnotationProcessingData {
 
     @Override
     @Nullable
-    public String getGeneratedSourceFolderName() {
+    public Path getGeneratedSourceFolderName() {
       return null;
     }
 
@@ -98,5 +98,5 @@ public interface AnnotationProcessingData {
    * The name of the root folder where annotation processing source should be generated.
    */
   @Nullable
-  public String getGeneratedSourceFolderName();
+  public Path getGeneratedSourceFolderName();
 }

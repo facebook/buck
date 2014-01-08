@@ -22,7 +22,6 @@ import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -93,7 +92,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
     if (lines != null) {
       return lines;
     } else if (buildable.getPathToOutputFile() != null) {
-      return getOutputFileContentsByLine(Paths.get(buildable.getPathToOutputFile()));
+      return getOutputFileContentsByLine(buildable.getPathToOutputFile());
     } else {
       throw new RuntimeException("No lines for buildable: " + buildable);
     }

@@ -65,7 +65,7 @@ public class GenParcelable extends AbstractBuildable {
 
   @Nullable
   @Override
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     return null;
   }
 

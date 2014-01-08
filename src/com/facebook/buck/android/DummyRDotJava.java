@@ -176,7 +176,7 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
 
   @Nullable
   @Override
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     return null;
   }
 

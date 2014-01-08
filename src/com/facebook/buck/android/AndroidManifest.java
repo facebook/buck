@@ -128,7 +128,7 @@ public class AndroidManifest extends AbstractBuildable {
     commands.add(new MkdirStep(pathToOutputFile.getParent()));
 
     commands.add(new GenerateManifestStep(
-        skeletonFile.resolve(context).toString(),
+        skeletonFile.resolve(context),
         manifestFiles,
         getPathToOutputFile()));
 
@@ -136,8 +136,8 @@ public class AndroidManifest extends AbstractBuildable {
   }
 
   @Override
-  public String getPathToOutputFile() {
-    return pathToOutputFile.toString();
+  public Path getPathToOutputFile() {
+    return pathToOutputFile;
   }
 
 

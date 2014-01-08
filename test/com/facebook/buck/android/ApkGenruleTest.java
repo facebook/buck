@@ -174,7 +174,7 @@ public class ApkGenruleTest {
         ImmutableList.of(
             "rm",
             "-f",
-            apkGenrule.getPathToOutputFile()),
+            apkGenrule.getPathToOutputFile().toString()),
         rmCommand.getShellCommand(executionContext));
 
     Step secondStep = steps.get(1);

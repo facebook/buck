@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
@@ -111,7 +110,7 @@ public class ApkGenrule extends Genrule implements InstallableBuildRule {
 
   @Override
   public Path getApkPath() {
-    return Paths.get(getPathToOutputFile());
+    return getPathToOutputFile();
   }
 
   @Override

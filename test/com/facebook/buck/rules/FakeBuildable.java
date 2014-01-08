@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,7 +30,7 @@ import javax.annotation.Nullable;
 public class FakeBuildable extends AbstractBuildable {
 
   @Nullable
-  private String pathToOutputFile;
+  private Path pathToOutputFile;
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
@@ -44,13 +45,13 @@ public class FakeBuildable extends AbstractBuildable {
 
   @Override
   @Nullable
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     return pathToOutputFile;
   }
 
   /** @return this */
   public FakeBuildable setPathToOutputFile(@Nullable String pathToOutputFile) {
-    this.pathToOutputFile = pathToOutputFile;
+    this.pathToOutputFile = Paths.get(pathToOutputFile);
     return this;
   }
 

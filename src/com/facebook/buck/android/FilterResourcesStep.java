@@ -147,7 +147,7 @@ public class FilterResourcesStep implements Step {
     final boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
 
     if (filterDrawables) {
-      Set<String> drawables = drawableFinder.findDrawables(inResDirToOutResDirMap.keySet());
+      Set<Path> drawables = drawableFinder.findDrawables(inResDirToOutResDirMap.keySet());
       filePredicates.add(
           Filters.createImageDensityFilter(drawables, targetDensities, canDownscale));
     }
@@ -209,10 +209,10 @@ public class FilterResourcesStep implements Step {
     Filters.Density targetDensity = Filters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
-    for (String drawable : drawableFinder.findDrawables(inResDirToOutResDirMap.values())) {
+    for (Path drawable : drawableFinder.findDrawables(inResDirToOutResDirMap.values())) {
       File drawableFile = filesystem.getFileForRelativePath(drawable);
 
-      if (drawable.endsWith(".9.png")) {
+      if (drawable.toString().endsWith(".9.png")) {
         // Skip nine-patch for now.
         continue;
       }
@@ -226,9 +226,9 @@ public class FilterResourcesStep implements Step {
         // Replace density qualifier with target density using regular expression to match
         // the qualifier in the context of a path to a drawable.
         String fromDensity = (density == Density.NO_QUALIFIER ? "" : "-") + density.toString();
-        String destination = drawable.replaceFirst(
+        Path destination = Paths.get(drawable.toString().replaceFirst(
             "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
-            "$1-" + targetDensity + "$2");
+            "$1-" + targetDensity + "$2"));
 
         double factor = targetDensity.value() / density.value();
         if (factor >= 1.0) {
@@ -246,7 +246,7 @@ public class FilterResourcesStep implements Step {
         }
 
         // Delete newly-empty directories to prevent missing resources errors in apkbuilder.
-        String parent = drawableFile.getParent();
+        Path parent = drawableFile.toPath().getParent();
         if (filesystem.listFiles(parent).length == 0 && !filesystem.deleteFileAtPath(parent)) {
           throw new HumanReadableException("Cannot delete directory: " + parent);
         }
@@ -256,7 +256,7 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface DrawableFinder {
-    public Set<String> findDrawables(Iterable<Path> dirs) throws IOException;
+    public Set<Path> findDrawables(Iterable<Path> dirs) throws IOException;
   }
 
   public static class DefaultDrawableFinder implements DrawableFinder {
@@ -268,8 +268,8 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public Set<String> findDrawables(Iterable<Path> dirs) throws IOException {
-      final ImmutableSet.Builder<String> drawableBuilder = ImmutableSet.builder();
+    public Set<Path> findDrawables(Iterable<Path> dirs) throws IOException {
+      final ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
       for (Path dir : dirs) {
         new DirectoryTraversal(dir.toFile()) {
           @Override
@@ -277,7 +277,7 @@ public class FilterResourcesStep implements Step {
             if (DRAWABLE_PATH_PATTERN.matcher(relativePath).matches() &&
                 !DRAWABLE_EXCLUDE_PATTERN.matcher(relativePath).matches()) {
               // The path is normalized so that the value can be matched against patterns.
-              drawableBuilder.add(MorePaths.newPathInstance(file).toString());
+              drawableBuilder.add(MorePaths.newPathInstance(file));
             }
           }
         }.traverse();
@@ -288,7 +288,7 @@ public class FilterResourcesStep implements Step {
 
   public interface ImageScaler {
     public boolean isAvailable(ExecutionContext context);
-    public void scale(double factor, String source, String destination, ExecutionContext context);
+    public void scale(double factor, Path source, Path destination, ExecutionContext context);
   }
 
   /**
@@ -310,7 +310,7 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public void scale(double factor, String source, String destination, ExecutionContext context) {
+    public void scale(double factor, Path source, Path destination, ExecutionContext context) {
       Step convertStep = new BashStep(
           "convert",
           "-adaptive-resize", (int) (factor * 100) + "%",

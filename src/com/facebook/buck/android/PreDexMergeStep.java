@@ -39,7 +39,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -60,10 +59,10 @@ class PreDexMergeStep implements Step {
 
   private final ImmutableList<DexWithClasses> dexFilesToMerge;
   private final Optional<DexWithClasses> dexWithClassesForRDotJava;
-  private final String primaryDexPath;
+  private final Path primaryDexPath;
   private final ClassNameFilter primaryDexFilter;
   private final Path secondaryDexMetadataTxt;
-  private final String secondaryDexJarFilesDir;
+  private final Path secondaryDexJarFilesDir;
   private final DexStore dexStore;
   private final long linearAllocHardLimit;
 
@@ -75,10 +74,10 @@ class PreDexMergeStep implements Step {
 
   public PreDexMergeStep(ImmutableList<DexWithClasses> dexFilesToMerge,
       Optional<DexWithClasses> dexWithClassesForRDotJava,
-      String primaryDexPath,
+      Path primaryDexPath,
       ImmutableSet<String> primaryDexPatterns,
       Path secondaryDexMetadataTxt,
-      String secondaryDexJarFilesDir,
+      Path secondaryDexJarFilesDir,
       DexStore dexStore,
       long linearAllocHardLimit,
       Path scratchDirectory) {
@@ -174,13 +173,13 @@ class PreDexMergeStep implements Step {
     // Create the steps do dex the secondary dexes.
     for (int index = 0; index < secondaryDexesContents.size(); index++) {
       String name = String.format(pattern, index + 1);
-      Path pathToSecondaryDex = Paths.get(secondaryDexJarFilesDir, name);
+      Path pathToSecondaryDex = secondaryDexJarFilesDir.resolve(name);
       indexToPathToSecondaryDex.put(index, pathToSecondaryDex);
 
       List<DexWithClasses> secondaryDex = secondaryDexesContents.get(index);
       dxSteps.add(SmartDexingStep.createDxStepForDxPseudoRule(
           Iterables.transform(secondaryDex, TO_PATH),
-          pathToSecondaryDex.toString(),
+          pathToSecondaryDex,
           DX_MERGE_OPTIONS));
     }
 
@@ -277,7 +276,7 @@ class PreDexMergeStep implements Step {
     };
   }
 
-  private static DxStep createDxStep(String outputDexFile, Iterable<DexWithClasses> dexFiles) {
+  private static DxStep createDxStep(Path outputDexFile, Iterable<DexWithClasses> dexFiles) {
     return new DxStep(outputDexFile, Iterables.transform(dexFiles, TO_PATH), DX_MERGE_OPTIONS);
   }
 

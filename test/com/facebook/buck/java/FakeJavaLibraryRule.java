@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRule {
 
@@ -80,14 +81,14 @@ public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRul
 
   @Override
   public ImmutableSetMultimap<JavaLibraryRule, String> getTransitiveClasspathEntries() {
-    return ImmutableSetMultimap.of((JavaLibraryRule) this, getPathToOutputFile());
+    return ImmutableSetMultimap.of((JavaLibraryRule) this, getPathToOutputFile().toString());
   }
 
   @Override
-  public String getPathToOutputFile() {
-    return BuckConstant.GEN_DIR + "/" +
+  public Path getPathToOutputFile() {
+    return Paths.get(BuckConstant.GEN_DIR + "/" +
         getBuildTarget().getBasePathWithSlash() +
-        getBuildTarget().getShortName() + ".jar";
+        getBuildTarget().getShortName() + ".jar");
   }
 
   @Override

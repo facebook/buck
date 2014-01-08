@@ -59,8 +59,8 @@ import java.util.concurrent.Callable;
 
 public class PreDexMergeStepTest {
 
-  private static final String secondaryDexJarFilesDir =
-      "buck-out/gen/app/__app_secondary_dex__/assets/secondary-program-dex-jars";
+  private static final Path secondaryDexJarFilesDir =
+      Paths.get("buck-out/gen/app/__app_secondary_dex__/assets/secondary-program-dex-jars");
   private static final Path secondaryDexMetadataTxt =
       Paths.get("buck-out/gen/app/__app_metadata.txt");
 
@@ -367,7 +367,7 @@ public class PreDexMergeStepTest {
         ImmutableSet.of("com.example.R", "com.example.R$id"),
         /* linearAllocSize */ 100);
 
-    String primaryDexPath = "buck-out/gen/app/__app_classes.dex";
+    Path primaryDexPath = Paths.get("buck-out/gen/app/__app_classes.dex");
 
     return new PreDexMergeStep(
         dexFilesToMerge,

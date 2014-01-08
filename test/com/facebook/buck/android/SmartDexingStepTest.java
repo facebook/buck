@@ -72,17 +72,18 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testInputResolverWithMultipleOutputs() throws IOException {
     File primaryOutDir = tmpDir.newFolder("primary-out");
     File primaryOut = new File(primaryOutDir, "primary.jar");
-    Set<String> primaryIn = ImmutableSet.of("input/a.jar", "input/b.jar", "input/c.jar");
+    Set<Path> primaryIn = ImmutableSet.of(
+        Paths.get("input/a.jar"), Paths.get("input/b.jar"), Paths.get("input/c.jar"));
     File secondaryOutDir = tmpDir.newFolder("secondary-out");
     File secondaryInDir = tmpDir.newFolder("secondary-in");
     File secondaryInFile = new File(secondaryInDir, "2.jar");
     Files.write(new byte[]{0}, secondaryInFile);
 
     InputResolver resolver = new InputResolver(
-        "primary-out/primary.jar",
+        Paths.get("primary-out/primary.jar"),
         primaryIn,
-        Optional.of("secondary-out"),
-        Optional.of("secondary-in"));
+        Optional.of(Paths.get("secondary-out")),
+        Optional.of(Paths.get("secondary-in")));
     assertTrue("Expected secondary output", resolver.hasSecondaryOutput());
     final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
     Multimap<File, File> outputToInputs = resolver.createOutputToInputs(DexStore.JAR,
@@ -91,9 +92,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     MoreAsserts.assertIterablesEquals(
         "Detected inconsistency with primary input arguments",
-        Iterables.transform(primaryIn, new Function<String, File>() {
+        Iterables.transform(primaryIn, new Function<Path, File>() {
           @Override
-          public File apply(String input) {
+          public File apply(Path input) {
             return projectFilesystem.getFileForRelativePath(input);
           }
         }),
@@ -132,7 +133,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     DxPseudoRule rule = new DxPseudoRule(context,
         ImmutableSet.of(testIn.toPath()),
-        outputFile.getPath(),
+        outputFile.toPath(),
         outputHashFile,
         /* optimizeDex */ false);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
@@ -150,7 +151,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithXzOutput() {
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
-    String outputPath = "classes.dex.jar.xz";
+    Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
 
@@ -174,7 +175,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithDexOutput() {
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
-    String outputPath = "classes.dex";
+    Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
 
@@ -189,7 +190,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() {
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
-    String outputPath = "classes.dex.jar";
+    Path outputPath = Paths.get("classes.dex.jar");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
 
@@ -204,7 +205,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
   public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() {
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
-    String outputPath = "classes.flex";
+    Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
   }

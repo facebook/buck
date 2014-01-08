@@ -34,8 +34,7 @@ import java.util.Set;
 
 public class JUnitStep extends ShellStep {
 
-  public static final String EMMA_OUTPUT_DIR =
-      String.format("%s/emma", BuckConstant.GEN_DIR);
+  public static final Path EMMA_OUTPUT_DIR = BuckConstant.GEN_PATH.resolve("emma");
 
   // Note that the default value is used when `buck test --all` is run on Buck itself.
   // TODO(mbolin): Change this so that pathToEmmaJar is injected. This is a non-trivial refactor
@@ -77,7 +76,7 @@ public class JUnitStep extends ShellStep {
 
   public static final String JACOCO_EXEC_COVERAGE_FILE = "jacoco.exec";
 
-  public static final String JACOCO_OUTPUT_DIR = String.format("%s/jacoco", BuckConstant.GEN_DIR);
+  public static final Path JACOCO_OUTPUT_DIR = BuckConstant.GEN_PATH.resolve("jacoco");
 
   /**
    * @param classpathEntries contains the entries that will be listed first in the classpath when

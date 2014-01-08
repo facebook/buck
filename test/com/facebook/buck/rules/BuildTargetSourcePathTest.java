@@ -98,8 +98,8 @@ public class BuildTargetSourcePathTest {
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of()) {
       @Override
-      public String getPathToOutputFile() {
-        return "cheese";
+      public Path getPathToOutputFile() {
+        return Paths.get("cheese");
       }
     });
 

@@ -27,6 +27,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -120,12 +121,12 @@ public class Filters {
    */
   @VisibleForTesting
   static Set<File> filterByDensity(
-      Iterable<String> candidates,
+      Iterable<Path> candidates,
       Set<Filters.Density> targetDensities,
       boolean canDownscale) {
     ImmutableSet.Builder<File> removals = ImmutableSet.builder();
 
-    Table<String, Density, String> imageValues = HashBasedTable.create();
+    Table<String, Density, Path> imageValues = HashBasedTable.create();
 
     // Create mappings for drawables. If candidate == "<base>/drawable-<dpi>-<other>/<filename>",
     // then we'll record a mapping of the form ("<base>/<filename>/<other>", "<dpi>") -> candidate.
@@ -134,8 +135,8 @@ public class Filters {
     //                       --------------------------------------------------------------------
     // key: res/some.png/    |  res/drawable-mdpi/some.png          res/drawable-hdpi/some.png
     // key: res/some.png/fr  |  res/drawable-fr-hdpi/some.png
-    for (String candidate : candidates) {
-      File f = new File(candidate);
+    for (Path candidate : candidates) {
+      File f = candidate.toFile();
 
       Qualifiers qualifiers = new Qualifiers(f);
 
@@ -147,7 +148,7 @@ public class Filters {
     }
 
     for (String key : imageValues.rowKeySet()) {
-      Map<Density, String> options = imageValues.row(key);
+      Map<Density, Path> options = imageValues.row(key);
       Set<Density> available = options.keySet();
 
       // This is to make sure we preserve the existing structure of drawable/ files.
@@ -171,7 +172,7 @@ public class Filters {
       if (!available.contains(largestTarget)) {
         Density fallback = null;
         // Downscaling nine-patch drawables would require extra logic, not doing that yet.
-        if (canDownscale && !options.values().iterator().next().endsWith(".9.png")) {
+        if (canDownscale && !options.values().iterator().next().toString().endsWith(".9.png")) {
           // Highest possible quality, because we'll downscale it.
           fallback = Density.ORDERING.max(available);
         } else {
@@ -188,7 +189,7 @@ public class Filters {
 
       // Mark remaining densities for removal.
       for (Density density : Sets.difference(available, toKeep)) {
-        removals.add(new File(options.get(density)).getAbsoluteFile());
+        removals.add(options.get(density).toFile().getAbsoluteFile());
       }
     }
 
@@ -204,7 +205,7 @@ public class Filters {
    * @param canDownscale if no exact match is available, retain the highest quality
    * @return a predicate as above
    */
-  public static Predicate<File> createImageDensityFilter(Iterable<String> candidates,
+  public static Predicate<File> createImageDensityFilter(Iterable<Path> candidates,
                                                          Set<Filters.Density> targetDensities,
                                                          boolean canDownscale) {
     final Set<File> filesToRemove = filterByDensity(candidates, targetDensities, canDownscale);

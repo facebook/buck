@@ -226,7 +226,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             }
 
             if (outputJar.isPresent()) {
-              outputClasspathBuilder.put(DefaultJavaLibraryRule.this, getPathToOutputFile());
+              outputClasspathBuilder.put(DefaultJavaLibraryRule.this, getPathToOutputFile().toString());
             }
 
             return outputClasspathBuilder.build();
@@ -257,7 +257,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
             // Only add ourselves to the classpath if there's a jar to be built.
             if (outputJar.isPresent()) {
-              classpathEntries.putAll(DefaultJavaLibraryRule.this, getPathToOutputFile());
+              classpathEntries.putAll(DefaultJavaLibraryRule.this, getPathToOutputFile().toString());
             }
 
             return classpathEntries.build();
@@ -370,12 +370,12 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     return getPathToAbiOutputDir().resolve("abi");
   }
 
-  private static String getOutputJarDirPath(BuildTarget target) {
-    return String.format(
+  private static Path getOutputJarDirPath(BuildTarget target) {
+    return Paths.get(String.format(
         "%s/%slib__%s__output",
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
-        target.getShortName());
+        target.getShortName()));
   }
 
   private static Path getOutputJarPath(BuildTarget target) {
@@ -550,7 +550,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
 
     // Javac requires that the root directory for generated sources already exist.
-    String annotationGenFolder =
+    Path annotationGenFolder =
         javacOptions.getAnnotationProcessingData().getGeneratedSourceFolderName();
     if (annotationGenFolder != null) {
       MakeCleanDirectoryStep mkdirGeneratedSources =
@@ -786,10 +786,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         Path relativeSymlinkPath;
 
 
-        if (resource.startsWith(BuckConstant.BUCK_OUTPUT_DIRECTORY) ||
-            resource.startsWith(BuckConstant.GEN_DIR) ||
-            resource.startsWith(BuckConstant.BIN_DIR) ||
-            resource.startsWith(BuckConstant.ANNOTATION_DIR)) {
+        if (resource.startsWith(BuckConstant.BUCK_OUTPUT_PATH) ||
+            resource.startsWith(BuckConstant.GEN_PATH) ||
+            resource.startsWith(BuckConstant.BIN_PATH) ||
+            resource.startsWith(BuckConstant.ANNOTATION_PATH)) {
           // Handle the case where we depend on the output of another BuildRule. In that case, just
           // grab the output and put in the same package as this target would be in.
           relativeSymlinkPath = Paths.get(String.format(
@@ -816,9 +816,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   @Override
   @Nullable
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     if (outputJar.isPresent()) {
-      return outputJar.get().toString();
+      return outputJar.get();
     }
     return null;
   }

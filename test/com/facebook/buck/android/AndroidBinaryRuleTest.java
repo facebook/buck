@@ -16,8 +16,9 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.BuckConstant.BIN_DIR;
+import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
+import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -42,6 +43,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -104,16 +106,20 @@ public class AndroidBinaryRuleTest {
 
     BuildContext context = createMock(BuildContext.class);
     replay(context);
+    ImmutableSet<Path> classpathEntriesToDex =
+        FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
+            .transform(MorePaths.TO_PATH)
+            .toSet();
     androidBinary.addProguardCommands(
         context,
-        dexTransitiveDependencies.classpathEntriesToDex,
+        classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
         ImmutableSet.<String>of());
     verify(context);
 
     MakeCleanDirectoryStep expectedClean =
-        new MakeCleanDirectoryStep("buck-out/gen/java/src/com/facebook/base/.proguard/apk");
+        new MakeCleanDirectoryStep(Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
 
     GenProGuardConfigStep expectedGenProguard =
         new GenProGuardConfigStep(
@@ -127,11 +133,11 @@ public class AndroidBinaryRuleTest {
           ImmutableSet.<Path>of(),
           false,
           ImmutableMap.of(
-              "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar",
-              "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/java/src/com/" +
-                  "facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar"),
+              Paths.get("buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
+              Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/java/src/com/" +
+                  "facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
           ImmutableSet.of("buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
-          "buck-out/gen/java/src/com/facebook/base/.proguard/apk");
+          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
 
     assertEquals(
         ImmutableList.of(expectedClean, expectedGenProguard, expectedObfuscation),
@@ -244,10 +250,10 @@ public class AndroidBinaryRuleTest {
         .setTarget("Google Inc.:Google APIs:16"));
 
     Path proguardDir = rule.getProguardOutputFromInputClasspath(
-        BIN_DIR + "/first-party/orca/lib-base/lib__lib-base__classes");
-    assertEquals(GEN_DIR + "/.proguard/fbandroid_with_dash_debug_fbsign/" +
-        BIN_DIR + "/first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar",
-        proguardDir.toString());
+        BIN_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes"));
+    assertEquals(GEN_PATH.resolve(".proguard/fbandroid_with_dash_debug_fbsign").resolve(
+        BIN_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar")),
+        proguardDir);
   }
 
   private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands) {
@@ -278,10 +284,10 @@ public class AndroidBinaryRuleTest {
             DexStore.JAR,
             /* useLinearAllocSplitDex */ false)));
 
-    Set<String> classpath = Sets.newHashSet();
-    ImmutableSet.Builder<String> secondaryDexDirectories = ImmutableSet.builder();
+    Set<Path> classpath = Sets.newHashSet();
+    ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
-    String primaryDexPath = BIN_DIR + "/.dex/classes.dex";
+    Path primaryDexPath = BIN_PATH.resolve(".dex/classes.dex");
     splitDexRule.addDexingSteps(classpath,
         secondaryDexDirectories,
         commandsBuilder,
@@ -393,7 +399,7 @@ public class AndroidBinaryRuleTest {
     // Invoke copyNativeLibrary to populate the steps.
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     AndroidBinaryRule.copyNativeLibrary(
-        Paths.get(sourceDir), destinationDir, cpuFilters, stepsBuilder);
+        Paths.get(sourceDir), Paths.get(destinationDir), cpuFilters, stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
     assertEquals(steps.size(), expectedCommandDescriptions.size());

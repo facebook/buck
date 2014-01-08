@@ -26,28 +26,21 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class RmStep implements Step {
 
-  private final Path patternToDelete;
+  private final Path toDelete;
   private final boolean shouldForceDeletion;
   private final boolean shouldRecurse;
 
-  public RmStep(String patternToDelete, boolean shouldForceDeletion) {
-    this(patternToDelete, shouldForceDeletion, false /* shouldRecurse */);
+  public RmStep(Path toDelete, boolean shouldForceDeletion) {
+    this(toDelete, shouldForceDeletion, false /* shouldRecurse */);
   }
 
-  public RmStep(String patternToDelete,
-                boolean shouldForceDeletion,
-                boolean shouldRecurse) {
-    this(Paths.get(patternToDelete), shouldForceDeletion, shouldRecurse);
-  }
-
-  public RmStep(Path patternToDelete,
+  public RmStep(Path toDelete,
       boolean shouldForceDeletion,
       boolean shouldRecurse) {
-    this.patternToDelete = Preconditions.checkNotNull(patternToDelete);
+    this.toDelete = Preconditions.checkNotNull(toDelete);
     this.shouldForceDeletion = shouldForceDeletion;
     this.shouldRecurse = shouldRecurse;
   }
@@ -64,7 +57,7 @@ public class RmStep implements Step {
       args.add("-f");
     }
 
-    Path absolutePath = context.getProjectFilesystem().resolve(patternToDelete);
+    Path absolutePath = context.getProjectFilesystem().resolve(toDelete);
     args.add(absolutePath.toString());
 
     return args.build();
@@ -81,7 +74,7 @@ public class RmStep implements Step {
     if (shouldRecurse) {
       // Delete a folder recursively
       try {
-        projectFilesystem.rmdir(patternToDelete.toString());
+        projectFilesystem.rmdir(toDelete.toString());
       } catch (IOException e) {
         if (shouldForceDeletion) {
           return 0;
@@ -91,7 +84,7 @@ public class RmStep implements Step {
       }
     } else {
       // Delete a single file
-      File file = projectFilesystem.resolve(patternToDelete).toFile();
+      File file = projectFilesystem.resolve(toDelete).toFile();
       if (!file.delete() && !shouldForceDeletion) {
         return 1;
       }

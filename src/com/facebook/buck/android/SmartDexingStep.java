@@ -55,6 +55,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -78,7 +79,7 @@ public class SmartDexingStep implements Step {
   private final boolean optimizeDex;
   private ListeningExecutorService dxExecutor;
 
-  /** Lazily initialized.  See {@link InputResolver#createOutputToInputs(DexStore)}. */
+  /** Lazily initialized.  See {@link InputResolver#createOutputToInputs(DexStore, ProjectFilesystem)}. */
   private Multimap<File, File> outputToInputs;
 
   /**
@@ -97,10 +98,10 @@ public class SmartDexingStep implements Step {
    *     within jar files, or as xz-compressed files).
    */
   public SmartDexingStep(
-      String primaryOutputPath,
-      Set<String> primaryInputsToDex,
-      Optional<String> secondaryOutputDir,
-      Optional<String> secondaryInputsDir,
+      Path primaryOutputPath,
+      Set<Path> primaryInputsToDex,
+      Optional<Path> secondaryOutputDir,
+      Optional<Path> secondaryInputsDir,
       Path successDir,
       Optional<Integer> numThreads,
       DexStore dexStore,
@@ -247,7 +248,7 @@ public class SmartDexingStep implements Step {
               return input.toPath();
             }
           })),
-          outputFile.getPath(),
+          outputFile.toPath(),
           context.getProjectFilesystem().resolve(successDir.resolve(outputFile.getName())),
           optimizeDex));
     }
@@ -276,16 +277,16 @@ public class SmartDexingStep implements Step {
   // Helper class to break down the complex set of paths that this command accepts.
   @VisibleForTesting
   static class InputResolver {
-    private final String primaryOutputPath;
-    private final Set<String> primaryInputsToDex;
-    private final Optional<String> secondaryOutputDir;
-    private final Optional<String> secondaryInputsDir;
+    private final Path primaryOutputPath;
+    private final Set<Path> primaryInputsToDex;
+    private final Optional<Path> secondaryOutputDir;
+    private final Optional<Path> secondaryInputsDir;
 
     public InputResolver(
-        String primaryOutputPath,
-        Set<String> primaryInputsToDex,
-        Optional<String> secondaryOutputDir,
-        Optional<String> secondaryInputsDir) {
+        Path primaryOutputPath,
+        Set<Path> primaryInputsToDex,
+        Optional<Path> secondaryOutputDir,
+        Optional<Path> secondaryInputsDir) {
       this.primaryOutputPath = Preconditions.checkNotNull(primaryOutputPath);
       this.primaryInputsToDex = ImmutableSet.copyOf(primaryInputsToDex);
       Preconditions.checkArgument(!(secondaryOutputDir.isPresent() ^ secondaryInputsDir.isPresent()),
@@ -305,7 +306,7 @@ public class SmartDexingStep implements Step {
 
       // Add the primary output.
       File primaryOutputFile = projectFilesystem.getFileForRelativePath(primaryOutputPath);
-      for (String primaryInputToDex : primaryInputsToDex) {
+      for (Path primaryInputToDex : primaryInputsToDex) {
         map.put(primaryOutputFile, projectFilesystem.getFileForRelativePath(primaryInputToDex));
       }
 
@@ -346,14 +347,14 @@ public class SmartDexingStep implements Step {
   static class DxPseudoRule {
     private final ExecutionContext context;
     private final Set<Path> srcs;
-    private final String outputPath;
+    private final Path outputPath;
     private final Path outputHashPath;
     private final boolean optimizeDex;
     private String newInputsHash;
 
     public DxPseudoRule(ExecutionContext context,
         Set<Path> srcs,
-        String outputPath,
+        Path outputPath,
         Path outputHashPath,
         boolean optimizeDex) {
       this.context = Preconditions.checkNotNull(context);
@@ -421,7 +422,7 @@ public class SmartDexingStep implements Step {
 
       // Make sure the output dex file isn't newer than the output hash file.
       long outputHashFileModTime = outputHashPath.toFile().lastModified();
-      long outputFileModTime = new File(outputPath).lastModified();
+      long outputFileModTime = outputPath.toFile().lastModified();
       if (outputFileModTime > outputHashFileModTime) {
         return false;
       }
@@ -456,15 +457,18 @@ public class SmartDexingStep implements Step {
    * file passed to it.
    */
   static Step createDxStepForDxPseudoRule(Iterable<Path> filesToDex,
-      String outputPath,
+      Path outputPath,
       EnumSet<Option> dxOptions) {
-    if (outputPath.endsWith(DexStore.XZ.getExtension())) {
+
+    String output = outputPath.toString();
+
+    if (output.endsWith(DexStore.XZ.getExtension())) {
       List<Step> steps = Lists.newArrayList();
-      String tempDexJarOutput = outputPath.replaceAll("\\.jar\\.xz$", ".tmp.jar");
+      Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
       steps.add(new DxStep(tempDexJarOutput, filesToDex, dxOptions));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
-      String repackedJar = outputPath.replaceAll("\\.xz$", "");
+      Path repackedJar = Paths.get(output.replaceAll("\\.xz$", ""));
       steps.add(new RepackZipEntriesStep(
           tempDexJarOutput,
           repackedJar,
@@ -474,8 +478,8 @@ public class SmartDexingStep implements Step {
       steps.add(new RmStep(tempDexJarOutput, true));
       steps.add(new XzStep(repackedJar));
       return new CompositeStep(steps);
-    } else if (outputPath.endsWith(DexStore.JAR.getExtension()) ||
-        outputPath.endsWith("classes.dex")) {
+    } else if (output.endsWith(DexStore.JAR.getExtension()) ||
+        output.endsWith("classes.dex")) {
       return new DxStep(outputPath, filesToDex, dxOptions);
     } else {
       throw new IllegalArgumentException(String.format(

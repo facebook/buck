@@ -81,7 +81,7 @@ public class GenAidl extends AbstractBuildable {
 
   @Override
   @Nullable
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     // A gen_aidl() does not have a "primary output" at this time.
     return null;
   }

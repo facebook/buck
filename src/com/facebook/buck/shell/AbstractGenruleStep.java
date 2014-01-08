@@ -239,7 +239,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   private Path getLocationReplacementFrom(ProjectFilesystem filesystem, Buildable matchingRule) {
-    return filesystem.getPathRelativizer().apply(matchingRule.getPathToOutputFile());
+    return filesystem.getAbsolutifier().apply(matchingRule.getPathToOutputFile());
   }
 
   /**

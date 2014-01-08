@@ -73,7 +73,7 @@ public class DxStepTest extends EasyMockSupport {
     ExecutionContext context = createExecutionContext(2);
     Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(),
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
         SAMPLE_FILES_TO_DEX,
         EnumSet.of(Option.NO_OPTIMIZE));
 
@@ -95,7 +95,7 @@ public class DxStepTest extends EasyMockSupport {
     ExecutionContext context = createExecutionContext(2);
     Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(), SAMPLE_FILES_TO_DEX);
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
     String expected = String.format("%s --output %s %s",
         EXPECTED_DX_PREFIX,
@@ -115,7 +115,7 @@ public class DxStepTest extends EasyMockSupport {
     ExecutionContext context = createExecutionContext(2);
     Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(),
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
         SAMPLE_FILES_TO_DEX,
         EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
 
@@ -138,7 +138,7 @@ public class DxStepTest extends EasyMockSupport {
     ExecutionContext context = createExecutionContext(3);
     Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(), SAMPLE_FILES_TO_DEX);
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
     String expected = String.format("%s --statistics --output %s %s",
         EXPECTED_DX_PREFIX,
@@ -163,7 +163,7 @@ public class DxStepTest extends EasyMockSupport {
     ExecutionContext context = createExecutionContext(10);
     Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(), SAMPLE_FILES_TO_DEX);
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
     String expected = String.format(
         "%s --statistics --verbose --output %s %s",
@@ -189,7 +189,7 @@ public class DxStepTest extends EasyMockSupport {
     ExecutionContext context = createExecutionContext(2);
     Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(),
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
         SAMPLE_FILES_TO_DEX,
         EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         new Supplier<String>() {
@@ -217,7 +217,7 @@ public class DxStepTest extends EasyMockSupport {
     ExecutionContext context = createExecutionContext(2);
     Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH.toString(),
+    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
         SAMPLE_FILES_TO_DEX,
         EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         new Supplier<String>() {

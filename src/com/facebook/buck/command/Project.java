@@ -517,10 +517,10 @@ public class Project {
       JavaLibraryRule javaLibraryRule = (JavaLibraryRule)projectRule;
       AnnotationProcessingData processingData = javaLibraryRule.getAnnotationProcessingData();
 
-      String annotationGenSrc = processingData.getGeneratedSourceFolderName();
+      Path annotationGenSrc = processingData.getGeneratedSourceFolderName();
       if (annotationGenSrc != null) {
         module.annotationGenPath =
-            "/" + Paths.get(basePathWithSlash).relativize(Paths.get(annotationGenSrc)).toString();
+            "/" + Paths.get(basePathWithSlash).relativize(annotationGenSrc).toString();
         module.annotationGenIsForTest = !hasSourceFoldersForSrcRule;
       }
     }
@@ -894,7 +894,7 @@ public class Project {
       return null;
     }
     String directoryPath = target.getBasePath();
-    Preconditions.checkArgument(pathRelativeToProjectRoot.startsWith(directoryPath));
+    Preconditions.checkArgument(pathRelativeToProjectRoot.toString().startsWith(directoryPath));
     return pathRelativeToProjectRoot.toString().substring(directoryPath.length());
   }
 

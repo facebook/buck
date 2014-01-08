@@ -40,8 +40,9 @@ public class BuckConstant {
   public static final Path BIN_PATH = BUCK_OUTPUT_PATH.resolve("bin");
 
   public static final String ANNOTATION_DIR = BUCK_OUTPUT_DIRECTORY + "/annotation";
+  public static final Path ANNOTATION_PATH = BUCK_OUTPUT_PATH.resolve("annotation");
 
-  public static final String BUCK_TRACE_DIR = BUCK_OUTPUT_DIRECTORY + "/log/traces";
+  public static final Path BUCK_TRACE_DIR = BUCK_OUTPUT_PATH.resolve("log/traces");
 
   /**
    * This variable is package-private because conceptually, only parsing logic should be concerned

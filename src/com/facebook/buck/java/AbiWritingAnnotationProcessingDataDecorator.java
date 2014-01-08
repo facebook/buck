@@ -95,7 +95,7 @@ public class AbiWritingAnnotationProcessingDataDecorator
 
       @Override
       @Nullable
-      public String getGeneratedSourceFolderName() {
+      public Path getGeneratedSourceFolderName() {
         return delegate.getGeneratedSourceFolderName();
       }
 

@@ -101,7 +101,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
 
   @Override
   @Nullable
-  public String getPathToOutputFile() {
+  public Path getPathToOutputFile() {
     // A prebuilt_native_library does not have a "primary output" at this time.
     return null;
   }
