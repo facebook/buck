@@ -18,6 +18,7 @@
   <property name="testclasses.dir" value="${build.dir}/testclasses" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="client.dir" value="third-party/nailgun" />
+  <property name="test.class" value="Test" />
 
   <fileset dir="${lib.dir}" id="buck.jars">
     <include name="args4j-2.0.26.jar" />
@@ -220,7 +221,7 @@
             Do not exclude tests that start with "Abstract", as there are some tests for abstract
             classes.
           -->
-          <include name="**/*Test.java" />
+          <include name="**/*${test.class}.java" />
           <exclude name="**/testdata/**" />
         </fileset>
       </batchtest>
