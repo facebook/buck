@@ -617,6 +617,21 @@ class BuckConfig {
     return getValue("ndk", "max_version");
   }
 
+  public Optional<Path> getJavac() {
+    Optional<String> path = getValue("tools", "javac");
+    if (path.isPresent()) {
+      File javac = new File(path.get());
+      if (!javac.exists()) {
+        throw new HumanReadableException("Javac does not exist: " + javac.getPath());
+      }
+      if (!javac.canExecute()) {
+        throw new HumanReadableException("Javac is not executable: " + javac.getPath());
+      }
+      return Optional.of(javac.toPath());
+    }
+    return Optional.absent();
+  }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     ImmutableMap<String, String> properties = this.getEntriesForSection(sectionName);
     return Optional.fromNullable(properties.get(propertyName));
