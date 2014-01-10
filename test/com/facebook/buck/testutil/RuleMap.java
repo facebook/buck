@@ -39,6 +39,7 @@ public class RuleMap {
   private static DependencyGraph createGraphFromBuildRules(Iterable<BuildRule> rules) {
     MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
     for (BuildRule rule : rules) {
+      graph.addNode(rule);
       for (BuildRule dep : rule.getDeps()) {
         graph.addEdge(rule, dep);
       }
