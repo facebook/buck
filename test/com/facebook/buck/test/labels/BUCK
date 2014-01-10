@@ -1,0 +1,12 @@
+java_test(
+  name = 'labels',
+  srcs = glob(['*.java']),
+  resources = glob(['testdata/**/*']),
+  deps = [
+    '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
+    '//lib:junit',
+    '//test/com/facebook/buck/testutil/integration:integration',
+  ],
+)

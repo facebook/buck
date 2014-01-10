@@ -410,8 +410,7 @@ public class TestCommandTest {
     DependencyGraph graph = createDependencyGraphFromBuildRules(rules);
     TestCommandOptions options = getOptions("--include", "linux", "windows");
 
-    Iterable<TestRule> result = TestCommand.getCandidateRulesByIncludedLabels(
-        graph, options.getIncludedLabels());
+    Iterable<TestRule> result = TestCommand.getCandidateRules(graph, options);
     assertThat(result, IsIterableContainingInAnyOrder.containsInAnyOrder(rule1, rule3));
   }
 

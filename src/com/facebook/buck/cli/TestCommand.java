@@ -129,8 +129,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     Build build = buildCommand.getBuild();
 
-    Iterable<TestRule> results = getCandidateRulesByIncludedLabels(
-        build.getDependencyGraph(), options.getIncludedLabels());
+    Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph(), options);
 
     results = filterTestRules(options, results);
 
@@ -331,8 +330,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @VisibleForTesting
-  static Iterable<TestRule> getCandidateRulesByIncludedLabels(
-      DependencyGraph graph, final ImmutableSet<String> includedLabels) {
+  static Iterable<TestRule> getCandidateRules(
+      DependencyGraph graph,
+      final TestCommandOptions options) {
     AbstractBottomUpTraversal<BuildRule, List<TestRule>> traversal =
         new AbstractBottomUpTraversal<BuildRule, List<TestRule>>(graph) {
 
@@ -343,8 +343,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         if (buildRule instanceof TestRule) {
           TestRule testRule = (TestRule)buildRule;
           // If includedSet not empty, only select test rules that contain included label.
-          if (includedLabels.isEmpty() ||
-              !Sets.intersection(testRule.getLabels(), includedLabels).isEmpty()) {
+          if (isRuleIncluded(testRule, options)) {
             results.add(testRule);
           }
         }
@@ -357,6 +356,17 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     };
     traversal.traverse();
     return traversal.getResult();
+  }
+
+  private static boolean isRuleIncluded(TestRule rule, TestCommandOptions options) {
+    ImmutableSet<String> includedLabels = options.getIncludedLabels();
+    return includedLabels.isEmpty() ||
+        !Sets.intersection(rule.getLabels(), includedLabels).isEmpty();
+  }
+
+  private static boolean isRuleExcluded(TestRule rule, TestCommandOptions options) {
+    ImmutableSet<String> excludedLabels = options.getExcludedLabels();
+    return !Sets.intersection(rule.getLabels(), excludedLabels).isEmpty();
   }
 
   @VisibleForTesting
@@ -376,7 +386,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     builder.addAll(Iterables.filter(testRules, new Predicate<TestRule>() {
       @Override
       public boolean apply(TestRule rule) {
-        return Sets.intersection(rule.getLabels(), options.getExcludedLabels()).isEmpty();
+        return isRuleIncluded(rule, options) && !isRuleExcluded(rule, options);
       }
     }));
 

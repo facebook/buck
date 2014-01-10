@@ -1,0 +1,13 @@
+java_test(
+  name = 'geometry',
+  srcs = ['EarthIsFlatTest.java'],
+  labels = ['unscientific', 'not-herecy'],
+  deps = [ '//lib:junit' ],
+)
+
+java_test(
+  name = 'orientation',
+  srcs = ['PhotonsTest.java'],
+  labels = ['scientific'],
+  deps = [ '//lib:junit' ],
+)
