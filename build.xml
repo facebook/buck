@@ -51,6 +51,7 @@
     <include name="java/astyanax/slf4j-api-1.7.2.jar" />
     <include name="java/astyanax/slf4j-log4j12-1.7.2.jar" />
     <include name="java/closure-templates/soy-2012-12-21-no-guava.jar" />
+    <include name="java/dd-plist/dd-plist.jar" />
     <include name="java/gson/gson-2.2.4.jar" />
     <include name="java/jetty/jetty-all-9.0.4.v20130625.jar" />
     <include name="java/jetty/servlet-api.jar" />
