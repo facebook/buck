@@ -41,15 +41,12 @@ public class AndroidBinaryGraphEnhancer {
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
-  private final ImmutableSet<BuildTarget> buildRulesToExcludeFromDex;
   private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
   private final ImmutableSortedSet.Builder<BuildRule> totalDeps;
 
-  AndroidBinaryGraphEnhancer(BuildRuleParams originalParams,
-      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex) {
+  AndroidBinaryGraphEnhancer(BuildRuleParams originalParams) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
-    this.buildRulesToExcludeFromDex = buildRulesToExcludeFromDex;
     this.buildRuleBuilderParams = new DefaultBuildRuleBuilderParams(
         originalParams.getPathRelativizer(),
         originalParams.getRuleKeyBuilderFactory());
@@ -64,7 +61,9 @@ public class AndroidBinaryGraphEnhancer {
    * <p>
    * This method may modify {@code ruleResolver}, inserting new rules into its index.
    */
-  ImmutableSet<IntermediateDexRule> createDepsForPreDexing(BuildRuleResolver ruleResolver) {
+  ImmutableSet<IntermediateDexRule> createDepsForPreDexing(
+      BuildRuleResolver ruleResolver,
+      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex) {
     ImmutableSet.Builder<IntermediateDexRule> preDexDeps = ImmutableSet.builder();
     ImmutableSet<JavaLibraryRule> transitiveJavaDeps = Classpaths
         .getClasspathEntries(originalDeps).keySet();

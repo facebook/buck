@@ -31,9 +31,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -157,17 +155,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           .addAll(apkUnderTest.getBuildRulesToExcludeFromDex())
           .addAll(Classpaths.getClasspathEntries(apkUnderTest.getClasspathDeps()).keySet())
           .build();
-      ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex = FluentIterable
-          .from(buildRulesToExcludeFromDex)
-          .transform(new Function<BuildRule, BuildTarget>() {
-            @Override
-            public BuildTarget apply(BuildRule input) {
-              return input.getBuildTarget();
-            }
-          })
-          .toSet();
-      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-          originalParams, buildTargetsToExcludeFromDex);
+      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(originalParams);
 
       ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk =
           getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build());

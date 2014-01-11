@@ -86,9 +86,9 @@ public class AndroidBinaryGraphEnhancerTest {
         pathRelativizer,
         ruleKeyBuilderFactory);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        originalParams, buildRulesToExcludeFromDex);
+        originalParams);
     ImmutableSet<IntermediateDexRule> depsForPreDexing = graphEnhancer.createDepsForPreDexing(
-        ruleResolver);
+        ruleResolver, buildRulesToExcludeFromDex);
     assertEquals(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx " +
             "list.",

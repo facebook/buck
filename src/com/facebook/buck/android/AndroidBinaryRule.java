@@ -1100,13 +1100,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       ImmutableSet<IntermediateDexRule> preDexDeps;
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex =
           buildTargetsToExcludeFromDexBuilder.build();
-      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-          originalParams, buildTargetsToExcludeFromDex);
+      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(originalParams);
       if (!disablePreDex
           && PackageType.DEBUG.equals(packageType)
           && !preprocessJavaClassesBash.isPresent()
           ) {
-        preDexDeps = graphEnhancer.createDepsForPreDexing(ruleResolver);
+        preDexDeps = graphEnhancer.createDepsForPreDexing(ruleResolver, buildTargetsToExcludeFromDex);
       } else {
         preDexDeps = ImmutableSet.of();
       }
