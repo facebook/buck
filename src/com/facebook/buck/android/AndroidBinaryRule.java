@@ -472,7 +472,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       ImmutableSet<String> resDirectories,
       ImmutableSet<Path> nativeLibraryDirectories,
       Path resourceApkPath,
-      Path unsignedApkPath) {
+      Path signedApkPath) {
     // Execute preprocess_java_classes_binary, if appropriate.
     ImmutableSet<Path> classpathEntriesToDex;
     if (preprocessJavaClassesBash.isPresent()) {
@@ -618,7 +618,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         resourceApkPath,
-        unsignedApkPath,
+        signedApkPath,
         dexFile,
         ImmutableSet.<String>of(),
         nativeLibraryDirectories,
