@@ -383,7 +383,7 @@ public final class BuildRuleFactoryParams {
   }
 
   public Function<Path, Path> getPathRelativizer() {
-    return abstractBuildRuleFactoryParams.getPathRelativizer();
+    return abstractBuildRuleFactoryParams.getPathAbsolutifier();
   }
 
   public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {

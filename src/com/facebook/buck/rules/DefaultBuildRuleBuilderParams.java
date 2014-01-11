@@ -39,7 +39,7 @@ public class DefaultBuildRuleBuilderParams implements AbstractBuildRuleBuilderPa
   }
 
   @Override
-  public Function<Path, Path> getPathRelativizer() {
+  public Function<Path, Path> getPathAbsolutifier() {
     return pathRelativizer;
   }
 

@@ -42,7 +42,7 @@ public abstract class AbstractBuildRuleBuilder<T extends BuildRule> implements B
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   protected AbstractBuildRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    this.pathRelativizer = params.getPathRelativizer();
+    this.pathRelativizer = params.getPathAbsolutifier();
     this.ruleKeyBuilderFactory = params.getRuleKeyBuilderFactory();
   }
 

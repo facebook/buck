@@ -34,7 +34,7 @@ public class FakeAbstractBuildRuleBuilderParams implements AbstractBuildRuleBuil
   }
 
   @Override
-  public Function<Path, Path> getPathRelativizer() {
+  public Function<Path, Path> getPathAbsolutifier() {
     return IdentityPathAbsolutifier.getIdentityAbsolutifier();
   }
 
