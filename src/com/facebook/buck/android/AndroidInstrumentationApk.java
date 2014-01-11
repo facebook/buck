@@ -206,10 +206,12 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           manifest,
           /* packageType */ PackageType.INSTRUMENTED,
           apkUnderTest.getCpuFilters(),
-          /* preDexDeps */ ImmutableSet.<IntermediateDexRule>of(),
           /* rDotJavaNeedsDexing */ false);
 
-      return new AndroidInstrumentationApk(result.getParams(),
+      BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
+
+      return new AndroidInstrumentationApk(
+          newParams,
           manifest,
           apkUnderTest,
           buildRulesToExcludeFromDex,

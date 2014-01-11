@@ -1135,11 +1135,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           manifest,
           packageType,
           cpuFilters.build(),
-          preDexDeps,
           /* rDotJavaNeedsDexing */ !preDexDeps.isEmpty());
+      BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
 
       return new AndroidBinaryRule(
-          result.getParams(),
+          newParams,
           manifest,
           target,
           getBuildTargetsAsBuildRules(ruleResolver, classpathDepsBuilder.build()),

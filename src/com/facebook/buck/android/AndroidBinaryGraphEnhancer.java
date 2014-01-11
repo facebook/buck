@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -40,21 +39,23 @@ public class AndroidBinaryGraphEnhancer {
   private static final String UBER_R_DOT_JAVA_FLAVOR = "uber_r_dot_java";
   private static final String AAPT_PACKAGE_FLAVOR = "aapt_package";
 
-  private final BuildRuleParams originalParams;
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final ImmutableSet<BuildTarget> buildRulesToExcludeFromDex;
   private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
+  private final ImmutableSortedSet.Builder<BuildRule> totalDeps;
 
   AndroidBinaryGraphEnhancer(BuildRuleParams originalParams,
       ImmutableSet<BuildTarget> buildRulesToExcludeFromDex) {
-    this.originalParams = Preconditions.checkNotNull(originalParams);
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
     this.buildRulesToExcludeFromDex = buildRulesToExcludeFromDex;
     this.buildRuleBuilderParams = new DefaultBuildRuleBuilderParams(
         originalParams.getPathRelativizer(),
         originalParams.getRuleKeyBuilderFactory());
+    this.totalDeps = ImmutableSortedSet.naturalOrder();
+
+    totalDeps.addAll(originalDeps);
   }
 
   /**
@@ -100,7 +101,10 @@ public class AndroidBinaryGraphEnhancer {
               .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
       preDexDeps.add(preDex);
     }
-    return preDexDeps.build();
+
+    ImmutableSet<IntermediateDexRule> allPreDexDeps = preDexDeps.build();
+    totalDeps.addAll(allPreDexDeps);
+    return allPreDexDeps;
   }
 
   Result addBuildablesToCreateAaptResources(BuildRuleResolver ruleResolver,
@@ -110,7 +114,6 @@ public class AndroidBinaryGraphEnhancer {
       SourcePath manifest,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters,
-      ImmutableSet<IntermediateDexRule> preDexDeps,
       boolean rDotJavaNeedsDexing) {
     BuildTarget buildTargetForResources = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
     BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
@@ -137,35 +140,35 @@ public class AndroidBinaryGraphEnhancer {
     AaptPackageResources aaptPackageResources =
         (AaptPackageResources) aaptPackageResourcesBuildRule.getBuildable();
 
-    // Must create a new BuildRuleParams to supersede the one built by
-    // createBuildRuleParams(ruleResolver).
-    ImmutableSortedSet<BuildRule> totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(originalDeps)
-        .addAll(preDexDeps)
+    totalDeps
         .add(uberRDotJavaBuildRule)
         .add(aaptPackageResourcesBuildRule)
         .build();
-    BuildRuleParams buildRuleParams = originalParams.copyWithChangedDeps(totalDeps);
 
-    return new Result(buildRuleParams, uberRDotJava, aaptPackageResources);
+    return new Result(uberRDotJava, aaptPackageResources);
+  }
+
+  /**
+   * This should be called after all "createDeps" methods to get the total set of dependencies
+   * that the final AndroidBinaryRule should have.
+   *
+   * @return All dependencies for the AndroidBinaryRule.
+   */
+  ImmutableSortedSet<BuildRule> getTotalDeps() {
+    return totalDeps.build();
   }
 
   static class Result {
-    private final BuildRuleParams params;
     private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
 
-    public Result(BuildRuleParams params,
+    public Result(
         UberRDotJava uberRDotJava,
         AaptPackageResources aaptPackageBuildable) {
-      this.params = params;
       this.uberRDotJava = uberRDotJava;
       this.aaptPackageResources = aaptPackageBuildable;
     }
 
-    public BuildRuleParams getParams() {
-      return params;
-    }
 
     public UberRDotJava getUberRDotJava() {
       return uberRDotJava;
