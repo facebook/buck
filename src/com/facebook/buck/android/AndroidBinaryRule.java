@@ -430,14 +430,26 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     AndroidDexTransitiveDependencies dexTransitiveDependencies =
         findDexTransitiveDependencies();
     Path signedApkPath = getSignedApkPath();
-    addDxAndApkBuilderSteps(context,
-        steps,
+    DexFilesInfo dexFilesInfo = addFinalDxSteps(
+        context,
         transitiveDependencies,
         dexTransitiveDependencies,
         uberRDotJava.getResDirectories(),
-        nativeLibraryDirectories,
+        steps);
+
+    ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         aaptPackageResourcesBuildable.getResourceApkPath(),
-        signedApkPath);
+        getSignedApkPath(),
+        dexFilesInfo.primaryDexPath,
+        /* javaResourcesDirectories */ ImmutableSet.<String>of(),
+        nativeLibraryDirectories,
+        dexFilesInfo.secondaryDexZips,
+        dexTransitiveDependencies.pathsToThirdPartyJars,
+        keystore.getPathToStore(),
+        keystore.getPathToPropertiesFile(),
+        /* debugMode */ false);
+    steps.add(apkBuilderCommand);
+
 
     Path apkToAlign;
     // Optionally, compress the resources file in the .apk.
@@ -465,14 +477,15 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return steps.build();
   }
 
-  private void addDxAndApkBuilderSteps(BuildContext context,
-      ImmutableList.Builder<Step> steps,
+  /**
+   * Adds steps to do the final dexing or dex merging before building the apk.
+   */
+  private DexFilesInfo addFinalDxSteps(
+      BuildContext context,
       final AndroidTransitiveDependencies transitiveDependencies,
       final AndroidDexTransitiveDependencies dexTransitiveDependencies,
       ImmutableSet<String> resDirectories,
-      ImmutableSet<Path> nativeLibraryDirectories,
-      Path resourceApkPath,
-      Path signedApkPath) {
+      ImmutableList.Builder<Step> steps) {
     // Execute preprocess_java_classes_binary, if appropriate.
     ImmutableSet<Path> classpathEntriesToDex;
     if (preprocessJavaClassesBash.isPresent()) {
@@ -617,18 +630,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           FROYO_DEFLATE_LIMIT_BYTES));
     }
 
-    ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
-        resourceApkPath,
-        signedApkPath,
-        dexFile,
-        ImmutableSet.<String>of(),
-        nativeLibraryDirectories,
-        secondaryDexZips.build(),
-        dexTransitiveDependencies.pathsToThirdPartyJars,
-        keystore.getPathToStore(),
-        keystore.getPathToPropertiesFile(),
-        /* debugMode */ false);
-    steps.add(apkBuilderCommand);
+    return new DexFilesInfo(dexFile, secondaryDexZips.build());
   }
 
   /**
@@ -1025,6 +1027,19 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   public static Builder newAndroidBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
+  }
+
+  /**
+   * Encapsulates the information about dexing output that must be passed to ApkBuilder.
+   */
+  private static class DexFilesInfo {
+    final Path primaryDexPath;
+    final ImmutableSet<Path> secondaryDexZips;
+
+    DexFilesInfo(Path primaryDexPath, ImmutableSet<Path> secondaryDexZips) {
+      this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
+      this.secondaryDexZips = Preconditions.checkNotNull(secondaryDexZips);
+    }
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<AndroidBinaryRule> {
