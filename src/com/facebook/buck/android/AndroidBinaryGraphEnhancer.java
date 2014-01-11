@@ -112,7 +112,6 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableSet<IntermediateDexRule> preDexDeps,
       boolean rDotJavaNeedsDexing) {
-    BuildTarget originalBuildTarget = originalParams.getBuildTarget();
     BuildTarget buildTargetForResources = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
     BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
         UberRDotJava
@@ -146,11 +145,7 @@ public class AndroidBinaryGraphEnhancer {
         .add(uberRDotJavaBuildRule)
         .add(aaptPackageResourcesBuildRule)
         .build();
-    BuildRuleParams buildRuleParams = new BuildRuleParams(originalBuildTarget,
-        totalDeps,
-        originalParams.getVisibilityPatterns(),
-        originalParams.getPathRelativizer(),
-        originalParams.getRuleKeyBuilderFactory());
+    BuildRuleParams buildRuleParams = originalParams.copyWithChangedDeps(totalDeps);
 
     return new Result(buildRuleParams, uberRDotJava, aaptPackageResources);
   }

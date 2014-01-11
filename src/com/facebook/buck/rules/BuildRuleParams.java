@@ -50,6 +50,15 @@ public class BuildRuleParams {
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
   }
 
+  public BuildRuleParams copyWithChangedDeps(ImmutableSortedSet<BuildRule> newDeps) {
+    return new BuildRuleParams(
+        buildTarget,
+        newDeps,
+        visibilityPatterns,
+        pathRelativizer,
+        ruleKeyBuilderFactory);
+  }
+
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }

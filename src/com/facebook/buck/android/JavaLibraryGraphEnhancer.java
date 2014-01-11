@@ -74,12 +74,7 @@ public class JavaLibraryGraphEnhancer {
         .add(dummyRDotJavaBuildRule)
         .build();
 
-    BuildRuleParams newBuildRuleParams = new BuildRuleParams(
-        originalBuildRuleParams.getBuildTarget(),
-        totalDeps,
-        originalBuildRuleParams.getVisibilityPatterns(),
-        originalBuildRuleParams.getPathRelativizer(),
-        originalBuildRuleParams.getRuleKeyBuilderFactory());
+    BuildRuleParams newBuildRuleParams = originalBuildRuleParams.copyWithChangedDeps(totalDeps);
 
     return new Result(newBuildRuleParams, Optional.of(dummyRDotJava));
   }
