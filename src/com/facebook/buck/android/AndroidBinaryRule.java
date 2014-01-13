@@ -66,6 +66,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,6 +75,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
 import java.io.IOException;
@@ -906,9 +909,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       ImmutableList.Builder<Step> steps,
       Path primaryDexPath,
       Function<SourcePath, Path> sourcePathResolver) {
-    final Set<Path> primaryInputsToDex;
+    final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
-    final Optional<Path> secondaryInputsDir;
+    final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
 
     if (shouldSplitDex()) {
       Optional<Path> proguardMappingFile = Optional.absent();
@@ -933,7 +936,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // important because SmartDexingCommand will try to dx every entry in this directory.  It
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
-      Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
+      final Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
       steps.add(new MakeCleanDirectoryStep(secondaryZipDir));
 
       // Run the split-zip command which is responsible for dividing the large set of input
@@ -967,14 +970,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       secondaryDexDirectories.add(secondaryDexParentDir);
 
       // Adjust smart-dex inputs for the split-zip case.
-      primaryInputsToDex = ImmutableSet.of(primaryJarPath);
-      secondaryInputsDir = Optional.of(secondaryZipDir);
+      primaryInputsToDex = Suppliers.<Set<Path>>ofInstance(ImmutableSet.of(primaryJarPath));
+      Supplier<Multimap<Path, Path>> secondaryOutputToInputsMap =
+          splitZipCommand.getOutputToInputsMapSupplier(secondaryDexDir.get());
+      secondaryOutputToInputs = Optional.of(secondaryOutputToInputsMap);
     } else {
       // Simple case where our inputs are the natural classpath directories and we don't have
       // to worry about secondary jar/dex files.
-      primaryInputsToDex = classpathEntriesToDex;
+      primaryInputsToDex = Suppliers.ofInstance(classpathEntriesToDex);
       secondaryDexDir = Optional.absent();
-      secondaryInputsDir = Optional.absent();
+      secondaryOutputToInputs = Optional.absent();
     }
 
     // Stores checksum information from each invocation to intelligently decide when dx needs
@@ -992,15 +997,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // directly apply to the internal threading/parallelization details of various build commands
     // being executed.  For example, aapt is internally threaded by default when preprocessing
     // images.
+    EnumSet<DxStep.Option> dxOptions = PackageType.RELEASE.equals(packageType)
+        ? EnumSet.noneOf(DxStep.Option.class)
+        : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
     SmartDexingStep smartDexingCommand = new SmartDexingStep(
         primaryDexPath,
         primaryInputsToDex,
         secondaryDexDir,
-        secondaryInputsDir,
+        secondaryOutputToInputs,
         successDir,
         Optional.<Integer>absent(),
-        dexSplitMode.getDexStore(),
-        /* optimize */ PackageType.RELEASE.equals(packageType));
+        dxOptions);
     steps.add(smartDexingCommand);
   }
 

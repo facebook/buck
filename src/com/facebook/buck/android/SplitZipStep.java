@@ -31,9 +31,12 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
@@ -41,6 +44,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -86,6 +90,8 @@ public class SplitZipStep implements Step {
   private final boolean useLinearAllocSplitDex;
   private final long linearAllocHardLimit;
 
+  private boolean stepFinished;
+
   /**
    * @param inputPathsToSplit Input paths that would otherwise have been passed to a single dx --dex
    *     invocation.
@@ -129,6 +135,7 @@ public class SplitZipStep implements Step {
     this.pathToReportDir = Preconditions.checkNotNull(pathToReportDir);
     this.useLinearAllocSplitDex = useLinearAllocSplitDex;
     this.linearAllocHardLimit = linearAllocHardLimit;
+    this.stepFinished = false;
   }
 
   @Override
@@ -164,9 +171,10 @@ public class SplitZipStep implements Step {
         writeMetaList(secondaryMetaInfoWriter, secondaryZips, dexStore);
       }
 
+      stepFinished = true;
       return 0;
     } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
+      context.logError(e, "There was an error running SplitZipStep.");
       return 1;
     }
   }
@@ -277,7 +285,7 @@ public class SplitZipStep implements Step {
       Collection<File> jarFiles,
       DexStore dexStore) throws IOException {
     for (File secondary : jarFiles) {
-      String filename = SmartDexingStep.transformInputToDexOutput(secondary, dexStore);
+      String filename = transformInputToDexOutput(secondary, dexStore);
       String jarHash = hexSha1(secondary);
       String containedClass = findAnyClass(secondary);
       writer.write(String.format("%s %s %s",
@@ -320,4 +328,31 @@ public class SplitZipStep implements Step {
         ZIP_SIZE_HARD_LIMIT
     );
   }
+
+  public Supplier<Multimap<Path, Path>> getOutputToInputsMapSupplier(
+      final Path secondaryOutputDir) {
+    return new Supplier<Multimap<Path, Path>>() {
+      @Override
+      public Multimap<Path, Path> get() {
+        Preconditions.checkState(stepFinished,
+            "SplitZipStep must complete successfully before listing its outputs.");
+        ImmutableMultimap.Builder<Path, Path> builder = ImmutableMultimap.builder();
+        for (File inputFile : secondaryJarDir.toFile().listFiles()) {
+          Path outputDexPath = secondaryOutputDir.resolve(
+              transformInputToDexOutput(inputFile, dexStore));
+          builder.put(outputDexPath, Paths.get(inputFile.getPath()));
+        }
+        return builder.build();
+      }
+    };
+  }
+
+  private static String transformInputToDexOutput(File file, DexStore dexStore) {
+    if (DexStore.XZ == dexStore) {
+      return Files.getNameWithoutExtension(file.getName()) + ".dex.jar.xz";
+    } else {
+      return Files.getNameWithoutExtension(file.getName()) + ".dex.jar";
+    }
+  }
+
 }
