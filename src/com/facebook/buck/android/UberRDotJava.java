@@ -38,6 +38,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -65,6 +66,7 @@ import javax.annotation.Nullable;
  *       in an APK.
  *   <li>Generating a single {@code R.java} file from those directories (aka the uber-R.java).
  *   <li>Compiling the single {@code R.java} file.
+ *   <li>Dexing the single {@code R.java} to a {@code classes.dex.jar} file (Optional).
  * </ul>
  * <p>
  * Clients of this Buildable may need to know:
@@ -73,12 +75,13 @@ import javax.annotation.Nullable;
  *       as arguments to aapt to create the unsigned APK, as well as arguments to create a
  *       ProGuard config, if appropriate.)
  *   <li>The set of non-english {@code strings.xml} files identified by the resource filter.
- *   <li>The path to the R.java file.
+ *   <li>The path to the {@code R.java} file.
  * </ul>
  */
 public class UberRDotJava extends AbstractBuildable implements
     InitializableFromDisk<BuildOutput> {
 
+  public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
   private static final String RES_DIRECTORIES_KEY = "res_directories";
   private static final String NON_ENGLISH_STRING_FILES_KEY = "non_english_string_files";
 
@@ -111,24 +114,28 @@ public class UberRDotJava extends AbstractBuildable implements
   private final ResourceCompressionMode resourceCompressionMode;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
+  private final boolean rDotJavaNeedsDexing;
 
   @Nullable private BuildOutput buildOutput;
 
   UberRDotJava(BuildTarget buildTarget,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourceFilter,
-      AndroidResourceDepsFinder androidResourceDepsFinder) {
+      AndroidResourceDepsFinder androidResourceDepsFinder,
+      boolean rDotJavaNeedsDexing) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
+    this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder
         .set("resourceCompressionMode", resourceCompressionMode.toString())
-        .set("resourceFilter", resourceFilter.getDescription());
+        .set("resourceFilter", resourceFilter.getDescription())
+        .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing);
   }
 
   @Override
@@ -147,6 +154,34 @@ public class UberRDotJava extends AbstractBuildable implements
 
   public ImmutableSet<Path> getNonEnglishStringFiles() {
     return getBuildOutput().nonEnglishStringFiles;
+  }
+
+  public Optional<DexWithClasses> getRDotJavaDexWithClasses() {
+    Preconditions.checkState(rDotJavaNeedsDexing,
+        "Error trying to get R.java dex file: R.java is not supposed to be dexed.");
+
+    final Optional<Integer> linearAllocSizeEstimate = getBuildOutput().rDotJavaDexLinearAllocEstimate;
+    if (!linearAllocSizeEstimate.isPresent()) {
+      return Optional.absent();
+    }
+
+    return Optional.<DexWithClasses>of(new DexWithClasses() {
+      @Override
+      public Path getPathToDexFile() {
+        return DexRDotJavaStep.getPathToDexFile(buildTarget);
+      }
+
+      @Override
+      public ImmutableSet<String> getClassNames() {
+        throw new RuntimeException("Since R.java is unconditionally packed in the primary dex, no" +
+            "one should call this method.");
+      }
+
+      @Override
+      public int getSizeEstimate() {
+        return linearAllocSizeEstimate.get();
+      }
+    });
   }
 
   BuildTarget getBuildTarget() {
@@ -191,12 +226,29 @@ public class UberRDotJava extends AbstractBuildable implements
           resDirectories, rDotJavaPackages, steps, buildableContext);
     }
 
+    final Optional<DexRDotJavaStep> dexRDotJava = rDotJavaNeedsDexing && !resDirectories.isEmpty()
+        ? Optional.of(DexRDotJavaStep.create(buildTarget, getPathToCompiledRDotJavaFiles()))
+        : Optional.<DexRDotJavaStep>absent();
+    if (dexRDotJava.isPresent()) {
+      steps.add(dexRDotJava.get());
+      buildableContext.recordArtifact(DexRDotJavaStep.getPathToDexFile(buildTarget));
+    }
+
     steps.add(new AbstractExecutionStep("record_build_output") {
       @Override
       public int execute(ExecutionContext context) {
         buildableContext.addMetadata(
-            RES_DIRECTORIES_KEY, Iterables.transform(resDirectories, Functions.toStringFunction()));
-        buildableContext.addMetadata(NON_ENGLISH_STRING_FILES_KEY, nonEnglishStringFiles.get());
+            RES_DIRECTORIES_KEY,
+            Iterables.transform(resDirectories, Functions.toStringFunction()));
+        buildableContext.addMetadata(
+            NON_ENGLISH_STRING_FILES_KEY,
+            nonEnglishStringFiles.get());
+
+        if (dexRDotJava.isPresent()) {
+          buildableContext.addMetadata(
+              R_DOT_JAVA_LINEAR_ALLOC_SIZE,
+              dexRDotJava.get().getLinearAllocSizeEstimate().toString());
+        }
         return 0;
       }
     });
@@ -206,11 +258,17 @@ public class UberRDotJava extends AbstractBuildable implements
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    Optional<String> linearAllocSizeValue = onDiskBuildInfo.getValue(R_DOT_JAVA_LINEAR_ALLOC_SIZE);
+    Optional<Integer> linearAllocSize = linearAllocSizeValue.isPresent()
+        ? Optional.of(Integer.parseInt(linearAllocSizeValue.get()))
+        : Optional.<Integer>absent();
+
     return new BuildOutput(
       ImmutableSet.copyOf(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get()),
       FluentIterable.from(onDiskBuildInfo.getValues(NON_ENGLISH_STRING_FILES_KEY).get())
           .transform(MorePaths.TO_PATH)
-          .toSet()
+          .toSet(),
+      linearAllocSize
     );
   }
 
@@ -231,11 +289,15 @@ public class UberRDotJava extends AbstractBuildable implements
   public static class BuildOutput {
     private final ImmutableSet<String> resDirectories;
     private final ImmutableSet<Path> nonEnglishStringFiles;
+    private final Optional<Integer> rDotJavaDexLinearAllocEstimate;
 
     public BuildOutput(ImmutableSet<String> resDirectories,
-        ImmutableSet<Path> nonEnglishStringFiles) {
+        ImmutableSet<Path> nonEnglishStringFiles,
+        Optional<Integer> rDotJavaDexLinearAllocSizeEstimate) {
       this.resDirectories = Preconditions.checkNotNull(resDirectories);
       this.nonEnglishStringFiles = Preconditions.checkNotNull(nonEnglishStringFiles);
+      this.rDotJavaDexLinearAllocEstimate =
+          Preconditions.checkNotNull(rDotJavaDexLinearAllocSizeEstimate);
     }
   }
 
@@ -367,10 +429,10 @@ public class UberRDotJava extends AbstractBuildable implements
 
   static class Builder extends AbstractBuildable.Builder {
 
-    @Nullable private BuildTarget buildTarget;
     @Nullable private ResourceCompressionMode resourceCompressionMode;
     @Nullable private FilterResourcesStep.ResourceFilter resourceFilter;
     @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
+    private boolean rDotJavaNeedsDexing = false;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -387,28 +449,38 @@ public class UberRDotJava extends AbstractBuildable implements
       return this;
     }
 
-    public Builder setAllParams(BuildTarget buildTarget,
-        ResourceCompressionMode resourceCompressionMode,
-        ResourceFilter resourceFilter,
-        AndroidResourceDepsFinder androidResourceDepsFinder) {
-      this.buildTarget = buildTarget;
-      this.resourceCompressionMode = resourceCompressionMode;
-      this.resourceFilter = resourceFilter;
-      this.androidResourceDepsFinder = androidResourceDepsFinder;
+    public Builder setResourceCompressionMode(ResourceCompressionMode mode) {
+      this.resourceCompressionMode = mode;
+      return this;
+    }
 
-      // Add the android_resource rules as deps.
-      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResourcesUnsorted()) {
-        addDep(dep.getBuildTarget());
-      }
+    public Builder setResourceFilter(ResourceFilter resourceFilter) {
+      this.resourceFilter = resourceFilter;
+      return this;
+    }
+
+    public Builder setAndroidResourceDepsFinder(AndroidResourceDepsFinder resourceDepsFinder) {
+      this.androidResourceDepsFinder = resourceDepsFinder;
+      return this;
+    }
+
+    public Builder setRDotJavaNeedsDexing(boolean rDotJavaNeedsDexing) {
+      this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
       return this;
     }
 
     @Override
     protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+      // Add the android_resource rules as deps.
+      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResourcesUnsorted()) {
+        addDep(dep.getBuildTarget());
+      }
+      
       return new UberRDotJava(buildTarget,
           resourceCompressionMode,
           resourceFilter,
-          androidResourceDepsFinder);
+          androidResourceDepsFinder,
+          rDotJavaNeedsDexing);
     }
   }
 }

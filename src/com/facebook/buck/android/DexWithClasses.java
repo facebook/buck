@@ -20,6 +20,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Comparator;
 
 import javax.annotation.Nullable;
 
@@ -38,8 +39,8 @@ public interface DexWithClasses {
   /**
    * @return A value that estimates how much space the Dalvik code represented by this object will
    *     take up in a DEX file. The units for this estimate are not important, so long as they are
-   *     consistent with those used by {@link PreDexMergeStep} to determine how secondary DEX files
-   *     should be packed.
+   *     consistent with those used by {@link BucketPreDexedFilesStep} to determine how secondary DEX
+   *     files should be packed.
    */
   public int getSizeEstimate();
 
@@ -74,4 +75,20 @@ public interface DexWithClasses {
       };
     }
   };
+
+  public static Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
+      new Comparator<DexWithClasses>() {
+        @Override
+        public int compare(DexWithClasses o1, DexWithClasses o2) {
+          return o1.getPathToDexFile().compareTo(o2.getPathToDexFile());
+        }
+      };
+
+  public static Function <DexWithClasses, Path> TO_PATH =
+      new Function<DexWithClasses, Path>() {
+        @Override
+        public Path apply(DexWithClasses input) {
+          return input.getPathToDexFile();
+        }
+      };
 }
