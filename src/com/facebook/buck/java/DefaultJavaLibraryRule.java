@@ -202,8 +202,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     // the iteration order of the sets passed to the constructor changes. See
     // AbstractBuildRule.getInputsToCompareToOutput() for details.
     inputsToConsiderForCachingPurposes = ImmutableList.<Path>builder()
-        .addAll(srcs)
-        .addAll(SourcePaths.filterInputsToCompareToOutput(resources))
+        .addAll(this.srcs)
+        .addAll(SourcePaths.filterInputsToCompareToOutput(this.resources))
         .build();
 
     outputClasspathEntriesSupplier =

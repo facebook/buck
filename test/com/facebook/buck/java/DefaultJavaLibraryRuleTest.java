@@ -55,6 +55,8 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.Genrule;
@@ -62,6 +64,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -73,6 +76,7 @@ import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -99,6 +103,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1089,6 +1094,61 @@ public class DefaultJavaLibraryRuleTest {
                                          ImmutableSet.of("com.facebook.Foo", "com.facebook.Bar")));
 
     EasyMock.verify(context);
+  }
+
+  @Test
+  public void testRuleKeyIsOrderInsensitiveForSourcesAndResources() throws IOException {
+    AbstractBuildRuleBuilderParams params = new FakeAbstractBuildRuleBuilderParams();
+
+    // Note that these filenames were deliberately chosen to have identical hashes to maximize
+    // the chance of order-sensitivity when being inserted into a HashMap.  Just using
+    // {foo,bar}.{java,txt} resulted in a passing test even for the old broken code.
+
+    DefaultJavaLibraryRule rule1 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(params)
+        .setBuildTarget(BuildTargetFactory.newInstance("//lib:lib"))
+        .addSrc(Paths.get("agifhbkjdec.java"))
+        .addSrc(Paths.get("bdeafhkgcji.java"))
+        .addSrc(Paths.get("bdehgaifjkc.java"))
+        .addSrc(Paths.get("cfiabkjehgd.java"))
+        .addResource(new FileSourcePath("becgkaifhjd.txt"))
+        .addResource(new FileSourcePath("bkhajdifcge.txt"))
+        .addResource(new FileSourcePath("cabfghjekid.txt"))
+        .addResource(new FileSourcePath("chkdbafijge.txt"))
+        .build(new BuildRuleResolver());
+
+    DefaultJavaLibraryRule rule2 = DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(params)
+        .setBuildTarget(BuildTargetFactory.newInstance("//lib:lib"))
+        .addSrc(Paths.get("cfiabkjehgd.java"))
+        .addSrc(Paths.get("bdehgaifjkc.java"))
+        .addSrc(Paths.get("bdeafhkgcji.java"))
+        .addSrc(Paths.get("agifhbkjdec.java"))
+        .addResource(new FileSourcePath("chkdbafijge.txt"))
+        .addResource(new FileSourcePath("cabfghjekid.txt"))
+        .addResource(new FileSourcePath("bkhajdifcge.txt"))
+        .addResource(new FileSourcePath("becgkaifhjd.txt"))
+        .build(new BuildRuleResolver());
+
+    Collection<Path> inputs1 = rule1.getInputsToCompareToOutput();
+    Collection<Path> inputs2 = rule2.getInputsToCompareToOutput();
+    assertEquals(ImmutableList.copyOf(inputs1), ImmutableList.copyOf(inputs2));
+
+    ImmutableMap.Builder<String, String> fileHashes = ImmutableMap.builder();
+    for (String filename : ImmutableList.of(
+        "agifhbkjdec.java", "bdeafhkgcji.java", "bdehgaifjkc.java", "cfiabkjehgd.java",
+        "becgkaifhjd.txt", "bkhajdifcge.txt", "cabfghjekid.txt", "chkdbafijge.txt")) {
+      fileHashes.put(filename, Hashing.sha1().hashString(filename, Charsets.UTF_8).toString());
+    }
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new FakeRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(fileHashes.build()));
+
+    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(rule1);
+    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(rule2);
+    rule1.appendToRuleKey(builder1);
+    rule2.appendToRuleKey(builder2);
+    RuleKey.Builder.RuleKeyPair pair1 = builder1.build();
+    RuleKey.Builder.RuleKeyPair pair2 = builder2.build();
+    assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
+    assertEquals(pair1.getRuleKeyWithoutDeps(), pair2.getRuleKeyWithoutDeps());
   }
 
 
