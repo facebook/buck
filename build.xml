@@ -285,7 +285,7 @@
     </pmd>
   </target>
 
-  <target name="test" depends="java-test, py-test, lint" description="runs the unit tests" />
+  <target name="test" depends="java-test, py-test" description="runs the unit tests" />
 
   <target name="javadoc" description="generates HTML documentation for Java code"
       depends="compile">
