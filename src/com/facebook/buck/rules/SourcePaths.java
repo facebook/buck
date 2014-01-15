@@ -19,10 +19,13 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Collection;
+
+import javax.annotation.Nullable;
 
 /**
  * Utilities for dealing with {@link SourcePath}s.
@@ -60,5 +63,18 @@ public class SourcePaths {
       }
     };
     return Iterables.transform(sourcePaths, transform);
+  }
+
+  public static ImmutableSortedSet<SourcePath> toSortedSourcePaths(
+      @Nullable ImmutableSortedSet<Path> paths) {
+    if (paths == null) {
+      return ImmutableSortedSet.of();
+    }
+
+    ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
+    for (Path path : paths) {
+      sourcePaths.add(new FileSourcePath(path.toString()));
+    }
+    return sourcePaths.build();
   }
 }

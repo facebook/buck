@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.Keystore;
@@ -28,12 +29,17 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 
 
@@ -76,6 +82,54 @@ public class AndroidResourceRuleTest {
             Paths.get("java/src/com/facebook/base/res/drawable/C.xml"),
             Paths.get("java/src/com/facebook/base/res/drawable/E.xml")),
         androidResourceRule.getInputsToCompareToOutput());
+  }
+
+  @Test
+  public void testRuleKeyForDifferentInputFilenames() throws IOException {
+    BuildTarget buildTarget = new BuildTarget("//java/src/com/facebook/base", "res");
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
+        buildTarget,
+        ImmutableSortedSet.<BuildRule>of());
+    AndroidResourceRule androidResourceRule1 = new AndroidResourceRule(
+        buildRuleParams,
+        Paths.get("java/src/com/facebook/base/res"),
+        ImmutableSortedSet.of(
+            Paths.get("java/src/com/facebook/base/res/drawable/A.xml")),
+        "com.facebook",
+        Paths.get("java/src/com/facebook/base/assets"),
+        ImmutableSortedSet.of(
+            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")),
+        Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
+        /* hasWhitelisted */ false);
+    AndroidResourceRule androidResourceRule2 = new AndroidResourceRule(
+        buildRuleParams,
+        Paths.get("java/src/com/facebook/base/res"),
+        ImmutableSortedSet.of(
+            Paths.get("java/src/com/facebook/base/res/drawable/C.xml")),
+        "com.facebook",
+        Paths.get("java/src/com/facebook/base/assets"),
+        ImmutableSortedSet.of(
+            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")),
+        Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
+        /* hasWhitelisted */ false);
+
+    String commonHash = Strings.repeat("a", 40);
+    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
+        "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
+        "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
+        "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
+        "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
+
+    RuleKey.Builder.RuleKeyPair pair1 = androidResourceRule1.appendToRuleKey(
+        RuleKey.builder(androidResourceRule1, fakeFileHashCache))
+        .build();
+    RuleKey.Builder.RuleKeyPair pair2 = androidResourceRule2.appendToRuleKey(
+        RuleKey.builder(androidResourceRule2, fakeFileHashCache))
+        .build();
+
+    assertNotEquals("The two android_resource rules should have different rule keys.",
+        pair1.getRuleKeyWithoutDeps(),
+        pair2.getRuleKeyWithoutDeps());
   }
 
   /**
