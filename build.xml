@@ -82,7 +82,7 @@
 
   <!-- Default target so that a command line build can 
        do more than one thing.  'success' must be the last dependency. -->
-  <target name="default" depends="compile, dx, client, success" />
+  <target name="default" depends="compile, dx, client, javacc-tests, success" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
