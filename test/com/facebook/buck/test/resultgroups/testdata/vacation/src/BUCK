@@ -1,0 +1,56 @@
+java_library(
+  name = 'vacation',
+  srcs = [],
+  visibility = ['//test:vacation'],
+  deps = [':location', ':passport', ':medicine', ':currency'],
+)
+
+java_library(
+  name = 'location',
+  srcs = [],
+  visibility = ['//test:location'],
+  deps = [':readbook', ':havemind'],
+)
+
+java_library(
+  name = 'readbook',
+  srcs = [],
+  visibility = ['//test:readbook'],
+  deps = [],
+)
+
+java_library(
+  name = 'havemind',
+  srcs = [],
+  visibility = ['//test:havemind'],
+  deps = [],
+)
+
+java_library(
+  name = 'passport',
+  srcs = [],
+  visibility = ['//test:passport'],
+  deps = [':weephoto'],
+)
+
+java_library(
+  name = 'weephoto',
+  srcs = [],
+  visibility = ['//test:weephoto'],
+  deps = [],
+)
+
+java_library(
+  name = 'medicine',
+  srcs = [],
+  visibility = ['//test:medicine'],
+  deps = [],
+)
+
+java_library(
+  name = 'currency',
+  srcs = [],
+  visibility = ['//test:currency'],
+  deps = [],
+)
+

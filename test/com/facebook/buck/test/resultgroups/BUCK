@@ -2,6 +2,7 @@ java_library(
   name = 'fixtures',
   srcs = [
     'MockingDSL.java',
+    'VacationFixture.java',
   ],
   deps = [
     '//lib:easymock',
@@ -19,6 +20,7 @@ java_test(
   name = 'resultgroups',
   srcs = [
     'MockedMealTest.java',
+    'VacationIntegrationTest.java',
   ],
   source_under_test = ['//src/com/facebook/buck/test/resultgroups:resultgroups'],
   deps = [
@@ -33,6 +35,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test/resultgroups:resultgroups',
     '//src/com/facebook/buck/test:test',
+    '//test/com/facebook/buck/testutil/integration:integration',
   ],
   visibility = ['PUBLIC'],
 )

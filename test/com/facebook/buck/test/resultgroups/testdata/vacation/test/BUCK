@@ -1,0 +1,61 @@
+java_library(
+  name = 'flagfile',
+  srcs = ['FlagFile.java'],
+)
+
+java_test(
+  name = 'vacation',
+  srcs = ['VacationTest.java'],
+  source_under_test = ['//src:vacation'],
+  deps = [':flagfile', '//lib:junit', '//src:vacation'],
+)
+
+java_test(
+  name = 'location',
+  srcs = ['LocationTest.java'],
+  source_under_test = ['//src:location'],
+  deps = [':flagfile', '//lib:junit', '//src:location'],
+)
+
+java_test(
+  name = 'readbook',
+  srcs = ['ReadBookTest.java'],
+  source_under_test = ['//src:readbook'],
+  deps = [':flagfile', '//lib:junit', '//src:readbook'],
+)
+
+java_test(
+  name = 'havemind',
+  srcs = ['HaveMindTest.java'],
+  source_under_test = ['//src:havemind'],
+  deps = [':flagfile', '//lib:junit', '//src:havemind'],
+)
+
+java_test(
+  name = 'passport',
+  srcs = ['PassportTest.java'],
+  source_under_test = ['//src:passport'],
+  deps = [':flagfile', '//lib:junit', '//src:passport'],
+)
+
+java_test(
+  name = 'weephoto',
+  srcs = ['WeePhotoTest.java'],
+  source_under_test = ['//src:weephoto'],
+  deps = [':flagfile', '//lib:junit', '//src:weephoto'],
+)
+
+java_test(
+  name = 'medicine',
+  srcs = ['MedicineTest.java'],
+  source_under_test = ['//src:medicine'],
+  deps = [':flagfile', '//lib:junit', '//src:medicine'],
+)
+
+java_test(
+  name = 'currency',
+  srcs = ['CurrencyTest.java'],
+  source_under_test = ['//src:currency'],
+  deps = [':flagfile', '//lib:junit', '//src:currency'],
+)
+

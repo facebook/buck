@@ -18,6 +18,7 @@
       test/com/facebook/buck/parser/testdata, \
       test/com/facebook/buck/shell/testdata, \
       test/com/facebook/buck/test/labels/testdata, \
+      test/com/facebook/buck/test/resultgroups/testdata, \
       third-party/java/dalvik-jelly-bean
 
     # Common temp file patterns:
