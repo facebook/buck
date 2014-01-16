@@ -57,7 +57,7 @@ public class AaptPackageResourcesTest {
    */
   @Test
   public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() throws IOException {
-    UberRDotJavaBuildable uberRDotJava = EasyMock.createMock(UberRDotJavaBuildable.class);
+    UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
     EasyMock.replay(uberRDotJava);
 
     // One android_binary rule that depends on the two android_library rules.
@@ -112,7 +112,7 @@ public class AaptPackageResourcesTest {
         null, /* resDirectory */
         "java/src/com/facebook/base/assets2",
         null /* nativeLibsDirectory */);
-    UberRDotJavaBuildable uberRDotJava = EasyMock.createMock(UberRDotJavaBuildable.class);
+    UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
     EasyMock.replay(uberRDotJava);
 
     AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver
@@ -182,7 +182,7 @@ public class AaptPackageResourcesTest {
         null, /* resDirectory */
         "facebook/base/assets2",
         null /* nativeLibsDirectory */);
-    UberRDotJavaBuildable uberRDotJava = EasyMock.createMock(UberRDotJavaBuildable.class);
+    UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
     EasyMock.replay(uberRDotJava);
 
     // One android_binary rule that depends on the two android_library rules.

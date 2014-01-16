@@ -356,7 +356,7 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
     Set<Path> resourceDirectories = ImmutableSet.of(Paths.get("one"), Paths.get("two"));
 
-    FilterResourcesStep filterResourcesStep = buildRule.getUberRDotJavaBuildable()
+    FilterResourcesStep filterResourcesStep = buildRule.getUberRDotJava()
         .createFilterResourcesStep(resourceDirectories,
             /* whitelistedStringsDir */ ImmutableSet.<String>of());
 

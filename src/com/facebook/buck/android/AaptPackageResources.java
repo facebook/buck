@@ -70,7 +70,7 @@ public class AaptPackageResources extends AbstractBuildable {
 
   private final BuildTarget buildTarget;
   private final SourcePath manifest;
-  private final UberRDotJavaBuildable uberRDotJavaBuildable;
+  private final UberRDotJava uberRDotJava;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
 
@@ -79,12 +79,12 @@ public class AaptPackageResources extends AbstractBuildable {
 
   AaptPackageResources(BuildTarget buildTarget,
       SourcePath manifest,
-      UberRDotJavaBuildable uberRDotJavaBuildable,
+      UberRDotJava uberRDotJava,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.manifest = Preconditions.checkNotNull(manifest);
-    this.uberRDotJavaBuildable = Preconditions.checkNotNull(uberRDotJavaBuildable);
+    this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
     this.outputGenDirectory = String.format("%s/%s",
@@ -120,17 +120,17 @@ public class AaptPackageResources extends AbstractBuildable {
     steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
     buildableContext.recordArtifact(getAndroidManifestXml());
 
-    final AndroidTransitiveDependencies transitiveDependencies = uberRDotJavaBuildable
+    final AndroidTransitiveDependencies transitiveDependencies = uberRDotJava
         .getAndroidTransitiveDependencies();
 
     // If the strings should be stored as assets, then we need to create the .fbstr bundles.
-    final ImmutableSet<String> resDirectories = uberRDotJavaBuildable.getResDirectories();
+    final ImmutableSet<String> resDirectories = uberRDotJava.getResDirectories();
     if (!resDirectories.isEmpty() && isStoreStringsAsAssets()) {
       Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
       steps.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
       steps.add(new CompileStringsStep(
-          uberRDotJavaBuildable.getNonEnglishStringFiles(),
-          uberRDotJavaBuildable.getPathToGeneratedRDotJavaSrcFiles(),
+          uberRDotJava.getNonEnglishStringFiles(),
+          uberRDotJava.getPathToGeneratedRDotJavaSrcFiles(),
           tmpStringsDirPath));
     }
 
@@ -227,7 +227,7 @@ public class AaptPackageResources extends AbstractBuildable {
   }
 
   private boolean isStoreStringsAsAssets() {
-    return uberRDotJavaBuildable.isStoreStringsAsAssets();
+    return uberRDotJava.isStoreStringsAsAssets();
   }
 
   /**
@@ -306,7 +306,7 @@ public class AaptPackageResources extends AbstractBuildable {
   static class Builder extends AbstractBuildable.Builder {
 
     @Nullable private SourcePath manifest;
-    @Nullable private UberRDotJavaBuildable uberRDotJavaBuildable;
+    @Nullable private UberRDotJava uberRDotJava;
     @Nullable private PackageType packageType;
     @Nullable private ImmutableSet<TargetCpuType> cpuFilters;
 
@@ -327,16 +327,16 @@ public class AaptPackageResources extends AbstractBuildable {
 
     public Builder setAllParams(
         SourcePath manifest,
-        UberRDotJavaBuildable uberRDotJavaBuildable,
+        UberRDotJava uberRDotJava,
         ImmutableSet<BuildTarget> nativeTargetsWithAssets,
         PackageType packageType,
         ImmutableSet<TargetCpuType> cpuFilters) {
       this.manifest = manifest;
-      this.uberRDotJavaBuildable = uberRDotJavaBuildable;
+      this.uberRDotJava = uberRDotJava;
       this.packageType = packageType;
       this.cpuFilters = cpuFilters;
 
-      addDep(uberRDotJavaBuildable.getBuildTarget());
+      addDep(uberRDotJava.getBuildTarget());
       if (manifest instanceof BuildTargetSourcePath) {
         addDep(((BuildTargetSourcePath) manifest).getTarget());
       }
@@ -351,7 +351,7 @@ public class AaptPackageResources extends AbstractBuildable {
     protected AaptPackageResources newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
       return new AaptPackageResources(getBuildTarget(),
           manifest,
-          uberRDotJavaBuildable,
+          uberRDotJava,
           packageType,
           cpuFilters);
     }

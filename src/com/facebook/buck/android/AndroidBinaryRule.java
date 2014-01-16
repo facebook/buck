@@ -21,7 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import com.facebook.buck.android.UberRDotJavaBuildable.ResourceCompressionMode;
+import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.AccumulateClassNamesStep;
@@ -172,7 +172,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ImmutableSet<IntermediateDexRule> preDexDeps;
-  private final UberRDotJavaBuildable uberRDotJavaBuildable;
+  private final UberRDotJava uberRDotJava;
   private final AaptPackageResources aaptPackageResourcesBuildable;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
@@ -204,7 +204,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Optional<SourcePath> primaryDexClassesFile,
       Set<TargetCpuType> cpuFilters,
       Set<IntermediateDexRule> preDexDeps,
-      UberRDotJavaBuildable uberRDotJavaBuildable,
+      UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResourcesBuildable,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
@@ -229,7 +229,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         getBuildTarget().getBasePathWithSlash());
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.preDexDeps = ImmutableSet.copyOf(preDexDeps);
-    this.uberRDotJavaBuildable = Preconditions.checkNotNull(uberRDotJavaBuildable);
+    this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.aaptPackageResourcesBuildable = Preconditions.checkNotNull(aaptPackageResourcesBuildable);
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
@@ -301,8 +301,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return this.cpuFilters;
   }
 
-  public UberRDotJavaBuildable getUberRDotJavaBuildable() {
-    return uberRDotJavaBuildable;
+  public UberRDotJava getUberRDotJava() {
+    return uberRDotJava;
   }
 
   public ImmutableSortedSet<BuildRule> getPreprocessJavaClassesDeps() {
@@ -433,7 +433,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         steps,
         transitiveDependencies,
         dexTransitiveDependencies,
-        uberRDotJavaBuildable.getResDirectories(),
+        uberRDotJava.getResDirectories(),
         nativeLibraryDirectories,
         aaptPackageResourcesBuildable.getResourceApkPath(),
         signedApkPath);
@@ -741,8 +741,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   public AndroidDexTransitiveDependencies findDexTransitiveDependencies() {
-    return androidResourceDepsFinder.getAndroidDexTransitiveDependencies(
-        uberRDotJavaBuildable);
+    return androidResourceDepsFinder.getAndroidDexTransitiveDependencies(uberRDotJava);
   }
 
   /**
@@ -1168,7 +1167,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           primaryDexClassesFile,
           cpuFilters.build(),
           preDexDeps,
-          result.getUberRDotJavaBuildable(),
+          result.getUberRDotJava(),
           result.getAaptPackageResources(),
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,

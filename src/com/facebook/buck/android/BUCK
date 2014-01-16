@@ -77,7 +77,7 @@ RULES_SRCS = [
   'PreDexMergeStep.java',
   'RobolectricTestBuildRuleFactory.java',
   'RobolectricTestRule.java',
-  'UberRDotJavaBuildable.java',
+  'UberRDotJava.java',
 ]
 java_library(
   name = 'rules',

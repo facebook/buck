@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import com.facebook.buck.android.UberRDotJavaBuildable.ResourceCompressionMode;
+import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.model.BuildTarget;
@@ -66,7 +66,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       SourcePath manifest,
       AndroidBinaryRule apkUnderTest,
       ImmutableSet<BuildRule> buildRulesToExcludeFromDex,
-      UberRDotJavaBuildable uberRDotJavaBuildable,
+      UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResourcesBuildable,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk,
@@ -98,7 +98,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         // logic is used for an android_instrumentation_apk().
         /* preDexDeps */ ImmutableSet.<IntermediateDexRule>of(),
 
-        uberRDotJavaBuildable,
+        uberRDotJava,
         aaptPackageResourcesBuildable,
         apkUnderTest.getPreprocessJavaClassesDeps(),
         apkUnderTest.getPreprocessJavaClassesBash(),
@@ -226,7 +226,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           manifest,
           apkUnderTest,
           buildRulesToExcludeFromDex,
-          result.getUberRDotJavaBuildable(),
+          result.getUberRDotJava(),
           result.getAaptPackageResources(),
           androidResourceDepsFinder,
           getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()),

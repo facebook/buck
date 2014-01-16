@@ -59,13 +59,12 @@ public class AndroidTransitiveDependencyGraph {
   }
 
   /**
-   * @param uberRDotJavaBuildable that may have produced {@code R.class} files that need to be
-   *     dexed.
+   * @param uberRDotJava that may have produced {@code R.class} files that need to be dexed.
    */
   public AndroidDexTransitiveDependencies findDexDependencies(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
       ImmutableSet<BuildRule> buildRulesToExcludeFromDex,
-      UberRDotJavaBuildable uberRDotJavaBuildable) {
+      UberRDotJava uberRDotJava) {
     // These are paths that will be dex'ed. They may be either directories of compiled .class files,
     // or paths to compiled JAR files.
     final ImmutableSet.Builder<String> pathsToDexBuilder = ImmutableSet.builder();
@@ -110,7 +109,7 @@ public class AndroidTransitiveDependencyGraph {
     ImmutableSet<String> rDotJavaPackages = details.rDotJavaPackages;
     Optional<Path> pathToCompiledRDotJavaFilesOptional;
     if (!rDotJavaPackages.isEmpty()) {
-      Path pathToCompiledRDotJavaFiles = uberRDotJavaBuildable.getPathToCompiledRDotJavaFiles();
+      Path pathToCompiledRDotJavaFiles = uberRDotJava.getPathToCompiledRDotJavaFiles();
       pathsToDexBuilder.add(pathToCompiledRDotJavaFiles.toString());
 
       // TODO: Ultimately, pathToCompiledRDotJavaFiles should be pre-dexed so that it does not need

@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import com.facebook.buck.android.UberRDotJavaBuildable.BuildOutput;
+import com.facebook.buck.android.UberRDotJava.BuildOutput;
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -76,7 +76,7 @@ import javax.annotation.Nullable;
  *   <li>The path to the R.java file.
  * </ul>
  */
-public class UberRDotJavaBuildable extends AbstractBuildable implements
+public class UberRDotJava extends AbstractBuildable implements
     InitializableFromDisk<BuildOutput> {
 
   private static final String RES_DIRECTORIES_KEY = "res_directories";
@@ -114,7 +114,7 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
 
   @Nullable private BuildOutput buildOutput;
 
-  UberRDotJavaBuildable(BuildTarget buildTarget,
+  UberRDotJava(BuildTarget buildTarget,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourceFilter,
       AndroidResourceDepsFinder androidResourceDepsFinder) {
@@ -361,7 +361,7 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
         buildTarget.getShortName());
   }
 
-  public static Builder newUberRDotJavaBuildableBuilder(AbstractBuildRuleBuilderParams params) {
+  public static Builder newUberRDotJavaBuilder(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
@@ -404,8 +404,8 @@ public class UberRDotJavaBuildable extends AbstractBuildable implements
     }
 
     @Override
-    protected UberRDotJavaBuildable newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      return new UberRDotJavaBuildable(buildTarget,
+    protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+      return new UberRDotJava(buildTarget,
           resourceCompressionMode,
           resourceFilter,
           androidResourceDepsFinder);

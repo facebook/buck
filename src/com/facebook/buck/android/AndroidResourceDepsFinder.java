@@ -78,11 +78,11 @@ abstract class AndroidResourceDepsFinder {
   }
 
   public AndroidDexTransitiveDependencies getAndroidDexTransitiveDependencies(
-      UberRDotJavaBuildable uberRDotJavaBuildable) {
+      UberRDotJava uberRDotJava) {
     return transitiveDependencyGraph.findDexDependencies(
         getAndroidResources(),
         buildRulesToExcludeFromDex,
-        uberRDotJavaBuildable);
+        uberRDotJava);
   }
 
   /**

@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidBinaryRule.PackageType;
 import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import com.facebook.buck.android.UberRDotJavaBuildable.ResourceCompressionMode;
+import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
@@ -114,15 +114,14 @@ public class AndroidBinaryGraphEnhancer {
     BuildTarget originalBuildTarget = originalParams.getBuildTarget();
     BuildTarget buildTargetForResources = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
     BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
-        UberRDotJavaBuildable
-            .newUberRDotJavaBuildableBuilder(buildRuleBuilderParams)
+        UberRDotJava
+            .newUberRDotJavaBuilder(buildRuleBuilderParams)
             .setBuildTarget(buildTargetForResources)
             .setAllParams(buildTargetForResources,
                 resourceCompressionMode,
                 resourceFilter,
                 androidResourceDepsFinder));
-    UberRDotJavaBuildable uberRDotJavaBuildable = (UberRDotJavaBuildable) uberRDotJavaBuildRule
-        .getBuildable();
+    UberRDotJava uberRDotJava = (UberRDotJava) uberRDotJavaBuildRule.getBuildable();
 
     // Create the AaptPackageResourcesBuildable.
     BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
@@ -131,7 +130,7 @@ public class AndroidBinaryGraphEnhancer {
             .newAaptPackageResourcesBuildableBuilder(buildRuleBuilderParams)
             .setBuildTarget(buildTargetForAapt)
             .setAllParams(manifest,
-                uberRDotJavaBuildable,
+                uberRDotJava,
                 androidResourceDepsFinder.getAndroidTransitiveDependencies().nativeTargetsWithAssets,
                 packageType,
                 cpuFilters));
@@ -152,18 +151,18 @@ public class AndroidBinaryGraphEnhancer {
         originalParams.getPathRelativizer(),
         originalParams.getRuleKeyBuilderFactory());
 
-    return new Result(buildRuleParams, uberRDotJavaBuildable, aaptPackageResources);
+    return new Result(buildRuleParams, uberRDotJava, aaptPackageResources);
   }
 
   static class Result {
     private final BuildRuleParams params;
-    private final UberRDotJavaBuildable uberRDotJavaBuildable;
+    private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
 
-    public Result(BuildRuleParams params, UberRDotJavaBuildable uberRDotJavaBuildable,
+    public Result(BuildRuleParams params, UberRDotJava uberRDotJava,
         AaptPackageResources aaptPackageBuildable) {
       this.params = params;
-      this.uberRDotJavaBuildable = uberRDotJavaBuildable;
+      this.uberRDotJava = uberRDotJava;
       this.aaptPackageResources = aaptPackageBuildable;
     }
 
@@ -171,8 +170,8 @@ public class AndroidBinaryGraphEnhancer {
       return params;
     }
 
-    public UberRDotJavaBuildable getUberRDotJavaBuildable() {
-      return uberRDotJavaBuildable;
+    public UberRDotJava getUberRDotJava() {
+      return uberRDotJava;
     }
 
     public AaptPackageResources getAaptPackageResources() {
