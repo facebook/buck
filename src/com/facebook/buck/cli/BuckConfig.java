@@ -74,8 +74,9 @@ import javax.annotation.concurrent.Immutable;
 /**
  * Structured representation of data read from a {@code .buckconfig} file.
  */
+@Beta
 @Immutable
-class BuckConfig {
+public class BuckConfig {
   private static final String ALIAS_SECTION_HEADER = "alias";
 
   /**

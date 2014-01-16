@@ -72,10 +72,12 @@ java_library(
   name = 'steps',
   srcs = [
     'AccumulateClassNamesStep.java',
+    'ExternalJavacStep.java',
     'GenerateCodeCoverageReportStep.java',
     'InstrumentStep.java',
     'JarDirectoryStep.java',
     'JavacInMemoryStep.java',
+    'JavacStep.java',
     'JUnitStep.java',
     'ZipEntryJavaFileObject.java',
   ],

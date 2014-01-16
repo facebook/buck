@@ -260,8 +260,8 @@ public class DefaultJavaLibraryRuleTest {
     DefaultJavaLibraryRule javaLibrary = ruleResolver.buildAndAddToIndex(
         AndroidLibraryRule.newAndroidLibraryRuleBuilder(
             new DefaultBuildRuleBuilderParams(projectFilesystem, new FakeRuleKeyBuilderFactory()))
-        .setBuildTarget(buildTarget)
-        .addSrc(src));
+            .setBuildTarget(buildTarget)
+            .addSrc(src));
 
     String bootclasspath = "effects.jar:maps.jar:usb.jar:";
     BuildContext context = createBuildContext(javaLibrary, bootclasspath, projectFilesystem);
@@ -302,7 +302,7 @@ public class DefaultJavaLibraryRuleTest {
 
     assertEquals(
         "Generated files should not be included in getInputsToCompareToOutput() because they " +
-        "should not be part of the RuleKey computation.",
+            "should not be part of the RuleKey computation.",
         ImmutableList.of(Paths.get("library/data.txt")),
         javaRule.getInputsToCompareToOutput());
   }
@@ -410,8 +410,8 @@ public class DefaultJavaLibraryRuleTest {
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
     ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(processorTarget)
-        .addSrc(Paths.get("java/processor/processor.java")));
+            .setBuildTarget(processorTarget)
+            .addSrc(Paths.get("java/processor/processor.java")));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
     AndroidLibraryRule.Builder builder = AndroidLibraryRule.newAndroidLibraryRuleBuilder(
@@ -595,11 +595,11 @@ public class DefaultJavaLibraryRuleTest {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     JavaLibraryRule libraryOne = ruleResolver.buildAndAddToIndex(
         DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(libraryOneTarget)
-        .addDep(BuildTargetFactory.newInstance("//:not_included"))
-        .addDep(BuildTargetFactory.newInstance("//:included"))
-        .addExportedDep(BuildTargetFactory.newInstance("//:included"))
-        .addSrc(Paths.get("java/src/com/libone/Bar.java")));
+            .setBuildTarget(libraryOneTarget)
+            .addDep(BuildTargetFactory.newInstance("//:not_included"))
+            .addDep(BuildTargetFactory.newInstance("//:included"))
+            .addExportedDep(BuildTargetFactory.newInstance("//:included"))
+            .addSrc(Paths.get("java/src/com/libone/Bar.java")));
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
     JavaLibraryRule libraryTwo = ruleResolver.buildAndAddToIndex(
@@ -1149,6 +1149,63 @@ public class DefaultJavaLibraryRuleTest {
     RuleKey.Builder.RuleKeyPair pair2 = builder2.build();
     assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
     assertEquals(pair1.getRuleKeyWithoutDeps(), pair2.getRuleKeyWithoutDeps());
+  }
+
+  @Test
+  public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    DefaultJavaLibraryRule rule = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(libraryOneTarget)
+            .addSrc(Paths.get("java/src/com/libone/Bar.java")));
+
+    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+    rule.createCommandsForJavac(
+        rule.getPathToOutputFile(),
+        ImmutableSet.<String>copyOf(rule.getTransitiveClasspathEntries().values()),
+        ImmutableSet.<String>copyOf(rule.getDeclaredClasspathEntries().values()),
+        JavacOptions.DEFAULTS,
+        BuildDependencies.FIRST_ORDER_ONLY,
+        Optional.<JavacStep.SuggestBuildRules>absent(),
+        stepsBuilder,
+        Optional.<Path>absent(),
+        libraryOneTarget
+    );
+
+
+    List<Step> steps = stepsBuilder.build();
+    assertEquals(steps.size(), 3);
+    assertTrue(steps.get(2) instanceof JavacInMemoryStep);
+  }
+
+  @Test
+  public void testWhenJavacIsProvidedAnExternalJavacStepIsAdded() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    DefaultJavaLibraryRule rule = ruleResolver.buildAndAddToIndex(
+        DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(libraryOneTarget)
+            .addSrc(Paths.get("java/src/com/libone/Bar.java")));
+
+    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+    rule.createCommandsForJavac(
+        rule.getPathToOutputFile(),
+        ImmutableSet.<String>copyOf(rule.getTransitiveClasspathEntries().values()),
+        ImmutableSet.<String>copyOf(rule.getDeclaredClasspathEntries().values()),
+        JavacOptions.DEFAULTS,
+        BuildDependencies.FIRST_ORDER_ONLY,
+        Optional.<JavacStep.SuggestBuildRules>absent(),
+        stepsBuilder,
+        Optional.<Path>of(new File("javac").toPath()),
+        libraryOneTarget
+    );
+
+    List<Step> steps = stepsBuilder.build();
+    assertEquals(steps.size(), 3);
+    assertTrue(steps.get(2) instanceof ExternalJavacStep);
   }
 
 

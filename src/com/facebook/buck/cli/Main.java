@@ -433,6 +433,7 @@ public final class Main {
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
+      KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getConfigured(config);
       if (isDaemon) {
         parser = getParserFromDaemon(context, projectFilesystem, config, console, commandEvent);
 
@@ -440,7 +441,7 @@ public final class Main {
         // Initialize logging and create new Parser for new process.
         JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
         parser = new Parser(projectFilesystem,
-            KnownBuildRuleTypes.getDefault(),
+            buildRuleTypes,
             console,
             config.getPythonInterpreter(),
             config.getTempFilePatterns(),
@@ -452,7 +453,7 @@ public final class Main {
           new CommandRunnerParams(
               console,
               projectFilesystem,
-              KnownBuildRuleTypes.getDefault(),
+              buildRuleTypes,
               artifactCacheFactory,
               buildEventBus,
               parser,

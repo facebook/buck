@@ -138,6 +138,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   private final JavacOptions javacOptions;
 
+  private final Optional<Path> javac;
+
   @Nullable
   private JavaLibraryRule.Data buildOutput;
 
@@ -184,6 +186,24 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
                                    Optional<Path> proguardConfig,
                                    Set<BuildRule> exportedDeps,
                                    JavacOptions javacOptions) {
+    this(buildRuleParams,
+        srcs,
+        resources,
+        optionalDummyRDotJava,
+        proguardConfig,
+        exportedDeps,
+        javacOptions,
+        Optional.<Path>absent());
+  }
+
+  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
+                                   Set<Path> srcs,
+                                   Set<? extends SourcePath> resources,
+                                   Optional<DummyRDotJava> optionalDummyRDotJava,
+                                   Optional<Path> proguardConfig,
+                                   Set<BuildRule> exportedDeps,
+                                   JavacOptions javacOptions,
+                                   Optional<Path> javac) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
@@ -191,6 +211,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.javac = Preconditions.checkNotNull(javac);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -291,14 +312,17 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * @param commands List of steps to add to.
    * @return a {@link Supplier} that will return the ABI for this rule after javac is executed.
    */
-  private Supplier<Sha1HashCode> createCommandsForJavac(
+  @VisibleForTesting
+  Supplier<Sha1HashCode> createCommandsForJavac(
       Path outputDirectory,
       ImmutableSet<String> transitiveClasspathEntries,
       ImmutableSet<String> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildDependencies buildDependencies,
       Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRules,
-      ImmutableList.Builder<Step> commands) {
+      ImmutableList.Builder<Step> commands,
+      Optional<Path> javac,
+      BuildTarget target) {
     // Make sure that this directory exists because ABI information will be written here.
     Step mkdir = new MakeCleanDirectoryStep(getPathToAbiOutputDir());
     commands.add(mkdir);
@@ -310,24 +334,41 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           "__" + getBuildTarget().getShortName() + "__srcs");
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
-      final JavacInMemoryStep javac = new JavacInMemoryStep(
-          outputDirectory,
-          getJavaSrcs(),
-          transitiveClasspathEntries,
-          declaredClasspathEntries,
-          javacOptions,
-          Optional.of(getPathToAbiOutputFile()),
-          Optional.of(getFullyQualifiedName()),
-          buildDependencies,
-          suggestBuildRules,
-          Optional.of(pathToSrcsList));
-      commands.add(javac);
+      final JavacStep javacStep;
+      if (javac.isPresent()) {
+        javacStep = new ExternalJavacStep(
+            outputDirectory,
+            getJavaSrcs(),
+            transitiveClasspathEntries,
+            declaredClasspathEntries,
+            javacOptions,
+            Optional.of(getPathToAbiOutputFile()),
+            Optional.of(getFullyQualifiedName()),
+            buildDependencies,
+            suggestBuildRules,
+            Optional.of(pathToSrcsList),
+            javac.get(),
+            target);
+      } else {
+        javacStep = new JavacInMemoryStep(
+            outputDirectory,
+            getJavaSrcs(),
+            transitiveClasspathEntries,
+            declaredClasspathEntries,
+            javacOptions,
+            Optional.of(getPathToAbiOutputFile()),
+            Optional.of(getFullyQualifiedName()),
+            buildDependencies,
+            suggestBuildRules,
+            Optional.of(pathToSrcsList));
+      }
+      commands.add(javacStep);
 
       // Create a supplier that extracts the ABI key from javac after it executes.
       return Suppliers.memoize(new Supplier<Sha1HashCode>() {
         @Override
         public Sha1HashCode get() {
-          return createTotalAbiKey(javac.getAbiKey());
+          return createTotalAbiKey(javacStep.getAbiKey());
         }
       });
     } else {
@@ -577,7 +618,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         javacOptions,
         context.getBuildDependencies(),
         suggestBuildRule,
-        steps);
+        steps,
+        javac,
+        getBuildTarget());
 
 
     // If there are resources, then link them to the appropriate place in the classes directory.
@@ -757,6 +800,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
 
   @VisibleForTesting
+  public Optional<Path> getJavac() {
+    return javac;
+  }
+
+  @VisibleForTesting
   void addResourceCommands(BuildContext context,
                            ImmutableList.Builder<Step> commands,
                            Path outputDirectory,
@@ -824,7 +872,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   public static Builder newJavaLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
+    return newJavaLibraryRuleBuilder(Optional.<Path>absent(), params);
+  }
+
+  public static Builder newJavaLibraryRuleBuilder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
+    return new Builder(javac, params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibraryRule> implements
@@ -839,9 +891,15 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     protected Set<BuildTarget> exportedDeps = Sets.newHashSet();
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
     protected Optional<Path> proguardConfig = Optional.absent();
+    protected final Optional<Path> javac;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
+      this(Optional.<Path>absent(), params);
+    }
+
+    protected Builder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
       super(params);
+      this.javac = javac;
       this.params = params;
     }
 
@@ -865,7 +923,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           result.getOptionalDummyRDotJava(),
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
-          javacOptions.build());
+          javacOptions.build(),
+          javac);
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingBuilder() {
