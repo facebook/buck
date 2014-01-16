@@ -24,7 +24,7 @@ import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
@@ -73,20 +73,20 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
 
     // Find the android_binary() rule from the parse.
     BuildRule buildRule = dependencyGraph.findBuildRuleByTarget(buildTarget);
-    if (!(buildRule instanceof InstallableBuildRule)) {
+    if (!(buildRule instanceof InstallableApk)) {
       console.printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType().getName()));
       return 1;
     }
-    InstallableBuildRule installableBuildRule = (InstallableBuildRule)buildRule;
+    InstallableApk installableApk = (InstallableApk)buildRule;
 
     // We need this in case adb isn't already running.
     ExecutionContext context = createExecutionContext(options, dependencyGraph);
 
     // Find application package name from manifest and uninstall from matching devices.
-    String appId = tryToExtractPackageNameFromManifest(installableBuildRule,
+    String appId = tryToExtractPackageNameFromManifest(installableApk,
         dependencyGraph);
     return uninstallApk(appId,
         options.adbOptions(),

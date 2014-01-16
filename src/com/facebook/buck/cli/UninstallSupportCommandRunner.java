@@ -24,7 +24,7 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.cli.UninstallCommandOptions.UninstallOptions;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
@@ -48,7 +48,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see InstallCommand#installApk(InstallableBuildRule, InstallCommandOptions, ExecutionContext)
+   * @see InstallCommand#installApk(com.facebook.buck.rules.InstallableApk, InstallCommandOptions, ExecutionContext)
    */
   @VisibleForTesting
   protected boolean uninstallApk(final String packageName,
@@ -151,7 +151,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
     }
   }
 
-  String tryToExtractPackageNameFromManifest(InstallableBuildRule androidBinaryRule,
+  String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule,
       DependencyGraph dependencyGraph) {
     String pathToManifest = androidBinaryRule.getManifest().resolve(dependencyGraph).toString();
 

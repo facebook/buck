@@ -16,9 +16,16 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+
 import java.nio.file.Path;
 
-public interface InstallableBuildRule extends BuildRule {
+public interface InstallableApk {
+
+  /**
+   * @return The {@link BuildTarget} used to create this APK.
+   */
+  public BuildTarget getBuildTarget();
 
   /**
    * @return The manifest file for this build rule.

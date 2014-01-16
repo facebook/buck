@@ -27,7 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
@@ -143,7 +143,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       BuildRule apkRule = ruleResolver.get(this.apk);
       if (apkRule == null) {
         throw new HumanReadableException("Must specify apk for " + getBuildTarget());
-      } else if (!(apkRule instanceof InstallableBuildRule)) {
+      } else if (!(apkRule.getBuildable() instanceof InstallableApk)) {
         throw new HumanReadableException(
             "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
             getBuildTarget(),
@@ -153,7 +153,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
 
       BuildRuleParams originalParams = createBuildRuleParams(ruleResolver);
       final ImmutableSortedSet<BuildRule> originalDeps = originalParams.getDeps();
-      final AndroidBinaryRule apkUnderTest = getUnderlyingApk((InstallableBuildRule) apkRule);
+      final AndroidBinaryRule apkUnderTest = getUnderlyingApk(
+          (InstallableApk) apkRule.getBuildable());
 
       // Create the AndroidBinaryGraphEnhancer for this rule.
       ImmutableSet<BuildRule> buildRulesToExcludeFromDex = ImmutableSet.<BuildRule>builder()
@@ -255,14 +256,14 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
     }
   }
 
-  private static AndroidBinaryRule getUnderlyingApk(InstallableBuildRule rule) {
-    if (rule instanceof AndroidBinaryRule) {
-      return (AndroidBinaryRule)rule;
-    } else if (rule instanceof ApkGenrule) {
-      return getUnderlyingApk(((ApkGenrule)rule).getInstallableBuildRule());
+  private static AndroidBinaryRule getUnderlyingApk(InstallableApk installable) {
+    if (installable instanceof AndroidBinaryRule) {
+      return (AndroidBinaryRule)installable;
+    } else if (installable instanceof ApkGenrule) {
+      return getUnderlyingApk(((ApkGenrule)installable).getInstallableApk());
     } else {
       throw new IllegalStateException(
-          rule.getFullyQualifiedName() +
+          installable.getBuildTarget().getFullyQualifiedName() +
           " must be backed by either an android_binary() or an apk_genrule()");
     }
   }

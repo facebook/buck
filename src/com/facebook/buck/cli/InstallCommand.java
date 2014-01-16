@@ -27,7 +27,7 @@ import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
-import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
@@ -73,18 +73,18 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     Build build = buildCommand.getBuild();
     DependencyGraph graph = build.getDependencyGraph();
     BuildRule buildRule = graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0));
-    if (!(buildRule instanceof InstallableBuildRule)) {
+    if (!(buildRule instanceof InstallableApk)) {
       console.printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType().getName()));
       return 1;
     }
-    InstallableBuildRule installableBuildRule = (InstallableBuildRule)buildRule;
+    InstallableApk installableApk = (InstallableApk)buildRule;
 
     // Uninstall the app first, if requested.
     if (options.shouldUninstallFirst()) {
-      String packageName = tryToExtractPackageNameFromManifest(installableBuildRule,
+      String packageName = tryToExtractPackageNameFromManifest(installableApk,
           build.getBuildContext().getDependencyGraph());
       uninstallApk(packageName,
           options.adbOptions(),
@@ -95,14 +95,14 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!installApk(installableBuildRule, options, build.getExecutionContext())) {
+    if (!installApk(installableApk, options, build.getExecutionContext())) {
       return 1;
     }
 
     // We've installed the application successfully.
     // Is either of --activity or --run present?
     if (options.shouldStartActivity()) {
-      exitCode = startActivity(installableBuildRule,
+      exitCode = startActivity(installableApk,
           options.getActivityToStart(),
           options,
           build.getBuildContext(),
@@ -115,14 +115,14 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     return exitCode;
   }
 
-  private int startActivity(InstallableBuildRule androidBinaryRule,
+  private int startActivity(InstallableApk installableApk,
       String activity,
       InstallCommandOptions options,
       BuildContext buildContext,
       ExecutionContext context) throws IOException {
 
     // Might need the package name and activities from the AndroidManifest.
-    String pathToManifest = androidBinaryRule.getManifest().resolve(buildContext).toString();
+    String pathToManifest = installableApk.getManifest().resolve(buildContext).toString();
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest);
 
     if (activity == null) {
@@ -150,7 +150,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     PrintStream stdOut = console.getStdOut();
     stdOut.println(String.format("Starting activity %s...", activityToRun));
 
-    getBuckEventBus().post(StartActivityEvent.started(androidBinaryRule.getBuildTarget(),
+    getBuckEventBus().post(StartActivityEvent.started(installableApk.getBuildTarget(),
         activityToRun));
     boolean success = adbCall(options.adbOptions(),
         options.targetDeviceOptions(),
@@ -173,7 +173,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
           }
         },
         options.getBuckConfig());
-    getBuckEventBus().post(StartActivityEvent.finished(androidBinaryRule.getBuildTarget(),
+    getBuckEventBus().post(StartActivityEvent.finished(installableApk.getBuildTarget(),
         activityToRun,
         success));
 
@@ -221,12 +221,12 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
    *  devices will be used to install the apk if needed.
    */
   @VisibleForTesting
-  boolean installApk(InstallableBuildRule buildRule,
+  boolean installApk(InstallableApk installableApk,
       InstallCommandOptions options,
       ExecutionContext context) {
-    getBuckEventBus().post(InstallEvent.started(buildRule.getBuildTarget()));
+    getBuckEventBus().post(InstallEvent.started(installableApk.getBuildTarget()));
 
-    final File apk = buildRule.getApkPath().toFile();
+    final File apk = installableApk.getApkPath().toFile();
     final boolean installViaSd = options.shouldInstallViaSd();
     boolean success = adbCall(options.adbOptions(),
         options.targetDeviceOptions(),
@@ -243,7 +243,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
           }
         },
         options.getBuckConfig());
-    getBuckEventBus().post(InstallEvent.finished(buildRule.getBuildTarget(), success));
+    getBuckEventBus().post(InstallEvent.finished(installableApk.getBuildTarget(), success));
 
     return success;
   }

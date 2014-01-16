@@ -124,7 +124,7 @@ java_library(
     'ExportDependencies.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
-    'InstallableBuildRule.java',
+    'InstallableApk.java',
     'LabelsAttributeBuilder.java',
     'LoggingArtifactCacheDecorator.java',
     'MultiArtifactCache.java',

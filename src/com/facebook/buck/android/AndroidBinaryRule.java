@@ -42,7 +42,7 @@ import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
-import com.facebook.buck.rules.InstallableBuildRule;
+import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
@@ -99,7 +99,7 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
-    HasAndroidPlatformTarget, HasClasspathEntries, InstallableBuildRule {
+    HasAndroidPlatformTarget, HasClasspathEntries, InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
