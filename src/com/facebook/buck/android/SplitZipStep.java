@@ -159,12 +159,9 @@ public class SplitZipStep implements Step {
           projectFilesystem.getFileForRelativePath(pathToReportDir))
           .execute();
 
-      BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
-          Charsets.UTF_8);
-      try {
+      try(BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
+          Charsets.UTF_8)) {
         writeMetaList(secondaryMetaInfoWriter, secondaryZips, dexStore);
-      } finally {
-        secondaryMetaInfoWriter.close();
       }
 
       return 0;
