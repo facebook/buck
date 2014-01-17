@@ -59,7 +59,8 @@ public class BuckEventBusFactory {
   public static BuckEventBus newInstance(Clock clock, String buildId) {
     BuckEventBus buckEventBus = new BuckEventBus(clock,
         MoreExecutors.sameThreadExecutor(),
-        buildId);
+        buildId,
+        BuckEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
     buckEventBus.register(new ErrorListener());
     return buckEventBus;
   }

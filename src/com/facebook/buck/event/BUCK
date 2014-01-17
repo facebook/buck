@@ -6,6 +6,7 @@ java_library(
     '//lib:jackson',
     '//lib:jsr305',
     '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util/concurrent:concurrent',
   ],
   visibility = [

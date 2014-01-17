@@ -15,13 +15,16 @@
  */
 package com.facebook.buck.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,19 +43,22 @@ import java.util.concurrent.TimeUnit;
  * HttpEndpoint implementation which only allows a certain number of concurrent requests to be in
  * flight at any given point in time.
  */
-public class BlockingHttpEndpoint implements HttpEndpoint {
+public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
 
   public static final int DEFAULT_COMMON_TIMEOUT_MS = 5000;
-
   private URL url;
-  private int timeout = DEFAULT_COMMON_TIMEOUT_MS;
+  private int timeoutMillis;
   private final ListeningExecutorService requestService;
   private static final ThreadFactory threadFactory =
       new ThreadFactoryBuilder().setNameFormat(BlockingHttpEndpoint.class.getSimpleName() + "-%d")
           .build();
 
-  public BlockingHttpEndpoint(String url, int maxParallelRequests) throws MalformedURLException {
+  public BlockingHttpEndpoint(
+      String url,
+      int maxParallelRequests,
+      int timeoutMillis) throws MalformedURLException {
     this.url = new URL(url);
+    this.timeoutMillis = timeoutMillis;
 
     // Create an ExecutorService that blocks after N requests are in flight.  Taken from
     // http://www.springone2gx.com/blog/billy_newport/2011/05/there_s_more_to_configuring_threadpools_than_thread_pool_size
@@ -74,7 +80,8 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
     return send(connection, content);
   }
 
-  private ListenableFuture<HttpResponse> send(final HttpURLConnection connection, final String content) {
+  @VisibleForTesting
+  ListenableFuture<HttpResponse> send(final HttpURLConnection connection, final String content) {
     return requestService.submit(new Callable<HttpResponse>() {
       @Override
       public HttpResponse call() {
@@ -97,9 +104,30 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
     HttpURLConnection connection = (HttpURLConnection) this.url.openConnection();
     connection.setUseCaches(false);
     connection.setDoOutput(true);
-    connection.setConnectTimeout(timeout);
-    connection.setReadTimeout(timeout);
+    connection.setConnectTimeout(timeoutMillis);
+    connection.setReadTimeout(timeoutMillis);
     connection.setRequestMethod(httpMethod);
     return connection;
+  }
+
+  /**
+   * Attempt to complete submitted requests on close so that as much information is recorded as
+   * possible. This aids debugging when close is called during exception processing.
+   */
+  @Override
+  public void close() throws IOException {
+    requestService.shutdown();
+    try {
+      if (!requestService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
+        throw new IOException(Joiner.on(System.lineSeparator()).join(
+            "A BlockingHttpEndpoint failed to shut down within the standard timeout.",
+            "Your build might have succeeded, but some requests made to ",
+            this.url + " were probably lost.",
+            "Here's some debugging information:",
+            requestService.toString()));
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 }

@@ -20,6 +20,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
   ],

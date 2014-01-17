@@ -95,7 +95,6 @@ public final class Main {
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
   private static final int ARTIFACT_CACHE_TIMEOUT_IN_SECONDS = 15;
-  private static final int EVENT_BUS_SHUTDOWN_TIMEOUT_SECS = 15;
 
   private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
       new TimeSpan(100, TimeUnit.MILLISECONDS);
@@ -400,11 +399,14 @@ public final class Main {
     }
 
     int exitCode;
-
     ImmutableList<BuckEventListener> eventListeners;
     String buildId = MoreStrings.createRandomString();
     Clock clock = new DefaultClock();
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment();
+
+    // The order of resources in the try-with-resources block is important: the BuckEventBus must
+    // be the last resource, so that it is closed first and can deliver its queued events to the
+    // other resources before they are closed.
     try (AbstractConsoleEventBusListener consoleListener =
              createConsoleEventListener(clock, console, verbosity, executionEnvironment);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
@@ -470,14 +472,6 @@ public final class Main {
       }
 
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
-      boolean busShutDown = buildEventBus.shutdown(
-          EVENT_BUS_SHUTDOWN_TIMEOUT_SECS, TimeUnit.SECONDS);
-      if (!busShutDown) {
-        stdErr.println("The BuckEventBus failed to shut down within the standard timeout.");
-        stdErr.println("Your build might have succeeded, but some messages were probably lost.");
-        stdErr.println("Here's some debugging information:");
-        stdErr.println(buildEventBus.executorSummary());
-      }
     } finally {
       commandSemaphore.release(); // Allow another command to execute while outputting traces.
     }
@@ -584,7 +578,6 @@ public final class Main {
     }
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
-
 
 
 

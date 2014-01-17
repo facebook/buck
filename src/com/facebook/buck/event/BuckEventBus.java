@@ -18,11 +18,13 @@ package com.facebook.buck.event;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.AsyncEventBus;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +32,8 @@ import java.util.concurrent.TimeUnit;
  * Thin wrapper around guava event bus.
  */
 public class BuckEventBus implements Closeable {
+
+  public static int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
 
   private static Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER = new Supplier<Long>() {
     @Override
@@ -43,19 +47,26 @@ public class BuckEventBus implements Closeable {
   private final AsyncEventBus eventBus;
   private final Supplier<Long> threadIdSupplier;
   private final String buildId;
-
+  private final int shutdownTimeoutMillis;
 
   public BuckEventBus(Clock clock, String buildId) {
-    this(clock, MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()), buildId);
+    this(clock,
+        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        buildId,
+        DEFAULT_SHUTDOWN_TIMEOUT_MS);
   }
 
   @VisibleForTesting
-  BuckEventBus(Clock clock, ExecutorService executorService, String buildId) {
+  BuckEventBus(Clock clock,
+               ExecutorService executorService,
+               String buildId,
+               int shutdownTimeoutMillis) {
     this.clock = Preconditions.checkNotNull(clock);
     this.executorService = Preconditions.checkNotNull(executorService);
     this.eventBus = new AsyncEventBus("buck-build-events", executorService);
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = Preconditions.checkNotNull(buildId);
+    this.shutdownTimeoutMillis = shutdownTimeoutMillis;
   }
 
   public void post(BuckEvent event) {
@@ -94,33 +105,25 @@ public class BuckEventBus implements Closeable {
   }
 
   /**
-   * Attempt to release resources (specifically, threads) held by this bus.
-   * This is meant for cleaning up after an exception.  {@link #shutdown()} should be used under
-   * normal circumstances to wait for all jobs to complete.
+   * {@link ExecutorService#awaitTermination(long, java.util.concurrent.TimeUnit)} is called
+   * to wait for events which have been posted, but which have been queued by the
+   * {@link AsyncEventBus}, to be delivered. This allows listeners to record or report as much
+   * information as possible. This aids debugging when close is called during exception processing.
    */
   @Override
-  public void close() {
-    executorService.shutdown();
-  }
-
-  /**
-   * Shutdown the bus and wait a reasonable interval for it to terminate.
-   *
-   * @return {@code true} iff it successfully terminated.
-   */
-  public boolean shutdown(long timeout, TimeUnit unit) {
+  public void close() throws IOException {
     executorService.shutdown();
     try {
-      // Give the eventBus some time to finish dispatching all events and inform the caller
-      // if they don't finish during that time.
-      return executorService.awaitTermination(timeout, unit);
+      if (!executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
+        throw new IOException(
+            Joiner.on(System.lineSeparator()).join(
+                "The BuckEventBus failed to shut down within the standard timeout.",
+                "Your build might have succeeded, but some messages were probably lost.",
+                "Here's some debugging information:",
+                executorService.toString()));
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return false;
     }
-  }
-
-  public String executorSummary() {
-    return executorService.toString();
   }
 }
