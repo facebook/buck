@@ -52,7 +52,7 @@ public class GenruleFailingCommandIntegrationTest {
         this, "genrule_failing_command", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:fail");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:fail", "--verbose", "10");
     buildResult.assertExitCode(1);
 
     /* We want to make sure we failed for the right reason. The expected should contain something

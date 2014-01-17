@@ -38,16 +38,19 @@ public class StepFailedException extends Exception {
       ExecutionContext context,
       int exitCode,
       Optional<BuildTarget> buildTarget) {
+    String nameOrDescription = context.getVerbosity().shouldPrintCommand()
+        ? step.getDescription(context)
+        : step.getShortName();
     String message;
     if (buildTarget.isPresent()) {
       message = String.format("%s failed with exit code %d:\n%s",
           buildTarget.get().getFullyQualifiedName(),
           exitCode,
-          step.getDescription(context));
+          nameOrDescription);
     } else {
       message = String.format("Failed with exit code %d:\n%s",
           exitCode,
-          step.getDescription(context));
+          nameOrDescription);
     }
     return new StepFailedException(message, step, exitCode);
   }
