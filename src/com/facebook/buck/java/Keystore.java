@@ -61,9 +61,7 @@ public class Keystore extends AbstractBuildable {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder
-        .setInput("store", pathToStore)
-        .setInput("properties", pathToProperties);
+    return builder;
   }
 
   public BuildTarget getBuildTarget() {

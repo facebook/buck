@@ -194,7 +194,6 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
-        .setInputs("srcs", srcs.iterator())
         .set("cmd", cmd)
         .set("bash", bash)
         .set("cmd_exe", cmdExe);

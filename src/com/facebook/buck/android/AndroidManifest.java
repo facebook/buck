@@ -101,9 +101,7 @@ public class AndroidManifest extends AbstractBuildable {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder
-        .set("skeleton", skeletonFile.asReference())
-        .setInputs("manifestFiles", manifestFiles.iterator());
+    return builder;
   }
 
   public BuildTarget getBuildTarget() {

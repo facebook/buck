@@ -39,6 +39,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -134,7 +135,10 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(getBinaryJar());
+    ImmutableList.Builder<Path> builder = ImmutableList.builder();
+    builder.add(binaryJar);
+    Optionals.addIfPresent(sourceJar, builder);
+    return builder.build();
   }
 
   @Override
@@ -254,8 +258,6 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     return super.appendToRuleKey(builder)
-        .setInput("binaryJar", binaryJar)
-        .setInput("sourceJar", sourceJar.orNull())
         .set("javadocUrl", javadocUrl);
   }
 

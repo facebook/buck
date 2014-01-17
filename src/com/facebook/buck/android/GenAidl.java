@@ -91,7 +91,6 @@ public class GenAidl extends AbstractBuildable {
     // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aidl is used.
     return builder
-        .setInput("aidlFilePath", aidlFilePath)
         .set("importPath", importPath);
   }
 

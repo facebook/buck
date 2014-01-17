@@ -31,7 +31,6 @@ import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -54,12 +53,6 @@ public class PythonBinaryRule extends DoNotUseAbstractBuildable implements Binar
   protected PythonBinaryRule(BuildRuleParams buildRuleParams, Path main) {
     super(buildRuleParams);
     this.main = Preconditions.checkNotNull(main);
-  }
-
-  @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    return super.appendToRuleKey(builder)
-        .setInput("main", main);
   }
 
   @Override

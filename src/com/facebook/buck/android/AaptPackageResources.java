@@ -100,7 +100,6 @@ public class AaptPackageResources extends AbstractBuildable {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder
-        .set("manifest", manifest.asReference())
         .set("packageType", packageType.toString())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString());
   }

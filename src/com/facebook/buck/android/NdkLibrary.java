@@ -152,7 +152,6 @@ public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuilda
     // TODO(#2493457): This rule uses the ndk-build script (part of the Android NDK), so the RuleKey
     // should incorporate which version of the NDK is used.
     return builder
-        .setInputs("sources", sources.iterator())
         .set("flags", flags)
         .set("is_asset", isAsset());
   }

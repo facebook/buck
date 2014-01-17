@@ -57,6 +57,7 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -120,8 +121,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   protected final Optional<DummyRDotJava> optionalDummyRDotJava;
 
   private final Optional<Path> outputJar;
-
-  private final List<Path> inputsToConsiderForCachingPurposes;
 
   private final Optional<Path> proguardConfig;
 
@@ -218,14 +217,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     } else {
       this.outputJar = Optional.absent();
     }
-
-    // Note that both srcs and resources are sorted so that the list order is consistent even if
-    // the iteration order of the sets passed to the constructor changes. See
-    // AbstractBuildRule.getInputsToCompareToOutput() for details.
-    inputsToConsiderForCachingPurposes = ImmutableList.<Path>builder()
-        .addAll(this.srcs)
-        .addAll(SourcePaths.filterInputsToCompareToOutput(this.resources))
-        .build();
 
     outputClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
@@ -488,10 +479,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder)
-        .set("exportedDeps", exportedDeps)
-        .setInputs("srcs", srcs.iterator())
-        .setSourcePaths("resources", resources)
-        .setInput("proguard", proguardConfig.orNull());
+        .set("exportedDeps", exportedDeps);
     javacOptions.appendToRuleKey(builder);
     return builder;
   }
@@ -536,9 +524,12 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  @Nullable
   public Collection<Path> getInputsToCompareToOutput() {
-    return inputsToConsiderForCachingPurposes;
+    ImmutableList.Builder<Path> builder = ImmutableList.builder();
+    builder.addAll(this.srcs);
+    builder.addAll(SourcePaths.filterInputsToCompareToOutput(this.resources));
+    Optionals.addIfPresent(this.proguardConfig, builder);
+    return builder.build();
   }
 
   @Override

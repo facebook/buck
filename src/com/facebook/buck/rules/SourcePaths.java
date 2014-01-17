@@ -21,6 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -31,6 +32,14 @@ import javax.annotation.Nullable;
  * Utilities for dealing with {@link SourcePath}s.
  */
 public class SourcePaths {
+
+  public static final Function<Path, SourcePath> TO_SOURCE_PATH =
+      new Function<Path, SourcePath>() {
+        @Override
+        public SourcePath apply(Path input) {
+          return new FileSourcePath(input.toString());
+        }
+      };
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
@@ -65,16 +74,14 @@ public class SourcePaths {
     return Iterables.transform(sourcePaths, transform);
   }
 
-  public static ImmutableSortedSet<SourcePath> toSortedSourcePaths(
-      @Nullable ImmutableSortedSet<Path> paths) {
+  public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(
+      @Nullable Iterable<Path> paths) {
     if (paths == null) {
       return ImmutableSortedSet.of();
     }
 
-    ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
-    for (Path path : paths) {
-      sourcePaths.add(new FileSourcePath(path.toString()));
-    }
-    return sourcePaths.build();
+    return FluentIterable.from(paths)
+        .transform(TO_SOURCE_PATH)
+        .toSortedSet(Ordering.natural());
   }
 }

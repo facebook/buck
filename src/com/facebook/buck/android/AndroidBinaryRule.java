@@ -265,14 +265,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder)
-        .set("manifest", manifest.asReference())
         .set("target", target)
         .set("keystore", keystore.getBuildTarget().getFullyQualifiedName())
         .setRuleNames("classpathDeps", classpathDeps)
         .set("packageType", packageType.toString())
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
-        .set("proguardConfig", proguardConfig.transform(SourcePath.TO_REFERENCE))
         .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("primaryDexPatterns", primaryDexPatterns)
         .set("linearAllocHardLimit", linearAllocHardLimit)
@@ -411,9 +409,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     Optionals.addIfPresent(proguardConfig, sourcePaths);
     Optionals.addIfPresent(primaryDexClassesFile, sourcePaths);
 
-    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
-    inputs.addAll(SourcePaths.filterInputsToCompareToOutput(sourcePaths.build()));
-    return inputs.build();
+    return SourcePaths.filterInputsToCompareToOutput(sourcePaths.build());
   }
 
   @Override

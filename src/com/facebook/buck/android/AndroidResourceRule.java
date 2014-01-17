@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
@@ -236,12 +235,8 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     // TODO(#2493457): This rule uses the aapt binary (part of the Android SDK), so the RuleKey
     // should incorporate which version of aapt is used.
-    String manifestFilename = (manifestFile != null) ? manifestFile.toString() : null;
     return super.appendToRuleKey(builder)
-        .setSourcePaths("res", SourcePaths.toSortedSourcePaths(resSrcs))
         .set("rDotJavaPackage", rDotJavaPackage)
-        .setSourcePaths("assets", SourcePaths.toSortedSourcePaths(assetsSrcs))
-        .set("manifestFile", manifestFilename)
         .set("hasWhitelistedStrings", hasWhitelistedStrings);
   }
 

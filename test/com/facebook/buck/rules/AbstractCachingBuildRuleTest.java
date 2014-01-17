@@ -157,6 +157,13 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .putByte(RuleKey.Builder.SEPARATOR)
 
         .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("buck.sourcepaths".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putBytes("/dev/null".getBytes())
+        .putByte(RuleKey.Builder.SEPARATOR)
+        .putByte(RuleKey.Builder.SEPARATOR)
+
+        .putByte(RuleKey.Builder.SEPARATOR)
         .putBytes("deps".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
         .putBytes("19d2558a6bd3a34fb3f95412de9da27ed32fe208".getBytes())

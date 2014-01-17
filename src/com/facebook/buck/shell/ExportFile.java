@@ -31,7 +31,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -104,8 +103,7 @@ public class ExportFile extends AbstractBuildable {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("out", out.toString())
-        .setSourcePaths("src", ImmutableSortedSet.of(src));
+        .set("out", out.toString());
   }
 
   @Override

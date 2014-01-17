@@ -30,14 +30,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
@@ -83,12 +81,6 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
 
   public Optional<Path> getManifestFile() {
     return manifestFile;
-  }
-
-  @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-     return super.appendToRuleKey(builder)
-         .setInput("manifest", manifestFile.orNull());
   }
 
   @Override

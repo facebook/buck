@@ -115,8 +115,11 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
     // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
     // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
+    // Note: appendToRuleKey() should not set("srcs", srcs) if the inputs are order-independent.
+    Iterable<Path> inputs = getInputs();
     builder = super.appendToRuleKey(builder)
-        .setInputs("buck.inputs", getInputs().iterator());
+        .setInputs("buck.inputs", inputs.iterator())
+        .setSourcePaths("buck.sourcepaths", SourcePaths.toSourcePathsSortedByNaturalOrder(inputs));
     // TODO(simons): Rename this when no Buildables extend this class.
     return buildable.appendDetailsToRuleKey(builder);
   }

@@ -86,19 +86,10 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
   }
 
-  private void addMetaInfContents(ImmutableSortedSet.Builder<Path> files) {
-    Buildables.addInputsToSortedSet(metaInfDirectory, files, directoryTraverser);
-  }
-
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    ImmutableSortedSet.Builder<Path> metaInfFiles = ImmutableSortedSet.naturalOrder();
-    addMetaInfContents(metaInfFiles);
-
     return super.appendToRuleKey(builder)
-        .set("mainClass", mainClass)
-        .setInput("manifestFile", manifestFile)
-        .setInputs("metaInfDirectory", metaInfFiles.build().iterator());
+        .set("mainClass", mainClass);
   }
 
   @Override
@@ -120,7 +111,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
       builder.add(manifestFile);
     }
 
-    addMetaInfContents(builder);
+    Buildables.addInputsToSortedSet(metaInfDirectory, builder, directoryTraverser);
 
     return builder.build();
   }

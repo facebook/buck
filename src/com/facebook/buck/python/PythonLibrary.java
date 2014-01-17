@@ -35,7 +35,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -71,8 +70,7 @@ public class PythonLibrary extends AbstractBuildable {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder
-        .set("srcs", ImmutableSortedSet.copyOf(Iterables.transform(srcs, SourcePath.TO_REFERENCE)));
+    return builder;
   }
 
   private Path getPathToPythonPathDirectory() {

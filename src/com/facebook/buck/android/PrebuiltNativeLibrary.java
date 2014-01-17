@@ -80,10 +80,6 @@ public class PrebuiltNativeLibrary extends AbstractBuildable implements NativeLi
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder
-        // Note: we don't consider the libraries themselves. The library path points to a directory
-        // and this isn't in the FileHashCache (because it's not a file). Coeerce to a String.
-        // TODO(user): Find the files, rather than coerce to a String.
-        .set("nativeLibs", getLibraryPath().toString())
         .set("is_asset", isAsset());
   }
 
