@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.SortedSet;
 
 /**
@@ -94,28 +96,25 @@ public class BuckPyFunction {
   }
 
   private String getPythonDefault(ParamInfo param) {
-    if (param.getContainerType() != null) {
+    Class<?> resultClass = param.getResultClass();
+    if (Map.class.isAssignableFrom(resultClass)) {
+      return "{}";
+    } else if (Collection.class.isAssignableFrom(resultClass)) {
       return "[]";
-    }
-
-    if (Boolean.class.equals(param.getType())) {
+    } else if (Boolean.class.equals(resultClass)) {
       return "False";
-    }
-
-    if (Number.class.isAssignableFrom(param.getType())) {
+    } else if (Number.class.isAssignableFrom(resultClass)) {
       return "0";
-    }
-
-    if (String.class.equals(param.getType())) {
+    } else if (String.class.equals(resultClass)) {
       return "''";
+    } else {
+      return "None";
     }
-
-    return "None";
   }
 
   private boolean isSkippable(ParamInfo param) {
     if ("name".equals(param.getName())) {
-      if (!String.class.equals(param.getType())) {
+      if (!String.class.equals(param.getResultClass())) {
         throw new HumanReadableException("'name' parameter must be a java.lang.String");
       }
       return true;

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -59,6 +60,7 @@ import java.util.Set;
 public class ConstructorArgMarshaller {
 
   private final Path basePath;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   /**
    * Constructor. {@code pathFromProjectRootToBuildFile} is the path relative to the project root to
@@ -78,6 +80,8 @@ public class ConstructorArgMarshaller {
     } else {
       this.basePath = pathFromProjectRootToBuildFile.normalize();
     }
+
+    this.typeCoercerFactory = new TypeCoercerFactory();
   }
 
   /**
@@ -120,7 +124,7 @@ public class ConstructorArgMarshaller {
       if (Modifier.isFinal(field.getModifiers())) {
         continue;
       }
-      allInfo.add(new ParamInfo(basePath, field));
+      allInfo.add(new ParamInfo(typeCoercerFactory, basePath, field));
     }
 
     return allInfo.build();

@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -28,7 +29,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> {
@@ -39,22 +39,29 @@ public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> 
   private final ImmutableSortedSet<BuildTarget> deps;
   private final ImmutableSet<BuildTargetPattern> visibilities;
 
-  public DescribedRuleBuilder(Description<T> description, BuildRuleFactoryParams params)
+  public DescribedRuleBuilder(Description<T> description, final BuildRuleFactoryParams params)
       throws NoSuchBuildTargetException {
     this.description = Preconditions.checkNotNull(description);
     this.ruleFactoryParams = Preconditions.checkNotNull(params);
     this.target = params.target;
 
-    ImmutableSortedSet.Builder<BuildTarget> allDeps = ImmutableSortedSet.naturalOrder();
+    final ImmutableSortedSet.Builder<BuildTarget> allDeps = ImmutableSortedSet.naturalOrder();
     for (String rawDep : params.getOptionalListAttribute("deps")) {
       allDeps.add(params.resolveBuildTarget(rawDep));
     }
 
+    // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
+    TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
-      ParamInfo info = new ParamInfo(Paths.get(target.getBasePath()), field);
-      if (BuildRule.class.isAssignableFrom(info.getType()) ||
-          SourcePath.class.isAssignableFrom(info.getType())) {
+      ParamInfo info = new ParamInfo(typeCoercerFactory, Paths.get(target.getBasePath()), field);
+      Class<?> leafClass = info.getLeafClass();
+      Class<?> keyClass = info.getKeyClass();
+      if (BuildRule.class.isAssignableFrom(leafClass) ||
+          SourcePath.class.isAssignableFrom(leafClass) ||
+          (keyClass != null &&
+              (BuildRule.class.isAssignableFrom(keyClass) ||
+              SourcePath.class.isAssignableFrom(keyClass)))) {
         detectBuildTargetsForParameter(allDeps, info, params);
       }
     }
@@ -131,20 +138,28 @@ public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> 
    * @param builder The current builder to use.
    */
   private void detectBuildTargetsForParameter(
-      ImmutableSortedSet.Builder<BuildTarget> builder,
+      final ImmutableSortedSet.Builder<BuildTarget> builder,
       ParamInfo info,
-      BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
+      final BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.
 
-    if (info.getContainerType() != null) {
-      List<String> allParams = params.getOptionalListAttribute(info.getName());
-      for (String param : allParams) {
-        addTargetIfPresent(builder, params, param);
+    try {
+      info.traverse(new ParamInfo.Traversal() {
+        @Override
+        public void traverse(Object object) {
+          if (object instanceof String) {
+            try {
+              addTargetIfPresent(builder, params, (String) object);
+            } catch (NoSuchBuildTargetException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        }
+      }, params.getNullableRawAttribute(info.getName()));
+    } catch (RuntimeException e) {
+      if (e.getCause() instanceof NoSuchBuildTargetException) {
+        throw (NoSuchBuildTargetException) e.getCause();
       }
-    } else {
-      Optional<String> optional = params.getOptionalStringAttribute(info.getName());
-      String param = optional.or("");
-      addTargetIfPresent(builder, params, param);
     }
   }
 

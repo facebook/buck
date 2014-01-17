@@ -70,7 +70,7 @@ java_library(
     'Sha1HashCode.java',
     'SourcePath.java',
     'SourceRoot.java',
-  ],
+  ] + glob(["coercer/*.java"]),
   deps = [
     '//lib:guava',
     '//lib:jackson-annotations',

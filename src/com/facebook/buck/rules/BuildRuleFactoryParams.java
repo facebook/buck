@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
  * A set of parameters passed to a {@link BuildRuleFactory}.
  */
 public final class BuildRuleFactoryParams {
-  static final String GENFILE_PREFIX = "BUCKGEN:";
+  public static final String GENFILE_PREFIX = "BUCKGEN:";
 
   private final Map<String, ?> instance;
   private final ProjectFilesystem filesystem;
@@ -380,6 +380,11 @@ public final class BuildRuleFactoryParams {
     } else {
       return null;
     }
+  }
+
+  @Nullable
+  public Object getNullableRawAttribute(String attributeName) {
+    return instance.get(attributeName);
   }
 
   public Function<Path, Path> getPathRelativizer() {
