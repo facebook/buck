@@ -158,7 +158,8 @@ public class EventSerializationTest {
         "results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\":" +
         "null,\"success\":false,\"time\":0,\"message\":null,\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
-        "\"failureCount\":1,\"success\":false}],\"type\":\"RunComplete\"}", message);
+        "\"failureCount\":1,\"dependenciesPassTheirTests\":true,\"success\":false}]," +
+        "\"type\":\"RunComplete\"}", message);
   }
 
   @Test
@@ -180,7 +181,8 @@ public class EventSerializationTest {
         "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\"" +
         ":null,\"success\":false,\"time\":0,\"message\":null,\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
-        "\"failureCount\":1,\"success\":false},\"type\":\"ResultsAvailable\"}", message);
+        "\"failureCount\":1,\"dependenciesPassTheirTests\":true,\"success\":false}," +
+        "\"type\":\"ResultsAvailable\"}", message);
   }
 
   private BuildRule generateFakeBuildRule() {

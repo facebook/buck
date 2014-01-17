@@ -1,0 +1,12 @@
+java_library(
+  name = 'resultgroups',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/test:test',
+  ],
+  visibility = ['PUBLIC'],
+)

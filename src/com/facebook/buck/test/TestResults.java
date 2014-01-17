@@ -41,6 +41,7 @@ public class TestResults {
   private final ImmutableList<TestCaseSummary> failures;
   private final int failureCount;
   private final ImmutableSet<String> contacts;
+  private boolean dependenciesPassTheirTests = true;
 
   @VisibleForTesting
   public TestResults(List<TestCaseSummary> testCases) {
@@ -92,6 +93,14 @@ public class TestResults {
   @JsonIgnore
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  public void setDependenciesPassTheirTests(boolean dependenciesPassTheirTests) {
+    this.dependenciesPassTheirTests = dependenciesPassTheirTests;
+  }
+
+  public boolean getDependenciesPassTheirTests() {
+    return dependenciesPassTheirTests;
   }
 }
 
