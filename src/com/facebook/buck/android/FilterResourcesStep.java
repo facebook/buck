@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.Escaper;
@@ -28,6 +29,7 @@ import com.facebook.buck.util.Filters.Density;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -304,9 +306,23 @@ public class FilterResourcesStep implements Step {
       return instance;
     }
 
+    private ExecutionContext getContextWithSilentConsole(ExecutionContext context) {
+      // Using the normal console results in the super console freezing.
+      Console console = context.getConsole();
+      return ExecutionContext.builder()
+          .setExecutionContext(context)
+          .setConsole(new Console(
+              Verbosity.SILENT,
+              console.getStdOut(),
+              console.getStdErr(),
+              console.getAnsi()
+          ))
+          .build();
+    }
+
     @Override
     public boolean isAvailable(ExecutionContext context) {
-      return 0 == new BashStep("which convert").execute(context);
+      return 0 == new BashStep("which convert").execute(getContextWithSilentConsole(context));
     }
 
     @Override
@@ -318,7 +334,7 @@ public class FilterResourcesStep implements Step {
           Escaper.escapeAsBashString(destination)
       );
 
-      if (0 != convertStep.execute(context)) {
+      if (0 != convertStep.execute(getContextWithSilentConsole(context))) {
         throw new HumanReadableException("Cannot scale " + source + " to " + destination);
       }
     }
