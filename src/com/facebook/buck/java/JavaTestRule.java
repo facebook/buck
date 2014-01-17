@@ -72,7 +72,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   /**
    * Build rules for which this test rule will be testing.
    */
-  private final ImmutableSet<JavaLibraryRule> sourceUnderTest;
+  private final ImmutableSet<BuildRule> sourceUnderTest;
 
   private CompiledClassFileFinder compiledClassFileFinder;
 
@@ -89,7 +89,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       Optional<Path> proguardConfig,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<JavaLibraryRule> sourceUnderTest) {
+      ImmutableSet<BuildRule> sourceUnderTest) {
     super(buildRuleParams,
         srcs,
         resources,
@@ -131,7 +131,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   /**
    * @return A set of rules that this test rule will be testing.
    */
-  public ImmutableSet<JavaLibraryRule> getSourceUnderTest() {
+  public ImmutableSet<BuildRule> getSourceUnderTest() {
     return sourceUnderTest;
   }
 
@@ -417,7 +417,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     @Override
     public JavaTestRule build(BuildRuleResolver ruleResolver) {
-      ImmutableSet<JavaLibraryRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
+      ImmutableSet<BuildRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
           ruleResolver);
       AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
@@ -483,15 +483,15 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     /**
      * Generates the set of build rules that contain the source that will be under test.
      */
-    protected ImmutableSet<JavaLibraryRule> generateSourceUnderTest(
+    protected ImmutableSet<BuildRule> generateSourceUnderTest(
         ImmutableSet<BuildTarget> sourceUnderTestNames, BuildRuleResolver ruleResolver) {
-      ImmutableSet.Builder<JavaLibraryRule> sourceUnderTest = ImmutableSet.builder();
+      ImmutableSet.Builder<BuildRule> sourceUnderTest = ImmutableSet.builder();
       for (BuildTarget sourceUnderTestName : sourceUnderTestNames) {
         // Generates the set by matching its path with the full path names that are passed in.
         BuildRule rule = ruleResolver.get(sourceUnderTestName);
 
         if (rule instanceof JavaLibraryRule) {
-          sourceUnderTest.add((JavaLibraryRule) rule);
+          sourceUnderTest.add(rule);
         } else if (rule == null) {
           throw new HumanReadableException(
               "Specified source under test for %s is not among its dependencies: %s",

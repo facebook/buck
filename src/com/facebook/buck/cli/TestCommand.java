@@ -628,7 +628,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   /**
-   * Generates the set of rules under test.
+   * Generates the set of Java library rules under test.
    */
   private ImmutableSet<JavaLibraryRule> getRulesUnderTest(Iterable<TestRule> tests) {
     ImmutableSet.Builder<JavaLibraryRule> rulesUnderTest = ImmutableSet.builder();
@@ -637,7 +637,20 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     for (TestRule test : tests) {
       if (test instanceof JavaTestRule) {
         JavaTestRule javaTestRule = (JavaTestRule) test;
-        rulesUnderTest.addAll(javaTestRule.getSourceUnderTest());
+        ImmutableSet<BuildRule> sourceUnderTest = javaTestRule.getSourceUnderTest();
+        for (BuildRule buildRule : sourceUnderTest) {
+          if (buildRule instanceof JavaLibraryRule) {
+            JavaLibraryRule javaLibraryRule = (JavaLibraryRule) buildRule;
+            rulesUnderTest.add(javaLibraryRule);
+          } else {
+            throw new HumanReadableException(
+                "Test '%s' is a java_test() " +
+                "but it is testing module '%s' " +
+                "which is not a java_library()!",
+                test.getBuildTarget(),
+                buildRule.getBuildTarget());
+          }
+        }
       }
     }
 

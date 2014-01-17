@@ -20,6 +20,7 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -93,6 +94,11 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
   @Override
   public ImmutableSet<String> getContacts() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getSourceUnderTest() {
     return ImmutableSet.of();
   }
 

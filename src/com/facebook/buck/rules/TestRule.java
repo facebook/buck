@@ -76,6 +76,11 @@ public interface TestRule extends BuildRule {
   public ImmutableSet<String> getContacts();
 
   /**
+   * @return The set of {@link BuildRule} instances that this test is testing.
+   */
+  public ImmutableSet<BuildRule> getSourceUnderTest();
+
+  /**
    * @return The relative path to the output directory of the test rule.
    */
   public Path getPathToTestOutputDirectory();
