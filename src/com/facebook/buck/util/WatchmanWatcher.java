@@ -167,6 +167,19 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
           }
           builder = new PathEventBuilder();
           break;
+        case END_ARRAY:
+        case NOT_AVAILABLE:
+        case START_ARRAY:
+        case START_OBJECT:
+        case VALUE_EMBEDDED_OBJECT:
+        case VALUE_FALSE:
+        case VALUE_NULL:
+        case VALUE_NUMBER_FLOAT:
+        case VALUE_NUMBER_INT:
+        case VALUE_STRING:
+        case VALUE_TRUE:
+        default:
+          break;
       }
       token = jsonParser.nextToken();
     }
