@@ -41,10 +41,11 @@ public final class Ansi {
   private static final String SUBTLE_SEQUENCE = GREY;
 
   private static final String BACKGROUND_RED = "\u001B[41m";
+  private static final String BACKGROUND_YELLOW = "\u001B[43m";
   private static final String BACKGROUND_GREEN = "\u001B[42m";
 
-  private static final String HIGHLIGHTED_WARNING_SEQUENCE = BOLD + BACKGROUND_RED + WHITE;
-
+  private static final String HIGHLIGHTED_ERROR_SEQUENCE = BOLD + BACKGROUND_RED + WHITE;
+  private static final String HIGHLIGHTED_WARNING_SEQUENCE = BOLD + BACKGROUND_YELLOW + BLACK;
   private static final String HIGHLIGHTED_SUCCESS_SEQUENCE = BOLD + BACKGROUND_GREEN + BLACK;
 
   private static final String CURSOR_PREVIOUS_LINE = "\u001B[%dA";
@@ -118,7 +119,7 @@ public final class Ansi {
   }
 
   public String getHighlightedWarningSequence() {
-    return isAnsiTerminal ? HIGHLIGHTED_WARNING_SEQUENCE : "";
+    return isAnsiTerminal ? HIGHLIGHTED_ERROR_SEQUENCE : "";
   }
 
   public String getHighlightedResetSequence() {
@@ -126,6 +127,14 @@ public final class Ansi {
   }
 
   public String asHighlightedFailureText(String text) {
+    if (isAnsiTerminal) {
+      return HIGHLIGHTED_ERROR_SEQUENCE + text + RESET;
+    } else {
+      return text;
+    }
+  }
+
+  public String asHighlightedWarningText(String text) {
     if (isAnsiTerminal) {
       return HIGHLIGHTED_WARNING_SEQUENCE + text + RESET;
     } else {
@@ -165,8 +174,18 @@ public final class Ansi {
     stream.println(asHighlightedFailureText(text));
   }
 
-  public String asHighlightedStatusText(boolean isSuccess, String text) {
-    return isSuccess ? asHighlightedSuccessText(text) : asHighlightedFailureText(text);
+  public String asHighlightedStatusText(SeverityLevel level, String text) {
+    switch (level) {
+      case OK:
+        return asHighlightedSuccessText(text);
+      case WARNING:
+        return asHighlightedWarningText(text);
+      case ERROR:
+        return asHighlightedFailureText(text);
+      default:
+        String message = String.format("Unexpected SeverityLevel; cannot highlight '%s'!", level);
+        throw new IllegalArgumentException(message);
+    }
   }
 
   public void printHighlightedStatusText(boolean isSuccess, PrintStream stream, String text) {
@@ -206,4 +225,6 @@ public final class Ansi {
       return "";
     }
   }
+
+  public static enum SeverityLevel { OK, WARNING, ERROR }
 }

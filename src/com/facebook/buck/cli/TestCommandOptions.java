@@ -54,6 +54,17 @@ public class TestCommandOptions extends BuildCommandOptions {
   private boolean isJaccoEnabled = false;
 
   @Option(
+      name = "--ignore-when-dependencies-fail",
+      aliases = {"-i"},
+      usage =
+          "Ignore test failures for libraries if they depend on other libraries " +
+          "that aren't passing their tests.  " +
+          "For example, if java_library A depends on B, " +
+          "and they are tested respectively by T1 and T2 and both of those tests fail, " +
+          "only print the error for T2.")
+  private boolean isIgnoreFailingDependencies = false;
+
+  @Option(
       name = "--include",
       usage = "Labels to include when running tests, --include L1 L2 ... LN --other_option.",
       handler = StringSetOptionHandler.class)
@@ -130,6 +141,10 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Override
   public boolean isDebugEnabled() {
     return isDebugEnabled;
+  }
+
+  public boolean isIgnoreFailingDependencies() {
+    return isIgnoreFailingDependencies;
   }
 
   public Optional<TargetDevice> getTargetDeviceOptional() {

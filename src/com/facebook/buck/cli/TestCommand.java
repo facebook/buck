@@ -47,6 +47,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.resultgroups.TestResultsGrouper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -83,6 +84,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -461,23 +463,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Buck, not the test being run.
     Verbosity verbosity = console.getVerbosity();
     final boolean printTestResults = (verbosity != Verbosity.SILENT);
-    FutureCallback<TestResults> onTestFinishedCallback = new FutureCallback<TestResults>() {
 
-      @Override
-      public void onSuccess(TestResults testResults) {
-        if (printTestResults) {
-          getBuckEventBus().post(IndividualTestEvent.finished(
-              options.getArgumentsFormattedAsBuildTargets(), testResults));
-        }
-      }
-
-      @Override
-      public void onFailure(Throwable throwable) {
-        // This should never happen, but if it does, that means that something has gone awry, so
-        // we should bubble it up.
-        throwable.printStackTrace(getStdErr());
-      }
-    };
+    // For grouping results!
+    TestResultsGrouper grouper = null;
+    if (options.isIgnoreFailingDependencies()) {
+      grouper = new TestResultsGrouper(tests);
+    }
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
         executionContext.getProjectFilesystem());
@@ -514,6 +505,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                   test.interpretTestResults(executionContext,
                       /*isUsingTestSelectors*/ options.getTestSelectorListOptional().isPresent())),
               test.getBuildTarget());
+      FutureCallback<TestResults> onTestFinishedCallback =
+          getFutureCallback(grouper, test, options, printTestResults);
       Futures.addCallback(testResults, onTestFinishedCallback);
       results.add(testResults);
     }
@@ -571,6 +564,41 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     });
 
     return failures ? 1 : 0;
+  }
+
+  private FutureCallback<TestResults> getFutureCallback(
+      @Nullable final TestResultsGrouper grouper,
+      final TestRule testRule,
+      final TestCommandOptions options,
+      final boolean printTestResults) {
+    return new FutureCallback<TestResults>() {
+
+      @Override
+      public void onSuccess(TestResults testResults) {
+        if (printTestResults) {
+          if (grouper == null) {
+            postTestResults(testResults);
+          } else {
+            Map<TestRule, TestResults> postableTestResultsMap = grouper.post(testRule, testResults);
+            for (TestResults rr : postableTestResultsMap.values()) {
+              postTestResults(rr);
+            }
+          }
+        }
+      }
+
+      private void postTestResults(TestResults testResults) {
+        getBuckEventBus().post(IndividualTestEvent.finished(
+            options.getArgumentsFormattedAsBuildTargets(), testResults));
+      }
+
+      @Override
+      public void onFailure(Throwable throwable) {
+        // This should never happen, but if it does, that means that something has gone awry, so
+        // we should bubble it up.
+        throwable.printStackTrace(getStdErr());
+      }
+    };
   }
 
   private Callable<TestResults> getCachingStatusTransformingCallable(

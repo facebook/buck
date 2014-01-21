@@ -96,12 +96,26 @@ public class TestCaseSummary {
   }
 
   /** @return a one-line, printable summary */
-  public String getOneLineSummary(Ansi ansi) {
-    String status = ansi.asHighlightedStatusText(isSuccess(), isSuccess() ? "PASS" : "FAIL");
+  public String getOneLineSummary(boolean hasPassingDependencies, Ansi ansi) {
+    String status;
+    Ansi.SeverityLevel severityLevel;
+    if (!isSuccess()) {
+      if (hasPassingDependencies) {
+        severityLevel = Ansi.SeverityLevel.ERROR;
+        status = ansi.asHighlightedStatusText(severityLevel, "FAIL");
+      } else {
+        severityLevel = Ansi.SeverityLevel.WARNING;
+        status = ansi.asHighlightedStatusText(severityLevel, "DROP");
+      }
+    } else {
+      severityLevel = Ansi.SeverityLevel.OK;
+      status = ansi.asHighlightedStatusText(severityLevel, "PASS");
+    }
+
     return String.format("%s %s %2d Passed  %2d Failed   %s",
         status,
         !isCached ? TimeFormat.formatForConsole(totalTime, ansi)
-                  : ansi.asHighlightedStatusText(isSuccess(), "CACHED"),
+                  : ansi.asHighlightedStatusText(severityLevel, "CACHED"),
         testResults.size() - failureCount,
         failureCount,
         testCaseName);

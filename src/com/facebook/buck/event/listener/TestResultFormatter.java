@@ -59,14 +59,14 @@ public class TestResultFormatter {
   /** Writes a detailed summary that ends with a trailing newline. */
   public void reportResult(ImmutableList.Builder<String> addTo, TestResults results) {
     for (TestCaseSummary testCase : results.getTestCases()) {
-      addTo.add(testCase.getOneLineSummary(ansi));
+      addTo.add(testCase.getOneLineSummary(results.getDependenciesPassTheirTests(), ansi));
 
       if (testCase.isSuccess()) {
         continue;
       }
 
       for (TestResultSummary testResult : testCase.getTestResults()) {
-        if (!testResult.isSuccess()) {
+        if (results.getDependenciesPassTheirTests() && !testResult.isSuccess()) {
           reportResultSummary(addTo, testResult);
         }
       }

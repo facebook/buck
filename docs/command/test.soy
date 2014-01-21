@@ -44,7 +44,7 @@ Builds and runs the tests for one or more specified targets:
 {call buck.param}
   {param name: 'debug' /}
   {param desc}
-  If specified, the tests will start suspended with a JDWP debug port of 5005. 
+  If specified, the tests will start suspended with a JDWP debug port of 5005.
   This means that they will not run until a debugger is attached.
  {/param}
 {/call}
@@ -130,6 +130,34 @@ Builds and runs the tests for one or more specified targets:
   The number of active threads may not always be equal to this
   argument.
  {/param}
+{/call}
+
+{call buck.param}
+  {param name: '--ignore-when-dependencies-fail'/}
+  {param desc}
+  If a library is broken its tests are probably failing.  If another library
+  depends on that library and its tests are also failing, it is probably
+  because the dependency has a bug.
+
+  <p>
+
+  For example, if the library <code>HouseBuilder</code> depends on
+  {sp}<code>Bricks</code> and the <code>Bricks</code> library is broken, it will
+  probably cause its own tests as well as <code>HouseBuilder</code>'s to fail.
+
+  <p>
+
+  Accordingly, if the libraries are tested respectively by
+  {sp}<code>HouseBuilderTest</code> and <code>BricksTest</code>, and both tests
+  fail then only the error for <code>BricksTest</code> is printed; the error
+  for <code>HouseBuilderTest</code> is ignored.
+
+  <p>
+
+  You'll still be notified that <code>HouseBuilderTest</code> is failing, and
+  running the tests again without this option will show the cached test result
+  (and error) in full.
+  {/param}
 {/call}
 
 {call buck.param}
