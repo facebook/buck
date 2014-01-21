@@ -46,7 +46,7 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Nullable
   private String pathToXmlTestOutput = null;
 
-  @Option(name ="--jacoco", usage = "Whether jacoco should be used for code coverage analysis or emma.")
+  @Option(name = "--jacoco", usage = "Whether jacoco should be used for code coverage analysis or emma.")
   private boolean isJaccoEnabled = false;
 
   @Option(
