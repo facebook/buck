@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -140,7 +141,7 @@ public class StringResources {
 
     try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
       for (Map.Entry<Integer, String> entry : strings.entrySet()) {
-        byte[] resourceBytes = entry.getValue().getBytes(charset);
+        byte[] resourceBytes = getUnescapedStringBytes(entry.getValue());
         writeShort(outputStream, entry.getKey() - previousResourceId);
         writeShort(outputStream, resourceBytes.length);
         dataStream.write(resourceBytes, 0, resourceBytes.length);
@@ -167,7 +168,7 @@ public class StringResources {
 
         for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
           outputStream.writeByte(PLURAL_CATEGORY_MAP.get(cat.getKey()).byteValue());
-          byte[] pluralValue = cat.getValue().getBytes(charset);
+          byte[] pluralValue = getUnescapedStringBytes(cat.getValue());
           writeShort(outputStream, pluralValue.length);
           dataStream.write(pluralValue);
         }
@@ -193,7 +194,7 @@ public class StringResources {
         outputStream.writeInt(arrayValues.size());
 
         for (String arrayValue : arrayValues) {
-          byte[] byteValue = arrayValue.getBytes(charset);
+          byte[] byteValue = getUnescapedStringBytes(arrayValue);
           writeShort(outputStream, byteValue.length);
           dataStream.write(byteValue);
         }
@@ -208,5 +209,10 @@ public class StringResources {
     Preconditions.checkState(number <= Short.MAX_VALUE,
         "Error attempting to compact a numeral to short: " + number);
     stream.writeShort(number);
+  }
+
+  @VisibleForTesting
+  static byte[] getUnescapedStringBytes(String value) {
+    return value.replace("\\\"", "\"").replace("\\'", "'").getBytes(charset);
   }
 }

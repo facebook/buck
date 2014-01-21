@@ -36,7 +36,7 @@ public class StringResourcesTest {
   private static final ImmutableMap<Integer, String> strings = ImmutableMap.of(
       12345678, "S_one",
       12345679, "S_two",
-      12345680, "S_three");
+      12345680, "\\\"S_three\\\"");
 
   private static final ImmutableMap<String, String> plural1 = ImmutableMap.of(
       "one", "P1_one",
@@ -74,6 +74,16 @@ public class StringResourcesTest {
     verifyBinaryStream(binaryOutput);
   }
 
+  @Test
+  public void testUnescapesQuotesAndApostrophes() {
+    assertEquals("Test",
+        new String(StringResources.getUnescapedStringBytes("Test")));
+    assertEquals("\"testing\"",
+        new String(StringResources.getUnescapedStringBytes("\\\"testing\\\"")));
+    assertEquals("On a friend's timeline",
+        new String(StringResources.getUnescapedStringBytes("On a friend\\'s timeline")));
+  }
+
   private void verifyBinaryStream(byte[] binaryOutput) throws IOException {
     DataInputStream stream = new DataInputStream(new ByteArrayInputStream(binaryOutput));
 
@@ -88,12 +98,12 @@ public class StringResourcesTest {
     assertEquals(1, stream.readShort());
     assertEquals(5, stream.readShort());
     assertEquals(1, stream.readShort());
-    assertEquals(7, stream.readShort());
+    assertEquals(9, stream.readShort());
 
     // string values
     assertEquals("S_one", readStringOfLength(stream, 5));
     assertEquals("S_two", readStringOfLength(stream, 5));
-    assertEquals("S_three", readStringOfLength(stream, 7));
+    assertEquals("\"S_three\"", readStringOfLength(stream, 9)); // string should be unescaped.
 
     // Plurals
     assertEquals(2, stream.readInt());
