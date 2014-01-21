@@ -70,6 +70,9 @@ final class TestResult {
       private Result result;
       private RunListener resultListener;
 
+      // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
+      private long startTime = System.currentTimeMillis();
+
       @Override
       public void testStarted(Description description) throws Exception {
         // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
@@ -143,7 +146,9 @@ final class TestResult {
 
       @Override
       public void testFailure(Failure failure) throws Exception {
-        if (resultListener != null) {
+        if (resultListener == null) {
+          recordUnpairedFailure(failure);
+        } else {
           resultListener.testFailure(failure);
         }
       }
@@ -153,6 +158,26 @@ final class TestResult {
         if (resultListener != null) {
           resultListener.testIgnored(description);
         }
+      }
+
+      /**
+       * It's possible to encounter a Failure before we've started any tests (and therefore before
+       * testStarted() has been called).  The known example is a @BeforeClass that throws an
+       * exception, but there may be others.
+       * <p>
+       * Recording these unexpected failures helps us propagate failures back up to the "buck test"
+       * process.
+       */
+      private void recordUnpairedFailure(Failure failure) {
+        long runtime = System.currentTimeMillis() - startTime;
+        Description description = failure.getDescription();
+        results.add(new TestResult(
+            description.getClassName(),
+            description.getMethodName(),
+            runtime,
+            failure,
+            null,
+            null));
       }
     };
   }
