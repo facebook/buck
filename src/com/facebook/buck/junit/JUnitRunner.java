@@ -138,10 +138,31 @@ public final class JUnitRunner {
         jUnitCore.run(request);
       }
 
-      if (!isSingularResultClaimingAllTestsWereFilteredOut(results)) {
+      if (isSignificantEnoughToWriteResultsToFile(filter, results)) {
         writeResult(className, results);
       }
     }
+  }
+
+  private boolean isSignificantEnoughToWriteResultsToFile(Filter filter, List<TestResult> results) {
+    // When not using a filter, all results should be recorded.
+    if (filter == null) {
+      return true;
+    }
+
+    // If the results size is 0 (which can happen at least with JUnit 4.11), results are not
+    // significant and shouldn't be recorded.
+    if (results.size() == 0) {
+      return false;
+    }
+
+    // In JUnit 4.8, we have an odd scenario where we have one result telling us we have no results.
+    // More information below.
+    if (isSingularResultClaimingAllTestsWereFilteredOut(results)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
