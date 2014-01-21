@@ -16,11 +16,13 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -36,17 +38,22 @@ public class TestResultFormatter {
     this.ansi = Preconditions.checkNotNull(ansi);
   }
 
-  public void runStarted(ImmutableList.Builder<String> addTo,
+  public void runStarted(
+      ImmutableList.Builder<String> addTo,
       boolean isRunAllTests,
+      Optional<TestSelectorList> testSelectorList,
+      boolean shouldExplainTestSelectorList,
       ImmutableList<String> targetNames) {
-
-    String targetsBeingTested;
-    if (isRunAllTests) {
-      targetsBeingTested = "ALL TESTS";
+    if (testSelectorList.isPresent()) {
+      addTo.add("TESTING SELECTED TESTS");
+      if (shouldExplainTestSelectorList) {
+        addTo.addAll(testSelectorList.get().getExplanation());
+      }
+    } else if (isRunAllTests) {
+      addTo.add("TESTING ALL TESTS");
     } else {
-      targetsBeingTested = Joiner.on(' ').join(targetNames);
+      addTo.add("TESTING " + Joiner.on(' ').join(targetNames));
     }
-    addTo.add(String.format("TESTING %s", targetsBeingTested));
   }
 
   /** Writes a detailed summary that ends with a trailing newline. */

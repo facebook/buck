@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -138,11 +139,13 @@ public class EventSerializationTest {
 
   @Test
   public void testTestRunEventStarted() throws IOException {
-    TestRunEvent.Started event = TestRunEvent.started(true, ImmutableList.<String>of());
+    TestRunEvent.Started event = TestRunEvent.started(
+        true, Optional.<TestSelectorList>absent(), false, ImmutableList.<String>of());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"runAllTests\":true,\"targetNames\":[],\"type\":\"RunStarted\"}", message);
+        "\"runAllTests\":true,\"testSelectorListOptional\":{\"present\":false}," +
+        "\"targetNames\":[],\"type\":\"RunStarted\"}", message);
   }
 
   @Test

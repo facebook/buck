@@ -16,9 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -34,7 +36,8 @@ public interface TestRule extends BuildRule {
    * Returns a boolean indicating whether the files that contain the test results for this rule are
    * present.
    * <p>
-   * If this method returns {@code true}, then {@link #interpretTestResults(ExecutionContext)}
+   * If this method returns {@code true}, then
+   * {@link #interpretTestResults(ExecutionContext, boolean)}
    * should be able to be called directly.
    */
   public boolean hasTestResultFiles(ExecutionContext executionContext);
@@ -45,14 +48,22 @@ public interface TestRule extends BuildRule {
    * <strong>Note:</strong> This method may be run without {@link #build(BuildContext)} having been
    * run. This happens if the user has built [and ran] the test previously and then re-runs it using
    * the {@code --debug} flag.
+   *
    * @param buildContext Because this method may be run without {@link #build(BuildContext)} having
    *     been run, this is supplied in case any non-cacheable build work needs to be done.
    * @param executionContext Provides context for creating {@link com.facebook.buck.step.Step}s.
+   * @param testSelectorListOptional Provides a way of selecting which tests to include or exclude
+   *     from a run.
    * @return the commands required to run the tests
    */
-  public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext);
+  public List<Step> runTests(
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      Optional<TestSelectorList> testSelectorListOptional);
 
-  public Callable<TestResults> interpretTestResults(ExecutionContext executionContext);
+  public Callable<TestResults> interpretTestResults(
+      ExecutionContext executionContext,
+      boolean isUsingTestSelectors);
 
   /**
    * @return The set of labels for this build rule.

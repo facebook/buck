@@ -95,7 +95,11 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void testRunStarted(TestRunEvent.Started event) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    testFormatter.runStarted(lines, event.isRunAllTests(), event.getTargetNames());
+    testFormatter.runStarted(lines,
+        event.isRunAllTests(),
+        event.getTestSelectorListOptional(),
+        event.shouldExplainTestSelectorList(),
+        event.getTargetNames());
     printLines(lines);
   }
 

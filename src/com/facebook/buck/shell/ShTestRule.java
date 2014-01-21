@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
@@ -37,6 +38,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -108,7 +110,10 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   }
 
   @Override
-  public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext) {
+  public List<Step> runTests(
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      Optional<TestSelectorList> testSelectorList) {
     Preconditions.checkState(isRuleBuilt(), "%s must be built before tests can be run.", this);
 
     Step mkdirClean = new MakeCleanDirectoryStep(getPathToTestOutputDirectory());
@@ -134,7 +139,9 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   }
 
   @Override
-  public Callable<TestResults> interpretTestResults(ExecutionContext context) {
+  public Callable<TestResults> interpretTestResults(
+      ExecutionContext context,
+      boolean isUsingTestSelectors) {
     final ImmutableSet<String> contacts = getContacts();
     return new Callable<TestResults>() {
 

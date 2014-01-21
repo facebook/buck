@@ -22,9 +22,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -73,16 +75,57 @@ public class TestResultFormatterTest {
   public void shouldShowTargetsForTestsThatAreAboutToBeRun() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runStarted(builder, false, ImmutableList.of("//:example", "//foo:bar"));
+    formatter.runStarted(
+        builder,
+        false,
+        Optional.<TestSelectorList>absent(),
+        false,
+        ImmutableList.of("//:example", "//foo:bar"));
 
     assertEquals("TESTING //:example //foo:bar", toString(builder));
   }
 
   @Test
-  public void shouldShowThatAllTestAreBeingRunWhenRunIsStarted() {
+  public void shouldSaySelectedTestsWillBeRun() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    formatter.runStarted(builder, true, ImmutableList.of("//:example", "//foo:bar"));
+    ImmutableList<String> rawSelectors = ImmutableList.<String>of("com.example.clown.Car");
+    TestSelectorList testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+    Optional<TestSelectorList> testSelectorListOptional = Optional.of(testSelectorList);
+    ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
+
+    formatter.runStarted(builder, false, testSelectorListOptional, false, targetNames);
+
+    assertEquals("TESTING SELECTED TESTS", toString(builder));
+  }
+
+  @Test
+  public void shouldExplainWhichTestsWillBeSelected() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    ImmutableList<String> rawSelectors = ImmutableList.<String>of("com.example.clown.Car");
+    TestSelectorList testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+    Optional<TestSelectorList> testSelectorListOptional = Optional.of(testSelectorList);
+    ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
+    boolean shouldExplain = true;
+
+    formatter.runStarted(builder, false, testSelectorListOptional, shouldExplain, targetNames);
+
+    String expected = "TESTING SELECTED TESTS\n" +
+        "include class:com.example.clown.Car method:<any>\n" +
+        "exclude everything else";
+
+    assertEquals(
+        expected,
+        toString(builder));
+  }
+
+  @Test
+  public void shouldShowThatAllTestAreBeingRunWhenRunIsStarted() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
+
+    formatter.runStarted(builder, true, Optional.<TestSelectorList>absent(), false, targetNames);
 
     assertEquals("TESTING ALL TESTS", toString(builder));
   }

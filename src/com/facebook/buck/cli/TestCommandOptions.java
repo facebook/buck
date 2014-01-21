@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.java.DefaultJavaPackageFinder;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -62,6 +63,9 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   @AdditionalOptions
   private TargetDeviceOptions targetDeviceOptions;
+
+  @AdditionalOptions
+  private TestSelectorOptions testSelectorOptions;
 
   private static ImmutableSet.Builder<String> validateLabels(Set<String> labelSet) {
     ImmutableSet.Builder<String> result = ImmutableSet.builder();
@@ -136,5 +140,13 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   public Optional<TargetDevice> getTargetDeviceOptional() {
     return targetDeviceOptions.getTargetDeviceOptional();
+  }
+
+  public Optional<TestSelectorList> getTestSelectorListOptional() {
+    return testSelectorOptions.getTestSelectorListOptional();
+  }
+
+  public boolean shouldExplainTestSelectorList() {
+    return testSelectorOptions.shouldExplain();
   }
 }

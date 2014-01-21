@@ -16,14 +16,19 @@
 
 package com.facebook.buck.junit;
 
+import com.facebook.buck.test.selectors.TestDescription;
+import com.facebook.buck.test.selectors.TestSelectorList;
+
 import org.junit.Ignore;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
 import org.junit.internal.builders.AnnotatedBuilder;
 import org.junit.internal.builders.JUnit4Builder;
 import org.junit.runner.Computer;
+import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Runner;
+import org.junit.runner.manipulation.Filter;
 import org.junit.runner.notification.Failure;
 import org.junit.runners.model.RunnerBuilder;
 import org.w3c.dom.Document;
@@ -58,20 +63,50 @@ import javax.xml.transform.stream.StreamResult;
  */
 public final class JUnitRunner {
 
+  private static final String FILTER_DESCRIPTION = "TestSelectorList-filter";
+
   private final File outputDirectory;
   private final List<String> testClassNames;
   private final long defaultTestTimeoutMillis;
+  /* @Nullable */ private final TestSelectorList testSelectorList;
 
   public JUnitRunner(
       File outputDirectory,
       List<String> testClassNames,
-      long defaultTestTimeoutMillis) {
+      long defaultTestTimeoutMillis,
+      /* @Nullable */ TestSelectorList testSelectorList) {
     this.outputDirectory = outputDirectory;
     this.testClassNames = testClassNames;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
+    this.testSelectorList = testSelectorList;
   }
 
   public void run() throws Throwable {
+    Filter filter = null;
+    if (testSelectorList != null) {
+      filter = new Filter() {
+        @Override
+        public boolean shouldRun(Description description) {
+          String methodName = description.getMethodName();
+          if (methodName == null) {
+            // JUnit will give us an org.junit.runner.Description like this for the test class itself.
+            // It's easier for our filtering to make decisions just at the method level, however, so
+            // just always return true here.
+            return true;
+          } else {
+            String className = description.getClassName();
+            TestDescription testDescription = new TestDescription(className, methodName);
+            return testSelectorList.isIncluded(testDescription);
+          }
+        }
+
+        @Override
+        public String describe() {
+          return FILTER_DESCRIPTION;
+        }
+      };
+    }
+
     for (String className : testClassNames) {
       final Class<?> testClass = Class.forName(className);
       Ignore ignore = testClass.getAnnotation(Ignore.class);
@@ -87,12 +122,57 @@ public final class JUnitRunner {
 
         Runner suite = new Computer().getSuite(createRunnerBuilder(), new Class<?>[]{testClass});
         Request request = Request.runner(suite);
+        if (filter != null) {
+          // NB: Another way to do this would be to always include a Filter, and make the Filter's
+          // shouldRun() always return true if we don't have any selectors.  JUnit's behavior is
+          // different* if a Filter is included however, so only include a filter if we have
+          // selectors.
+          //
+          // (*Some people write classes without tests in them.  When using a filter these are
+          // considered error-worthy and NoTestsRemainException is thrown.  When not using a filter
+          // no error is thrown.)
+          request = request.filterWith(filter);
+        }
 
         jUnitCore.addListener(TestResult.createSingleTestResultRunListener(results));
         jUnitCore.run(request);
       }
-      writeResult(className, results);
+
+      if (!isSingularResultClaimingAllTestsWereFilteredOut(results)) {
+        writeResult(className, results);
+      }
     }
+  }
+
+  /**
+   * JUnit doesn't normally consider encountering a testless class an error.  However, when
+   * using org.junit.runner.manipulation.Filter, testless classes *are* considered an error,
+   * throwing org.junit.runner.manipulation.NoTestsRemainException.
+   *
+   * If we are using test-selectors then it's possible we will run a test class but never run any
+   * of its test methods, because they'd all get filtered out.  When this happens, the results will
+   * contain a single failure containing the error from the NoTestsRemainException.
+   *
+   * (NB: we can't decide at the class level whether we need to run a test class or not; we can only
+   * run the test class and all its test methods and handle the erroneous exception JUnit throws if
+   * no test-methods were actually run.)
+   */
+  private boolean isSingularResultClaimingAllTestsWereFilteredOut(List<TestResult> results) {
+    if (results.size() != 1) {
+      return false;
+    }
+
+    TestResult testResult = results.get(0);
+    if (testResult.isSuccess()) {
+      return false;
+    }
+
+    String message = testResult.failure.getMessage();
+    if (message == null) {
+      return false;
+    }
+
+    return message.contains("No tests found matching " + FILTER_DESCRIPTION);
   }
 
   private boolean isTestClass(Class<?> klass) {
@@ -205,7 +285,8 @@ public final class JUnitRunner {
     trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 
     // Write the result to a file.
-    File outputFile = new File(outputDirectory, testClassName + ".xml");
+    String testSelectorSuffix = testSelectorList != null ? ".test_selectors" : "";
+    File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
     OutputStream output = new BufferedOutputStream(new FileOutputStream(outputFile));
     StreamResult streamResult = new StreamResult(output);
     DOMSource source = new DOMSource(doc);
@@ -218,6 +299,7 @@ public final class JUnitRunner {
    * <ul>
    *   <li>(string) output directory
    *   <li>(long) default timeout in milliseconds (0 for no timeout)
+   *   <li>(string) newline separated list of test selectors
    *   <li>(string...) fully-qualified names of test classes
    * </ul>
    */
@@ -230,6 +312,9 @@ public final class JUnitRunner {
       System.err.println("Must specify an output directory and a default timeout.");
       System.exit(1);
     } else if (args.length == 2) {
+      System.err.println("Must specify some test selectors (or empty string for no selectors).");
+      System.exit(1);
+    } else if (args.length == 3) {
       System.err.println("Must specify at least one test.");
       System.exit(1);
     }
@@ -243,13 +328,20 @@ public final class JUnitRunner {
 
     long defaultTestTimeoutMillis = Long.parseLong(args[1]);
 
+    TestSelectorList testSelectorList = null;
+    if (!args[2].isEmpty()) {
+      List<String> rawSelectors = Arrays.asList(args[2].split("\n"));
+      testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+    }
+
     // Each argument other than the first one should be a class name to run.
-    List<String> testClassNames = Arrays.asList(args).subList(2, args.length);
+    List<String> testClassNames = Arrays.asList(args).subList(3, args.length);
 
     // Run the tests.
     new JUnitRunner(outputDirectory,
         testClassNames,
-        defaultTestTimeoutMillis)
+        defaultTestTimeoutMillis,
+        testSelectorList)
     .run();
 
     // Explicitly exit to force the test runner to complete even if tests have sloppily left behind

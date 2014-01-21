@@ -1,0 +1,7 @@
+java_test(
+  name = 'future',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:junit',
+  ],
+)

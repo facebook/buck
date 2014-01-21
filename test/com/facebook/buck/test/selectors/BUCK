@@ -1,0 +1,12 @@
+java_test(
+  name = 'selectors',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/test/selectors:selectors',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/test/selectors:selectors',
+  ],
+)

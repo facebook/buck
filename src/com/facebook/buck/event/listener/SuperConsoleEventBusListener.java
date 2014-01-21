@@ -277,7 +277,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void testRunStarted(TestRunEvent.Started event) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    testFormatter.runStarted(builder, event.isRunAllTests(), event.getTargetNames());
+    testFormatter.runStarted(builder,
+        event.isRunAllTests(),
+        event.getTestSelectorListOptional(),
+        event.shouldExplainTestSelectorList(),
+        event.getTargetNames());
     logEvents.add(LogEvent.info(Joiner.on('\n').join(builder.build())));
   }
 
@@ -289,7 +293,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // We could just format as if this was a log entry, but doing so causes the console to flicker
     // obscenely and isn't conducive to running tests. Since this is the last step of the build, the
     // output will still render just fine if we write directly to stderr.
-    console.getStdErr().println(Joiner.on('\n').join(builder.build()));
+    ImmutableList<String> lines = builder.build();
+    // When using TestSelectors, we may have a target that produces no test results and therefore
+    // no lines of output, so we should not print anything at all.
+    if (!lines.isEmpty()) {
+      console.getStdErr().println(Joiner.on('\n').join(lines));
+    }
   }
 
   @Subscribe

@@ -16,6 +16,7 @@ java_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/test/selectors:selectors',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',

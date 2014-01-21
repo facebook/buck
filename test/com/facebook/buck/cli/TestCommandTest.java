@@ -455,7 +455,8 @@ public class TestCommandTest {
         TestCommand.isTestRunRequiredForTest(
             createMock(TestRule.class),
             executionContext,
-            createMock(TestRuleKeyFileHelper.class))
+            createMock(TestRuleKeyFileHelper.class),
+            false)
     );
 
     verify(executionContext);
@@ -477,7 +478,8 @@ public class TestCommandTest {
         TestCommand.isTestRunRequiredForTest(
             testRule,
             executionContext,
-            createMock(TestRuleKeyFileHelper.class)));
+            createMock(TestRuleKeyFileHelper.class),
+            false));
 
     verify(executionContext, testRule);
   }
@@ -497,7 +499,8 @@ public class TestCommandTest {
         TestCommand.isTestRunRequiredForTest(
             testRule,
             executionContext,
-            createMock(TestRuleKeyFileHelper.class)));
+            createMock(TestRuleKeyFileHelper.class),
+            false));
 
     verify(executionContext, testRule);
   }
@@ -519,7 +522,8 @@ public class TestCommandTest {
     assertTrue(
         "A cached build should run the tests if the test output directory\'s rule key is not " +
             "present or does not matche the rule key for the test.",
-        TestCommand.isTestRunRequiredForTest(testRule, executionContext, testRuleKeyFileHelper));
+        TestCommand.isTestRunRequiredForTest(
+            testRule, executionContext, testRuleKeyFileHelper, false));
 
     verify(executionContext, testRule, testRuleKeyFileHelper);
   }

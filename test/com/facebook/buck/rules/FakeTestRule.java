@@ -15,11 +15,13 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -83,12 +85,17 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public List<Step> runTests(BuildContext buildContext, ExecutionContext executionContext) {
+  public List<Step> runTests(
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      Optional<TestSelectorList> testSelectorListOptional) {
     throw new UnsupportedOperationException("runTests() not supported in fake");
   }
 
   @Override
-  public Callable<TestResults> interpretTestResults(ExecutionContext executionContext) {
+  public Callable<TestResults> interpretTestResults(
+      ExecutionContext executionContext,
+      boolean isUsingTestSelectors) {
     throw new UnsupportedOperationException("interpretTestResults() not supported in fake");
   }
 

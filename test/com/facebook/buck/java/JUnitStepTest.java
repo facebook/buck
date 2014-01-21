@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.AndroidPlatformTarget;
@@ -66,6 +67,7 @@ public class JUnitStepTest {
         isCodeCoverageEnabled,
         isJacocoEnabled,
         isDebugEnabled,
+        Optional.<TestSelectorList>absent(),
         testRunnerClassesDirectory);
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
@@ -87,6 +89,7 @@ public class JUnitStepTest {
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
             "5000",
+            "",
             testClass1,
             testClass2),
         observedArgs);
@@ -120,6 +123,7 @@ public class JUnitStepTest {
         isCodeCoverageEnabled,
         isJacocoEnabled,
         isDebugEnabled,
+        Optional.<TestSelectorList>absent(),
         testRunnerClassesDirectory);
 
 
@@ -146,6 +150,7 @@ public class JUnitStepTest {
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults,
             "0",
+            "",
             testClass1,
             testClass2),
         observedArgs);

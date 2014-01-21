@@ -7,6 +7,7 @@ java_library(
     # test, as not to interfere with the results of the test.
     '//lib:junit',
     '//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner',
+    '//src/com/facebook/buck/test/selectors:selectors',
   ],
   visibility = [
     '//test/com/facebook/buck/junit:junit',
