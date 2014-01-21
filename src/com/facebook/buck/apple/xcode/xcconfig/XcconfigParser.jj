@@ -1,0 +1,271 @@
+/*
+ * Copyright 2013-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+options {
+  STATIC = false;
+}
+
+PARSER_BEGIN(XcconfigParser)
+
+package com.facebook.buck.apple.xcode.xcconfig;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+
+import com.facebook.buck.util.ProjectFilesystem;
+
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.io.Reader;
+import java.io.FileReader;
+import java.io.StringReader;
+
+/** Parse Xcconfig files. */
+public class XcconfigParser {
+
+  private Optional<ProjectFilesystem> fileSystem;
+  private Optional<Path> inputPathInProject;
+
+  private static XcconfigParser of(Reader input,
+                                   Optional<ProjectFilesystem> fileSystem,
+                                   Optional<Path> inputPathInProject) {
+    XcconfigParser parser = new XcconfigParser(input);
+    parser.fileSystem = Preconditions.checkNotNull(fileSystem);
+    parser.inputPathInProject = Preconditions.checkNotNull(inputPathInProject);
+    return parser;
+  }
+
+  public static ImmutableList<PredicatedConfigValue> parse(
+      ProjectFilesystem fileSystem,
+      Path inputPathInProject) throws ParseException {
+    Optional<Reader> readerOpt = fileSystem.getReaderIfFileExists(inputPathInProject);
+    if (!readerOpt.isPresent()) {
+      throw new ParseException("Cannot open file: " + inputPathInProject);
+    }
+    return XcconfigParser.of(readerOpt.get(),
+                             Optional.<ProjectFilesystem>of(fileSystem),
+                             Optional.<Path>of(inputPathInProject))
+                         .file();
+  }
+
+  public static ImmutableList<PredicatedConfigValue> parse(
+      ProjectFilesystem fileSystem,
+      String inputPathInProject) throws ParseException {
+        return parse(fileSystem, FileSystems.getDefault().getPath(inputPathInProject));
+  }
+
+  public static PredicatedConfigValue parseSetting(String setting) throws ParseException {
+    return XcconfigParser.of(new StringReader(setting),
+                             Optional.<ProjectFilesystem>absent(),
+                             Optional.<Path>absent())
+                         .buildSetting();
+  }
+
+  private ImmutableList<PredicatedConfigValue> parseIncludedFile(String includeFileName)
+      throws ParseException {
+
+    if (!fileSystem.isPresent()) {
+      throw new ParseException("Cannot include files without a filesystem");
+    }
+
+    // Parse the included file.
+    Path includeFilePath = FileSystems.getDefault().getPath(includeFileName);
+    Path includeFilePathInProject = null;
+
+    if (includeFilePath.isAbsolute()) {
+      // this feature is missing in xcodebuild : for testing purpose only!
+      includeFilePathInProject = includeFilePath;
+    } else if (inputPathInProject.isPresent()) {
+      // check relative to current file
+      try {
+        includeFilePathInProject = inputPathInProject.get().resolveSibling(includeFilePath);
+      } catch (InvalidPathException e) {
+        includeFilePathInProject = null;
+      }
+    }
+
+    if (includeFilePathInProject == null) {
+      throw new ParseException("Cannot resolve path for included file: " + includeFileName);
+    }
+
+    return parse(fileSystem.get(), includeFilePathInProject);
+  }
+
+}
+
+PARSER_END(XcconfigParser)
+
+<DEFAULT> SKIP:
+{
+  " "
+| "\n"
+| "\r"
+| "\t"
+| < "//" (~["\n"])* "\n" >
+}
+
+<DEFAULT> TOKEN:
+{
+  < LITERAL: (["A"-"Z", "a"-"z", "0"-"9", "_"])+ >
+| < LEFT_BRACKET: "[" > : CONDITION
+| < EQUAL: "=" (" ")* > : SETTING_VALUE
+| < INCLUDE: "#include" >
+| < QUOTED_STRING: "\"" (~["\""])* "\"" >
+}
+
+<SETTING_VALUE> SKIP:
+{
+  < "//" (~["\n"])* >
+}
+
+<SETTING_VALUE> TOKEN:
+{
+  < DOLLAR_LEFT_PAREN: "$(" >
+| < RIGHT_PAREN: ")" >
+| < DOLLAR_LEFT_BRACE: "${" >
+| < RIGHT_BRACE: "}" >
+| < DOLLAR_LITERAL: "$" (["A"-"Z", "a"-"z", "0"-"9", "_"])+ >
+| < VALUE_LITERAL : "/" // Note: if we get here the next char is not a slash, otherwise
+                        // this would not be the longest possible match in this state
+                  | (("/")? (~["\n", "$", "}", ")", "/"])+) >
+| < EOL: "\n" > : DEFAULT
+}
+
+<CONDITION> TOKEN:
+{
+  < CONDITION_EQUAL: "=" > : CONDITION_RHS
+| < KEY: (["a"-"z"])+ >
+| < STAR: "*" >
+| < COMMA: "," >
+| < RIGHT_BRACKET: "]" > : DEFAULT
+}
+
+<CONDITION_RHS> TOKEN:
+{
+  < CONDITION_LITERAL: (["a"-"z", "0"-"9", "_", "."])+ > : CONDITION
+}
+
+ImmutableList<PredicatedConfigValue> file() :
+{
+  ImmutableList.Builder<PredicatedConfigValue> builder = ImmutableList.builder();
+  Token file;
+  PredicatedConfigValue setting;
+}
+{
+  (
+    ( <INCLUDE> file = <QUOTED_STRING>
+      {
+        String s = file.image;
+        builder.addAll(parseIncludedFile(s.substring(1, s.length()-1)));
+      }
+    )
+  | ( setting = buildSetting()
+      {
+        builder.add(setting);
+      }
+    )
+  )*
+  {
+   return builder.build();
+  }
+}
+
+PredicatedConfigValue buildSetting() :
+{
+  Token key;
+  ImmutableSortedSet.Builder<Condition> conditions = ImmutableSortedSet.naturalOrder();;
+  ImmutableList.Builder<TokenValue> valueTokens = ImmutableList.builder();;
+}
+{
+  (
+    ( key = <LITERAL> )
+    ( <LEFT_BRACKET> ( parseCondition(conditions)
+                     (<COMMA> parseCondition(conditions))* )?
+      <RIGHT_BRACKET> )*
+    <EQUAL>
+    ( parseTokenValue(valueTokens) )+
+    (<EOL> | <EOF>)
+  )
+  {
+    return new PredicatedConfigValue(key.image, conditions.build(), valueTokens.build());
+  }
+}
+
+void parseCondition(ImmutableSortedSet.Builder<Condition> conditions) :
+{
+  Token key;
+  Token value;
+  boolean isPrefix = false;
+}
+{
+  (
+    key = <KEY>
+    <CONDITION_EQUAL>
+    value = <CONDITION_LITERAL>
+    ( <STAR> { isPrefix = true; } | {})
+  )
+  {
+    conditions.add(new Condition(key.image, value.image, isPrefix));
+  }
+}
+
+void parseTokenValue(ImmutableList.Builder<TokenValue> tokens) :
+{
+  Token value;
+}
+{
+  (
+    value = <VALUE_LITERAL>
+    {
+      tokens.add(TokenValue.literal(value.image));
+    }
+  )
+  | (
+    value = <DOLLAR_LITERAL>
+    {
+      String s = value.image;
+      tokens.add(TokenValue.interpolation(
+        ImmutableList.<TokenValue>of(TokenValue.literal(s.substring(1, s.length())))
+      ));
+    }
+  )
+  | (
+    <DOLLAR_LEFT_BRACE>
+    {
+        ImmutableList.Builder<TokenValue> nestedTokens = ImmutableList.builder();
+    }
+    (parseTokenValue(nestedTokens))+
+    <RIGHT_BRACE>
+    {
+      tokens.add(TokenValue.interpolation(nestedTokens.build()));
+    }
+  )
+  | (
+    <DOLLAR_LEFT_PAREN>
+    {
+        ImmutableList.Builder<TokenValue> nestedTokens = ImmutableList.builder();
+    }
+    (parseTokenValue(nestedTokens))+
+    <RIGHT_PAREN>
+    {
+      tokens.add(TokenValue.interpolation(nestedTokens.build()));
+    }
+  )
+}

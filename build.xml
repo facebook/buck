@@ -117,15 +117,12 @@
   </target>
 
   <target name="javacc">
-  <mkdir dir="${javacc.gensrc.dir}" />
-<!--
-    <mkdir dir="${javacc.gensrc.dir}/YY" />
-    <javacc target="src/YY/XXXX.jj"
-            outputdirectory="${javacc.gensrc.dir}/YY"
+    <mkdir dir="${javacc.gensrc.dir}/com/facebook/buck/apple/xcode/xcconfig" />
+    <javacc target="src/com/facebook/buck/apple/xcode/xcconfig/XcconfigParser.jj"
+            outputdirectory="${javacc.gensrc.dir}/com/facebook/buck/apple/xcode/xcconfig"
             javacchome="third-party/java/javacc"
             static="false"
-        />
--->
+    />
   </target>
 
   <target name="javacc-tests">
@@ -300,10 +297,13 @@
         <exclude name="com/facebook/buck/cli/quickstart/**" />
         <exclude name="**/BUCK" />
         <exclude name="**/*.iml"/>
+        <exclude name="**/*.jj"/>
         <exclude name="**/*.py"/>
         <exclude name="**/*.pyc"/>
         <exclude name="**/*.sh"/>
         <exclude name="**/*.soy"/>
+      </fileset>
+      <fileset dir="${javacc.gensrc.dir}">
       </fileset>
       <link href="http://docs.oracle.com/javase/7/docs/api/" />
       <link href="http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/" />

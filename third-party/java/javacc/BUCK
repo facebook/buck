@@ -13,4 +13,4 @@ sh_binary(
 
 # to create a java library from .jj and .java source files, use:
 #   include_defs('//third-party/java/javacc/DEFS')
-#   make_javacc_parser_library(name, srcs, [deps], [visibility])
+#   javacc_parser_library(name, srcs, [deps], [visibility])

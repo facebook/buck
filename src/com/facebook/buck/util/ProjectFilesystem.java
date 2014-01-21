@@ -33,9 +33,11 @@ import com.google.common.io.InputSupplier;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
@@ -279,6 +281,23 @@ public class ProjectFilesystem {
         throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
       }
       return Optional.of(contents);
+    } else {
+      return Optional.absent();
+    }
+  }
+
+  /**
+   * Attempts to open the file for future read access. Returns {@link Optional#absent()} if the file
+   * does not exist.
+   */
+  public Optional<Reader> getReaderIfFileExists(Path pathRelativeToProjectRoot) {
+    File fileToRead = getFileForRelativePath(pathRelativeToProjectRoot);
+    if (fileToRead.isFile()) {
+      try {
+        return Optional.of((Reader) new FileReader(fileToRead));
+      } catch (Exception e) {
+        throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
+      }
     } else {
       return Optional.absent();
     }

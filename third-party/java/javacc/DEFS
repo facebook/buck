@@ -1,4 +1,4 @@
-def make_javacc_parser_library(
+def javacc_parser_library(
     name,
     srcs,
     deps=[],

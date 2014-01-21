@@ -20,6 +20,8 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 
 import java.io.File;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Path;
 
 // TODO(user): Override rest of the methods and provide helper methods to verify its state.
@@ -40,6 +42,15 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public Optional<String> readFileIfItExists(Path path) {
     return Optional.absent();
+  }
+
+  @Override
+  public Optional<Reader> getReaderIfFileExists(Path path) {
+    Optional<String> content = readFileIfItExists(path);
+    if (!content.isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.of((Reader) new StringReader(content.get()));
   }
 
   @Override

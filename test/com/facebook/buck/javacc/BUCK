@@ -12,7 +12,7 @@ java_test(
 
 include_defs('//third-party/java/javacc/DEFS')
 
-make_javacc_parser_library(
+javacc_parser_library(
   name = 'simple1',
   srcs = glob(['*.jj']),
 )
