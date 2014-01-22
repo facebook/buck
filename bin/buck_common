@@ -46,6 +46,14 @@ ORIGINAL_WORKING_DIRECTORY="$PWD"
 # Keep track of the project root directory.
 PROJECT_ROOT="$PWD"
 
+if ! [ -f "$PROJECT_ROOT/.buckconfig" ] ; then
+  echo >&2 'This does not appear to be the root of a Buck project.'
+  echo >&2 'Please "cd" to the root of your project before running buck.'
+  echo >&2 'If this really is the root of your project, run "touch .buckconfig"'
+  echo >&2 'then re-run your buck command.'
+  exit 1
+fi
+
 # Test for running buck daemon.
 BUCKD_DIR="${PROJECT_ROOT}/.buckd"
 BUCKD_LOG_FILE="${BUCKD_DIR}/buckd.log"
