@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -34,7 +34,7 @@ import java.nio.file.Path;
  * the output directory, copies the appropriate files to {@link BuckConstant#GEN_DIR}, and records
  * these artifacts for upload via the {@link BuildableContext}.
  */
-public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
+public class RecordArtifactsInDirectoryStep implements Step {
 
   private final BuildableContext buildableContext;
   private final Path binDirectory;
@@ -49,7 +49,6 @@ public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
   public RecordArtifactsInDirectoryStep(BuildableContext buildableContext,
       Path binDirectory,
       Path genDirectory) {
-    super("recording artifacts in " + binDirectory);
     this.buildableContext = Preconditions.checkNotNull(buildableContext);
     this.binDirectory = Preconditions.checkNotNull(binDirectory);
     this.genDirectory = Preconditions.checkNotNull(genDirectory);
@@ -81,6 +80,16 @@ public class RecordArtifactsInDirectoryStep extends AbstractExecutionStep {
     }
 
     return 0;
+  }
+
+  @Override
+  public String getShortName() {
+    return "record_artifacts_in_dir";
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return String.format("%s %s", getShortName(), binDirectory);
   }
 
 }
