@@ -19,6 +19,9 @@ package com.facebook.buck.javacc;
 import org.junit.Test;
 import java.io.StringReader;
 
+// This class depends on javacc-generated source code.
+// Please run "ant compile-tests" if you hit undefined symbols in IntelliJ.
+
 public class JavaCCTest {
 
   @Test

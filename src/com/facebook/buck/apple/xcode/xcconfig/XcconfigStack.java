@@ -16,6 +16,9 @@
 
 package com.facebook.buck.apple.xcode.xcconfig;
 
+// This class depends on javacc-generated source code.
+// Please run "ant compile-tests" if you hit undefined symbols in IntelliJ.
+
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
