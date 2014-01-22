@@ -21,7 +21,6 @@ import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.java.classes.FileLikes;
-import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
@@ -50,8 +49,7 @@ import javax.annotation.Nullable;
  * {@link Step} that takes a directory or zip of {@code .class} files and traverses it to get the
  * total set of {@code .class} files included by the directory or zip.
  */
-public class AccumulateClassNamesStep extends AbstractExecutionStep
-    implements Supplier<ImmutableSortedMap<String, HashCode>> {
+public class AccumulateClassNamesStep implements Step, Supplier<ImmutableSortedMap<String, HashCode>> {
 
   /**
    * In the generated {@code classes.txt} file, each line will contain the path to a {@code .class}
@@ -81,7 +79,6 @@ public class AccumulateClassNamesStep extends AbstractExecutionStep
    */
   public AccumulateClassNamesStep(Optional<Path> pathToJarOrClassesDirectory,
       Path whereClassNamesShouldBeWritten) {
-    super("get_class_names " + pathToJarOrClassesDirectory + " > " + whereClassNamesShouldBeWritten);
     this.pathToJarOrClassesDirectory = Preconditions.checkNotNull(pathToJarOrClassesDirectory);
     this.whereClassNamesShouldBeWritten = Preconditions.checkNotNull(whereClassNamesShouldBeWritten);
   }
@@ -120,6 +117,18 @@ public class AccumulateClassNamesStep extends AbstractExecutionStep
     }
 
     return 0;
+  }
+
+  @Override
+  public String getShortName() {
+    return "get_class_names";
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return String.format("get_class_names %s > %s",
+        pathToJarOrClassesDirectory,
+        whereClassNamesShouldBeWritten);
   }
 
   /**
