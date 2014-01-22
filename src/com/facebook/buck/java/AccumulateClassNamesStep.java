@@ -27,7 +27,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
@@ -43,13 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.Nullable;
-
 /**
  * {@link Step} that takes a directory or zip of {@code .class} files and traverses it to get the
  * total set of {@code .class} files included by the directory or zip.
  */
-public class AccumulateClassNamesStep implements Step, Supplier<ImmutableSortedMap<String, HashCode>> {
+public class AccumulateClassNamesStep implements Step {
 
   /**
    * In the generated {@code classes.txt} file, each line will contain the path to a {@code .class}
@@ -62,14 +59,6 @@ public class AccumulateClassNamesStep implements Step, Supplier<ImmutableSortedM
 
   private final Optional<Path> pathToJarOrClassesDirectory;
   private final Path whereClassNamesShouldBeWritten;
-
-  /**
-   * Map of names of {@code .class} files to hashes of their contents.
-   * <p>
-   * This is not set until this step is executed.
-   */
-  @Nullable
-  private ImmutableSortedMap<String, HashCode> classNames;
 
   /**
    * @param pathToJarOrClassesDirectory Where to look for .class files. If absent, then an empty
@@ -167,13 +156,6 @@ public class AccumulateClassNamesStep implements Step, Supplier<ImmutableSortedM
     }
 
     return Optional.of(classNamesBuilder.build());
-  }
-
-  @Override
-  public ImmutableSortedMap<String, HashCode> get() {
-    Preconditions.checkNotNull(classNames,
-        "Step must be executed successfully before invoking this method.");
-    return classNames;
   }
 
   /**
