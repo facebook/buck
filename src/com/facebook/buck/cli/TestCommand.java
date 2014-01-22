@@ -47,6 +47,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
@@ -73,6 +74,7 @@ import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.List;
@@ -127,6 +129,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph());
 
     results = filterTestRules(options, results);
+    if (options.isPrintMatchingTestRules()) {
+      printMatchingTestRules(console, results);
+      return 0;
+    }
 
     BuildContext buildContext = build.getBuildContext();
     ExecutionContext buildExecutionContext = build.getExecutionContext();
@@ -270,9 +276,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       BuildTargetException, BuildFileParseException {
     Logging.setLoggingLevelForVerbosity(console.getVerbosity());
 
-    // Create artifact cache to initialize Cassandra connection, if appropriate.
-    ArtifactCache artifactCache = getArtifactCache();
-
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
     RawRulePredicate predicate = new RawRulePredicate() {
@@ -301,6 +304,13 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     });
 
     testRules = filterTestRules(options, testRules);
+    if (options.isPrintMatchingTestRules()) {
+      printMatchingTestRules(console, testRules);
+      return 0;
+    }
+
+    // Create artifact cache to initialize Cassandra connection, if appropriate.
+    ArtifactCache artifactCache = getArtifactCache();
 
     // Build all of the test rules.
     Build build = options.createBuild(options.getBuckConfig(),
@@ -321,6 +331,21 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         build.getBuildContext(),
         build.getExecutionContext(),
         options);
+  }
+
+  private void printMatchingTestRules(Console console, Iterable<TestRule> testRules) {
+    PrintStream out = console.getStdOut();
+    ImmutableList<TestRule> list = ImmutableList.copyOf(testRules);
+    out.println(String.format("MATCHING TEST RULES (%d):", list.size()));
+    out.println("");
+    if (list.isEmpty()) {
+      out.println("  (none)");
+    } else {
+      for (TestRule testRule : testRules) {
+        out.println("  " + testRule.getBuildTarget());
+      }
+    }
+    out.println("");
   }
 
   @VisibleForTesting
@@ -394,6 +419,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       ExecutionContext executionContext,
       StepRunner stepRunner,
       final TestCommandOptions options) throws IOException {
+
     ImmutableSet<JavaLibraryRule> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.
     if (options.isCodeCoverageEnabled()) {

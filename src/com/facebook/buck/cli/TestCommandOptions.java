@@ -65,6 +65,11 @@ public class TestCommandOptions extends BuildCommandOptions {
       handler = StringSetOptionHandler.class)
   private Supplier<ImmutableSet<String>> excludedSet;
 
+  @Option(
+      name = "--dry-run",
+      usage = "Print tests that match the given command line options, but don't run them.")
+  private boolean printMatchingTestRules;
+
   @AdditionalOptions
   private TargetDeviceOptions targetDeviceOptions;
 
@@ -207,5 +212,9 @@ public class TestCommandOptions extends BuildCommandOptions {
       disjunction.add(conjunction.build());
     }
     return disjunction.build();
+  }
+
+  public boolean isPrintMatchingTestRules() {
+    return printMatchingTestRules;
   }
 }
