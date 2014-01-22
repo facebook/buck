@@ -178,10 +178,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throw new HumanReadableException(e);
     }
 
+    ExecutionContext executionContext = createExecutionContext(options,
+        partialGraph.getDependencyGraph());
+
     ProjectGenerator projectGenerator = new ProjectGenerator(
         partialGraph,
         targets,
         getProjectFilesystem(),
+        executionContext,
         getProjectFilesystem().getFileForRelativePath("_gen").toPath(),
         "GeneratedProject");
 

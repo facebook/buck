@@ -53,6 +53,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -97,6 +102,7 @@ import javax.xml.transform.stream.StreamResult;
 public class ProjectGenerator {
   private final PartialGraph partialGraph;
   private final ProjectFilesystem projectFilesystem;
+  private final ExecutionContext executionContext;
   private final Path outputDirectory;
   private final String projectName;
   private final ImmutableList<BuildTarget> initialTargets;
@@ -113,11 +119,13 @@ public class ProjectGenerator {
       PartialGraph partialGraph,
       ImmutableList<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
+      ExecutionContext executionContext,
       Path outputDirectory,
       String projectName) {
     this.partialGraph = partialGraph;
     this.initialTargets = initialTargets;
     this.projectFilesystem = projectFilesystem;
+    this.executionContext = executionContext;
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
 
@@ -249,6 +257,9 @@ public class ProjectGenerator {
         buildable.getConfigurations(), ImmutableMap.<String, String>of());
 
     // -- build phases
+    // TODO (Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
         target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
     addHeadersBuildPhase(target, targetGroup, buildable.getHeaders());
@@ -279,6 +290,9 @@ public class ProjectGenerator {
         ImmutableMap.<String, String>of("INFOPLIST_FILE", infoPlistPath.toString()));
 
     // -- phases
+    // TODO (Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
         target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
     addFrameworksBuildPhase(
@@ -318,6 +332,9 @@ public class ProjectGenerator {
         ImmutableMap.of("INFOPLIST_FILE", infoPlistPath.toString()));
 
     // -- phases
+    // TODO (Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
         target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
     addFrameworksBuildPhase(
@@ -398,6 +415,34 @@ public class ProjectGenerator {
           target.getBuildConfigurationList().getBuildConfigurationsByName()
               .getUnchecked(configuration.getName());
       outputConfiguration.setBaseConfigurationReference(fileReference);
+    }
+  }
+
+  private void addRunScriptBuildPhase(PBXNativeTarget target, Genrule rule) {
+    // TODO: Check and validate dependencies of the script. If it depends on libraries etc.
+    // we can't handle it currently.
+    PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
+    target.getBuildPhases().add(shellScriptBuildPhase);
+    for (Path path : rule.getSrcs()) {
+      shellScriptBuildPhase.getInputPaths().add(path.toString());
+    }
+
+    StringBuilder bashCommandBuilder = new StringBuilder();
+    ShellStep genruleStep = rule.createGenruleStep();
+    for (String commandElement : genruleStep.getShellCommand(executionContext)) {
+      if (bashCommandBuilder.length() > 0) {
+        bashCommandBuilder.append(' ');
+      }
+      bashCommandBuilder.append(Escaper.escapeAsBashString(commandElement));
+    }
+    shellScriptBuildPhase.setShellScript(bashCommandBuilder.toString());
+  }
+
+  private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
+    for (BuildRule dependency : rule.getDeps()) {
+      if (dependency.getType().equals(BuildRuleType.GENRULE)) {
+        addRunScriptBuildPhase(target, (Genrule)dependency);
+      }
     }
   }
 

@@ -56,15 +56,20 @@ import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DescribedRule;
+import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -100,6 +105,7 @@ public class ProjectGeneratorTest {
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
 
   private ProjectFilesystem projectFilesystem;
+  private ExecutionContext executionContext;
   private XcodeNativeDescription xcodeNativeDescription;
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
@@ -108,6 +114,7 @@ public class ProjectGeneratorTest {
   @Before
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
+    executionContext = TestExecutionContext.newInstance();
     xcodeNativeDescription = new XcodeNativeDescription();
     iosLibraryDescription = new IosLibraryDescription();
     iosTestDescription = new IosTestDescription();
@@ -383,6 +390,55 @@ public class ProjectGeneratorTest {
     assertHasSingletonResourcesPhaseWithEntries(target, "resource.png");
   }
 
+  @Test
+  public void testIosLibraryRuleWithGenruleDependency() throws IOException {
+
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    AbstractBuildRuleBuilderParams genruleParams = new FakeAbstractBuildRuleBuilderParams();
+    Genrule.Builder builder = Genrule.newGenruleBuilder(genruleParams);
+    builder.setBuildTarget(new BuildTarget("//foo", "script"));
+    builder.setBash(Optional.of("echo \"hello world!\""));
+    builder.setOut("helloworld.txt");
+
+    Genrule genrule = buildRuleResolver.buildAndAddToIndex(builder);
+
+    BuildTarget libTarget = new BuildTarget("//foo", "lib");
+    BuildRuleParams libParams = new FakeBuildRuleParams(libTarget,
+                                                        ImmutableSortedSet.<BuildRule>of(genrule));
+    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
+    arg.srcs = ImmutableList.of(
+        Either.<SourcePath, Pair<SourcePath, String>>ofRight(
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
+    arg.frameworks = ImmutableSortedSet.of();
+    BuildRule rule = new DescribedRule(
+        IosLibraryDescription.TYPE,
+        iosLibraryDescription.createBuildable(libParams, arg), libParams);
+
+    buildRuleResolver.addToIndex(libTarget, rule);
+
+    ProjectGenerator projectGenerator = createProjectGenerator(
+        buildRuleResolver, ImmutableList.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertThat(project.getTargets(), hasSize(2));
+    PBXTarget target = project.getTargets().get(0);
+    assertThat(target.getName(), equalTo("//foo:lib"));
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+
+    PBXShellScriptBuildPhase shellScriptBuildPhase = getSingletonPhaseByType(
+        target,
+        PBXShellScriptBuildPhase.class);
+
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        equalTo("/bin/bash -e -c 'echo \"hello world!\"'"));
+  }
+
   private ProjectGenerator createProjectGenerator(
       BuildRuleResolver buildRuleResolver, ImmutableList<BuildTarget> initialBuildTargets) {
     PartialGraph partialGraph = PartialGraphFactory.newInstance(
@@ -391,6 +447,7 @@ public class ProjectGeneratorTest {
         partialGraph,
         initialBuildTargets,
         projectFilesystem,
+        executionContext,
         OUTPUT_DIRECTORY,
         PROJECT_NAME);
   }
