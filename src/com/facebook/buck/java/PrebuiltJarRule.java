@@ -37,7 +37,6 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -210,12 +209,11 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
     return steps.build();
   }
 
-  class CalculateAbiStep extends AbstractExecutionStep {
+  class CalculateAbiStep implements Step {
 
     private final BuildableContext buildableContext;
 
     private CalculateAbiStep(BuildableContext buildableContext) {
-      super("calculate ABI for " + binaryJar);
       this.buildableContext = Preconditions.checkNotNull(buildableContext);
     }
 
@@ -234,6 +232,16 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
       buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
 
       return 0;
+    }
+
+    @Override
+    public String getShortName() {
+      return "calculate_abi";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return String.format("%s %s", getShortName(), binaryJar);
     }
 
   }
