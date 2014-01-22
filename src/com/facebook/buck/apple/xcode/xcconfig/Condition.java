@@ -18,8 +18,6 @@ package com.facebook.buck.apple.xcode.xcconfig;
 
 import java.util.Objects;
 
-import javax.annotation.Nullable;
-
 /**
  * A condition applying to an entry in a xcconfig file
  */
@@ -67,28 +65,9 @@ public class Condition implements Comparable<Condition> {
     return keyComp;
   }
 
-  /**
-   * @return  Condition which matches the smaller subset. Null if one Condition is not a subset of the
-   *          other.
-   */
-  @Nullable
-  public Condition narrow(Condition other) {
-    if (!key.equals(other.key)) {
-      return null;
-    }
-    if (isPrefix && other.isPrefix) {
-      return value.startsWith(other.value) ? this : other.value.startsWith(value) ? other : null;
-    } else if (isPrefix) {
-      return other.value.startsWith(value) ? other : null;
-    } else if (other.isPrefix) {
-      return value.startsWith(other.value) ? this : null;
-    } else {
-      return value.equals(other.value) ? this : null;
-    }
-  }
-
   @Override
   public String toString() {
     return key + "=" + value + (isPrefix ? "*" : "");
   }
+
 }

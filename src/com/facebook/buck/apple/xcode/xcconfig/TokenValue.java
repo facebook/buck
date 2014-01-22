@@ -16,7 +16,9 @@
 
 package com.facebook.buck.apple.xcode.xcconfig;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Objects;
@@ -55,6 +57,10 @@ public class TokenValue {
     return new TokenValue(Type.INTERPOLATION, null, value);
   }
 
+  public static TokenValue interpolation(String name) {
+    return interpolation(ImmutableList.of(TokenValue.literal(name)));
+  }
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -81,7 +87,56 @@ public class TokenValue {
       case LITERAL: return literalValue;
       case INTERPOLATION: return "$(" + Joiner.on("").join(interpolationValue) + ")";
     }
+    // unreachable
     return null;
+  }
+
+  // Interpolate this token in depth using the given interpretation function
+  public TokenValue interpolate(Function<String, Optional<TokenValue>> function) {
+    switch (type) {
+      case LITERAL:
+        return this;
+
+      case INTERPOLATION:
+        ImmutableList<TokenValue> newValue = interpolateList(function, interpolationValue);
+        if (newValue.size() == 1 && newValue.get(0).type == Type.LITERAL) {
+          Optional<TokenValue> interpolated = function.apply(newValue.get(0).literalValue);
+          if (interpolated.isPresent()) {
+            return interpolated.get();
+          }
+        }
+        return interpolation(newValue);
+    }
+    // unreachable
+    return null;
+  }
+
+  // Interpolate the given list of tokens in depth using the given interpretation function
+  // Take a chance to collapse a list made of string literals into a singleton literal
+  public static ImmutableList<TokenValue> interpolateList(
+      Function<String, Optional<TokenValue>> function,
+      ImmutableList<TokenValue> values) {
+    ImmutableList.Builder<TokenValue> newValues = ImmutableList.builder();
+    @Nullable StringBuilder stringValue = new StringBuilder();
+
+    for (TokenValue token : values) {
+      TokenValue newToken = token.interpolate(function);
+
+      newValues.add(newToken);
+
+      if (stringValue != null) {
+        if (newToken.type != Type.LITERAL) {
+          stringValue = null;
+        } else {
+          stringValue.append(newToken.literalValue);
+        }
+      }
+    }
+
+    if (stringValue != null) {
+      return ImmutableList.of(literal(stringValue.toString()));
+    }
+    return newValues.build();
   }
 
 }

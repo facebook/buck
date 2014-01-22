@@ -16,21 +16,20 @@
 
 package com.facebook.buck.apple.xcode.xcconfig;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
+import com.google.common.collect.ImmutableList;
 
+import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class XcconfigStackTest {
   @Test
   public void testTrivialResolution() {
     new TestBench()
         .addLayer("FOO", "bar")
-        .assertEquals("FOO = bar");
+        .assertEquals(
+            "__0_FOO = bar",
+            "FOO = $(__0_FOO)"
+        );
   }
 
   @Test
@@ -38,49 +37,68 @@ public class XcconfigStackTest {
     new TestBench()
         .addLayer("FOO", "top")
         .addLayer("FOO", "bottom")
-        .assertEquals("FOO = top");
+        .assertEquals(
+            "__0_FOO = top",
+            "__1_FOO = bottom",
+            "FOO = $(__1_FOO)"
+        );
   }
 
   @Test
   public void testSimpleInterpolation() {
     new TestBench()
         .addLayer(
-            "FOO", "a $(BAR) b $BAR c",
-            "BAR", "val",
+            "FOO", "a $(BAR) b $BAR c ${BAR}",
+            "BAR", "val1",
+            "BAR", "val2",
             "BAZ", "$(MISSING)1")
         .assertEquals(
-            "BAR = val",
-            "BAZ = $(MISSING)1",
-            "FOO = a val b val c");
+            "__0_BAR = val2",
+            "__0_BAZ = $(MISSING)1",
+            "__0_FOO = a $(BAR) b $(BAR) c $(BAR)",
+            "BAR = $(__0_BAR)",
+            "BAZ = $(__0_BAZ)",
+            "FOO = $(__0_FOO)"
+        );
   }
 
   @Test
   public void testInheritedInterpolation() {
     new TestBench()
         .addLayer(
-            "FOO", "$(inherited) top_foo",
-            "BAR", "$(BAR) top_bar")
-        .addLayer(
             "FOO", "bottom_foo",
             "BAR", "bottom_bar",
-            "BAZ", "$(FOO) $(BAR)")
+            "BAZ", "$(FOO) $(BAR) $(BAZ)")
+        .addLayer(
+            "FOO", "$(inherited) top_foo",
+            "BAR", "$(BAR) top_bar")
         .assertEquals(
-            "BAR = bottom_bar top_bar",
-            "BAZ = bottom_foo top_foo bottom_bar top_bar",
-            "FOO = bottom_foo top_foo");
+            "__0_BAR = bottom_bar",
+            "__0_BAZ = $(FOO) $(BAR) $(inherited)",
+            "__0_FOO = bottom_foo",
+            "__1_BAR = $(__0_BAR) top_bar",
+            "__1_FOO = $(__0_FOO) top_foo",
+            "BAR = $(__1_BAR)",
+            "BAZ = $(__0_BAZ)",
+            "FOO = $(__1_FOO)"
+        );
   }
 
   @Test
   public void testNestedInterpolation() {
     new TestBench()
         .addLayer(
-            "FOO", "a$(BAR$(NAME_SUFFIX))",
+            "FOO", "a$(BAR$(FOO))",
             "NAME_SUFFIX", "_ZZZ",
             "BAR_ZZZ", "baz")
         .assertEquals(
-            "BAR_ZZZ = baz",
-            "FOO = abaz",
-            "NAME_SUFFIX = _ZZZ");
+            "__0_BAR_ZZZ = baz",
+            "__0_FOO = a$(BAR$(inherited))",
+            "__0_NAME_SUFFIX = _ZZZ",
+            "BAR_ZZZ = $(__0_BAR_ZZZ)",
+            "FOO = $(__0_FOO)",
+            "NAME_SUFFIX = $(__0_NAME_SUFFIX)"
+        );
   }
   @Test
   public void testConditionalSimple() {
@@ -90,23 +108,11 @@ public class XcconfigStackTest {
             "FOO[arch=i386]", "a",
             "FOO[arch=x86_64]", "b")
         .assertEquals(
-            "FOO = foo",
-            "FOO[arch=i386] = a",
-            "FOO[arch=x86_64] = b");
-  }
-
-  @Test
-  public void testConditionalPropagation() {
-    new TestBench()
-        .addLayer(
-            "FOO", "foo",
-            "FOO[arch=i386]", "foo_i386",
-            "BAR", "$(FOO)")
-        .assertEquals(
-            "BAR = foo",
-            "BAR[arch=i386] = foo_i386",
-            "FOO = foo",
-            "FOO[arch=i386] = foo_i386");
+            "__0_FOO = foo",
+            "__0_FOO[arch=i386] = a",
+            "__0_FOO[arch=x86_64] = b",
+            "FOO = $(__0_FOO)"
+        );
   }
 
   @Test
@@ -118,11 +124,14 @@ public class XcconfigStackTest {
             "B[sdk=iphonesimulator*]", "b_sim",
             "C", "$A $B")
         .assertEquals(
-            "A[arch=i386] = a_i386",
-            "A[arch=x86_64] = a_x86_64",
-            "B[sdk=iphonesimulator*] = b_sim",
-            "C[arch=i386,sdk=iphonesimulator*] = a_i386 b_sim",
-            "C[arch=x86_64,sdk=iphonesimulator*] = a_x86_64 b_sim");
+            "__0_A[arch=i386] = a_i386",
+            "__0_A[arch=x86_64] = a_x86_64",
+            "__0_B[sdk=iphonesimulator*] = b_sim",
+            "__0_C = $(A) $(B)",
+            "A = $(__0_A)",
+            "B = $(__0_B)",
+            "C = $(__0_C)"
+        );
   }
 
   /**
@@ -147,10 +156,9 @@ public class XcconfigStackTest {
 
     public TestBench assertEquals(String... lines) {
       XcconfigStack stack = builder.build();
-      List<String> result = stack.resolveConfigStack();
-      Collections.sort(result);
-      Arrays.sort(lines);
-      assertThat(result, contains(lines));
+      ImmutableList<String> result = stack.resolveConfigStack();
+      ImmutableList<String> expected = ImmutableList.copyOf(lines);
+      Assert.assertEquals(expected, result);
       return this;
     }
   }
