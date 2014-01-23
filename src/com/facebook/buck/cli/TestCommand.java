@@ -124,7 +124,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     Build build = buildCommand.getBuild();
 
-    Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph(), options);
+    Iterable<TestRule> results = getCandidateRules(build.getDependencyGraph());
 
     results = filterTestRules(options, results);
 
@@ -325,8 +325,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   @VisibleForTesting
   static Iterable<TestRule> getCandidateRules(
-      DependencyGraph graph,
-      final TestCommandOptions options) {
+      DependencyGraph graph) {
     AbstractBottomUpTraversal<BuildRule, List<TestRule>> traversal =
         new AbstractBottomUpTraversal<BuildRule, List<TestRule>>(graph) {
 
@@ -336,10 +335,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       public void visit(BuildRule buildRule) {
         if (buildRule instanceof TestRule) {
           TestRule testRule = (TestRule)buildRule;
-          // If includedSet not empty, only select test rules that contain included label.
-          if (isRuleIncluded(testRule, options)) {
-            results.add(testRule);
-          }
+          results.add(testRule);
         }
       }
 
@@ -350,17 +346,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     };
     traversal.traverse();
     return traversal.getResult();
-  }
-
-  private static boolean isRuleIncluded(TestRule rule, TestCommandOptions options) {
-    ImmutableSet<String> includedLabels = options.getIncludedLabels();
-    return includedLabels.isEmpty() ||
-        !Sets.intersection(rule.getLabels(), includedLabels).isEmpty();
-  }
-
-  private static boolean isRuleExcluded(TestRule rule, TestCommandOptions options) {
-    ImmutableSet<String> excludedLabels = options.getExcludedLabels();
-    return !Sets.intersection(rule.getLabels(), excludedLabels).isEmpty();
   }
 
   @VisibleForTesting
@@ -380,7 +365,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     builder.addAll(Iterables.filter(testRules, new Predicate<TestRule>() {
       @Override
       public boolean apply(TestRule rule) {
-        return isRuleIncluded(rule, options) && !isRuleExcluded(rule, options);
+        return options.isMatchedByLabelOptions(rule.getLabels());
       }
     }));
 

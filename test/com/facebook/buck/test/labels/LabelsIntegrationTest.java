@@ -71,6 +71,19 @@ public class LabelsIntegrationTest {
     assertTestsFail("test", "//test:geometry", "//test:orientation", "--exclude", "unscientific");
   }
 
+  @Test
+  public void shouldIgnoreFailingTestWithTheCorrectLabelConjunction() throws IOException {
+    // Both the passing test (PhotonsTest) and the failing test (EarthIsFlatTest) are labelled
+    // testy, so asking for all tests that match "testy OR lighty" will fail.
+    //
+    // NB: A bug in the way args are parsed means that even though "testy light" is a single arg
+    // here, it is split into multiple labels in by TestCommandOptions.
+    assertTestsFail("test", "--all", "--include", "testy lighty");
+
+    // ...but "testy AND lighty" only matches the passing test.
+    assertTestsPass("test", "--all", "--include", "testy+lighty");
+  }
+
   private void assertTestsFail(String... args) throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
     result.assertExitCode(1);

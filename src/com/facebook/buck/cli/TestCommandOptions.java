@@ -17,9 +17,12 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.java.DefaultJavaPackageFinder;
-import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
@@ -33,6 +36,7 @@ import javax.annotation.Nullable;
 
 public class TestCommandOptions extends BuildCommandOptions {
 
+  public static final String LABEL_SEPERATOR = "+";
   @Option(name = "--all", usage = "Whether all of the tests should be run.")
   private boolean all = false;
 
@@ -67,36 +71,29 @@ public class TestCommandOptions extends BuildCommandOptions {
   @AdditionalOptions
   private TestSelectorOptions testSelectorOptions;
 
-  private static ImmutableSet.Builder<String> validateLabels(Set<String> labelSet) {
-    ImmutableSet.Builder<String> result = ImmutableSet.builder();
-    for (String label : labelSet) {
-      BuckConfig.validateLabelName(label);
-    }
-    result.addAll(labelSet);
-    return result;
-  }
-
-  private Supplier<ImmutableSet<String>> includedLabelsSupplier =
-      Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
+  private Supplier<ImmutableSet<ImmutableSet<String>>> includedLabelsSupplier =
+      Suppliers.memoize(new Supplier<ImmutableSet<ImmutableSet<String>>>() {
         @Override
-        public ImmutableSet<String> get() {
-          ImmutableSet.Builder<String> result = validateLabels(includedSet.get());
-          return result.build();
+        public ImmutableSet<ImmutableSet<String>> get() {
+          return splitLabels(includedSet.get());
         }
-  });
+      });
 
-  private Supplier<ImmutableSet<String>> excludedLabelsSupplier =
-      Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
+  private Supplier<ImmutableSet<ImmutableSet<String>>> excludedLabelsSupplier =
+      Suppliers.memoize(new Supplier<ImmutableSet<ImmutableSet<String>>>() {
         @Override
-        public ImmutableSet<String> get() {
-          ImmutableSet.Builder<String> result = validateLabels(excludedSet.get());
-          result.addAll(getBuckConfig().getDefaultExcludedLabels());
-          ImmutableSet<String> allExcluded = result.build();
-
-          // If someone has included a test, then we should really run it.
-          return Sets.difference(allExcluded, getIncludedLabels()).immutableCopy();
+        public ImmutableSet<ImmutableSet<String>> get() {
+          return splitLabels(excludedSet.get());
         }
-  });
+      });
+
+  private Supplier<ImmutableSet<ImmutableSet<String>>> globalExcludedLabelsSupplier =
+      Suppliers.memoize(new Supplier<ImmutableSet<ImmutableSet<String>>>() {
+        @Override
+        public ImmutableSet<ImmutableSet<String>> get() {
+          return splitLabels(getBuckConfig().getDefaultExcludedLabels());
+        }
+      });
 
   public TestCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
@@ -130,14 +127,6 @@ public class TestCommandOptions extends BuildCommandOptions {
     return isDebugEnabled;
   }
 
-  public ImmutableSet<String> getIncludedLabels() {
-    return includedLabelsSupplier.get();
-  }
-
-  public ImmutableSet<String> getExcludedLabels() {
-    return excludedLabelsSupplier.get();
-  }
-
   public Optional<TargetDevice> getTargetDeviceOptional() {
     return targetDeviceOptions.getTargetDeviceOptional();
   }
@@ -148,5 +137,75 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   public boolean shouldExplainTestSelectorList() {
     return testSelectorOptions.shouldExplain();
+  }
+
+  /**
+   * See if we include (either by default, or explicit inclusion) or explicitly exclude a set of
+   * labels.
+   *
+   * @param labels A candidate set of labels -- {a, b, j, k} -- that we are checking.
+   */
+  public boolean isMatchedByLabelOptions(Set<String> labels) {
+    // A set of subsets of labels -- { {a, b}, {x, y} } -- that we include.
+    ImmutableSet<ImmutableSet<String>> included = includedLabelsSupplier.get();
+    ImmutableSet<ImmutableSet<String>> excluded = excludedLabelsSupplier.get();
+
+    // Don't include the global labels in this check, as it's likely we might do the following:
+    //
+    //   config file: exclude X     ...to, by default, never run X tests
+    //   --include: X               ...for the rare occasions we do actually want to run X tests
+    //
+    Sets.SetView<ImmutableSet<String>> intersection = Sets.intersection(included, excluded);
+    if (!intersection.isEmpty()) {
+      ImmutableSet.Builder<String> builder = new ImmutableSet.Builder<>();
+      for (ImmutableSet<String> labelSet : intersection) {
+        String setString = Joiner.on(LABEL_SEPERATOR).join(labelSet);
+        builder.add(setString);
+      }
+      String message = "You have specified labels that are both included and excluded: " +
+          Joiner.on(", ").join(builder.build());
+      throw new HumanReadableException(message);
+    }
+
+    // If non-empty, only include if we have a --include that matches.
+    if (!included.isEmpty()) {
+      for (ImmutableSet<String> comparisonLabels : included) {
+        // An individual set of labels -- {a, b} -- all of which have be in our candidate.
+        if (labels.containsAll(comparisonLabels)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // If any exclude exists that matches, we should exclude.
+    ImmutableSet<ImmutableSet<String>> globalExcluded = globalExcludedLabelsSupplier.get();
+    Sets.SetView<ImmutableSet<String>> allExcluded = Sets.union(excluded, globalExcluded);
+    for (ImmutableSet<String> comparisonLabels : allExcluded) {
+      if (labels.containsAll(comparisonLabels)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Split a set of "a+b" "x+y" args into {{"a", "b"}, {"x", "y"}}.
+   */
+  private ImmutableSet<ImmutableSet<String>> splitLabels(Set<String> labelSets) {
+    // This could be an ImmutableOrderedSet but it's hard to find an order for a Set<Set<String>>.
+    ImmutableSet.Builder<ImmutableSet<String>> disjunction = new ImmutableSet.Builder<>();
+    for (String labelSet : labelSets) {
+      ImmutableSet.Builder<String> conjunction = new ImmutableSet.Builder<>();
+      Iterable<String> split = Splitter.on(LABEL_SEPERATOR)
+          .trimResults().omitEmptyStrings().split(labelSet);
+      for (String labelName : split) {
+        BuckConfig.validateLabelName(labelName);
+        conjunction.add(labelName);
+      }
+      disjunction.add(conjunction.build());
+    }
+    return disjunction.build();
   }
 }

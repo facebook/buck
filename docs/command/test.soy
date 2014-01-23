@@ -62,6 +62,14 @@ Builds and runs the tests for one or more specified targets:
 
   to run only fast tests. See <a href="{ROOT}rule/java_test.html"><code>{sp}
   java_test()</code></a> for more details.
+
+  <p>
+
+  Use multiple arguments to match any label, and <code>+</code> to match a set
+  of labels.  For example to match all the fast tests that are either stable or
+  trustworthy, and aren't unstable:
+
+  <pre>&hellip; --include fast+stable fast+trustworthy --exclude fast+unstable</pre>
   {/param}
 {/call}
 
