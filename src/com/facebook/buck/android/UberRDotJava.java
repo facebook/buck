@@ -461,6 +461,11 @@ public class UberRDotJava extends AbstractBuildable implements
 
     public Builder setAndroidResourceDepsFinder(AndroidResourceDepsFinder resourceDepsFinder) {
       this.androidResourceDepsFinder = resourceDepsFinder;
+      // Add the android_resource rules as deps.
+      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResourcesUnsorted()) {
+        addDep(dep.getBuildTarget());
+      }
+
       return this;
     }
 
@@ -471,11 +476,6 @@ public class UberRDotJava extends AbstractBuildable implements
 
     @Override
     protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
-      // Add the android_resource rules as deps.
-      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResourcesUnsorted()) {
-        addDep(dep.getBuildTarget());
-      }
-      
       return new UberRDotJava(buildTarget,
           resourceCompressionMode,
           resourceFilter,
