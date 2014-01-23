@@ -66,6 +66,7 @@ kill -0 `cat "$BUCKD_PID_FILE" 2> /dev/null` &> /dev/null || BUCKD_RUNNING=1
 pushd "$BUCK_BIN_DIRECTORY" > /dev/null
 pushd .. > /dev/null
 BUCK_DIRECTORY="$PWD"
+BUCK_SUCCESS_FILE="build/successful-build"
 
 # If there is a .buckversion file in the project root, then make sure that Buck is at that version.
 # The only way to override this is to include a .nobuckcheck file in the project root.
@@ -113,6 +114,7 @@ elif [ -e "${PROJECT_ROOT}/.buckversion" ]; then
     git checkout $BUCK_REQUIRED_VERSION
 
     # Now that we have updated the repository, we should rebuild Buck.
+    rm -f "$BUCK_SUCCESS_FILE"
     checkForAnt
     ant clean
     if [ $? -ne 0 ]; then
@@ -212,7 +214,7 @@ else
 fi
 
 # Make sure that Buck has been built.
-if [ ! -e "build/successful-build" ]; then
+if [ ! -e "$BUCK_SUCCESS_FILE" ]; then
 
   if [ $BUCKD_RUNNING -eq 0 ] && [ -e "$BUCKD_PID_FILE" ]; then
     echo "Killing buckd before building buck"
