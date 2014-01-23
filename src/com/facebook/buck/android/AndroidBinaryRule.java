@@ -904,8 +904,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
 
     if (shouldSplitDex()) {
+      Optional<Path> proguardFullConfigFile = Optional.absent();
       Optional<Path> proguardMappingFile = Optional.absent();
       if (packageType.isBuildWithObfuscation()) {
+        proguardFullConfigFile = Optional.of(getPathForProGuardDirectory().resolve("configuration.txt"));
         proguardMappingFile = Optional.of(getPathForProGuardDirectory().resolve("mapping.txt"));
       }
 
@@ -940,6 +942,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           primaryJarPath,
           secondaryZipDir,
           "secondary-%d.jar",
+          proguardFullConfigFile,
           proguardMappingFile,
           primaryDexPatterns,
           primaryDexClassesFile.transform(sourcePathResolver),
