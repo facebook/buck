@@ -23,8 +23,6 @@ import com.google.common.collect.ImmutableCollection;
 import java.nio.file.Path;
 import java.util.Collection;
 
-import javax.annotation.Nullable;
-
 public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
     implements TypeCoercer<C> {
   private final TypeCoercer<T> elementTypeCoercer;
@@ -34,25 +32,20 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   @Override
-  public Class<?> getLeafClass() {
-    return elementTypeCoercer.getLeafClass();
-  }
-
-  @Nullable
-  @Override
-  public Class<?> getKeyClass() {
-    return null;
+  public boolean hasElementClass(Class<?>... types) {
+    return elementTypeCoercer.hasElementClass(types);
   }
 
   @Override
-  public void traverse(Object object, Traversal traversal) {
+  public boolean traverse(Object object, Traversal traversal) {
     if (object instanceof Collection) {
       traversal.traverse(object);
       for (Object element : (Iterable<?>) object) {
         elementTypeCoercer.traverse(element, traversal);
       }
+      return true;
     } else {
-      throw new IllegalArgumentException(String.format("expected '%s' to be a collection", object));
+      return false;
     }
   }
 

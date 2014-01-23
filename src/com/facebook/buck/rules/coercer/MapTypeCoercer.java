@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   private final TypeCoercer<K> keyTypeCoercer;
   private final TypeCoercer<V> valueTypeCoercer;
@@ -42,26 +40,21 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   }
 
   @Override
-  public Class<?> getLeafClass() {
-    return valueTypeCoercer.getLeafClass();
-  }
-
-  @Nullable
-  @Override
-  public Class<?> getKeyClass() {
-    return keyTypeCoercer.getLeafClass();
+  public boolean hasElementClass(Class<?>... types) {
+    return keyTypeCoercer.hasElementClass(types) || valueTypeCoercer.hasElementClass(types);
   }
 
   @Override
-  public void traverse(Object object, Traversal traversal) {
+  public boolean traverse(Object object, Traversal traversal) {
     if (object instanceof Map) {
       traversal.traverse(object);
       for (Map.Entry<?, ?> element : ((Map<?, ?>) object).entrySet()) {
         keyTypeCoercer.traverse(element.getKey(), traversal);
         valueTypeCoercer.traverse(element.getValue(), traversal);
       }
+      return true;
     } else {
-      throw new IllegalArgumentException(String.format("expected '%s' to be a Map", object));
+      return false;
     }
   }
 

@@ -20,8 +20,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
-
 /**
  * Class defining an interpretation of some dynamically typed Java object as a specific class.
  *
@@ -35,20 +33,10 @@ public interface TypeCoercer<T> {
   public Class<T> getOutputClass();
 
   /**
-   * For primitive types, return the output class.
-   *
-   * For collection types, return the recursive element class. (i.e. for a collection of
-   * collections, return the leaf class of the collection).
+   * Returns whether the leaf nodes of this type coercer outputs value that is an instance of the
+   * given class or its subclasses. Does not match non-leaf nodes like Map or List.
    */
-  public Class<?> getLeafClass();
-
-  /**
-   * Returns the key class of the outermost map.
-   *
-   * @return the key class if the coerced type is a map, otherwise return null.
-   */
-  @Nullable
-  public Class<?> getKeyClass();
+  public boolean hasElementClass(Class<?>... types);
 
   /**
    * Traverse an object guided by this TypeCoercer.
@@ -56,8 +44,14 @@ public interface TypeCoercer<T> {
    * #{link Traversal#traverse} function will be called once for the object.
    * If the object is a collection or map, it will also recursively traverse all elements of the
    * map.
+   *
+   * Note that this does not check that the input can be coerced, except with respect to traversal.
+   * That is, it will check that the object is a collection before traversing down its members, but
+   * will not check that it's indeed a BuildTarget.
+   *
+   * @return Whether the traversal succeeded.
    */
-  public void traverse(Object object, Traversal traversal);
+  public boolean traverse(Object object, Traversal traversal);
 
   /**
    * @throws CoerceFailedException Input object cannot be coerced into the given type.

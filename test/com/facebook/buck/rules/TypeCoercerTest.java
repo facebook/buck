@@ -18,9 +18,10 @@ package com.facebook.buck.rules;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
@@ -130,41 +131,6 @@ public class TypeCoercerTest {
     typeCoercerFactory.typeCoercerForType(type);
   }
 
-  @Test
-  public void getLeafClassMapOfLists() throws NoSuchFieldException {
-    Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
-    assertEquals(Integer.class, coercer.getLeafClass());
-  }
-
-  @Test
-  public void getLeafClassListOfSets() throws NoSuchFieldException {
-    Type type = TestFields.class.getField("listOfSets").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
-    assertEquals(Integer.class, coercer.getLeafClass());
-  }
-
-  @Test
-  public void getLeafClassSet() throws NoSuchFieldException {
-    Type type = TestFields.class.getField("setOfSourcePaths").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
-    assertEquals(SourcePath.class, coercer.getLeafClass());
-  }
-
-  @Test
-  public void getKeyClassMapOfLists() throws NoSuchFieldException {
-    Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
-    assertEquals(String.class, coercer.getKeyClass());
-  }
-
-  @Test
-  public void getKeyClassOfSetShouldBeNull() throws NoSuchFieldException {
-    Type type = TestFields.class.getField("setOfSourcePaths").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
-    assertNull(coercer.getKeyClass());
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void disallowMapWithOptionalKeys() throws NoSuchFieldException {
     Type type = TestFields.class.getField("optionalIntegerMapOfStrings").getGenericType();
@@ -203,6 +169,27 @@ public class TypeCoercerTest {
     assertEquals("//foo:foo", objects.get(8));
   }
 
+  @Test
+  public void hasElementTypesForContainers() throws NoSuchFieldException {
+    Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    assertTrue(coercer.hasElementClass(String.class));
+    assertTrue(coercer.hasElementClass(Integer.class));
+    assertTrue(coercer.hasElementClass(Integer.class, String.class));
+    assertTrue(coercer.hasElementClass(Integer.class, SourcePath.class));
+    assertFalse(coercer.hasElementClass(SourcePath.class));
+  }
+
+  @Test
+  public void hasElementTypesForPrimitives() throws NoSuchFieldException {
+    Type type = TestFields.class.getField("primitiveString").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    assertTrue(coercer.hasElementClass(String.class));
+    assertFalse(coercer.hasElementClass(Integer.class));
+  }
+
   @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
@@ -215,5 +202,6 @@ public class TypeCoercerTest {
     public Object object;
     public ImmutableMap<String, ImmutableList<BuildTarget>> stringMapOfListOfBuildTargets;
     public Map<Optional<Integer>, String> optionalIntegerMapOfStrings;
+    public String primitiveString;
   }
 }

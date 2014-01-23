@@ -55,13 +55,7 @@ public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> 
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
       ParamInfo info = new ParamInfo(typeCoercerFactory, Paths.get(target.getBasePath()), field);
-      Class<?> leafClass = info.getLeafClass();
-      Class<?> keyClass = info.getKeyClass();
-      if (BuildRule.class.isAssignableFrom(leafClass) ||
-          SourcePath.class.isAssignableFrom(leafClass) ||
-          (keyClass != null &&
-              (BuildRule.class.isAssignableFrom(keyClass) ||
-              SourcePath.class.isAssignableFrom(keyClass)))) {
+      if (info.hasElementTypes(BuildRule.class, SourcePath.class)) {
         detectBuildTargetsForParameter(allDeps, info, params);
       }
     }

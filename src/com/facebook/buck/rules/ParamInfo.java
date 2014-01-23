@@ -86,18 +86,14 @@ class ParamInfo implements Comparable<ParamInfo> {
     return typeCoercer.getOutputClass();
   }
 
-  public Class<?> getLeafClass() {
-    return typeCoercer.getLeafClass();
-  }
-
-  public Class<?> getKeyClass() {
-    return typeCoercer.getKeyClass();
-  }
-
   public void traverse(Traversal traversal, @Nullable Object object) {
     if (object != null) {
       typeCoercer.traverse(object, traversal);
     }
+  }
+
+  public boolean hasElementTypes(final Class<?>... types) {
+    return typeCoercer.hasElementClass(types);
   }
 
   public void setFromParams(
@@ -184,6 +180,6 @@ class ParamInfo implements Comparable<ParamInfo> {
     return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, javaName);
   }
 
-  public interface Traversal extends TypeCoercer.Traversal {};
+  public interface Traversal extends TypeCoercer.Traversal {}
 }
 

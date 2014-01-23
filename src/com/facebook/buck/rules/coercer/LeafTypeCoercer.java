@@ -16,24 +16,24 @@
 
 package com.facebook.buck.rules.coercer;
 
-import javax.annotation.Nullable;
-
 /**
  * Superclass of coercers for non-collection/map types.
  */
 public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
-  public Class<T> getLeafClass() {
-    return getOutputClass();
-  }
-
-  @Nullable
-  @Override
-  public Class<?> getKeyClass() {
-    return null;
-  }
 
   @Override
-  public void traverse(Object object, Traversal traversal) {
+  public boolean hasElementClass(Class<?>... types) {
+    for (Class<?> type : types) {
+      if (type.isAssignableFrom(getOutputClass())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean traverse(Object object, Traversal traversal) {
     traversal.traverse(object);
+    return true;
   }
 }
