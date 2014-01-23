@@ -409,6 +409,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     sourcePaths.add(manifest);
 
     Optionals.addIfPresent(proguardConfig, sourcePaths);
+    Optionals.addIfPresent(primaryDexClassesFile, sourcePaths);
 
     ImmutableList.Builder<Path> inputs = ImmutableList.builder();
     inputs.addAll(SourcePaths.filterInputsToCompareToOutput(sourcePaths.build()));
