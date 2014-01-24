@@ -1096,11 +1096,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           new AndroidTransitiveDependencyGraph(classpathDeps);
 
       BuildRuleParams originalParams = createBuildRuleParams(ruleResolver);
+      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(originalParams);
       final ImmutableSortedSet<BuildRule> originalDeps = originalParams.getDeps();
-      ImmutableSet<IntermediateDexRule> preDexDeps;
+
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex =
           buildTargetsToExcludeFromDexBuilder.build();
-      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(originalParams);
+      ImmutableSet<IntermediateDexRule> preDexDeps;
       if (!disablePreDex
           && PackageType.DEBUG.equals(packageType)
           && !preprocessJavaClassesBash.isPresent()
