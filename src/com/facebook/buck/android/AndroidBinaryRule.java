@@ -563,7 +563,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           steps,
           dexFile,
           context.getSourcePathResolver());
-    } else if (!dexSplitMode.isShouldSplitDex()) {
+    } else if (dexSplitMode.isShouldSplitDex()) {
+      // This uses a separate implementation from addDexingSteps.
+      // The differences in the splitting logic are too significant to make it
+      // worth merging them.
+      mergePreDexedArtifactsIntoMultipleDexFiles(preDexDeps,
+          secondaryDexDirectoriesBuilder,
+          steps,
+          dexFile);
+    } else {
+      // For single-dex apps with pre-dexing, we just add the steps directly.
       Iterable<Path> filesToDex = FluentIterable.from(preDexDeps)
           .transform(
               new Function<IntermediateDexRule, Path>() {
@@ -590,16 +599,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
       // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
       steps.add(new DxStep(dexFile, filesToDex, DX_MERGE_OPTIONS));
-    } else {
-      // At least initially (and possibly always), the logic for merging pre-dexed artifacts will
-      // not leverage SmartDexingStep, so mergePreDexedArtifactsIntoMultipleDexFiles() and
-      // addDexingSteps() do not use a common implementation. We hope to use graph-enhancement and
-      // its natural cacheability rather than SmartDexingStep to limit the number of secondary
-      // dex files that we need to rebuild.
-      mergePreDexedArtifactsIntoMultipleDexFiles(preDexDeps,
-          secondaryDexDirectoriesBuilder,
-          steps,
-          dexFile);
     }
     ImmutableSet<Path> secondaryDexDirectories = secondaryDexDirectoriesBuilder.build();
 
