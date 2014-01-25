@@ -35,7 +35,7 @@ public class AndroidResourceDetails {
    */
   public final ImmutableSet<Path> resDirectories;
 
-  public final ImmutableSet<String> whitelistedStringDirs;
+  public final ImmutableSet<Path> whitelistedStringDirs;
 
   public final ImmutableSet<String> rDotJavaPackages;
 
@@ -50,14 +50,14 @@ public class AndroidResourceDetails {
   public AndroidResourceDetails(ImmutableList<HasAndroidResourceDeps> androidResources) {
     ImmutableSet.Builder<Path> resDirectoryBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> rDotJavaPackageBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<String> whitelistedStringDirsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> whitelistedStringDirsBuilder = ImmutableSet.builder();
     for (HasAndroidResourceDeps androidResource : androidResources) {
       Path resDirectory = androidResource.getRes();
       if (resDirectory != null) {
         resDirectoryBuilder.add(resDirectory);
         rDotJavaPackageBuilder.add(androidResource.getRDotJavaPackage());
         if (androidResource.hasWhitelistedStrings()) {
-          whitelistedStringDirsBuilder.add(resDirectory.toString());
+          whitelistedStringDirsBuilder.add(resDirectory);
         }
       }
     }

@@ -329,7 +329,7 @@ public class UberRDotJava extends AbstractBuildable implements
    */
   @VisibleForTesting
   FilterResourcesStep createFilterResourcesStep(Set<Path> resourceDirectories,
-      ImmutableSet<String> whitelistedStringDirs) {
+      ImmutableSet<Path> whitelistedStringDirs) {
     ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
     String resDestinationBasePath = getResDestinationBasePath();
     int count = 0;
@@ -345,8 +345,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
     if (isStoreStringsAsAssets()) {
       filterResourcesStepBuilder.enableStringsFilter();
-      filterResourcesStepBuilder.setWhitelistedStringDirs(
-          FluentIterable.from(whitelistedStringDirs).transform(MorePaths.TO_PATH).toSet());
+      filterResourcesStepBuilder.setWhitelistedStringDirs(whitelistedStringDirs);
     }
 
     return filterResourcesStepBuilder.build();

@@ -358,7 +358,7 @@ public class AndroidBinaryRuleTest {
 
     FilterResourcesStep filterResourcesStep = buildRule.getUberRDotJava()
         .createFilterResourcesStep(resourceDirectories,
-            /* whitelistedStringsDir */ ImmutableSet.<String>of());
+            /* whitelistedStringsDir */ ImmutableSet.<Path>of());
 
     assertEquals(
         ImmutableSet.of(
