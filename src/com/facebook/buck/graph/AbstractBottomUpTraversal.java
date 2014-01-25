@@ -19,10 +19,13 @@ package com.facebook.buck.graph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class that performs a "bottom-up" traversal of a DAG. For any given node, every node to which it
@@ -36,10 +39,14 @@ public abstract class AbstractBottomUpTraversal<T, V> {
 
   private final Queue<T> nodesToExplore;
 
+  // AtomicInteger is used to decrement the integer value in-place.
+  private final Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes;
+
   public AbstractBottomUpTraversal(TraversableGraph<T> graph) {
     this.graph = Preconditions.checkNotNull(graph);
     this.visitedNodes = Sets.newHashSet();
     this.nodesToExplore = Lists.newLinkedList();
+    this.effectiveOutDegreesOfExplorableNodes = Maps.newHashMap();
   }
 
   public final void traverse() {
@@ -56,16 +63,15 @@ public abstract class AbstractBottomUpTraversal<T, V> {
       visitedNodes.add(node);
 
       // Only add a node to the set of nodes to be explored if all the nodes it depends on have
-      // been visited already.
+      // been visited already. We achieve the same by keeping track of the out degrees of explorable
+      // nodes. After visiting a node, decrement the out degree of each of its parent node. When the
+      // out degree reaches zero, it is safe to add that node to the list of nodes to explore next.
       for (T exploreCandidate : graph.getIncomingNodesFor(node)) {
-        boolean hasUnexploredDependency = false;
-        for (T dep : graph.getOutgoingNodesFor(exploreCandidate)) {
-          if (!visitedNodes.contains(dep)) {
-            hasUnexploredDependency = true;
-            break;
-          }
+        if (!effectiveOutDegreesOfExplorableNodes.containsKey(exploreCandidate)) {
+          effectiveOutDegreesOfExplorableNodes.put(exploreCandidate,
+              new AtomicInteger(Iterables.size(graph.getOutgoingNodesFor(exploreCandidate))));
         }
-        if (!hasUnexploredDependency) {
+        if (effectiveOutDegreesOfExplorableNodes.get(exploreCandidate).decrementAndGet() == 0) {
           nodesToExplore.add(exploreCandidate);
         }
       }
