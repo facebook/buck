@@ -21,8 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -64,15 +62,6 @@ abstract class AndroidResourceDepsFinder {
     return androidResources;
   }
 
-  /**
-   * This method is offered for performance reasons.
-   * @return A collection with the same elements as {@link #getAndroidResources()}, but in no
-   *     particular order.
-   */
-  public Set<HasAndroidResourceDeps> getAndroidResourcesUnsorted() {
-    return findMyAndroidResourceDepsUnsorted();
-  }
-
   public AndroidResourceDetails getAndroidResourceDetails() {
     return transitiveDependencyGraph.findAndroidResourceDetails(getAndroidResources());
   }
@@ -91,6 +80,4 @@ abstract class AndroidResourceDepsFinder {
    *     {@code aapt} when generating the {@code R.java} files for this APK.
    */
   protected abstract ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps();
-
-  protected abstract Set<HasAndroidResourceDeps> findMyAndroidResourceDepsUnsorted();
 }

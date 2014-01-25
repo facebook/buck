@@ -461,7 +461,7 @@ public class UberRDotJava extends AbstractBuildable implements
     public Builder setAndroidResourceDepsFinder(AndroidResourceDepsFinder resourceDepsFinder) {
       this.androidResourceDepsFinder = resourceDepsFinder;
       // Add the android_resource rules as deps.
-      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResourcesUnsorted()) {
+      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResources()) {
         addDep(dep.getBuildTarget());
       }
 

@@ -37,12 +37,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
 
 
 /**
@@ -199,16 +195,6 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
             }
           }
           return allResources.build();
-        }
-
-        @Override
-        protected Set<HasAndroidResourceDeps> findMyAndroidResourceDepsUnsorted() {
-          Collection<BuildRule> apk = Collections.<BuildRule>singleton(apkUnderTest);
-          Set<HasAndroidResourceDeps> originalResources =
-              UberRDotJavaUtil.getAndroidResourceDepsUnsorted(apk);
-          Set<HasAndroidResourceDeps> instrumentationResources =
-              UberRDotJavaUtil.getAndroidResourceDepsUnsorted(originalDeps);
-          return Sets.difference(instrumentationResources, originalResources);
         }
       };
 

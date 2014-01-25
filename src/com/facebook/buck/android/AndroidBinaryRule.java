@@ -1135,11 +1135,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
           return UberRDotJavaUtil.getAndroidResourceDeps(originalDeps);
         }
-
-        @Override
-        protected Set<HasAndroidResourceDeps> findMyAndroidResourceDepsUnsorted() {
-          return UberRDotJavaUtil.getAndroidResourceDepsUnsorted(originalDeps);
-        }
       };
 
       AndroidBinaryGraphEnhancer.Result result = graphEnhancer.addBuildablesToCreateAaptResources(
