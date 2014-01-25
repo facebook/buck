@@ -63,7 +63,7 @@ import java.util.regex.Pattern;
  *       <item>Default</item>
  *       <item>Verbose</item>
  *       <item>Debug</item>
- *     </stri (which is accepted, hurray!) and bump .buckversionng-array>
+ *     </string-array>
  *   </resources>
  *   }
  * </pre></p>
