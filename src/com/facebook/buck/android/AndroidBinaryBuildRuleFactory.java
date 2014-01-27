@@ -82,14 +82,20 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
             DexStore.XZ :
             DexStore.JAR;
 
-    // use_linear_alloc_split_dex
     boolean useLinearAllocSplitDex = params.getBooleanAttribute("use_linear_alloc_split_dex");
+    List<String> primaryDexPatterns = params.getOptionalListAttribute("primary_dex_patterns");
+    long linearAllocHardLimit = params.getRequiredLongAttribute("linear_alloc_hard_limit");
+    Optional<SourcePath> primaryDexClassesFile = params.getOptionalSourcePath(
+        "primary_dex_classes_file", builder);
 
     builder.setDexSplitMode(new DexSplitMode(
         useSplitDex,
         dexSplitStrategy,
         dexStore,
-        useLinearAllocSplitDex));
+        useLinearAllocSplitDex,
+        linearAllocHardLimit,
+        primaryDexPatterns,
+        primaryDexClassesFile));
 
     // use_android_proguard_config_with_optimizations
     boolean useAndroidProguardConfigWithOptimizations =
@@ -105,19 +111,6 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     if (resourceCompression.isPresent()) {
       builder.setResourceCompressionMode(resourceCompression.get());
     }
-
-    // primary_dex_patterns
-    List<String> primaryDexPatterns = params.getOptionalListAttribute("primary_dex_patterns");
-    builder.addPrimaryDexPatterns(primaryDexPatterns);
-
-    // linear_alloc_hard_limit
-    long linearAllocHardLimit = params.getRequiredLongAttribute("linear_alloc_hard_limit");
-    builder.setLinearAllocHardLimit(linearAllocHardLimit);
-
-    // primary_dex_classes_file
-    Optional<SourcePath> primaryDexClassesFile = params.getOptionalSourcePath(
-        "primary_dex_classes_file", builder);
-    builder.setPrimaryDexClassesFile(primaryDexClassesFile);
 
     // resource_filter
     List<String> resourceFilter = params.getOptionalListAttribute("resource_filter");

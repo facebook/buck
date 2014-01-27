@@ -31,6 +31,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -77,13 +78,13 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
             /* shouldSplitDex */ false,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
             DexStore.JAR,
-            /* useLinearAllocSplitDex */ false),
+            /* useLinearAllocSplitDex */ false,
+            /* linearAllocHardLimit */ 0,
+            /* primaryDexPatterns */ ImmutableSet.<String>of(),
+            /* primaryDexClassesFile */ Optional.<SourcePath>absent()),
         apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getResourceCompressionMode(),
-        apkUnderTest.getPrimaryDexPatterns(),
-        apkUnderTest.getLinearAllocHardLimit(),
-        apkUnderTest.getPrimaryDexClassesFile(),
         apkUnderTest.getCpuFilters(),
 
         // TODO(mbolin, t3338497): Figure out why AndroidInstrumentationApk.Builder cannot pass in
