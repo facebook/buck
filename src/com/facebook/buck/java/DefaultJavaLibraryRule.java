@@ -26,6 +26,7 @@ import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -390,12 +391,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   private Path getPathToAbiOutputDir() {
-    BuildTarget target = getBuildTarget();
-    return Paths.get(String.format(
-        "%s/%slib__%s__abi",
-        BuckConstant.GEN_DIR,
-        target.getBasePathWithSlash(),
-        target.getShortName()));
+    return BuildTargets.getGenPath(getBuildTarget(), "lib__%s__abi");
   }
 
   private Path getPathToAbiOutputFile() {
@@ -403,11 +399,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   private static Path getOutputJarDirPath(BuildTarget target) {
-    return Paths.get(String.format(
-        "%s/%slib__%s__output",
-        BuckConstant.GEN_DIR,
-        target.getBasePathWithSlash(),
-        target.getShortName()));
+    return BuildTargets.getGenPath(target, "lib__%s__output");
   }
 
   private static Path getOutputJarPath(BuildTarget target) {
@@ -422,11 +414,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    *     The return value does not end with a slash.
    */
   private static Path getClassesDir(BuildTarget target) {
-    return Paths.get(String.format(
-        "%s/%slib__%s__classes",
-        BuckConstant.BIN_DIR,
-        target.getBasePathWithSlash(),
-        target.getShortName()));
+    return BuildTargets.getBinPath(target, "lib__%s__classes");
   }
 
   /**

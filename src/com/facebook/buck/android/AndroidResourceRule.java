@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
@@ -33,7 +34,6 @@ import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -44,7 +44,6 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -126,10 +125,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
       pathToTextSymbolsFile = null;
     } else {
       BuildTarget buildTarget = buildRuleParams.getBuildTarget();
-      pathToTextSymbolsDir = Paths.get(String.format("%s/%s__%s_text_symbols__",
-          BuckConstant.GEN_DIR,
-          buildTarget.getBasePathWithSlash(),
-          buildTarget.getShortName()));
+      pathToTextSymbolsDir = BuildTargets.getGenPath(buildTarget, "__%s_text_symbols__");
       pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     }
   }

@@ -20,6 +20,7 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.UberRDotJava.BuildOutput;
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
@@ -34,7 +35,6 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -397,10 +397,7 @@ public class UberRDotJava extends AbstractBuildable implements
    *     built.
    */
   public Path getPathToCompiledRDotJavaFiles() {
-    return Paths.get(String.format("%s/%s__%s_uber_rdotjava_bin__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName()));
+    return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_bin__");
   }
 
   /**
@@ -409,17 +406,11 @@ public class UberRDotJava extends AbstractBuildable implements
    * will be under a directory path that matches the corresponding package structure.
    */
   Path getPathToGeneratedRDotJavaSrcFiles() {
-    return Paths.get(String.format("%s/%s__%s_uber_rdotjava_src__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName()));
+    return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_src__");
   }
 
   private String getResDestinationBasePath() {
-    return String.format("%s/%s__filtered__%s__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName());
+    return BuildTargets.getBinPath(buildTarget, "__filtered__%s__").toString();
   }
 
   public static Builder newUberRDotJavaBuilder(AbstractBuildRuleBuilderParams params) {

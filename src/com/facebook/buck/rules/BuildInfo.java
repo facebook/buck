@@ -17,10 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.model.BuildTargets;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Shared utilities for {@link BuildInfoRecorder} and {@link OnDiskBuildInfo}.
@@ -46,9 +45,6 @@ class BuildInfo {
    * @return A path relative to the project root that includes a trailing slash.
    */
   static Path getPathToMetadataDirectory(BuildTarget target) {
-    return Paths.get(String.format("%s/%s.%s/metadata/",
-        BuckConstant.BIN_DIR,
-        target.getBasePathWithSlash(),
-        target.getShortName()));
+    return BuildTargets.getBinPath(target, ".%s/metadata/");
   }
 }

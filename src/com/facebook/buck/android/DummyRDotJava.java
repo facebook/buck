@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.AbiRule.ABI_KEY_ON_DISK_METADATA;
 
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
@@ -36,7 +37,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +46,6 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -150,24 +149,15 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
   }
 
   private static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {
-    return Paths.get(String.format("%s/%s__%s_rdotjava_src__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName()));
+    return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_src__");
   }
 
   private static Path getRDotJavaBinFolder(BuildTarget buildTarget) {
-    return Paths.get(String.format("%s/%s__%s_rdotjava_bin__",
-        BuckConstant.BIN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName()));
+    return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_bin__");
   }
 
   private static Path getPathToAbiOutputDir(BuildTarget buildTarget) {
-    return Paths.get(String.format("%s/%s__%s_dummyrdotjava_abi__",
-        BuckConstant.GEN_DIR,
-        buildTarget.getBasePathWithSlash(),
-        buildTarget.getShortName()));
+    return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_abi__");
   }
 
   public static Builder newDummyRDotJavaBuildableBuilder(AbstractBuildRuleBuilderParams params) {

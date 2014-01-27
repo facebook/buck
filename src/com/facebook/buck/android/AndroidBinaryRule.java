@@ -29,6 +29,7 @@ import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
@@ -53,7 +54,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
@@ -189,9 +189,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
-  /** This path is guaranteed to end with a slash. */
-  private final String outputGenDirectory;
-
   /**
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
    *     can find the list of valid values on your system by running
@@ -234,9 +231,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.primaryDexPatterns = ImmutableSet.copyOf(primaryDexPatterns);
     this.linearAllocHardLimit = linearAllocHardLimit;
     this.primaryDexClassesFile = Preconditions.checkNotNull(primaryDexClassesFile);
-    this.outputGenDirectory = String.format("%s/%s",
-        BuckConstant.GEN_DIR,
-        getBuildTarget().getBasePathWithSlash());
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.preDexDeps = ImmutableSet.copyOf(preDexDeps);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
@@ -749,11 +743,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    */
   @VisibleForTesting
   Path getPathForProGuardDirectory() {
-    return MorePaths.newPathInstance(
-        String.format("%s/%s.proguard/%s",
-        BuckConstant.GEN_DIR,
-        getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName()));
+    return BuildTargets.getGenPath(getBuildTarget(), ".proguard/%s");
   }
 
   /**
@@ -768,9 +758,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   public String getUnsignedApkPath() {
-    return String.format("%s%s.unsigned.apk",
-        outputGenDirectory,
-        getBuildTarget().getShortName());
+    return BuildTargets.getGenPath(getBuildTarget(), "%s.unsigned.apk").toString();
   }
 
   /** The APK at this path will be signed, but not zipaligned. */
@@ -783,17 +771,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".compressed.apk"));
   }
 
-  /**
-   * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
-   * the {@link BuckConstant#BIN_DIR} and the target base path, then formatted with the target
-   * short name.
-   * {@code format} should not start with a slash.
-   */
   private Path getBinPath(String format) {
-    return Paths.get(String.format("%s/%s" + format,
-        BuckConstant.BIN_DIR,
-        getBuildTarget().getBasePathWithSlash(),
-        getBuildTarget().getShortName()));
+    return BuildTargets.getBinPath(getBuildTarget(), format);
   }
 
   @VisibleForTesting
