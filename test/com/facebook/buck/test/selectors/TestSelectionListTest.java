@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.util.List;
-
 public class TestSelectionListTest {
 
   public static final TestDescription CAR_DOORS = new TestDescription(
@@ -37,8 +35,9 @@ public class TestSelectionListTest {
 
   @Test
   public void shouldNotFilterTestsThatAreIncluded() {
-    TestSelectorList selectomatic = TestSelectorList.buildFrom(
-        ImmutableList.of("com.example.clown.Car"));
+    TestSelectorList selectomatic = new TestSelectorList.Builder()
+        .addRawSelectors("com.example.clown.Car")
+        .build();
 
     assertTrue(selectomatic.isIncluded(CAR_DOORS));
     assertFalse(selectomatic.defaultIsInclusive);
@@ -46,8 +45,9 @@ public class TestSelectionListTest {
 
   @Test
   public void shouldFilterTestsThatAreExcluded() {
-    TestSelectorList selectomatic = TestSelectorList.buildFrom(
-        ImmutableList.of("!com.example.clown.Car"));
+    TestSelectorList selectomatic = new TestSelectorList.Builder()
+        .addRawSelectors("!com.example.clown.Car")
+        .build();
 
     assertFalse(selectomatic.isIncluded(CAR_DOORS));
     assertTrue(selectomatic.defaultIsInclusive);
@@ -55,11 +55,10 @@ public class TestSelectionListTest {
 
   @Test
   public void shouldIncludeThingsWeExplicitlyWantToInclude() {
-    List<String> rawSelectors = ImmutableList.of(
-        "com.example.clown.Car",
-        "com.example.clown.Shoes");
-
-    TestSelectorList selectotron = TestSelectorList.buildFrom(rawSelectors);
+    TestSelectorList selectotron = new TestSelectorList.Builder()
+        .addRawSelectors("com.example.clown.Car")
+        .addRawSelectors("com.example.clown.Shoes")
+        .build();
 
     assertTrue(selectotron.isIncluded(CAR_DOORS));
     assertTrue(selectotron.isIncluded(SHOE_LACES));
@@ -69,11 +68,10 @@ public class TestSelectionListTest {
 
   @Test
   public void testExcludeSomeTestsButIncludeByDefault() {
-    List<String> rawSelectors = ImmutableList.of(
-        "!com.example.clown.PrimeMinisterialDecree",
-        "!com.example.clown.Shoes");
-
-    TestSelectorList selectotron = TestSelectorList.buildFrom(rawSelectors);
+    TestSelectorList selectotron = new TestSelectorList.Builder()
+        .addRawSelectors("!com.example.clown.PrimeMinisterialDecree")
+        .addRawSelectors("!com.example.clown.Shoes")
+        .build();
 
     assertTrue(selectotron.isIncluded(CAR_DOORS));
     assertFalse(selectotron.isIncluded(SHOE_LACES));
@@ -83,11 +81,10 @@ public class TestSelectionListTest {
 
   @Test
   public void testExcludeMethodsWithEverythingElseIncluded() {
-    List<String> rawSelectors = ImmutableList.of(
-        "!#testLaces",
-        "!#formAllianceWithClowns");
-
-    TestSelectorList selectotron = TestSelectorList.buildFrom(rawSelectors);
+    TestSelectorList selectotron = new TestSelectorList.Builder()
+        .addRawSelectors("!#testLaces")
+        .addRawSelectors("!#formAllianceWithClowns")
+        .build();
 
     assertTrue(selectotron.isIncluded(CAR_DOORS));
     assertFalse(selectotron.isIncluded(SHOE_LACES));
@@ -96,12 +93,11 @@ public class TestSelectionListTest {
 
   @Test
   public void shouldExplainItself() {
-    List<String> rawSelectors = ImmutableList.of(
-        "!ClownTest",
-        "ShoesTest#testLaces",
-        "#testTalent");
-
-    TestSelectorList testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+    TestSelectorList testSelectorList = new TestSelectorList.Builder()
+        .addRawSelectors("!ClownTest")
+        .addRawSelectors("ShoesTest#testLaces")
+        .addRawSelectors("#testTalent")
+        .build();
 
     assertFalse(testSelectorList.defaultIsInclusive);
 
@@ -116,9 +112,9 @@ public class TestSelectionListTest {
 
   @Test
   public void shouldCollapseCatchAllFinalSelector() {
-    List<String> rawSelectors = ImmutableList.of("!A", "B#c", "#d", "#");
-
-    TestSelectorList testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+    TestSelectorList testSelectorList = new TestSelectorList.Builder()
+        .addRawSelectors("!A", "B#c", "#d", "#")
+        .build();
 
     ImmutableList<String> expected = ImmutableList.of(
         "exclude class:A method:<any>",

@@ -89,8 +89,10 @@ public class TestResultFormatterTest {
   public void shouldSaySelectedTestsWillBeRun() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    ImmutableList<String> rawSelectors = ImmutableList.<String>of("com.example.clown.Car");
-    TestSelectorList testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+    TestSelectorList testSelectorList = new TestSelectorList.Builder()
+        .addRawSelectors("com.example.clown.Car")
+        .build();
+
     Optional<TestSelectorList> testSelectorListOptional = Optional.of(testSelectorList);
     ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
 
@@ -103,8 +105,10 @@ public class TestResultFormatterTest {
   public void shouldExplainWhichTestsWillBeSelected() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    ImmutableList<String> rawSelectors = ImmutableList.<String>of("com.example.clown.Car");
-    TestSelectorList testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+    TestSelectorList testSelectorList = new TestSelectorList.Builder()
+        .addRawSelectors("com.example.clown.Car")
+        .build();
+
     Optional<TestSelectorList> testSelectorListOptional = Optional.of(testSelectorList);
     ImmutableList<String> targetNames = ImmutableList.of("//:example", "//foo:bar");
     boolean shouldExplain = true;

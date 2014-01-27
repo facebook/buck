@@ -17,6 +17,7 @@
 package com.facebook.buck.test.selectors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -29,41 +30,13 @@ public class TestSelectorList {
   private final List<TestSelector> testSelectors;
   final boolean defaultIsInclusive;
 
-  TestSelectorList(
+  private TestSelectorList(
       List<String> rawSelectors,
       List<TestSelector> testSelectors,
       boolean defaultIsInclusive) {
     this.rawSelectors = rawSelectors;
     this.testSelectors = testSelectors;
     this.defaultIsInclusive = defaultIsInclusive;
-  }
-
-  /**
-   * Build a new {@link TestSelectorList} from a list of strings, each of which is parsed by
-   * {@link TestSelector}.
-   *
-   * If any of the selectors is an inclusive selector, everything else will be excluded.
-   * Conversely, if all of the selectors are exclusive, then everything else will be included by
-   * default.
-   *
-   * @param rawSelectors A list of strings that will be parsed into {@link TestSelector} instances.
-   * @return
-   */
-  public static TestSelectorList buildFrom(List<String> rawSelectors) {
-    if (rawSelectors.size() == 0) {
-      throw new IllegalArgumentException("You must give at least one rawSelector, none given!");
-    }
-    List<TestSelector> testSelectors = new ArrayList<>();
-    boolean defaultIsInclusive = true;
-    for (String rawSelector : rawSelectors) {
-      TestSelector testSelector;
-      testSelector = TestSelector.buildFrom(rawSelector);
-      // Default to being inclusive only if all selectors are *exclusive*.
-      defaultIsInclusive = defaultIsInclusive && !testSelector.isInclusive();
-      testSelectors.add(testSelector);
-    }
-    // If we are given a list of exclusion rules, default to including everything else!
-    return new TestSelectorList(rawSelectors, testSelectors, defaultIsInclusive);
   }
 
   public boolean isIncluded(TestDescription description) {
@@ -102,5 +75,53 @@ public class TestSelectorList {
 
   public List<String> getRawSelectors() {
     return rawSelectors;
+  }
+
+  /**
+   * Build a new {@link TestSelectorList} from a list of strings, each of which is parsed by
+   * {@link TestSelector}.
+   *
+   * If any of the selectors is an inclusive selector, everything else will be excluded.
+   * Conversely, if all of the selectors are exclusive, then everything else will be included by
+   * default.
+   *
+   */
+  public static class Builder {
+
+    private final List<String> rawSelectors = new ArrayList<>();
+    private final List<TestSelector> testSelectors = new ArrayList<>();
+
+    private Builder addRawSelector(String rawSelector) {
+      TestSelector testSelector = TestSelector.buildFrom(rawSelector);
+      this.rawSelectors.add(rawSelector);
+      this.testSelectors.add(testSelector);
+      return this;
+    }
+
+    public Builder addRawSelectors(String... rawSelectors) {
+      for (String rawSelector : rawSelectors) {
+        addRawSelector(rawSelector);
+      }
+      return this;
+    }
+
+    public Builder addRawSelectors(Collection<String> rawTestSelectors) {
+      for (String rawTestSelector : rawTestSelectors) {
+        addRawSelector(rawTestSelector);
+      }
+      return this;
+    }
+
+    public TestSelectorList build() {
+      // Default to being inclusive only if all selectors are *exclusive*.
+      boolean defaultIsInclusive = true;
+      for (TestSelector testSelector : testSelectors) {
+        if (testSelector.isInclusive()) {
+          defaultIsInclusive = false;
+          break;
+        }
+      }
+      return new TestSelectorList(rawSelectors, testSelectors, defaultIsInclusive);
+    }
   }
 }

@@ -352,7 +352,9 @@ public final class JUnitRunner {
     TestSelectorList testSelectorList = null;
     if (!args[2].isEmpty()) {
       List<String> rawSelectors = Arrays.asList(args[2].split("\n"));
-      testSelectorList = TestSelectorList.buildFrom(rawSelectors);
+      testSelectorList = new TestSelectorList.Builder()
+          .addRawSelectors(rawSelectors)
+          .build();
     }
 
     // Each argument other than the first one should be a class name to run.

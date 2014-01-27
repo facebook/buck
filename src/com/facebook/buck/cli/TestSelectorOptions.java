@@ -62,7 +62,9 @@ public class TestSelectorOptions {
     }
 
     try {
-      TestSelectorList testSelectorList = TestSelectorList.buildFrom(rawTestSelectors);
+      TestSelectorList testSelectorList = new TestSelectorList.Builder()
+          .addRawSelectors(rawTestSelectors)
+          .build();
       return Optional.of(testSelectorList);
     } catch (TestSelectorParseException e) {
       String message = "Unable to parse test selectors: " + e.getMessage();
