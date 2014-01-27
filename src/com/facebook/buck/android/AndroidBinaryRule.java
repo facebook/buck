@@ -568,9 +568,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       // The differences in the splitting logic are too significant to make it
       // worth merging them.
       mergePreDexedArtifactsIntoMultipleDexFiles(preDexDeps,
+          dexFile,
           secondaryDexDirectoriesBuilder,
-          steps,
-          dexFile);
+          steps
+      );
     } else {
       // For single-dex apps with pre-dexing, we just add the steps directly.
       Iterable<Path> filesToDex = FluentIterable.from(preDexDeps)
@@ -632,17 +633,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   /**
    * @param preDexDeps The set of pre-dexed JAR files that should go into the final APK.
+   * @param primaryDexPath The path where the primary {@code classes.dex} file should be written.
    * @param secondaryDexDirectoriesBuilder The contract for updating this builder must match that
    *     of {@link #addDexingSteps}.
    * @param steps The collection of steps to which steps needed to produce the dex files should be
    *     added.
-   * @param primaryDexPath The path where the primary {@code classes.dex} file should be written.
    */
   private void mergePreDexedArtifactsIntoMultipleDexFiles(
       ImmutableSet<IntermediateDexRule> preDexDeps,
+      Path primaryDexPath,
       ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder,
-      ImmutableList.Builder<Step> steps,
-      Path primaryDexPath) {
+      ImmutableList.Builder<Step> steps) {
 
 
     // Collect all of the DexWithClasses objects to use for merging.
