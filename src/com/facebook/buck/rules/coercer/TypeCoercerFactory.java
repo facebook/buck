@@ -118,7 +118,13 @@ public class TypeCoercerFactory {
       }
 
       Class<?> rawClass = (Class<?>) rawType;
-      if (rawClass.isAssignableFrom(ImmutableList.class)) {
+      if (rawClass.equals(Either.class)) {
+        Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
+            "expected type '%s' to have two parameters", parameterizedType);
+        return new EitherTypeCoercer<>(
+            typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
+            typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
+      } else if (rawClass.isAssignableFrom(ImmutableList.class)) {
         return new ListTypeCoercer<>(
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
       } else if (rawClass.isAssignableFrom(ImmutableSet.class)) {

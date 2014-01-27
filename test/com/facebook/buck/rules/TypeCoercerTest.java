@@ -17,14 +17,16 @@
 package com.facebook.buck.rules;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Optional;
@@ -34,6 +36,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.lang.reflect.Type;
@@ -150,23 +154,20 @@ public class TypeCoercerTest {
             "foo", ImmutableList.of("//foo:bar", "//foo:baz"),
             "bar", ImmutableList.of(":bar", "//foo:foo"));
 
-    final List<Object> objects = Lists.newArrayList();
-    coercer.traverse(input, new ParamInfo.Traversal() {
-      @Override
-      public void traverse(Object object) {
-        objects.add(object);
-      }
-    });
-    assertThat(objects, hasSize(9));
-    assertSame(input, objects.get(0));
-    assertEquals("foo", objects.get(1));
-    assertSame(input.get("foo"), objects.get(2));
-    assertEquals("//foo:bar", objects.get(3));
-    assertEquals("//foo:baz", objects.get(4));
-    assertEquals("bar", objects.get(5));
-    assertSame(input.get("bar"), objects.get(6));
-    assertEquals(":bar", objects.get(7));
-    assertEquals("//foo:foo", objects.get(8));
+    TestTraversal traversal = new TestTraversal();
+    coercer.traverse(input, traversal);
+    List<Object> objects = traversal.getObjects();
+
+    assertThat(objects, Matchers.<Object>contains(
+        (Matcher) sameInstance(input),
+        (Matcher) is("foo"),
+        (Matcher) sameInstance(input.get("foo")),
+        (Matcher) is("//foo:bar"),
+        (Matcher) is("//foo:baz"),
+        (Matcher) is("bar"),
+        (Matcher) sameInstance(input.get("bar")),
+        (Matcher) is(":bar"),
+        (Matcher) is("//foo:foo")));
   }
 
   @Test
@@ -190,6 +191,56 @@ public class TypeCoercerTest {
     assertFalse(coercer.hasElementClass(Integer.class));
   }
 
+  @Test
+  public void coerceToEitherLeftOrRight() throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("eitherStringOrStringList").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    String inputString = "a_string";
+    ImmutableList<String> inputList = ImmutableList.of("a", "b");
+
+    assertEquals(
+        Either.ofLeft(inputString),
+        coercer.coerce(buildRuleResolver, Paths.get(""), inputString));
+    assertEquals(
+        Either.ofRight(inputList),
+        coercer.coerce(buildRuleResolver, Paths.get(""), inputList));
+  }
+
+  @Test
+  public void traverseWithEitherAndContainer() throws NoSuchFieldException {
+    Type type = TestFields.class.getField("eitherStringOrStringList").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    TestTraversal traversal = new TestTraversal();
+    ImmutableList<String> input = ImmutableList.of("foo");
+    coercer.traverse(input, traversal);
+    assertThat(
+        traversal.getObjects(),
+        Matchers.<Object>contains(
+            (Matcher) sameInstance(input),
+            (Matcher) sameInstance(input.get(0))));
+
+    traversal = new TestTraversal();
+    String input2 = "foo";
+    coercer.traverse(input2, traversal);
+    assertThat(traversal.getObjects(), hasSize(1));
+    assertThat(traversal.getObjects().get(0), sameInstance((Object) "foo"));
+  }
+
+  static class TestTraversal implements ParamInfo.Traversal {
+    private List<Object> objects = Lists.newArrayList();
+
+    public List<Object> getObjects() {
+      return objects;
+    }
+
+    @Override
+    public void traverse(Object object) {
+      objects.add(object);
+    }
+  }
+
   @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
@@ -203,5 +254,6 @@ public class TypeCoercerTest {
     public ImmutableMap<String, ImmutableList<BuildTarget>> stringMapOfListOfBuildTargets;
     public Map<Optional<Integer>, String> optionalIntegerMapOfStrings;
     public String primitiveString;
+    public Either<String, List<String>> eitherStringOrStringList;
   }
 }
