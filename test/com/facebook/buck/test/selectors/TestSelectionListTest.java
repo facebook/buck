@@ -26,56 +26,60 @@ import org.junit.Test;
 
 public class TestSelectionListTest {
 
-  public static final TestDescription CAR_DOORS = new TestDescription(
-      "com.example.clown.Car", "testDoors");
-  public static final TestDescription SHOE_LACES = new TestDescription(
-      "com.example.clown.Shoes", "testLaces");
-  public static final TestDescription PM_DECREE = new TestDescription(
-      "com.example.clown.PrimeMinisterialDecree", "formAllianceWithClowns");
+  public static final String CAR_CLASS = "com.example.clown.Car";
+  public static final String SHOES_CLASS = "com.example.clown.Shoes";
+  public static final String PM_CLASS = "com.example.clown.PrimeMinisterialDecree";
+
+  public static final TestDescription CAR_DOORS_TEST =
+      new TestDescription(CAR_CLASS, "testDoors");
+  public static final TestDescription SHOE_LACES_TEST =
+      new TestDescription(SHOES_CLASS, "testLaces");
+  public static final TestDescription PM_DECREE_TEST =
+      new TestDescription(PM_CLASS, "formAllianceWithClowns");
 
   @Test
   public void shouldNotFilterTestsThatAreIncluded() {
     TestSelectorList selectomatic = new TestSelectorList.Builder()
-        .addRawSelectors("com.example.clown.Car")
+        .addRawSelectors(CAR_CLASS)
         .build();
 
-    assertTrue(selectomatic.isIncluded(CAR_DOORS));
+    assertTrue(selectomatic.isIncluded(CAR_DOORS_TEST));
     assertFalse(selectomatic.defaultIsInclusive);
   }
 
   @Test
   public void shouldFilterTestsThatAreExcluded() {
     TestSelectorList selectomatic = new TestSelectorList.Builder()
-        .addRawSelectors("!com.example.clown.Car")
+        .addRawSelectors("!" + CAR_CLASS)
         .build();
 
-    assertFalse(selectomatic.isIncluded(CAR_DOORS));
+    assertFalse(selectomatic.isIncluded(CAR_DOORS_TEST));
     assertTrue(selectomatic.defaultIsInclusive);
   }
 
   @Test
   public void shouldIncludeThingsWeExplicitlyWantToInclude() {
     TestSelectorList selectotron = new TestSelectorList.Builder()
-        .addRawSelectors("com.example.clown.Car")
-        .addRawSelectors("com.example.clown.Shoes")
+        .addRawSelectors(CAR_CLASS)
+        .addRawSelectors(SHOES_CLASS)
         .build();
 
-    assertTrue(selectotron.isIncluded(CAR_DOORS));
-    assertTrue(selectotron.isIncluded(SHOE_LACES));
-    assertFalse(selectotron.isIncluded(PM_DECREE));
+    assertTrue(selectotron.isIncluded(CAR_DOORS_TEST));
+    assertTrue(selectotron.isIncluded(SHOE_LACES_TEST));
+    assertFalse(selectotron.isIncluded(PM_DECREE_TEST));
     assertFalse(selectotron.defaultIsInclusive);
   }
 
   @Test
   public void testExcludeSomeTestsButIncludeByDefault() {
     TestSelectorList selectotron = new TestSelectorList.Builder()
-        .addRawSelectors("!com.example.clown.PrimeMinisterialDecree")
-        .addRawSelectors("!com.example.clown.Shoes")
+        .addRawSelectors("!" + PM_CLASS)
+        .addRawSelectors("!" + SHOES_CLASS)
         .build();
 
-    assertTrue(selectotron.isIncluded(CAR_DOORS));
-    assertFalse(selectotron.isIncluded(SHOE_LACES));
-    assertFalse(selectotron.isIncluded(PM_DECREE));
+    assertTrue(selectotron.isIncluded(CAR_DOORS_TEST));
+    assertFalse(selectotron.isIncluded(SHOE_LACES_TEST));
+    assertFalse(selectotron.isIncluded(PM_DECREE_TEST));
     assertTrue(selectotron.defaultIsInclusive);
   }
 
@@ -86,9 +90,9 @@ public class TestSelectionListTest {
         .addRawSelectors("!#formAllianceWithClowns")
         .build();
 
-    assertTrue(selectotron.isIncluded(CAR_DOORS));
-    assertFalse(selectotron.isIncluded(SHOE_LACES));
-    assertFalse(selectotron.isIncluded(PM_DECREE));
+    assertTrue(selectotron.isIncluded(CAR_DOORS_TEST));
+    assertFalse(selectotron.isIncluded(SHOE_LACES_TEST));
+    assertFalse(selectotron.isIncluded(PM_DECREE_TEST));
   }
 
   @Test
