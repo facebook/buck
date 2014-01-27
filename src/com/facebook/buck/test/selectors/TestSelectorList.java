@@ -16,6 +16,10 @@
 
 package com.facebook.buck.test.selectors;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,6 +30,16 @@ import java.util.List;
  */
 public class TestSelectorList {
 
+  /**
+   * Test selector strings are parsed in two places: (i) by "buck test" when it is first run, to
+   * validate that the selectors make sense; and (ii) by the JUnitStep's JUnitRunner, which
+   * is what actually does the test selecting.
+   * <p>
+   * We keep a list of the raw selectors used to build out List of TestSelectors so that they can
+   * be passed from (i) to (ii).  This is expensive in that it wastes time re-parsing selectors, but
+   * it means that if the input is an "@/tmp/long-list-of-tests.txt" then re-using that terse
+   * argument keeps the "JUnitSteps" Junit java command line nice and short.
+   */
   private final List<String> rawSelectors;
   private final List<TestSelector> testSelectors;
   final boolean defaultIsInclusive;
@@ -92,9 +106,25 @@ public class TestSelectorList {
     private final List<TestSelector> testSelectors = new ArrayList<>();
 
     private Builder addRawSelector(String rawSelector) {
-      TestSelector testSelector = TestSelector.buildFrom(rawSelector);
       this.rawSelectors.add(rawSelector);
-      this.testSelectors.add(testSelector);
+      if (rawSelector.charAt(0) == '@') {
+        try {
+          String pathString = rawSelector.substring(1);
+          if (pathString.isEmpty()) {
+            throw new TestSelectorParseException("Doesn't mention a path!");
+          }
+          File file = new File(pathString);
+          loadFromFile(file);
+        } catch (TestSelectorParseException|IOException e) {
+          String message = String.format("Error with test-selector '%s': %s",
+              rawSelector, e.getMessage());
+          throw new RuntimeException(message, e);
+        }
+        return this;
+      } else {
+        TestSelector testSelector = TestSelector.buildFrom(rawSelector);
+        this.testSelectors.add(testSelector);
+      }
       return this;
     }
 
@@ -108,6 +138,29 @@ public class TestSelectorList {
     public Builder addRawSelectors(Collection<String> rawTestSelectors) {
       for (String rawTestSelector : rawTestSelectors) {
         addRawSelector(rawTestSelector);
+      }
+      return this;
+    }
+
+    Builder loadFromFile(File file) throws IOException {
+      try (
+        FileReader tempReader = new FileReader(file);
+        BufferedReader in = new BufferedReader(tempReader);
+      ) {
+        String line;
+        int lineNumber = 1;
+
+        while ((line = in.readLine()) != null) {
+          try {
+            addRawSelector(line.trim());
+            lineNumber++;
+          } catch (TestSelectorParseException e) {
+            String message = String.format("Test selector error in %s at line %d", file, lineNumber);
+            throw new TestSelectorParseException(message, e);
+          }
+        }
+      } catch (IOException e) {
+        throw e;
       }
       return this;
     }

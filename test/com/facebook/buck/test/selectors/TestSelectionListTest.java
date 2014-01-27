@@ -24,6 +24,10 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 public class TestSelectionListTest {
 
   public static final String CAR_CLASS = "com.example.clown.Car";
@@ -129,4 +133,21 @@ public class TestSelectionListTest {
     assertEquals(expected, testSelectorList.getExplanation());
   }
 
+  @Test
+  public void shouldSelectFromFile() throws IOException {
+    File tempFile = File.createTempFile("test-selectors", ".txt");
+    FileWriter fileWriter = new FileWriter(tempFile);
+    fileWriter.write("!" + CAR_CLASS + "\n");
+    fileWriter.write(SHOES_CLASS + "\n");
+    fileWriter.write("#\n");
+    fileWriter.close();
+
+    TestSelectorList testSelectorList = new TestSelectorList.Builder()
+        .loadFromFile(tempFile)
+        .build();
+
+    assertFalse(testSelectorList.isIncluded(CAR_DOORS_TEST));
+    assertTrue(testSelectorList.isIncluded(SHOE_LACES_TEST));
+    assertTrue(testSelectorList.isIncluded(PM_DECREE_TEST));
+  }
 }

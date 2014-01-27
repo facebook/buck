@@ -28,4 +28,8 @@ public class TestSelectorParseException extends RuntimeException {
   public TestSelectorParseException(String message) {
     super(message);
   }
+
+  public TestSelectorParseException(String message, Exception cause) {
+    super(message, cause);
+  }
 }

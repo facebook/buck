@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 
 public class TestSelectorsIntegrationTest {
@@ -114,6 +115,15 @@ public class TestSelectorsIntegrationTest {
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), containsString(error));
     }
+  }
+
+  @Test
+  public void shouldFilterFromFile() throws IOException {
+    File testSelectorsFile = workspace.getFile("test-selectors.txt");
+    String arg = String.format("@%s", testSelectorsFile.getAbsolutePath());
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "--all", "--filter", arg);
+    result.assertExitCode(0);
   }
 
   private void assertOutputWithSelectors(ProjectWorkspace.ProcessResult result) {
