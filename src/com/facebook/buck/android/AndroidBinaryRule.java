@@ -1069,12 +1069,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       boolean shouldPreDex = !disablePreDex
           && PackageType.DEBUG.equals(packageType)
           && !preprocessJavaClassesBash.isPresent();
-      ImmutableSet<IntermediateDexRule> preDexDeps;
-      if (shouldPreDex) {
-        preDexDeps = graphEnhancer.createDepsForPreDexing(ruleResolver, buildTargetsToExcludeFromDex);
-      } else {
-        preDexDeps = ImmutableSet.of();
-      }
 
       // Create the BuildRule and Buildable for UberRDotJava.
       boolean allowNonExistentRule =
@@ -1102,6 +1096,14 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
               packageType,
               cpuFilters.build(),
               shouldPreDex);
+
+      ImmutableSet<IntermediateDexRule> preDexDeps;
+      if (shouldPreDex) {
+        preDexDeps = graphEnhancer.createDepsForPreDexing(ruleResolver, buildTargetsToExcludeFromDex);
+      } else {
+        preDexDeps = ImmutableSet.of();
+      }
+
       BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
 
       return new AndroidBinaryRule(
