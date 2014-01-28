@@ -74,6 +74,7 @@ RULES_SRCS = [
   'NativeLibraryBuildable.java',
   'NdkLibraryBuildRuleFactory.java',
   'NdkLibrary.java',
+  'PreDexMerge.java',
   'PrebuiltNativeLibrary.java',
   'PrebuiltNativeLibraryBuildRuleFactory.java',
   'RobolectricTestBuildRuleFactory.java',

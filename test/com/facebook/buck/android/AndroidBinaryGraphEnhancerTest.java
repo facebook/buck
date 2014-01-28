@@ -16,18 +16,25 @@
 
 package com.facebook.buck.android;
 
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,6 +43,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Iterator;
 
 public class AndroidBinaryGraphEnhancerTest {
@@ -79,23 +87,60 @@ public class AndroidBinaryGraphEnhancerTest {
     // is //java/com/example:lib, and that //java/com/example:dep2 is in its no_dx list.
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.<BuildRule>of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
+    BuildTarget apkTarget = new BuildTarget("//java/com/example", "apk");
     BuildRuleParams originalParams = new BuildRuleParams(
-        new BuildTarget("//java/com/example", "apk"),
+        apkTarget,
         originalDeps,
         /* visibilityPatterns */ ImmutableSet.<BuildTargetPattern>of(),
         pathRelativizer,
         ruleKeyBuilderFactory);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams);
-    ImmutableSet<IntermediateDexRule> depsForPreDexing = graphEnhancer.createDepsForPreDexing(
-        ruleResolver, buildRulesToExcludeFromDex);
+
+    UberRDotJava uberRDotJava = createMock(UberRDotJava.class);
+    BuildTarget uberRDotJavaTarget =
+        new BuildTarget("//java/com/example", "apk", "uber_r_dot_java");
+    expect(uberRDotJava.getBuildTarget()).andStubReturn(uberRDotJavaTarget);
+    replay(uberRDotJava);
+    BuildRule uberRDotJavaRule = new AbstractBuildable.AnonymousBuildRule(
+        BuildRuleType._UBER_R_DOT_JAVA,
+        uberRDotJava,
+        new BuildRuleParams(
+            uberRDotJavaTarget,
+            ImmutableSortedSet.<BuildRule>of(),
+            ImmutableSet.of(BuildTargetPattern.MATCH_ALL),
+            pathRelativizer,
+            ruleKeyBuilderFactory));
+    ruleResolver.addToIndex(uberRDotJavaTarget, uberRDotJavaRule);
+
+    AndroidBinaryGraphEnhancer.DexEnhancementResult dexEnhancementResult =
+        graphEnhancer.createDepsForPreDexing(
+          ruleResolver,
+          BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
+          DexSplitMode.NO_SPLIT,
+          buildRulesToExcludeFromDex,
+          uberRDotJava);
+    Collection<BuildRule> totalDeps = graphEnhancer.getTotalDeps();
+    BuildTarget dexMergeTarget = new BuildTarget("//java/com/example", "apk", "dex_merge");
+    BuildRule dexMergeRule = ruleResolver.get(dexMergeTarget);
+
+    assertEquals(dexMergeRule.getBuildable(), dexEnhancementResult.getPreDexMerge().get());
+
+    MoreAsserts.assertDepends("apk should depend on dex merge", totalDeps, dexMergeTarget);
+    MoreAsserts.assertNotDepends("apk should not depend on library dexes", totalDeps,
+        new BuildTarget("//java/com/example", "dep1"));
+
     assertEquals(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx " +
-            "list.",
-        2,
-    		depsForPreDexing.size());
+            "list.  And we should depend on uber_r_dot_java.",
+        3,
+        dexMergeRule.getDeps().size());
 
-    Iterator<IntermediateDexRule> depsForPreDexingIter = depsForPreDexing.iterator();
+    Iterator<BuildRule> depsForPreDexingIter = dexMergeRule.getDeps().iterator();
+
+    BuildRule shouldBeUberRDotJavaRule = depsForPreDexingIter.next();
+    assertEquals(uberRDotJavaRule, shouldBeUberRDotJavaRule);
+
     BuildRule preDexRule1 = depsForPreDexingIter.next();
     assertEquals("//java/com/example:dep1#dex", preDexRule1.getBuildTarget().toString());
     assertNotNull(ruleResolver.get(preDexRule1.getBuildTarget()));

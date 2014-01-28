@@ -99,6 +99,7 @@ public class QuickstartIntegrationTest {
       "`buck targets` should display a list of targets.",
       Joiner.on('\n').join("//apps/myapp:app",
         "//apps/myapp:app#aapt_package",
+        "//apps/myapp:app#dex_merge",
         "//apps/myapp:app#uber_r_dot_java",
         "//apps/myapp:debug_keystore",
         "//apps/myapp:project_config",

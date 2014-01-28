@@ -47,7 +47,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
-import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -56,7 +55,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipDirectoryWithMaxDeflateStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -64,7 +62,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -74,7 +71,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
@@ -82,13 +78,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * <pre>
@@ -111,7 +103,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    * This is the path from the root of the APK that should contain the metadata.txt and
    * secondary-N.dex.jar files for secondary dexes.
    */
-  private static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
+  static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
 
   /**
    * The largest file size Froyo will deflate.
@@ -166,9 +158,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final Optional<SourcePath> proguardConfig;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<TargetCpuType> cpuFilters;
-  private final ImmutableSet<IntermediateDexRule> preDexDeps;
+  private final Path primaryDexPath;
   private final UberRDotJava uberRDotJava;
   private final AaptPackageResources aaptPackageResourcesBuildable;
+  private final Optional<PreDexMerge> preDexMerge;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
@@ -192,9 +185,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Optional<SourcePath> proguardConfig,
       ResourceCompressionMode resourceCompressionMode,
       Set<TargetCpuType> cpuFilters,
-      Set<IntermediateDexRule> preDexDeps,
+      Path primaryDexPath,
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResourcesBuildable,
+      Optional<PreDexMerge> preDexMerge,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
       AndroidResourceDepsFinder androidResourceDepsFinder,
@@ -211,9 +205,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
-    this.preDexDeps = ImmutableSet.copyOf(preDexDeps);
+    this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.aaptPackageResourcesBuildable = Preconditions.checkNotNull(aaptPackageResourcesBuildable);
+    this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
@@ -522,11 +517,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     }
 
     // Create the final DEX (or set of DEX files in the case of split dex).
-    // The APK building command needs to take a directory of raw files, so we create a directory
-    // that can only contain .dex files from this build rule.
-    Path dexDir = getBinPath(".dex/%s");
-    steps.add(new MkdirStep(dexDir));
-    Path dexFile = dexDir.resolve("classes.dex");
+    // The APK building command needs to take a directory of raw files, so primaryDexPath
+    // can only contain .dex files from this build rule.
 
     // Create dex artifacts. If split-dex is used, the assets/ directory should contain entries
     // that look something like the following:
@@ -545,50 +537,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // listed in secondaryDexDirectoriesBuilder so that their contents will be compressed
     // appropriately for Froyo.
     ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder = ImmutableSet.builder();
-    if (preDexDeps.isEmpty()) {
+    if (!preDexMerge.isPresent()) {
+      steps.add(new MkdirStep(primaryDexPath.getParent()));
+
       addDexingSteps(
           classpathEntriesToDex,
           secondaryDexDirectoriesBuilder,
           steps,
-          dexFile,
+          primaryDexPath,
           context.getSourcePathResolver());
-    } else if (dexSplitMode.isShouldSplitDex()) {
-      // This uses a separate implementation from addDexingSteps.
-      // The differences in the splitting logic are too significant to make it
-      // worth merging them.
-      mergePreDexedArtifactsIntoMultipleDexFiles(preDexDeps,
-          dexFile,
-          secondaryDexDirectoriesBuilder,
-          steps
-      );
     } else {
-      // For single-dex apps with pre-dexing, we just add the steps directly.
-      Iterable<Path> filesToDex = FluentIterable.from(preDexDeps)
-          .transform(
-              new Function<IntermediateDexRule, Path>() {
-                  @Override
-                  @Nullable
-                  public Path apply(IntermediateDexRule preDexDep) {
-                    DexProducedFromJavaLibraryThatContainsClassFiles preDex = preDexDep
-                        .getBuildable();
-                    if (preDex.hasOutput()) {
-                      return preDex.getPathToDex();
-                    } else {
-                      return null;
-                    }
-                  }
-              })
-          .filter(Predicates.notNull());
-
-      // If this APK has Android resources, then the generated R.class files also need to be dexed.
-      Optional<DexWithClasses> rDotJavaDexWithClasses = uberRDotJava.getRDotJavaDexWithClasses();
-      if (rDotJavaDexWithClasses.isPresent()) {
-        filesToDex = Iterables.concat(filesToDex,
-            Collections.singleton(rDotJavaDexWithClasses.get().getPathToDexFile()));
-      }
-
-      // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-      steps.add(new DxStep(dexFile, filesToDex, DX_MERGE_OPTIONS));
+      secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
     ImmutableSet<Path> secondaryDexDirectories = secondaryDexDirectoriesBuilder.build();
 
@@ -606,96 +565,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           FROYO_DEFLATE_LIMIT_BYTES));
     }
 
-    return new DexFilesInfo(dexFile, secondaryDexZips.build());
-  }
-
-  /**
-   * @param preDexDeps The set of pre-dexed JAR files that should go into the final APK.
-   * @param primaryDexPath The path where the primary {@code classes.dex} file should be written.
-   * @param secondaryDexDirectoriesBuilder The contract for updating this builder must match that
-   *     of {@link #addDexingSteps}.
-   * @param steps The collection of steps to which steps needed to produce the dex files should be
-   *     added.
-   */
-  private void mergePreDexedArtifactsIntoMultipleDexFiles(
-      ImmutableSet<IntermediateDexRule> preDexDeps,
-      Path primaryDexPath,
-      ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder,
-      ImmutableList.Builder<Step> steps) {
-
-
-    // Collect all of the DexWithClasses objects to use for merging.
-    ImmutableList<DexWithClasses> dexFilesToMerge = FluentIterable.from(preDexDeps)
-        .transform(DexWithClasses.TO_DEX_WITH_CLASSES)
-        .filter(Predicates.notNull())
-        .toList();
-
-    // Create all of the output paths needed for the SmartDexingStep.
-    Path secondaryDexScratchDir = getBinPath("__%s_secondary_dex__");
-    Path secondaryDexMetadataScratchDir = secondaryDexScratchDir.resolve("metadata");
-    Path secondaryDexJarFilesScratchDir = secondaryDexScratchDir.resolve("jarfiles");
-    secondaryDexDirectoriesBuilder.add(secondaryDexMetadataScratchDir);
-    secondaryDexDirectoriesBuilder.add(secondaryDexJarFilesScratchDir);
-
-    final Path secondaryDexMetadataDir = secondaryDexMetadataScratchDir.resolve(SECONDARY_DEX_SUBDIR);
-    final Path secondaryDexJarFilesDir = secondaryDexJarFilesScratchDir.resolve(SECONDARY_DEX_SUBDIR);
-    steps.add(new MakeCleanDirectoryStep(secondaryDexMetadataDir));
-    // Do not clear existing directory which might contain secondary dex files that are not
-    // re-merged (since their contents did not change).
-    steps.add(new MkdirStep(secondaryDexJarFilesDir));
-
-    // Add a step to do the bucketing of dex inputs. The bucketing must be done at runtime because
-    // it is not safe to invoke dexWithClassesForRDotJava.getLinearAllocEstimate() at this point, but
-    // it will be safe by the time the BucketPreDexedFilesStep is executed. (By comparison, it is
-    // safe to invoke getLinearAllocEstimate() on every element in dexFilesToMerge at this point.)
-    Path preDexScratchDir = secondaryDexScratchDir.resolve("__bucket_pre_dex__");
-    steps.add(new MakeCleanDirectoryStep(preDexScratchDir));
-
-    final BucketPreDexedFilesStep bucketPreDexedFilesStep = new BucketPreDexedFilesStep(
-        uberRDotJava.getRDotJavaDexWithClasses(),
-        dexFilesToMerge,
-        dexSplitMode.getPrimaryDexPatterns(),
-        preDexScratchDir,
-        dexSplitMode.getLinearAllocHardLimit(),
-        dexSplitMode.getDexStore(),
-        secondaryDexJarFilesDir);
-    steps.add(bucketPreDexedFilesStep);
-
-    Path successDir = getBinPath("__%s_merge_pre_dex__/.success");
-    steps.add(new MkdirStep(successDir));
-    steps.add(new SmartDexingStep(
-        primaryDexPath,
-        bucketPreDexedFilesStep.getPrimaryDexInputsSupplier(),
-        Optional.of(secondaryDexJarFilesDir),
-        Optional.of(bucketPreDexedFilesStep.getSecondaryOutputToInputsSupplier()),
-        successDir,
-        /* numThreads */ Optional.<Integer>absent(),
-        DX_MERGE_OPTIONS));
-
-    steps.add(new AbstractExecutionStep("write_metadata_txt") {
-      @Override
-      public int execute(ExecutionContext context) {
-        ProjectFilesystem filesystem = context.getProjectFilesystem();
-        Map<Path, DexWithClasses> metadataTxtEntries =
-            bucketPreDexedFilesStep.getMetadataTxtEntries();
-        List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
-        try {
-          for (Map.Entry<Path, DexWithClasses> entry : metadataTxtEntries.entrySet()) {
-            Path pathToSecondaryDex = entry.getKey();
-            String containedClass = Iterables.get(entry.getValue().getClassNames(), 0);
-            containedClass = containedClass.replace('/', '.');
-            String hash = filesystem.computeSha1(pathToSecondaryDex);
-            lines.add(String.format("%s %s %s", pathToSecondaryDex.getFileName(), hash, containedClass));
-          }
-          filesystem.writeLinesToPath(lines, secondaryDexMetadataDir.resolve("metadata.txt"));
-        } catch (IOException e) {
-          context.logError(e, "Failed when writing metadata.txt multi-dex.");
-          return 1;
-        }
-        return 0;
-      }
-    });
-
+    return new DexFilesInfo(primaryDexPath, secondaryDexZips.build());
   }
 
   public AndroidTransitiveDependencies findTransitiveDependencies() {
@@ -1089,11 +959,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
               cpuFilters.build(),
               shouldPreDex);
 
-      ImmutableSet<IntermediateDexRule> preDexDeps;
+      Path primaryDexPath = BuildTargets.getBinPath(getBuildTarget(), ".dex/%s/classes.dex");
+      AndroidBinaryGraphEnhancer.DexEnhancementResult dexEnhancementResult;
       if (shouldPreDex) {
-        preDexDeps = graphEnhancer.createDepsForPreDexing(ruleResolver, buildTargetsToExcludeFromDex);
+        dexEnhancementResult = graphEnhancer.createDepsForPreDexing(
+            ruleResolver,
+            primaryDexPath,
+            dexSplitMode,
+            buildTargetsToExcludeFromDex,
+            aaptEnhancementResult.getUberRDotJava());
       } else {
-        preDexDeps = ImmutableSet.of();
+        dexEnhancementResult = new AndroidBinaryGraphEnhancer.DexEnhancementResult(
+            Optional.<PreDexMerge>absent());
       }
 
       BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
@@ -1111,9 +988,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           proguardConfig,
           resourceCompressionMode,
           cpuFilters.build(),
-          preDexDeps,
+          primaryDexPath,
           aaptEnhancementResult.getUberRDotJava(),
           aaptEnhancementResult.getAaptPackageResources(),
+          dexEnhancementResult.getPreDexMerge(),
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,
           androidResourceDepsFinder,

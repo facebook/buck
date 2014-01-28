@@ -30,12 +30,16 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
 
 public class AndroidBinaryGraphEnhancer {
 
   private static final String DEX_FLAVOR = "dex";
+  private static final String DEX_MERGE_FLAVOR = "dex_merge";
   private static final String UBER_R_DOT_JAVA_FLAVOR = "uber_r_dot_java";
   private static final String AAPT_PACKAGE_FLAVOR = "aapt_package";
 
@@ -61,9 +65,12 @@ public class AndroidBinaryGraphEnhancer {
    * <p>
    * This method may modify {@code ruleResolver}, inserting new rules into its index.
    */
-  ImmutableSet<IntermediateDexRule> createDepsForPreDexing(
+  DexEnhancementResult createDepsForPreDexing(
       BuildRuleResolver ruleResolver,
-      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex) {
+      Path primaryDexPath,
+      DexSplitMode dexSplitMode,
+      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex,
+      UberRDotJava uberRDotJava) {
     ImmutableSet.Builder<IntermediateDexRule> preDexDeps = ImmutableSet.builder();
     ImmutableSet<JavaLibraryRule> transitiveJavaDeps = Classpaths
         .getClasspathEntries(originalDeps).keySet();
@@ -102,8 +109,21 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     ImmutableSet<IntermediateDexRule> allPreDexDeps = preDexDeps.build();
-    totalDeps.addAll(allPreDexDeps);
-    return allPreDexDeps;
+
+    BuildTarget buildTargetForDexMerge = createBuildTargetWithFlavor(DEX_MERGE_FLAVOR);
+    BuildRule preDexMergeBuildRule = ruleResolver.buildAndAddToIndex(
+        PreDexMerge
+            .newPreDexMergeBuilder(buildRuleBuilderParams)
+            .setBuildTarget(buildTargetForDexMerge)
+            .setPrimaryDexPath(primaryDexPath)
+            .setDexSplitMode(dexSplitMode)
+            .setPreDexDeps(allPreDexDeps)
+            .setUberRDotJava(uberRDotJava));
+    PreDexMerge preDexMerge = (PreDexMerge) preDexMergeBuildRule.getBuildable();
+
+    totalDeps.add(preDexMergeBuildRule);
+
+    return new DexEnhancementResult(Optional.of(preDexMerge));
   }
 
   AaptEnhancementResult addBuildablesToCreateAaptResources(BuildRuleResolver ruleResolver,
@@ -175,6 +195,18 @@ public class AndroidBinaryGraphEnhancer {
 
     public AaptPackageResources getAaptPackageResources() {
       return aaptPackageResources;
+    }
+  }
+
+  static class DexEnhancementResult {
+    private final Optional<PreDexMerge> preDexMerge;
+
+    DexEnhancementResult(Optional<PreDexMerge> preDexMerge) {
+      this.preDexMerge = preDexMerge;
+    }
+
+    public Optional<PreDexMerge> getPreDexMerge() {
+      return preDexMerge;
     }
   }
 

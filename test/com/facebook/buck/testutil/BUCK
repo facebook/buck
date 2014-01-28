@@ -10,6 +10,7 @@ java_library(
     '//lib:jsr305',
     '//lib:junit',
     '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:steps',

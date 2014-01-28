@@ -20,6 +20,7 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -77,15 +79,10 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getResourceCompressionMode(),
         apkUnderTest.getCpuFilters(),
-
-        // TODO(mbolin, t3338497): Figure out why AndroidInstrumentationApk.Builder cannot pass in
-        // graphEnhancer.createDepsForPreDexing(ruleResolver) for this value.
-        // For now, do not specify any pre-dex deps so that the traditional dexing
-        // logic is used for an android_instrumentation_apk().
-        /* preDexDeps */ ImmutableSet.<IntermediateDexRule>of(),
-
+        BuildTargets.getBinPath(buildRuleParams.getBuildTarget(), ".dex/%s/classes.dex"),
         uberRDotJava,
         aaptPackageResourcesBuildable,
+        Optional.<PreDexMerge>absent(),
         apkUnderTest.getPreprocessJavaClassesDeps(),
         apkUnderTest.getPreprocessJavaClassesBash(),
         androidResourceDepsFinder,
