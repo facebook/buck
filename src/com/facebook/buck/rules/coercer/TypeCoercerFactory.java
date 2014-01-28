@@ -124,6 +124,12 @@ public class TypeCoercerFactory {
         return new EitherTypeCoercer<>(
             typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
             typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
+      } else if (rawClass.equals(Pair.class)) {
+        Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
+            "expected type '%s' to have two parameters", parameterizedType);
+        return new PairTypeCoercer<>(
+            typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
+            typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
       } else if (rawClass.isAssignableFrom(ImmutableList.class)) {
         return new ListTypeCoercer<>(
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));

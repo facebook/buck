@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Optional;
@@ -40,6 +41,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
@@ -240,6 +242,43 @@ public class TypeCoercerTest {
     }
   }
 
+  @Test
+  public void pairTypeCoercerCanCoerceFromTwoElementLists()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    ImmutableList<?> input = ImmutableList.of("foo.m", "-foo -bar");
+    assertEquals(
+        new Pair<>(Paths.get("foo.m"), "-foo -bar"),
+        coercer.coerce(buildRuleResolver, Paths.get(""), input));
+  }
+
+  @Test
+  public void hasElementTypesForPair() throws NoSuchFieldException {
+    Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    assertTrue(coercer.hasElementClass(String.class));
+    assertTrue(coercer.hasElementClass(Path.class));
+    assertFalse(coercer.hasElementClass(Integer.class));
+  }
+
+  @Test
+  public void traverseWithPair() throws NoSuchFieldException {
+    Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    TestTraversal traversal = new TestTraversal();
+    ImmutableList<?> input = ImmutableList.of("foo", "bar");
+    coercer.traverse(input, traversal);
+    assertThat(
+        traversal.getObjects(),
+        Matchers.<Object>contains(ImmutableList.of(
+            sameInstance(input.get(0)),
+            sameInstance(input.get(1)))));
+  }
+
   @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
@@ -254,5 +293,6 @@ public class TypeCoercerTest {
     public Map<Optional<Integer>, String> optionalIntegerMapOfStrings;
     public String primitiveString;
     public Either<String, List<String>> eitherStringOrStringList;
+    public Pair<Path, String> pairOfPathsAndStrings;
   }
 }

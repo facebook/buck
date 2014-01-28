@@ -28,4 +28,10 @@ public class CoerceFailedException extends Exception {
     return new CoerceFailedException("%s: Cannot coerce argument '%s' to %s",
         pathRelativeToProjectRoot, object, resultType);
   }
+
+  public static CoerceFailedException simple(
+      Path pathRelativeToProjectRoot, Object object, Class<?> resultType, String detail) {
+    return new CoerceFailedException("%s: Cannot coerce argument '%s' to %s, %s",
+        pathRelativeToProjectRoot, object, resultType, detail);
+  }
 }
