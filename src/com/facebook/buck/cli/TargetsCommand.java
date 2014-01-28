@@ -134,7 +134,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         return 1;
       }
     } else {
-      printTargetsList(matchingBuildRules, options.isShowOutput());
+      printTargetsList(matchingBuildRules, options.isShowOutput(), options.isShowRuleKey());
     }
 
     return 0;
@@ -142,11 +142,15 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   @VisibleForTesting
   void printTargetsList(SortedMap<String, BuildRule> matchingBuildRules,
-      boolean showOutput) {
+      boolean showOutput,
+      boolean showRuleKey) throws IOException {
     for (Map.Entry<String, BuildRule> target : matchingBuildRules.entrySet()) {
       String output = target.getKey();
+      BuildRule buildRule = target.getValue();
+      if (showRuleKey) {
+        output += " " + buildRule.getRuleKey();
+      }
       if (showOutput) {
-        BuildRule buildRule = target.getValue();
         Buildable buildable = buildRule.getBuildable();
         if (buildable != null) {
           Path outputPath = buildable.getPathToOutputFile();

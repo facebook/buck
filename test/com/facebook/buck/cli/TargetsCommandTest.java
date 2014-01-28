@@ -159,7 +159,7 @@ public class TargetsCommandTest {
     // run `buck targets` on the build file and parse the observed JSON.
     SortedMap<String, BuildRule> buildRules = buildBuildTargets(outputFile, "test-library");
 
-    targetsCommand.printTargetsList(buildRules, /* showOutput */ false);
+    targetsCommand.printTargetsList(buildRules, /* showOutput */ false, /* showRuleKey */ false);
     String observedOutput = console.getTextWrittenToStdOut();
 
     assertEquals("Output from targets command should match expected output.",
@@ -179,7 +179,7 @@ public class TargetsCommandTest {
         outputFile,
         "test-library");
 
-    targetsCommand.printTargetsList(buildRules, /* showOutput */ true);
+    targetsCommand.printTargetsList(buildRules, /* showOutput */ true, /* showRuleKey */ false);
     String observedOutput = console.getTextWrittenToStdOut();
 
     assertEquals("Output from targets command should match expected output.",

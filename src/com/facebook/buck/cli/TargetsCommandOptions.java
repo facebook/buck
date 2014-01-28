@@ -52,6 +52,10 @@ public class TargetsCommandOptions extends BuildCommandOptions {
       usage = "Print the absolute path to the output for each rule after the rule name.")
   private boolean isShowOutput;
 
+  @Option(name = "--show_rulekey",
+      usage = "Print the RuleKey of each rule after the rule name.")
+  private boolean isShowRuleKey;
+
   public TargetsCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
   }
@@ -103,6 +107,11 @@ public class TargetsCommandOptions extends BuildCommandOptions {
   /** @return {@code true} if {@code --show_output} was specified. */
   public boolean isShowOutput() {
     return isShowOutput;
+  }
+
+  /** @return {@code true} if {@code --show_rulekey} was specified. */
+  public boolean isShowRuleKey() {
+    return isShowRuleKey;
   }
 
   /** @return the name of the build target identified by the specified alias or {@code null}. */
