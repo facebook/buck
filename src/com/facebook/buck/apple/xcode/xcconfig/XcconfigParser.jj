@@ -42,39 +42,39 @@ public class XcconfigParser {
 
   private Optional<ProjectFilesystem> fileSystem;
   private Optional<Path> inputPathInProject;
+  private ImmutableList<Path> additionalSearchPaths;
 
   private static XcconfigParser of(Reader input,
                                    Optional<ProjectFilesystem> fileSystem,
-                                   Optional<Path> inputPathInProject) {
+                                   Optional<Path> inputPathInProject,
+                                   ImmutableList<Path> additionalSearchPaths) {
     XcconfigParser parser = new XcconfigParser(input);
     parser.fileSystem = Preconditions.checkNotNull(fileSystem);
     parser.inputPathInProject = Preconditions.checkNotNull(inputPathInProject);
+    parser.additionalSearchPaths = Preconditions.checkNotNull(additionalSearchPaths);
     return parser;
   }
 
   public static ImmutableList<PredicatedConfigValue> parse(
       ProjectFilesystem fileSystem,
-      Path inputPathInProject) throws ParseException {
+      Path inputPathInProject,
+      ImmutableList<Path> searchPaths) throws ParseException {
     Optional<Reader> readerOpt = fileSystem.getReaderIfFileExists(inputPathInProject);
     if (!readerOpt.isPresent()) {
       throw new ParseException("Cannot open file: " + inputPathInProject);
     }
     return XcconfigParser.of(readerOpt.get(),
                              Optional.<ProjectFilesystem>of(fileSystem),
-                             Optional.<Path>of(inputPathInProject))
+                             Optional.<Path>of(inputPathInProject),
+                             searchPaths)
                          .file();
-  }
-
-  public static ImmutableList<PredicatedConfigValue> parse(
-      ProjectFilesystem fileSystem,
-      String inputPathInProject) throws ParseException {
-        return parse(fileSystem, FileSystems.getDefault().getPath(inputPathInProject));
   }
 
   public static PredicatedConfigValue parseSetting(String setting) throws ParseException {
     return XcconfigParser.of(new StringReader(setting),
                              Optional.<ProjectFilesystem>absent(),
-                             Optional.<Path>absent())
+                             Optional.<Path>absent(),
+                             ImmutableList.<Path>of())
                          .buildSetting();
   }
 
@@ -96,16 +96,30 @@ public class XcconfigParser {
       // check relative to current file
       try {
         includeFilePathInProject = inputPathInProject.get().resolveSibling(includeFilePath);
+        if (!fileSystem.get().exists(includeFilePathInProject)) {
+            includeFilePathInProject = null;
+        }
       } catch (InvalidPathException e) {
         includeFilePathInProject = null;
       }
+    }
+
+    // additional search paths
+    if (includeFilePathInProject == null) {
+        for (Path searchPath : additionalSearchPaths) {
+            Path path = searchPath.resolve(includeFilePath);
+            if (fileSystem.get().exists(path)) {
+                includeFilePathInProject = path;
+                break;
+            }
+        }
     }
 
     if (includeFilePathInProject == null) {
       throw new ParseException("Cannot resolve path for included file: " + includeFileName);
     }
 
-    return parse(fileSystem.get(), includeFilePathInProject);
+    return parse(fileSystem.get(), includeFilePathInProject, additionalSearchPaths);
   }
 
 }

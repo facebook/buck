@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 // This class depends on javacc-generated source code.
 // Please run "ant compile-tests" if you hit undefined symbols in IntelliJ.
@@ -55,7 +57,17 @@ public class XcconfigParserTest {
                                          String inputPath,
                                          ImmutableList<PredicatedConfigValue> value)
       throws ParseException, IOException {
-    assertEquals(value, XcconfigParser.parse(filesystem, inputPath));
+    assertFileHasValue(filesystem, inputPath, ImmutableList.<Path>of(), value);
+  }
+
+  private static void assertFileHasValue(ProjectFilesystem filesystem,
+                                         String inputPath,
+                                         ImmutableList<Path> searchPaths,
+                                         ImmutableList<PredicatedConfigValue> value)
+      throws ParseException, IOException {
+    assertEquals(
+        value,
+        XcconfigParser.parse(filesystem, Paths.get(inputPath), searchPaths));
   }
 
 
@@ -132,13 +144,28 @@ public class XcconfigParserTest {
   @Test
   public void testMultiFileParsing() throws ParseException, IOException {
 
-    ImmutableMap<String,String> files = new ImmutableMap.Builder<String,String>()
-        .put("file1.xcconfig", s2 + "\n" + s3)
-        .put("folder/file2.xcconfig", s1 + "\n" + "#include \"../file1.xcconfig\"")
-        .build();
+    ImmutableMap<String,String> files = ImmutableMap.of(
+        "file1.xcconfig", s2 + "\n" + s3,
+        "folder/file2.xcconfig", s1 + "\n" + "#include \"../file1.xcconfig\""
+    );
 
     ProjectFilesystem fileSystem = new FakeReadonlyProjectFilesystem(files);
     assertFileHasValue(fileSystem, "folder/file2.xcconfig", values);
+  }
+
+  @Test
+  public void testAdditionalSearchPaths() throws ParseException, IOException {
+    ImmutableMap<String, String> files = ImmutableMap.of(
+        "some_other_search_path/file1.xcconfig", s2 + "\n" + s3,
+        "folder/file2.xcconfig", s1 + "\n" + "#include \"file1.xcconfig\""
+    );
+
+    ProjectFilesystem filesystem = new FakeReadonlyProjectFilesystem(files);
+    assertFileHasValue(
+        filesystem,
+        "folder/file2.xcconfig",
+        ImmutableList.of(Paths.get("some_other_search_path")),
+        values);
   }
 
   @Test

@@ -30,7 +30,7 @@ public class FakeReadonlyProjectFilesystem extends FakeProjectFilesystem {
 
   @Override
   public boolean exists(Path path) {
-    return files.containsKey(path.toString());
+    return files.containsKey(path.normalize().toString());
   }
 
   @Override

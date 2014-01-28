@@ -101,10 +101,11 @@ public final class XcconfigStack {
       this("__");
     }
 
-    public void addSettingsFromFile(ProjectFilesystem filesystem, Path xcconfigPath) {
+    public void addSettingsFromFile(
+        ProjectFilesystem filesystem, Path xcconfigPath, ImmutableList<Path> searchPaths) {
       ImmutableList<PredicatedConfigValue> settings;
       try {
-        settings = XcconfigParser.parse(filesystem, xcconfigPath);
+        settings = XcconfigParser.parse(filesystem, xcconfigPath, searchPaths);
       } catch (ParseException e) {
         throw new RuntimeException("Failed to add xcconfig settings from file", e);
       }
