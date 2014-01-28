@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -158,16 +157,16 @@ public class TypeCoercerTest {
     coercer.traverse(input, traversal);
     List<Object> objects = traversal.getObjects();
 
-    assertThat(objects, Matchers.<Object>contains(
-        (Matcher) sameInstance(input),
-        (Matcher) is("foo"),
-        (Matcher) sameInstance(input.get("foo")),
-        (Matcher) is("//foo:bar"),
-        (Matcher) is("//foo:baz"),
-        (Matcher) is("bar"),
-        (Matcher) sameInstance(input.get("bar")),
-        (Matcher) is(":bar"),
-        (Matcher) is("//foo:foo")));
+    assertThat(objects, Matchers.<Object>contains(ImmutableList.of(
+        sameInstance((Object)input),
+        is((Object)"foo"),
+        sameInstance((Object)input.get("foo")),
+        is((Object)"//foo:bar"),
+        is((Object)"//foo:baz"),
+        is((Object)"bar"),
+        sameInstance((Object)input.get("bar")),
+        is((Object)":bar"),
+        is((Object)"//foo:foo"))));
   }
 
   @Test
@@ -217,9 +216,9 @@ public class TypeCoercerTest {
     coercer.traverse(input, traversal);
     assertThat(
         traversal.getObjects(),
-        Matchers.<Object>contains(
-            (Matcher) sameInstance(input),
-            (Matcher) sameInstance(input.get(0))));
+        Matchers.<Object>contains(ImmutableList.of(
+            sameInstance((Object)input),
+            sameInstance((Object)input.get(0)))));
 
     traversal = new TestTraversal();
     String input2 = "foo";
