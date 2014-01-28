@@ -96,13 +96,22 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return 1;
     }
 
-    // Parse the entire dependency graph.
+    // Parse the entire dependency graph, or (if targets are specified),
+    // only the specified targets and their dependencies..
     PartialGraph graph;
     try {
-      graph = PartialGraph.createFullGraph(getProjectFilesystem(),
-          options.getDefaultIncludes(),
-          getParser(),
-          getBuckEventBus());
+      if (matchingBuildTargets.isEmpty()) {
+        graph = PartialGraph.createFullGraph(getProjectFilesystem(),
+            options.getDefaultIncludes(),
+            getParser(),
+            getBuckEventBus());
+      } else {
+        graph = PartialGraph.createPartialGraphIncludingRoots(
+            matchingBuildTargets,
+            options.getDefaultIncludes(),
+            getParser(),
+            getBuckEventBus());
+      }
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

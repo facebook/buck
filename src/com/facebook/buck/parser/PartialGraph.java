@@ -97,6 +97,21 @@ public class PartialGraph {
     return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
   }
 
+  /**
+   * Like {@link #createPartialGraphFromRoots}, but trades accuracy for speed.
+   *
+   * <p>The graph returned from this method will include all transitive deps of the roots, but
+   * might also include rules that are not actually dependencies.  This looseness allows us to
+   * run faster by avoiding a post-hoc filtering step.
+   */
+  public static PartialGraph createPartialGraphIncludingRoots(
+      Iterable<BuildTarget> roots,
+      Iterable<String> includes,
+      Parser parser,
+      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+    return parseAndCreateGraphFromTargets(roots, includes, parser, eventBus);
+  }
+
   private static PartialGraph parseAndCreateGraphFromTargets(
       Iterable<BuildTarget> targets,
       Iterable<String> includes,
