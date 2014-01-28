@@ -56,7 +56,7 @@ public class DexRDotJavaStepTest {
 
     List<String> expectedStepDescriptions = Lists.newArrayList(
         makeCleanDirDescription(rDotJavaScratchDir),
-        String.format("get_class_names Optional.of(.) > %s", rDotJavaClassesTxt),
+        String.format("get_class_names . > %s", rDotJavaClassesTxt),
         dxStepDescription(rDotJavaDex),
         "estimate_linear_alloc");
 
