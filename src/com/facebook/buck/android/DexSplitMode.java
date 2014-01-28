@@ -41,10 +41,11 @@ class DexSplitMode {
   /**
    * File that whitelists the class files that should be in the primary dex.
    * <p>
-   * Values in this file must match JAR entries exactly, so they should contain path separators.
+   * Values in this file must match JAR entries (without the .class suffix),
+   * so they should contain path separators.
    * For example:
    * <pre>
-   * com/google/common/collect/ImmutableSet.class
+   * java/util/Map$Entry
    * </pre>
    */
   private final Optional<SourcePath> primaryDexClassesFile;
