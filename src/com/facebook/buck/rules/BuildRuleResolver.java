@@ -68,13 +68,21 @@ public class BuildRuleResolver {
     return fullyQualifiedName == null ? null : buildRuleIndex.get(fullyQualifiedName);
   }
 
-  public <T extends BuildRule> T buildAndAddToIndex(BuildRuleBuilder<T> builder) {
-    T buildRule = builder.build(this);
-    BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
+  /**
+   * Adds to the index a mapping from {@code target} to {@code buildRule}.
+   */
+  @VisibleForTesting
+  public void addToIndex(BuildTarget target, BuildRule buildRule) {
+    BuildRule oldValue = buildRuleIndex.put(target, buildRule);
     if (oldValue != null) {
       throw new IllegalStateException("A build rule for this target has already been created: " +
-          buildRule.getBuildTarget());
+          target);
     }
+  }
+
+  public <T extends BuildRule> T buildAndAddToIndex(BuildRuleBuilder<T> builder) {
+    T buildRule = builder.build(this);
+    addToIndex(buildRule.getBuildTarget(), buildRule);
     return buildRule;
   }
 }
