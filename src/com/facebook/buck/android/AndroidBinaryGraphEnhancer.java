@@ -92,12 +92,12 @@ public class AndroidBinaryGraphEnhancer {
       }
 
       // Create the IntermediateDexRule and add it to both the ruleResolver and preDexDeps.
-      IntermediateDexRule.Builder preDexBuilder = IntermediateDexRule
-          .newPreDexBuilder(buildRuleBuilderParams)
-          .setBuildTarget(preDexTarget)
-          .setJavaLibraryRuleToDex(javaLibraryRule)
-          .addVisibilityPattern(BuildTargetPattern.MATCH_ALL);
-      IntermediateDexRule preDex = ruleResolver.buildAndAddToIndex(preDexBuilder);
+      IntermediateDexRule preDex = ruleResolver.buildAndAddToIndex(
+          IntermediateDexRule
+              .newPreDexBuilder(buildRuleBuilderParams)
+              .setBuildTarget(preDexTarget)
+              .setJavaLibraryRuleToDex(javaLibraryRule)
+              .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
       preDexDeps.add(preDex);
     }
     return preDexDeps.build();
