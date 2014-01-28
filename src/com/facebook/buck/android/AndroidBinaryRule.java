@@ -1092,15 +1092,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         }
       };
 
-      AndroidBinaryGraphEnhancer.Result result = graphEnhancer.addBuildablesToCreateAaptResources(
-          ruleResolver,
-          resourceCompressionMode,
-          resourceFilter,
-          androidResourceDepsFinder,
-          manifest,
-          packageType,
-          cpuFilters.build(),
-          shouldPreDex);
+      AndroidBinaryGraphEnhancer.AaptEnhancementResult aaptEnhancementResult =
+          graphEnhancer.addBuildablesToCreateAaptResources(
+              ruleResolver,
+              resourceCompressionMode,
+              resourceFilter,
+              androidResourceDepsFinder,
+              manifest,
+              packageType,
+              cpuFilters.build(),
+              shouldPreDex);
       BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
 
       return new AndroidBinaryRule(
@@ -1117,8 +1118,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           resourceCompressionMode,
           cpuFilters.build(),
           preDexDeps,
-          result.getUberRDotJava(),
-          result.getAaptPackageResources(),
+          aaptEnhancementResult.getUberRDotJava(),
+          aaptEnhancementResult.getAaptPackageResources(),
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,
           androidResourceDepsFinder,

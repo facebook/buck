@@ -106,7 +106,7 @@ public class AndroidBinaryGraphEnhancer {
     return allPreDexDeps;
   }
 
-  Result addBuildablesToCreateAaptResources(BuildRuleResolver ruleResolver,
+  AaptEnhancementResult addBuildablesToCreateAaptResources(BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourceFilter,
       AndroidResourceDepsFinder androidResourceDepsFinder,
@@ -144,7 +144,7 @@ public class AndroidBinaryGraphEnhancer {
         .add(aaptPackageResourcesBuildRule)
         .build();
 
-    return new Result(uberRDotJava, aaptPackageResources);
+    return new AaptEnhancementResult(uberRDotJava, aaptPackageResources);
   }
 
   /**
@@ -157,11 +157,11 @@ public class AndroidBinaryGraphEnhancer {
     return totalDeps.build();
   }
 
-  static class Result {
+  static class AaptEnhancementResult {
     private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
 
-    public Result(
+    public AaptEnhancementResult(
         UberRDotJava uberRDotJava,
         AaptPackageResources aaptPackageBuildable) {
       this.uberRDotJava = uberRDotJava;

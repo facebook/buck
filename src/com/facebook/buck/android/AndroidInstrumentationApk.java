@@ -187,15 +187,16 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         }
       };
 
-      AndroidBinaryGraphEnhancer.Result result = graphEnhancer.addBuildablesToCreateAaptResources(
-          ruleResolver,
-          /* resourceCompressionMode */ ResourceCompressionMode.DISABLED,
-          /* resourceFilter */ ResourceFilter.EMPTY_FILTER,
-          androidResourceDepsFinder,
-          manifest,
-          /* packageType */ PackageType.INSTRUMENTED,
-          apkUnderTest.getCpuFilters(),
-          /* rDotJavaNeedsDexing */ false);
+      AndroidBinaryGraphEnhancer.AaptEnhancementResult aaptEnhancementResult =
+          graphEnhancer.addBuildablesToCreateAaptResources(
+              ruleResolver,
+              /* resourceCompressionMode */ ResourceCompressionMode.DISABLED,
+              /* resourceFilter */ ResourceFilter.EMPTY_FILTER,
+              androidResourceDepsFinder,
+              manifest,
+              /* packageType */ PackageType.INSTRUMENTED,
+              apkUnderTest.getCpuFilters(),
+              /* rDotJavaNeedsDexing */ false);
 
       BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
 
@@ -204,8 +205,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           manifest,
           apkUnderTest,
           buildRulesToExcludeFromDex,
-          result.getUberRDotJava(),
-          result.getAaptPackageResources(),
+          aaptEnhancementResult.getUberRDotJava(),
+          aaptEnhancementResult.getAaptPackageResources(),
           androidResourceDepsFinder,
           getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()),
           androidTransitiveDependencyGraph);
