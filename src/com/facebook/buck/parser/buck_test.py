@@ -1,5 +1,6 @@
 from buck import glob_pattern_to_regex_string
 from buck import LazyBuildEnvPartial
+from buck import passes_glob_filter
 from buck import relpath
 from buck import strip_none_entries
 from buck import symlink_aware_walk
@@ -48,6 +49,15 @@ class TestBuck(unittest.TestCase):
     self.assertTrue(all_java_tests_re.match('MainTest.java'))
     self.assertFalse(all_java_tests_re.match('com/example/Main.java'))
     self.assertTrue(all_java_tests_re.match('com/example/MainTest.java'))
+
+
+  def test_glob_pattern_to_regex_string_ignores_dot_files_and_dirs(self):
+    all_java_tests = glob_pattern_to_regex_string('**/*Test.java')
+    all_java_tests_re = re.compile(all_java_tests)
+    self.assertTrue(passes_glob_filter('path/to/MyJavaTest.java', [all_java_tests_re], []))
+    self.assertFalse(passes_glob_filter('path/to/.MyJavaTest.java', [all_java_tests_re], []))
+    self.assertFalse(passes_glob_filter('path/.to/MyJavaTest.java', [all_java_tests_re], []))
+    self.assertTrue(passes_glob_filter('./path/to/MyJavaTest.java', [all_java_tests_re], []))
 
 
   def test_lazy_build_env_partial(self):

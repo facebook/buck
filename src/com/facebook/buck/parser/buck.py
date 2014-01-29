@@ -153,6 +153,40 @@ def symlink_aware_walk(base):
   raise StopIteration
 
 
+def splitpath(path, maxdepth=20):
+  '''Splits /foo/bar/baz.java into ['', 'foo', 'bar', 'baz.java'].'''
+  (head, tail) = os.path.split(path)
+  if maxdepth > 0 and head and head != path:
+    return splitpath(head, maxdepth - 1) + [tail]
+  elif head:
+    return [head]
+  else:
+    return [tail]
+
+def passes_glob_filter(path, inclusions, exclusions):
+  '''Checks path against inclusion and exclusion regexes.
+
+  Returns False if the path contains any components which
+  start with a dot (mimicking the behavior of glob()).
+
+  Returns False if the path matches any compiled regex
+  in the list 'exclusions'.
+
+  Otherwise, returns True if the path matches any compiled
+  regex in the list 'inclusions', or False if it does not.'''
+  # Ignore dot-files and dot-directories (but not '.' itself).
+  for component in splitpath(path):
+    if len(component) > 1 and component.startswith('.'):
+      return False
+  for exclusion in exclusions:
+    if exclusion.match(path):
+      return False
+  for inclusion in inclusions:
+    if inclusion.match(path):
+      return True
+  return False
+
+
 @provide_for_build
 def glob(includes, excludes=[], build_env=None):
   search_base = build_env['BUILD_FILE_DIRECTORY']
@@ -166,20 +200,11 @@ def glob(includes, excludes=[], build_env=None):
   inclusions = [pattern_to_regex(p) for p in includes]
   exclusions = [pattern_to_regex(p) for p in excludes]
 
-  def passes_glob_filter(path):
-    for exclusion in exclusions:
-      if exclusion.match(path):
-        return False
-    for inclusion in inclusions:
-      if inclusion.match(path):
-        return True
-    return False
-
   # Return the filtered set of includes as an array.
   paths = []
 
   def check_path(path):
-    if passes_glob_filter(path):
+    if passes_glob_filter(path, inclusions, exclusions):
       paths.append(path)
 
   for root, dirs, files in symlink_aware_walk(search_base):

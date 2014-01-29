@@ -52,6 +52,8 @@ public class LicenseCheckTest {
     @Override
     public void visit(File file, String relativePath) {
       if (!"java".equals(Files.getFileExtension(relativePath)) ||
+          // Ignore dangling symlinks.
+          !file.exists() ||
           relativePath.startsWith("com/facebook/buck/cli/quickstart/android/")) {
         return;
       }
