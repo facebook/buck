@@ -70,6 +70,12 @@ public class XcconfigParserTest {
         XcconfigParser.parse(filesystem, Paths.get(inputPath), searchPaths));
   }
 
+  /**
+   * Parse and toString a string, test that they are identical.
+   */
+  private static void assertParseAndToStringIsIdentity(String content) throws ParseException {
+    assertEquals(content, parser(content).buildSetting().toString());
+  }
 
   @Test(expected = TokenMgrError.class)
   // will throw TokenMgrError but the compiler does not know ;)
@@ -174,5 +180,35 @@ public class XcconfigParserTest {
     assertEquals(s2, value2.toString());
     assertEquals("X[a=1*,x=3,y=4] = 1 /$(Y $(Z)) 2 SDF ", value3.toString());
   }
-}
 
+  @Test
+  public void valueWithUnbalancedParensAndBraces() throws ParseException {
+    assertParseAndToStringIsIdentity("X = ABC ) DEF)GHI} JKL");
+    assertParseAndToStringIsIdentity("X = $(ABC$(DEF)) DEF)GHI} JKL");
+  }
+
+  @Test(expected = ParseException.class)
+  public void braceInterpWithParenShouldThrow() throws ParseException {
+    assertParseAndToStringIsIdentity("X = ${SOME)THING}");
+  }
+
+  @Test(expected = ParseException.class)
+  public void parenInterpWithBraceShouldThrow() throws ParseException {
+    assertParseAndToStringIsIdentity("X = $(SOME}THING)");
+  }
+
+  @Test
+  public void conditionWithOnlyStarAllowed() throws ParseException {
+    assertParseAndToStringIsIdentity("X[arch=*] = FOO");
+  }
+
+  @Test
+  public void simpleDollarLiteral() throws ParseException {
+    assertBuildSettingHasValue(
+        "X = $FOO",
+        new PredicatedConfigValue(
+            "X",
+            ImmutableSortedSet.<Condition>of(),
+            ImmutableList.of(TokenValue.interpolation("FOO"))));
+  }
+}
