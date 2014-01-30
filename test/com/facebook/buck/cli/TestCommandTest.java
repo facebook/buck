@@ -500,6 +500,7 @@ public class TestCommandTest {
             createMock(TestRule.class),
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
+            true,
             false)
     );
 
@@ -523,7 +524,8 @@ public class TestCommandTest {
             testRule,
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
-            false));
+            /* results cache enabled */ true,
+            /* running with test selectors */ false));
 
     verify(executionContext, testRule);
   }
@@ -544,7 +546,8 @@ public class TestCommandTest {
             testRule,
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
-            false));
+            /* results cache enabled */ true,
+            /* running with test selectors */ false));
 
     verify(executionContext, testRule);
   }
@@ -567,7 +570,11 @@ public class TestCommandTest {
         "A cached build should run the tests if the test output directory\'s rule key is not " +
             "present or does not matche the rule key for the test.",
         TestCommand.isTestRunRequiredForTest(
-            testRule, executionContext, testRuleKeyFileHelper, false));
+            testRule,
+            executionContext,
+            testRuleKeyFileHelper,
+            /* results cache enabled */ true,
+            /* running with test selectors */ false));
 
     verify(executionContext, testRule, testRuleKeyFileHelper);
   }

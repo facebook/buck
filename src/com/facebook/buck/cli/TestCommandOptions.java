@@ -37,6 +37,8 @@ import javax.annotation.Nullable;
 public class TestCommandOptions extends BuildCommandOptions {
 
   public static final String LABEL_SEPERATOR = "+";
+  public static final String USE_RESULTS_CACHE = "use_results_cache";
+
   @Option(name = "--all", usage = "Whether all of the tests should be run.")
   private boolean all = false;
 
@@ -52,6 +54,9 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   @Option(name = "--jacoco", usage = "Whether jacoco should be used for code coverage analysis or emma.")
   private boolean isJaccoEnabled = false;
+
+  @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
+  private boolean isResultsCacheDisabled = false;
 
   @Option(
       name = "--ignore-when-dependencies-fail",
@@ -113,6 +118,8 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   public TestCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
+
+    setUseResultsCacheFromConfig(buckConfig);
   }
 
   public boolean isRunAllTests() {
@@ -136,6 +143,17 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Override
   public boolean isJacocoEnabled() {
     return isJaccoEnabled;
+  }
+
+  private void setUseResultsCacheFromConfig(BuckConfig buckConfig) {
+    // The command line option is a negative one, hence the slightly confusing logic.
+    boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, true);
+    isResultsCacheDisabled = !isUseResultsCache;
+  }
+
+  public boolean isResultsCacheEnabled() {
+    // The option is negative (--no-X) but we prefer to reason about positives, in the code.
+    return !isResultsCacheDisabled;
   }
 
   @Override
