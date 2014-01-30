@@ -128,6 +128,7 @@ java_library(
   srcs = SPLIT_DEX_SRCS,
   deps = [
     '//lib:guava',
+    '//lib:jsr305',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/rules:build_rule',

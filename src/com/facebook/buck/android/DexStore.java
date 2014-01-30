@@ -18,9 +18,12 @@ package com.facebook.buck.android;
 
 import com.google.common.base.Preconditions;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * Specifies how secondary .dex files should be stored in the .apk.
  */
+@Immutable
 enum DexStore {
   /**
    * Secondary dexes should be compressed using JAR's deflate.

@@ -27,9 +27,12 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * Bundles together some information about whether and how we should split up dex files.
  */
+@Immutable
 class DexSplitMode {
   private final boolean shouldSplitDex;
   private final DexStore dexStore;
