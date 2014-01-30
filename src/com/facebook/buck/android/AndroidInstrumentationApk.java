@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
-import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
@@ -31,7 +30,6 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -74,14 +72,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         PackageType.INSTRUMENTED,
         buildRulesToExcludeFromDex,
         // Do not split the test apk even if the tested apk is split
-        new DexSplitMode(
-            /* shouldSplitDex */ false,
-            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-            DexStore.JAR,
-            /* useLinearAllocSplitDex */ false,
-            /* linearAllocHardLimit */ 0,
-            /* primaryDexPatterns */ ImmutableSet.<String>of(),
-            /* primaryDexClassesFile */ Optional.<SourcePath>absent()),
+        DexSplitMode.NO_SPLIT,
         apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getResourceCompressionMode(),

@@ -34,6 +34,15 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 class DexSplitMode {
+  public static final DexSplitMode NO_SPLIT = new DexSplitMode(
+      /* shouldSplitDex */ false,
+      ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+      DexStore.JAR,
+      /* useLinearAllocSplitDex */ false,
+      /* linearAllocHardLimit */ 0,
+      /* primaryDexPatterns */ ImmutableSet.<String>of(),
+      /* primaryDexClassesFile */ Optional.<SourcePath>absent());
+
   private final boolean shouldSplitDex;
   private final DexStore dexStore;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;

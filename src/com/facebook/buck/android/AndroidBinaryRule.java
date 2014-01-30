@@ -22,7 +22,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
-import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -1021,14 +1020,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private ImmutableSet.Builder<BuildTarget> buildTargetsToExcludeFromDexBuilder =
         ImmutableSet.builder();
     private boolean disablePreDex = false;
-    private DexSplitMode dexSplitMode = new DexSplitMode(
-        /* shouldSplitDex */ false,
-        ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-        DexStore.JAR,
-        /* useLinearAllocSplitDex */ false,
-        /* linearAllocHardLimit*/ 0,
-        /* primaryDexPatterns */ ImmutableSet.<String>of(),
-        /* primaryDexClassesFile */ Optional.<SourcePath>absent());
+    private DexSplitMode dexSplitMode = DexSplitMode.NO_SPLIT;
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
