@@ -480,7 +480,12 @@ public final class Main {
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
     for (BuckEventListener eventListener : eventListeners) {
-      eventListener.outputTrace(buildId);
+      try {
+        eventListener.outputTrace(buildId);
+      } catch (RuntimeException e) {
+        System.err.println("Skipping over non-fatal error");
+        e.printStackTrace();
+      }
     }
     return exitCode;
   }
