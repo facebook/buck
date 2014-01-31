@@ -350,6 +350,14 @@ public class RuleKey {
         setVal(buildRule.getRuleKey());
       }
       separate();
+
+      if (rule instanceof ExportDependencies) {
+        setKey("exported_deps");
+        for (BuildRule buildRule : ((ExportDependencies) rule).getExportedDeps()) {
+          setVal(buildRule.getRuleKey());
+        }
+        separate();
+      }
       RuleKey totalRuleKey = new RuleKey(hasher.hash());
 
       if (logElms != null) {

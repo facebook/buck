@@ -466,8 +466,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
-    super.appendToRuleKey(builder)
-        .set("exportedDeps", exportedDeps);
+    super.appendToRuleKey(builder);
     javacOptions.appendToRuleKey(builder);
     return builder;
   }
