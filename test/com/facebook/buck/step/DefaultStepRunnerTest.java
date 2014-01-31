@@ -16,8 +16,11 @@
 
 package com.facebook.buck.step;
 
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
@@ -35,9 +38,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
-
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 public class DefaultStepRunnerTest {
 
@@ -119,7 +119,7 @@ public class DefaultStepRunnerTest {
       runner.runStep(new ExplosionStep());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
-      assertEquals("Failed on step explode with an exception:\n#yolo", e.getMessage());
+      assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));
     }
   }
 

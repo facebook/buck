@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.TestConsole;
@@ -99,8 +100,8 @@ public class StepFailedExceptionTest {
 
     assertEquals(step, exception.getStep());
     assertEquals(1, exception.getExitCode());
-    assertEquals("//foo:bar failed on step cp with an exception:\nCopy failed!",
-        exception.getMessage());
+    assertTrue(exception.getMessage().startsWith(
+        "//foo:bar failed on step cp with an exception:\nCopy failed!"));
   }
 
   @Test
@@ -112,7 +113,7 @@ public class StepFailedExceptionTest {
 
     assertEquals(step, exception.getStep());
     assertEquals(1, exception.getExitCode());
-    assertEquals("Failed on step cp with an exception:\nCopy failed!",
-        exception.getMessage());
+    assertTrue(exception.getMessage().startsWith(
+        "Failed on step cp with an exception:\nCopy failed!"));
   }
 }
