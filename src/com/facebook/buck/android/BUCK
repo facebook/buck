@@ -63,7 +63,7 @@ RULES_SRCS = [
   'AndroidTransitiveDependencyGraph.java',
   'ApkGenrule.java',
   'ApkGenruleBuildRuleFactory.java',
-  'BucketPreDexedFilesStep.java',
+  'PreDexedFilesSorter.java',
   'DexProducedFromJavaLibraryThatContainsClassFiles.java',
   'DexRDotJavaStep.java',
   'DexWithClasses.java',

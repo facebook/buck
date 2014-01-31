@@ -39,7 +39,7 @@ public interface DexWithClasses {
   /**
    * @return A value that estimates how much space the Dalvik code represented by this object will
    *     take up in a DEX file. The units for this estimate are not important, so long as they are
-   *     consistent with those used by {@link BucketPreDexedFilesStep} to determine how secondary DEX
+   *     consistent with those used by {@link PreDexedFilesSorter} to determine how secondary DEX
    *     files should be packed.
    */
   public int getSizeEstimate();

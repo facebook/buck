@@ -43,6 +43,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -111,7 +112,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     steps.add(new MkdirStep(primaryDexPath.getParent()));
 
     if (dexSplitMode.isShouldSplitDex()) {
-      addStepsForSplitDex(steps, buildableContext);
+      addStepsForSplitDex(steps, context, buildableContext);
     } else {
       addStepsForSingleDex(steps, buildableContext);
     }
@@ -120,6 +121,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
 
   private void addStepsForSplitDex(
       ImmutableList.Builder<Step> steps,
+      BuildContext context,
       final BuildableContext buildableContext) {
 
     // Collect all of the DexWithClasses objects to use for merging.
@@ -143,10 +145,6 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     // re-merged (since their contents did not change).
     steps.add(new MkdirStep(secondaryDexJarFilesDir));
 
-    // Add a step to do the bucketing of dex inputs. The bucketing must be done at runtime because
-    // it is not safe to invoke dexWithClassesForRDotJava.getLinearAllocEstimate() at this point, but
-    // it will be safe by the time the BucketPreDexedFilesStep is executed. (By comparison, it is
-    // safe to invoke getLinearAllocEstimate() on every element in dexFilesToMerge at this point.)
     Path preDexScratchDir = secondaryDexScratchDir.resolve("__bucket_pre_dex__");
     steps.add(new MakeCleanDirectoryStep(preDexScratchDir));
 
@@ -163,7 +161,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     buildableContext.recordArtifactsInDirectory(secondaryDexMetadataDir);
     buildableContext.recordArtifactsInDirectory(successDir);
 
-    final BucketPreDexedFilesStep bucketPreDexedFilesStep = new BucketPreDexedFilesStep(
+    PreDexedFilesSorter preDexedFilesSorter = new PreDexedFilesSorter(
         uberRDotJava.getRDotJavaDexWithClasses(),
         dexFilesToMerge,
         dexSplitMode.getPrimaryDexPatterns(),
@@ -171,13 +169,14 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         dexSplitMode.getLinearAllocHardLimit(),
         dexSplitMode.getDexStore(),
         secondaryDexJarFilesDir);
-    steps.add(bucketPreDexedFilesStep);
+    final PreDexedFilesSorter.Result sortResult =
+        preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(context, steps);
 
     steps.add(new SmartDexingStep(
         primaryDexPath,
-        bucketPreDexedFilesStep.getPrimaryDexInputsSupplier(),
+        Suppliers.ofInstance(sortResult.primaryDexInputs),
         Optional.of(secondaryDexJarFilesDir),
-        Optional.of(bucketPreDexedFilesStep.getSecondaryOutputToInputsSupplier()),
+        Optional.of(Suppliers.ofInstance(sortResult.secondaryOutputToInputs)),
         successDir,
         /* numThreads */ Optional.<Integer>absent(),
         AndroidBinaryRule.DX_MERGE_OPTIONS));
@@ -186,8 +185,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
       @Override
       public int execute(ExecutionContext executionContext) {
         ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
-        Map<Path, DexWithClasses> metadataTxtEntries =
-            bucketPreDexedFilesStep.getMetadataTxtEntries();
+        Map<Path, DexWithClasses> metadataTxtEntries = sortResult.metadataTxtDexEntries;
         List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
         try {
           for (Map.Entry<Path, DexWithClasses> entry : metadataTxtEntries.entrySet()) {

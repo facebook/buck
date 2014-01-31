@@ -17,14 +17,15 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.CanaryFactory;
-import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +46,7 @@ import java.util.Set;
 /**
  * Responsible for bucketing pre-dexed objects into primary and secondary dex files.
  */
-public class BucketPreDexedFilesStep extends AbstractExecutionStep {
+public class PreDexedFilesSorter {
   
   private final Optional<DexWithClasses> rDotJavaDex;
   private final List<DexWithClasses> dexFilesToMerge;
@@ -55,19 +56,12 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
   private final Path secondaryDexJarFilesDir;
 
   /**
-   * These fields are set during the step execution.
-   */
-  private Set<Path> primaryDexInputs;
-  private Map<Path, DexWithClasses> metadataTxtEntries;
-  private Multimap<Path, Path> secondaryOutputToInputs;
-
-  /**
    * Directory under the project filesystem where this step may write temporary data. This directory
    * must exist and be empty before this step writes to it.
    */
   private final Path scratchDirectory;
 
-  public BucketPreDexedFilesStep(
+  public PreDexedFilesSorter(
       Optional<DexWithClasses> rDotJavaDex,
       List<DexWithClasses> dexFilesToMerge,
       ImmutableSet<String> primaryDexPatterns,
@@ -75,7 +69,6 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
       long linearAllocHardLimit,
       DexStore dexStore,
       Path secondaryDexJarFilesDir) {
-    super("bucket_dx");
     this.rDotJavaDex = Preconditions.checkNotNull(rDotJavaDex);
     this.dexFilesToMerge = Preconditions.checkNotNull(dexFilesToMerge);
     this.primaryDexFilter = ClassNameFilter.fromConfiguration(
@@ -87,33 +80,9 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
     this.secondaryDexJarFilesDir = Preconditions.checkNotNull(secondaryDexJarFilesDir);
   }
 
-  public Supplier<Set<Path>> getPrimaryDexInputsSupplier() {
-    return new Supplier<Set<Path>>() {
-      @Override
-      public Set<Path> get() {
-        return Preconditions.checkNotNull(primaryDexInputs,
-            "Trying to read primary dex inputs before BucketPreDexedFilesStep finished.");
-      }
-    };
-  }
-
-  public Map<Path, DexWithClasses> getMetadataTxtEntries() {
-    return Preconditions.checkNotNull(metadataTxtEntries,
-        "Trying to read secondary dex metadata contents before BucketPreDexedFilesStep finished.");
-  }
-
-  public Supplier<Multimap<Path, Path>> getSecondaryOutputToInputsSupplier() {
-    return new Supplier<Multimap<Path, Path>>() {
-      @Override
-      public Multimap<Path, Path> get() {
-        return Preconditions.checkNotNull(secondaryOutputToInputs,
-            "Trying to read secodary dex inputs before BucketPreDexedFilesStep finished.");
-      }
-    };
-  }
-
-  @Override
-  public int execute(ExecutionContext context) {
+  public Result sortIntoPrimaryAndSecondaryDexes(
+      BuildContext context,
+      ImmutableList.Builder<Step> steps) {
     List<DexWithClasses> primaryDexContents = Lists.newArrayList();
     List<List<DexWithClasses>> secondaryDexesContents = Lists.newArrayList();
 
@@ -137,14 +106,14 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
         // Case 1: Entry must be in the primary dex.
         primaryDexSize += dexWithClasses.getSizeEstimate();
         if (primaryDexSize > linearAllocHardLimit) {
-          context.postEvent(LogEvent.severe(
+          context.logError(
               "DexWithClasses %s with cost %s puts the linear alloc estimate for the primary dex " +
                   "at %s, exceeding the maximum of %s.",
               dexWithClasses.getPathToDexFile(),
               dexWithClasses.getSizeEstimate(),
               primaryDexSize,
-              linearAllocHardLimit));
-          return 1;
+              linearAllocHardLimit);
+          throw new HumanReadableException("Primary dex exceeds linear alloc limit.");
         }
         primaryDexContents.add(dexWithClasses);
       } else {
@@ -153,12 +122,12 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
         // If the individual DexWithClasses exceeds the limit for a secondary dex, then we have done
         // something horribly wrong.
         if (dexWithClasses.getSizeEstimate() > linearAllocHardLimit) {
-          context.postEvent(LogEvent.severe(
+          context.logError(
               "DexWithClasses %s with cost %s exceeds the max cost %s for a secondary dex file.",
               dexWithClasses.getPathToDexFile(),
               dexWithClasses.getSizeEstimate(),
-              linearAllocHardLimit));
-          return 1;
+              linearAllocHardLimit);
+          throw new HumanReadableException("Secondary dex exceeds linear alloc limit.");
         }
 
         // If there is no current secondary dex, or dexWithClasses would put the current secondary
@@ -166,13 +135,7 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
         // canary.
         if (currentSecondaryDexContents == null ||
             dexWithClasses.getSizeEstimate() + currentSecondaryDexSize > linearAllocHardLimit) {
-          DexWithClasses canary;
-          try {
-            canary = createCanary(secondaryDexesContents.size() + 1, context);
-          } catch (IOException e) {
-            context.logError(e, "Failed to create canary for secondary dex.");
-            return 1;
-          }
+          DexWithClasses canary = createCanary(secondaryDexesContents.size() + 1, steps);
 
           currentSecondaryDexContents = Lists.newArrayList(canary);
           currentSecondaryDexSize = canary.getSizeEstimate();
@@ -185,25 +148,24 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
       }
     }
 
-    primaryDexInputs = FluentIterable.from(primaryDexContents)
+    ImmutableSet<Path> primaryDexInputs = FluentIterable.from(primaryDexContents)
         .transform(DexWithClasses.TO_PATH)
         .toSet();
 
-    metadataTxtEntries = Maps.newHashMap();
+    Map<Path, DexWithClasses> metadataTxtEntries = Maps.newHashMap();
 
     String pattern = "secondary-%d" + dexStore.getExtension();
-    ImmutableMultimap.Builder<Path, Path> builder = ImmutableMultimap.builder();
+    ImmutableMultimap.Builder<Path, Path> secondaryOutputToInputs = ImmutableMultimap.builder();
     for (int index = 0; index < secondaryDexesContents.size(); index++) {
       String secondaryDexFilename = String.format(pattern, index + 1);
       Path pathToSecondaryDex = secondaryDexJarFilesDir.resolve(secondaryDexFilename);
       metadataTxtEntries.put(pathToSecondaryDex, secondaryDexesContents.get(index).get(0));
       Collection<Path> dexContentPaths = Collections2.transform(
           secondaryDexesContents.get(index), DexWithClasses.TO_PATH);
-      builder.putAll(pathToSecondaryDex, dexContentPaths);
+      secondaryOutputToInputs.putAll(pathToSecondaryDex, dexContentPaths);
     }
-    secondaryOutputToInputs = builder.build();
 
-    return 0;
+    return new Result(primaryDexInputs, secondaryOutputToInputs.build(), metadataTxtEntries);
   }
 
 
@@ -218,25 +180,33 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
 
   /**
    * @see com.facebook.buck.dalvik.CanaryFactory#create(int)
-   * @throws IOException
    */
-  private DexWithClasses createCanary(int index, ExecutionContext context) throws IOException {
-    FileLike fileLike = CanaryFactory.create(index);
+  private DexWithClasses createCanary(int index, ImmutableList.Builder<Step> steps) {
+    final FileLike fileLike = CanaryFactory.create(index);
     String canaryDirName = "canary_" + String.valueOf(index);
     final Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
 
     // Strip the .class suffix to get the class name for the DexWithClasses object.
-    String relativePathToClassFile = fileLike.getRelativePath();
+    final String relativePathToClassFile = fileLike.getRelativePath();
     Preconditions.checkState(relativePathToClassFile.endsWith(".class"));
     final String className = relativePathToClassFile.replaceFirst("\\.class$", "");
 
     // Write out the .class file.
-    Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    projectFilesystem.createParentDirs(classFile);
-    try (InputStream inputStream = fileLike.getInput()) {
-      projectFilesystem.copyToPath(inputStream, classFile);
-    }
+    steps.add(new AbstractExecutionStep("write_canary_class") {
+      @Override
+      public int execute(ExecutionContext context) {
+        Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
+        ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+        try (InputStream inputStream = fileLike.getInput()) {
+          projectFilesystem.createParentDirs(classFile);
+          projectFilesystem.copyToPath(inputStream, classFile);
+        } catch (IOException e) {
+          context.logError(e,  "Error writing canary class file: %s.",  classFile.toString());
+          return 1;
+        }
+        return 0;
+      }
+    });
 
     return new DexWithClasses() {
 
@@ -257,5 +227,20 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
         return ImmutableSet.of(className);
       }
     };
+  }
+
+  public static class Result {
+    public final Set<Path> primaryDexInputs;
+    public final Multimap<Path, Path> secondaryOutputToInputs;
+    public final Map<Path, DexWithClasses> metadataTxtDexEntries;
+
+    public Result(
+        Set<Path> primaryDexInputs,
+        Multimap<Path, Path> secondaryOutputToInputs,
+        Map<Path, DexWithClasses> metadataTxtDexEntries) {
+      this.primaryDexInputs = Preconditions.checkNotNull(primaryDexInputs);
+      this.secondaryOutputToInputs = Preconditions.checkNotNull(secondaryOutputToInputs);
+      this.metadataTxtDexEntries = Preconditions.checkNotNull(metadataTxtDexEntries);
+    }
   }
 }

@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -68,7 +67,7 @@ public class CanaryFactory {
    *
    * @param index Index of the current zip (to ensure unique names).
    */
-  public static FileLike create(final int index) throws IOException {
+  public static FileLike create(final int index) {
     final byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
     final String canaryIndexStr = String.format("%02d", index);
     byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charsets.UTF_8);
