@@ -159,6 +159,10 @@ public class BuildContext {
     events.post(ThrowableLogEvent.create(error, msg, formatArgs));
   }
 
+  public void logError(String msg, Object... formatArgs) {
+    events.post(LogEvent.severe(msg, formatArgs));
+  }
+
   public static Builder builder() {
     return new Builder();
   }
