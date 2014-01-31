@@ -196,7 +196,7 @@ public class BucketPreDexedFilesStep extends AbstractExecutionStep {
     for (int index = 0; index < secondaryDexesContents.size(); index++) {
       String secondaryDexFilename = String.format(pattern, index + 1);
       Path pathToSecondaryDex = secondaryDexJarFilesDir.resolve(secondaryDexFilename);
-      metadataTxtEntries.put(pathToSecondaryDex, secondaryDexesContents.get(0).get(0));
+      metadataTxtEntries.put(pathToSecondaryDex, secondaryDexesContents.get(index).get(0));
       Collection<Path> dexContentPaths = Collections2.transform(
           secondaryDexesContents.get(index), DexWithClasses.TO_PATH);
       builder.putAll(pathToSecondaryDex, dexContentPaths);
