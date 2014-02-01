@@ -204,8 +204,9 @@ public class JUnitStep extends ShellStep {
     // tests written to those file descriptors, as well.
     args.add(directoryForTestResults);
 
-    // Add the default test timeout.
-    args.add(String.valueOf(context.getDefaultTestTimeoutMillis()));
+    // Add the default test timeout if --debug flag is not set
+    long timeout = isDebugEnabled ? 0 : context.getDefaultTestTimeoutMillis();
+    args.add(String.valueOf(timeout));
 
     // Add the test selectors, one per line, in a single argument.
     StringBuilder selectorsArgBuilder = new StringBuilder();
