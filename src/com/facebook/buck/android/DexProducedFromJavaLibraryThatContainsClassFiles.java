@@ -141,7 +141,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
         // dexed before so it knows whether it needs to re-dex them. This way, adding a comment to a
         // Java file that triggers a recompile will not trigger a dx or a dx-merge.
         String abiKeyHash = getAbiKeyForDeps().getHash();
-        buildableContext.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA, abiKeyHash);
         buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKeyHash);
         buildableContext.addMetadata(LINEAR_ALLOC_KEY_ON_DISK_METADATA,
             String.valueOf(linearAllocEstimate.get()));

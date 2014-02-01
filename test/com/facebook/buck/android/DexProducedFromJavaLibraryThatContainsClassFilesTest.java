@@ -132,8 +132,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     // .class file hashes of the JavaLibraryRule that it dexed.
     Sha1HashCode abiKey = DexProducedFromJavaLibraryThatContainsClassFiles
         .computeAbiKey(javaLibraryRule.getClassNamesToHashes());
-    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-        abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
         abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(
@@ -192,8 +190,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     assertThat(recordArtifactAndMetadataStep.getShortName(), startsWith("record_"));
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
-    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-        abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
         abiKey.getHash());
 

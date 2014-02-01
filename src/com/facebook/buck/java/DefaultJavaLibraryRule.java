@@ -651,9 +651,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         return 0;
       }
     });
-
-    buildableContext.addMetadata(ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-        getAbiKeyForDeps().getHash());
   }
 
   /**

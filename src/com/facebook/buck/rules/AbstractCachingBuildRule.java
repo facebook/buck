@@ -495,6 +495,12 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     BuildableContext buildableContext = new DefaultBuildableContext(onDiskBuildInfo,
         buildInfoRecorder);
     List<Step> steps = buildable.getBuildSteps(context, buildableContext);
+
+    if (this instanceof AbiRule) {
+      buildableContext.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+          ((AbiRule)this).getAbiKeyForDeps().getHash());
+    }
+
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
