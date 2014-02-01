@@ -17,13 +17,13 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +32,6 @@ import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -80,9 +79,6 @@ public class JavaLibraryRules {
   }
 
   private static Path getPathToClassHashes(BuildTarget buildTarget) {
-    return Paths.get(
-        BuckConstant.GEN_DIR,
-        buildTarget.getBasePath(),
-        buildTarget.getShortName() + ".classes.txt");
+    return BuildTargets.getGenPath(buildTarget, "%s.classes.txt");
   }
 }
