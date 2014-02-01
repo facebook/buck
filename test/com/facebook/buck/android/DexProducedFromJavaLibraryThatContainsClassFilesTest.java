@@ -26,9 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.FakeJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryRule;
-import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -128,12 +126,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         ImmutableSet.of(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")),
         buildableContext.getRecordedArtifacts());
 
-    // The ABI for a DexProducedFromJavaLibraryThatContainsClassFiles should be a function of the
-    // .class file hashes of the JavaLibraryRule that it dexed.
-    Sha1HashCode abiKey = DexProducedFromJavaLibraryThatContainsClassFiles
-        .computeAbiKey(javaLibraryRule.getClassNamesToHashes());
-    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
-        abiKey.getHash());
     buildableContext.assertContainsMetadataMapping(
         DexProducedFromJavaLibraryThatContainsClassFiles.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "250");
 
@@ -182,16 +174,12 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     verifyAll();
     resetAll();
 
-    Sha1HashCode abiKey = new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY);
-    expect(javaLibrary.getClassNamesToHashes()).andReturn(ImmutableSortedMap.<String, HashCode>of());
     replayAll();
 
     Step recordArtifactAndMetadataStep = steps.get(2);
     assertThat(recordArtifactAndMetadataStep.getShortName(), startsWith("record_"));
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
-    buildableContext.assertContainsMetadataMapping(AbiRule.ABI_KEY_ON_DISK_METADATA,
-        abiKey.getHash());
 
     verifyAll();
   }

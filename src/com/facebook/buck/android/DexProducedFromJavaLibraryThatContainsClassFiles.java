@@ -20,7 +20,6 @@ import com.facebook.buck.android.DexProducedFromJavaLibraryThatContainsClassFile
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.Buildable;
@@ -136,12 +135,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
           buildableContext.recordArtifact(getPathToDex());
         }
 
-        // The ABI key for the deps is also the ABI key for this Buildable. A dx-merge step can keep
-        // track of the ABIs of the DexProducedFromJavaLibraryThatContainsClassFiles that it has
-        // dexed before so it knows whether it needs to re-dex them. This way, adding a comment to a
-        // Java file that triggers a recompile will not trigger a dx or a dx-merge.
-        String abiKeyHash = getAbiKeyForDeps().getHash();
-        buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKeyHash);
         buildableContext.addMetadata(LINEAR_ALLOC_KEY_ON_DISK_METADATA,
             String.valueOf(linearAllocEstimate.get()));
         return 0;
