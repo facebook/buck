@@ -143,12 +143,12 @@ public class MergeAndroidResourcesStep implements Step {
 
       // Then write R.java to the output directory.
       Files.createParentDirs(rDotJava);
-      BufferedWriter writer = Files.newWriter(rDotJava, Charsets.UTF_8);
-      try {
-        writeJavaCodeForPackageAndResources(new PrintWriter(writer),
-            rDotJavaPackage, resources);
-      } finally {
-        writer.close();
+
+      try (BufferedWriter writer = Files.newWriter(rDotJava, Charsets.UTF_8)) {
+        writeJavaCodeForPackageAndResources(
+            new PrintWriter(writer),
+            rDotJavaPackage,
+            resources);
       }
     }
   }
