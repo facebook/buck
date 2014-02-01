@@ -30,11 +30,6 @@ public interface AbiRule {
   public static final String ABI_KEY_ON_DISK_METADATA = "ABI_KEY";
 
   /**
-   * Key for {@link OnDiskBuildInfo} to identify the ABI key for the deps of a build rule.
-   */
-  public static final String ABI_KEY_FOR_DEPS_ON_DISK_METADATA = "ABI_KEY_FOR_DEPS";
-
-  /**
    * Returns a {@link Sha1HashCode} that represents the ABI of this rule's deps.
    */
   public Sha1HashCode getAbiKeyForDeps() throws IOException;

@@ -51,6 +51,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Beta
 public abstract class AbstractCachingBuildRule extends AbstractBuildRule implements BuildRule {
 
+  /**
+   * Key for {@link com.facebook.buck.rules.OnDiskBuildInfo} to identify
+   * the ABI key for the deps of a build rule.
+   */
+  @VisibleForTesting
+  public static final String ABI_KEY_FOR_DEPS_ON_DISK_METADATA = "ABI_KEY_FOR_DEPS";
+
   private final Buildable buildable;
 
   /**
@@ -378,7 +385,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         // Therefore, if the ABI of its deps has not changed, there is nothing to rebuild.
         Sha1HashCode abiKeyForDeps = abiRule.getAbiKeyForDeps();
         Optional<Sha1HashCode> cachedAbiKeyForDeps = onDiskBuildInfo.getHash(
-            AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
+            ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
         if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
           return new BuildResult(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
               CacheResult.LOCAL_KEY_UNCHANGED_HIT);
@@ -497,7 +504,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     List<Step> steps = buildable.getBuildSteps(context, buildableContext);
 
     if (this instanceof AbiRule) {
-      buildableContext.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+      buildableContext.addMetadata(
+          ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
           ((AbiRule)this).getAbiKeyForDeps().getHash());
     }
 

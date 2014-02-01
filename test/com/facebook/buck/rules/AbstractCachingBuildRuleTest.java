@@ -341,7 +341,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
          // disk.
          .setRuleKeyWithoutDeps(new RuleKey(TestAbstractCachingBuildRule.RULE_KEY_WITHOUT_DEPS_HASH))
          // Similarly, the ABI key for the deps in memory should be the same as the one on disk.
-        .putMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+        .putMetadata(
+            AbstractCachingBuildRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
             TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH)
         .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA,
             "At some point, this method call should go away.");
@@ -412,7 +413,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // This metadata must be added to the buildInfoRecorder so that it is written as part of
     // writeMetadataToDisk().
-    buildInfoRecorder.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+    buildInfoRecorder.addMetadata(AbstractCachingBuildRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
         TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH);
 
     // These methods should be invoked after the rule is built locally.
