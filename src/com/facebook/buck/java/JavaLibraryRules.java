@@ -47,13 +47,13 @@ public class JavaLibraryRules {
       ImmutableList.Builder<Step> steps) {
     Preconditions.checkNotNull(javaLibraryRule);
 
-      Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
-          javaLibraryRule.getBuildTarget());
-      steps.add(new MkdirStep(pathToClassHashes.getParent()));
-      steps.add(new AccumulateClassNamesStep(
-          Optional.fromNullable(javaLibraryRule.getPathToOutputFile()),
-          pathToClassHashes));
-      buildableContext.recordArtifact(pathToClassHashes);
+    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
+        javaLibraryRule.getBuildTarget());
+    steps.add(new MkdirStep(pathToClassHashes.getParent()));
+    steps.add(new AccumulateClassNamesStep(
+        Optional.fromNullable(javaLibraryRule.getPathToOutputFile()),
+        pathToClassHashes));
+    buildableContext.recordArtifact(pathToClassHashes);
   }
 
   static JavaLibraryRule.Data initializeFromDisk(
