@@ -756,7 +756,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    */
   @Override
   public JavaLibraryRule.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    return JavaLibraryRules.initializeFromDisk(this, onDiskBuildInfo);
+    return JavaLibraryRules.initializeFromDisk(getBuildTarget(), onDiskBuildInfo);
   }
 
   @Override
