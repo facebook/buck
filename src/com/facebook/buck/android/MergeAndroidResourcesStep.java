@@ -20,9 +20,10 @@ import static com.google.common.collect.Ordering.natural;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -39,13 +40,11 @@ import com.google.common.io.Files;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -77,7 +76,7 @@ public class MergeAndroidResourcesStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try {
-      doExecute();
+      doExecute(context);
       return 0;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
@@ -85,7 +84,7 @@ public class MergeAndroidResourcesStep implements Step {
     }
   }
 
-  private void doExecute() throws IOException {
+  private void doExecute(ExecutionContext context) throws IOException {
     // A symbols file may look like:
     //
     //    int id placeholder 0x7f020000
@@ -116,17 +115,8 @@ public class MergeAndroidResourcesStep implements Step {
     // though Robolectric doesn't read resources.arsc, it does assert that all the R.java resource
     // ids are unique.  This forces us to re-enumerate new unique ids.
     SortedSetMultimap<String, Resource> rDotJavaPackageToResources = sortSymbols(
-        new Function<Path, Readable>() {
-          @Override
-          public Readable apply(Path pathToFile) {
-            try {
-              return new FileReader(pathToFile.toFile());
-            } catch (FileNotFoundException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        },
         symbolsFileToRDotJavaPackage,
+        context.getProjectFilesystem(),
         true /* reenumerate */);
 
     // Create an R.java file for each package.
@@ -155,8 +145,8 @@ public class MergeAndroidResourcesStep implements Step {
 
   @VisibleForTesting
   static SortedSetMultimap<String, Resource> sortSymbols(
-      Function<Path, Readable> filePathToReadable,
       Map<Path, String> symbolsFileToRDotJavaPackage,
+      ProjectFilesystem filesystem,
       boolean reenumerate) {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
@@ -165,33 +155,38 @@ public class MergeAndroidResourcesStep implements Step {
     SortedSetMultimap<String, Resource> rDotJavaPackageToSymbolsFiles = TreeMultimap.create();
     for (Map.Entry<Path, String> entry : symbolsFileToRDotJavaPackage.entrySet()) {
       Path symbolsFile = entry.getKey();
-      String packageName = entry.getValue();
 
       // Read the symbols file and parse each line as a Resource.
-      Readable readable = filePathToReadable.apply(symbolsFile);
-      try (Scanner scanner = new Scanner(readable)) {
-        while (scanner.hasNext()) {
-          String line = scanner.nextLine();
-          Matcher matcher = TEXT_SYMBOLS_LINE.matcher(line);
-          boolean isMatch = matcher.matches();
-          Preconditions.checkState(isMatch, "Should be able to match '%s'.", line);
-          String idType = matcher.group(1);
-          String type = matcher.group(2);
-          String name = matcher.group(3);
-          String idValue = matcher.group(4);
+      List<String> linesInSymbolsFile;
+      try {
+        linesInSymbolsFile = FluentIterable.from(filesystem.readLines(symbolsFile))
+            .filter(MoreStrings.NON_EMPTY)
+            .toList();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
 
-          // We're only doing the remapping so Roboelectric is happy and it is already ignoring the
-          // id references found in the styleable section.  So let's do that as well so we don't have
-          // to get fancier than is needed.  That is, just re-enumerate all app-level resource ids
-          // and ignore everything else, allowing the styleable references to be messed up.
-          String idValueToUse = idValue;
-          if (reenumerate && idValue.startsWith("0x7f")) {
-            idValueToUse = String.format("0x%08x", enumerator.next());
-          }
+      String packageName = entry.getValue();
+      for (String line : linesInSymbolsFile) {
+        Matcher matcher = TEXT_SYMBOLS_LINE.matcher(line);
+        boolean isMatch = matcher.matches();
+        Preconditions.checkState(isMatch, "Should be able to match '%s'.", line);
+        String idType = matcher.group(1);
+        String type = matcher.group(2);
+        String name = matcher.group(3);
+        String idValue = matcher.group(4);
 
-          Resource resource = new Resource(idType, type, name, idValue, idValueToUse);
-          rDotJavaPackageToSymbolsFiles.put(packageName, resource);
+        // We're only doing the remapping so Roboelectric is happy and it is already ignoring the
+        // id references found in the styleable section.  So let's do that as well so we don't have
+        // to get fancier than is needed.  That is, just re-enumerate all app-level resource ids
+        // and ignore everything else, allowing the styleable references to be messed up.
+        String idValueToUse = idValue;
+        if (reenumerate && idValue.startsWith("0x7f")) {
+          idValueToUse = String.format("0x%08x", enumerator.next());
         }
+
+        Resource resource = new Resource(idType, type, name, idValue, idValueToUse);
+        rDotJavaPackageToSymbolsFiles.put(packageName, resource);
       }
     }
     return rDotJavaPackageToSymbolsFiles;

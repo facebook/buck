@@ -17,8 +17,12 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 
 import java.util.Random;
+
+import javax.annotation.Nullable;
 
 public final class MoreStrings {
 
@@ -28,6 +32,14 @@ public final class MoreStrings {
   private static int LENGTH_OF_RANDOM_STRING = 8;
 
   private static Random insecureRandom = new Random();
+
+  public static final Predicate<String> NON_EMPTY =
+      new Predicate<String>() {
+        @Override
+        public boolean apply(@Nullable String input) {
+          return !Strings.isNullOrEmpty(input);
+        }
+      };
 
   /** Utility class: do not instantiate. */
   private MoreStrings() {}
