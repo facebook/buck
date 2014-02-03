@@ -54,6 +54,7 @@ java_test(
     '//lib:hamcrest-library',
     '//lib:jsr305',
     '//lib:junit',
+    '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/cli:events',
     '//src/com/facebook/buck/cli:config',

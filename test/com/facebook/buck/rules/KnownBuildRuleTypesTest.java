@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidLibraryRule;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.model.BuildFileTree;
@@ -93,6 +94,40 @@ public class KnownBuildRuleTypesTest {
 
     assertTrue("Rule is DefaultJavaLibraryRule", rule instanceof DefaultJavaLibraryRule);
     DefaultJavaLibraryRule libraryRule = (DefaultJavaLibraryRule) rule;
+    assertEquals(javac.toPath(), libraryRule.getJavac().get());
+  }
+
+  @Test
+  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithAbsentJavac() throws IOException, NoSuchBuildTargetException {
+    FakeBuckConfig buckConfig = new FakeBuckConfig();
+
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig).build();
+    BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.ANDROID_LIBRARY);
+    BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
+
+    assertTrue("Rule is AndroidLibraryRule", rule instanceof AndroidLibraryRule);
+    AndroidLibraryRule libraryRule = (AndroidLibraryRule) rule;
+    assertEquals(Optional.absent(), libraryRule.getJavac());
+  }
+
+  @Test
+  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithJavacSet() throws IOException, NoSuchBuildTargetException {
+    final File javac = temporaryFolder.newFile();
+    javac.setExecutable(true);
+
+    FakeBuckConfig buckConfig = new FakeBuckConfig(
+        new HashMap<String, Map<String, String>>() {{
+          put("tools", new HashMap<String, String>() {{
+            put("javac", javac.toString());
+          }});
+        }});
+
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig).build();
+    BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.ANDROID_LIBRARY);
+    BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
+
+    assertTrue("Rule is AndroidLibraryRule", rule instanceof AndroidLibraryRule);
+    AndroidLibraryRule libraryRule = (AndroidLibraryRule) rule;
     assertEquals(javac.toPath(), libraryRule.getJavac().get());
   }
 }

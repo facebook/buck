@@ -52,12 +52,33 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
 
   @VisibleForTesting
   public AndroidLibraryRule(BuildRuleParams buildRuleParams,
+                            Set<Path> srcs,
+                            Set<SourcePath> resources,
+                            Optional<DummyRDotJava> optionalDummyRDotJava,
+                            Optional<Path> proguardConfig,
+                            Set<BuildRule> exportedDeps,
+                            JavacOptions javacOptions,
+                            Optional<Path> manifestFile) {
+    this(buildRuleParams,
+        srcs,
+        resources,
+        optionalDummyRDotJava,
+        proguardConfig,
+        exportedDeps,
+        javacOptions,
+        Optional.<Path>absent(),
+        manifestFile);
+  }
+
+  @VisibleForTesting
+  public AndroidLibraryRule(BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Path> proguardConfig,
       Set<BuildRule> exportedDeps,
       JavacOptions javacOptions,
+      Optional<Path> javac,
       Optional<Path> manifestFile) {
     super(buildRuleParams,
         srcs,
@@ -65,7 +86,8 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
         optionalDummyRDotJava,
         proguardConfig,
         exportedDeps,
-        javacOptions);
+        javacOptions,
+        javac);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }
 
@@ -96,14 +118,18 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static Builder newAndroidLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
+    return newAndroidLibraryRuleBuilder(Optional.<Path>absent(), params);
+  }
+
+  public static Builder newAndroidLibraryRuleBuilder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
+    return new Builder(javac, params);
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
     private Optional<Path> manifestFile = Optional.absent();
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
-      super(params);
+    private Builder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
+      super(javac, params);
     }
 
     @Override
@@ -128,6 +154,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           javacOptions.build(),
+          javac,
           manifestFile);
     }
 

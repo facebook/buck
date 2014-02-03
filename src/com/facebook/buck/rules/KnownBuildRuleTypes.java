@@ -148,9 +148,13 @@ public class KnownBuildRuleTypes {
   }
 
   public static Builder createConfiguredBuilder(BuckConfig buckConfig) {
+    Optional<Path> javac = buckConfig.getJavac();
+
     Builder builder = createDefaultBuilder();
     builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(buckConfig.getJavac()));
+        new JavaLibraryBuildRuleFactory(javac));
+    builder.register(BuildRuleType.ANDROID_LIBRARY,
+        new AndroidLibraryBuildRuleFactory(javac));
     return builder;
   }
 
