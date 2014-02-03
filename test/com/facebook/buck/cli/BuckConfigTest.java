@@ -94,6 +94,25 @@ public class BuckConfigTest {
     assertFalse(entries.hasNext());
   }
 
+  @Test
+  public void shouldGetBooleanValues() throws IOException {
+    assertTrue(
+        "a.b is true when 'yes'",
+        createFromText("[a]", "  b = yes").getBooleanValue("a", "b", true));
+    assertTrue(
+        "a.b is true when literally 'true'",
+        createFromText("[a]", "  b = true").getBooleanValue("a", "b", true));
+    assertTrue(
+        "a.b is true when 'YES' (capitalized)",
+        createFromText("[a]", "  b = YES").getBooleanValue("a", "b", true));
+    assertFalse(
+        "a.b is false by default",
+        createFromText("[x]", "  y = COWS").getBooleanValue("a", "b", false));
+    assertFalse(
+        "a.b is true when 'no'",
+        createFromText("[a]", "  b = no").getBooleanValue("a", "b", true));
+  }
+
   /**
    * Ensure that whichever alias is listed first in the file is the one used in the reverse map if
    * the value appears multiple times.
@@ -522,7 +541,8 @@ public class BuckConfigTest {
     FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
         .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
         .build());
-    assertEquals("Should return path to temp file.",
+    assertEquals(
+        "Should return path to temp file.",
         configPythonFile.getAbsolutePath(), config.getPythonInterpreter());
   }
 
@@ -608,6 +628,13 @@ public class BuckConfigTest {
     if (parser == null) {
       parser = new BuildTargetParser(projectFilesystem);
     }
+    return BuckConfig.createFromReader(reader, projectFilesystem, parser, Platform.detect());
+  }
+
+  private BuckConfig createFromText(String... lines) throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
+    BuildTargetParser parser = new BuildTargetParser(projectFilesystem);
+    StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfig.createFromReader(reader, projectFilesystem, parser, Platform.detect());
   }
 }

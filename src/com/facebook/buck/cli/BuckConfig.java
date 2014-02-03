@@ -638,6 +638,31 @@ public class BuckConfig {
     return Optional.fromNullable(properties.get(propertyName));
   }
 
+
+  public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {
+    Map<String, String> entries = getEntriesForSection(sectionName);
+    if (!entries.containsKey(propertyName)) {
+      return defaultValue;
+    }
+
+    String answer = entries.get(propertyName);
+    switch (answer.toLowerCase()) {
+      case "yes":
+      case "true":
+        return true;
+
+      case "no":
+      case "false":
+        return false;
+
+      default:
+        throw new HumanReadableException(
+            "Unknown value for %s in [%s]: %s; should be yes/no true/false!",
+            propertyName,
+            sectionName);
+    }
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
