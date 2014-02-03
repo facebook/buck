@@ -225,6 +225,9 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
 
     public Builder setAndroidResourceDeps(ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
       this.androidResourceDeps = Preconditions.checkNotNull(androidResourceDeps);
+      for (HasAndroidResourceDeps dep : androidResourceDeps) {
+        addDep(dep.getBuildTarget());
+      }
       return this;
     }
   }
