@@ -217,9 +217,11 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
             private void recordBuildRuleSuccess(BuildResult result) {
               // Make sure that all of the local files have the same values they would as if the
               // rule had been built locally.
-              if (result.getSuccess().shouldWriteRecordedMetadataToDiskAfterBuilding()) {
+              BuildRuleSuccess.Type success = result.getSuccess();
+              if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
                 try {
-                  buildInfoRecorder.get().writeMetadataToDisk();
+                  boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
+                  buildInfoRecorder.get().writeMetadataToDisk(clearExistingMetadata);
                 } catch (IOException e) {
                   onFailure(e);
                 }
@@ -378,24 +380,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         Optional<Sha1HashCode> cachedAbiKeyForDeps = onDiskBuildInfo.getHash(
             AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
         if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
-          // Re-copy the ABI metadata.
-          // TODO(mbolin): This seems really bad: there could be other metadata to copy, too?
-          buildInfoRecorder.addMetadata(
-              AbiRule.ABI_KEY_ON_DISK_METADATA,
-              onDiskBuildInfo.getValue(AbiRule.ABI_KEY_ON_DISK_METADATA).get());
-          buildInfoRecorder.addMetadata(
-              AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-              cachedAbiKeyForDeps.get().getHash());
-
-          // This key must be
-          // DexProducedFromJavaLibraryThatContainsClassFiles.LINEAR_ALLOC_KEY_ON_DISK_METADATA.
-          // This is a hack for an emergency fix that is a problem because of the TODO above.
-          String linearAllocKey = "linearalloc";
-          Optional<String> linearAlloc = onDiskBuildInfo.getValue(linearAllocKey);
-          if (linearAlloc.isPresent()) {
-            buildInfoRecorder.addMetadata(linearAllocKey, linearAlloc.get());
-          }
-
           return new BuildResult(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
               CacheResult.LOCAL_KEY_UNCHANGED_HIT);
         }

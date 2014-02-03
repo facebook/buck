@@ -33,14 +33,15 @@ public class BuildRuleSuccess {
 
   private static enum Property {
     SHOULD_UPLOAD_RESULTING_ARTIFACT,
-    SHOULD_WRITE_RECORDED_METADATA_TO_DISK,
+    SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
+    SHOULD_UPDATE_METADATA_ON_DISK,
   }
 
   public static enum Type {
     /** Built by executing the {@link Step}s for the rule. */
     BUILT_LOCALLY(
         Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
-        Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK
+        Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK
         ),
 
     /** Fetched via the {@link ArtifactCache}. */
@@ -56,7 +57,7 @@ public class BuildRuleSuccess {
      * the deps matches the one on disk.
      */
     MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS(
-        Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK
+        Property.SHOULD_UPDATE_METADATA_ON_DISK
         ),
 
     /** Created trivially, such as a {@link ProjectConfigRule}. */
@@ -75,7 +76,13 @@ public class BuildRuleSuccess {
     }
 
     public boolean shouldWriteRecordedMetadataToDiskAfterBuilding() {
-      return properties.contains(Property.SHOULD_WRITE_RECORDED_METADATA_TO_DISK);
+      return properties.contains(Property.SHOULD_UPDATE_METADATA_ON_DISK) ||
+          properties.contains(Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK);
+
+    }
+
+    public boolean shouldClearAndOverwriteMetadataOnDisk() {
+      return properties.contains(Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK);
     }
 
     public boolean shouldUploadResultingArtifact() {

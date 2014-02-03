@@ -17,30 +17,90 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.io.File;
+import java.io.IOException;
 
 public class BuildInfoRecorderTest {
 
+  private static final String RULE_KEY = Strings.repeat("a", 40);
+  private static final String RULE_KEY_WITHOUT_DEPS = Strings.repeat("b", 40);
+
+  private static final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//foo:bar");
+
   @Test
   public void testAddMetadataMultipleValues() {
-    BuildTarget buildTarget = new BuildTarget("//foo", "bar");
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(new File("."));
-    RuleKey ruleKey = new RuleKey("d6475c3ad8b3d603bcf3bc0930358cae3c2a4b3d");
-    RuleKey ruleKeyWithoutDeps = new RuleKey("026d7608df52b1c27297b55b49b1f9d2b5c3d487");
-
-    BuildInfoRecorder buildInfoRecorder = new BuildInfoRecorder(buildTarget,
-        projectFilesystem,
-        ruleKey,
-        ruleKeyWithoutDeps);
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(new FakeProjectFilesystem());
     buildInfoRecorder.addMetadata("foo", ImmutableList.of("bar", "biz", "baz"));
     assertEquals("[\"bar\",\"biz\",\"baz\"]",
         buildInfoRecorder.getMetadataFor("foo"));
+  }
+
+  @Test
+  public void testWriteMetadataToDisk() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
+    buildInfoRecorder.addMetadata("key1", "value1");
+
+    buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
+
+    OnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem);
+    assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
+
+    buildInfoRecorder = createBuildInfoRecorder(filesystem);
+    buildInfoRecorder.addMetadata("key2", "value2");
+
+    buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
+
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem);
+    assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
+    assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key2", "value2");
+
+    buildInfoRecorder = createBuildInfoRecorder(filesystem);
+    buildInfoRecorder.addMetadata("key3", "value3");
+
+    buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
+
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem);
+    assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key3", "value3");
+    assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key1");
+    assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key2");
+  }
+
+  private static void assertOnDiskBuildInfoHasMetadata(
+      OnDiskBuildInfo onDiskBuildInfo,
+      String key,
+      String value) {
+    MoreAsserts.assertOptionalValueEquals(
+        String.format("BuildInfoRecorder must record '%s:%s' to the filesystem.", key, value),
+        value,
+        onDiskBuildInfo.getValue(key));
+  }
+
+  private static void assertOnDiskBuildInfoDoesNotHaveMetadata(
+      OnDiskBuildInfo onDiskBuildInfo,
+      String key) {
+    assertFalse(
+        String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
+        onDiskBuildInfo.getValue(key).isPresent());
+  }
+
+  private static BuildInfoRecorder createBuildInfoRecorder(ProjectFilesystem filesystem) {
+    return new BuildInfoRecorder(
+        BUILD_TARGET,
+        filesystem,
+        new RuleKey(RULE_KEY),
+        new RuleKey(RULE_KEY_WITHOUT_DEPS));
   }
 }

@@ -100,8 +100,10 @@ public class BuildInfoRecorder {
    * Writes the metadata currently stored in memory to the directory returned by
    * {@link BuildInfo#getPathToMetadataDirectory(BuildTarget)}.
    */
-  public void writeMetadataToDisk() throws IOException {
-    projectFilesystem.rmdir(pathToMetadataDirectory);
+  public void writeMetadataToDisk(boolean clearExistingMetadata) throws IOException {
+    if (clearExistingMetadata) {
+      projectFilesystem.rmdir(pathToMetadataDirectory);
+    }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
@@ -112,7 +114,7 @@ public class BuildInfoRecorder {
   }
 
   /**
-   * This key/value pair is stored in memory until {@link #writeMetadataToDisk()} is invoked.
+   * This key/value pair is stored in memory until {@link #writeMetadataToDisk(boolean)} is invoked.
    */
   public void addMetadata(String key, String value) {
     metadataToWrite.put(Preconditions.checkNotNull(key), Preconditions.checkNotNull(value));

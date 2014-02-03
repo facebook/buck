@@ -215,7 +215,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // These methods should be invoked after the rule is built locally.
     buildInfoRecorder.recordArtifact(Paths.get(pathToOutputFile));
-    buildInfoRecorder.writeMetadataToDisk();
+    buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
     buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
 
     // Attempting to build the rule should force a rebuild due to a cache miss.
@@ -344,15 +344,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         .putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA,
             "At some point, this method call should go away.");
 
-    // This metadata must be added to the buildInfoRecorder so that it is written as part of
-    // writeMetadataToDisk().
-    buildInfoRecorder.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA,
-        "At some point, this method call should go away.");
-    buildInfoRecorder.addMetadata(AbiRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-        TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH);
-
     // These methods should be invoked after the rule is built locally.
-    buildInfoRecorder.writeMetadataToDisk();
+    buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
     expect(buildContext.getExecutor()).andReturn(MoreExecutors.sameThreadExecutor());

@@ -26,6 +26,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -254,6 +255,17 @@ public final class MoreAsserts {
         fail(userMessage);
       }
     }
+  }
+
+  public static <T> void assertOptionalValueEquals(
+      String userMessage,
+      T expectedValue,
+      Optional<T> optionalValue) {
+    if (!optionalValue.isPresent()) {
+      failWith(userMessage, "Optional value is not present.");
+    }
+
+    assertEquals(userMessage, expectedValue, optionalValue.get());
   }
 
   private static String prefixWithUserMessage(@Nullable String userMessage, String message) {
