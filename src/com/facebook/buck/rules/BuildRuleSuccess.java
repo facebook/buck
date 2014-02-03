@@ -32,7 +32,6 @@ public class BuildRuleSuccess {
   private final Type type;
 
   private static enum Property {
-    SHOULD_INITIALIZE_FROM_DISK_AFTER_BUILDING,
     SHOULD_UPLOAD_RESULTING_ARTIFACT,
     SHOULD_WRITE_RECORDED_METADATA_TO_DISK,
   }
