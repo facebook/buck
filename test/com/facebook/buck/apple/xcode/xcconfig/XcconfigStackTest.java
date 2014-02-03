@@ -16,12 +16,24 @@
 
 package com.facebook.buck.apple.xcode.xcconfig;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+
+import com.facebook.buck.testutil.FakeReadonlyProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class XcconfigStackTest {
+
+
   @Test
   public void testTrivialResolution() {
     new TestBench()
@@ -132,6 +144,24 @@ public class XcconfigStackTest {
             "B = $(__0_B)",
             "C = $(__0_C)"
         );
+  }
+
+  @Test
+  public void parseErrorInIncludedFileShouldDisplayFriendlyErrorMessage() {
+    ProjectFilesystem projectFilesystem = new FakeReadonlyProjectFilesystem(ImmutableMap.of(
+        "foo.xcconfig", "#include \"bar.xcconfig\"",
+        "bar.xcconfig", "#include \"baz.xcconfig\"",
+        "baz.xcconfig", "ABC ***"
+    ));
+    XcconfigStack.Builder builder = XcconfigStack.builder();
+    try {
+      builder.addSettingsFromFile(projectFilesystem, ImmutableList.<Path>of(), Paths.get("foo.xcconfig"));
+    } catch (HumanReadableException e) {
+      assertThat(e.getHumanReadableErrorMessage(), containsString(
+          "In file: bar.xcconfig\n" +
+          "In file: baz.xcconfig\n"));
+    }
+    builder.build();
   }
 
   /**

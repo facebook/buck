@@ -22,11 +22,14 @@ package com.facebook.buck.apple.xcode.xcconfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 
 import java.nio.file.Path;
@@ -102,12 +105,20 @@ public final class XcconfigStack {
     }
 
     public void addSettingsFromFile(
-        ProjectFilesystem filesystem, Path xcconfigPath, ImmutableList<Path> searchPaths) {
+        ProjectFilesystem filesystem, ImmutableList<Path> searchPaths, Path xcconfigPath) {
       ImmutableList<PredicatedConfigValue> settings;
       try {
         settings = XcconfigParser.parse(filesystem, xcconfigPath, searchPaths);
       } catch (ParseException e) {
-        throw new RuntimeException("Failed to add xcconfig settings from file", e);
+        // combine the error messages, which may contain a hierarchy of file inclusions, into a
+        // single human readable message
+        String combinedMessage = Joiner.on('\n').join(
+            Iterables.transform(Throwables.getCausalChain(e), new Function<Throwable, String>() {
+              public String apply(Throwable input) {
+                return input.getMessage();
+              }
+            }));
+        throw new HumanReadableException(e, combinedMessage);
       }
       for (PredicatedConfigValue setting : settings) {
         addSetting(setting);

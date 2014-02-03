@@ -24,6 +24,7 @@ package com.facebook.buck.apple.xcode.xcconfig;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -63,11 +64,21 @@ public class XcconfigParser {
     if (!readerOpt.isPresent()) {
       throw new ParseException("Cannot open file: " + inputPathInProject);
     }
-    return XcconfigParser.of(readerOpt.get(),
-                             Optional.<ProjectFilesystem>of(fileSystem),
-                             Optional.<Path>of(inputPathInProject),
-                             searchPaths)
-                         .file();
+    try {
+        return XcconfigParser.of(readerOpt.get(),
+                                 Optional.<ProjectFilesystem>of(fileSystem),
+                                 Optional.<Path>of(inputPathInProject),
+                                 searchPaths)
+                             .file();
+    } catch (Throwable e) {  // javacc does not parse java7's multi-exception catch
+      if (e instanceof ParseException || e instanceof TokenMgrError) {
+        ParseException e1 = new ParseException("In file: " + inputPathInProject);
+        e1.initCause(e);
+        throw e1;
+      } else {
+        throw Throwables.propagate(e);
+      }
+    }
   }
 
   public static PredicatedConfigValue parseSetting(String setting) throws ParseException {
