@@ -400,6 +400,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     final AndroidTransitiveDependencies transitiveDependencies = findTransitiveDependencies();
 
+    // Create the .dex files if we aren't doing pre-dexing.
+    AndroidDexTransitiveDependencies dexTransitiveDependencies =
+        findDexTransitiveDependencies();
+    Path signedApkPath = getSignedApkPath();
+    DexFilesInfo dexFilesInfo = addFinalDxSteps(
+        context,
+        transitiveDependencies,
+        dexTransitiveDependencies,
+        resourcesFilter.getResDirectories(),
+        buildableContext,
+        steps);
+
     // Copy the transitive closure of files in native_libs to a single directory, if any.
     ImmutableSet<Path> nativeLibraryDirectories;
     if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
@@ -413,18 +425,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     } else {
       nativeLibraryDirectories = ImmutableSet.of();
     }
-
-    // Create the .dex files if we aren't doing pre-dexing.
-    AndroidDexTransitiveDependencies dexTransitiveDependencies =
-        findDexTransitiveDependencies();
-    Path signedApkPath = getSignedApkPath();
-    DexFilesInfo dexFilesInfo = addFinalDxSteps(
-        context,
-        transitiveDependencies,
-        dexTransitiveDependencies,
-        resourcesFilter.getResDirectories(),
-        buildableContext,
-        steps);
 
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         aaptPackageResources.getResourceApkPath(),
