@@ -1,0 +1,14 @@
+java_test(
+  name = 'xcode',
+  srcs = glob(['*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/apple/xcode:xcode',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:junit',
+    '//src/com/facebook/buck/apple/xcode:xcode',
+    '//src/com/facebook/buck/apple/xcode/plist:plist',
+    '//third-party/java/dd-plist:dd-plist',
+  ]
+)

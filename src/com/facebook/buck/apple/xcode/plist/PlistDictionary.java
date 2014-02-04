@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode.plist;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.util.Iterator;
@@ -26,6 +27,10 @@ public class PlistDictionary extends PlistValue implements Iterable<Map.Entry<St
 
   public PlistDictionary() {
     this.value = Maps.newHashMap();
+  }
+
+  public PlistValue get(String key) {
+    return this.value.get(key);
   }
 
   public void put(String key, PlistValue value) {
@@ -40,6 +45,10 @@ public class PlistDictionary extends PlistValue implements Iterable<Map.Entry<St
   @Override
   public Iterator<Map.Entry<String, PlistValue>> iterator() {
     return value.entrySet().iterator();
+  }
+
+  public ImmutableMap<String, PlistValue> asMap() {
+    return ImmutableMap.copyOf(value);
   }
 
   public static PlistDictionary of(String k, PlistValue v) {
