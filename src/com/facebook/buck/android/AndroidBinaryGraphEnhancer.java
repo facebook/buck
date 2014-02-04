@@ -23,6 +23,7 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -45,6 +46,7 @@ public class AndroidBinaryGraphEnhancer {
   private static final String RESOURCES_FILTER_FLAVOR = "resources_filter";
   private static final String UBER_R_DOT_JAVA_FLAVOR = "uber_r_dot_java";
   private static final String AAPT_PACKAGE_FLAVOR = "aapt_package";
+  private static final String CALCULATE_ABI_FLAVOR = "calculate_exopackage_abi";
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
@@ -192,8 +194,45 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   /**
+   * Must be called *after* aapt and dex enhancement.  If this is used, the AndroidBinaryRule
+   * should depend on the finalExopackageDeps returned by this method, not "getTotalDeps".
+   */
+  AbiEnhancementResult createDepsForAbiCalculation(
+      BuildRuleResolver ruleResolver,
+      boolean exopackage,
+      Keystore keystore,
+      AndroidResourceDepsFinder androidResourceDepsFinder,
+      AaptEnhancementResult aaptEnhancementResult,
+      DexEnhancementResult dexEnhancementResult) {
+
+    ImmutableSortedSet<BuildRule> finalDeps;
+    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
+    if (!exopackage) {
+      finalDeps = getTotalDeps();
+      computeExopackageDepsAbi = Optional.absent();
+    } else {
+      BuildTarget buildTargetForAbiCalculation = createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR);
+      BuildRule abiCalculatorRule = ruleResolver.buildAndAddToIndex(
+          ComputeExopackageDepsAbi.newBuildableBuilder(
+              buildRuleBuilderParams,
+              buildTargetForAbiCalculation,
+              getTotalDeps(),
+              androidResourceDepsFinder,
+              aaptEnhancementResult.getUberRDotJava(),
+              aaptEnhancementResult.getAaptPackageResources(),
+              dexEnhancementResult.getPreDexMerge(),
+              keystore));
+      finalDeps = ImmutableSortedSet.of(abiCalculatorRule);
+      computeExopackageDepsAbi =
+          Optional.of((ComputeExopackageDepsAbi)abiCalculatorRule.getBuildable());
+    }
+    return new AbiEnhancementResult(finalDeps, computeExopackageDepsAbi);
+  }
+
+  /**
    * This should be called after all "createDeps" methods to get the total set of dependencies
    * that the final AndroidBinaryRule should have.
+   * Except for exopackages.  For them, use the result of createDepsForAbiCalculation.
    *
    * @return All dependencies for the AndroidBinaryRule.
    */
@@ -237,6 +276,26 @@ public class AndroidBinaryGraphEnhancer {
 
     public Optional<PreDexMerge> getPreDexMerge() {
       return preDexMerge;
+    }
+  }
+
+  static class AbiEnhancementResult {
+    private final ImmutableSortedSet<BuildRule> finalExopackageDeps;
+    private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
+
+    AbiEnhancementResult(
+        ImmutableSortedSet<BuildRule> finalExopackageDeps,
+        Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi) {
+      this.finalExopackageDeps = finalExopackageDeps;
+      this.computeExopackageDepsAbi = computeExopackageDepsAbi;
+    }
+
+    public ImmutableSortedSet<BuildRule> getFinalExopackageDeps() {
+      return finalExopackageDeps;
+    }
+
+    public Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi() {
+      return computeExopackageDepsAbi;
     }
   }
 

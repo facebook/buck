@@ -1,0 +1,237 @@
+/*
+ * Copyright 2013-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.android;
+
+import com.facebook.buck.testutil.integration.BuckBuildLog;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import java.io.IOException;
+
+public class AndroidBinaryRuleIntegrationTest {
+
+  @Rule
+  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+
+  private ProjectWorkspace workspace;
+
+  private static final String SIMPLE_TARGET = "//apps/multidex:app";
+  private static final String EXOPACKAGE_TARGET = "//apps/multidex:app-exo";
+
+  @Before
+  public void setUp() throws IOException {
+    tmpFolder.create();
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "android_project", tmpFolder);
+
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build", SIMPLE_TARGET, EXOPACKAGE_TARGET);
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testEditingStringForcesRebuild() throws IOException {
+    workspace.replaceFileContents("res/com/sample/base/res/values/strings.xml", "Hello", "Bye");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingColorForcesRebuild() throws IOException {
+    workspace.replaceFileContents("res/com/sample/top/res/layout/top_layout.xml", "white", "black");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingImageForcesRebuild() throws IOException {
+    workspace.copyFile(
+        "res/com/sample/top/res/drawable/tiny_white.png",
+        "res/com/sample/top/res/drawable/tiny_something.png");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingAssetForcesRebuild() throws IOException {
+    workspace.replaceFileContents("res/com/sample/base/buck-assets/hilarity.txt", "banana", "kiwi");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingManifestForcesRebuild() throws IOException {
+    workspace.replaceFileContents(
+        "apps/multidex/AndroidManifest.xml", "versionCode=\"1\"", "versionCode=\"2\"");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingNativeForcesRebuild() throws IOException, InterruptedException {
+    // Sleep 1 second (plus another half to be super duper safe) to make sure that
+    // fakesystem.c gets a later timestamp than the fakesystem.o that was produced
+    // during the build in setUp.  If we don't do this, there's a chance that the
+    // ndk-build we run during the upcoming build will not rebuild it (on filesystems
+    // that have 1-second granularity for last modified).
+    // To verify this, create a Makefile with the following rule (don't forget to use a tab):
+    // out: in
+    //   cat $< > $@
+    // Run: echo foo > in ; make ; cat out ; echo bar > in ; make ; cat out
+    // On a filesystem with 1-second mtime granularity, the last "cat" should print "foo"
+    // (with very high probability).
+    Thread.sleep(1500);
+
+    workspace.replaceFileContents(
+        "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingThirdPartyJarForcesRebuild() throws IOException {
+    workspace.copyFile(
+        "third-party/kiwi-2.0.jar",
+        "third-party/kiwi-current.jar");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingKeystoreForcesRebuild() throws IOException {
+    workspace.replaceFileContents(
+        "keystores/debug.keystore.properties",
+        "my_alias",
+        "my_alias\n");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingPrimaryDexClassForcesRebuildForSimplePackage() throws IOException {
+    workspace.replaceFileContents(
+        "java/com/sample/app/MyApplication.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    result.assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(SIMPLE_TARGET);
+  }
+
+  @Test
+  public void testEditingSecondaryDexClassForcesRebuildForSimplePackage() throws IOException {
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    result.assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(SIMPLE_TARGET);
+  }
+
+  @Test
+  public void testEditingPrimaryDexClassForcesRebuildForExopackage() throws IOException {
+    workspace.replaceFileContents(
+        "java/com/sample/app/MyApplication.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingSecondaryDexClassGetsAbiHitForExopackage() throws IOException {
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
+    result.assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetHadMatchingDepsAbi(EXOPACKAGE_TARGET);
+  }
+}

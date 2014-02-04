@@ -1,0 +1,5 @@
+prebuilt_jar(
+  name = 'kiwi',
+  binary_jar = 'kiwi-current.jar',
+  visibility = ['PUBLIC'],
+)

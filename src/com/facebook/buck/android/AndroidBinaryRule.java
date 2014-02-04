@@ -30,6 +30,7 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
@@ -43,6 +44,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.AbstractGenruleStep;
@@ -96,7 +98,7 @@ import java.util.Set;
  * </pre>
  */
 public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
-    HasAndroidPlatformTarget, HasClasspathEntries, InstallableApk {
+    HasAndroidPlatformTarget, HasClasspathEntries, InstallableApk, AbiRule {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
@@ -165,6 +167,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final UberRDotJava uberRDotJava;
   private final AaptPackageResources aaptPackageResources;
   private final Optional<PreDexMerge> preDexMerge;
+  private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
   private final boolean exopackage;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
@@ -194,6 +197,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResources,
       Optional<PreDexMerge> preDexMerge,
+      Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
       boolean exopackage,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
@@ -216,10 +220,20 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
+    this.computeExopackageDepsAbi = Preconditions.checkNotNull(computeExopackageDepsAbi);
     this.exopackage = exopackage;
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
+
+    if (exopackage && !preDexMerge.isPresent()) {
+      throw new IllegalArgumentException("exopackage only works with pre-dexing");
+    }
+
+    if (exopackage) {
+      Preconditions.checkArgument(computeExopackageDepsAbi.isPresent(),
+          "computeExopackageDepsAbi must be set if exopackage is true");
+    }
   }
 
   @Override
@@ -416,6 +430,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         buildableContext,
         steps);
 
+    ////
+    // BE VERY CAREFUL adding any code below here.
+    // Any inputs to apkbuilder must be reflected in the hash returned by getAbiKeyForDeps.
+    ////
+
     // Copy the transitive closure of files in native_libs to a single directory, if any.
     ImmutableSet<Path> nativeLibraryDirectories;
     if (!transitiveDependencies.nativeLibsDirectories.isEmpty()) {
@@ -469,6 +488,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     buildableContext.recordArtifact(getApkPath());
     return steps.build();
+  }
+
+  @Override
+  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+    // For non-exopackages, there is no benefit to the ABI optimization, so we want to disable it.
+    // Returning our RuleKey has this effect because we will never get an ABI match after a
+    // RuleKey miss.
+    if (!exopackage) {
+      return new Sha1HashCode(getRuleKey().toString());
+    }
+
+    return computeExopackageDepsAbi.get().getAndroidBinaryAbiHash();
   }
 
   /**
@@ -1018,7 +1049,17 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
             Optional.<PreDexMerge>absent());
       }
 
-      BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
+      AndroidBinaryGraphEnhancer.AbiEnhancementResult abiEnhancementResult =
+          graphEnhancer.createDepsForAbiCalculation(
+            ruleResolver,
+            exopackage,
+            (Keystore) keystore,
+            androidResourceDepsFinder,
+            aaptEnhancementResult,
+            dexEnhancementResult);
+      ImmutableSortedSet<BuildRule> finalDeps = abiEnhancementResult.getFinalExopackageDeps();
+
+      BuildRuleParams newParams = originalParams.copyWithChangedDeps(finalDeps);
 
       return new AndroidBinaryRule(
           newParams,
@@ -1039,6 +1080,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           aaptEnhancementResult.getUberRDotJava(),
           aaptEnhancementResult.getAaptPackageResources(),
           dexEnhancementResult.getPreDexMerge(),
+          abiEnhancementResult.computeExopackageDepsAbi(),
           exopackage,
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,

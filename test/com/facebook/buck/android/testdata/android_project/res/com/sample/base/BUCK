@@ -1,6 +1,8 @@
 android_resource(
   name = 'base',
   res = 'res',
+  # See com.facebook.buck.android.AndroidBinaryRuleIntegrationTest#testEditingAssetForcesRebuild
+  assets = 'buck-assets',
   package = 'com.sample',
   visibility = [
     'PUBLIC',
