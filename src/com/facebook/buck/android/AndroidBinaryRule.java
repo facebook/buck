@@ -414,7 +414,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       nativeLibraryDirectories = ImmutableSet.of();
     }
 
-    // Create the .dex files and create the unsigned APK using ApkBuilder.
+    // Create the .dex files if we aren't doing pre-dexing.
     AndroidDexTransitiveDependencies dexTransitiveDependencies =
         findDexTransitiveDependencies();
     Path signedApkPath = getSignedApkPath();
