@@ -165,6 +165,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final UberRDotJava uberRDotJava;
   private final AaptPackageResources aaptPackageResources;
   private final Optional<PreDexMerge> preDexMerge;
+  private final boolean exopackage;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
@@ -193,6 +194,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResources,
       Optional<PreDexMerge> preDexMerge,
+      boolean exopackage,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
       AndroidResourceDepsFinder androidResourceDepsFinder) {
@@ -214,6 +216,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
+    this.exopackage = exopackage;
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
@@ -246,6 +249,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("optimizationPasses", optimizationPasses.toString())
         .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
+        .set("exopackage", exopackage)
         .set("preprocessJavaClassesBash", preprocessJavaClassesBash)
         .set("preprocessJavaClassesDeps", preprocessJavaClassesDeps);
     return dexSplitMode.appendToRuleKey("dexSplitMode", builder);
@@ -567,7 +571,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           steps,
           primaryDexPath,
           context.getSourcePathResolver());
-    } else {
+    } else if (!exopackage) {
       secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
     ImmutableSet<Path> secondaryDexDirectories = secondaryDexDirectoriesBuilder.build();
@@ -925,6 +929,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private ImmutableSet.Builder<BuildTarget> buildTargetsToExcludeFromDexBuilder =
         ImmutableSet.builder();
     private boolean disablePreDex = false;
+    private boolean exopackage = false;
     private DexSplitMode dexSplitMode = DexSplitMode.NO_SPLIT;
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<Integer> optimizationPasses = Optional.absent();
@@ -1034,6 +1039,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           aaptEnhancementResult.getUberRDotJava(),
           aaptEnhancementResult.getAaptPackageResources(),
           dexEnhancementResult.getPreDexMerge(),
+          exopackage,
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,
           androidResourceDepsFinder);
@@ -1095,6 +1101,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     public Builder setDisablePreDex(boolean disablePreDex) {
       this.disablePreDex = disablePreDex;
+      return this;
+    }
+
+    public Builder setExopackage(boolean exopackage) {
+      this.exopackage = exopackage;
       return this;
     }
 

@@ -87,6 +87,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         uberRDotJava,
         aaptPackageResourcesBuildable,
         Optional.<PreDexMerge>absent(),
+        /* exopackage */ false,
         apkUnderTest.getPreprocessJavaClassesDeps(),
         apkUnderTest.getPreprocessJavaClassesBash(),
         androidResourceDepsFinder);

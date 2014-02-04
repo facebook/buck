@@ -91,6 +91,8 @@ public class AndroidBinaryBuildRuleFactory
     // disable_pre_dex
     builder.setDisablePreDex(params.getBooleanAttribute("disable_pre_dex"));
 
+    builder.setExopackage(params.getBooleanAttribute("exopackage"));
+
     // dex_compression
     DexStore dexStore =
         "xz".equals(params.getRequiredStringAttribute("dex_compression")) ?
