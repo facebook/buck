@@ -189,10 +189,10 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         context.createBuildInfoRecorder(
             eq(buildTarget),
             capture(ruleKeyForRecorder),
-            /* ruleKeyWithoutDepsForRecorder */ capture(new Capture<RuleKey>())))
+            /* ruleKeyWithoutDepsForRecorder */ anyObject(RuleKey.class)))
         .andReturn(buildInfoRecorder);
     expect(buildInfoRecorder.fetchArtifactForBuildable(
-            capture(new Capture<File>()),
+            anyObject(File.class),
             eq(artifactCache)))
         .andReturn(CacheResult.MISS);
 
@@ -326,8 +326,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     BuildInfoRecorder buildInfoRecorder = createMock(BuildInfoRecorder.class);
     expect(buildContext.createBuildInfoRecorder(
            eq(buildTarget),
-           /* ruleKey */ capture(new Capture<RuleKey>()),
-           /* ruleKeyWithoutDeps */ capture(new Capture<RuleKey>())))
+           /* ruleKey */ anyObject(RuleKey.class),
+           /* ruleKeyWithoutDeps */ anyObject(RuleKey.class)))
         .andReturn(buildInfoRecorder);
 
     // Populate the metadata that should be read from disk.
