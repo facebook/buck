@@ -45,6 +45,7 @@ import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
+import com.google.common.collect.ImmutableList;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -415,7 +416,7 @@ public class Main {
         } else if (dexB == null) {
             result = dexA;
         } else {
-            result = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
+            result = new DexMerger(ImmutableList.of(dexA, dexB), CollisionPolicy.KEEP_FIRST).merge();
         }
 
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -428,19 +429,18 @@ public class Main {
      * same type, this fails with an exception.
      */
     private static byte[] mergeLibraryDexBuffers(byte[] outArray) throws IOException {
-        for (byte[] libraryDex : libraryDexBuffers) {
-            if (outArray == null) {
-                outArray = libraryDex;
-                continue;
-            }
-
-            Dex a = new Dex(outArray);
-            Dex b = new Dex(libraryDex);
-            Dex ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
-            outArray = ab.getBytes();
+        if (libraryDexBuffers.isEmpty()) {
+            return outArray;
         }
 
-        return outArray;
+        ImmutableList.Builder<Dex> buffers = ImmutableList.builder();
+        if (outArray != null) {
+            buffers.add(new Dex(outArray));
+        }
+        for (byte[] libraryDex : libraryDexBuffers) {
+            buffers.add(new Dex(libraryDex));
+        }
+        return new DexMerger(buffers.build(), CollisionPolicy.FAIL).merge().getBytes();
     }
 
     /**
