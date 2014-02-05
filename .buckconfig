@@ -20,7 +20,7 @@
       test/com/facebook/buck/test/cache/testdata, \
       test/com/facebook/buck/test/labels/testdata, \
       test/com/facebook/buck/test/resultgroups/testdata, \
-      third-party/java/dalvik-jelly-bean
+      third-party/java/dx-from-kitkat
 
     # Common temp file patterns:
     # .*\.swp$ (vim)
