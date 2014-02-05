@@ -1,0 +1,100 @@
+Blort.test1:(I)I:
+regs: 0006; ins: 0002; outs: 0000
+  0000: move-object v0, v4
+  0001: move v1, v5
+  0002: move v3, v1
+  0003: packed-switch v3, 0012 // +000f
+  0006: move v3, v1
+  0007: move v0, v3
+  0008: return v0
+  0009: const/16 v3, #int 10 // #000a
+  000b: move v1, v3
+  000c: goto 0006 // -0006
+  000d: const/16 v3, #int 20 // #0014
+  000f: move v1, v3
+  0010: goto 0006 // -000a
+  0011: nop // spacer
+  0012: packed-switch-payload // for switch @ 0003
+          1: 00000009 // +00000006
+          2: 0000000d // +0000000a
+Blort.test2:(I)I:
+regs: 0006; ins: 0002; outs: 0000
+  0000: move-object v0, v4
+  0001: move v1, v5
+  0002: move v3, v1
+  0003: packed-switch v3, 0018 // +0015
+  0006: move v3, v1
+  0007: move v0, v3
+  0008: return v0
+  0009: const/16 v3, #int 10 // #000a
+  000b: move v1, v3
+  000c: invoke-static {}, Blort.blort:()V
+  000f: goto 0006 // -0009
+  0010: const/16 v3, #int 20 // #0014
+  0012: move v1, v3
+  0013: goto 0006 // -000d
+  0014: move-exception v3
+  0015: move-object v2, v3
+  0016: goto 0006 // -0010
+  0017: nop // spacer
+  0018: packed-switch-payload // for switch @ 0003
+          1: 00000009 // +00000006
+          2: 00000010 // +0000000d
+  catches
+    tries:
+      try 000c..000f
+      catch java.lang.RuntimeException -> 0014
+Blort.test3:(I)I:
+regs: 0006; ins: 0002; outs: 0000
+  0000: move-object v0, v4
+  0001: move v1, v5
+  0002: move v3, v1
+  0003: packed-switch v3, 0018 // +0015
+  0006: move v3, v1
+  0007: move v0, v3
+  0008: return v0
+  0009: const/16 v3, #int 10 // #000a
+  000b: move v1, v3
+  000c: invoke-static {}, Blort.blort:()V
+  000f: goto 0006 // -0009
+  0010: move-exception v3
+  0011: move-object v2, v3
+  0012: goto 0006 // -000c
+  0013: const/16 v3, #int 20 // #0014
+  0015: move v1, v3
+  0016: goto 0006 // -0010
+  0017: nop // spacer
+  0018: packed-switch-payload // for switch @ 0003
+          1: 00000009 // +00000006
+          2: 00000013 // +00000010
+  catches
+    tries:
+      try 000c..000f
+      catch java.lang.RuntimeException -> 0010
+Blort.test4:(I)I:
+regs: 0006; ins: 0002; outs: 0000
+  0000: move-object v0, v4
+  0001: move v1, v5
+  0002: move v3, v1
+  0003: packed-switch v3, 0018 // +0015
+  0006: move v3, v1
+  0007: move v0, v3
+  0008: return v0
+  0009: const/16 v3, #int 10 // #000a
+  000b: move v1, v3
+  000c: invoke-static {}, Blort.blort:()V
+  000f: goto 0006 // -0009
+  0010: move-exception v3
+  0011: move-object v2, v3
+  0012: goto 0006 // -000c
+  0013: const/16 v3, #int 20 // #0014
+  0015: move v1, v3
+  0016: goto 0006 // -0010
+  0017: nop // spacer
+  0018: packed-switch-payload // for switch @ 0003
+          1: 00000009 // +00000006
+          2: 00000013 // +00000010
+  catches
+    tries:
+      try 000c..000f
+      catch java.lang.RuntimeException -> 0010

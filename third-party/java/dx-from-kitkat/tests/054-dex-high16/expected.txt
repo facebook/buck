@@ -1,0 +1,68 @@
+Blort.testDouble:()V:
+regs: 0002; ins: 0000; outs: 0002
+  0000: const-wide/high16 v0, #double -Infinity // #fff0000000000000
+  0002: invoke-static {v0, v1}, Blort.sink:(D)V
+  0005: const-wide/high16 v0, #double -0.0 // #8000000000000000
+  0007: invoke-static {v0, v1}, Blort.sink:(D)V
+  000a: const-wide/high16 v0, #double 1.0 // #3ff0000000000000
+  000c: invoke-static {v0, v1}, Blort.sink:(D)V
+  000f: const-wide/high16 v0, #double Infinity // #7ff0000000000000
+  0011: invoke-static {v0, v1}, Blort.sink:(D)V
+  0014: const-wide/high16 v0, #double NaN // #7ff8000000000000
+  0016: invoke-static {v0, v1}, Blort.sink:(D)V
+  0019: return-void
+Blort.testFloat:()V:
+regs: 0001; ins: 0000; outs: 0001
+  0000: const/high16 v0, #float -Infinity // #ff800000
+  0002: invoke-static {v0}, Blort.sink:(F)V
+  0005: const/high16 v0, #float -0.0 // #80000000
+  0007: invoke-static {v0}, Blort.sink:(F)V
+  000a: const/high16 v0, #float 1.0 // #3f800000
+  000c: invoke-static {v0}, Blort.sink:(F)V
+  000f: const/high16 v0, #float Infinity // #7f800000
+  0011: invoke-static {v0}, Blort.sink:(F)V
+  0014: const/high16 v0, #float NaN // #7fc00000
+  0016: invoke-static {v0}, Blort.sink:(F)V
+  0019: return-void
+Blort.testInt:()V:
+regs: 0001; ins: 0000; outs: 0001
+  0000: const/high16 v0, #int -2147483648 // #80000000
+  0002: invoke-static {v0}, Blort.sink:(I)V
+  0005: const/high16 v0, #int 1073741824 // #40000000
+  0007: invoke-static {v0}, Blort.sink:(I)V
+  000a: const/high16 v0, #int 536870912 // #20000000
+  000c: invoke-static {v0}, Blort.sink:(I)V
+  000f: const/high16 v0, #int 268435456 // #10000000
+  0011: invoke-static {v0}, Blort.sink:(I)V
+  0014: const/high16 v0, #int 524288 // #00080000
+  0016: invoke-static {v0}, Blort.sink:(I)V
+  0019: const/high16 v0, #int 262144 // #00040000
+  001b: invoke-static {v0}, Blort.sink:(I)V
+  001e: const/high16 v0, #int 131072 // #00020000
+  0020: invoke-static {v0}, Blort.sink:(I)V
+  0023: const/high16 v0, #int 65536 // #00010000
+  0025: invoke-static {v0}, Blort.sink:(I)V
+  0028: const/high16 v0, #int 1450704896 // #56780000
+  002a: invoke-static {v0}, Blort.sink:(I)V
+  002d: return-void
+Blort.testLong:()V:
+regs: 0002; ins: 0000; outs: 0002
+  0000: const-wide/high16 v0, #long -9223372036854775808 // #8000000000000000
+  0002: invoke-static {v0, v1}, Blort.sink:(J)V
+  0005: const-wide/high16 v0, #long 4611686018427387904 // #4000000000000000
+  0007: invoke-static {v0, v1}, Blort.sink:(J)V
+  000a: const-wide/high16 v0, #long 2305843009213693952 // #2000000000000000
+  000c: invoke-static {v0, v1}, Blort.sink:(J)V
+  000f: const-wide/high16 v0, #long 1152921504606846976 // #1000000000000000
+  0011: invoke-static {v0, v1}, Blort.sink:(J)V
+  0014: const-wide/high16 v0, #long 2251799813685248 // #0008000000000000
+  0016: invoke-static {v0, v1}, Blort.sink:(J)V
+  0019: const-wide/high16 v0, #long 1125899906842624 // #0004000000000000
+  001b: invoke-static {v0, v1}, Blort.sink:(J)V
+  001e: const-wide/high16 v0, #long 562949953421312 // #0002000000000000
+  0020: invoke-static {v0, v1}, Blort.sink:(J)V
+  0023: const-wide/high16 v0, #long 281474976710656 // #0001000000000000
+  0025: invoke-static {v0, v1}, Blort.sink:(J)V
+  0028: const-wide/high16 v0, #long 6230730084467081216 // #5678000000000000
+  002a: invoke-static {v0, v1}, Blort.sink:(J)V
+  002d: return-void

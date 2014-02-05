@@ -1,0 +1,4 @@
+This is a smoke test of dex conversion, which ensures that the
+conversion runs without failure, though the contents of the converted
+file are not checked for correctness. This test is of a classfile with
+just a final static variable.

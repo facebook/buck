@@ -1,0 +1,38 @@
+#
+# sample small-but-valid classfile
+#
+
+cafe babe  # magic
+0000       # minor_version
+002e       # major_version
+0014       # constant_pool_count
+
+#
+# constant_pool
+#
+06 41195895 5f8a0903       # 0001: double[415269.3433]
+05 12345678 9abcdef0       # 0003: long[0x1234567890abcdef0]
+04 42f6e666                # 0005: float[123.45]
+03 12345678                # 0006: integer[0x12345678]
+08 0013                    # 0007: string["Small"]
+0b 0011 000b               # 0008: ifaceMethod[Small.blort:()V]
+0a 0011 000b               # 0009: method[Small.blort:()V]
+09 0011 000c               # 000a: field[Small.blort:x/y/Zzz]
+0c 000f 000d               # 000b: nat[blort:()V]
+0c 000f 000e               # 000c: nat[blort:x/y/Zzz]
+01 0003 "()V"              # 000d: utf8["()V"]
+01 0007 "x/y/Zzz"          # 000e: utf8["x/y/Zzz"]
+01 0005 "blort"            # 000f: utf8["blort"]
+07 0012                    # 0010: class[java/lang/Object]
+07 0013                    # 0011: class[Small]
+01 0010 "java/lang/Object" # 0012: utf8["java/lang/Object"]
+01 0005 "Small"            # 0013: utf8["Small"]
+
+0001  # access_flags
+0011  # this_class
+0010  # super_class
+0000  # interfaces_count
+0000  # fields_count
+0000  # methods_count
+
+0000  # attributes_count

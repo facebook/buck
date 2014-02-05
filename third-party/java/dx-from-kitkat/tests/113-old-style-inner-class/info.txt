@@ -1,0 +1,3 @@
+This is a smoke test of dex conversion, which makes sure that
+converstion of old-style anonymous inner classes (whose representation
+is information-lossy) causes a warning to be issued.

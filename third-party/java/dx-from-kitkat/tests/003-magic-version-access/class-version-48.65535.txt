@@ -1,0 +1,25 @@
+#
+# classfile with the valid version 48.65535 (0x30.0xffff)
+#
+
+cafe babe  # magic
+ffff       # minor_version
+0030       # major_version
+0005       # constant_pool_count
+
+#
+# constant_pool
+#
+01 0005 "Small"            # 0001: utf8["Small"]
+01 0010 "java/lang/Object" # 0002: utf8["java/lang/Object"]
+07 0001                    # 0003: class[Small]
+07 0002                    # 0004: class[java/lang/Object]
+
+ffff  # access_flags
+0003  # this_class
+0004  # super_class
+0000  # interfaces_count
+0000  # fields_count
+0000  # methods_count
+
+0000  # attributes_count

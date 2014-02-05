@@ -1,0 +1,29 @@
+reading small-class.txt...
+begin classfile
+magic: cafebabe
+minor_version: 0000
+major_version: 002e
+constant_pool_count: 0007
+
+constant_pool:
+  0001: utf8{"Small"}
+  0002: utf8{"java/lang/Object"}
+  0003: type{Small}
+  0004: type{java.lang.Object}
+  0005: utf8{"Signature"}
+  0006: utf8{"LYo;"}
+end constant_pool
+access_flags: public|super
+this_class: type{Small}
+super_class: type{java.lang.Object}
+interfaces_count: 0000
+fields_count: 0000
+methods_count: 0000
+attributes_count: 0001
+
+attributes[0]:
+  name: Signature
+  length: 00000002
+  signature: string{"LYo;"}
+end attributes[0]
+end classfile

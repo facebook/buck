@@ -1,0 +1,22 @@
+Generated: ./op_areturn.class
+areturn: expected failure occurred
+Generated: ./op_dreturn.class
+dreturn: expected failure occurred
+Generated: ./op_freturn.class
+freturn: expected failure occurred
+Generated: ./op_ireturn.class
+ireturn: expected failure occurred
+Generated: ./op_lreturn.class
+lreturn: expected failure occurred
+Generated: ./op_sig_areturn.class
+sig_areturn: expected failure occurred
+Generated: ./op_sig_dreturn.class
+sig_dreturn: expected failure occurred
+Generated: ./op_sig_freturn.class
+sig_freturn: expected failure occurred
+Generated: ./op_sig_ireturn.class
+sig_ireturn: expected failure occurred
+Generated: ./op_sig_lreturn.class
+sig_lreturn: expected failure occurred
+Generated: ./op_sig_return.class
+sig_return: expected failure occurred

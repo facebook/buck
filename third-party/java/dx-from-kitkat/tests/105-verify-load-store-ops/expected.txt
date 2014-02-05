@@ -1,0 +1,84 @@
+Generated: ./op_aaload.class
+aaload: expected failure occurred
+Generated: ./op_aastore.class
+aastore: expected failure occurred
+Generated: ./op_aastore2.class
+aastore2: expected failure occurred
+Generated: ./op_astore.class
+astore: expected failure occurred
+Generated: ./op_astore_0.class
+astore_0: expected failure occurred
+Generated: ./op_astore_1.class
+astore_1: expected failure occurred
+Generated: ./op_astore_2.class
+astore_2: expected failure occurred
+Generated: ./op_astore_3.class
+astore_3: expected failure occurred
+Generated: ./op_baload.class
+baload: expected failure occurred
+Generated: ./op_bastore.class
+bastore: expected failure occurred
+Generated: ./op_caload.class
+caload: expected failure occurred
+Generated: ./op_castore.class
+castore: expected failure occurred
+Generated: ./op_daload.class
+daload: expected failure occurred
+Generated: ./op_dastore.class
+dastore: expected failure occurred
+Generated: ./op_dstore.class
+dstore: expected failure occurred
+Generated: ./op_dstore_0.class
+dstore_0: expected failure occurred
+Generated: ./op_dstore_1.class
+dstore_1: expected failure occurred
+Generated: ./op_dstore_2.class
+dstore_2: expected failure occurred
+Generated: ./op_dstore_3.class
+dstore_3: expected failure occurred
+Generated: ./op_faload.class
+faload: expected failure occurred
+Generated: ./op_fastore.class
+fastore: expected failure occurred
+Generated: ./op_fstore.class
+fstore: expected failure occurred
+Generated: ./op_fstore_0.class
+fstore_0: expected failure occurred
+Generated: ./op_fstore_1.class
+fstore_1: expected failure occurred
+Generated: ./op_fstore_2.class
+fstore_2: expected failure occurred
+Generated: ./op_fstore_3.class
+fstore_3: expected failure occurred
+Generated: ./op_iaload.class
+iaload: expected failure occurred
+Generated: ./op_iastore.class
+iastore: expected failure occurred
+Generated: ./op_istore.class
+istore: expected failure occurred
+Generated: ./op_istore_0.class
+istore_0: expected failure occurred
+Generated: ./op_istore_1.class
+istore_1: expected failure occurred
+Generated: ./op_istore_2.class
+istore_2: expected failure occurred
+Generated: ./op_istore_3.class
+istore_3: expected failure occurred
+Generated: ./op_laload.class
+laload: expected failure occurred
+Generated: ./op_lastore.class
+lastore: expected failure occurred
+Generated: ./op_lstore.class
+lstore: expected failure occurred
+Generated: ./op_lstore_0.class
+lstore_0: expected failure occurred
+Generated: ./op_lstore_1.class
+lstore_1: expected failure occurred
+Generated: ./op_lstore_2.class
+lstore_2: expected failure occurred
+Generated: ./op_lstore_3.class
+lstore_3: expected failure occurred
+Generated: ./op_saload.class
+saload: expected failure occurred
+Generated: ./op_sastore.class
+sastore: expected failure occurred

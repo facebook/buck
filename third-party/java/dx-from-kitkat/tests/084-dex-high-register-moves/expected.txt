@@ -1,0 +1,58 @@
+Blort.test:()V:
+regs: 0018; ins: 0000; outs: 0000
+  0000: const/16 v22, #int 0 // #0000
+  0002: move/from16 v2, v22
+  0004: const/16 v22, #int 0 // #0000
+  0006: move/from16 v3, v22
+  0008: const/16 v22, #int 0 // #0000
+  000a: move/from16 v4, v22
+  000c: const/16 v22, #int 0 // #0000
+  000e: move/from16 v5, v22
+  0010: const/16 v22, #int 0 // #0000
+  0012: move/from16 v6, v22
+  0014: const/16 v22, #int 0 // #0000
+  0016: move/from16 v7, v22
+  0018: const/16 v22, #int 0 // #0000
+  001a: move/from16 v8, v22
+  001c: const/16 v22, #int 0 // #0000
+  001e: move/from16 v9, v22
+  0020: const/16 v22, #int 0 // #0000
+  0022: move/from16 v10, v22
+  0024: const/16 v22, #int 0 // #0000
+  0026: move/from16 v11, v22
+  0028: const/16 v22, #int 0 // #0000
+  002a: move/from16 v12, v22
+  002c: const/16 v22, #int 0 // #0000
+  002e: move/from16 v13, v22
+  0030: const/16 v22, #int 0 // #0000
+  0032: move/from16 v14, v22
+  0034: const/16 v22, #int 0 // #0000
+  0036: move/from16 v15, v22
+  0038: const/16 v22, #int 0 // #0000
+  003a: move/from16 v16, v22
+  003c: const/16 v22, #int 0 // #0000
+  003e: move/from16 v17, v22
+  0040: sget v22, Blort.i:I
+  0042: move/from16 v18, v22
+  0044: sget-wide v22, Blort.l:J
+  0046: move-wide/from16 v19, v22
+  0048: sget-object v22, Blort.o:Ljava/lang/Object;
+  004a: move-object/from16 v21, v22
+  004c: move/from16 v22, v18
+  004e: move/from16 v0, v22
+  0050: neg-int v0, v0
+  0051: move/from16 v22, v0
+  0053: sput v22, Blort.i:I
+  0055: move-wide/from16 v22, v19
+  0057: move-wide/from16 v0, v22
+  0059: neg-long v0, v0
+  005a: move-wide/from16 v22, v0
+  005c: sput-wide v22, Blort.l:J
+  005e: move-object/from16 v22, v21
+  0060: instance-of/jumbo v22, v22, java.lang.String
+  0065: if-eqz v22, 006c // +0007
+  0067: const/16 v22, #int 0 // #0000
+  0069: sput v22, Blort.i:I
+  006b: return-void
+  006c: const/16 v22, #int 1 // #0001
+  006e: goto 0069 // -0005

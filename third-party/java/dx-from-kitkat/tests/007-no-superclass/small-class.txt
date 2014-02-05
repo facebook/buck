@@ -1,0 +1,24 @@
+#
+# sample small-but-valid classfile
+#
+
+cafe babe  # magic
+0000       # minor_version
+002e       # major_version
+0003       # constant_pool_count
+
+#
+# constant_pool
+#
+01 0010 "java/lang/Object" # 0001: utf8["java/lang/Object"]
+07 0001                    # 0002: class[java/lang/Object]
+
+0001  # access_flags
+0002  # this_class
+0000  # super_class
+0000  # interfaces_count
+
+0000  # fields_count
+0000  # methods_count
+
+0000  # attributes_count

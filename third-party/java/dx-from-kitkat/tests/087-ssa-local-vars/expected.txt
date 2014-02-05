@@ -1,0 +1,1266 @@
+reading Blort.class...
+method <init> ()V
+first 000c
+block 0000
+  pred 000a
+  live in:{2}
+  Blort.java:2@0001: Rop{invoke-direct . <- Ljava/lang/Object; call throws <any
+  >}(java.lang.Object.<init>:()V catch) . <- v2:NffffLBlort;
+  next 0004
+  live out:{}
+block 0004
+  pred 0000
+  live in:{}
+  Blort.java:2@0004: goto . <- .
+  next 000b
+  live out:{}
+block 000a
+  pred 000c
+  live in:{}
+  Blort.java:2@0000: move-param-object(0) v2:"this"NffffLBlort; <- .
+  Blort.java:2@0000: goto . <- .
+  next 0000
+  live out:{2}
+block 000b
+  pred 0004
+  live in:{}
+  Blort.java:2@0004: return-void . <- .
+  next 000d
+  live out:{}
+block 000c
+  live in:{}
+  @????: goto . <- .
+  next 000a
+  live out:{}
+block 000d
+  pred 000b
+  live in:{}
+  returns
+  live out:{}
+
+method arrayCopyTest (I)V
+first 012c
+block 0000
+  pred 0112
+  live in:{12, 62, 63}
+  Blort.java:5@0001: move-int v13:"j"I <- v12:I
+  Blort.java:7@0004: new-array-object(java.lang.String[] catch) . <- v63:I=8
+  next 0119
+  live out:{62, 63}
+block 0007
+  pred 0119
+  live in:{15, 62, 63}
+  @????: mark-local-object . <- v15:"stringArray"[Ljava/lang/String;
+  Blort.java:8@000a: new-array-object(java.lang.Object[] catch) . <- v63:I=8
+  next 011a
+  live out:{15, 62}
+block 000d
+  pred 011a
+  live in:{15, 17, 62}
+  @????: mark-local-object . <- v17:"objectArray"[Ljava/lang/Object;
+  Blort.java:10@000f: move-object v18:"anotherOne"[Ljava/lang/Object; <- v17:[L
+  java/lang/Object;
+  Blort.java:12@0013: if-eqz-object . <- v18:[Ljava/lang/Object;
+  next 0016 *
+  next 0131
+  live out:{15, 17, 62}
+block 0016
+  pred 000d
+  live in:{15, 17, 62}
+  Blort.java:13@0016: get-static-object(java.lang.System.out:Ljava/io/PrintStre
+  am; catch) . <- .
+  next 011b
+  live out:{15, 17, 62}
+block 0019
+  pred 011b
+  live in:{15, 17, 19, 62}
+  Blort.java:13@0019: const-object("foo" catch) . <- .
+  next 011c
+  live out:{15, 17, 19, 62}
+block 001b
+  pred 011c
+  live in:{15, 17, 19, 20, 62}
+  Blort.java:13@001b: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
+  String; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V 
+  catch) . <- v19:Ljava/io/PrintStream; v20:Ljava/lang/String;="foo"
+  next 0130
+  live out:{15, 17, 62}
+block 001e
+  pred 0130
+  pred 0131
+  live in:{15, 17, 62}
+  Blort.java:17@001e: const-int(0) v23:I=0 <- .
+  @????: mark-local-int . <- v23:"i"I
+  Blort.java:17@001f: goto . <- .
+  next 0021
+  live out:{15, 17, 23, 62}
+block 0021
+  pred 001e
+  pred 0038
+  live in:{15, 17, 62}
+  @????: phi v30:"i"I <- v23:"i"I[b=001e] v34:"i"I[b=0038]
+  Blort.java:17@0024: array-length(catch) . <- v15:[Ljava/lang/String;
+  next 011d
+  live out:{15, 17, 30, 62}
+block 0025
+  pred 011d
+  live in:{15, 17, 30, 31, 62}
+  Blort.java:17@0025: if-ge-int . <- v30:I v31:I
+  next 0028 *
+  next 003e
+  live out:{15, 17, 30, 62}
+block 0028
+  pred 0025
+  live in:{15, 17, 30, 62}
+  Blort.java:18@002b: new-instance(java.lang.String catch) . <- .
+  next 011e
+  live out:{15, 17, 30, 62}
+block 002e
+  pred 011e
+  live in:{15, 17, 30, 32, 62}
+  Blort.java:18@0031: Rop{invoke-static . <- I call throws <any>}(java.lang.Int
+  eger.toString:(I)Ljava/lang/String; catch) . <- v30:I
+  next 011f
+  live out:{15, 17, 30, 32, 62}
+block 0034
+  pred 011f
+  live in:{15, 17, 30, 32, 33, 62}
+  Blort.java:18@0034: Rop{invoke-direct . <- Ljava/lang/String; Ljava/lang/Stri
+  ng; call throws <any>}(java.lang.String.<init>:(Ljava/lang/String;)V catch) .
+   <- v32:N002bLjava/lang/String; v33:Ljava/lang/String;
+  next 0037
+  live out:{15, 17, 30, 32, 62}
+block 0037
+  pred 0034
+  live in:{15, 17, 30, 32, 62}
+  Blort.java:18@0037: aput-object(catch) . <- v32:Ljava/lang/String; v15:[Ljava
+  /lang/String; v30:I
+  next 0038
+  live out:{15, 17, 30, 62}
+block 0038
+  pred 0037
+  live in:{15, 17, 30, 62}
+  Blort.java:17@0038: add-const-int(1) v34:"i"I <- v30:I
+  Blort.java:17@003b: goto . <- .
+  next 0021
+  live out:{15, 17, 34, 62}
+block 003e
+  pred 0025
+  live in:{15, 17, 62}
+  Blort.java:20@003e: get-static-object(java.lang.System.out:Ljava/io/PrintStre
+  am; catch) . <- .
+  next 0120
+  live out:{15, 17, 62}
+block 0041
+  pred 0120
+  live in:{15, 17, 35, 62}
+  Blort.java:20@0041: const-object("string -> object" catch) . <- .
+  next 0121
+  live out:{15, 17, 35, 62}
+block 0043
+  pred 0121
+  live in:{15, 17, 35, 36, 62}
+  Blort.java:20@0043: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
+  String; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V 
+  catch) . <- v35:Ljava/io/PrintStream; v36:Ljava/lang/String;="string -> objec
+  t"
+  next 0046
+  live out:{15, 17, 62}
+block 0046
+  pred 0043
+  live in:{15, 17, 62}
+  Blort.java:21@004b: array-length(catch) . <- v15:[Ljava/lang/String;
+  next 0122
+  live out:{15, 17, 62}
+block 004c
+  pred 0122
+  live in:{15, 17, 39, 62}
+  Blort.java:21@004c: Rop{invoke-static . <- Ljava/lang/Object; I Ljava/lang/Ob
+  ject; I I call throws <any>}(java.lang.System.arraycopy:(Ljava/lang/Object;IL
+  java/lang/Object;II)V catch) . <- v15:[Ljava/lang/String; v62:I=0 v17:[Ljava/
+  lang/Object; v62:I=0 v39:I
+  next 004f
+  live out:{15, 17, 62}
+block 004f
+  pred 004c
+  live in:{15, 17, 62}
+  Blort.java:22@004f: get-static-object(java.lang.System.out:Ljava/io/PrintStre
+  am; catch) . <- .
+  next 0123
+  live out:{15, 17, 62}
+block 0052
+  pred 0123
+  live in:{15, 17, 40, 62}
+  Blort.java:22@0052: const-object("object -> string" catch) . <- .
+  next 0124
+  live out:{15, 17, 40, 62}
+block 0054
+  pred 0124
+  live in:{15, 17, 40, 41, 62}
+  Blort.java:22@0054: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
+  String; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V 
+  catch) . <- v40:Ljava/io/PrintStream; v41:Ljava/lang/String;="object -> strin
+  g"
+  next 0057
+  live out:{15, 17, 62}
+block 0057
+  pred 0054
+  live in:{15, 17, 62}
+  Blort.java:23@005c: array-length(catch) . <- v15:[Ljava/lang/String;
+  next 0125
+  live out:{15, 17, 62}
+block 005d
+  pred 0125
+  live in:{15, 17, 44, 62}
+  Blort.java:23@005d: Rop{invoke-static . <- Ljava/lang/Object; I Ljava/lang/Ob
+  ject; I I call throws <any>}(java.lang.System.arraycopy:(Ljava/lang/Object;IL
+  java/lang/Object;II)V catch) . <- v17:[Ljava/lang/Object; v62:I=0 v15:[Ljava/
+  lang/String; v62:I=0 v44:I
+  next 0060
+  live out:{15, 17}
+block 0060
+  pred 005d
+  live in:{15, 17}
+  Blort.java:24@0060: get-static-object(java.lang.System.out:Ljava/io/PrintStre
+  am; catch) . <- .
+  next 0126
+  live out:{15, 17}
+block 0063
+  pred 0126
+  live in:{15, 17, 45}
+  Blort.java:24@0063: const-object("object -> string (modified)" catch) . <- .
+  next 0127
+  live out:{15, 17, 45}
+block 0065
+  pred 0127
+  live in:{15, 17, 45, 46}
+  Blort.java:24@0065: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
+  String; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V 
+  catch) . <- v45:Ljava/io/PrintStream; v46:Ljava/lang/String;="object -> strin
+  g (modified)"
+  next 0068
+  live out:{15, 17}
+block 0068
+  pred 0065
+  live in:{15, 17}
+  Blort.java:25@0069: const-int(4) v47:I=4 <- .
+  Blort.java:25@006a: new-instance(java.lang.Object catch) . <- .
+  next 0128
+  live out:{15, 17, 47}
+block 006d
+  pred 0128
+  live in:{15, 17, 47, 48}
+  Blort.java:25@006e: Rop{invoke-direct . <- Ljava/lang/Object; call throws <an
+  y>}(java.lang.Object.<init>:()V catch) . <- v48:N006aLjava/lang/Object;
+  next 0071
+  live out:{15, 17, 47, 48}
+block 0071
+  pred 006d
+  live in:{15, 17, 47, 48}
+  Blort.java:25@0071: aput-object(catch) . <- v48:Ljava/lang/Object; v17:[Ljava
+  /lang/Object; v47:I=4
+  next 0072
+  live out:{15, 17}
+block 0072
+  pred 0071
+  live in:{15, 17}
+  Blort.java:27@0073: const-int(0) v49:I=0 <- .
+  Blort.java:27@0075: const-int(0) v50:I=0 <- .
+  Blort.java:27@0077: array-length(catch java.lang.ArrayStoreException) . <- v1
+  5:[Ljava/lang/String;
+  next 012d
+  next 0129 *
+  live out:{15, 17, 49, 50}
+block 0078
+  pred 0129
+  live in:{15, 17, 49, 50, 51}
+  Blort.java:27@0078: Rop{invoke-static . <- Ljava/lang/Object; I Ljava/lang/Ob
+  ject; I I call throws <any>}(java.lang.System.arraycopy:(Ljava/lang/Object;IL
+  java/lang/Object;II)V catch java.lang.ArrayStoreException) . <- v17:[Ljava/la
+  ng/Object; v49:I=0 v15:[Ljava/lang/String; v50:I=0 v51:I
+  next 012e
+  next 007b *
+  live out:{}
+block 007b
+  pred 0078
+  live in:{}
+  Blort.java:31@007b: goto . <- .
+  next 0088
+  live out:{}
+block 007e
+  pred 0107
+  live in:{58}
+  @????: mark-local-object . <- v58:"ase"Ljava/lang/ArrayStoreException;
+  Blort.java:30@0080: get-static-object(java.lang.System.out:Ljava/io/PrintStre
+  am; catch) . <- .
+  next 012a
+  live out:{}
+block 0083
+  pred 012a
+  live in:{59}
+  Blort.java:30@0083: const-object("caught ArrayStoreException (expected)" catc
+  h) . <- .
+  next 012b
+  live out:{59}
+block 0085
+  pred 012b
+  live in:{59, 60}
+  Blort.java:30@0085: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
+  String; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V 
+  catch) . <- v59:Ljava/io/PrintStream; v60:Ljava/lang/String;="caught ArraySto
+  reException (expected)"
+  next 012f
+  live out:{}
+block 0088
+  pred 007b
+  pred 012f
+  live in:{}
+  Blort.java:32@0088: goto . <- .
+  next 0113
+  live out:{}
+block 0107
+  pred 012d
+  pred 012e
+  live in:{}
+  @????: phi v58:Ljava/lang/ArrayStoreException; <- v52:Ljava/lang/ArrayStoreEx
+  ception;[b=012e] v61:Ljava/lang/ArrayStoreException;[b=012d]
+  Blort.java:28@007e: goto . <- .
+  next 007e
+  live out:{58}
+block 0112
+  pred 012c
+  live in:{62, 63}
+  Blort.java:5@0000: move-param-int(0) v12:"k"I <- .
+  Blort.java:5@0000: goto . <- .
+  next 0000
+  live out:{12, 62, 63}
+block 0113
+  pred 0088
+  live in:{}
+  Blort.java:32@0088: return-void . <- .
+  next 0132
+  live out:{}
+block 0119
+  pred 0000
+  live in:{62, 63}
+  Blort.java:7@0004: Rop{move-result-pseudo [Ljava/lang/String; <- . flows} v15
+  :[Ljava/lang/String; <- .
+  Blort.java:7@0004: goto . <- .
+  next 0007
+  live out:{15, 62, 63}
+block 011a
+  pred 0007
+  live in:{15, 62}
+  Blort.java:8@000a: Rop{move-result-pseudo [Ljava/lang/Object; <- . flows} v17
+  :[Ljava/lang/Object; <- .
+  Blort.java:8@000a: goto . <- .
+  next 000d
+  live out:{15, 17, 62}
+block 011b
+  pred 0016
+  live in:{15, 17, 62}
+  Blort.java:13@0016: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
+  v19:Ljava/io/PrintStream; <- .
+  Blort.java:13@0016: goto . <- .
+  next 0019
+  live out:{15, 17, 19, 62}
+block 011c
+  pred 0019
+  live in:{15, 17, 19, 62}
+  Blort.java:13@0019: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v20
+  :Ljava/lang/String;="foo" <- .
+  Blort.java:13@0019: goto . <- .
+  next 001b
+  live out:{15, 17, 19, 20, 62}
+block 011d
+  pred 0021
+  live in:{15, 17, 30, 62}
+  Blort.java:17@0024: Rop{move-result-pseudo I <- . flows} v31:I <- .
+  Blort.java:17@0024: goto . <- .
+  next 0025
+  live out:{15, 17, 30, 31, 62}
+block 011e
+  pred 0028
+  live in:{15, 17, 30, 62}
+  Blort.java:18@002b: Rop{move-result-pseudo N002bLjava/lang/String; <- . flows
+  } v32:N002bLjava/lang/String; <- .
+  Blort.java:18@002b: goto . <- .
+  next 002e
+  live out:{15, 17, 30, 32, 62}
+block 011f
+  pred 002e
+  live in:{15, 17, 30, 32, 62}
+  Blort.java:18@0031: Rop{move-result Ljava/lang/String; <- . flows} v33:Ljava/
+  lang/String; <- .
+  Blort.java:18@0031: goto . <- .
+  next 0034
+  live out:{15, 17, 30, 32, 33, 62}
+block 0120
+  pred 003e
+  live in:{15, 17, 62}
+  Blort.java:20@003e: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
+  v35:Ljava/io/PrintStream; <- .
+  Blort.java:20@003e: goto . <- .
+  next 0041
+  live out:{15, 17, 35, 62}
+block 0121
+  pred 0041
+  live in:{15, 17, 35, 62}
+  Blort.java:20@0041: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v36
+  :Ljava/lang/String;="string -> object" <- .
+  Blort.java:20@0041: goto . <- .
+  next 0043
+  live out:{15, 17, 35, 36, 62}
+block 0122
+  pred 0046
+  live in:{15, 17, 62}
+  Blort.java:21@004b: Rop{move-result-pseudo I <- . flows} v39:I <- .
+  Blort.java:21@004b: goto . <- .
+  next 004c
+  live out:{15, 17, 39, 62}
+block 0123
+  pred 004f
+  live in:{15, 17, 62}
+  Blort.java:22@004f: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
+  v40:Ljava/io/PrintStream; <- .
+  Blort.java:22@004f: goto . <- .
+  next 0052
+  live out:{15, 17, 40, 62}
+block 0124
+  pred 0052
+  live in:{15, 17, 40, 62}
+  Blort.java:22@0052: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v41
+  :Ljava/lang/String;="object -> string" <- .
+  Blort.java:22@0052: goto . <- .
+  next 0054
+  live out:{15, 17, 40, 41, 62}
+block 0125
+  pred 0057
+  live in:{15, 17, 62}
+  Blort.java:23@005c: Rop{move-result-pseudo I <- . flows} v44:I <- .
+  Blort.java:23@005c: goto . <- .
+  next 005d
+  live out:{15, 17, 44, 62}
+block 0126
+  pred 0060
+  live in:{15, 17}
+  Blort.java:24@0060: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
+  v45:Ljava/io/PrintStream; <- .
+  Blort.java:24@0060: goto . <- .
+  next 0063
+  live out:{15, 17, 45}
+block 0127
+  pred 0063
+  live in:{15, 17, 45}
+  Blort.java:24@0063: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v46
+  :Ljava/lang/String;="object -> string (modified)" <- .
+  Blort.java:24@0063: goto . <- .
+  next 0065
+  live out:{15, 17, 45, 46}
+block 0128
+  pred 0068
+  live in:{15, 17, 47}
+  Blort.java:25@006a: Rop{move-result-pseudo N006aLjava/lang/Object; <- . flows
+  } v48:N006aLjava/lang/Object; <- .
+  Blort.java:25@006a: goto . <- .
+  next 006d
+  live out:{15, 17, 47, 48}
+block 0129
+  pred 0072
+  live in:{15, 17, 49, 50}
+  Blort.java:27@0077: Rop{move-result-pseudo I <- . flows} v51:I <- .
+  Blort.java:27@0077: goto . <- .
+  next 0078
+  live out:{15, 17, 49, 50, 51}
+block 012a
+  pred 007e
+  live in:{}
+  Blort.java:30@0080: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
+  v59:Ljava/io/PrintStream; <- .
+  Blort.java:30@0080: goto . <- .
+  next 0083
+  live out:{59}
+block 012b
+  pred 0083
+  live in:{59}
+  Blort.java:30@0083: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v60
+  :Ljava/lang/String;="caught ArrayStoreException (expected)" <- .
+  Blort.java:30@0083: goto . <- .
+  next 0085
+  live out:{59, 60}
+block 012c
+  live in:{}
+  @????: const-int(8) v63:I=8 <- .
+  @????: const-int(0) v62:I=0 <- .
+  @????: goto . <- .
+  next 0112
+  live out:{62, 63}
+block 012d
+  pred 0072
+  live in:{}
+  Blort.java:28@007e: Rop{move-exception Ljava/lang/ArrayStoreException; <- . f
+  lows} v61:Ljava/lang/ArrayStoreException; <- .
+  @????: goto . <- .
+  next 0107
+  live out:{61}
+block 012e
+  pred 0078
+  live in:{}
+  Blort.java:28@007e: Rop{move-exception Ljava/lang/ArrayStoreException; <- . f
+  lows} v52:Ljava/lang/ArrayStoreException; <- .
+  @????: goto . <- .
+  next 0107
+  live out:{52}
+block 012f
+  pred 0085
+  live in:{}
+  @????: goto . <- .
+  next 0088
+  live out:{}
+block 0130
+  pred 001b
+  live in:{15, 17, 62}
+  @????: goto . <- .
+  next 001e
+  live out:{15, 17, 62}
+block 0131
+  pred 000d
+  live in:{15, 17, 62}
+  @????: goto . <- .
+  next 001e
+  live out:{15, 17, 62}
+block 0132
+  pred 0113
+  live in:{}
+  returns
+  live out:{}
+
+method testConstructor ()V
+first 0035
+block 0000
+  pred 002c
+  live in:{}
+  Blort.java:35@0000: const-object-nothrow(null) v7:<null>=null <- .
+  @????: mark-local-object . <- v7:"foo"LBlort;
+  Blort.java:35@0001: goto . <- .
+  next 0002
+  live out:{7}
+block 0002
+  pred 0000
+  live in:{7}
+  Blort.java:37@0002: new-instance(Blort catch java.lang.Exception) . <- .
+  next 0036
+  next 0033 *
+  live out:{7}
+block 0005
+  pred 0033
+  live in:{7, 8}
+  Blort.java:37@0006: Rop{invoke-direct . <- LBlort; call throws <any>}(Blort.<
+  init>:()V catch java.lang.Exception) . <- v8:N0002LBlort;
+  next 0037
+  next 0009 *
+  live out:{7, 8}
+block 0009
+  pred 0005
+  live in:{8}
+  @????: mark-local-object . <- v8:"foo"LBlort;
+  Blort.java:37@0009: goto . <- .
+  next 000a
+  live out:{8}
+block 000a
+  pred 0009
+  live in:{8}
+  Blort.java:39@000a: goto . <- .
+  next 000e
+  live out:{8}
+block 000d
+  pred 0023
+  live in:{7}
+  Blort.java:38@000d: goto . <- .
+  next 000e
+  live out:{7}
+block 000e
+  pred 000a
+  pred 000d
+  live in:{}
+  @????: phi v14:"foo"LBlort; <- v8:"foo"LBlort;[b=000a] v7:"foo"LBlort;[b=000d
+  ]
+  Blort.java:40@000e: get-static-object(java.lang.System.err:Ljava/io/PrintStre
+  am; catch) . <- .
+  next 0034
+  live out:{14}
+block 0011
+  pred 0034
+  live in:{14, 15}
+  Blort.java:40@0012: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
+  Object; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/Object;)V 
+  catch) . <- v15:Ljava/io/PrintStream; v14:LBlort;
+  next 0015
+  live out:{}
+block 0015
+  pred 0011
+  live in:{}
+  Blort.java:41@0015: goto . <- .
+  next 002d
+  live out:{}
+block 0023
+  pred 0036
+  pred 0037
+  live in:{7}
+  Blort.java:38@000d: goto . <- .
+  next 000d
+  live out:{7}
+block 002c
+  pred 0035
+  live in:{}
+  Blort.java:35@0000: move-param-object(0) v6:"this"LBlort; <- .
+  Blort.java:35@0000: goto . <- .
+  next 0000
+  live out:{}
+block 002d
+  pred 0015
+  live in:{}
+  Blort.java:41@0015: return-void . <- .
+  next 0038
+  live out:{}
+block 0033
+  pred 0002
+  live in:{7}
+  Blort.java:37@0002: Rop{move-result-pseudo N0002LBlort; <- . flows} v8:N0002L
+  Blort; <- .
+  Blort.java:37@0002: goto . <- .
+  next 0005
+  live out:{7, 8}
+block 0034
+  pred 000e
+  live in:{14}
+  Blort.java:40@000e: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
+  v15:Ljava/io/PrintStream; <- .
+  Blort.java:40@000e: goto . <- .
+  next 0011
+  live out:{14, 15}
+block 0035
+  live in:{}
+  @????: goto . <- .
+  next 002c
+  live out:{}
+block 0036
+  pred 0002
+  live in:{7}
+  Blort.java:38@000d: Rop{move-exception Ljava/lang/Exception; <- . flows} v19:
+  Ljava/lang/Exception; <- .
+  @????: goto . <- .
+  next 0023
+  live out:{7}
+block 0037
+  pred 0005
+  live in:{7}
+  Blort.java:38@000d: Rop{move-exception Ljava/lang/Exception; <- . flows} v9:L
+  java/lang/Exception; <- .
+  @????: goto . <- .
+  next 0023
+  live out:{7}
+block 0038
+  pred 002d
+  live in:{}
+  returns
+  live out:{}
+
+method parseHeaderGroup (Ljava/lang/Object;Ljava/lang/Object;II)V
+first 01c6
+block 0000
+  pred 01ae
+  live in:{16, 17, 18, 99, 100, 101}
+  Blort.java:57@0000: const-object-nothrow(null) v19:<null>=null <- .
+  @????: mark-local-object . <- v19:"current"Ljava/lang/StringBuilder;
+  Blort.java:58@0003: const-object-nothrow(null) v20:<null>=null <- .
+  @????: mark-local-object . <- v20:"previous"Ljava/lang/StringBuilder;
+  Blort.java:58@0004: goto . <- .
+  next 01ca
+  live out:{16, 17, 18, 19, 20, 99, 100, 101}
+block 0006
+  pred 01ca
+  live in:{16, 17, 18, 30, 31, 99, 100, 101}
+  Blort.java:60@0008: if-nez-object . <- v31:Ljava/lang/StringBuilder;
+  next 000b *
+  next 0019
+  live out:{16, 17, 18, 30, 31, 99, 100, 101}
+block 000b
+  pred 0006
+  live in:{16, 17, 18, 30, 99, 100, 101}
+  Blort.java:61@000b: new-instance(java.lang.StringBuilder catch) . <- .
+  next 01b5
+  live out:{16, 17, 18, 30, 99, 100, 101}
+block 000e
+  pred 01b5
+  live in:{16, 17, 18, 30, 32, 99, 100, 101}
+  Blort.java:61@000f: const-int(64) v33:I=64 <- .
+  Blort.java:61@0011: Rop{invoke-direct . <- Ljava/lang/StringBuilder; I call t
+  hrows <any>}(java.lang.StringBuilder.<init>:(I)V catch) . <- v32:N000bLjava/l
+  ang/StringBuilder; v33:I=64
+  next 0014
+  live out:{16, 17, 18, 30, 32, 99, 100, 101}
+block 0014
+  pred 000e
+  live in:{16, 17, 18, 30, 32, 99, 100, 101}
+  @????: mark-local-object . <- v32:"current"Ljava/lang/StringBuilder;
+  Blort.java:61@0016: goto . <- .
+  next 001f
+  live out:{16, 17, 18, 30, 32, 99, 100, 101}
+block 0019
+  pred 0006
+  live in:{16, 17, 18, 30, 31, 99, 100, 101}
+  Blort.java:63@001b: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; call th
+  rows <any>}(java.lang.StringBuilder.length:()I catch) . <- v31:Ljava/lang/Str
+  ingBuilder;
+  next 01b6
+  live out:{16, 17, 18, 30, 31, 99, 100, 101}
+block 001e
+  pred 01b6
+  live in:{16, 17, 18, 30, 31, 99, 100, 101}
+  @????: goto . <- .
+  next 001f
+  live out:{16, 17, 18, 30, 31, 99, 100, 101}
+block 001f
+  pred 0014
+  pred 001e
+  live in:{16, 17, 18, 30, 99, 100, 101}
+  @????: phi v39:"current"Ljava/lang/StringBuilder; <- v32:"current"Ljava/lang/
+  StringBuilder;[b=0014] v31:"current"Ljava/lang/StringBuilder;[b=001e]
+  Blort.java:65@0020: Rop{invoke-virtual . <- Ljava/lang/Object; call throws <a
+  ny>}(java.lang.Object.hashCode:()I catch) . <- v16:Ljava/lang/Object;
+  next 01b7
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 0023
+  pred 01b7
+  live in:{16, 17, 18, 30, 39, 40, 99, 100, 101}
+  @????: mark-local-int . <- v40:"l"I
+  Blort.java:66@0027: const-int(-1) v41:I=-1 <- .
+  Blort.java:66@0028: if-eq-int . <- v40:I v41:I=-1
+  next 002b *
+  next 01d4
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 002b
+  pred 0023
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:66@002d: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; call th
+  rows <any>}(java.lang.StringBuilder.length:()I catch) . <- v39:Ljava/lang/Str
+  ingBuilder;
+  next 01b8
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 0030
+  pred 01b8
+  live in:{16, 17, 18, 30, 39, 42, 99, 100, 101}
+  Blort.java:66@0030: const-int(1) v43:I=1 <- .
+  Blort.java:66@0031: if-ge-int . <- v42:I v43:I=1
+  next 0034 *
+  next 0037
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 0034
+  pred 0030
+  live in:{}
+  Blort.java:67@0034: goto . <- .
+  next 00d6
+  live out:{}
+block 0037
+  pred 0030
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:70@003a: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; I call 
+  throws <any>}(java.lang.StringBuilder.charAt:(I)C catch) . <- v39:Ljava/lang/
+  StringBuilder; v100:I=0
+  next 01b9
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 003d
+  pred 01b9
+  live in:{16, 17, 18, 30, 39, 45, 99, 100, 101}
+  Blort.java:70@003f: if-eq-int . <- v45:I v99:I=32
+  next 0042 *
+  next 01d3
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 0042
+  pred 003d
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:70@0045: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; I call 
+  throws <any>}(java.lang.StringBuilder.charAt:(I)C catch) . <- v39:Ljava/lang/
+  StringBuilder; v100:I=0
+  next 01ba
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 0048
+  pred 01ba
+  live in:{16, 17, 18, 30, 39, 48, 99, 100, 101}
+  Blort.java:70@004a: if-ne-int . <- v48:I v101:I=9
+  next 01d2 *
+  next 01d1
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 004d
+  pred 01c9
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:70@004f: if-eqz-object . <- v30:Ljava/lang/StringBuilder;
+  next 0052 *
+  next 01d0
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 0052
+  pred 004d
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:71@0052: const-int(0) v67:I=0 <- .
+  @????: mark-local-int . <- v67:"i"I
+  Blort.java:71@0053: goto . <- .
+  next 0055
+  live out:{16, 17, 18, 30, 39, 67, 99, 100, 101}
+block 0055
+  pred 0052
+  pred 0079
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  @????: phi v71:"i"I <- v67:"i"I[b=0052] v78:"i"I[b=0079]
+  Blort.java:72@0059: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; call th
+  rows <any>}(java.lang.StringBuilder.length:()I catch) . <- v39:Ljava/lang/Str
+  ingBuilder;
+  next 01bb
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 005c
+  pred 01bb
+  live in:{16, 17, 18, 30, 39, 71, 72, 99, 100, 101}
+  Blort.java:72@005c: if-ge-int . <- v71:I v72:I
+  next 005f *
+  next 01cf
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 005f
+  pred 005c
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:73@0063: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; I call 
+  throws <any>}(java.lang.StringBuilder.charAt:(I)C catch) . <- v39:Ljava/lang/
+  StringBuilder; v71:I
+  next 01bc
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 0066
+  pred 01bc
+  live in:{16, 17, 18, 30, 39, 71, 73, 99, 100, 101}
+  @????: mark-local-int . <- v73:"ch"C
+  Blort.java:74@006c: if-eq-int . <- v73:I v99:I=32
+  next 006f *
+  next 01ce
+  live out:{16, 17, 18, 30, 39, 71, 73, 99, 100, 101}
+block 006f
+  pred 0066
+  live in:{16, 17, 18, 30, 39, 71, 73, 99, 100, 101}
+  Blort.java:74@0073: if-eq-int . <- v73:I v101:I=9
+  next 0076 *
+  next 01cd
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 0076
+  pred 006f
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:75@0076: goto . <- .
+  next 01c8
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 0079
+  pred 01cd
+  pred 01ce
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:77@0079: add-const-int(1) v78:"i"I <- v71:I
+  Blort.java:78@007c: goto . <- .
+  next 0055
+  live out:{16, 17, 18, 30, 39, 78, 99, 100, 101}
+block 007f
+  pred 01c8
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:79@0080: if-lez-int . <- v18:I
+  next 0083 *
+  next 01cc
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 0083
+  pred 007f
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:79@0085: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; call th
+  rows <any>}(java.lang.StringBuilder.length:()I catch) . <- v30:Ljava/lang/Str
+  ingBuilder;
+  next 01bd
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 0088
+  pred 01bd
+  live in:{16, 17, 18, 30, 39, 71, 82, 99, 100, 101}
+  Blort.java:79@0089: add-const-int(1) v84:I <- v82:I
+  Blort.java:79@008c: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; call th
+  rows <any>}(java.lang.StringBuilder.length:()I catch) . <- v39:Ljava/lang/Str
+  ingBuilder;
+  next 01be
+  live out:{16, 17, 18, 30, 39, 71, 84, 99, 100, 101}
+block 008f
+  pred 01be
+  live in:{16, 17, 18, 30, 39, 71, 84, 85, 99, 100, 101}
+  Blort.java:79@008f: add-int v86:I <- v84:I v85:I
+  Blort.java:79@0092: sub-int v87:I <- v86:I v71:I
+  Blort.java:79@0094: if-le-int . <- v87:I v18:I
+  next 0097 *
+  next 01cb
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 0097
+  pred 008f
+  live in:{}
+  Blort.java:81@0097: new-instance(java.io.IOException catch) . <- .
+  next 01bf
+  live out:{}
+block 009a
+  pred 01bf
+  live in:{88}
+  Blort.java:81@009b: const-object("Maximum line length limit exceeded" catch) 
+  . <- .
+  next 01c0
+  live out:{88}
+block 009d
+  pred 01c0
+  live in:{88, 89}
+  Blort.java:81@009d: Rop{invoke-direct . <- Ljava/io/IOException; Ljava/lang/S
+  tring; call throws <any>}(java.io.IOException.<init>:(Ljava/lang/String;)V ca
+  tch) . <- v88:N0097Ljava/io/IOException; v89:Ljava/lang/String;="Maximum line
+   length limit exceeded"
+  next 00a0
+  live out:{88}
+block 00a0
+  pred 009d
+  live in:{88}
+  Blort.java:81@00a0: throw(catch) . <- v88:Ljava/io/IOException;
+  next 01d5
+  live out:{}
+block 00a1
+  pred 01cb
+  pred 01cc
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:83@00a5: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; I call 
+  throws <any>}(java.lang.StringBuilder.append:(C)Ljava/lang/StringBuilder; cat
+  ch) . <- v30:Ljava/lang/StringBuilder; v99:I=32
+  next 01c1
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 00a8
+  pred 01c1
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:84@00b1: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; call th
+  rows <any>}(java.lang.StringBuilder.length:()I catch) . <- v39:Ljava/lang/Str
+  ingBuilder;
+  next 01c2
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 00b4
+  pred 01c2
+  live in:{16, 17, 18, 30, 39, 71, 94, 99, 100, 101}
+  Blort.java:84@00b6: sub-int v95:I <- v94:I v71:I
+  Blort.java:84@00b7: Rop{invoke-virtual . <- Ljava/lang/StringBuilder; Ljava/l
+  ang/CharSequence; I I call throws <any>}(java.lang.StringBuilder.append:(Ljav
+  a/lang/CharSequence;II)Ljava/lang/StringBuilder; catch) . <- v30:Ljava/lang/S
+  tringBuilder; v39:Ljava/lang/StringBuilder; v71:I v95:I
+  next 01c3
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 00ba
+  pred 01c3
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:85@00bb: goto . <- .
+  next 01c7
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 00be
+  pred 01d0
+  pred 01d1
+  live in:{16, 17, 18, 39, 99, 100, 101}
+  Blort.java:86@00c0: move-object v52:"previous"Ljava/lang/StringBuilder; <- v3
+  9:Ljava/lang/StringBuilder;
+  Blort.java:87@00c2: const-object-nothrow(null) v53:<null>=null <- .
+  @????: mark-local-object . <- v53:"current"Ljava/lang/StringBuilder;
+  Blort.java:87@00c3: goto . <- .
+  next 01c7
+  live out:{16, 17, 18, 52, 53, 99, 100, 101}
+block 00c5
+  pred 01c7
+  live in:{16, 17, 18, 61, 62, 99, 100, 101}
+  Blort.java:89@00c6: if-lez-int . <- v17:I
+  next 00c9 *
+  next 00d3
+  live out:{16, 17, 18, 61, 62, 99, 100, 101}
+block 00c9
+  pred 00c5
+  live in:{}
+  Blort.java:90@00c9: new-instance(java.io.IOException catch) . <- .
+  next 01c4
+  live out:{}
+block 00cc
+  pred 01c4
+  live in:{63}
+  Blort.java:90@00cd: const-object("Maximum header count exceeded" catch) . <- 
+  .
+  next 01c5
+  live out:{63}
+block 00cf
+  pred 01c5
+  live in:{63, 64}
+  Blort.java:90@00cf: Rop{invoke-direct . <- Ljava/io/IOException; Ljava/lang/S
+  tring; call throws <any>}(java.io.IOException.<init>:(Ljava/lang/String;)V ca
+  tch) . <- v63:N00c9Ljava/io/IOException; v64:Ljava/lang/String;="Maximum head
+  er count exceeded"
+  next 00d2
+  live out:{63}
+block 00d2
+  pred 00cf
+  live in:{63}
+  Blort.java:90@00d2: throw(catch) . <- v63:Ljava/io/IOException;
+  next 01d5
+  live out:{}
+block 00d3
+  pred 00c5
+  live in:{16, 17, 18, 61, 62, 99, 100, 101}
+  Blort.java:92@00d3: goto . <- .
+  next 01ca
+  live out:{16, 17, 18, 61, 62, 99, 100, 101}
+block 00d6
+  pred 0034
+  pred 01d4
+  live in:{}
+  Blort.java:93@00d6: goto . <- .
+  next 01af
+  live out:{}
+block 01ae
+  pred 01c6
+  live in:{99, 100, 101}
+  Blort.java:57@0000: move-param-object(0) v15:"headGroup"Ljava/lang/Object; <-
+   .
+  Blort.java:57@0000: move-param-object(1) v16:"inbuffer"Ljava/lang/Object; <- 
+  .
+  Blort.java:57@0000: move-param-int(2) v17:"maxHeaderCount"I <- .
+  Blort.java:57@0000: move-param-int(3) v18:"maxLineLen"I <- .
+  Blort.java:57@0000: goto . <- .
+  next 0000
+  live out:{16, 17, 18, 99, 100, 101}
+block 01af
+  pred 00d6
+  live in:{}
+  Blort.java:93@00d6: return-void . <- .
+  next 01d5
+  live out:{}
+block 01b5
+  pred 000b
+  live in:{16, 17, 18, 30, 99, 100, 101}
+  Blort.java:61@000b: Rop{move-result-pseudo N000bLjava/lang/StringBuilder; <- 
+  . flows} v32:N000bLjava/lang/StringBuilder; <- .
+  Blort.java:61@000b: goto . <- .
+  next 000e
+  live out:{16, 17, 18, 30, 32, 99, 100, 101}
+block 01b6
+  pred 0019
+  live in:{16, 17, 18, 30, 31, 99, 100, 101}
+  Blort.java:63@001b: goto . <- .
+  next 001e
+  live out:{16, 17, 18, 30, 31, 99, 100, 101}
+block 01b7
+  pred 001f
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:65@0020: Rop{move-result I <- . flows} v40:I <- .
+  Blort.java:65@0020: goto . <- .
+  next 0023
+  live out:{16, 17, 18, 30, 39, 40, 99, 100, 101}
+block 01b8
+  pred 002b
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:66@002d: Rop{move-result I <- . flows} v42:I <- .
+  Blort.java:66@002d: goto . <- .
+  next 0030
+  live out:{16, 17, 18, 30, 39, 42, 99, 100, 101}
+block 01b9
+  pred 0037
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:70@003a: Rop{move-result C <- . flows} v45:C <- .
+  Blort.java:70@003a: goto . <- .
+  next 003d
+  live out:{16, 17, 18, 30, 39, 45, 99, 100, 101}
+block 01ba
+  pred 0042
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:70@0045: Rop{move-result C <- . flows} v48:C <- .
+  Blort.java:70@0045: goto . <- .
+  next 0048
+  live out:{16, 17, 18, 30, 39, 48, 99, 100, 101}
+block 01bb
+  pred 0055
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:72@0059: Rop{move-result I <- . flows} v72:I <- .
+  Blort.java:72@0059: goto . <- .
+  next 005c
+  live out:{16, 17, 18, 30, 39, 71, 72, 99, 100, 101}
+block 01bc
+  pred 005f
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:73@0063: Rop{move-result C <- . flows} v73:C <- .
+  Blort.java:73@0063: goto . <- .
+  next 0066
+  live out:{16, 17, 18, 30, 39, 71, 73, 99, 100, 101}
+block 01bd
+  pred 0083
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:79@0085: Rop{move-result I <- . flows} v82:I <- .
+  Blort.java:79@0085: goto . <- .
+  next 0088
+  live out:{16, 17, 18, 30, 39, 71, 82, 99, 100, 101}
+block 01be
+  pred 0088
+  live in:{16, 17, 18, 30, 39, 71, 84, 99, 100, 101}
+  Blort.java:79@008c: Rop{move-result I <- . flows} v85:I <- .
+  Blort.java:79@008c: goto . <- .
+  next 008f
+  live out:{16, 17, 18, 30, 39, 71, 84, 85, 99, 100, 101}
+block 01bf
+  pred 0097
+  live in:{}
+  Blort.java:81@0097: Rop{move-result-pseudo N0097Ljava/io/IOException; <- . fl
+  ows} v88:N0097Ljava/io/IOException; <- .
+  Blort.java:81@0097: goto . <- .
+  next 009a
+  live out:{88}
+block 01c0
+  pred 009a
+  live in:{88}
+  Blort.java:81@009b: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v89
+  :Ljava/lang/String;="Maximum line length limit exceeded" <- .
+  Blort.java:81@009b: goto . <- .
+  next 009d
+  live out:{88, 89}
+block 01c1
+  pred 00a1
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:83@00a5: goto . <- .
+  next 00a8
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 01c2
+  pred 00a8
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  Blort.java:84@00b1: Rop{move-result I <- . flows} v94:I <- .
+  Blort.java:84@00b1: goto . <- .
+  next 00b4
+  live out:{16, 17, 18, 30, 39, 71, 94, 99, 100, 101}
+block 01c3
+  pred 00b4
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  Blort.java:84@00b7: goto . <- .
+  next 00ba
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 01c4
+  pred 00c9
+  live in:{}
+  Blort.java:90@00c9: Rop{move-result-pseudo N00c9Ljava/io/IOException; <- . fl
+  ows} v63:N00c9Ljava/io/IOException; <- .
+  Blort.java:90@00c9: goto . <- .
+  next 00cc
+  live out:{63}
+block 01c5
+  pred 00cc
+  live in:{63}
+  Blort.java:90@00cd: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v64
+  :Ljava/lang/String;="Maximum header count exceeded" <- .
+  Blort.java:90@00cd: goto . <- .
+  next 00cf
+  live out:{63, 64}
+block 01c6
+  live in:{}
+  @????: const-int(9) v101:I=9 <- .
+  @????: const-int(0) v100:I=0 <- .
+  @????: const-int(32) v99:I=32 <- .
+  @????: goto . <- .
+  next 01ae
+  live out:{99, 100, 101}
+block 01c7
+  pred 00ba
+  pred 00be
+  live in:{16, 17, 18, 99, 100, 101}
+  @????: phi v61:"previous"Ljava/lang/StringBuilder; <- v52:"previous"Ljava/lan
+  g/StringBuilder;[b=00be] v30:"previous"Ljava/lang/StringBuilder;[b=00ba]
+  @????: phi v62:"current"Ljava/lang/StringBuilder; <- v53:"current"Ljava/lang/
+  StringBuilder;[b=00be] v39:"current"Ljava/lang/StringBuilder;[b=00ba]
+  @????: goto . <- .
+  next 00c5
+  live out:{16, 17, 18, 61, 62, 99, 100, 101}
+block 01c8
+  pred 0076
+  pred 01cf
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  @????: goto . <- .
+  next 007f
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 01c9
+  pred 01d2
+  pred 01d3
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  @????: goto . <- .
+  next 004d
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 01ca
+  pred 0000
+  pred 00d3
+  live in:{16, 17, 18, 99, 100, 101}
+  @????: phi v30:"previous"Ljava/lang/StringBuilder; <- v20:"previous"Ljava/lan
+  g/StringBuilder;[b=0000] v61:"previous"Ljava/lang/StringBuilder;[b=00d3]
+  @????: phi v31:"current"Ljava/lang/StringBuilder; <- v19:"current"Ljava/lang/
+  StringBuilder;[b=0000] v62:"current"Ljava/lang/StringBuilder;[b=00d3]
+  @????: goto . <- .
+  next 0006
+  live out:{16, 17, 18, 30, 31, 99, 100, 101}
+block 01cb
+  pred 008f
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  @????: goto . <- .
+  next 00a1
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 01cc
+  pred 007f
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  @????: goto . <- .
+  next 00a1
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 01cd
+  pred 006f
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  @????: goto . <- .
+  next 0079
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 01ce
+  pred 0066
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  @????: goto . <- .
+  next 0079
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 01cf
+  pred 005c
+  live in:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+  @????: goto . <- .
+  next 01c8
+  live out:{16, 17, 18, 30, 39, 71, 99, 100, 101}
+block 01d0
+  pred 004d
+  live in:{16, 17, 18, 39, 99, 100, 101}
+  @????: goto . <- .
+  next 00be
+  live out:{16, 17, 18, 39, 99, 100, 101}
+block 01d1
+  pred 0048
+  live in:{16, 17, 18, 39, 99, 100, 101}
+  @????: goto . <- .
+  next 00be
+  live out:{16, 17, 18, 39, 99, 100, 101}
+block 01d2
+  pred 0048
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  @????: goto . <- .
+  next 01c9
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 01d3
+  pred 003d
+  live in:{16, 17, 18, 30, 39, 99, 100, 101}
+  @????: goto . <- .
+  next 01c9
+  live out:{16, 17, 18, 30, 39, 99, 100, 101}
+block 01d4
+  pred 0023
+  live in:{}
+  @????: goto . <- .
+  next 00d6
+  live out:{}
+block 01d5
+  pred 00a0
+  pred 00d2
+  pred 01af
+  live in:{}
+  returns
+  live out:{}

@@ -1,0 +1,10 @@
+Blort.test1:()Ljava/lang/Object;:
+regs: 0001; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: return-object v0
+Blort.test2:(Ljava/lang/Object;)V:
+regs: 0003; ins: 0001; outs: 0000
+  0000: move-object v0, v2
+  0001: const/4 v1, #null // #0
+  0002: move-object v0, v1
+  0003: return-void

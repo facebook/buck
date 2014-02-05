@@ -1,0 +1,24 @@
+  -keep public class * extends android.app.Instrumentation {
+    <init>();
+  }
+  -keep public class * extends android.app.Application {
+    <init>();
+  }
+  -keep public class * extends android.app.Activity {
+    <init>();
+  }
+  -keep public class * extends android.app.Service {
+    <init>();
+  }
+  -keep public class * extends android.content.ContentProvider {
+   <init>();
+  }
+  -keep public class * extends android.content.BroadcastReceiver {
+   <init>();
+  }
+  -keep public class * extends android.app.backup.BackupAgent {
+   <init>();
+  }
+  -keep class android.support.multidex.** {
+    *;
+  }

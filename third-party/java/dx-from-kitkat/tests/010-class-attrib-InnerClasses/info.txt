@@ -1,0 +1,7 @@
+This is a dump of a simple class which is valid in structure but is overall
+invalid. That being said, the system should still have no trouble parsing and
+dumping it.
+
+The salient bit of parsing tested here is that the class has a single
+class-level InnerClasses attribute, which is syntactically valid and contains
+one entry for each of the possible combinations of null-vs-valid cpe.

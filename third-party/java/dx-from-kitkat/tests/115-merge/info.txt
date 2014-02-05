@@ -1,0 +1,6 @@
+Merges two dex files into one and then loads the result.
+
+Because it loads the merged dex files, this JUnit test only works on a dalvikvm.
+The run script requires vogar, so you must have vogar on your $PATH to run this
+test. You'll also need a device or host VM for vogar to attach to.
+

@@ -1,0 +1,85 @@
+reading Blort.class...
+method scalalocals ()V
+first 0025
+block 0000
+  pred 001a
+  live in:{}
+  blort.j:@0000: Rop{invoke-static . <- . call throws <any>}(blort.returnint:()
+  I catch) . <- .
+  next 0021
+  live out:{}
+block 0003
+  pred 0021
+  live in:{}
+  blort.j:@0003: Rop{invoke-static . <- . call throws <any>}(blort.returnint:()
+  I catch) . <- .
+  next 0022
+  live out:{}
+block 0006
+  pred 0022
+  live in:{}
+  blort.j:@0006: Rop{invoke-static . <- . call throws <any>}(blort.returnint:()
+  I catch) . <- .
+  next 0023
+  live out:{}
+block 0009
+  pred 0023
+  live in:{}
+  blort.j:@0009: Rop{invoke-static . <- . call throws <any>}(blort.returnint:()
+  I catch) . <- .
+  next 0024
+  live out:{}
+block 000c
+  pred 0024
+  live in:{14}
+  @????: mark-local-int . <- v14:"x"I
+  blort.j:@001b: goto . <- .
+  next 001b
+  live out:{}
+block 001a
+  pred 0025
+  live in:{}
+  blort.j:@0000: goto . <- .
+  next 0000
+  live out:{}
+block 001b
+  pred 000c
+  live in:{}
+  blort.j:@001b: return-void . <- .
+  next 0026
+  live out:{}
+block 0021
+  pred 0000
+  live in:{}
+  blort.j:@0000: goto . <- .
+  next 0003
+  live out:{}
+block 0022
+  pred 0003
+  live in:{}
+  blort.j:@0003: goto . <- .
+  next 0006
+  live out:{}
+block 0023
+  pred 0006
+  live in:{}
+  blort.j:@0006: goto . <- .
+  next 0009
+  live out:{}
+block 0024
+  pred 0009
+  live in:{}
+  blort.j:@0009: Rop{move-result I <- . flows} v14:I <- .
+  blort.j:@0009: goto . <- .
+  next 000c
+  live out:{14}
+block 0025
+  live in:{}
+  @????: goto . <- .
+  next 001a
+  live out:{}
+block 0026
+  pred 001b
+  live in:{}
+  returns
+  live out:{}

@@ -1,0 +1,9 @@
+TEST 1
+local variable type mismatch: attempt to set or access a value of type int using a local variable of type java.lang.Object. This is symptomatic of .class transformation tools that ignore local variable information.
+TEST 2
+local variable type mismatch: attempt to set or access a value of type java.lang.Object using a local variable of type int. This is symptomatic of .class transformation tools that ignore local variable information.
+TEST 3
+local variable type mismatch: attempt to set or access a value of type int using a local variable of type byte[]. This is symptomatic of .class transformation tools that ignore local variable information.
+TEST 4
+local variable type mismatch: attempt to set or access a value of type java.lang.String using a local variable of type java.lang.Object[]. This is symptomatic of .class transformation tools that ignore local variable information.
+DONE

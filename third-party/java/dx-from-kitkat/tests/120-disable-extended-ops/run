@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# Copyright (C) 2011 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This test checks to see that without --target-api=11, the result of
+# dx contains at least one "iget/jumbo" opcode (one example of an
+# extended opcode); and that with that option no such opcode is
+# produced.
+
+$JAVAC -d . *.java
+
+count=`dx --debug --dex --no-optimize --positions=none --no-locals \
+    --dump-method=Blort.test Blort.class | grep "iget/jumbo" | wc -l`
+if [ "$count" = "0" ]; then
+    echo "No iget/jumbo emitted without --target-api"
+fi
+
+count=`dx --debug --dex --no-optimize --positions=none --no-locals \
+    --target-api=11 \
+    --dump-method=Blort.test Blort.class | grep "iget/jumbo" | wc -l`
+if [ "$count" != "0" ]; then
+    echo "Found $count iget/jumbo emitted with --target-api=11"
+fi
+
+echo "Done"

@@ -1,0 +1,3 @@
+Generated: ./blort.class
+  blort.j:@0000: const-int(99) v1:I=99 <- .
+  blort.j:@0002: move-int v0:I=99 <- v1:I=99

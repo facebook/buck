@@ -1,0 +1,146 @@
+Blort.testInstance1:()V:
+regs: 0003; ins: 0001; outs: 0000
+  0000: move-object v0, v2
+  0001: move-object v1, v2
+  0002: monitor-enter v1
+  0003: monitor-exit v1
+  0004: return-void
+Blort.testInstance2:(Ljava/lang/Object;)V:
+regs: 0006; ins: 0002; outs: 0001
+  0000: move-object v0, v4
+  0001: move-object v1, v5
+  0002: move-object v3, v4
+  0003: monitor-enter v3
+  0004: move-object v2, v1
+  0005: invoke-virtual {v2}, java.lang.Object.hashCode:()I
+  0008: move-result v2
+  0009: monitor-exit v3
+  000a: return-void
+  000b: move-exception v0
+  000c: monitor-exit v3
+  000d: throw v0
+  catches
+    tries:
+      try 0005..0008
+      catch <any> -> 000b
+Blort.testInstance3:(III)I:
+regs: 000b; ins: 0004; outs: 0000
+  0000: move-object v0, v7
+  0001: move v1, v8
+  0002: move v2, v9
+  0003: move v3, v10
+  0004: move-object v6, v7
+  0005: monitor-enter v6
+  0006: move v4, v1
+  0007: const/4 v5, #int 1 // #1
+  0008: if-ne v4, v5, 000e // +0006
+  000a: const/4 v4, #int 1 // #1
+  000b: move v0, v4
+  000c: monitor-exit v6
+  000d: return v0
+  000e: const/4 v4, #int 2 // #2
+  000f: move v0, v4
+  0010: goto 000c // -0004
+Blort.testInstance4:(J)J:
+regs: 000b; ins: 0003; outs: 0000
+  0000: move-object v0, v8
+  0001: move-wide v1, v9
+  0002: move-object v7, v8
+  0003: monitor-enter v7
+  0004: move-wide v3, v1
+  0005: const-wide/16 v5, #long 1 // #0001
+  0007: cmp-long v3, v3, v5
+  0009: if-nez v3, 0010 // +0007
+  000b: const-wide/16 v3, #long 1 // #0001
+  000d: move-wide v0, v3
+  000e: monitor-exit v7
+  000f: return-wide v0
+  0010: const-wide/16 v3, #long 2 // #0002
+  0012: move-wide v0, v3
+  0013: goto 000e // -0005
+Blort.testInstance5:()V:
+regs: 0004; ins: 0001; outs: 0001
+  0000: move-object v0, v3
+  0001: move-object v2, v3
+  0002: monitor-enter v2
+  0003: move-object v1, v0
+  0004: invoke-virtual {v1}, Blort.testInstance5:()V
+  0007: monitor-exit v2
+  0008: return-void
+  0009: move-exception v0
+  000a: monitor-exit v2
+  000b: throw v0
+  catches
+    tries:
+      try 0004..0007
+      catch <any> -> 0009
+Blort.testStatic1:()V:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const-class v1, Blort
+  0002: monitor-enter v1
+  0003: monitor-exit v1
+  0004: return-void
+Blort.testStatic2:(Ljava/lang/Object;)V:
+regs: 0004; ins: 0001; outs: 0001
+  0000: move-object v0, v3
+  0001: const-class v2, Blort
+  0003: monitor-enter v2
+  0004: move-object v1, v0
+  0005: invoke-virtual {v1}, java.lang.Object.hashCode:()I
+  0008: move-result v1
+  0009: monitor-exit v2
+  000a: return-void
+  000b: move-exception v0
+  000c: monitor-exit v2
+  000d: throw v0
+  catches
+    tries:
+      try 0005..0008
+      catch <any> -> 000b
+Blort.testStatic3:(III)I:
+regs: 0009; ins: 0003; outs: 0000
+  0000: move v0, v6
+  0001: move v1, v7
+  0002: move v2, v8
+  0003: const-class v5, Blort
+  0005: monitor-enter v5
+  0006: move v3, v0
+  0007: const/4 v4, #int 1 // #1
+  0008: if-ne v3, v4, 000e // +0006
+  000a: const/4 v3, #int 1 // #1
+  000b: move v0, v3
+  000c: monitor-exit v5
+  000d: return v0
+  000e: const/4 v3, #int 2 // #2
+  000f: move v0, v3
+  0010: goto 000c // -0004
+Blort.testStatic4:(J)J:
+regs: 0009; ins: 0002; outs: 0000
+  0000: move-wide v0, v7
+  0001: const-class v6, Blort
+  0003: monitor-enter v6
+  0004: move-wide v2, v0
+  0005: const-wide/16 v4, #long 1 // #0001
+  0007: cmp-long v2, v2, v4
+  0009: if-nez v2, 0010 // +0007
+  000b: const-wide/16 v2, #long 1 // #0001
+  000d: move-wide v0, v2
+  000e: monitor-exit v6
+  000f: return-wide v0
+  0010: const-wide/16 v2, #long 2 // #0002
+  0012: move-wide v0, v2
+  0013: goto 000e // -0005
+Blort.testStatic5:()V:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const-class v1, Blort
+  0002: monitor-enter v1
+  0003: invoke-static {}, Blort.testStatic5:()V
+  0006: monitor-exit v1
+  0007: return-void
+  0008: move-exception v0
+  0009: monitor-exit v1
+  000a: throw v0
+  catches
+    tries:
+      try 0003..0006
+      catch <any> -> 0008

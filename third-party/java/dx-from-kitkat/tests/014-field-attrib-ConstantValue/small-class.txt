@@ -1,0 +1,140 @@
+#
+# sample small-but-valid classfile
+#
+
+cafe babe  # magic
+0000       # minor_version
+002e       # major_version
+001f       # constant_pool_count
+
+#
+# constant_pool
+#
+01 0005 "Small"              # 0001: utf8["Small"]
+01 0010 "java/lang/Object"   # 0002: utf8["java/lang/Object"]
+07 0001                      # 0003: class[Small]
+07 0002                      # 0004: class[java/lang/Object]
+01 000d "ConstantValue"      # 0005: utf8["ConstantValue"]
+01 0001 "a"                  # 0006: utf8["a"]
+01 0001 "b"                  # 0007: utf8["b"]
+01 0001 "c"                  # 0008: utf8["c"]
+01 0001 "d"                  # 0009: utf8["d"]
+01 0001 "e"                  # 000a: utf8["e"]
+01 0001 "f"                  # 000b: utf8["f"]
+01 0001 "g"                  # 000c: utf8["g"]
+01 0001 "h"                  # 000d: utf8["h"]
+01 0001 "i"                  # 000e: utf8["i"]
+08 0001                      # 000f: string["Small"]
+03 8191a1b1                  # 0010: integer[0x8191a1b1]
+04 bffeb852                  # 0011: float[-1.99]
+05 80818283 f0f1f2f3         # 0012: long[0x80818283f0f1f2f3]
+06 bfffd70a 3d70a3d7         # 0014: double[-1.99]
+01 0001 "B"                  # 0016: utf8["B"]
+01 0001 "C"                  # 0017: utf8["C"]
+01 0001 "D"                  # 0018: utf8["D"]
+01 0001 "F"                  # 0019: utf8["F"]
+01 0001 "I"                  # 001a: utf8["I"]
+01 0001 "J"                  # 001b: utf8["J"]
+01 0001 "S"                  # 001c: utf8["S"]
+01 0001 "Z"                  # 001d: utf8["Z"]
+01 0012 "Ljava/lang/String;" # 001e: utf8["Ljava/lang/String;"]
+
+0021  # access_flags
+0003  # this_class
+0004  # super_class
+0000  # interfaces_count
+
+0009  # fields_count
+
+# fields[0]
+0001  # access_flags
+0006  # "a"
+0016  # "B"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0010      # value
+
+# fields[1]
+0002  # access_flags
+0007  # "b"
+0017  # "C"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0010      # value
+
+# fields[2]
+0004  # access_flags
+0008  # "c"
+0018  # "D"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0014      # value
+
+# fields[3]
+0008  # access_flags
+0009  # "d"
+0019  # "F"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0011      # value
+
+# fields[4]
+0010  # access_flags
+000a  # "e"
+001a  # "I"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0010      # value
+
+# fields[5]
+0040  # access_flags
+000b  # "f"
+001b  # "J"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0012      # value
+
+# fields[6]
+0080  # access_flags
+000c  # "g"
+001c  # "Z"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0010      # value
+
+# fields[7]
+0019  # access_flags
+000d  # "h"
+001d  # "S"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+0010      # value
+
+# fields[8]
+0019  # access_flags
+000e  # "i"
+001e  # "Ljava/lang/String;"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000002  # length
+000f      # value
+
+0000  # methods_count
+0000  # attributes_count
