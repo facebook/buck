@@ -1,0 +1,21 @@
+android_library(
+  name = 'lib',
+  srcs = glob(['*.java']),
+  deps = [
+    '//res/com/sample/top:top',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+android_library(
+  name = 'lib_using_transitive_empty_res',
+  srcs = glob(['*.java']),
+  deps = [
+    '//res/com/sample/empty_res:empty_res',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -1,0 +1,10 @@
+android_resource(
+  name = 'empty_res',
+  visibility = [
+    'PUBLIC',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//res/com/sample/top:top',
+  ],
+)

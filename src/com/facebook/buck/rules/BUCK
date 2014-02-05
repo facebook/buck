@@ -69,6 +69,7 @@ java_library(
     'JavaPackageFinder.java',
     'OnDiskBuildInfo.java',
     'ParamInfo.java',
+    'RecordFileSha1Step.java',
     'RuleKey.java',
     'RuleKeyBuilderFactory.java',
     'Sha1HashCode.java',

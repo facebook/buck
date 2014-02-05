@@ -17,6 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Sha1HashCode;
+import com.google.common.base.Function;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
 
@@ -24,6 +28,22 @@ import java.nio.file.Path;
  * Indicates that this class may have android resources that should be packaged into an APK.
  */
 public interface HasAndroidResourceDeps {
+
+  public static final Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode> HASHER =
+      new Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode>() {
+        @Override
+        public Sha1HashCode apply(Iterable<HasAndroidResourceDeps> deps) {
+          Hasher hasher = Hashing.sha1().newHasher();
+          for (HasAndroidResourceDeps dep : deps) {
+            hasher.putUnencodedChars(dep.getPathToTextSymbolsFile().toString());
+            // Avoid collisions by marking end of path explicitly.
+            hasher.putChar('\0');
+            hasher.putUnencodedChars(dep.getTextSymbolsAbiKey().getHash());
+          }
+          return new Sha1HashCode(hasher.hash().toString());
+        }
+      };
+
   /**
    * @return the package name in which to generate the R.java representing these resources.
    */
@@ -33,6 +53,13 @@ public interface HasAndroidResourceDeps {
    * @return path to a temporary directory for storing text symbols.
    */
   Path getPathToTextSymbolsFile();
+
+  /**
+   * @return an ABI for the file pointed by {@link #getPathToTextSymbolsFile()}. Since the symbols
+   *     text file is essentially a list of resource id, name and type, this is simply a sha1 of
+   *     that file.
+   */
+  Sha1HashCode getTextSymbolsAbiKey();
 
   /**
    * @return path to a directory containing Android resources.

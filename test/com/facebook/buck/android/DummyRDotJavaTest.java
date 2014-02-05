@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.AbiRule.ABI_KEY_ON_DISK_METADATA;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
@@ -25,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -49,6 +49,9 @@ import java.util.Set;
 
 public class DummyRDotJavaTest {
 
+  private static final String RESOURCE_RULE1_KEY = Strings.repeat("a", 40);
+  private static final String RESOURCE_RULE2_KEY = Strings.repeat("b", 40);
+
   @Test
   public void testBuildSteps() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
@@ -57,11 +60,15 @@ public class DummyRDotJavaTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res1")));
+    resourceRule1.setBuildOutput(
+        new AndroidResourceRule.BuildOutput(new Sha1HashCode(RESOURCE_RULE1_KEY)));
     AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res2")));
+    resourceRule2.setBuildOutput(
+        new AndroidResourceRule.BuildOutput(new Sha1HashCode(RESOURCE_RULE2_KEY)));
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         ImmutableList.<HasAndroidResourceDeps>of(resourceRule1, resourceRule2),
@@ -91,8 +98,12 @@ public class DummyRDotJavaTest {
         steps,
         TestExecutionContext.newInstance());
 
-    assertEquals(ImmutableSet.<Path>of(Paths.get(rDotJavaBinFolder)),
+    assertEquals(ImmutableSet.of(Paths.get(rDotJavaBinFolder)),
         buildableContext.getRecordedArtifactDirectories());
+
+    Sha1HashCode expectedSha1 = AndroidResourceRule.HASHER.apply(
+        ImmutableList.<HasAndroidResourceDeps>of(resourceRule1, resourceRule2));
+    assertEquals(expectedSha1, dummyRDotJava.getAbiKeyForDeps());
   }
 
   @Test
@@ -111,9 +122,11 @@ public class DummyRDotJavaTest {
 
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     String keyHash = Strings.repeat("a", 40);
-    onDiskBuildInfo.putMetadata(ABI_KEY_ON_DISK_METADATA, keyHash);
+    onDiskBuildInfo.putMetadata(DummyRDotJava.METADATA_KEY_FOR_ABI_KEY, keyHash);
 
-    assertEquals(keyHash, dummyRDotJava.initializeFromDisk(onDiskBuildInfo).getHash());
+    assertEquals(
+        keyHash,
+        dummyRDotJava.initializeFromDisk(onDiskBuildInfo).rDotTxtSha1.getHash());
   }
 
   private static String makeCleanDirDescription(String dirname) {

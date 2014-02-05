@@ -23,13 +23,16 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Strings;
@@ -37,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -216,5 +220,40 @@ public class AndroidResourceRuleTest {
         String.format(
             "Topological sort %s should be either %s or %s", deps, validResult1, validResult2),
             deps2.equals(validResult1) || deps2.equals(validResult2));
+  }
+
+  @Test
+  public void testAbiKeyIsAbiKeyForDepsWhenResourcesAreAbsent() throws IOException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    AndroidResourceRule resourceRule1 = ruleResolver.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
+            .setRDotJavaPackage("com.facebook")
+            .setRes(Paths.get("android_res/com/example/res1")));
+    resourceRule1.setBuildOutput(
+        new AndroidResourceRule.BuildOutput(new Sha1HashCode(Strings.repeat("a", 40))));
+    AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
+            .setRDotJavaPackage("com.facebook")
+            .setRes(Paths.get("android_res/com/example/res2")));
+    resourceRule2.setBuildOutput(
+        new AndroidResourceRule.BuildOutput(new Sha1HashCode(Strings.repeat("b", 40))));
+    AndroidResourceRule resourceRule3 = ruleResolver.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res3"))
+            .addDep(resourceRule1.getBuildTarget())
+            .addDep(resourceRule2.getBuildTarget()));
+
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    assertTrue(
+        resourceRule3.getBuildSteps(EasyMock.createMock(BuildContext.class), buildableContext)
+            .isEmpty());
+
+    Sha1HashCode expectedSha1 = HasAndroidResourceDeps.HASHER.apply(
+        ImmutableList.<HasAndroidResourceDeps>of(resourceRule1, resourceRule2));
+    buildableContext.assertContainsMetadataMapping(
+        AndroidResourceRule.METADATA_KEY_FOR_ABI,
+        expectedSha1.getHash());
   }
 }

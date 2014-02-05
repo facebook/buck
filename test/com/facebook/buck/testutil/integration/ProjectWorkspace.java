@@ -79,6 +79,8 @@ public class ProjectWorkspace {
       Pattern.compile(".*BuildRuleFinished\\((?<RuleName>[^\\)]+)\\): (?<Status>\\S+) " +
               "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)");
 
+  private static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
+
   private static final Function<Path, Path> BUILD_FILE_RENAME = new Function<Path, Path>() {
     @Override
     @Nullable
@@ -206,6 +208,10 @@ public class ProjectWorkspace {
    */
   public Path resolve(Path pathRelativeToWorkspaceRoot) {
     return destPath.resolve(pathRelativeToWorkspaceRoot);
+  }
+
+  public void resetBuildLogFile() throws IOException {
+    writeContentsToPath("", PATH_TO_BUILD_LOG);
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
