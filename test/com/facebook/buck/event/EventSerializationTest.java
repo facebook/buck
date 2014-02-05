@@ -196,13 +196,12 @@ public class EventSerializationTest {
   }
 
   private TestResults generateFakeTestResults() {
-    ImmutableList<TestResultSummary> testResults = ImmutableList.<TestResultSummary>builder()
-        .add(new TestResultSummary())
-        .build();
-    TestCaseSummary testCase = new TestCaseSummary("Test1", testResults);
-    ImmutableList<TestCaseSummary> testCases = ImmutableList.<TestCaseSummary>builder()
-        .add(testCase)
-        .build();
+    String testCaseName = "Test1";
+    TestResultSummary testResultSummary = new TestResultSummary(
+        testCaseName, null, false, 0, null, null, null, null);
+    TestCaseSummary testCase = new TestCaseSummary(testCaseName,
+        ImmutableList.of(testResultSummary));
+    ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);
     return new TestResults(testCases);
   }
 
