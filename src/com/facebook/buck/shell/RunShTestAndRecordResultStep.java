@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.resulttype.ResultType;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,7 +61,7 @@ public class RunShTestAndRecordResultStep implements Step {
       summary = new TestResultSummary(
           getShortName(),
           "sh_test",
-          /* isSuccess */ true,
+          /* type */ ResultType.SUCCESS,
           /* duration*/ 0,
           /* message */ "sh_test ignored on Windows",
           /* stacktrace */ null,
@@ -94,10 +95,11 @@ public class RunShTestAndRecordResultStep implements Step {
       int exitCode = test.execute(context);
 
       // Write test result.
+      boolean isSuccess = exitCode == 0;
       summary = new TestResultSummary(
           getShortName(),
           "sh_test",
-          /* isSuccess */ exitCode == 0,
+          /* type */ isSuccess ? ResultType.SUCCESS : ResultType.FAILURE,
           test.getDuration(),
           /* message */ null,
           /* stacktrace */ null,

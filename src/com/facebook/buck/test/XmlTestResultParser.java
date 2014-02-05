@@ -16,6 +16,7 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.test.resulttype.ResultType;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -58,12 +59,13 @@ public class XmlTestResultParser {
     for (int i = 0; i < testElements.getLength(); i++) {
       Element node = (Element)testElements.item(i);
       String testName = node.getAttribute("name");
-      boolean isSuccess = Boolean.valueOf(node.getAttribute("success"));
       long time = Long.valueOf(node.getAttribute("time"));
+      String typeString = node.getAttribute("type");
+      ResultType type = ResultType.valueOf(typeString);
 
       String message;
       String stacktrace;
-      if (isSuccess) {
+      if (type == ResultType.SUCCESS) {
         message = null;
         stacktrace = null;
       } else {
@@ -90,7 +92,7 @@ public class XmlTestResultParser {
       TestResultSummary testResult = new TestResultSummary(
           testCaseName,
           testName,
-          isSuccess,
+          type,
           time,
           message,
           stacktrace,

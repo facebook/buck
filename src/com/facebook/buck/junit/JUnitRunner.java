@@ -271,13 +271,16 @@ public final class JUnitRunner {
       boolean isSuccess = result.isSuccess();
       test.setAttribute("success", Boolean.toString(isSuccess));
 
+      // type attribute
+      test.setAttribute("type", result.type.toString());
+
       // time attribute
       long runTime = result.runTime;
       test.setAttribute("time", String.valueOf(runTime));
 
       // Include failure details, if appropriate.
-      if (!isSuccess) {
-        Failure failure = result.failure;
+      Failure failure = result.failure;
+      if (failure != null) {
         String message = failure.getMessage();
         test.setAttribute("message", message);
 

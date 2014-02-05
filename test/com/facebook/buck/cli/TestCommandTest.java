@@ -47,6 +47,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.resulttype.ResultType;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -281,7 +282,7 @@ public class TestCommandTest {
     TestResultSummary result1 = new TestResultSummary(
         /* testCaseName */ "TestCase",
         /* testName */ "passTest",
-        /* isSuccess */ true,
+        /* type */ ResultType.SUCCESS,
         /* time */ 5000,
         /* message */ null,
         /* stacktrace */ null,
@@ -290,7 +291,7 @@ public class TestCommandTest {
     TestResultSummary result2 = new TestResultSummary(
         /* testCaseName */ "TestCase",
         /* testName */ "failWithMsg",
-        /* isSuccess */ false,
+        /* type */ ResultType.FAILURE,
         /* time */ 7000,
         /* message */ "Index out of bounds!",
         /* stacktrace */ "Stacktrace",
@@ -299,7 +300,8 @@ public class TestCommandTest {
     TestResultSummary result3 = new TestResultSummary(
         /* testCaseName */ "TestCase",
         /* testName */ "failNoMsg",
-        /* isSuccess */ false,
+        /* isSuccess */
+        /* type */ ResultType.SUCCESS,
         /* time */ 4000,
         /* message */ null,
         /* stacktrace */ null,
