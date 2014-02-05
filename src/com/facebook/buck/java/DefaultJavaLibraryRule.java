@@ -140,6 +140,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   private final Optional<Path> javac;
 
+  private final Optional<String> javacVersion;
+
   @Nullable
   private JavaLibraryRule.Data buildOutput;
 
@@ -193,7 +195,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         proguardConfig,
         exportedDeps,
         javacOptions,
-        Optional.<Path>absent());
+        Optional.<Path>absent(),
+        Optional.<String>absent());
   }
 
   protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
@@ -203,7 +206,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
                                    Optional<Path> proguardConfig,
                                    Set<BuildRule> exportedDeps,
                                    JavacOptions javacOptions,
-                                   Optional<Path> javac) {
+                                   Optional<Path> javac,
+                                   Optional<String> javacVersion) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
@@ -212,6 +216,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.javac = Preconditions.checkNotNull(javac);
+    this.javacVersion = Preconditions.checkNotNull(javacVersion);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -403,10 +408,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   private static Path getOutputJarPath(BuildTarget target) {
-    return Paths.get(String.format(
-        "%s/%s.jar",
-        getOutputJarDirPath(target),
-        target.getShortName()));
+    return Paths.get(
+        String.format(
+            "%s/%s.jar",
+            getOutputJarDirPath(target),
+            target.getShortName()));
   }
 
   /**
@@ -468,6 +474,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder);
     javacOptions.appendToRuleKey(builder);
+    if (javac.isPresent() && javacVersion.isPresent()) {
+      builder.set("javacVersion", javacVersion.get());
+    }
     return builder;
   }
 
@@ -851,11 +860,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   public static Builder newJavaLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return newJavaLibraryRuleBuilder(Optional.<Path>absent(), params);
+    return newJavaLibraryRuleBuilder(Optional.<Path>absent(), Optional.<String>absent(), params);
   }
 
-  public static Builder newJavaLibraryRuleBuilder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
-    return new Builder(javac, params);
+  public static Builder newJavaLibraryRuleBuilder(Optional<Path> javac,
+      Optional<String> javacVersion,
+      AbstractBuildRuleBuilderParams params) {
+    return new Builder(javac, javacVersion, params);
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<DefaultJavaLibraryRule> implements
@@ -871,14 +882,18 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
     protected Optional<Path> proguardConfig = Optional.absent();
     protected final Optional<Path> javac;
+    protected final Optional<String> javacVersion;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
-      this(Optional.<Path>absent(), params);
+      this(Optional.<Path>absent(), Optional.<String>absent(), params);
     }
 
-    protected Builder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
+    protected Builder(Optional<Path> javac,
+        Optional<String> javacVersion,
+        AbstractBuildRuleBuilderParams params) {
       super(params);
       this.javac = javac;
+      this.javacVersion = javacVersion;
       this.params = params;
     }
 
@@ -903,7 +918,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           javacOptions.build(),
-          javac);
+          javac,
+          javacVersion);
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingBuilder() {

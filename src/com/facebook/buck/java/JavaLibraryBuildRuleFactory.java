@@ -32,13 +32,15 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 
   private final Optional<Path> javac;
+  private final Optional<String> javacVersion;
 
   public JavaLibraryBuildRuleFactory() {
-    this(Optional.<Path>absent());
+    this(Optional.<Path>absent(), Optional.<String>absent());
   }
 
-  public JavaLibraryBuildRuleFactory(Optional<Path> javac) {
+  public JavaLibraryBuildRuleFactory(Optional<Path> javac, Optional<String> javacVersion) {
     this.javac = javac;
+    this.javacVersion = javacVersion;
   }
 
   @VisibleForTesting
@@ -46,9 +48,14 @@ public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<Defaul
     return javac;
   }
 
+  @VisibleForTesting
+  public Optional<String> getJavacVersion() {
+    return javacVersion;
+  }
+
   @Override
   public DefaultJavaLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(javac, params);
+    return DefaultJavaLibraryRule.newJavaLibraryRuleBuilder(javac, javacVersion, params);
   }
 
   @Override

@@ -45,6 +45,7 @@ import com.facebook.buck.shell.GenruleBuildRuleFactory;
 import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +53,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -125,7 +127,7 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory());
     builder.register(BuildRuleType.GENRULE, new GenruleBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(Optional.<Path>absent()));
+        new JavaLibraryBuildRuleFactory(Optional.<Path>absent(), Optional.<String>absent()));
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
     builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
@@ -143,18 +145,33 @@ public class KnownBuildRuleTypes {
     return builder;
   }
 
-  public static KnownBuildRuleTypes getConfigured(BuckConfig buckConfig) {
-    return createConfiguredBuilder(buckConfig).build();
+  public static KnownBuildRuleTypes getConfigured(BuckConfig buckConfig, ProcessExecutor executor) {
+    return createConfiguredBuilder(buckConfig, executor).build();
   }
 
-  public static Builder createConfiguredBuilder(BuckConfig buckConfig) {
+  public static Builder createConfiguredBuilder(BuckConfig buckConfig, ProcessExecutor executor) {
     Optional<Path> javac = buckConfig.getJavac();
+
+    Optional<String> javacVersion = Optional.<String>absent();
+    if (javac.isPresent()) {
+      try {
+        ProcessExecutor.Result versionResult = executor.execute(
+            Runtime.getRuntime().exec(javac.get() + " -version"));
+        if (versionResult.getExitCode() == 0) {
+          javacVersion = Optional.of(versionResult.getStdout());
+        } else {
+          throw new HumanReadableException(versionResult.getStderr());
+        }
+      } catch (IOException e) {
+        throw new HumanReadableException("Could not run " + javac.get() + " -version");
+      }
+    }
 
     Builder builder = createDefaultBuilder();
     builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(javac));
+        new JavaLibraryBuildRuleFactory(javac, javacVersion));
     builder.register(BuildRuleType.ANDROID_LIBRARY,
-        new AndroidLibraryBuildRuleFactory(javac));
+        new AndroidLibraryBuildRuleFactory(javac, javacVersion));
     return builder;
   }
 

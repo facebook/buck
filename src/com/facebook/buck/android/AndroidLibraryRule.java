@@ -67,6 +67,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
         exportedDeps,
         javacOptions,
         Optional.<Path>absent(),
+        Optional.<String>absent(),
         manifestFile);
   }
 
@@ -79,6 +80,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       Set<BuildRule> exportedDeps,
       JavacOptions javacOptions,
       Optional<Path> javac,
+      Optional<String> javacVersion,
       Optional<Path> manifestFile) {
     super(buildRuleParams,
         srcs,
@@ -87,7 +89,8 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
         proguardConfig,
         exportedDeps,
         javacOptions,
-        javac);
+        javac,
+        javacVersion);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }
 
@@ -118,18 +121,18 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   }
 
   public static Builder newAndroidLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return newAndroidLibraryRuleBuilder(Optional.<Path>absent(), params);
+    return newAndroidLibraryRuleBuilder(Optional.<Path>absent(), Optional.<String>absent(), params);
   }
 
-  public static Builder newAndroidLibraryRuleBuilder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
-    return new Builder(javac, params);
+  public static Builder newAndroidLibraryRuleBuilder(Optional<Path> javac, Optional<String> javacVersion, AbstractBuildRuleBuilderParams params) {
+    return new Builder(javac, javacVersion, params);
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
     private Optional<Path> manifestFile = Optional.absent();
 
-    private Builder(Optional<Path> javac, AbstractBuildRuleBuilderParams params) {
-      super(javac, params);
+    private Builder(Optional<Path> javac, Optional<String> javacVersion, AbstractBuildRuleBuilderParams params) {
+      super(javac, javacVersion, params);
     }
 
     @Override
@@ -155,6 +158,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           javacOptions.build(),
           javac,
+          javacVersion,
           manifestFile);
     }
 

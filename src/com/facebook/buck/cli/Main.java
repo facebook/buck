@@ -39,6 +39,7 @@ import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.ShutdownException;
@@ -436,7 +437,7 @@ public final class Main {
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
-      KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getConfigured(config);
+      KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getConfigured(config, new ProcessExecutor(console));
       if (isDaemon) {
         parser = getParserFromDaemon(context, projectFilesystem, config, console, commandEvent);
 

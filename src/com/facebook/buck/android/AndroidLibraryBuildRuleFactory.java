@@ -31,13 +31,13 @@ public class AndroidLibraryBuildRuleFactory extends JavaLibraryBuildRuleFactory 
     super();
   }
 
-  public AndroidLibraryBuildRuleFactory(Optional<Path> javac) {
-    super(javac);
+  public AndroidLibraryBuildRuleFactory(Optional<Path> javac, Optional<String> javacVersion) {
+    super(javac, javacVersion);
   }
 
   @Override
   public AndroidLibraryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return AndroidLibraryRule.newAndroidLibraryRuleBuilder(getJavac(), params);
+    return AndroidLibraryRule.newAndroidLibraryRuleBuilder(getJavac(), getJavacVersion(), params);
   }
 
   @Override
