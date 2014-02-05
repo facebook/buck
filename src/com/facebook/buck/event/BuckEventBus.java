@@ -16,6 +16,7 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -115,7 +116,7 @@ public class BuckEventBus implements Closeable {
     executorService.shutdown();
     try {
       if (!executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
-        throw new IOException(
+        throw new ShutdownException(
             Joiner.on(System.lineSeparator()).join(
                 "The BuckEventBus failed to shut down within the standard timeout.",
                 "Your build might have succeeded, but some messages were probably lost.",

@@ -51,7 +51,7 @@ public class BlockingHttpEndpointTest {
     endpoint.send(new TestHttpURLConnection(0), "Foo");
     try {
       endpoint.close();
-    } catch (IOException e) {
+    } catch (ShutdownException e) {
       fail("Endpoint should shut down successfully.");
     }
     long durationNanos = System.nanoTime() - start;
@@ -69,7 +69,7 @@ public class BlockingHttpEndpointTest {
     try {
       endpoint.close();
       fail("Endpoint should not shut down successfully.");
-    } catch (IOException e) {
+    } catch (ShutdownException e) {
       assertThat("Exception should be due to shutdown.",
           e.getMessage(),
           Matchers.containsString("failed to shut down"));

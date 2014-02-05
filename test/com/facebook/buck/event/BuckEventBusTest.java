@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
@@ -28,7 +29,6 @@ import com.google.common.eventbus.Subscribe;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class BuckEventBusTest {
@@ -47,7 +47,7 @@ public class BuckEventBusTest {
     long start = System.nanoTime();
     try {
       eb.close();
-    } catch (IOException e) {
+    } catch (ShutdownException e) {
       fail("Bus should shut down successfully.");
     }
     long durationNanos = System.nanoTime() - start;
@@ -69,7 +69,7 @@ public class BuckEventBusTest {
     try {
       eb.close();
       fail("Bus should not shut down successfully.");
-    } catch (IOException e) {
+    } catch (ShutdownException e) {
       assertThat("Exception should be due to shutdown.",
           e.getMessage(),
           Matchers.containsString("failed to shut down"));

@@ -115,11 +115,11 @@ public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
    * possible. This aids debugging when close is called during exception processing.
    */
   @Override
-  public void close() throws IOException {
+  public void close() {
     requestService.shutdown();
     try {
       if (!requestService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
-        throw new IOException(Joiner.on(System.lineSeparator()).join(
+        throw new ShutdownException(Joiner.on(System.lineSeparator()).join(
             "A BlockingHttpEndpoint failed to shut down within the standard timeout.",
             "Your build might have succeeded, but some requests made to ",
             this.url + " were probably lost.",

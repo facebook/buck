@@ -41,6 +41,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
+import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchServiceWatcher;
 import com.facebook.buck.util.WatchmanWatcher;
@@ -658,6 +659,10 @@ public final class Main {
           new Ansi(platform));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return FAIL_EXIT_CODE;
+    } catch (ShutdownException e) {
+      stdErr.println(e);
+      e.printStackTrace(stdErr);
+      return 0;
     }
   }
 
