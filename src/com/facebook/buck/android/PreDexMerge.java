@@ -260,7 +260,6 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     return null;
   }
 
-  @Nullable
   public ImmutableSet<Path> getSecondaryDexDirectories() {
     return getBuildOutput().secondaryDexDirectories;
   }
