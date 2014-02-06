@@ -29,7 +29,9 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -79,6 +81,7 @@ import javax.annotation.Nullable;
  */
 public class PreDexMerge extends AbstractBuildable implements InitializableFromDisk<BuildOutput> {
 
+  private static final String PRIMARY_DEX_HASH_KEY = "primary_dex_hash";
   private static final String SECONDARY_DEX_DIRECTORIES_KEY = "secondary_dex_directories";
 
   private final BuildTarget buildTarget;
@@ -122,7 +125,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   private void addStepsForSplitDex(
       ImmutableList.Builder<Step> steps,
       BuildContext context,
-      final BuildableContext buildableContext) {
+      BuildableContext buildableContext) {
 
     // Collect all of the DexWithClasses objects to use for merging.
     ImmutableList<DexWithClasses> dexFilesToMerge = FluentIterable.from(preDexDeps)
@@ -182,6 +185,13 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         successDir,
         /* numThreads */ Optional.<Integer>absent(),
         AndroidBinaryRule.DX_MERGE_OPTIONS));
+
+    // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
+    // Single dex apks cannot be exopackages, so they will never need ABI keys.
+    steps.add(new RecordFileSha1Step(
+        primaryDexPath,
+        PRIMARY_DEX_HASH_KEY,
+        buildableContext));
 
     steps.add(new AbstractExecutionStep("write_metadata_txt") {
       @Override
@@ -260,14 +270,22 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     return null;
   }
 
+  public Sha1HashCode getPrimaryDexHash() {
+    Preconditions.checkState(dexSplitMode.isShouldSplitDex());
+    return getBuildOutput().primaryDexHash;
+  }
+
   public ImmutableSet<Path> getSecondaryDexDirectories() {
     return getBuildOutput().secondaryDexDirectories;
   }
 
   static class BuildOutput {
+    /** Null iff this is a single-dex app. */
+    @Nullable private final Sha1HashCode primaryDexHash;
     private final ImmutableSet<Path> secondaryDexDirectories;
 
-    BuildOutput(ImmutableSet<Path> secondaryDexDirectories) {
+    BuildOutput(Sha1HashCode primaryDexHash, ImmutableSet<Path> secondaryDexDirectories) {
+      this.primaryDexHash = primaryDexHash;
       this.secondaryDexDirectories = Preconditions.checkNotNull(secondaryDexDirectories);
     }
   }
@@ -277,7 +295,14 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    Optional<Sha1HashCode> primaryDexHash = onDiskBuildInfo.getHash(PRIMARY_DEX_HASH_KEY);
+    // We only save the hash for split-dex builds.
+    if (dexSplitMode.isShouldSplitDex()) {
+      Preconditions.checkState(primaryDexHash.isPresent());
+    }
+
     return new BuildOutput(
+        primaryDexHash.orNull(),
         FluentIterable.from(onDiskBuildInfo.getValues(SECONDARY_DEX_DIRECTORIES_KEY).get())
             .transform(MorePaths.TO_PATH)
             .toSet());
