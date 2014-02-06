@@ -38,6 +38,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
@@ -322,7 +323,9 @@ public class ProjectFilesystem {
 
   public void writeBytesToPath(byte[] bytes, Path pathRelativeToProjectRoot) throws IOException {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    java.nio.file.Files.newOutputStream(path).write(bytes);
+    try (OutputStream outputStream = java.nio.file.Files.newOutputStream(path)) {
+      outputStream.write(bytes);
+    }
   }
 
   /**
