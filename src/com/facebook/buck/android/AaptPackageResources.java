@@ -110,7 +110,6 @@ public class AaptPackageResources extends AbstractBuildable {
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
     steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
-    buildableContext.recordArtifact(getAndroidManifestXml());
 
     final AndroidTransitiveDependencies transitiveDependencies = uberRDotJava
         .getAndroidTransitiveDependencies();
@@ -203,6 +202,8 @@ public class AaptPackageResources extends AbstractBuildable {
         getResourceApkPath(),
         packageType.isCrunchPngFiles()));
 
+    buildableContext.recordArtifact(getAndroidManifestXml());
+    buildableContext.recordArtifact(getResourceApkPath());
     return steps.build();
   }
 

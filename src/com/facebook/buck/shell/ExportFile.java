@@ -115,6 +115,7 @@ public class ExportFile extends AbstractBuildable {
         .add(new MkdirStep(out.getParent()))
         .add(CopyStep.forFile(src.resolve(context), out));
 
+    buildableContext.recordArtifact(out);
     return builder.build();
   }
 

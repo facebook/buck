@@ -36,6 +36,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -190,17 +191,15 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
         rDotJavaPackage,
         /* isTempRDotJava */ true,
         /* extraLibraryPackages */ ImmutableSet.<String>of());
+
+    buildableContext.recordArtifact(pathToTextSymbolsFile);
     return ImmutableList.of(mkdir, genRDotJava);
   }
 
   @Override
   @Nullable
   public Path getPathToOutputFile() {
-    if (pathToTextSymbolsFile != null) {
-      return pathToTextSymbolsFile;
-    } else {
-      return null;
-    }
+    return Optional.fromNullable(pathToTextSymbolsFile).orNull();
   }
 
   @Override

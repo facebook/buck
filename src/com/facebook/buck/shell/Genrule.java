@@ -300,6 +300,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     // Create a shell command that corresponds to this.cmd.
     commands.add(createGenruleStep());
 
+    buildableContext.recordArtifact(pathToOutFile);
     return commands.build();
   }
 

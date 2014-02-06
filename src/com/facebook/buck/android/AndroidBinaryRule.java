@@ -452,6 +452,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         String.format("built APK for %s at %s", getFullyQualifiedName(), apkPath));
     steps.add(success);
 
+    buildableContext.recordArtifact(getApkPath());
     return steps.build();
   }
 

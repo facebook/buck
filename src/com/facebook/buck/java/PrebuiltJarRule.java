@@ -210,6 +210,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
+    buildableContext.recordArtifact(getBinaryJar());
     return steps.build();
   }
 

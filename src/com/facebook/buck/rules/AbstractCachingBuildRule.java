@@ -418,16 +418,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       return new BuildResult(e);
     }
 
-    // Given that the Buildable has built successfully, record that the output file has been
-    // written, assuming it has one.
-    // TODO(mbolin): Buildable.getSteps() should use BuildableContext such that Buildable is
-    // responsible for invoking recordArtifact() itself. Once that is done, this call to
-    // recordArtifact() should be deleted.
-    Path pathToOutputFile = buildable.getPathToOutputFile();
-    if (pathToOutputFile != null) {
-      buildInfoRecorder.recordArtifact(pathToOutputFile);
-    }
-
     return new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY, cacheResult);
   }
 

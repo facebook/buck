@@ -130,6 +130,7 @@ public class AndroidManifest extends AbstractBuildable {
         manifestFiles,
         getPathToOutputFile()));
 
+    buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();
   }
 

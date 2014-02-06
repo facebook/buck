@@ -117,7 +117,8 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     Path outputDirectory = getOutputDirectory();
@@ -150,6 +151,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
     Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile);
     commands.add(jar);
 
+    buildableContext.recordArtifact(outputFile);
     return commands.build();
   }
 

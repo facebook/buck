@@ -621,6 +621,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           Collections.singleton(outputDirectory),
           /* mainClass */ null,
           /* manifestFile */ null));
+      buildableContext.recordArtifact(outputJar.get());
     }
 
     Preconditions.checkNotNull(abiKeySupplier,
@@ -850,10 +851,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   @Override
   @Nullable
   public Path getPathToOutputFile() {
-    if (outputJar.isPresent()) {
-      return outputJar.get();
-    }
-    return null;
+    return outputJar.orNull();
   }
 
   public static Builder newJavaLibraryRuleBuilder(AbstractBuildRuleBuilderParams params) {

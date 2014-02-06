@@ -608,6 +608,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     @Override
     public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
         throws IOException {
+      buildableContext.recordArtifact(pathToOutputFile);
       return buildSteps;
     }
 

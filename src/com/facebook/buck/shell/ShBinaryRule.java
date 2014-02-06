@@ -96,6 +96,7 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
         SourcePaths.toPaths(resources, context),
         output);
 
+    buildableContext.recordArtifact(output);
     return ImmutableList.of(mkdir, generateShellScript);
   }
 
