@@ -208,11 +208,11 @@ public class AaptPackageResources extends AbstractBuildable {
 
   /**
    * Buck does not require the manifest to be named AndroidManifest.xml, but commands such as aapt
-   * do. For this reason, we symlink the path to {@link #getManifest()} to the path returned by
+   * do. For this reason, we symlink the path to {@link #manifest} to the path returned by
    * this method, whose name is always "AndroidManifest.xml".
    * <p>
-   * Therefore, commands created by this method should use this method instead of
-   * {@link #getManifest()}.
+   * Therefore, commands created by this buildable should use this method instead of
+   * {@link #manifest}.
    */
   Path getAndroidManifestXml() {
     return BuildTargets.getBinPath(buildTarget, "__manifest_%s__/AndroidManifest.xml");
