@@ -16,9 +16,14 @@
 
 package com.facebook.buck.shell;
 
+import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.getCurrentArguments;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
@@ -28,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.easymock.EasyMockSupport;
+import org.easymock.IAnswer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +42,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Level;
 
 public class ShellStepTest extends EasyMockSupport {
 
@@ -73,9 +80,23 @@ public class ShellStepTest extends EasyMockSupport {
     console.setVerbosity(verbosity);
     ProcessExecutor processExecutor = new ProcessExecutor(console);
 
-    expect(context.getStdErr()).andReturn(console.getStdErr()).anyTimes();
-    expect(context.getVerbosity()).andReturn(verbosity).anyTimes();
-    expect(context.getProcessExecutor()).andReturn(processExecutor).anyTimes();
+    expect(context.getStdErr()).andStubReturn(console.getStdErr());
+    expect(context.getVerbosity()).andStubReturn(verbosity);
+    expect(context.getProcessExecutor()).andStubReturn(processExecutor);
+
+    context.postEvent(anyObject(BuckEvent.class));
+    expectLastCall().andStubAnswer(
+        new IAnswer<Void>() {
+          @Override
+          public Void answer() throws Throwable {
+            LogEvent event = (LogEvent) getCurrentArguments()[0];
+            if (event.getLevel().equals(Level.SEVERE)) {
+              console.getStdErr().write(event.getMessage().getBytes(Charsets.US_ASCII));
+            }
+            return null;
+          }
+        });
+
     replayAll();
   }
 

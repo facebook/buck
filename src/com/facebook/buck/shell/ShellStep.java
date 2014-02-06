@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.event.LogEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -117,17 +118,22 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   int interactWithProcess(ExecutionContext context, Process process) {
-    Verbosity verbosity = context.getVerbosity();
-    boolean shouldPrintStdOut = shouldPrintStdout(verbosity);
-    boolean shouldPrintStdErr = shouldPrintStderr(verbosity);
-
     ProcessExecutor executor = context.getProcessExecutor();
     ProcessExecutor.Result result = executor.execute(process,
-        shouldPrintStdOut,
-        shouldPrintStdErr,
+        /* shouldPrintStdOut */ false,
+        /* shouldPrintStdErr */ false,
         context.getVerbosity() == Verbosity.SILENT);
     this.stdout = result.getStdout();
     this.stderr = result.getStderr();
+
+    Verbosity verbosity = context.getVerbosity();
+    if (!result.getStderr().isEmpty() && shouldPrintStderr(verbosity)) {
+      context.postEvent(LogEvent.severe(result.getStderr()));
+    }
+    if (!result.getStdout().isEmpty() && shouldPrintStdout(verbosity)) {
+      context.postEvent(LogEvent.info(result.getStdout()));
+    }
+
     return result.getExitCode();
   }
 
