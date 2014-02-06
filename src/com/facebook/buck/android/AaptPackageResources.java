@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AaptPackageResources.BuildOutput;
 import com.facebook.buck.android.AndroidBinaryRule.PackageType;
 import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
@@ -29,7 +30,11 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
@@ -64,7 +69,10 @@ import javax.annotation.Nullable;
 /**
  * Packages the resources using {@code aapt}.
  */
-public class AaptPackageResources extends AbstractBuildable {
+public class AaptPackageResources extends AbstractBuildable
+    implements InitializableFromDisk<BuildOutput> {
+
+  public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";
 
   private final BuildTarget buildTarget;
   private final SourcePath manifest;
@@ -206,6 +214,12 @@ public class AaptPackageResources extends AbstractBuildable {
 
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
+
+    steps.add(new RecordFileSha1Step(
+        getResourceApkPath(),
+        RESOURCE_PACKAGE_HASH_KEY,
+        buildableContext));
+
     return steps.build();
   }
 
@@ -283,6 +297,45 @@ public class AaptPackageResources extends AbstractBuildable {
 
   private Path getPathForTmpStringAssetsDirectory() {
     return BuildTargets.getBinPath(buildTarget, "__strings_%s__");
+  }
+
+  public Sha1HashCode getResourcePackageHash() {
+    return getBuildOutput().resourcePackageHash;
+  }
+
+  static class BuildOutput {
+    private final Sha1HashCode resourcePackageHash;
+
+    BuildOutput(Sha1HashCode resourcePackageHash) {
+      this.resourcePackageHash = Preconditions.checkNotNull(resourcePackageHash);
+    }
+  }
+
+  @Nullable
+  private BuildOutput buildOutput;
+
+  @Override
+  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    Optional<Sha1HashCode> resourcePackageHash = onDiskBuildInfo.getHash(RESOURCE_PACKAGE_HASH_KEY);
+    Preconditions.checkState(
+        resourcePackageHash.isPresent(),
+        "Should not be initializing %s from disk if the resource hash is not written.",
+        buildTarget);
+    return new BuildOutput(resourcePackageHash.get());
+  }
+
+  @Override
+  public void setBuildOutput(BuildOutput buildOutput) {
+    Preconditions.checkState(this.buildOutput == null,
+        "buildOutput should not already be set for %s.",
+        this);
+    this.buildOutput = buildOutput;
+  }
+
+  @Override
+  public BuildOutput getBuildOutput() {
+    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
+    return buildOutput;
   }
 
   public static Builder newAaptPackageResourcesBuildableBuilder(
