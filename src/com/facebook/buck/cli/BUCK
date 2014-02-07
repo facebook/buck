@@ -111,6 +111,7 @@ java_library(
     '//third-party/java/astyanax:slf4j-api',
     '//third-party/java/astyanax:slf4j-log4j12',
   ],
+  resources = glob(['quickstart/**/*']),
   visibility = [
     '//test/com/facebook/buck/cli:',
     '//src/com/facebook/buck/event:event',
