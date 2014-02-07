@@ -16,18 +16,29 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.Preconditions;
 
 public class PBXBuildStyle extends PBXProjectItem {
-  private String name;
+  private final String name;
+  private NSDictionary buildSettings;
 
   public PBXBuildStyle(String name) {
     this.name = Preconditions.checkNotNull(name);
+    this.buildSettings = new NSDictionary();
   }
 
   public String getName() {
     return name;
+  }
+
+  public NSDictionary getBuildSettings() {
+    return buildSettings;
+  }
+
+  public void setBuildSettings(NSDictionary buildSettings) {
+    this.buildSettings = buildSettings;
   }
 
   @Override
@@ -40,5 +51,6 @@ public class PBXBuildStyle extends PBXProjectItem {
     super.serializeInto(s);
 
     s.addField("name", name);
+    s.addField("buildSettings", buildSettings);
   }
 }

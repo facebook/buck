@@ -34,6 +34,7 @@ public class PBXFileReference extends PBXReference {
           .put("m", "sourcecode.c.objc")
           .put("mm", "sourcecode.cpp.objcpp")
           .put("png", "image.png")
+          .put("xcconfig", "text.xcconfig")
           .build();
 
   private Optional<String> lastKnownFileType;
@@ -43,7 +44,7 @@ public class PBXFileReference extends PBXReference {
 
     // this is necessary to prevent O(n^2) behavior in xcode project loading
     String fileType = fileTypeToFileTypeIdentifiers.get(Files.getFileExtension(name));
-    lastKnownFileType = Optional.of(fileType);
+    lastKnownFileType = Optional.fromNullable(fileType);
   }
 
   public Optional<String> getLastKnownFileType() {

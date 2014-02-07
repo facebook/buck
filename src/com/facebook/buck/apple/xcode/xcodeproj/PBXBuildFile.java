@@ -38,6 +38,7 @@ public class PBXBuildFile extends PBXProjectItem {
 
   public PBXBuildFile(PBXReference fileRef) {
     this.fileRef = Preconditions.checkNotNull(fileRef);
+    this.settings = Optional.absent();
   }
 
   public PBXReference getFileRef() {

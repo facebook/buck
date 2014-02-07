@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -62,6 +63,21 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   @Override
   int runCommandWithOptionsInternal(ProjectCommandOptions options) throws IOException {
+    switch (options.getIde()) {
+      case "intellij":
+        return runIntellijProjectGenerator(options);
+      case "xcode":
+        return runXcodeProjectGenerator(options);
+      default:
+        throw new HumanReadableException(String.format(
+            "Unknown IDE `%s` in .buckconfig", options.getIde()));
+    }
+  }
+
+  /**
+   * Run intellij specific project generation actions.
+   */
+  int runIntellijProjectGenerator(ProjectCommandOptions options) throws IOException {
     // Create a PartialGraph that only contains targets that can be represented as IDE
     // configuration files.
     PartialGraph partialGraph;
@@ -141,6 +157,39 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   }
 
   /**
+   * Run xcode specific project generation actions.
+   */
+  int runXcodeProjectGenerator(ProjectCommandOptions options)
+      throws IOException {
+
+    List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
+
+    PartialGraph partialGraph;
+    ImmutableList<BuildTarget> targets;
+    try {
+      // IOS creates a full graph all the time in order to find tests of targets (which depends
+      // on, but is not depended on, by the libraries).
+      partialGraph = PartialGraph.createFullGraph(getProjectFilesystem(),
+          options.getDefaultIncludes(),
+          getParser(),
+          getBuckEventBus());
+      targets = getBuildTargets(argumentsAsBuildTargets);
+    } catch (BuildTargetException | BuildFileParseException e) {
+      throw new HumanReadableException(e);
+    }
+
+    ProjectGenerator projectGenerator = new ProjectGenerator(
+        partialGraph,
+        targets,
+        getProjectFilesystem(),
+        getProjectFilesystem().getFileForRelativePath("_gen").toPath(),
+        "GeneratedProject");
+
+    projectGenerator.createXcodeProjects();
+    return 0;
+  }
+
+  /**
    * Calls {@link BuildCommand#runCommandWithOptions}
    *
    * This is factored into a separate method for testing purposes.
@@ -180,5 +229,4 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   String getUsageIntro() {
     return "generates project configuration files for an IDE";
   }
-
 }

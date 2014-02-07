@@ -30,8 +30,8 @@ import java.util.List;
 
 public class ProjectCommandOptions extends AbstractCommandOptions {
 
-  @Option(name = "--target", usage = "Only supported value is 'intellij'")
-  private String target;
+  @Option(name = "--output-path", usage = "project output path, only applicable for 'xcode' target.")
+  private String outputPath;
 
 
   @Argument
@@ -53,8 +53,8 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
   }
 
-  public String getTarget() {
-    return target;
+  public String getOutputPath() {
+    return outputPath;
   }
 
 
@@ -72,6 +72,11 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   public Optional<String> getPathToPostProcessScript() {
     return getBuckConfig().getValue("project", "post_process");
+  }
+
+  public String getIde() {
+    Optional<String> ide = getBuckConfig().getValue("project", "ide");
+    return ide.or("intellij");
   }
 
   private List<String> getInitialTargets() {
