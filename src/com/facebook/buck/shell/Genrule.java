@@ -199,6 +199,10 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
         .set("cmd_exe", cmdExe);
   }
 
+  public ImmutableList<Path> getSrcs() {
+    return srcs;
+  }
+
   protected void addEnvironmentVariables(ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put("SRCS", Joiner.on(' ').join(srcsToAbsolutePaths.values()));
@@ -256,8 +260,7 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
     }
   }
 
-  @VisibleForTesting
-  AbstractGenruleStep createGenruleStep() {
+  public AbstractGenruleStep createGenruleStep() {
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
     // as srcs. Without this, a genrule is not guaranteed to be hermetic.
