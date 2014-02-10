@@ -43,7 +43,6 @@ public class IosBinary extends AbstractBuildable {
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> headers;
-  private final ImmutableSortedSet<SourcePath> resources;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
 
@@ -51,7 +50,6 @@ public class IosBinary extends AbstractBuildable {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     headers = Preconditions.checkNotNull(arg.headers);
-    resources = Preconditions.checkNotNull(arg.resources);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
 
     ImmutableSortedSet.Builder<SourcePath> srcsBuilder = ImmutableSortedSet.naturalOrder();
@@ -77,10 +75,6 @@ public class IosBinary extends AbstractBuildable {
     return headers;
   }
 
-  public ImmutableSortedSet<SourcePath> getResources() {
-    return resources;
-  }
-
   public ImmutableSortedSet<String> getFrameworks() {
     return frameworks;
   }
@@ -97,7 +91,7 @@ public class IosBinary extends AbstractBuildable {
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(Iterables.concat(srcs, headers, resources));
+    return SourcePaths.filterInputsToCompareToOutput(Iterables.concat(srcs, headers));
   }
 
   @Override

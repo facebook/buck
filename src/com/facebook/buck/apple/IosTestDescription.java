@@ -60,7 +60,6 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
     public Path infoPlist;
     public ImmutableList<Either<SourcePath, Pair<SourcePath, String>>> srcs;
     public ImmutableSortedSet<SourcePath> headers;
-    public ImmutableSortedSet<SourcePath> resources;
     public ImmutableSortedSet<String> frameworks;
     public ImmutableSortedSet<BuildRule> sourceUnderTest;
     public Optional<ImmutableSortedSet<BuildRule>> deps;

@@ -45,7 +45,6 @@ public class IosTest extends AbstractBuildable {
   private final ImmutableSet<XcodeRuleConfiguration> configurations;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> headers;
-  private final ImmutableSortedSet<SourcePath> resources;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
   private final ImmutableSortedSet<BuildRule> sourceUnderTest;
@@ -54,7 +53,6 @@ public class IosTest extends AbstractBuildable {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
     headers = Preconditions.checkNotNull(arg.headers);
-    resources = Preconditions.checkNotNull(arg.resources);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
     sourceUnderTest = Preconditions.checkNotNull(arg.sourceUnderTest);
 
@@ -93,10 +91,6 @@ public class IosTest extends AbstractBuildable {
     return headers;
   }
 
-  public ImmutableSortedSet<SourcePath> getResources() {
-    return resources;
-  }
-
   @Nullable
   @Override
   public Path getPathToOutputFile() {
@@ -105,7 +99,7 @@ public class IosTest extends AbstractBuildable {
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return SourcePaths.filterInputsToCompareToOutput(Iterables.concat(srcs, headers, resources));
+    return SourcePaths.filterInputsToCompareToOutput(Iterables.concat(srcs, headers));
   }
 
   @Override

@@ -19,10 +19,12 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.IosBinary;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibrary;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTest;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNative;
@@ -31,6 +33,7 @@ import com.facebook.buck.apple.XcodeRuleConfiguration;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
@@ -52,8 +55,9 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -61,12 +65,14 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -168,13 +174,17 @@ public class ProjectGenerator {
   public void createXcodeProjects() throws IOException {
     try {
       Iterable<BuildRule> allRules = getAllRules(partialGraph, initialTargets);
+      ImmutableMap.Builder<BuildRule, PBXTarget> ruleToTargetMapBuilder = ImmutableMap.builder();
       for (BuildRule rule : allRules) {
         // Trigger the loading cache to call the generateTargetForBuildRule function.
-        buildRuleToXcodeTarget.getUnchecked(rule);
+        Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
+        if (target.isPresent()) {
+          ruleToTargetMapBuilder.put(rule, target.get());
+        }
       }
       addGeneratedSignedSourceTarget(project);
       writeProjectFile(project);
-      scheme = createScheme(partialGraph, projectPath, buildRuleToXcodeTarget.asMap());
+      scheme = createScheme(partialGraph, projectPath, ruleToTargetMapBuilder.build());
       writeWorkspace(projectPath);
       writeScheme(scheme, projectPath);
     } catch (UncheckedExecutionException e) {
@@ -292,7 +302,7 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         buildable.getFrameworks(),
         collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(target, targetGroup, buildable.getResources());
+    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -334,7 +344,7 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
         buildable.getFrameworks(),
         collectRecursiveLibraryDependencies(rule));
-    addResourcesBuildPhase(target, targetGroup, buildable.getResources());
+    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -491,16 +501,15 @@ public class ProjectGenerator {
   }
 
   private void addResourcesBuildPhase(
-      PBXNativeTarget target, PBXGroup targetGroup, Iterable<SourcePath> resources) {
+      PBXNativeTarget target, PBXGroup targetGroup, Iterable<Path> resources) {
     PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
-    PBXResourcesBuildPhase resourcesBuildPhase = new PBXResourcesBuildPhase();
-    target.getBuildPhases().add(resourcesBuildPhase);
-    for (SourcePath sourcePath : resources) {
-      Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
+    PBXBuildPhase phase = new PBXResourcesBuildPhase();
+    target.getBuildPhases().add(phase);
+    for (Path resource : resources) {
       PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-          SourceTreePath.absolute(projectFilesystem.getFileForRelativePath(path).toPath()));
+          SourceTreePath.absolute(projectFilesystem.getFileForRelativePath(resource).toPath()));
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-      resourcesBuildPhase.getFiles().add(buildFile);
+      phase.getFiles().add(buildFile);
     }
   }
 
@@ -541,8 +550,8 @@ public class ProjectGenerator {
     PBXShellScriptBuildPhase generatedSignedSourceScriptPhase = new PBXShellScriptBuildPhase();
     generatedSignedSourceScriptPhase.setShellScript(
         "# Do not change or remove this. This is a generated script phase\n" +
-        "# used solely to include a signature in the generated Xcode project.\n" +
-        "# " + SourceSigner.SIGNED_SOURCE_PLACEHOLDER
+            "# used solely to include a signature in the generated Xcode project.\n" +
+            "# " + SourceSigner.SIGNED_SOURCE_PLACEHOLDER
     );
     target.getBuildPhases().add(generatedSignedSourceScriptPhase);
     project.getTargets().add(target);
@@ -652,14 +661,14 @@ public class ProjectGenerator {
   private static XCScheme createScheme(
       PartialGraph partialGraph,
       Path projectPath,
-      final Map<BuildRule, Optional<PBXTarget>> ruleToTargetMap) throws IOException {
+      final Map<BuildRule, PBXTarget> ruleToTargetMap) throws IOException {
 
     List<BuildRule> orderedBuildRules = TopologicalSort.sort(
         partialGraph.getDependencyGraph(),
         new Predicate<BuildRule>() {
           @Override
           public boolean apply(@Nullable BuildRule input) {
-            return ruleToTargetMap.containsKey(input) && ruleToTargetMap.get(input).isPresent();
+            return ruleToTargetMap.containsKey(input);
           }
         });
 
@@ -667,7 +676,7 @@ public class ProjectGenerator {
     for (BuildRule rule : orderedBuildRules) {
       scheme.addBuildAction(
           projectPath.getFileName().toString(),
-          ruleToTargetMap.get(rule).get().getGlobalID());
+          ruleToTargetMap.get(rule).getGlobalID());
     }
 
     return scheme;
@@ -754,34 +763,73 @@ public class ProjectGenerator {
     return this.repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path);
   }
 
-  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(final BuildRule rule) {
-    final ImmutableSet.Builder<PBXFileReference> result = ImmutableSet.builder();
+  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(BuildRule rule) {
+    return FluentIterable
+        .from(getRecursiveRuleDependenciesOfType(
+            rule,
+            IosLibraryDescription.TYPE,
+            XcodeNativeDescription.TYPE))
+        .transform(
+            new Function<BuildRule, PBXFileReference>() {
+              @Override
+              public PBXFileReference apply(BuildRule input) {
+                if (input.getType().equals(IosLibraryDescription.TYPE)) {
+                  PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(
+                      input).get();
+                  return target.getProductReference();
+                } else if (input.getType().equals(XcodeNativeDescription.TYPE)) {
+                  XcodeNative xcodeNative = (XcodeNative) input.getBuildable();
+                  return project.getMainGroup()
+                      .getOrCreateChildGroupByName("Frameworks")
+                      .getOrCreateFileReferenceBySourceTreePath(
+                          new SourceTreePath(
+                              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                              Paths.get(xcodeNative.getProduct())));
+                } else {
+                  throw new RuntimeException("Unexpected type: " + input.getType());
+                }
+              }
+            }
+        ).toSet();
+  }
+
+  /**
+   * Collect resources from recursive dependencies.
+   *
+   * @param rule  Build rule at the tip of the traversal.
+   * @return  Paths to resource files and folders, children of folder are not included.
+   */
+  private Iterable<Path> collectRecursiveResources(BuildRule rule) {
+    Iterable<BuildRule> resourceRules = getRecursiveRuleDependenciesOfType(
+        rule, IosResourceDescription.TYPE);
+    ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
+    for (BuildRule resourceRule : resourceRules) {
+      AppleResource resource =
+          (AppleResource) Preconditions.checkNotNull(resourceRule.getBuildable());
+      paths.addAll(resource.getDirs());
+      paths.addAll(SourcePaths.toPaths(resource.getFiles(), partialGraph.getDependencyGraph()));
+    }
+    return paths.build();
+  }
+
+  private Iterable<BuildRule> getRecursiveRuleDependenciesOfType(
+      final BuildRule rule, BuildRuleType... types) {
+    final ImmutableSet<BuildRuleType> requestedTypes = ImmutableSet.copyOf(types);
+    final ImmutableList.Builder<BuildRule> filteredRules = ImmutableList.builder();
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
         new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
           @Override
           protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
             return node.getDeps().iterator();
           }
+
           @Override
           protected void onNodeExplored(BuildRule node) {
-            if (node == rule) {
-              return;
-            }
-            if (node.getType().equals(IosLibraryDescription.TYPE)) {
-              PBXNativeTarget target =
-                  (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(node).get();
-              result.add(target.getProductReference());
-            } else if (node.getType().equals(XcodeNativeDescription.TYPE)) {
-              XcodeNative xcodeNative =
-                  (XcodeNative) Preconditions.checkNotNull(node.getBuildable());
-              PBXFileReference reference = project.getMainGroup()
-                  .getOrCreateChildGroupByName("Frameworks")
-                  .getOrCreateFileReferenceBySourceTreePath(new SourceTreePath(
-                      PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                      Paths.get(xcodeNative.getProduct())));
-              result.add(reference);
+            if (node != rule && requestedTypes.contains(node.getType())) {
+              filteredRules.add(node);
             }
           }
+
           @Override
           protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
           }
@@ -789,9 +837,10 @@ public class ProjectGenerator {
     try {
       traversal.traverse(ImmutableList.of(rule));
     } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException e) {
-      throw new HumanReadableException(e, e.getMessage());
+      // actual load failures and cycle exceptions should have been caught at an earlier stage
+      throw new RuntimeException(e);
     }
-    return result.build();
+    return filteredRules.build();
   }
 
   /**

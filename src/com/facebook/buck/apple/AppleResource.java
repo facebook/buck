@@ -23,6 +23,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.BuckConstant;
@@ -55,7 +57,7 @@ public class AppleResource extends AbstractBuildable {
 
   private final DirectoryTraverser directoryTraverser;
   private final ImmutableSortedSet<Path> dirs;
-  private final ImmutableSortedSet<Path> files;
+  private final ImmutableSortedSet<SourcePath> files;
   private final Path outputDirectory;
 
   AppleResource(
@@ -89,7 +91,7 @@ public class AppleResource extends AbstractBuildable {
   /**
    * Returns the set of files to copy for this resource rule.
    */
-  public ImmutableSortedSet<Path> getFiles() {
+  public ImmutableSortedSet<SourcePath> getFiles() {
     return files;
   }
 
@@ -105,7 +107,7 @@ public class AppleResource extends AbstractBuildable {
           directoryTraverser);
     }
 
-    inputsToConsiderForCachingPurposes.addAll(files);
+    inputsToConsiderForCachingPurposes.addAll(SourcePaths.filterInputsToCompareToOutput(files));
     return inputsToConsiderForCachingPurposes.build();
   }
 
@@ -132,8 +134,8 @@ public class AppleResource extends AbstractBuildable {
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
 
-    for (Path file : files) {
-      steps.add(CopyStep.forFile(file, outputDirectory));
+    for (SourcePath file : files) {
+      steps.add(CopyStep.forFile(file.resolve(context), outputDirectory));
     }
 
     return steps.build();

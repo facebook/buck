@@ -33,8 +33,10 @@ import static org.junit.Assert.fail;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosResourceDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
@@ -60,8 +62,10 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DescribedRule;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
@@ -74,6 +78,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -90,6 +96,7 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -111,6 +118,7 @@ public class ProjectGeneratorTest {
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
   private IosBinaryDescription iosBinaryDescription;
+  private IosResourceDescription iosResourceDescription;
 
   @Before
   public void setUp() {
@@ -120,6 +128,7 @@ public class ProjectGeneratorTest {
     iosLibraryDescription = new IosLibraryDescription();
     iosTestDescription = new IosTestDescription();
     iosBinaryDescription = new IosBinaryDescription();
+    iosResourceDescription = new IosResourceDescription();
   }
 
   @Test
@@ -329,7 +338,6 @@ public class ProjectGeneratorTest {
     arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
     arg.srcs = ImmutableList.of(Either.<SourcePath, Pair<SourcePath, String>>ofRight(
         new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
-    arg.resources = ImmutableSortedSet.<SourcePath>of(new FileSourcePath("resource.png"));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
     arg.sourceUnderTest = ImmutableSortedSet.of();
 
@@ -351,10 +359,12 @@ public class ProjectGeneratorTest {
 
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(target, ImmutableMap.of(
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target, ImmutableMap.of(
         "foo.m", Optional.of("-foo")));
 
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(target, ImmutableList.of(
+    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target, ImmutableList.of(
         "$SDKROOT/Foo.framework"));
   }
 
@@ -372,7 +382,6 @@ public class ProjectGeneratorTest {
     arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
     arg.srcs = ImmutableList.of(Either.<SourcePath, Pair<SourcePath, String>>ofRight(
         new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
-    arg.resources = ImmutableSortedSet.<SourcePath>of(new FileSourcePath("resource.png"));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
 
     BuildRule rule = new DescribedRule(
@@ -399,7 +408,6 @@ public class ProjectGeneratorTest {
             "$SDKROOT/Foo.framework",
             // Propagated library from deps.
             "$BUILT_PRODUCTS_DIR/libfoo.a"));
-    assertHasSingletonResourcesPhaseWithEntries(target, "resource.png");
   }
 
   @Test
@@ -522,6 +530,49 @@ public class ProjectGeneratorTest {
     assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
   }
 
+  @Test
+  public void resourcesInDependenciesPropagatesToBinariesAndTests() throws IOException {
+    BuildRule resourceRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "res"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosResourceDescription,
+        new Function<AppleResourceDescriptionArg, AppleResourceDescriptionArg>() {
+          @Override
+          public AppleResourceDescriptionArg apply(AppleResourceDescriptionArg input) {
+            input.files = ImmutableSet.<SourcePath>of(new FileSourcePath("foo.png"));
+            input.dirs = ImmutableSet.<Path>of(Paths.get("foodir"));
+            return input;
+          }
+        });
+
+    BuildRule libraryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "lib"),
+        ImmutableSortedSet.of(resourceRule),
+        iosLibraryDescription);
+
+    BuildRule testRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "test"),
+        ImmutableSortedSet.of(libraryRule),
+        iosTestDescription);
+
+    BuildRule binaryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "bin"),
+        ImmutableSortedSet.of(libraryRule),
+        iosBinaryDescription);
+
+    BuildRuleResolver resolver = new BuildRuleResolver(ImmutableSet.of(
+        resourceRule, libraryRule, testRule, binaryRule));
+    ProjectGenerator projectGenerator = createProjectGenerator(
+        resolver, ImmutableList.of(testRule.getBuildTarget(), binaryRule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXTarget testTarget = assertTargetExistsAndReturnTarget(generatedProject, "//foo:test");
+    assertHasSingletonResourcesPhaseWithEntries(testTarget, "foo.png", "foodir");
+    PBXTarget binTarget = assertTargetExistsAndReturnTarget(generatedProject, "//foo:bin");
+    assertHasSingletonResourcesPhaseWithEntries(binTarget, "foo.png", "foodir");
+  }
+
   private ProjectGenerator createProjectGenerator(
       BuildRuleResolver buildRuleResolver, ImmutableList<BuildTarget> initialBuildTargets) {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleResolver);
@@ -566,12 +617,62 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Paths.get("Info.plist");
     arg.frameworks = ImmutableSortedSet.of();
     arg.headers = ImmutableSortedSet.of();
-    arg.resources = ImmutableSortedSet.of();
     arg.srcs = ImmutableList.of();
     arg.sourceUnderTest = sourceUnderTest;
     return new DescribedRule(
         iosTestDescription.getBuildRuleType(),
         iosTestDescription.createBuildable(buildRuleParams, arg),
+        buildRuleParams);
+  }
+
+  private <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
+      BuildTarget target,
+      ImmutableSortedSet<BuildRule> deps,
+      Description<T> description) {
+    return createBuildRuleWithDefaults(target, deps, description, Functions.<T>identity());
+  }
+
+  /**
+   * Helper function to create a build rule for a description, initializing fields to empty values,
+   * and allowing a user to override specific fields.
+   */
+  private <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
+      BuildTarget target,
+      ImmutableSortedSet<BuildRule> deps,
+      Description<T> description,
+      Function<T, T> overrides) {
+    T arg = description.createUnpopulatedConstructorArg();
+    for (Field field : arg.getClass().getFields()) {
+      Object value;
+      if (field.getType().isAssignableFrom(ImmutableSortedSet.class)) {
+        value = ImmutableSortedSet.of();
+      } else if (field.getType().isAssignableFrom(ImmutableList.class)) {
+        value = ImmutableList.of();
+      } else if (field.getType().isAssignableFrom(ImmutableMap.class)) {
+        value = ImmutableMap.of();
+      } else if (field.getType().isAssignableFrom(Optional.class)) {
+        value = Optional.absent();
+      } else if (field.getType().isAssignableFrom(String.class)) {
+        value = "";
+      } else if (field.getType().isAssignableFrom(Path.class)) {
+        value = Paths.get("");
+      } else if (field.getType().isPrimitive()) {
+        // do nothing, these are initialized with a zero value
+        continue;
+      } else {
+        // user should provide
+        continue;
+      }
+      try {
+        field.set(arg, value);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(target, deps);
+    return new DescribedRule(
+        description.getBuildRuleType(),
+        description.createBuildable(buildRuleParams, overrides.apply(arg)),
         buildRuleParams);
   }
 

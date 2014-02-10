@@ -74,6 +74,17 @@ public class SourcePaths {
     return Iterables.transform(sourcePaths, transform);
   }
 
+  public static Iterable<Path> toPaths(Iterable<SourcePath> sourcePaths,
+      final DependencyGraph context) {
+    Function<SourcePath, Path> transform = new Function<SourcePath, Path>() {
+      @Override
+      public Path apply(SourcePath sourcePath) {
+        return sourcePath.resolve(context);
+      }
+    };
+    return Iterables.transform(sourcePaths, transform);
+  }
+
   public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(
       @Nullable Iterable<Path> paths) {
     if (paths == null) {

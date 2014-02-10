@@ -60,7 +60,6 @@ public class IosBinaryDescription implements Description<IosBinaryDescription.Ar
     public Path infoPlist;
     public ImmutableList<Either<SourcePath, Pair<SourcePath, String>>> srcs;
     public ImmutableSortedSet<SourcePath> headers;
-    public ImmutableSortedSet<SourcePath> resources;
     public ImmutableSortedSet<String> frameworks;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
