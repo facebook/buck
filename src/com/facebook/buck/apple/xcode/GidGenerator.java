@@ -28,14 +28,30 @@ import java.util.Set;
  */
 public class GidGenerator {
   private final Random random;
-  private final Set<String> generatedIDs;
+  private final Set<String> generatedIds;
 
   public GidGenerator(long seed) {
     random = new Random(seed);
-    generatedIDs = Sets.newHashSet();
+    generatedIds = Sets.newHashSet();
   }
 
-  public String genGID() {
+  /**
+   * Generate a stable GID based on the class name and hash of some object info.
+   *
+   * GIDs generated this way will be in the form of
+   *  {@code <class-name-hash-32> <obj-hash-32> <counter-32>}
+   */
+  public String generateStableGid(String pbxClassName, int hash) {
+    int counter = 0;
+    String gid;
+    do {
+      gid = String.format("%08X%08X%08X", pbxClassName.hashCode(), hash, counter++);
+    } while (generatedIds.contains(gid));
+    generatedIds.add(gid);
+    return gid;
+  }
+
+  public String genGid() {
     String gid;
 
     do {
@@ -46,9 +62,9 @@ public class GidGenerator {
       }
 
       gid = builder.toString();
-    } while (generatedIDs.contains(gid));
+    } while (generatedIds.contains(gid));
 
-    generatedIDs.add(gid);
+    generatedIds.add(gid);
     return gid;
   }
 }

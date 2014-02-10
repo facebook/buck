@@ -73,7 +73,7 @@ public class XcodeprojSerializer {
    */
   private String serializeObject(PBXObject obj) {
     if (obj.getGlobalID() == null) {
-      obj.setGlobalID(gidGenerator.genGID());
+      obj.setGlobalID(obj.generateGid(gidGenerator));
     } else {
       // Check that the object has already been serialized.
       NSObject object = objects.get(obj.getGlobalID());

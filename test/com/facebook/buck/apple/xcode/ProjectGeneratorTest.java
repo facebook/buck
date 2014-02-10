@@ -501,6 +501,27 @@ public class ProjectGeneratorTest {
     assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//baz:lib");
   }
 
+  @Test
+  public void generatedGidsForTargetsAreStable() throws IOException {
+    BuildRule fooLib = createXcodeNativeRule(
+        new BuildTarget("//foo", "foo"),
+        ImmutableSortedSet.<BuildRule>of());
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(fooLib));
+
+    ProjectGenerator projectGenerator = createProjectGenerator(
+        buildRuleResolver, ImmutableList.of(fooLib.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:foo");
+    String expectedGID = String.format(
+        "%08X%08X%08X", target.isa().hashCode(), target.getName().hashCode(), 0);
+    assertEquals("expected GID has correct value (value from which it's derived have not changed)",
+        "93C1B2AA2245423200000000", expectedGID);
+    assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
+  }
+
   private ProjectGenerator createProjectGenerator(
       BuildRuleResolver buildRuleResolver, ImmutableList<BuildTarget> initialBuildTargets) {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleResolver);
