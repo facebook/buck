@@ -124,7 +124,7 @@ public class CompileStringsStep implements Step {
   public int execute(ExecutionContext context) {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
-      buildResourceNameToIdMap(filesystem);
+      buildResourceNameToIdMap(filesystem, rDotJavaSrcDir.resolve("R.txt"), resourceNameToIdMap);
     } catch (IOException e) {
       context.logError(e, "Failure parsing R.txt file.");
       return 1;
@@ -220,16 +220,18 @@ public class CompileStringsStep implements Step {
    * {@code plurals} and {@code array}, and builds a map of resource names to their corresponding
    * ids.
    */
-  @VisibleForTesting
-  void buildResourceNameToIdMap(ProjectFilesystem filesystem)
-      throws IOException {
-    List<String> fileLines = filesystem.readLines(rDotJavaSrcDir.resolve("R.txt"));
+  public static void buildResourceNameToIdMap(
+      ProjectFilesystem filesystem,
+      Path pathToRDotTxtFile,
+      Map<String, Integer> resultMap
+  ) throws IOException {
+    List<String> fileLines = filesystem.readLines(pathToRDotTxtFile);
     for (String line : fileLines) {
       Matcher matcher = R_DOT_TXT_STRING_RESOURCE_PATTERN.matcher(line);
       if (!matcher.matches()) {
         continue;
       }
-      resourceNameToIdMap.put(matcher.group(2), Integer.parseInt(matcher.group(3), 16));
+      resultMap.put(matcher.group(2), Integer.parseInt(matcher.group(3), 16));
     }
   }
 

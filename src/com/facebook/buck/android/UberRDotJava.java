@@ -377,6 +377,9 @@ public class UberRDotJava extends AbstractBuildable implements
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
     commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
+    // TODO: add command to build the string source map file...
+
+
     // Compile the R.java files.
     Set<Path> javaSourceFilePaths = Sets.newHashSet();
     for (String rDotJavaPackage : rDotJavaPackages) {
