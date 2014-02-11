@@ -26,5 +26,5 @@ public class Foo {
   @Argument
   private List<String> arguments = new ArrayList();
 
-  ForwardingBlockingDeque<String> BANG;  
+  ForwardingBlockingDeque<String> BANG;
 }

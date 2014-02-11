@@ -8,6 +8,6 @@ import java.util.List;
 public final class FeedStoryRenderer {
 
   public void render(List<CacheableEntity> entities) {
-    
+
   }
 }

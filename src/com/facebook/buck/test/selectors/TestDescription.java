@@ -21,19 +21,19 @@ package com.facebook.buck.test.selectors;
  * test-selectors code does not need a dependency on JUnit.
  */
 public class TestDescription {
- 
+
    private final String className;
    private final String methodName;
- 
+
    public TestDescription(String className, String methodName) {
      this.className = className;
      this.methodName = methodName;
    }
- 
+
    public String getClassName() {
      return className;
    }
- 
+
    public String getMethodName() {
      return methodName;
    }

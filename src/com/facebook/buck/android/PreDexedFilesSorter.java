@@ -47,7 +47,7 @@ import java.util.Set;
  * Responsible for bucketing pre-dexed objects into primary and secondary dex files.
  */
 public class PreDexedFilesSorter {
-  
+
   private final Optional<DexWithClasses> rDotJavaDex;
   private final List<DexWithClasses> dexFilesToMerge;
   private final ClassNameFilter primaryDexFilter;

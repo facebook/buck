@@ -17,7 +17,7 @@
 package com.example;
 
 public class SeriousBusiness {
-  
+
   public static void main(String... args) {
     Util.printHelloWorld();
   }

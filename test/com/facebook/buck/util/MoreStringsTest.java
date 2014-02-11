@@ -58,32 +58,32 @@ public class MoreStringsTest {
   @Test
   public void testGetLevenshteinDistance() {
     assertEquals(
-        "The distance between '' and 'BUILD' should be 5 (e.g., 5 insertions).", 
-        5, 
+        "The distance between '' and 'BUILD' should be 5 (e.g., 5 insertions).",
+        5,
         MoreStrings.getLevenshteinDistance("", "BUILD"));
     assertEquals(
-        "'BUILD' and 'BUILD' should be identical.", 
-        0, 
+        "'BUILD' and 'BUILD' should be identical.",
+        0,
         MoreStrings.getLevenshteinDistance("BUILD", "BUILD"));
     assertEquals(
-        "The distance between 'BIULD' and 'BUILD' should be 2 (e.g., 1 deletion + 1 insertion).", 
-        2, 
+        "The distance between 'BIULD' and 'BUILD' should be 2 (e.g., 1 deletion + 1 insertion).",
+        2,
         MoreStrings.getLevenshteinDistance("BIULD", "BUILD"));
     assertEquals(
-        "The distance between 'INSTALL' and 'AUDIT' should be 7 (e.g., 5 substitutions + 2 deletions).", 
-        7, 
+        "The distance between 'INSTALL' and 'AUDIT' should be 7 (e.g., 5 substitutions + 2 deletions).",
+        7,
         MoreStrings.getLevenshteinDistance("INSTALL", "AUDIT"));
     assertEquals(
-        "The distance between 'aaa' and 'bbbbbb' should be 6 (e.g., 3 substitutions + 3 insertions).", 
-        6, 
+        "The distance between 'aaa' and 'bbbbbb' should be 6 (e.g., 3 substitutions + 3 insertions).",
+        6,
         MoreStrings.getLevenshteinDistance("aaa", "bbbbbb"));
     assertEquals(
-        "The distance between 'build' and 'biuldd' should be 3 (e.g., 1 deletion + 2 insertions).", 
-        3, 
+        "The distance between 'build' and 'biuldd' should be 3 (e.g., 1 deletion + 2 insertions).",
+        3,
         MoreStrings.getLevenshteinDistance("build", "biuldd"));
     assertEquals(
-        "The distance between 'test' and 'tset' should be 2 (e.g., 1 deletion + 1 insertion).", 
-        2, 
+        "The distance between 'test' and 'tset' should be 2 (e.g., 1 deletion + 1 insertion).",
+        2,
         MoreStrings.getLevenshteinDistance("test", "tset"));
   }
 }

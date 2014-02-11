@@ -83,13 +83,13 @@ public final class MoreStrings {
           if (arr1[i - 1] == arr2[j - 1]) {
             levenshteinDist[i][j] = levenshteinDist[i - 1][j - 1];
           } else {
-            levenshteinDist[i][j] = 
+            levenshteinDist[i][j] =
               Math.min(levenshteinDist[i - 1][j] + 1,
                   Math.min(levenshteinDist[i][j - 1] + 1, levenshteinDist[i - 1][j - 1] + 1));
           }
         }
       }
-      
+
       return levenshteinDist[arr1.length][arr2.length];
     }
 

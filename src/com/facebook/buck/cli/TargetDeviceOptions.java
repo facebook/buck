@@ -83,7 +83,7 @@ public class TargetDeviceOptions {
 
     return serial;
   }
-    
+
   public boolean isEmulatorsOnlyModeEnabled() {
     return useEmulatorsOnlyMode;
   }

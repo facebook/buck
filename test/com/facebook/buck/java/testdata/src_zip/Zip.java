@@ -36,7 +36,7 @@ public class Zip {
     }
     String target = args[0];
     URI uri = URI.create("jar:" + new File(target).toURI());
-    Map<String, String> env = new HashMap<>(); 
+    Map<String, String> env = new HashMap<>();
     env.put("create", "true");
     try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
       Files.write(zipfs.getPath("/Main.java"), MAIN_JAVA.getBytes());

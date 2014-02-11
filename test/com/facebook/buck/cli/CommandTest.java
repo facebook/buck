@@ -44,8 +44,8 @@ public class CommandTest {
     assertEquals(Optional.of(Command.TARGETS), Command.parseCommandName("tragets").getCommand());
     assertEquals(Optional.of(Command.TARGETS), Command.parseCommandName("taegers").getCommand());
     assertEquals(
-        "'yyyyyyy' shouldn't match any current command.", 
-        Optional.absent(), 
+        "'yyyyyyy' shouldn't match any current command.",
+        Optional.absent(),
         Command.parseCommandName("yyyyyyy").getCommand());
 
     // Boundary cases
@@ -53,25 +53,25 @@ public class CommandTest {
         "'unsintakk' is of distance 4 to the closest command 'uninstall' since\n" +
         "4 / length('uninstall') = 4 / 9 is smaller than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect it matches uninstall.\n",
-        Optional.of(Command.UNINSTALL), 
+        Optional.of(Command.UNINSTALL),
         Command.parseCommandName("unsintakk").getCommand());
     assertEquals(
         "'insatkk' is of distance 4 to the closest command 'install' since\n" +
         "4 / length('install') = 4 / 7 is larger than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect Optional.absent() gets returned.\n",
-        Optional.absent(), 
+        Optional.absent(),
         Command.parseCommandName("insatkk").getCommand());
     assertEquals(
         "'atrgest' is of distance 4 to the closest command 'targets' since\n" +
         "4 / length('targets') = 4 / 7 is larger than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect Optional.absent() gets returned.\n",
-        Optional.absent(), 
+        Optional.absent(),
         Command.parseCommandName("atrgest").getCommand());
     assertEquals(
         "'unsintskk' is of distance 5 to the closest command 'uninstall' since\n" +
         "5 / length('uninstall') = 5 / 9 is larger than Command.MAX_ERROR_RATIO (0.5),\n" +
         "we expect Optional.absent() gets returned.\n",
-        Optional.absent(), 
+        Optional.absent(),
         Command.parseCommandName("unsintskk").getCommand());
   }
 }

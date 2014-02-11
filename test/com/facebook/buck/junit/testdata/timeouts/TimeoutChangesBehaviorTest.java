@@ -60,14 +60,14 @@ public class TimeoutChangesBehaviorTest {
   private static class Transaction {
 
     private boolean isInTransaction = false;
-    
+
     public void beginTransaction() {
       isInTransaction = true;
-    }    
+    }
 
     public boolean isInTransaction() {
       return isInTransaction;
-    }    
+    }
 
   }
 }
