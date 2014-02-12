@@ -891,15 +891,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     steps.add(smartDexingCommand);
   }
 
-  /**
-   * @return the path to the AndroidManifest.xml. Note that this file is not guaranteed to be named
-   *     AndroidManifest.xml.
-   */
-  @Override
-  public SourcePath getManifest() {
-    return manifest;
-  }
-
   @Override
   public Path getManifestPath() {
     return aaptPackageResources.getAndroidManifestXml();
