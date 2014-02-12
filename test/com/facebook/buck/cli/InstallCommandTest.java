@@ -20,10 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.event.BuckEventBus;
@@ -41,39 +39,17 @@ import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class InstallCommandTest {
 
-  private BuckConfig buckConfig;
   private InstallCommand installCommand;
 
   @Before
   public void setUp() {
-    buckConfig = new FakeBuckConfig();
     installCommand = createInstallCommand();
-  }
-
-  private InstallCommandOptions getOptions(String...args) throws CmdLineException {
-    InstallCommandOptions options = new InstallCommandOptions(buckConfig);
-    new CmdLineParserAdditionalOptions(options).parseArgument(args);
-    return options;
-  }
-
-  private TestDevice createRealDevice(String serial, IDevice.DeviceState state) {
-    TestDevice device = TestDevice.createRealDevice(serial);
-    device.setState(state);
-    return device;
-  }
-
-  private TestDevice createEmulator(String serial, IDevice.DeviceState state) {
-    TestDevice device = TestDevice.createEmulator(serial);
-    device.setState(state);
-    return device;
   }
 
   private TestDevice createDeviceForShellCommandTest(final String output) {
@@ -105,209 +81,6 @@ public class InstallCommandTest {
         Platform.detect()));
   }
 
-  /**
-   * Verify that null is returned when no devices are present.
-   */
-  @Test
-  public void testDeviceFilterNoDevices() throws CmdLineException {
-    InstallCommandOptions options = getOptions();
-    IDevice[] devices = new IDevice[] { };
-
-    assertNull(installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions()));
-  }
-
-  /**
-   * Verify that non-online devices will not appear in result list.
-   */
-  @Test
-  public void testDeviceFilterOnlineOnly() throws CmdLineException {
-    InstallCommandOptions options = getOptions();
-    IDevice[] devices = new IDevice[] {
-        createEmulator("1", IDevice.DeviceState.OFFLINE),
-        createEmulator("2", IDevice.DeviceState.BOOTLOADER),
-        createEmulator("3", IDevice.DeviceState.RECOVERY),
-        createRealDevice("4", IDevice.DeviceState.OFFLINE),
-        createRealDevice("5", IDevice.DeviceState.BOOTLOADER),
-        createRealDevice("6", IDevice.DeviceState.RECOVERY),
-    };
-
-    assertNull(installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions()));
-  }
-
-  /**
-   * Verify that multi-install is not enabled and multiple devices
-   * pass the filter null is returned. Also verify that if multiple
-   * devices are passing the filter and multi-install mode is enabled
-   * they all appear in resulting list.
-   */
-  @Test
-  public void testDeviceFilterMultipleDevices() throws CmdLineException {
-    IDevice[] devices = new IDevice[] {
-        createEmulator("1", IDevice.DeviceState.ONLINE),
-        createEmulator("2", IDevice.DeviceState.ONLINE),
-        createRealDevice("4", IDevice.DeviceState.ONLINE),
-        createRealDevice("5", IDevice.DeviceState.ONLINE)
-    };
-
-    InstallCommandOptions options = getOptions();
-    assertNull(installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions()));
-
-    options = getOptions(AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG);
-    List<IDevice> filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNotNull(filteredDevices);
-    assertEquals(devices.length, filteredDevices.size());
-  }
-
-  /**
-   * Verify that when emulator-only mode is enabled only emulators appear in result.
-   */
-  @Test
-  public void testDeviceFilterEmulator() throws CmdLineException {
-    InstallCommandOptions options = getOptions(TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
-
-    IDevice[] devices = new IDevice[] {
-        createEmulator("1", IDevice.DeviceState.ONLINE),
-        createRealDevice("2", IDevice.DeviceState.ONLINE),
-    };
-
-    List<IDevice> filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNotNull(filteredDevices);
-    assertEquals(1, filteredDevices.size());
-    assertSame(devices[0], filteredDevices.get(0));
-  }
-
-  /**
-   * Verify that when real-device-only mode is enabled only real devices appear in result.
-   */
-  @Test
-  public void testDeviceFilterRealDevices() throws CmdLineException {
-    InstallCommandOptions options = getOptions(TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
-
-    IDevice[] devices = new IDevice[] {
-        createRealDevice("1", IDevice.DeviceState.ONLINE),
-        createEmulator("2", IDevice.DeviceState.ONLINE)
-    };
-
-    List<IDevice> filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNotNull(filteredDevices);
-    assertEquals(1, filteredDevices.size());
-    assertSame(devices[0], filteredDevices.get(0));
-  }
-
-  /**
-   * Verify that filtering by serial number works.
-   */
-  @Test
-  public void testDeviceFilterBySerial() throws CmdLineException {
-    IDevice[] devices = new IDevice[] {
-        createRealDevice("1", IDevice.DeviceState.ONLINE),
-        createEmulator("2", IDevice.DeviceState.ONLINE),
-        createRealDevice("3", IDevice.DeviceState.ONLINE),
-        createEmulator("4", IDevice.DeviceState.ONLINE)
-    };
-
-    for (int i = 0; i < devices.length; i++) {
-      InstallCommandOptions options = getOptions(TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG,
-          devices[i].getSerialNumber());
-
-      List<IDevice> filteredDevices = installCommand.filterDevices(
-          devices, options.adbOptions(), options.targetDeviceOptions());
-      assertNotNull(filteredDevices);
-      assertEquals(1, filteredDevices.size());
-      assertSame(devices[i], filteredDevices.get(0));
-    }
-  }
-
-  /**
-   * Verify that if no devices match filters null is returned.
-   */
-  @Test
-  public void testDeviceFilterNoMatchingDevices() throws CmdLineException {
-    IDevice[] devices = new IDevice[] {
-        createRealDevice("1", IDevice.DeviceState.ONLINE),
-        createEmulator("2", IDevice.DeviceState.ONLINE),
-        createRealDevice("3", IDevice.DeviceState.ONLINE),
-        createEmulator("4", IDevice.DeviceState.ONLINE)
-    };
-
-    InstallCommandOptions options = getOptions(
-          TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, "invalid-serial");
-    List<IDevice> filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNull(filteredDevices);
-  }
-
-  /**
-   * Verify that different combinations of arguments work correctly.
-   */
-  @Test
-  public void testDeviceFilterCombos() throws CmdLineException {
-    TestDevice realDevice1 = createRealDevice("1", IDevice.DeviceState.ONLINE);
-    TestDevice realDevice2 = createRealDevice("2", IDevice.DeviceState.ONLINE);
-    TestDevice emulator1 = createEmulator("3", IDevice.DeviceState.ONLINE);
-    TestDevice emulator2 = createEmulator("4", IDevice.DeviceState.ONLINE);
-    IDevice[] devices = new IDevice[] {
-        realDevice1,
-        emulator1,
-        realDevice2,
-        emulator2
-    };
-
-    // Filter by serial in "real device" mode with serial number for real device.
-    InstallCommandOptions options = getOptions(
-        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, realDevice1.getSerialNumber(),
-        TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
-    List<IDevice> filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNotNull(filteredDevices);
-    assertEquals(1, filteredDevices.size());
-    assertSame(realDevice1, filteredDevices.get(0));
-
-    // Filter by serial in "real device" mode with serial number for emulator.
-    options = getOptions(
-        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, emulator1.getSerialNumber(),
-        TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
-    filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNull(filteredDevices);
-
-    // Filter by serial in "emulator" mode with serial number for real device.
-    options = getOptions(
-        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, realDevice1.getSerialNumber(),
-        TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
-    filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNull(filteredDevices);
-
-    // Filter by serial in "real device" mode with serial number for emulator.
-    options = getOptions(
-        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, emulator1.getSerialNumber(),
-        TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
-    filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNotNull(filteredDevices);
-    assertEquals(1, filteredDevices.size());
-    assertSame(emulator1, filteredDevices.get(0));
-
-    // Filter in both "real device" mode and "emulator mode".
-    options = getOptions(
-        TargetDeviceOptions.DEVICE_MODE_LONG_ARG,
-        TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG,
-        AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG);
-    filteredDevices = installCommand.filterDevices(
-        devices, options.adbOptions(), options.targetDeviceOptions());
-    assertNotNull(filteredDevices);
-    assertEquals(devices.length, filteredDevices.size());
-    for (IDevice device : devices) {
-      assertTrue(filteredDevices.contains(device));
-    }
-  }
 
   /**
    * Verify that successful installation on device results in true.

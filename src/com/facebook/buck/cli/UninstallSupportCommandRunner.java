@@ -39,10 +39,13 @@ import java.io.PrintStream;
  * uninstall packages.
  */
 public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOptions>
-    extends AdbCommandRunner<T> {
+    extends AbstractCommandRunner<T> {
+
+  protected final AdbHelper adbHelper;
 
   protected UninstallSupportCommandRunner(CommandRunnerParams params) {
     super(params);
+    adbHelper = new AdbHelper(console);
   }
 
   /**
@@ -61,18 +64,25 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       ExecutionContext context,
       BuckConfig buckConfig) {
     getBuckEventBus().post(UninstallEvent.started(packageName));
-    boolean success = adbCall(adbOptions, deviceOptions, context, new AdbCallable() {
-      @Override
-      public boolean call(IDevice device) throws Exception {
-        return uninstallApkFromDevice(device, packageName, uninstallOptions.shouldKeepUserData());
-      }
+    boolean success = adbHelper.adbCall(
+        adbOptions,
+        deviceOptions,
+        context,
+        new AdbHelper.AdbCallable() {
+          @Override
+          public boolean call(IDevice device) throws Exception {
+            return uninstallApkFromDevice(
+                device,
+                packageName,
+                uninstallOptions.shouldKeepUserData());
+          }
 
-      @Override
-      public String toString() {
-        return "uninstall apk";
-      }
-    },
-    buckConfig);
+          @Override
+          public String toString() {
+            return "uninstall apk";
+          }
+        },
+        buckConfig);
     getBuckEventBus().post(UninstallEvent.finished(packageName, success));
     return success;
   }
@@ -133,7 +143,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       String packageName,
       boolean keepData) throws InstallException {
     try {
-      ErrorParsingReceiver receiver = new ErrorParsingReceiver() {
+      AdbHelper.ErrorParsingReceiver receiver = new AdbHelper.ErrorParsingReceiver() {
         @Override
         protected String matchForError(String line) {
           return line.toLowerCase().contains("failure") ? line : null;
@@ -142,7 +152,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       device.executeShellCommand(
           "pm uninstall " + (keepData ? "-k " : "") + packageName,
           receiver,
-          INSTALL_TIMEOUT);
+          AdbHelper.INSTALL_TIMEOUT);
       return receiver.getErrorMessage();
     } catch (TimeoutException e) {
       throw new InstallException(e);

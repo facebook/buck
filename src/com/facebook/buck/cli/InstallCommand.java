@@ -152,10 +152,11 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
 
     getBuckEventBus().post(StartActivityEvent.started(installableApk.getBuildTarget(),
         activityToRun));
-    boolean success = adbCall(options.adbOptions(),
+    boolean success = adbHelper.adbCall(
+        options.adbOptions(),
         options.targetDeviceOptions(),
         context,
-        new AdbCallable() {
+        new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
             String err = deviceStartActivity(device, activityToRun);
@@ -184,18 +185,19 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
   @VisibleForTesting
   String deviceStartActivity(IDevice device, String activityToRun) {
     try {
-        ErrorParsingReceiver receiver = new ErrorParsingReceiver() {
-          @Override
-          protected String matchForError(String line) {
-            // Parses output from shell am to determine if activity was started correctly.
-            return (Pattern.matches("^([\\w_$.])*(Exception|Error|error).*$", line) ||
-                line.contains("am: not found")) ? line : null;
-          }
-        };
+        AdbHelper.ErrorParsingReceiver receiver =
+            new AdbHelper.ErrorParsingReceiver() {
+              @Override
+              protected String matchForError(String line) {
+                // Parses output from shell am to determine if activity was started correctly.
+                return (Pattern.matches("^([\\w_$.])*(Exception|Error|error).*$", line) ||
+                    line.contains("am: not found")) ? line : null;
+              }
+            };
         device.executeShellCommand(
             String.format("am start -n %s", activityToRun),
             receiver,
-            INSTALL_TIMEOUT);
+            AdbHelper.INSTALL_TIMEOUT);
         return receiver.getErrorMessage();
     } catch (Exception e) {
       return e.toString();
@@ -228,10 +230,11 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
 
     final File apk = installableApk.getApkPath().toFile();
     final boolean installViaSd = options.shouldInstallViaSd();
-    boolean success = adbCall(options.adbOptions(),
+    boolean success = adbHelper.adbCall(
+        options.adbOptions(),
         options.targetDeviceOptions(),
         context,
-        new AdbCallable() {
+        new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
             return installApkOnDevice(device, apk, installViaSd);
@@ -315,7 +318,8 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
   private String deviceGetExternalStorage(IDevice device) throws TimeoutException,
           AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
       CollectingOutputReceiver receiver = new CollectingOutputReceiver();
-      device.executeShellCommand("echo $EXTERNAL_STORAGE", receiver, GETPROP_TIMEOUT);
+      device.executeShellCommand(
+          "echo $EXTERNAL_STORAGE", receiver, AdbHelper.GETPROP_TIMEOUT);
       String value = receiver.getOutput().trim();
       if (value.isEmpty()) {
           return null;

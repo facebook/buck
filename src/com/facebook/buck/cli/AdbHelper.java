@@ -23,6 +23,7 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.TriState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -37,23 +38,21 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 /**
- * Base class for commands that use the AndroidDebugBridge to run commands on devices.
- * Currently, {@link InstallCommand}, {@link UninstallCommand}.
- *
- * @param <T>
+ * Helper for executing commands over ADB, especially for multiple devices.
  */
-public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
-    extends AbstractCommandRunner<T> {
+public class AdbHelper {
 
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
   // Taken from ddms source code.
-  static final int INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
-  static final int GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
+  public static final int INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
+  public static final int GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
 
-  protected AdbCommandRunner(CommandRunnerParams params) {
-    super(params);
+  private final Console console;
+
+  public AdbHelper(Console console) {
+    this.console = console;
   }
 
   /**
@@ -137,8 +136,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     return devices;
   }
 
-  @VisibleForTesting
-  boolean isAdbInitialized(AndroidDebugBridge adb) {
+  private boolean isAdbInitialized(AndroidDebugBridge adb) {
     return adb.isConnected() && adb.hasInitialDeviceList();
   }
 
@@ -146,10 +144,9 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    * Creates connection to adb and waits for this connection to be initialized
    * and receive initial list of devices.
    */
-  @VisibleForTesting
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  AndroidDebugBridge createAdb(ExecutionContext context) {
+  private AndroidDebugBridge createAdb(ExecutionContext context) {
     try {
       AndroidDebugBridge.init(/* clientSupport */ false);
     } catch (IllegalStateException ex) {
@@ -195,12 +192,11 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
-  @VisibleForTesting
-  protected boolean adbCall(AdbOptions options,
-                            TargetDeviceOptions deviceOptions,
-                            ExecutionContext context,
-                            AdbCallable adbCallable,
-                            BuckConfig buckConfig) {
+  public boolean adbCall(AdbOptions options,
+                         TargetDeviceOptions deviceOptions,
+                         ExecutionContext context,
+                         AdbCallable adbCallable,
+                         BuckConfig buckConfig) {
 
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
@@ -276,7 +272,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   /**
    * Base class for commands to be run against an {@link com.android.ddmlib.IDevice IDevice}.
    */
-  public abstract class AdbCallable {
+  public abstract static class AdbCallable {
 
     /**
      * Perform the actions specified by this {@code AdbCallable} and return true on success.
@@ -288,7 +284,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
     /**
      * Wraps this as a {@link java.util.concurrent.Callable Callable&lt;Boolean&gt;} whose
      * {@link Callable#call() call()} method calls
-     * {@link AdbCommandRunner.AdbCallable#call(IDevice) call(IDevice)} against the specified
+     * {@link AdbHelper.AdbCallable#call(IDevice) call(IDevice)} against the specified
      * device.
      * @param device the {@link com.android.ddmlib.IDevice IDevice} to run against.
      * @return a {@code Callable}
@@ -313,7 +309,8 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    * {@link com.android.ddmlib.IDevice#executeShellCommand(String,
    * com.android.ddmlib.IShellOutputReceiver)} succeeded.
    */
-  protected abstract static class ErrorParsingReceiver extends MultiLineReceiver {
+  // Should be made private in a follow-up diff.
+  public abstract static class ErrorParsingReceiver extends MultiLineReceiver {
 
     private String errorMessage = null;
 
