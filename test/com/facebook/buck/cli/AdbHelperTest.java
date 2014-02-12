@@ -23,6 +23,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 
@@ -63,7 +65,8 @@ public class AdbHelperTest {
 
   private AdbHelper createAdbHelper() {
     Console console = new TestConsole();
-    return new AdbHelper(console);
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    return new AdbHelper(console, eventBus);
   }
 
   /**

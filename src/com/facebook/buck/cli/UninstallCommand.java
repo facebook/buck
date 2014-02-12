@@ -88,7 +88,7 @@ public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCom
     // Find application package name from manifest and uninstall from matching devices.
     String appId = tryToExtractPackageNameFromManifest(installableApk,
         dependencyGraph);
-    return uninstallApk(appId,
+    return adbHelper.uninstallApk(appId,
         options.adbOptions(),
         options.targetDeviceOptions(),
         options.uninstallOptions(),

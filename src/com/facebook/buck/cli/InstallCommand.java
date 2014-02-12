@@ -86,7 +86,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     if (options.shouldUninstallFirst()) {
       String packageName = tryToExtractPackageNameFromManifest(installableApk,
           build.getBuildContext().getDependencyGraph());
-      uninstallApk(packageName,
+      adbHelper.uninstallApk(packageName,
           options.adbOptions(),
           options.targetDeviceOptions(),
           options.uninstallOptions(),
