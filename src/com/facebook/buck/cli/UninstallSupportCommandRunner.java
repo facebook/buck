@@ -21,8 +21,9 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Base class for Commands which need {@link AndroidDebugBridge} and also need to
@@ -39,11 +40,11 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
   }
 
   public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
-    String pathToManifest = androidBinaryRule.getManifestPath().toString();
+    Path pathToManifest = androidBinaryRule.getManifestPath();
 
-    // Note that the file may not exist if AndroidManifest.xml is a generated file.
-    File androidManifestXml = new File(pathToManifest);
-    if (!androidManifestXml.isFile()) {
+    // Note that the file may not exist if AndroidManifest.xml is a generated file
+    // and the rule has not been built yet.
+    if (!Files.isRegularFile(pathToManifest)) {
       throw new HumanReadableException(
           "Manifest file %s does not exist, so could not extract package name.",
           pathToManifest);

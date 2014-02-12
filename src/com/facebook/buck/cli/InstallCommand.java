@@ -35,6 +35,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -121,7 +122,7 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
       ExecutionContext context) throws IOException {
 
     // Might need the package name and activities from the AndroidManifest.
-    String pathToManifest = installableApk.getManifestPath().toString();
+    Path pathToManifest = installableApk.getManifestPath();
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest);
 
     if (activity == null) {

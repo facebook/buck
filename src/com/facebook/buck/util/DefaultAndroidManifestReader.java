@@ -19,16 +19,16 @@ package com.facebook.buck.util;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 
@@ -133,9 +133,8 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader{
    * @return an {@code AndroidManifestReader} for {@code path}
    * @throws IOException
    */
-  public static AndroidManifestReader forPath(String path) throws IOException {
-    File androidManifestXml = new File(path);
-    Reader reader = Files.newReader(androidManifestXml, Charsets.UTF_8);
+  public static AndroidManifestReader forPath(Path path) throws IOException {
+    Reader reader = Files.newBufferedReader(path, Charsets.UTF_8);
     return forReader(reader);
   }
 
