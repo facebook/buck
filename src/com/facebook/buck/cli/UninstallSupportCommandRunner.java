@@ -41,7 +41,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
 
   public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule,
       DependencyGraph dependencyGraph) {
-    String pathToManifest = androidBinaryRule.getManifest().resolve(dependencyGraph).toString();
+    String pathToManifest = androidBinaryRule.getManifestPath().toString();
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file.
     File androidManifestXml = new File(pathToManifest);

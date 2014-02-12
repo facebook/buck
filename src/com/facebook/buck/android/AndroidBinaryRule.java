@@ -900,6 +900,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return manifest;
   }
 
+  @Override
+  public Path getManifestPath() {
+    return aaptPackageResources.getAndroidManifestXml();
+  }
+
   String getTarget() {
     return target;
   }

@@ -33,6 +33,12 @@ public interface InstallableApk {
   public SourcePath getManifest();
 
   /**
+   * @return the path to the AndroidManifest.xml. Note that this file might be a symlink,
+   *     and might not exist at all before this rule has been built.
+   */
+  public Path getManifestPath();
+
+  /**
    * @return The APK at this path is the final one that points to an APK that a user should
    *         install.
    */

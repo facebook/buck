@@ -24,7 +24,6 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.LogEvent;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableApk;
@@ -86,7 +85,8 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     if (options.shouldUninstallFirst()) {
       String packageName = tryToExtractPackageNameFromManifest(installableApk,
           build.getBuildContext().getDependencyGraph());
-      adbHelper.uninstallApk(packageName,
+      adbHelper.uninstallApk(
+          packageName,
           options.adbOptions(),
           options.targetDeviceOptions(),
           options.uninstallOptions(),
@@ -102,10 +102,10 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     // We've installed the application successfully.
     // Is either of --activity or --run present?
     if (options.shouldStartActivity()) {
-      exitCode = startActivity(installableApk,
+      exitCode = startActivity(
+          installableApk,
           options.getActivityToStart(),
           options,
-          build.getBuildContext(),
           build.getExecutionContext());
       if (exitCode != 0) {
         return exitCode;
@@ -115,14 +115,14 @@ public class InstallCommand extends UninstallSupportCommandRunner<InstallCommand
     return exitCode;
   }
 
-  private int startActivity(InstallableApk installableApk,
+  private int startActivity(
+      InstallableApk installableApk,
       String activity,
       InstallCommandOptions options,
-      BuildContext buildContext,
       ExecutionContext context) throws IOException {
 
     // Might need the package name and activities from the AndroidManifest.
-    String pathToManifest = installableApk.getManifest().resolve(buildContext).toString();
+    String pathToManifest = installableApk.getManifestPath().toString();
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest);
 
     if (activity == null) {
