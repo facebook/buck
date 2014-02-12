@@ -27,8 +27,11 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultAndroidManifestReader;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.TriState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -38,6 +41,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -477,6 +482,21 @@ public class AdbHelper {
     }
   }
 
+  public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
+    Path pathToManifest = androidBinaryRule.getManifestPath();
 
+    // Note that the file may not exist if AndroidManifest.xml is a generated file
+    // and the rule has not been built yet.
+    if (!Files.isRegularFile(pathToManifest)) {
+      throw new HumanReadableException(
+          "Manifest file %s does not exist, so could not extract package name.",
+          pathToManifest);
+    }
 
+    try {
+      return DefaultAndroidManifestReader.forPath(pathToManifest).getPackage();
+    } catch (IOException e) {
+      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
+    }
+  }
 }
