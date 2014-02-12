@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
@@ -39,8 +38,7 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
     adbHelper = new AdbHelper(console, getBuckEventBus());
   }
 
-  public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule,
-      DependencyGraph dependencyGraph) {
+  public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
     String pathToManifest = androidBinaryRule.getManifestPath().toString();
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file.
