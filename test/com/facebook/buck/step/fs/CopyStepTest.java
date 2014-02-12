@@ -49,7 +49,7 @@ public class CopyStepTest {
   public void testGetShellCommandInternalPath() {
     Path source = Paths.get("path/to/source.txt");
     Path destination = Paths.get("path/to/destination.txt");
-    CopyStep copyCommand = new CopyStep(source, destination);
+    CopyStep copyCommand = CopyStep.forFile(source, destination);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertFalse(copyCommand.isRecursive());
@@ -59,7 +59,7 @@ public class CopyStepTest {
   public void testGetShellCommandInternal() {
     Path source = Paths.get("path/to/source.txt");
     Path destination = Paths.get("path/to/destination.txt");
-    CopyStep copyCommand = new CopyStep(source, destination);
+    CopyStep copyCommand = CopyStep.forFile(source, destination);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertFalse(copyCommand.isRecursive());
@@ -69,7 +69,10 @@ public class CopyStepTest {
   public void testGetShellCommandInternalWithRecurse() {
     Path source = Paths.get("path/to/source");
     Path destination = Paths.get("path/to/destination");
-    CopyStep copyCommand = new CopyStep(source, destination, /* shouldRecurse */ true);
+    CopyStep copyCommand = CopyStep.forDirectory(
+        source,
+        destination,
+        CopyStep.DirectoryMode.CONTENTS_ONLY);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertTrue(copyCommand.isRecursive());
@@ -77,7 +80,7 @@ public class CopyStepTest {
 
   @Test
   public void testGetShortName() {
-    CopyStep copyCommand = new CopyStep(Paths.get("here"), Paths.get("there"));
+    CopyStep copyCommand = CopyStep.forFile(Paths.get("here"), Paths.get("there"));
     assertEquals("cp", copyCommand.getShortName());
   }
 

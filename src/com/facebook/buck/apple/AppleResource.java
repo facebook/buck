@@ -94,11 +94,7 @@ public class AppleResource extends AbstractBuildable {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     for (Path resourcePath : resources) {
-      steps.add(
-          new CopyStep(
-              resourcePath,
-              outputDirectory,
-              /* shouldRecurse */ true));
+      steps.add(CopyStep.forFile(resourcePath, outputDirectory));
     }
 
     return steps.build();

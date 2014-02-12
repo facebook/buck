@@ -188,10 +188,10 @@ public class AaptPackageResources extends AbstractBuildable {
     if (isStoreStringsAsAssets()) {
       Path stringAssetsDir = assetsDirectory.get().resolve("strings");
       steps.add(new MakeCleanDirectoryStep(stringAssetsDir));
-      steps.add(new CopyStep(
+      steps.add(CopyStep.forDirectory(
           getPathForTmpStringAssetsDirectory(),
           stringAssetsDir,
-          /* shouldRecurse */ true));
+          CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
     steps.add(new MkdirStep(getResourceApkPath().getParent()));

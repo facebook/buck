@@ -93,7 +93,7 @@ public class AppleResourceTest {
 
     MoreAsserts.assertSteps("Copy the resources to the expected location",
         ImmutableList.of(
-            "cp -R image.png buck-out/bin/path/to/app/MyApp.app"),
+            "cp image.png buck-out/bin/path/to/app/MyApp.app"),
         steps,
         executionContext);
   }
@@ -148,7 +148,7 @@ public class AppleResourceTest {
 
     MoreAsserts.assertSteps("Copy the resources to the expected location",
         ImmutableList.of(
-            "cp -R image.png buck-out/bin/path/to/app/MyApp.app/Resources"),
+            "cp image.png buck-out/bin/path/to/app/MyApp.app/Resources"),
         steps,
         executionContext);
   }

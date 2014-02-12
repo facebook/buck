@@ -317,7 +317,7 @@ public class AndroidBinaryRuleTest {
         "/path/to/source",
         "/path/to/destination/",
         ImmutableList.of(
-            "cp -R /path/to/source /path/to/destination"));
+            "cp -R /path/to/source/* /path/to/destination"));
   }
 
   @Test
@@ -328,7 +328,7 @@ public class AndroidBinaryRuleTest {
         "/path/to/destination/",
         ImmutableList.of(
             "[ -d /path/to/source/armeabi-v7a ] && mkdir -p /path/to/destination/armeabi-v7a " +
-                "&& cp -R /path/to/source/armeabi-v7a /path/to/destination/armeabi-v7a"));
+                "&& cp -R /path/to/source/armeabi-v7a/* /path/to/destination/armeabi-v7a"));
   }
 
   @Test
@@ -339,9 +339,9 @@ public class AndroidBinaryRuleTest {
         "/path/to/destination/",
         ImmutableList.of(
             "[ -d /path/to/source/armeabi ] && mkdir -p /path/to/destination/armeabi " +
-                "&& cp -R /path/to/source/armeabi /path/to/destination/armeabi",
+                "&& cp -R /path/to/source/armeabi/* /path/to/destination/armeabi",
             "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
-                "&& cp -R /path/to/source/x86 /path/to/destination/x86"));
+                "&& cp -R /path/to/source/x86/* /path/to/destination/x86"));
   }
 
   @Test

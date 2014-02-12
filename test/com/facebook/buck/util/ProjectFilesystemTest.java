@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.WatchEvents;
+import com.facebook.buck.util.ProjectFilesystem.CopySourceMode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -196,6 +197,29 @@ public class ProjectFilesystemTest {
     assertTrue(new File(tmp.getRoot(), "dest/com/example/foo/package.html").exists());
     assertTrue(new File(tmp.getRoot(), "dest/com/example/bar/Bar.java").exists());
     assertTrue(new File(tmp.getRoot(), "dest/com/example/bar/package.html").exists());
+  }
+
+  @Test
+  public void testCopyFolderAndContents() throws IOException {
+    // Build up a directory of dummy files.
+    tmp.newFolder("src");
+    tmp.newFolder("src/com");
+    tmp.newFolder("src/com/example");
+    tmp.newFolder("src/com/example/foo");
+    tmp.newFile("src/com/example/foo/Foo.java");
+    tmp.newFile("src/com/example/foo/package.html");
+    tmp.newFolder("src/com/example/bar");
+    tmp.newFile("src/com/example/bar/Bar.java");
+    tmp.newFile("src/com/example/bar/package.html");
+
+    // Copy the contents of src/ to dest/ (including src itself).
+    tmp.newFolder("dest");
+    filesystem.copy(Paths.get("src"), Paths.get("dest"), CopySourceMode.DIRECTORY_AND_CONTENTS);
+
+    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/foo/Foo.java").exists());
+    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/foo/package.html").exists());
+    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/bar/Bar.java").exists());
+    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/bar/package.html").exists());
   }
 
   @Test

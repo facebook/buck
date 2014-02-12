@@ -60,6 +60,28 @@ import java.util.zip.ZipEntry;
  */
 public class ProjectFilesystem {
 
+  /**
+   * Controls the behavior of how the source should be treated when copying.
+   */
+  public enum CopySourceMode {
+      /**
+       * Copy the single source file into the destination path.
+       */
+      FILE,
+
+      /**
+       * Treat the source as a directory and copy each file inside it
+       * to the destination path, which must be a directory.
+       */
+      DIRECTORY_CONTENTS_ONLY,
+
+      /**
+       * Treat the source as a directory. Copy the directory and its
+       * contents to the destination path, which must be a directory.
+       */
+      DIRECTORY_AND_CONTENTS,
+  };
+
   private final Path projectRoot;
 
   private final Function<Path, Path> pathAbsolutifier;
@@ -449,12 +471,29 @@ public class ProjectFilesystem {
         event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
   }
 
+  public void copy(Path source, Path target, CopySourceMode sourceMode) throws IOException {
+    switch (sourceMode) {
+      case FILE:
+        java.nio.file.Files.copy(
+            resolve(source),
+            resolve(target),
+            StandardCopyOption.REPLACE_EXISTING);
+        break;
+      case DIRECTORY_CONTENTS_ONLY:
+        MoreFiles.copyRecursively(resolve(source), resolve(target));
+        break;
+      case DIRECTORY_AND_CONTENTS:
+        MoreFiles.copyRecursively(resolve(source), resolve(target.resolve(source.getFileName())));
+        break;
+    }
+  }
+
   public void copyFolder(Path source, Path target) throws IOException {
-    MoreFiles.copyRecursively(resolve(source), resolve(target));
+    copy(source, target, CopySourceMode.DIRECTORY_CONTENTS_ONLY);
   }
 
   public void copyFile(Path source, Path target) throws IOException {
-    java.nio.file.Files.copy(resolve(source), resolve(target), StandardCopyOption.REPLACE_EXISTING);
+    copy(source, target, CopySourceMode.FILE);
   }
 
   public void createSymLink(Path sourcePath, Path targetPath, boolean force)

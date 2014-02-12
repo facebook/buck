@@ -314,7 +314,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       ImmutableList.Builder<Step> steps) {
 
     if (cpuFilters.isEmpty()) {
-      steps.add(new CopyStep(sourceDir, destinationDir, true));
+      steps.add(
+          CopyStep.forDirectory(
+              sourceDir,
+              destinationDir,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
     } else {
       for (TargetCpuType cpuType : cpuFilters) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
@@ -324,7 +328,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         Path libDestinationDir = destinationDir.resolve(abiDirectoryComponent.get());
 
         final MkdirStep mkDirStep = new MkdirStep(libDestinationDir);
-        final CopyStep copyStep = new CopyStep(libSourceDir, libDestinationDir, true);
+        final CopyStep copyStep = CopyStep.forDirectory(
+            libSourceDir,
+            libDestinationDir,
+            CopyStep.DirectoryMode.CONTENTS_ONLY);
         steps.add(new Step() {
           @Override
           public int execute(ExecutionContext context) {
