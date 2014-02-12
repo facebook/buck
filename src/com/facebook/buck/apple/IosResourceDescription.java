@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.util.DefaultDirectoryTraverser;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -43,6 +44,10 @@ public class IosResourceDescription implements Description<AppleResourceDescript
 
   @Override
   public AppleResource createBuildable(BuildRuleParams params, AppleResourceDescriptionArg args) {
-    return new AppleResource(params, args, Optional.<Path>absent());
+    return new AppleResource(
+        new DefaultDirectoryTraverser(),
+        params,
+        args,
+        Optional.<Path>absent());
   }
 }

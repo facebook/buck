@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
+import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -25,7 +26,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.util.DirectoryTraverser;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -45,21 +46,26 @@ import java.util.Collection;
  * <pre>
  * ios_resource(
  *   name = 'res',
- *   resources = glob(['Resources/**']),
+ *   dirs = ['MyLibrary.bundle'],
+ *   files = glob(['Resources/**']),
  * )
  * </pre>
  */
 public class AppleResource extends AbstractBuildable {
 
-  private final ImmutableSortedSet<Path> resources;
+  private final DirectoryTraverser directoryTraverser;
+  private final ImmutableSortedSet<Path> dirs;
+  private final ImmutableSortedSet<Path> files;
   private final Path outputDirectory;
 
-  @VisibleForTesting
   AppleResource(
+      DirectoryTraverser directoryTraverser,
       BuildRuleParams params,
       AppleResourceDescriptionArg args,
       Optional<Path> outputPathSubdirectory) {
-    this.resources = ImmutableSortedSet.copyOf(args.resources);
+    this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
+    this.dirs = ImmutableSortedSet.copyOf(args.dirs);
+    this.files = ImmutableSortedSet.copyOf(args.files);
     Preconditions.checkNotNull(outputPathSubdirectory);
     BuildTarget target = params.getBuildTarget();
     Path baseOutputDirectory = Paths.get(
@@ -73,9 +79,34 @@ public class AppleResource extends AbstractBuildable {
     }
   }
 
+  /**
+   * Returns the set of directories to recursively copy for this resource rule.
+   */
+  public ImmutableSortedSet<Path> getDirs() {
+    return dirs;
+  }
+
+  /**
+   * Returns the set of files to copy for this resource rule.
+   */
+  public ImmutableSortedSet<Path> getFiles() {
+    return files;
+  }
+
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return resources;
+    ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes = ImmutableSortedSet
+        .naturalOrder();
+
+    for (Path dir : dirs) {
+      Buildables.addInputsToSortedSet(
+          dir,
+          inputsToConsiderForCachingPurposes,
+          directoryTraverser);
+    }
+
+    inputsToConsiderForCachingPurposes.addAll(files);
+    return inputsToConsiderForCachingPurposes.build();
   }
 
   @Override
@@ -93,8 +124,16 @@ public class AppleResource extends AbstractBuildable {
       throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    for (Path resourcePath : resources) {
-      steps.add(CopyStep.forFile(resourcePath, outputDirectory));
+    for (Path dir : dirs) {
+      steps.add(
+          CopyStep.forDirectory(
+              dir,
+              outputDirectory,
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+    }
+
+    for (Path file : files) {
+      steps.add(CopyStep.forFile(file, outputDirectory));
     }
 
     return steps.build();

@@ -24,5 +24,6 @@ import java.nio.file.Path;
  * {@link OsxResourceDescription}.
  */
 public class AppleResourceDescriptionArg {
-  public Set<Path> resources;
+  public Set<Path> dirs;
+  public Set<Path> files;
 }
