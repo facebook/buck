@@ -31,9 +31,13 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 
-public class UninstallCommand extends UninstallSupportCommandRunner<UninstallCommandOptions> {
+public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOptions> {
+
+  private final AdbHelper adbHelper;
+
   public UninstallCommand(CommandRunnerParams params) {
     super(params);
+    adbHelper = new AdbHelper(console, getBuckEventBus());
   }
 
   @Override

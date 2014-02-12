@@ -43,10 +43,13 @@ import java.util.regex.Pattern;
 /**
  * Command so a user can build and install an APK.
  */
-public class InstallCommand extends UninstallSupportCommandRunner<InstallCommandOptions> {
+public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions> {
+
+  private final AdbHelper adbHelper;
 
   protected InstallCommand(CommandRunnerParams params) {
     super(params);
+    adbHelper = new AdbHelper(console, getBuckEventBus());
   }
 
   @Override
