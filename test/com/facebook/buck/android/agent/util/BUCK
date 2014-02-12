@@ -1,0 +1,12 @@
+java_test(
+  name = 'util',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:junit',
+    '//src/com/facebook/buck/android/agent/util:util',
+  ],
+  source_under_test = [
+    '//src/com/facebook/buck/android/agent/util:util',
+  ],
+)
+

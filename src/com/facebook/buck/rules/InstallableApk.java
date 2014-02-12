@@ -17,6 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -38,4 +40,16 @@ public interface InstallableApk {
    *         install.
    */
   public Path getApkPath();
+
+  public Optional<ExopackageInfo> getExopackageInfo();
+
+  public static class ExopackageInfo {
+    public final Path metadata;
+    public final Path dexDirectory;
+
+    public ExopackageInfo(Path metadata, Path dexDirectory) {
+      this.metadata = Preconditions.checkNotNull(metadata);
+      this.dexDirectory = Preconditions.checkNotNull(dexDirectory);
+    }
+  }
 }

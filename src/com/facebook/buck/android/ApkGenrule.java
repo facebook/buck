@@ -113,6 +113,11 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   }
 
   @Override
+  public Optional<ExopackageInfo> getExopackageInfo() {
+    return apk.getExopackageInfo();
+  }
+
+  @Override
   public Collection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
   }

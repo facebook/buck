@@ -1,0 +1,32 @@
+android_library(
+  name = 'agent-lib',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/android/agent/util:util',
+    # Do not add other deps here.  The agent should remain very small.
+  ],
+)
+
+java_binary(
+  name = 'agent-for-host',
+  main_class = "com.facebook.buck.android.agent.AgentMain",
+  deps = [
+    ':agent-lib',
+  ],
+)
+
+android_binary(
+  name = 'agent',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = ':debug_keystore',
+  deps = [
+    ':agent-lib',
+  ],
+)
+
+keystore(
+  name = 'debug_keystore',
+  store = 'debug.keystore',
+  properties = 'debug.keystore.properties',
+)

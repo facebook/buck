@@ -279,6 +279,16 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     );
   }
 
+  public Path getMetadataTxtPath() {
+    Preconditions.checkState(dexSplitMode.isShouldSplitDex());
+    return new SplitDexPaths().metadataFile;
+  }
+
+  public Path getDexDirectory() {
+    Preconditions.checkState(dexSplitMode.isShouldSplitDex());
+    return new SplitDexPaths().jarfilesSubdir;
+  }
+
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     dexSplitMode.appendToRuleKey("dexSplitMode", builder);

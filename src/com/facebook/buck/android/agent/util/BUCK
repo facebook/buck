@@ -1,0 +1,14 @@
+# Code shared between the agent and the host.
+java_library(
+  name = 'util',
+  source = '6',
+  target = '6',
+  srcs = glob(['*.java']),
+  deps = [
+    # Do not add other deps here.  The agent should remain very small.
+  ],
+  visibility = [
+    '//src/com/facebook/buck/android/agent:agent-lib',
+    '//src/com/facebook/buck/cli:cli',
+  ],
+)

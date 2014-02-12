@@ -227,7 +227,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
 
     if (exopackage && !preDexMerge.isPresent()) {
-      throw new IllegalArgumentException("exopackage only works with pre-dexing");
+      throw new IllegalArgumentException(getBuildTarget() +
+          " specified exopackage without pre-dexing, which is invalid.");
     }
 
     if (exopackage) {
@@ -902,6 +903,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   boolean shouldSplitDex() {
     return dexSplitMode.isShouldSplitDex();
+  }
+
+  @Override
+  public Optional<ExopackageInfo> getExopackageInfo() {
+    if (!exopackage) {
+      return Optional.absent();
+    }
+    return Optional.of(new ExopackageInfo(
+        preDexMerge.get().getMetadataTxtPath(),
+        preDexMerge.get().getDexDirectory()));
   }
 
   boolean isUseAndroidProguardConfigWithOptimizations() {

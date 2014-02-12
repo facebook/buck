@@ -20,6 +20,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.InstallableApk;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
 
@@ -82,7 +83,18 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!adbHelper.installApk(installableApk, options)) {
+    boolean installSuccess;
+    Optional<InstallableApk.ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
+    if (exopackageInfo.isPresent()) {
+      installSuccess = new ExopackageInstaller(
+          build.getExecutionContext(),
+          adbHelper,
+          installableApk)
+          .install();
+    } else {
+      installSuccess = adbHelper.installApk(installableApk, options);
+    }
+    if (!installSuccess) {
       return 1;
     }
 

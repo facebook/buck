@@ -396,6 +396,61 @@ public class AdbHelper {
   }
 
   /**
+   * An exception that indicates that an executed command returned an unsuccessful exit code.
+   */
+  public static class CommandFailedException extends IOException {
+    public final String command;
+    public final int exitCode;
+    public final String output;
+    public CommandFailedException(String command, int exitCode, String output) {
+      super("Command '" + command + "' failed with code " + exitCode + ".  Output:\n" + output);
+      this.command = command;
+      this.exitCode = exitCode;
+      this.output = output;
+    }
+  }
+
+  /**
+   * Runs a command on a device and throws an exception if it fails.
+   *
+   * <p>This will not work if your command contains "exit" or "trap" statements.
+   *
+   * @param device Device to run the command on.
+   * @param command Shell command to execute.  Must not use "exit" or "trap".
+   * @return The full text output of the command.
+   * @throws CommandFailedException if the command fails.
+   */
+  public static String executeCommandWithErrorChecking(IDevice device, String command)
+      throws
+      TimeoutException,
+      AdbCommandRejectedException,
+      ShellCommandUnresponsiveException,
+      IOException {
+    CollectingOutputReceiver receiver = new CollectingOutputReceiver();
+    device.executeShellCommand(command + " ; echo -n :$?", receiver);
+    String realOutput = checkReceiverOutput(command, receiver);
+    return realOutput;
+  }
+
+  /**
+   * This was made public for one specific call site in ExopackageInstaller.
+   * If you're reading this, you probably shouldn't call it.  Pretend this method is private.
+   */
+  public static String checkReceiverOutput(
+      String command,
+      CollectingOutputReceiver receiver) throws CommandFailedException {
+    String fullOutput = receiver.getOutput();
+    int colon = fullOutput.lastIndexOf(':');
+    String realOutput = fullOutput.substring(0, colon);
+    String exitCodeStr = fullOutput.substring(colon + 1);
+    int exitCode = Integer.parseInt(exitCodeStr);
+    if (exitCode != 0) {
+      throw new CommandFailedException(command, exitCode, realOutput);
+    }
+    return realOutput;
+  }
+
+  /**
    * Install apk on all matching devices. This functions performs device
    * filtering based on three possible arguments:
    *

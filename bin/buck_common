@@ -316,6 +316,7 @@ BUCK_JAVA_ARGS="\
 -Dbuck.version_uid=${BUCK_VERSION_UID} \
 -Dbuck.dx=${BUCK_PATH_TO_CUSTOM_DX} \
 -Dbuck.buckd_dir=${BUCKD_DIR} \
+-Dbuck.android_agent_path=${BUCK_DIRECTORY}/assets/android/agent.apk \
 -Dlog4j.configuration=file:${BUCK_DIRECTORY}/config/log4j.properties \
 ${BUCK_PROJECT_JAVA_ARGS} \
 ${BUCK_EXTRA_JAVA_ARGS}"
