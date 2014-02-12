@@ -20,15 +20,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.FakeDirectoryTraverser;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collection;
 
 
 public class PrebuiltNativeLibraryRuleTest {
@@ -38,19 +38,13 @@ public class PrebuiltNativeLibraryRuleTest {
     // Mock out the traversal of the res/ and assets/ directories. Note that the directory entries
     // are not traversed in alphabetical order because ensuring that a sort happens is part of what
     // we are testing.
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
-        if ("java/src/com/facebook/base/libs".equals(rootPath)) {
-          traversal.visit(null, "armeabi/foo.so");
-          traversal.visit(null, "armeabi/libilbc-codec.so");
-          traversal.visit(null, "armeabi/bar.so");
-        } else {
-          throw new RuntimeException("Unexpected path: " + rootPath);
-        }
-      }
-    };
+    DirectoryTraverser traverser = new FakeDirectoryTraverser(
+        ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
+            "java/src/com/facebook/base/libs",
+            ImmutableList.of(
+                new FakeDirectoryTraverser.Entry(null, "armeabi/foo.so"),
+                new FakeDirectoryTraverser.Entry(null, "armeabi/libilbc-codec.so"),
+                new FakeDirectoryTraverser.Entry(null, "armeabi/bar.so"))));
 
     // Create an android_library rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.

@@ -41,6 +41,7 @@ java_test(
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/step:testutil',
+    '//test/com/facebook/buck/util:testutil',
     '//test/com/facebook/buck/util/concurrent:testutil',
     '//test/com/facebook/buck/testutil:testutil',
   ],

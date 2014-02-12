@@ -32,11 +32,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.FakeDirectoryTraverser;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -70,18 +71,12 @@ public class AaptPackageResourcesTest {
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) {
-        throw new RuntimeException("Unexpected: no assets directories to traverse!");
-      }
-    };
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         /* assetsDirectories */ ImmutableSet.<Path>of(),
         commands,
-        traverser);
+        new FakeDirectoryTraverser());
     EasyMock.verify(uberRDotJava);
 
     // Verify that no assets/ directory is used.
@@ -129,24 +124,18 @@ public class AaptPackageResourcesTest {
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<Path> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
-        if ("java/src/com/facebook/base/assets2".equals(rootPath)) {
-          traversal.visit(
-              new File("java/src/com/facebook/base/assets2",
-                  "fonts/Theinhardt-Medium.otf"),
-              "fonts/Theinhardt-Medium.otf");
-          traversal.visit(
-              new File("java/src/com/facebook/base/assets2",
-                  "fonts/Theinhardt-Regular.otf"),
-              "fonts/Theinhardt-Regular.otf");
-        } else {
-          throw new RuntimeException("Unexpected path: " + rootPath);
-        }
-      }
-    };
+    DirectoryTraverser traverser = new FakeDirectoryTraverser(
+        ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
+            "java/src/com/facebook/base/assets2",
+            ImmutableList.of(
+                new FakeDirectoryTraverser.Entry(
+                    new File("java/src/com/facebook/base/assets2",
+                             "fonts/Theinhardt-Medium.otf"),
+                    "fonts/Theinhardt-Medium.otf"),
+                new FakeDirectoryTraverser.Entry(
+                    new File("java/src/com/facebook/base/assets2",
+                             "fonts/Theinhardt-Regular.otf"),
+                    "fonts/Theinhardt-Regular.otf"))));
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
@@ -203,29 +192,24 @@ public class AaptPackageResourcesTest {
         resourceOne.getAssets(),
         resourceTwo.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new DirectoryTraverser() {
-      @Override
-      public void traverse(DirectoryTraversal traversal) throws IOException {
-        String rootPath = MorePaths.newPathInstance(traversal.getRoot()).toString();
-        if ("facebook/base/assets1".equals(rootPath)) {
-          traversal.visit(
-              new File("facebook/base/assets1",
-                  "guava-10.0.1-fork.dex.1.jar"),
-              "guava-10.0.1-fork.dex.1.jar");
-        } else if ("facebook/base/assets2".equals(rootPath)) {
-          traversal.visit(
-              new File("facebook/base/assets2",
-                  "fonts/Theinhardt-Medium.otf"),
-              "fonts/Theinhardt-Medium.otf");
-          traversal.visit(
-              new File("facebook/base/assets2",
-                  "fonts/Theinhardt-Regular.otf"),
-              "fonts/Theinhardt-Regular.otf");
-        } else {
-          throw new RuntimeException("Unexpected path: " + rootPath);
-        }
-      }
-    };
+    DirectoryTraverser traverser = new FakeDirectoryTraverser(
+        ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
+            "facebook/base/assets1",
+            ImmutableList.of(
+                new FakeDirectoryTraverser.Entry(
+                    new File("facebook/base/assets1",
+                             "guava-10.0.1-fork.dex.1.jar"),
+                    "guava-10.0.1-fork.dex.1.jar")),
+            "facebook/base/assets2",
+            ImmutableList.of(
+                new FakeDirectoryTraverser.Entry(
+                    new File("facebook/base/assets2",
+                             "fonts/Theinhardt-Medium.otf"),
+                    "fonts/Theinhardt-Medium.otf"),
+                new FakeDirectoryTraverser.Entry(
+                    new File("facebook/base/assets2",
+                             "fonts/Theinhardt-Regular.otf"),
+                    "fonts/Theinhardt-Regular.otf"))));
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
