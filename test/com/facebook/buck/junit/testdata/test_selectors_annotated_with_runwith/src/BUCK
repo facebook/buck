@@ -1,0 +1,10 @@
+java_library(
+  name = 'runner',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:junit',
+  ],
+  visibility = [
+    '//test:broken',
+  ],
+)

@@ -42,6 +42,9 @@ import java.util.concurrent.TimeoutException;
  * <p>
  * The superclass, {@link BlockJUnit4ClassRunner}, was introduced in JUnit 4.5 as a published API
  * that was designed to be extended.
+ * <p>
+ * This runner also creates Descriptions that allow JUnitRunner to filter which test-methods to run
+ * and should be forced into the test code path whenever test-selectors are in use.
  */
 public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
 

@@ -224,7 +224,11 @@ public final class JUnitRunner {
       protected AnnotatedBuilder annotatedBuilder() {
         // If there is no default timeout specified in .buckconfig, then use the original behavior
         // of AllDefaultPossibilitiesBuilder.
-        if (defaultTestTimeoutMillis <= 0) {
+        //
+        // Additionally, if we are using test selectors then we should use the original behavior
+        // to use our BuckBlockJUnit4ClassRunner, which provides the Descriptions needed to do
+        // test selecting properly.
+        if (defaultTestTimeoutMillis <= 0 || testSelectorList != null) {
           return super.annotatedBuilder();
         }
 
