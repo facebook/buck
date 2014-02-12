@@ -28,7 +28,7 @@ import java.io.IOException;
  */
 public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions> {
 
-  protected InstallCommand(CommandRunnerParams params) {
+  public InstallCommand(CommandRunnerParams params) {
     super(params);
   }
 
