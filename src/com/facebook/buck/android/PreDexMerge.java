@@ -137,27 +137,28 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         .toList();
 
     // Create all of the output paths needed for the SmartDexingStep.
-    Path secondaryDexScratchDir = BuildTargets.getBinPath(buildTarget, "__%s_secondary_dex__");
-    Path secondaryDexMetadataScratchDir = secondaryDexScratchDir.resolve("metadata");
-    Path secondaryDexJarFilesScratchDir = secondaryDexScratchDir.resolve("jarfiles");
-    final ImmutableSet<Path> secondaryDexDirectories = ImmutableSet.of(
-        secondaryDexMetadataScratchDir, secondaryDexJarFilesScratchDir);
+    Path workDir = BuildTargets.getBinPath(buildTarget, "_%s_output");
 
+    Path metadataDir = workDir.resolve("metadata");
+    Path jarfilesDir = workDir.resolve("jarfiles");
+    Path scratchDir = workDir.resolve("scratch");
+    Path successDir = workDir.resolve("success");
 
+    // These directories must use SECONDARY_DEX_SUBDIR because that mirrors the paths that
+    // they will appear at in the APK.
+    final ImmutableSet<Path> secondaryDexDirectories = ImmutableSet.of(metadataDir, jarfilesDir);
     final Path secondaryDexMetadataDir =
-        secondaryDexMetadataScratchDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+        metadataDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
     final Path secondaryDexJarFilesDir =
-        secondaryDexJarFilesScratchDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
-    steps.add(new MakeCleanDirectoryStep(secondaryDexMetadataDir));
+        jarfilesDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
     steps.add(new MkdirStep(secondaryDexJarFilesDir));
-
-    Path preDexScratchDir = secondaryDexScratchDir.resolve("__bucket_pre_dex__");
-    steps.add(new MakeCleanDirectoryStep(preDexScratchDir));
-
-    Path successDir = BuildTargets.getBinPath(buildTarget, "__%s_merge_pre_dex__/.success");
     steps.add(new MkdirStep(successDir));
+
+    steps.add(new MakeCleanDirectoryStep(secondaryDexMetadataDir));
+    steps.add(new MakeCleanDirectoryStep(scratchDir));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
@@ -173,7 +174,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         uberRDotJava.getRDotJavaDexWithClasses(),
         dexFilesToMerge,
         dexSplitMode.getPrimaryDexPatterns(),
-        preDexScratchDir,
+        scratchDir,
         dexSplitMode.getLinearAllocHardLimit(),
         dexSplitMode.getDexStore(),
         secondaryDexJarFilesDir);
