@@ -42,6 +42,7 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeTestRule;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestCaseSummary;
@@ -390,19 +391,19 @@ public class TestCommandTest {
   @Test
   public void testGetCandidateRulesByIncludedLabels() throws CmdLineException {
     TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows", "linux"),
+        ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
     TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("android"),
+        ImmutableSet.of(new Label("android")),
         BuildTargetFactory.newInstance("//:teh"),
         ImmutableSortedSet.<BuildRule>of(rule1),
         ImmutableSet.<BuildTargetPattern>of());
 
     TestRule rule3 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows"),
+        ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(rule2),
         ImmutableSet.<BuildTargetPattern>of());
@@ -421,19 +422,19 @@ public class TestCommandTest {
     TestCommandOptions options = getOptions("--exclude", "linux", "windows");
 
     TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows", "linux"),
+        ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
     TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("android"),
+        ImmutableSet.of(new Label("android")),
         BuildTargetFactory.newInstance("//:teh"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
     TestRule rule3 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows"),
+        ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
@@ -449,13 +450,13 @@ public class TestCommandTest {
     TestCommandOptions options = getOptions("--include", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows", "linux"),
+        ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
     TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows"),
+        ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
@@ -471,13 +472,13 @@ public class TestCommandTest {
     TestCommandOptions options = getOptions("--exclude", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows", "linux"),
+        ImmutableSet.of(new Label("windows"), new Label("linux")),
         BuildTargetFactory.newInstance("//:for"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
 
     TestRule rule2 = new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.of("windows"),
+        ImmutableSet.of(new Label("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<BuildTargetPattern>of());
@@ -486,6 +487,38 @@ public class TestCommandTest {
 
     Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
     assertEquals(ImmutableSet.of(rule2), result);
+  }
+
+  @Test
+  public void testLabelPriority() throws CmdLineException {
+    TestCommandOptions options = getOptions("--exclude", "c", "--include", "a+b");
+
+    TestRule rule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+        ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
+        BuildTargetFactory.newInstance("//:for"),
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.<BuildTargetPattern>of());
+
+    List<TestRule> testRules = ImmutableList.of(rule);
+
+    Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
+    assertEquals(ImmutableSet.of(), result);
+  }
+
+  @Test
+  public void testLabelPlingSyntax() throws CmdLineException {
+    TestCommandOptions options = getOptions("--labels", "!c", "a+b");
+
+    TestRule rule = new FakeTestRule(BuildRuleType.JAVA_TEST,
+        ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
+        BuildTargetFactory.newInstance("//:for"),
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSet.<BuildTargetPattern>of());
+
+    List<TestRule> testRules = ImmutableList.of(rule);
+
+    Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
+    assertEquals(ImmutableSet.of(), result);
   }
 
   @Test
@@ -587,12 +620,12 @@ public class TestCommandTest {
         ImmutableMap.<String, Map<String, String>>of(
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
-    assertThat(config.getDefaultExcludedLabels(), contains("e2e"));
+    assertThat(config.getDefaultExcludedLabels(), contains(new Label("e2e")));
     TestCommandOptions options = new TestCommandOptions(config);
 
     new CmdLineParserAdditionalOptions(options).parseArgument();
 
-    assertFalse(options.isMatchedByLabelOptions(ImmutableSet.of("e2e")));
+    assertFalse(options.isMatchedByLabelOptions(ImmutableSet.of(new Label("e2e"))));
   }
 
   @Test
@@ -602,12 +635,12 @@ public class TestCommandTest {
         ImmutableMap.<String, Map<String, String>>of(
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
-    assertThat(config.getDefaultExcludedLabels(), contains("e2e"));
+    assertThat(config.getDefaultExcludedLabels(), contains(new Label("e2e")));
     TestCommandOptions options = new TestCommandOptions(config);
 
     new CmdLineParserAdditionalOptions(options).parseArgument("--include", "e2e");
 
-    assertTrue(options.isMatchedByLabelOptions(ImmutableSet.of("e2e")));
+    assertTrue(options.isMatchedByLabelOptions(ImmutableSet.of(new Label("e2e"))));
   }
 
   @Test
@@ -617,14 +650,14 @@ public class TestCommandTest {
         ImmutableMap.<String, Map<String, String>>of(
             "test",
             ImmutableMap.of("excluded_labels", excludedLabel)));
-    assertThat(config.getDefaultExcludedLabels(), contains(excludedLabel));
+    assertThat(config.getDefaultExcludedLabels(), contains(new Label(excludedLabel)));
     TestCommandOptions options = new TestCommandOptions(config);
 
     new CmdLineParserAdditionalOptions(options).parseArgument("//example:test");
 
     FakeTestRule rule = new FakeTestRule(
         new BuildRuleType("java_test"),
-        /* labels */ ImmutableSet.of(excludedLabel),
+        /* labels */ ImmutableSet.of(new Label(excludedLabel)),
         BuildTargetFactory.newInstance("//example:test"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* visibility */ ImmutableSet.<BuildTargetPattern>of());

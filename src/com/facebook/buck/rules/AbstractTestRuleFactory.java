@@ -30,8 +30,13 @@ public abstract class AbstractTestRuleFactory<T extends AbstractBuildRuleBuilder
 
     // labels
     if (builder instanceof LabelsAttributeBuilder) {
-      List<String> labels = params.getOptionalListAttribute("labels");
-      ((LabelsAttributeBuilder)builder).setLabels(ImmutableSet.copyOf(labels));
+      List<String> rawLabels = params.getOptionalListAttribute("labels");
+      ImmutableSet.Builder<Label> labelBuilder = new ImmutableSet.Builder<>();
+      for (String rawLabel : rawLabels) {
+        Label label = new Label(rawLabel);
+        labelBuilder.add(label);
+      }
+      ((LabelsAttributeBuilder)builder).setLabels(labelBuilder.build());
     }
 
     return builder;

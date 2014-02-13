@@ -127,6 +127,7 @@ java_library(
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
     'InstallableApk.java',
+    'Label.java',
     'LabelsAttributeBuilder.java',
     'LoggingArtifactCacheDecorator.java',
     'MultiArtifactCache.java',

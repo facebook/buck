@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -58,12 +59,12 @@ import java.util.concurrent.Callable;
 public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
   private final Path test;
-  private final ImmutableSet<String> labels;
+  private final ImmutableSet<Label> labels;
 
   protected ShTestRule(
       BuildRuleParams buildRuleParams,
       Path test,
-      Set<String> labels) {
+      Set<Label> labels) {
     super(buildRuleParams);
     this.test = Preconditions.checkNotNull(test);
     this.labels = ImmutableSet.copyOf(labels);
@@ -80,7 +81,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   }
 
   @Override
-  public ImmutableSet<String> getLabels() {
+  public ImmutableSet<Label> getLabels() {
     return labels;
   }
 
@@ -165,7 +166,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
       LabelsAttributeBuilder {
 
     private Path test;
-    private ImmutableSet<String> labels = ImmutableSet.of();
+    private ImmutableSet<Label> labels = ImmutableSet.of();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -183,7 +184,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
     }
 
     @Override
-    public Builder setLabels(ImmutableSet<String> labels) {
+    public Builder setLabels(ImmutableSet<Label> labels) {
       this.labels = labels;
       return this;
     }

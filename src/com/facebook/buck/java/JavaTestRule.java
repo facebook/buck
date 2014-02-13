@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.JavaLibraryGraphEnhancer;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -76,7 +77,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   private CompiledClassFileFinder compiledClassFileFinder;
 
-  private final ImmutableSet<String> labels;
+  private final ImmutableSet<Label> labels;
 
   private final ImmutableSet<String> contacts;
 
@@ -84,7 +85,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
       Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<DummyRDotJava> optionalDummyRDotJava,
-      Set<String> labels,
+      Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
       JavacOptions javacOptions,
@@ -109,7 +110,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   }
 
   @Override
-  public ImmutableSet<String> getLabels() {
+  public ImmutableSet<Label> getLabels() {
     return labels;
   }
 
@@ -408,7 +409,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     @Nullable protected List<String> vmArgs = ImmutableList.of();
     protected ImmutableSet<BuildTarget> sourcesUnderTest = ImmutableSet.of();
-    protected ImmutableSet<String> labels = ImmutableSet.of();
+    protected ImmutableSet<Label> labels = ImmutableSet.of();
     protected ImmutableSet<String> contacts = ImmutableSet.of();
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
@@ -470,7 +471,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
 
     @Override
-    public Builder setLabels(ImmutableSet<String> labels) {
+    public Builder setLabels(ImmutableSet<Label> labels) {
       this.labels = labels;
       return this;
     }

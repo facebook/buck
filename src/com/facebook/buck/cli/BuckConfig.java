@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.DirArtifactCache;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.Ansi;
@@ -460,17 +461,18 @@ public class BuckConfig {
     return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(paths);
   }
 
-  ImmutableSet<String> getDefaultExcludedLabels() {
+  ImmutableSet<Label> getDefaultExcludedLabels() {
     Optional<String> excludedRulesOptional = getValue("test", "excluded_labels");
     if (excludedRulesOptional.isPresent()) {
       String excludedRules = excludedRulesOptional.get();
       Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
-      ImmutableSet<String> result =  ImmutableSet.copyOf(splitter.split(excludedRules));
+      ImmutableSet.Builder<Label> builder = new ImmutableSet.Builder<>();
       // Validate that all specified labels are valid.
-      for (String label : result) {
+      for (String label : splitter.split(excludedRules)) {
         validateLabelName(label);
+        builder.add(new Label(label));
       }
-      return result;
+      return builder.build();
     } else {
       return ImmutableSet.of();
     }

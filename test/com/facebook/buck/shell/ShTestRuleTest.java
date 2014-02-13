@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildRuleParams;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +45,7 @@ public class ShTestRuleTest extends EasyMockSupport {
     ShTestRule shTest = new ShTestRule(
         new FakeBuildRuleParams(new BuildTarget("//test/com/example", "my_sh_test")),
         Paths.get("run_test.sh"),
-        /* labels */ ImmutableSet.<String>of());
+        /* labels */ ImmutableSet.<Label>of());
 
     ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);
     EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(true);

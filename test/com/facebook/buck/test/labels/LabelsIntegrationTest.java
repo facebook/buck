@@ -78,7 +78,7 @@ public class LabelsIntegrationTest {
     //
     // NB: A bug in the way args are parsed means that even though "testy light" is a single arg
     // here, it is split into multiple labels in by TestCommandOptions.
-    assertTestsFail("test", "--all", "--include", "testy lighty");
+    assertTestsFail("test", "--all", "--include", "testy", "lighty");
 
     // ...but "testy AND lighty" only matches the passing test.
     assertTestsPass("test", "--all", "--include", "testy+lighty");

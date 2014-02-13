@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.annotations.VisibleForTesting;
@@ -71,7 +72,7 @@ public class RobolectricTestRule extends JavaTestRule {
       Set<Path> srcs,
       Set<SourcePath> resources,
       Optional<DummyRDotJava> optionalDummyRDotJava,
-      Set<String> labels,
+      Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
       JavacOptions javacOptions,

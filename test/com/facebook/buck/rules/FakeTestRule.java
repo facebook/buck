@@ -34,10 +34,10 @@ import java.util.concurrent.Callable;
 public class FakeTestRule extends AbstractBuildRule implements TestRule {
 
   private final BuildRuleType type;
-  private final ImmutableSet<String> labels;
+  private final ImmutableSet<Label> labels;
 
   public FakeTestRule(BuildRuleType type,
-                       ImmutableSet<String> labels,
+                       ImmutableSet<Label> labels,
                        BuildTarget target,
                        ImmutableSortedSet<BuildRule> deps,
                        ImmutableSet<BuildTargetPattern> visibilityPatterns) {
@@ -47,7 +47,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   public FakeTestRule(BuildRuleType type,
-                      ImmutableSet<String> labels,
+                      ImmutableSet<Label> labels,
                       BuildRuleParams buildRuleParams) {
     super(buildRuleParams);
     this.labels = labels;
@@ -100,7 +100,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public ImmutableSet<String> getLabels() {
+  public ImmutableSet<Label> getLabels() {
     return labels;
   }
 

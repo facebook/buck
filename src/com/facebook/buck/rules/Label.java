@@ -13,11 +13,33 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.rules;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Preconditions;
 
-public interface LabelsAttributeBuilder {
+public class Label {
+  private final String labelString;
 
-  public AbstractBuildRuleBuilder<?> setLabels(ImmutableSet<Label> labels);
+  public Label(String labelString) {
+    this.labelString = Preconditions.checkNotNull(labelString);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Label)) {
+      return false;
+    }
+    return labelString.equals(((Label) obj).labelString);
+  }
+
+  @Override
+  public int hashCode() {
+    return labelString.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return labelString;
+  }
 }

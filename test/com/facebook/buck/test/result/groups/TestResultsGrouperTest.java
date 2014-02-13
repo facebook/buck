@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeTestRule;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TestRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -76,7 +77,7 @@ public class TestResultsGrouperTest {
   private FakeTestRule getFakeTestRule(String suffix, BuildRule... dependencies) {
     String name = String.format("//:%s", suffix);
     return new FakeTestRule(BuildRuleType.JAVA_TEST,
-        ImmutableSet.<String>of(),
+        ImmutableSet.<Label>of(),
         BuildTargetFactory.newInstance(name),
         ImmutableSortedSet.copyOf(dependencies),
         ImmutableSet.<BuildTargetPattern>of());

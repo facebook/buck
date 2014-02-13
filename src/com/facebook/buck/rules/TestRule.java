@@ -68,7 +68,7 @@ public interface TestRule extends BuildRule {
   /**
    * @return The set of labels for this build rule.
    */
-  public ImmutableSet<String> getLabels();
+  public ImmutableSet<Label> getLabels();
 
   /**
    * @return The set of email addresses to act as contact points for this test.
