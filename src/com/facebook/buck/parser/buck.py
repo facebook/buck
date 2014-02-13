@@ -319,6 +319,7 @@ def java_binary(
   name,
   main_class=None,
   manifest_file=None,
+  manifest_pristine=None,
   deps=[],
   visibility=[],
   build_env=None):
@@ -327,6 +328,7 @@ def java_binary(
     'type' : 'java_binary',
     'name' : name,
     'manifest_file': manifest_file,
+    'manifest_pristine': manifest_pristine,
     'main_class' : main_class,
     'deps' : deps,
     'visibility' : visibility,

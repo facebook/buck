@@ -623,7 +623,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           outputJar.get(),
           Collections.singleton(outputDirectory),
           /* mainClass */ null,
-          /* manifestFile */ null));
+          /* manifestFile */ null,
+          /* manifestPristine */ null));
     }
 
     Preconditions.checkNotNull(abiKeySupplier,

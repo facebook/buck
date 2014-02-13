@@ -49,6 +49,13 @@ public class JavaBinaryBuildRuleFactory extends AbstractBuildRuleFactory<JavaBin
       builder.setManifest(manifestFilePath);
     }
 
+    // manifest_pristine
+    Optional<String> manifestPristine = params.getOptionalStringAttribute("manifest_pristine");
+    if (manifestPristine.isPresent()) {
+      Path manifestPristinePath = params.resolveFilePathRelativeToBuildFileDirectory(
+          manifestPristine.get());
+      builder.setManifestPristine(manifestPristinePath);
+    }
   }
 
 }

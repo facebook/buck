@@ -73,6 +73,10 @@ public class JarDirectoryStep implements Step {
   @Nullable
   private final Path manifestFile;
 
+  /** If specified, the Manifest file to use for the generated JAR file, without merge  */
+  @Nullable
+  private final Path manifestPristine;
+
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
    * <p>
@@ -86,15 +90,20 @@ public class JarDirectoryStep implements Step {
    * @param mainClass If specified, the value for the Main-Class attribute in the manifest of the
    *     generated JAR.
    * @param manifestFile If specified, the path to the manifest file to use with this JAR.
+   * @param manifestPristine If specified, the path to the manifest file to use with this JAR. This
+   *     file's content is preserved in in eJAR, i. e. it is not merged with the content of other
+   *     manifest files from dependent JARs.
    */
   public JarDirectoryStep(Path pathToOutputFile,
                           Set<Path> entriesToJar,
                           @Nullable String mainClass,
-                          @Nullable Path manifestFile) {
+                          @Nullable Path manifestFile,
+                          @Nullable Path manifestPristine) {
     this.pathToOutputFile = Preconditions.checkNotNull(pathToOutputFile);
     this.entriesToJar = ImmutableSet.copyOf(entriesToJar);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
+    this.manifestPristine = manifestPristine;
   }
 
   private String getJarArgs() {
@@ -112,10 +121,11 @@ public class JarDirectoryStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("jar %s %s %s %s",
+    return String.format("jar %s %s %s %s %s",
         getJarArgs(),
         pathToOutputFile,
         manifestFile != null ? manifestFile : "",
+        manifestPristine != null ? manifestPristine : "",
         Joiner.on(' ').join(entriesToJar));
   }
 
@@ -134,8 +144,7 @@ public class JarDirectoryStep implements Step {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
 
     // Write the manifest, as appropriate.
-    Manifest manifest = new Manifest();
-    manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+    Manifest manifest = newManifest();
 
     try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
         filesystem.getFileForRelativePath(pathToOutputFile), APPEND_TO_ZIP)) {
@@ -164,6 +173,13 @@ public class JarDirectoryStep implements Step {
         try (FileInputStream manifestStream = new FileInputStream(
             filesystem.getFileForRelativePath(manifestFile))) {
           Manifest userSupplied = new Manifest(manifestStream);
+          merge(manifest, userSupplied);
+        }
+      } else if (manifestPristine != null) {
+        try (FileInputStream manifestStream = new FileInputStream(
+            filesystem.getFileForRelativePath(manifestPristine))) {
+          Manifest userSupplied = new Manifest(manifestStream);
+          manifest = newManifest();
           merge(manifest, userSupplied);
         }
       }
@@ -242,6 +258,12 @@ public class JarDirectoryStep implements Step {
       ByteArrayInputStream rawManifest = new ByteArrayInputStream(output.toByteArray());
       return new Manifest(rawManifest);
     }
+  }
+
+  private static Manifest newManifest() {
+    Manifest manifest = new Manifest();
+    manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+    return manifest;
   }
 
   /**

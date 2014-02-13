@@ -56,7 +56,8 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
         ImmutableSet.of(Paths.get(first.getName()), Paths.get(second.getName())),
         "com.example.Main",
-        /* manifest file */ null);
+        /* manifest file */ null,
+        /* manifest pristine */ null);
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(zipup))
         .build();
@@ -83,7 +84,8 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
         ImmutableSet.of(Paths.get(first.getName()), Paths.get(second.getName())),
         "com.example.Main",
-        /* manifest file */ null);
+        /* manifest file */ null,
+        /* manifest pristine */ null);
 
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(zipup))
@@ -131,7 +133,8 @@ public class JarDirectoryStepTest {
         Paths.get("output.jar"),
         ImmutableSet.of(Paths.get("input.jar")),
         /* main class */ null,
-        Paths.get("manifest"));
+        Paths.get("manifest"),
+        /* manifest pristine */ null);
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(new ProjectFilesystem(tmp))
         .build();
