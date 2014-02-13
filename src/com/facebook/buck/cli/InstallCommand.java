@@ -65,22 +65,24 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
     }
     InstallableApk installableApk = (InstallableApk)buildRule;
 
-    final AdbHelper adbHelper = new AdbHelper(console, getBuckEventBus());
+    final AdbHelper adbHelper = new AdbHelper(
+        options.adbOptions(),
+        options.targetDeviceOptions(),
+        build.getExecutionContext(),
+        console,
+        getBuckEventBus(),
+        options.getBuckConfig());
 
     // Uninstall the app first, if requested.
     if (options.shouldUninstallFirst()) {
       String packageName = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
       adbHelper.uninstallApk(
           packageName,
-          options.adbOptions(),
-          options.targetDeviceOptions(),
-          options.uninstallOptions(),
-          build.getExecutionContext(),
-          options.getBuckConfig());
+          options.uninstallOptions());
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!adbHelper.installApk(installableApk, options, build.getExecutionContext())) {
+    if (!adbHelper.installApk(installableApk, options)) {
       return 1;
     }
 
@@ -89,9 +91,7 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
     if (options.shouldStartActivity()) {
       exitCode = adbHelper.startActivity(
           installableApk,
-          options.getActivityToStart(),
-          options,
-          build.getExecutionContext());
+          options.getActivityToStart());
       if (exitCode != 0) {
         return exitCode;
       }

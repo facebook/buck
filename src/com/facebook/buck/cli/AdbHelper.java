@@ -37,6 +37,7 @@ import com.facebook.buck.util.DefaultAndroidManifestReader;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.TriState;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -67,12 +68,26 @@ public class AdbHelper {
   public static final int INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
   public static final int GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
 
+  private final AdbOptions options;
+  private final TargetDeviceOptions deviceOptions;
+  @Nullable private final ExecutionContext context;
   private final Console console;
   private final BuckEventBus buckEventBus;
+  private final BuckConfig buckConfig;
 
-  public AdbHelper(Console console, BuckEventBus buckEventBus) {
-    this.console = console;
-    this.buckEventBus = buckEventBus;
+  public AdbHelper(
+      AdbOptions adbOptions,
+      TargetDeviceOptions deviceOptions,
+      ExecutionContext context,
+      Console console,
+      BuckEventBus buckEventBus,
+      BuckConfig buckConfig) {
+    this.options = Preconditions.checkNotNull(adbOptions);
+    this.deviceOptions = Preconditions.checkNotNull(deviceOptions);
+    this.context = context;
+    this.console = Preconditions.checkNotNull(console);
+    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
+    this.buckConfig = Preconditions.checkNotNull(buckConfig);
   }
 
   private BuckEventBus getBuckEventBus() {
@@ -85,9 +100,7 @@ public class AdbHelper {
    */
   @Nullable
   @VisibleForTesting
-  List<IDevice> filterDevices(IDevice[] allDevices,
-                              AdbOptions adbOptions,
-                              TargetDeviceOptions deviceOptions) {
+  List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
       console.printBuildFailure("No devices are found.");
       return null;
@@ -95,7 +108,7 @@ public class AdbHelper {
 
     List<IDevice> devices = Lists.newArrayList();
     TriState emulatorsOnly = TriState.UNSPECIFIED;
-    if (deviceOptions.isEmulatorsOnlyModeEnabled() && adbOptions.isMultiInstallModeEnabled()) {
+    if (deviceOptions.isEmulatorsOnlyModeEnabled() && options.isMultiInstallModeEnabled()) {
       emulatorsOnly = TriState.UNSPECIFIED;
     } else if (deviceOptions.isEmulatorsOnlyModeEnabled()) {
       emulatorsOnly = TriState.TRUE;
@@ -145,7 +158,7 @@ public class AdbHelper {
     }
 
     // Found multiple devices but multi-install mode is not enabled.
-    if (!adbOptions.isMultiInstallModeEnabled() && devices.size() > 1) {
+    if (!options.isMultiInstallModeEnabled() && devices.size() > 1) {
       console.printBuildFailure(
           String.format("%d device(s) matches specified device filter (1 expected).\n" +
                         "Either disconnect other devices or enable multi-install mode (%s).",
@@ -216,11 +229,7 @@ public class AdbHelper {
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
-  public boolean adbCall(AdbOptions options,
-                         TargetDeviceOptions deviceOptions,
-                         ExecutionContext context,
-                         AdbCallable adbCallable,
-                         BuckConfig buckConfig) {
+  public boolean adbCall(AdbCallable adbCallable) {
 
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
@@ -230,12 +239,12 @@ public class AdbHelper {
     }
 
     // Build list of matching devices.
-    List<IDevice> devices = filterDevices(adb.getDevices(), options, deviceOptions);
+    List<IDevice> devices = filterDevices(adb.getDevices());
     if (devices == null) {
       if (buckConfig.getRestartAdbOnFailure()) {
         console.printErrorText("No devices found with adb, restarting adb-server.");
         adb.restart();
-        devices = filterDevices(adb.getDevices(), options, deviceOptions);
+        devices = filterDevices(adb.getDevices());
       }
 
       if (devices == null) {
@@ -393,17 +402,14 @@ public class AdbHelper {
    *  mode is enabled (-x). This flag is used as a marker that user understands that multiple
    *  devices will be used to install the apk if needed.
    */
-  public boolean installApk(InstallableApk installableApk,
-      InstallCommandOptions options,
-      ExecutionContext context) {
+  public boolean installApk(
+      InstallableApk installableApk,
+      InstallCommandOptions options) {
     getBuckEventBus().post(InstallEvent.started(installableApk.getBuildTarget()));
 
     final File apk = installableApk.getApkPath().toFile();
     final boolean installViaSd = options.shouldInstallViaSd();
     boolean success = adbCall(
-        options.adbOptions(),
-        options.targetDeviceOptions(),
-        context,
         new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
@@ -414,8 +420,7 @@ public class AdbHelper {
           public String toString() {
             return "install apk";
           }
-        },
-        options.getBuckConfig());
+        });
     getBuckEventBus().post(InstallEvent.finished(installableApk.getBuildTarget(), success));
 
     return success;
@@ -496,9 +501,7 @@ public class AdbHelper {
 
   public int startActivity(
       InstallableApk installableApk,
-      String activity,
-      InstallCommandOptions options,
-      ExecutionContext context) throws IOException {
+      String activity) throws IOException {
 
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest = installableApk.getManifestPath();
@@ -532,9 +535,6 @@ public class AdbHelper {
     getBuckEventBus().post(StartActivityEvent.started(installableApk.getBuildTarget(),
         activityToRun));
     boolean success = adbCall(
-        options.adbOptions(),
-        options.targetDeviceOptions(),
-        context,
         new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
@@ -551,8 +551,7 @@ public class AdbHelper {
           public String toString() {
             return "start activity";
           }
-        },
-        options.getBuckConfig());
+        });
     getBuckEventBus().post(StartActivityEvent.finished(installableApk.getBuildTarget(),
         activityToRun,
         success));
@@ -585,18 +584,14 @@ public class AdbHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(
-     com.facebook.buck.rules.InstallableApk, InstallCommandOptions, ExecutionContext)
+   * @see #installApk(com.facebook.buck.rules.InstallableApk, InstallCommandOptions)
    */
-  public boolean uninstallApk(final String packageName,
-      final AdbOptions adbOptions,
-      final TargetDeviceOptions deviceOptions,
-      final UninstallCommandOptions.UninstallOptions uninstallOptions,
-      ExecutionContext context,
-      BuckConfig buckConfig) {
+  public boolean uninstallApk(
+      final String packageName,
+      final UninstallCommandOptions.UninstallOptions uninstallOptions) {
     getBuckEventBus().post(UninstallEvent.started(packageName));
     boolean success = adbCall(
-        adbOptions, deviceOptions, context, new AdbHelper.AdbCallable() {
+        new AdbHelper.AdbCallable() {
       @Override
       public boolean call(IDevice device) throws Exception {
         return uninstallApkFromDevice(device, packageName, uninstallOptions.shouldKeepUserData());
@@ -606,8 +601,7 @@ public class AdbHelper {
       public String toString() {
         return "uninstall apk";
       }
-    },
-        buckConfig);
+    });
     getBuckEventBus().post(UninstallEvent.finished(packageName, success));
     return success;
   }
