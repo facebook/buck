@@ -61,7 +61,8 @@ public class NdkLibraryTest {
     String basePath = "java/src/com/facebook/base";
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule rule = ruleResolver.buildAndAddToIndex(
-        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams(),
+            Optional.of("r8b"))
         .setBuildTarget(BuildTargetFactory.newInstance(
             String.format("//%s:base", basePath)))
         .addSrc(Paths.get(basePath + "/Application.mk"))

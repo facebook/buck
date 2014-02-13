@@ -70,7 +70,7 @@ public class KnownBuildRuleTypesTest {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor()).build();
+        new FakeProcessExecutor(), Optional.<String>absent()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -92,7 +92,7 @@ public class KnownBuildRuleTypesTest {
         }});
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor()).build();
+        new FakeProcessExecutor(), Optional.<String>absent()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -118,7 +118,7 @@ public class KnownBuildRuleTypesTest {
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
     KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(0, "fakeVersion 0.1", "")).build();
+        new FakeProcessExecutor(0, "fakeVersion 0.1", ""), Optional.<String>absent()).build();
     BuildRuleFactory<?> configuredFactory = configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule configuredRule = configuredFactory.newInstance(params).build(new BuildRuleResolver());
 
@@ -138,7 +138,7 @@ public class KnownBuildRuleTypesTest {
         }});
 
     KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(1, "", "error")).build();
+        new FakeProcessExecutor(1, "", "error"), Optional.<String>absent()).build();
     BuildRuleFactory<?> configuredFactory = configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     configuredFactory.newInstance(params).build(new BuildRuleResolver());
   }
@@ -148,7 +148,7 @@ public class KnownBuildRuleTypesTest {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor()).build();
+        new FakeProcessExecutor(), Optional.<String>absent()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.ANDROID_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -170,7 +170,7 @@ public class KnownBuildRuleTypesTest {
         }});
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor()).build();
+        new FakeProcessExecutor(), Optional.<String>absent()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.ANDROID_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 

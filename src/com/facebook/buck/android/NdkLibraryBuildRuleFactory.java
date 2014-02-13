@@ -19,17 +19,22 @@ package com.facebook.buck.android;
 import com.facebook.buck.rules.AbstractBuildRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.util.List;
 
 public class NdkLibraryBuildRuleFactory extends AbstractBuildRuleFactory<NdkLibrary.Builder> {
 
-  public NdkLibraryBuildRuleFactory() {
+  private final Optional<String> ndkVersion;
+
+  public NdkLibraryBuildRuleFactory(Optional<String> ndkVersion) {
+    this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
   }
 
   @Override
   public NdkLibrary.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return NdkLibrary.newNdkLibraryRuleBuilder(params);
+    return NdkLibrary.newNdkLibraryRuleBuilder(params, ndkVersion);
   }
 
   @Override

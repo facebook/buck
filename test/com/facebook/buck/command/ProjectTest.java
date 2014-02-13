@@ -768,10 +768,11 @@ public class ProjectTest {
 
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
     BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
-        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(fooJni)
-        .addSrc(Paths.get("Android.mk"))
-        .addVisibilityPattern(new SingletonBuildTargetPattern("//third_party/java/foo:foo")));
+        NdkLibrary.newNdkLibraryRuleBuilder(
+            new FakeAbstractBuildRuleBuilderParams(), Optional.<String>absent())
+              .setBuildTarget(fooJni)
+              .addSrc(Paths.get("Android.mk"))
+              .addVisibilityPattern(new SingletonBuildTargetPattern("//third_party/java/foo:foo")));
 
     ProjectConfigRule ndkProjectConfig = ruleResolver.buildAndAddToIndex(
         ProjectConfigRule.newProjectConfigRuleBuilder(new FakeAbstractBuildRuleBuilderParams())

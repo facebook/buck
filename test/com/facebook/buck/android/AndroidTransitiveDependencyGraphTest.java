@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -60,8 +61,11 @@ public class AndroidTransitiveDependencyGraphTest {
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
 
     BuildRule ndkLibrary = ruleResolver.buildAndAddToIndex(
-        NdkLibrary.newNdkLibraryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-            .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/native_library:library"))
+        NdkLibrary.newNdkLibraryRuleBuilder(
+            new FakeAbstractBuildRuleBuilderParams(), Optional.<String>absent())
+            .setBuildTarget(
+                BuildTargetFactory.newInstance(
+                    "//java/com/facebook/native_library:library"))
             .addSrc(Paths.get("Android.mk"))
             .setIsAsset(false)
             .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));

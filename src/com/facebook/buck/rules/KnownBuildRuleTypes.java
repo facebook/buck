@@ -132,7 +132,8 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
     builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
     builder.register(BuildRuleType.GEN_PARCELABLE, new GenParcelableBuildRuleFactory());
-    builder.register(BuildRuleType.NDK_LIBRARY, new NdkLibraryBuildRuleFactory());
+    builder.register(BuildRuleType.NDK_LIBRARY,
+        new NdkLibraryBuildRuleFactory(Optional.<String>absent()));
     builder.register(BuildRuleType.PREBUILT_JAR, new PrebuiltJarBuildRuleFactory());
     builder.register(BuildRuleType.PREBUILT_NATIVE_LIBRARY,
         new PrebuiltNativeLibraryBuildRuleFactory());
@@ -145,14 +146,20 @@ public class KnownBuildRuleTypes {
     return builder;
   }
 
-  public static KnownBuildRuleTypes getConfigured(BuckConfig buckConfig, ProcessExecutor executor) {
-    return createConfiguredBuilder(buckConfig, executor).build();
+  public static KnownBuildRuleTypes getConfigured(
+      BuckConfig buckConfig,
+      ProcessExecutor executor,
+      Optional<String> ndkVersion) {
+    return createConfiguredBuilder(buckConfig, executor, ndkVersion).build();
   }
 
-  public static Builder createConfiguredBuilder(BuckConfig buckConfig, ProcessExecutor executor) {
+  public static Builder createConfiguredBuilder(
+      BuckConfig buckConfig,
+      ProcessExecutor executor,
+      Optional<String> ndkVersion) {
     Optional<Path> javac = buckConfig.getJavac();
 
-    Optional<String> javacVersion = Optional.<String>absent();
+    Optional<String> javacVersion = Optional.absent();
     if (javac.isPresent()) {
       try {
         ProcessExecutor.Result versionResult = executor.execute(
@@ -172,6 +179,8 @@ public class KnownBuildRuleTypes {
         new JavaLibraryBuildRuleFactory(javac, javacVersion));
     builder.register(BuildRuleType.ANDROID_LIBRARY,
         new AndroidLibraryBuildRuleFactory(javac, javacVersion));
+    builder.register(BuildRuleType.NDK_LIBRARY,
+        new NdkLibraryBuildRuleFactory(ndkVersion));
     return builder;
   }
 

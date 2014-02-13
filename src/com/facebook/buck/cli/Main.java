@@ -455,11 +455,22 @@ public final class Main {
       // running commands such as `buck clean`.
       ArtifactCacheFactory artifactCacheFactory = new LoggingArtifactCacheFactory(buildEventBus);
 
+      // Configure the AndroidDirectoryResolver.
+      AndroidDirectoryResolver androidDirectoryResolver =
+          new DefaultAndroidDirectoryResolver(projectFilesystem);
+      Optional<Path> ndkDir = androidDirectoryResolver.findAndroidNdkDir();
+      Optional<String> ndkVersion = Optional.absent();
+      if (ndkDir.isPresent()) {
+        ndkVersion = Optional.of(androidDirectoryResolver.getNdkVersion(ndkDir.get()));
+        config.validateNdkVersion(ndkDir.get(), ndkVersion.get());
+      }
+
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
-      KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getConfigured(
-          config,
-          new ProcessExecutor(console));
+
+      KnownBuildRuleTypes buildRuleTypes =
+          KnownBuildRuleTypes.getConfigured(config, new ProcessExecutor(console), ndkVersion);
+
       if (isDaemon) {
         parser = getParserFromDaemon(context, projectFilesystem, config, console, commandEvent);
 
@@ -472,15 +483,6 @@ public final class Main {
             config.getPythonInterpreter(),
             config.getTempFilePatterns(),
             createRuleKeyBuilderFactory(new DefaultFileHashCache(projectFilesystem, console)));
-      }
-
-      AndroidDirectoryResolver androidDirectoryResolver =
-          new DefaultAndroidDirectoryResolver(projectFilesystem);
-      Optional<Path> ndkDir = androidDirectoryResolver.findAndroidNdkDir();
-      if (ndkDir.isPresent()) {
-        config.validateNdkVersion(
-            ndkDir.get(),
-            androidDirectoryResolver.getNdkVersion(ndkDir.get()));
       }
 
       exitCode = executingCommand.execute(remainingArgs,
