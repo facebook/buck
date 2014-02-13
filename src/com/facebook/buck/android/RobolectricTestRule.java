@@ -53,6 +53,7 @@ public class RobolectricTestRule extends JavaTestRule {
   private static final BuildableProperties PROPERTIES = new BuildableProperties(
       ANDROID, LIBRARY, TEST);
 
+  private final Optional<DummyRDotJava> optionalDummyRDotJava;
   /**
    * Used by robolectric test runner to get list of resource directories that
    * can be used for tests.
@@ -68,26 +69,29 @@ public class RobolectricTestRule extends JavaTestRule {
     }
   };
 
-  protected RobolectricTestRule(BuildRuleParams buildRuleParams,
+  protected RobolectricTestRule(
+      BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
-      Optional<DummyRDotJava> optionalDummyRDotJava,
       Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
+      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<BuildRule> sourceUnderTest) {
+      ImmutableSet<BuildRule> sourceUnderTest,
+      Optional<DummyRDotJava> optionalDummyRDotJava) {
     super(buildRuleParams,
         srcs,
         resources,
-        optionalDummyRDotJava,
         labels,
         contacts,
         proguardConfig,
+        additionalClasspathEntries,
         javacOptions,
         vmArgs,
         sourceUnderTest);
+    this.optionalDummyRDotJava = Preconditions.checkNotNull(optionalDummyRDotJava);
   }
 
   @Override
@@ -155,16 +159,23 @@ public class RobolectricTestRule extends JavaTestRule {
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ true);
 
-      return new RobolectricTestRule(result.getBuildRuleParams(),
+      Optional<DummyRDotJava> dummyRDotJava = result.getOptionalDummyRDotJava();
+      ImmutableSet<String> additionalClasspathEntries = dummyRDotJava.isPresent()
+          ? ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder().toString())
+          : ImmutableSet.<String>of();
+
+      return new RobolectricTestRule(
+          result.getBuildRuleParams(),
           srcs,
           resources,
-          result.getOptionalDummyRDotJava(),
           labels,
           contacts,
           proguardConfig,
+          additionalClasspathEntries,
           javacOptions.build(),
           allVmArgs.build(),
-          sourceUnderTest);
+          sourceUnderTest,
+          result.getOptionalDummyRDotJava());
     }
 
     @Override

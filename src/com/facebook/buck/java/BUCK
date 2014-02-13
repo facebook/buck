@@ -48,8 +48,6 @@ java_library(
     ':support',
     '//lib:guava',
     '//lib:jsr305',
-    '//src/com/facebook/buck/android:exceptions',
-    '//src/com/facebook/buck/android:r',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/java/abi:protocol',

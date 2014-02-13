@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryRule;
-import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -153,9 +152,9 @@ public class DefaultJavaLibraryRuleTest {
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
-        /* optionalDummyRDotJava */ Optional.<DummyRDotJava>absent(),
         /* proguardConfig */ Optional.<Path>absent(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS
         );
 
@@ -188,9 +187,9 @@ public class DefaultJavaLibraryRuleTest {
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
-        /* optionalDummyRDotJava */ Optional.<DummyRDotJava>absent(),
         /* proguargConfig */ Optional.<Path>absent(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS
         );
 
@@ -225,9 +224,9 @@ public class DefaultJavaLibraryRuleTest {
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
             new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
         ),
-        /* optionalDummyRDotJava */ Optional.<DummyRDotJava>absent(),
         /* proguargConfig */ Optional.<Path>absent(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS);
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -1004,9 +1003,9 @@ public class DefaultJavaLibraryRuleTest {
         new FakeBuildRuleParams(buildTarget, ImmutableSortedSet.copyOf(deps)),
         srcsAsPaths,
         /* resources */ ImmutableSet.<SourcePath>of(),
-        /* optionalDummyRDotJava */ Optional.<DummyRDotJava>absent(),
         /* proguardConfig */ Optional.<Path>absent(),
         exportedDeps,
+        /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.builder().build()
         ) {
       @Override
@@ -1322,11 +1321,11 @@ public class DefaultJavaLibraryRuleTest {
       public BuildRule createRule(BuildTarget target) {
         return new DefaultJavaLibraryRule(
             new FakeBuildRuleParams(target),
-            ImmutableSet.<Path>of(Paths.get("MyClass.java")),
+            ImmutableSet.of(Paths.get("MyClass.java")),
             ImmutableSet.<SourcePath>of(),
-            Optional.<DummyRDotJava>absent(),
             Optional.of(Paths.get("MyProguardConfig")),
             /* exportedDeps */ ImmutableSet.<BuildRule>of(),
+            /* additionalClasspathEntries */ ImmutableSet.<String>of(),
             JavacOptions.DEFAULTS);
       }
     };
@@ -1413,9 +1412,9 @@ public class DefaultJavaLibraryRuleTest {
               new FakeRuleKeyBuilderFactory()),
           ImmutableSet.of(Paths.get(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
-          /* optionalDummyRDotJava */ Optional.<DummyRDotJava>absent(),
           /* proguardConfig */ Optional.<Path>absent(),
           /* exortDeps */ ImmutableSet.<BuildRule>of(),
+          /* additionalClasspathEntries */ ImmutableSet.<String>of(),
           options.build(),
           /* manifestFile */ Optional.<Path>absent());
     }
