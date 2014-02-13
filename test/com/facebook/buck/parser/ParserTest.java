@@ -720,7 +720,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("java/com/facebook/SomeClass.java"),
+    WatchEvent<Path> event = createPathEvent(new File("java/com/facebook/SomeClass.java"),
         StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
@@ -742,7 +742,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("java/com/facebook/SomeClass.java"),
+    WatchEvent<Path> event = createPathEvent(new File("java/com/facebook/SomeClass.java"),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
@@ -765,7 +765,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("java/com/facebook/SomeClass.java"),
+    WatchEvent<Path> event = createPathEvent(new File("java/com/facebook/SomeClass.java"),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
@@ -788,7 +788,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("java/com/facebook/MumbleSwp.Java.swp"),
+    WatchEvent<Path> event = createPathEvent(new File("java/com/facebook/MumbleSwp.Java.swp"),
         StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
@@ -810,7 +810,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("java/com/facebook/MumbleSwp.Java.swp"),
+    WatchEvent<Path> event = createPathEvent(new File("java/com/facebook/MumbleSwp.Java.swp"),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
@@ -832,7 +832,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("java/com/facebook/MumbleSwp.Java.swp"),
+    WatchEvent<Path> event = createPathEvent(new File("java/com/facebook/MumbleSwp.Java.swp"),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
@@ -854,7 +854,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("SomeClass.java__backup"),
+    WatchEvent<Path> event = createPathEvent(new File("SomeClass.java__backup"),
         StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
@@ -876,7 +876,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("SomeClass.java__backup"),
+    WatchEvent<Path> event = createPathEvent(new File("SomeClass.java__backup"),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
@@ -898,7 +898,7 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(tempDir.newFile("SomeClass.java__backup"),
+    WatchEvent<Path> event = createPathEvent(new File("SomeClass.java__backup"),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 

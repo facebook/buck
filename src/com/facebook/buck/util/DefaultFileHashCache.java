@@ -80,7 +80,8 @@ public class DefaultFileHashCache implements FileHashCache {
 
   /**
    * Called when file change events are posted to the file change EventBus to invalidate cached
-   * build rules if required.
+   * build rules if required. {@link Path}s contained within events must all be relative to the
+   * {@link ProjectFilesystem} root.
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {

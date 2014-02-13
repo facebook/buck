@@ -30,10 +30,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.rules.TemporaryFolder;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -153,6 +155,23 @@ public class ProjectWorkspace {
         stderr.getContentsAsString(Charsets.UTF_8));
   }
 
+  public ProcessResult runBuckdCommand(String... args) throws IOException {
+
+    assertTrue("setUp() must be run before this method is invoked", isSetUp);
+    CapturingPrintStream stdout = new CapturingPrintStream();
+    CapturingPrintStream stderr = new CapturingPrintStream();
+
+    NGContext context = new TestContext();
+
+    Main main = new Main(stdout, stderr);
+    int exitCode = main.runMainWithExitCode(destDir, Optional.<NGContext>of(context), args);
+
+    return new ProcessResult(exitCode,
+        stdout.getContentsAsString(Charsets.UTF_8),
+        stderr.getContentsAsString(Charsets.UTF_8));
+
+  }
+
   /**
    * @return the {@link File} that corresponds to the {@code pathRelativeToProjectRoot}.
    */
@@ -262,5 +281,20 @@ public class ProjectWorkspace {
       }
     };
     java.nio.file.Files.walkFileTree(templatePath, copyDirVisitor);
+  }
+
+  /**
+   * NGContext test double.
+   */
+  private class TestContext extends NGContext {
+
+    public TestContext() {
+      in = new ByteArrayInputStream(new byte[0]);
+      setExitStream(new CapturingPrintStream());
+    }
+
+    @Override
+    public void addClientListener(NGClientListener listener) {
+    }
   }
 }

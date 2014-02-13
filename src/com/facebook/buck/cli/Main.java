@@ -299,6 +299,23 @@ public final class Main {
   }
 
   @VisibleForTesting
+  static void resetDaemon() {
+    daemon = null;
+  }
+
+  @VisibleForTesting
+  static void registerFileWatcher(Object watcher) {
+    Preconditions.checkNotNull(daemon);
+    daemon.fileEventBus.register(watcher);
+  }
+
+  @VisibleForTesting
+  static void watchFilesystem() throws IOException {
+    Preconditions.checkNotNull(daemon);
+    daemon.filesystemWatcher.postEvents();
+  }
+
+  @VisibleForTesting
   public Main(PrintStream stdOut, PrintStream stdErr) {
     this.stdOut = Preconditions.checkNotNull(stdOut);
     this.stdErr = Preconditions.checkNotNull(stdErr);

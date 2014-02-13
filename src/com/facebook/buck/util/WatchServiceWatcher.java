@@ -71,15 +71,16 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
 
           // Check against ignored directories.
           Path name = (Path) event.context();
-          final Path child = dir.resolve(name);
-          if (shouldIgnore(child)) {
+          Path absolutePath = dir.resolve(name);
+          final Path projectRelativePath = filesystem.getRootPath().relativize(absolutePath);
+          if (shouldIgnore(projectRelativePath)) {
             continue;
           }
 
           // If directory is created, watch its children.
-          if (filesystem.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
+          if (filesystem.isDirectory(absolutePath, LinkOption.NOFOLLOW_LINKS)) {
             if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-              registerAll(child);
+              registerAll(absolutePath);
             }
             continue; // TODO(user): post events about directories?
           }
@@ -101,7 +102,7 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
 
             @Override
             public Path context() {
-              return child;
+              return projectRelativePath;
             }
           });
 

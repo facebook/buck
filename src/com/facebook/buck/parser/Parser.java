@@ -730,7 +730,8 @@ public class Parser {
 
   /**
    * Called when file change events are posted to the file change EventBus to invalidate cached
-   * build rules if required.
+   * build rules if required. {@link Path}s contained within events must all be relative to the
+   * {@link ProjectFilesystem} root.
    */
   @Subscribe
   public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
@@ -786,12 +787,12 @@ public class Parser {
   /**
    * Finds the build file responsible for the given {@link Path} and invalidates
    * all of the cached rules dependent on it.
-   * @param path A {@link Path} "contained" within the build file to find and invalidate.
+   * @param path A {@link Path}, relative to the project root and "contained"
+   *             within the build file to find and invalidate.
    */
   private void invalidateContainingBuildFile(Path path) throws IOException {
     String packageBuildFilePath =
-        buildFileTreeCache.getInput().getBasePathOfAncestorTarget(
-            projectFilesystem.getProjectRoot().toPath().relativize(path).toString());
+        buildFileTreeCache.getInput().getBasePathOfAncestorTarget(path.toString());
     invalidateDependents(
         projectFilesystem.getFileForRelativePath(
             packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());

@@ -245,7 +245,8 @@ public class ProjectFilesystemTest {
   @Test
   public void testCreateContextStringForModifyEvent() throws IOException {
     File file = tmp.newFile("foo.txt");
-    WatchEvent<Path> modifyEvent = WatchEvents.createPathEvent(file,
+    WatchEvent<Path> modifyEvent = WatchEvents.createPathEvent(
+        file,
         StandardWatchEventKinds.ENTRY_MODIFY);
     assertEquals(file.getAbsolutePath(), filesystem.createContextString(modifyEvent));
   }

@@ -14,21 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.example.activity;
 
-import java.io.IOException;
+import android.app.Activity;
+import android.os.Bundle;
 
-/**
- * Watches a ProjectFilesystem for file changes using a given WatchService.
- * Change events are posted to a given EventBus when postEvents is called.
- * Paths in Event contexts are always relative to the project root.
- */
-public interface ProjectFilesystemWatcher {
-
-  /**
-   * Processes all pending file system events. These are generally posted to an EventBus passed
-   * to the ProjectFilesystemWatcher constructor.
-   */
-  public void postEvents() throws IOException;
-  public void close() throws IOException;
+public class MyFirstActivity extends Activity {
+  
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+  }
 }

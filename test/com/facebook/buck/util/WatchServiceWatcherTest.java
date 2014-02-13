@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
@@ -31,17 +32,22 @@ import com.google.common.eventbus.EventBus;
 
 import org.easymock.Capture;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitor;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+
+import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
+import static org.junit.Assert.assertEquals;
 
 public class WatchServiceWatcherTest {
 
@@ -50,9 +56,11 @@ public class WatchServiceWatcherTest {
   private WatchService watchService;
   private Path path;
   private WatchKey key;
-  private WatchEvent<Path> event;
   private Capture<FileVisitor<Path>> visitor;
   private WatchServiceWatcher watcher;
+
+  @Rule
+  public TemporaryFolder tempDir = new TemporaryFolder();
 
   @Before
   @SuppressWarnings("unchecked") // Needed to mock generic class.
@@ -62,9 +70,8 @@ public class WatchServiceWatcherTest {
     watchService = createNiceMock(WatchService.class);
     path = createNiceMock(Path.class);
     key = createNiceMock(WatchKey.class);
-    event = createNiceMock(WatchEvent.class);
 
-    expect(filesystem.getRootPath()).andReturn(Paths.get("/"));
+    expect(filesystem.getRootPath()).andReturn(Paths.get("./someproject/"));
     visitor = new Capture<>();
     filesystem.walkFileTree(anyObject(Path.class), capture(visitor));
     expect(path.normalize()).andReturn(path);
@@ -79,8 +86,7 @@ public class WatchServiceWatcherTest {
 
     // Return no events when WatchService is polled.
     expect(watchService.poll()).andReturn(null);
-
-    replay(filesystem, eventBus, watchService, path, key, event);
+    replay(filesystem, eventBus, watchService, path, key);
 
     // Pump WatchServiceWatcher.
     watcher = new WatchServiceWatcher(
@@ -89,24 +95,34 @@ public class WatchServiceWatcherTest {
     watcher.postEvents();
 
     // Check no events were posted to EventBus.
-    verify(filesystem, eventBus, watchService, path, key, event);
+    verify(filesystem, eventBus, watchService, path, key);
   }
 
   @Test
   public void eventPostedWhenFileChanged() throws IOException {
 
-    // Return a single create event when WatchService polled.
+    // Return a single modify event when WatchService polled.
     expect(watchService.poll()).andReturn(key).andReturn(null);
-    expect(key.pollEvents()).andReturn(Lists.<WatchEvent<?>>newArrayList(event));
     expect(filesystem.isPathChangeEvent(anyObject(WatchEvent.class))).andReturn(true).anyTimes();
-    expect(event.context()).andReturn(path);
-    expect(path.resolve(anyObject(Path.class))).andReturn(path);
-    expect(path.normalize()).andReturn(path);
-    expect(filesystem.isDirectory(
-        anyObject(Path.class), eq(LinkOption.NOFOLLOW_LINKS))).andReturn(false);
-    expect(key.reset()).andReturn(false);
+    expect(filesystem.getRootPath()).andReturn(path).anyTimes();
+    expect(key.pollEvents()).andReturn(
+        Lists.<WatchEvent<?>>newArrayList(
+            createPathEvent(
+                new File("./someproject/SomeClass.java"),
+                StandardWatchEventKinds.ENTRY_MODIFY)));
+    expect(path.relativize(anyObject(Path.class))).andReturn(Paths.get("SomeClass.java"));
     eventBus.post(anyObject(WatchEvent.class));
-    replay(filesystem, eventBus, watchService, path, key, event);
+    expectLastCall().andDelegateTo(new EventBus() {
+      @SuppressWarnings("unchecked") // Allow downcast from obj to WatchEvent<Path>.
+      public void post(Object obj) {
+        WatchEvent<Path> event = (WatchEvent<Path>) obj;
+        assertEquals(
+            "Posted events should have path relative to project root.",
+            event.context().toString(),
+            "SomeClass.java");
+      }
+    });
+    replay(filesystem, eventBus, watchService, path, key);
 
     // Pump WatchServiceWatcher.
     watcher = new WatchServiceWatcher(
@@ -115,7 +131,7 @@ public class WatchServiceWatcherTest {
     watcher.postEvents();
 
     // Check event was posted to EventBus.
-    verify(filesystem, eventBus, watchService, path, key, event);
+    verify(filesystem, eventBus, watchService, path, key);
   }
 
   @Test
@@ -123,22 +139,24 @@ public class WatchServiceWatcherTest {
 
     // Return a single modify event when WatchService polled.
     expect(watchService.poll()).andReturn(key).andReturn(null);
-    expect(key.pollEvents()).andReturn(Lists.<WatchEvent<?>>newArrayList(event));
     expect(filesystem.isPathChangeEvent(anyObject(WatchEvent.class))).andReturn(true).anyTimes();
-    expect(event.context()).andReturn(path);
-    expect(path.resolve(anyObject(Path.class))).andReturn(path);
-    expect(path.normalize()).andReturn(path);
-    expect(path.startsWith(anyObject(Path.class))).andReturn(false).andReturn(true);
-    expect(key.reset()).andReturn(false);
-    replay(filesystem, eventBus, watchService, path, key, event);
+    expect(filesystem.getRootPath()).andReturn(path).anyTimes();
+    expect(key.pollEvents()).andReturn(
+        Lists.<WatchEvent<?>>newArrayList(
+            createPathEvent(
+                new File("./someproject/somedir/SomeClass.java"),
+                StandardWatchEventKinds.ENTRY_MODIFY)));
+    expect(path.relativize(anyObject(Path.class))).andReturn(Paths.get("somedir/SomeClass.java"));
+    replay(filesystem, eventBus, watchService, path, key);
 
     // Pump WatchServiceWatcher.
     watcher = new WatchServiceWatcher(
-        filesystem, eventBus, ImmutableSet.<Path>of(Paths.get("/")), watchService);
+        filesystem, eventBus, ImmutableSet.<Path>of(Paths.get("somedir")), watchService);
     visitor.getValue().preVisitDirectory(path, null);
     watcher.postEvents();
 
-    // Check event was posted to EventBus.
-    verify(filesystem, eventBus, watchService, path, key, event);
+    // Check no events were posted to EventBus.
+    verify(filesystem, eventBus, watchService, path, key);
+
   }
 }

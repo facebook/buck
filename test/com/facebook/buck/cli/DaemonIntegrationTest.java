@@ -18,14 +18,20 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.eventbus.Subscribe;
+import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGConstants;
 import com.martiansoftware.nailgun.NGContext;
@@ -33,6 +39,7 @@ import com.martiansoftware.nailgun.NGExitException;
 import com.martiansoftware.nailgun.NGInputStream;
 import com.martiansoftware.nailgun.NGSecurityManager;
 
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -45,6 +52,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.WatchEvent;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -68,6 +78,7 @@ public class DaemonIntegrationTest {
   @After
   public void tearDown() {
     executorService.shutdown();
+    Main.resetDaemon();
   }
 
   /**
@@ -191,6 +202,114 @@ public class DaemonIntegrationTest {
       } finally {
         System.setSecurityManager(originalSecurityManager);
       }
+    }
+  }
+
+  @Test
+  public void whenAppBuckFileRemovedThenRebuildFails()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckdCommand("build", "app");
+    result.assertExitCode(0);
+
+    String fileName = "apps/myapp/BUCK";
+    assertTrue("Should delete BUCK file successfully", workspace.getFile(fileName).delete());
+    waitForChange(Paths.get(fileName));
+
+    try {
+      workspace.runBuckdCommand("build", "app");
+      fail("Should have thrown HumanReadableException.");
+    } catch (HumanReadableException e) {
+      assertThat("Failure should have been due to BUCK file removal.", e.getMessage(),
+          Matchers.containsString(fileName));
+    }
+  }
+
+  @Test
+  public void whenActivityBuckFileRemovedThenRebuildFails()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+
+    String fileName = "java/com/example/activity/BUCK";
+    assertTrue("Should delete BUCK file successfully.", workspace.getFile(fileName).delete());
+    waitForChange(Paths.get(fileName));
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(
+        Main.FAIL_EXIT_CODE);
+  }
+
+  @Test
+  public void whenSourceInputRemovedThenRebuildFails()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+
+    String fileName = "java/com/example/activity/MyFirstActivity.java";
+    assertTrue("Should delete BUCK file successfully.", workspace.getFile(fileName).delete());
+    waitForChange(Paths.get(fileName));
+
+    try {
+      workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+      fail("Should have thrown HumanReadableException.");
+    } catch (java.lang.RuntimeException e) {
+      assertThat("Failure should have been due to file removal.", e.getMessage(),
+          Matchers.containsString(fileName));
+    }
+  }
+
+  @Test
+  public void whenSourceInputInvalidatedThenRebuildFails() throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+
+    String fileName = "java/com/example/activity/MyFirstActivity.java";
+    Files.write("Some Illegal Java".getBytes(Charsets.US_ASCII), workspace.getFile(fileName));
+    waitForChange(Paths.get(fileName));
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(
+        Main.FAIL_EXIT_CODE);
+  }
+
+  private void waitForChange(final Path path) throws IOException {
+
+    class Watcher {
+      private Path path;
+      private boolean watchedChange = false;
+
+      public Watcher(Path path) {
+        this.path = path;
+        watchedChange = false;
+      }
+
+      public boolean watchedChange() {
+        return watchedChange;
+      }
+
+      @Subscribe
+      public synchronized void onEvent(WatchEvent<?> event) throws IOException {
+        if (path.equals(event.context())) {
+          watchedChange = true;
+        }
+      }
+    }
+
+    Watcher watcher = new Watcher(path);
+    Main.registerFileWatcher(watcher);
+    while (!watcher.watchedChange()) {
+      Main.watchFilesystem();
     }
   }
 }
