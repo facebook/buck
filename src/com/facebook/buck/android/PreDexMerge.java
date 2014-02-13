@@ -125,6 +125,33 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     return steps.build();
   }
 
+  /**
+   * Wrapper class for all the paths we need when merging for a split-dex APK.
+   */
+  private final class SplitDexPaths {
+    private final Path metadataDir;
+    private final Path jarfilesDir;
+    private final Path scratchDir;
+    private final Path successDir;
+    private final Path metadataSubdir;
+    private final Path jarfilesSubdir;
+    private final Path metadataFile;
+
+    private SplitDexPaths() {
+      Path workDir = BuildTargets.getBinPath(buildTarget, "_%s_output");
+
+      metadataDir = workDir.resolve("metadata");
+      jarfilesDir = workDir.resolve("jarfiles");
+      scratchDir = workDir.resolve("scratch");
+      successDir = workDir.resolve("success");
+      // These directories must use SECONDARY_DEX_SUBDIR because that mirrors the paths that
+      // they will appear at in the APK.
+      metadataSubdir = metadataDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+      jarfilesSubdir = jarfilesDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+      metadataFile = metadataSubdir.resolve("metadata.txt");
+    }
+  }
+
   private void addStepsForSplitDex(
       ImmutableList.Builder<Step> steps,
       BuildContext context,
@@ -136,29 +163,19 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         .filter(Predicates.notNull())
         .toList();
 
-    // Create all of the output paths needed for the SmartDexingStep.
-    Path workDir = BuildTargets.getBinPath(buildTarget, "_%s_output");
+    final SplitDexPaths paths = new SplitDexPaths();
 
-    Path metadataDir = workDir.resolve("metadata");
-    Path jarfilesDir = workDir.resolve("jarfiles");
-    Path scratchDir = workDir.resolve("scratch");
-    Path successDir = workDir.resolve("success");
-
-    // These directories must use SECONDARY_DEX_SUBDIR because that mirrors the paths that
-    // they will appear at in the APK.
-    final ImmutableSet<Path> secondaryDexDirectories = ImmutableSet.of(metadataDir, jarfilesDir);
-    final Path secondaryDexMetadataDir =
-        metadataDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
-    final Path secondaryDexJarFilesDir =
-        jarfilesDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+    final ImmutableSet<Path> secondaryDexDirectories = ImmutableSet.of(
+        paths.metadataDir,
+        paths.jarfilesDir);
 
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
-    steps.add(new MkdirStep(secondaryDexJarFilesDir));
-    steps.add(new MkdirStep(successDir));
+    steps.add(new MkdirStep(paths.jarfilesSubdir));
+    steps.add(new MkdirStep(paths.successDir));
 
-    steps.add(new MakeCleanDirectoryStep(secondaryDexMetadataDir));
-    steps.add(new MakeCleanDirectoryStep(scratchDir));
+    steps.add(new MakeCleanDirectoryStep(paths.metadataSubdir));
+    steps.add(new MakeCleanDirectoryStep(paths.scratchDir));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
@@ -166,27 +183,27 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     );
 
     buildableContext.recordArtifact(primaryDexPath);
-    buildableContext.recordArtifactsInDirectory(secondaryDexJarFilesDir);
-    buildableContext.recordArtifactsInDirectory(secondaryDexMetadataDir);
-    buildableContext.recordArtifactsInDirectory(successDir);
+    buildableContext.recordArtifactsInDirectory(paths.jarfilesSubdir);
+    buildableContext.recordArtifactsInDirectory(paths.metadataSubdir);
+    buildableContext.recordArtifactsInDirectory(paths.successDir);
 
     PreDexedFilesSorter preDexedFilesSorter = new PreDexedFilesSorter(
         uberRDotJava.getRDotJavaDexWithClasses(),
         dexFilesToMerge,
         dexSplitMode.getPrimaryDexPatterns(),
-        scratchDir,
+        paths.scratchDir,
         dexSplitMode.getLinearAllocHardLimit(),
         dexSplitMode.getDexStore(),
-        secondaryDexJarFilesDir);
+        paths.jarfilesSubdir);
     final PreDexedFilesSorter.Result sortResult =
         preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(context, steps);
 
     steps.add(new SmartDexingStep(
         primaryDexPath,
         Suppliers.ofInstance(sortResult.primaryDexInputs),
-        Optional.of(secondaryDexJarFilesDir),
+        Optional.of(paths.jarfilesSubdir),
         Optional.of(Suppliers.ofInstance(sortResult.secondaryOutputToInputs)),
-        successDir,
+        paths.successDir,
         /* numThreads */ Optional.<Integer>absent(),
         AndroidBinaryRule.DX_MERGE_OPTIONS));
 
@@ -212,7 +229,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
             lines.add(String.format("%s %s %s",
                 pathToSecondaryDex.getFileName(), hash, containedClass));
           }
-          filesystem.writeLinesToPath(lines, secondaryDexMetadataDir.resolve("metadata.txt"));
+          filesystem.writeLinesToPath(lines, paths.metadataFile);
         } catch (IOException e) {
           executionContext.logError(e, "Failed when writing metadata.txt multi-dex.");
           return 1;
