@@ -33,11 +33,8 @@ import java.io.IOException;
 
 public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOptions> {
 
-  private final AdbHelper adbHelper;
-
   public UninstallCommand(CommandRunnerParams params) {
     super(params);
-    adbHelper = new AdbHelper(console, getBuckEventBus());
   }
 
   @Override
@@ -88,6 +85,8 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
 
     // We need this in case adb isn't already running.
     ExecutionContext context = createExecutionContext(options, dependencyGraph);
+
+    final AdbHelper adbHelper = new AdbHelper(console, getBuckEventBus());
 
     // Find application package name from manifest and uninstall from matching devices.
     String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);

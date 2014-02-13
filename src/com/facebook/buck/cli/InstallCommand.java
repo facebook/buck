@@ -28,11 +28,8 @@ import java.io.IOException;
  */
 public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions> {
 
-  private final AdbHelper adbHelper;
-
   protected InstallCommand(CommandRunnerParams params) {
     super(params);
-    adbHelper = new AdbHelper(console, getBuckEventBus());
   }
 
   @Override
@@ -67,6 +64,8 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
       return 1;
     }
     InstallableApk installableApk = (InstallableApk)buildRule;
+
+    final AdbHelper adbHelper = new AdbHelper(console, getBuckEventBus());
 
     // Uninstall the app first, if requested.
     if (options.shouldUninstallFirst()) {
