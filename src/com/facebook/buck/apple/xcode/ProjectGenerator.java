@@ -19,6 +19,8 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.IosBinary;
+import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibrary;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTest;
@@ -183,6 +185,9 @@ public class ProjectGenerator {
     } else if (rule.getType().equals(IosTestDescription.TYPE)) {
       return Optional.of((PBXTarget) generateIosTestTarget(
           project, rule, (IosTest) rule.getBuildable()));
+    } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
+      return Optional.of((PBXTarget) generateIOSBinaryTarget(
+          project, rule, (IosBinary) rule.getBuildable()));
     } else {
       return Optional.absent();
     }
@@ -285,6 +290,45 @@ public class ProjectGenerator {
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
     String productName = getProductName(rule.getBuildTarget());
     String productOutputName = productName + ".octest";
+    PBXFileReference productReference = new PBXFileReference(
+        productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
+    productsGroup.getChildren().add(productReference);
+    target.setProductName(productName);
+    target.setProductReference(productReference);
+
+    project.getTargets().add(target);
+    return target;
+  }
+
+  private PBXNativeTarget generateIOSBinaryTarget(
+      PBXProject project, BuildRule rule, IosBinary buildable)
+      throws IOException {
+    PBXNativeTarget target = new PBXNativeTarget(rule.getFullyQualifiedName());
+    target.setProductType(PBXTarget.ProductType.IOS_BINARY);
+
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+
+    // -- configurations
+    Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    setTargetConfigurations(rule.getBuildTarget(), target, targetGroup, buildable.getConfigurations(),
+        ImmutableMap.of("INFOPLIST_FILE", infoPlistPath.toString()));
+
+    // -- phases
+    addSourcesBuildPhase(
+        target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
+    addFrameworksBuildPhase(
+        rule.getBuildTarget(),
+        target,
+        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
+        buildable.getFrameworks(),
+        collectRecursiveLibraryDependencies(rule));
+    addResourcesBuildPhase(target, targetGroup, buildable.getResources());
+
+    // -- products
+    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
+    String productName = getProductName(rule.getBuildTarget());
+    String productOutputName = productName + ".app";
     PBXFileReference productReference = new PBXFileReference(
         productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
     productsGroup.getChildren().add(productReference);

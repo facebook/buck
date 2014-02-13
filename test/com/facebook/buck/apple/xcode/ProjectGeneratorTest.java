@@ -32,6 +32,7 @@ import static org.junit.Assert.fail;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
@@ -44,6 +45,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
@@ -94,6 +96,7 @@ public class ProjectGeneratorTest {
   private XcodeNativeDescription xcodeNativeDescription;
   private IosLibraryDescription iosLibraryDescription;
   private IosTestDescription iosTestDescription;
+  private IosBinaryDescription iosBinaryDescription;
 
   @Before
   public void setUp() {
@@ -101,6 +104,7 @@ public class ProjectGeneratorTest {
     xcodeNativeDescription = new XcodeNativeDescription();
     iosLibraryDescription = new IosLibraryDescription();
     iosTestDescription = new IosTestDescription();
+    iosBinaryDescription = new IosBinaryDescription();
   }
 
   @Test
@@ -320,6 +324,44 @@ public class ProjectGeneratorTest {
         "$SDKROOT/Foo.framework"));
   }
 
+  @Test
+  public void testIosBinaryRule() throws IOException {
+    BuildRule depRule = createXcodeNativeRule(
+        new BuildTarget("//dep","dep"), ImmutableSortedSet.<BuildRule>of());
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "binary"), ImmutableSortedSet.of(depRule));
+
+    IosBinaryDescription.Arg arg = iosBinaryDescription.createUnpopulatedConstructorArg();
+    arg.infoPlist = Paths.get("Info.plist");
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
+    arg.srcs = ImmutableList.of(Either.<SourcePath, Pair<SourcePath, String>>ofRight(
+        new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
+    arg.resources = ImmutableSortedSet.<SourcePath>of(new FileSourcePath("resource.png"));
+    arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
+
+    BuildRule rule = new DescribedRule(
+        IosBinaryDescription.TYPE,
+        iosBinaryDescription.createBuildable(params, arg), params);
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
+
+    ProjectGenerator projectGenerator = createProjectGenerator(
+        buildRuleResolver, ImmutableList.of(rule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = getGeneratedTarget(projectGenerator.getGeneratedProject(), "//foo:binary");
+    assertHasConfigurations(target, "Debug");
+    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(target, ImmutableMap.of(
+        "foo.m", Optional.of("-foo")));
+    assertHasSingletonFrameworksPhaseWithFrameworkEntries(target, ImmutableList.of(
+        "$SDKROOT/Foo.framework",
+        // propagated library from deps
+        "$BUILT_PRODUCTS_DIR/libfoo.a"));
+    assertHasSingletonResourcesPhaseWithEntries(target, "resource.png");
+  }
+
   private ProjectGenerator createProjectGenerator(
       BuildRuleResolver buildRuleResolver, ImmutableList<BuildTarget> initialBuildTargets) {
     PartialGraph partialGraph = PartialGraphFactory.newInstance(
@@ -442,6 +484,27 @@ public class ProjectGeneratorTest {
               frameworks.contains(serialized));
           break;
       }
+    }
+  }
+
+  private void assertHasSingletonResourcesPhaseWithEntries(PBXTarget target, String... resources) {
+    PBXResourcesBuildPhase buildPhase =
+        getSingletonPhaseByType(target, PBXResourcesBuildPhase.class);
+    assertEquals("resources phase should have right number of elements",
+        resources.length, buildPhase.getFiles().size());
+
+    ImmutableSet.Builder<String> expectedResourceSetBuilder = ImmutableSet.builder();
+    for (String resource : resources) {
+      expectedResourceSetBuilder.add(
+          projectFilesystem.getRootPath().resolve(resource).toAbsolutePath().toString());
+    }
+    ImmutableSet<String> expectedResourceSet = expectedResourceSetBuilder.build();
+
+    for (PBXBuildFile file : buildPhase.getFiles()) {
+      String source = file.getFileRef().getPath();
+      assertTrue(
+          "resource should be in list of expected resources: " + source,
+          expectedResourceSet.contains(source));
     }
   }
 
