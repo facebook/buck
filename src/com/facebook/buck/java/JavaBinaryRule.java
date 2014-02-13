@@ -68,7 +68,11 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
   private final Path manifestFile;
 
   @Nullable
+  private final Path manifestPristine;
+
+  @Nullable
   private final Path metaInfDirectory;
+
 
   private final DirectoryTraverser directoryTraverser;
 
@@ -76,11 +80,13 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
       BuildRuleParams buildRuleParams,
       @Nullable String mainClass,
       @Nullable Path manifestFile,
+      @Nullable Path manifestPristine,
       @Nullable Path metaInfDirectory,
       DirectoryTraverser directoryTraverser) {
     super(buildRuleParams);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
+    this.manifestPristine = manifestPristine;
     this.metaInfDirectory = metaInfDirectory;
 
     this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
@@ -147,7 +153,8 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
     }
 
     Path outputFile = getOutputFile();
-    Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile);
+    Step jar = new JarDirectoryStep(outputFile, includePaths, mainClass, manifestFile,
+        manifestPristine);
     commands.add(jar);
 
     return commands.build();
@@ -190,6 +197,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
 
     private String mainClass;
     private Path manifestFile;
+    private Path manifestPristine;
     private Path metaInfDirectory;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
@@ -201,6 +209,7 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
       return new JavaBinaryRule(createBuildRuleParams(ruleResolver),
           mainClass,
           manifestFile,
+          manifestPristine,
           metaInfDirectory,
           new DefaultDirectoryTraverser());
     }
@@ -224,6 +233,11 @@ public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryB
 
     public Builder setManifest(Path manifestFile) {
       this.manifestFile = manifestFile;
+      return this;
+    }
+
+    public Builder setManifestPristine(Path manifestPristine) {
+      this.manifestPristine = manifestPristine;
       return this;
     }
 

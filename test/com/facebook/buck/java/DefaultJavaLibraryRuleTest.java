@@ -1305,6 +1305,7 @@ public class DefaultJavaLibraryRuleTest {
             "com.facebook.Main",
             null,
             null,
+            null,
             new DefaultDirectoryTraverser());
       }
     },
