@@ -21,6 +21,8 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.IosLibrary;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosTest;
+import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
@@ -29,11 +31,13 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
@@ -176,6 +180,9 @@ public class ProjectGenerator {
     } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
       return Optional.of((PBXTarget) generateXcodeNativeTarget(
           project, rule, (XcodeNative) rule.getBuildable()));
+    } else if (rule.getType().equals(IosTestDescription.TYPE)) {
+      return Optional.of((PBXTarget) generateIosTestTarget(
+          project, rule, (IosTest) rule.getBuildable()));
     } else {
       return Optional.absent();
     }
@@ -250,6 +257,44 @@ public class ProjectGenerator {
     return target;
   }
 
+  private PBXNativeTarget generateIosTestTarget(
+      PBXProject project, BuildRule rule, IosTest buildable) throws IOException {
+    PBXNativeTarget target = new PBXNativeTarget(rule.getFullyQualifiedName());
+    target.setProductType(PBXTarget.ProductType.IOS_TEST);
+
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+
+    // -- configurations
+    Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    setTargetConfigurations(rule.getBuildTarget(), target, targetGroup, buildable.getConfigurations(),
+        ImmutableMap.<String, String>of("INFOPLIST_FILE", infoPlistPath.toString()));
+
+    // -- phases
+    addSourcesBuildPhase(
+        target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
+    addFrameworksBuildPhase(
+        rule.getBuildTarget(),
+        target,
+        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
+        buildable.getFrameworks(),
+        collectRecursiveLibraryDependencies(rule));
+    addResourcesBuildPhase(target, targetGroup, buildable.getResources());
+
+    // -- products
+    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
+    String productName = getProductName(rule.getBuildTarget());
+    String productOutputName = productName + ".octest";
+    PBXFileReference productReference = new PBXFileReference(
+        productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
+    productsGroup.getChildren().add(productReference);
+    target.setProductName(productName);
+    target.setProductReference(productReference);
+
+    project.getTargets().add(target);
+    return target;
+  }
+
   private PBXAggregateTarget generateXcodeNativeTarget(
       PBXProject project,
       BuildRule rule,
@@ -260,7 +305,9 @@ public class ProjectGenerator {
         .getOrCreateChildGroupByName("Project References")
         .getOrCreateFileReferenceBySourceTreePath(SourceTreePath.absolute(referencedProjectPath));
     PBXContainerItemProxy proxy = new PBXContainerItemProxy(
-        referencedProject, buildable.getTargetGid(), PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
+        referencedProject,
+        buildable.getTargetGid(),
+        PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
     PBXAggregateTarget target = new PBXAggregateTarget(rule.getFullyQualifiedName());
     target.getDependencies().add(new PBXTargetDependency(proxy));
     project.getTargets().add(target);
@@ -357,6 +404,51 @@ public class ProjectGenerator {
       settings.put("ATTRIBUTES", new NSArray(new NSString("Public")));
       buildFile.setSettings(Optional.of(settings));
       headersBuildPhase.getFiles().add(buildFile);
+    }
+  }
+
+  private void addResourcesBuildPhase(
+      PBXNativeTarget target, PBXGroup targetGroup, Iterable<SourcePath> resources) {
+    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+    PBXResourcesBuildPhase resourcesBuildPhase = new PBXResourcesBuildPhase();
+    target.getBuildPhases().add(resourcesBuildPhase);
+    for (SourcePath sourcePath : resources) {
+      Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
+      PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+          SourceTreePath.absolute(projectFilesystem.getFileForRelativePath(path).toPath()));
+      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+      resourcesBuildPhase.getFiles().add(buildFile);
+    }
+  }
+
+  private void addFrameworksBuildPhase(
+      BuildTarget buildTarget,
+      PBXNativeTarget target,
+      PBXGroup sharedFrameworksGroup,
+      Iterable<String> frameworks,
+      Iterable<PBXFileReference> archives) {
+    PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
+    target.getBuildPhases().add(frameworksBuildPhase);
+    for (String framework : frameworks) {
+      Path path = Paths.get(framework);
+      if (path.startsWith("$SDKROOT")) {
+        Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
+        PBXFileReference fileReference = sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(PBXReference.SourceTree.SDKROOT, sdkRootRelativePath));
+        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      } else if (!path.toString().startsWith("$")) {
+        // regular path
+        PBXFileReference fileReference =
+            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.GROUP,
+                    relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
+        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      }
+    }
+
+    for (PBXFileReference archive : archives) {
+      frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
     }
   }
 
@@ -556,5 +648,43 @@ public class ProjectGenerator {
     Path originalProjectPath = projectFilesystem.getPathForRelativePath(
         Paths.get(buildTarget.getBasePathWithSlash()));
     return this.repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path);
+  }
+
+  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(final BuildRule rule) {
+    final ImmutableSet.Builder<PBXFileReference> result = ImmutableSet.builder();
+    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
+        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
+          @Override
+          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
+            return node.getDeps().iterator();
+          }
+          @Override
+          protected void onNodeExplored(BuildRule node) {
+            if (node == rule) {
+              return;
+            }
+            if (node.getType().equals(IosLibraryDescription.TYPE)) {
+              PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(node);
+              result.add(target.getProductReference());
+            } else if (node.getType().equals(XcodeNativeDescription.TYPE)) {
+              XcodeNative xcodeNative = (XcodeNative) node.getBuildable();
+              PBXFileReference reference = project.getMainGroup()
+                  .getOrCreateChildGroupByName("Frameworks")
+                  .getOrCreateFileReferenceBySourceTreePath(new SourceTreePath(
+                      PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                      Paths.get(xcodeNative.getProduct())));
+              result.add(reference);
+            }
+          }
+          @Override
+          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
+          }
+        };
+    try {
+      traversal.traverse(ImmutableList.of(rule));
+    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException e) {
+      throw new HumanReadableException(e, e.getMessage());
+    }
+    return result.build();
   }
 }
