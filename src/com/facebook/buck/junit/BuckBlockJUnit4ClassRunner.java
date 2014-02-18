@@ -21,12 +21,6 @@ import com.facebook.buck.util.concurrent.MoreExecutors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
-import org.junit.runner.Description;
-import org.junit.runner.Result;
-import org.junit.runner.manipulation.Filter;
-import org.junit.runner.manipulation.NoTestsRemainException;
-import org.junit.runner.notification.RunListener;
-import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
@@ -34,7 +28,6 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -91,49 +84,6 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
 
   private boolean isNeedingCustomTimeout() {
     return defaultTestTimeoutMillis <= 0 || hasTimeoutRule(getTestClass());
-  }
-
-  /**
-   * Convenience method to run a single test method under JUnit.
-   */
-  public Result runTest(Method testMethod) throws NoTestsRemainException {
-    // We need a Description for the method we want to test.
-    Description description = Description.createTestDescription(
-        getTestClass().getJavaClass(),
-        testMethod.getName(),
-        testMethod.getAnnotations());
-
-    // Filter this runner so it only runs a single test method.
-    Filter singleMethodFilter = Filter.matchMethodDescription(description);
-    filter(singleMethodFilter);
-
-    /*
-     * What follows is the implementation of JUnitCore.run(Runner) from JUnit 4.11. In JUnit 4.11,
-     * the Javadoc for that method states "Do not use. Testing purposes only," so we have copied
-     * the implementation here in case the method is removed in future versions of JUnit.
-     */
-
-    // We create a Result whose details will be updated by a RunListener that is attached to a
-    // RunNotifier.
-    Result result = new Result();
-    RunListener listener = result.createListener();
-    RunNotifier runNotifier = new RunNotifier();
-
-    // The Result's listener must be first according to comments in JUnit's source.
-    runNotifier.addFirstListener(listener);
-
-    try {
-      // Run the test.
-      runNotifier.fireTestRunStarted(description);
-      run(runNotifier);
-      runNotifier.fireTestRunFinished(result);
-    } finally {
-      // Make sure the notifier's reference to the listener is cleaned up.
-      runNotifier.removeListener(listener);
-    }
-
-    // Return the result that should have been populated by the listener/notifier combo.
-    return result;
   }
 
   /**
