@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.Main;
+import com.facebook.buck.cli.TestCommand;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.MoreStrings;
@@ -235,11 +236,11 @@ public class ProjectWorkspace {
     }
 
     public void assertTestFailure() {
-      assertExitCode(null, Main.FAIL_EXIT_CODE);
+      assertExitCode(null, TestCommand.TEST_FAILURES_EXIT_CODE);
     }
 
     public void assertTestFailure(String message) {
-      assertExitCode(message, Main.FAIL_EXIT_CODE);
+      assertExitCode(message, TestCommand.TEST_FAILURES_EXIT_CODE);
     }
 
     public void assertFailure(String message) {

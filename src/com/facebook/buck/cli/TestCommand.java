@@ -96,6 +96,8 @@ import javax.xml.transform.stream.StreamResult;
 
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
+  public static final int TEST_FAILURES_EXIT_CODE = 42;
+
   public TestCommand(CommandRunnerParams params) {
     super(params);
   }
@@ -568,7 +570,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     });
 
-    return failures ? 1 : 0;
+    return failures ? TEST_FAILURES_EXIT_CODE : 0;
   }
 
   private FutureCallback<TestResults> getFutureCallback(
