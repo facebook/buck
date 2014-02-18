@@ -131,10 +131,12 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
         throw new RuntimeException("RuleKey should already be computed if this is built.", e);
       }
 
-      return String.format("BuildRuleFinished(%s): %s %s %s",
+      String success = successType.isPresent() ? successType.get().toString() : "MISSING";
+      return String.format("BuildRuleFinished(%s): %s %s %s %s",
           getBuildRule(),
           getStatus(),
           getCacheResult(),
+          success,
           ruleKey);
     }
 
