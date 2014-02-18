@@ -22,6 +22,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestCommand;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.MoreStrings;
@@ -30,6 +33,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
@@ -44,6 +48,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -66,6 +74,10 @@ import javax.annotation.Nullable;
 public class ProjectWorkspace {
 
   private static final String EXPECTED_SUFFIX = ".expected";
+
+  private static final Pattern BUILD_LOG_FINISHED_RULE_REGEX =
+      Pattern.compile(".*BuildRuleFinished\\((?<RuleName>[^\\)]+)\\): (?<Status>\\S+) " +
+              "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)");
 
   private static final Function<Path, Path> BUILD_FILE_RENAME = new Function<Path, Path>() {
     @Override
@@ -189,6 +201,34 @@ public class ProjectWorkspace {
    */
   public Path resolve(Path pathRelativeToWorkspaceRoot) {
     return destPath.resolve(pathRelativeToWorkspaceRoot);
+  }
+
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public Map<BuildTarget, Optional<BuildRuleSuccess.Type>> getBuildRuleSuccessTypes()
+      throws IOException {
+    List<String> buildLogLines = Files.readLines(getFile("buck-out/bin/build.log"), Charsets.UTF_8);
+    ImmutableMap.Builder<BuildTarget, Optional<BuildRuleSuccess.Type>> builder =
+        ImmutableMap.builder();
+
+    for (String line : buildLogLines) {
+      Matcher matcher = BUILD_LOG_FINISHED_RULE_REGEX.matcher(line);
+      if (!matcher.matches()) {
+        continue;
+      }
+
+      String successTypeRaw = matcher.group("SuccessType");
+      BuildRuleSuccess.Type successType = null;
+      try {
+        successType = BuildRuleSuccess.Type.valueOf(successTypeRaw);
+      } catch (IllegalArgumentException e) {
+        // empty success type
+      }
+
+      String ruleName = matcher.group("RuleName");
+      builder.put(BuildTargetFactory.newInstance(ruleName), Optional.fromNullable(successType));
+    }
+
+    return builder.build();
   }
 
   /** The result of running {@code buck} from the command line. */
