@@ -44,7 +44,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertExitCode("buck build should exit with an error.", 1);
+    result.assertFailure("buck build should exit with an error.");
 
     assertEquals(
         "`buck build` should display an error message if no targets are provided.",
@@ -59,7 +59,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertExitCode("buck build should exit with an error.", 1);
+    result.assertFailure("buck build should exit with an error.");
 
     assertEquals(
         "`buck build` should suggest the alias found in .buckconfig as a target.",
@@ -81,7 +81,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertExitCode("buck build should exit with an error.", 1);
+    result.assertFailure("buck build should exit with an error.");
 
     assertEquals(
         Joiner.on(' ').join(
@@ -105,7 +105,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertExitCode("buck build should exit with an error.", 1);
+    result.assertFailure("buck build should exit with an error.");
 
     assertEquals(
         Joiner.on(' ').join(

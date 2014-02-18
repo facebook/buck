@@ -213,7 +213,7 @@ public class DaemonIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckdCommand("build", "app");
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     String fileName = "apps/myapp/BUCK";
     assertTrue("Should delete BUCK file successfully", workspace.getFile(fileName).delete());
@@ -235,14 +235,13 @@ public class DaemonIntegrationTest {
         this, "file_watching", tmp);
     workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/BUCK";
     assertTrue("Should delete BUCK file successfully.", workspace.getFile(fileName).delete());
     waitForChange(Paths.get(fileName));
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(
-        Main.FAIL_EXIT_CODE);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
   }
 
   @Test
@@ -252,7 +251,7 @@ public class DaemonIntegrationTest {
         this, "file_watching", tmp);
     workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     assertTrue("Should delete BUCK file successfully.", workspace.getFile(fileName).delete());
@@ -273,14 +272,13 @@ public class DaemonIntegrationTest {
         this, "file_watching", tmp);
     workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.write("Some Illegal Java".getBytes(Charsets.US_ASCII), workspace.getFile(fileName));
     waitForChange(Paths.get(fileName));
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(
-        Main.FAIL_EXIT_CODE);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
   }
 
   private void waitForChange(final Path path) throws IOException {

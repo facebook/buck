@@ -46,7 +46,7 @@ public class ClassStatementsTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all");
-    result.assertExitCode("Tests should fail", 1);
+    result.assertTestFailure("Tests should fail");
 
     String stderr = result.getStderr();
     assertThat("Explanatory exception output is present", stderr, containsString("BOOM!"));

@@ -62,12 +62,12 @@ public class CachedTestIntegrationTest {
 
     // The test should pass out of the box.
     ProcessResult result = workspace.runBuckCommand("test", "//:test");
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     // Edit the test so it should fail and then make sure that it fails.
     testUtil.makeTestFail();
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
-    result2.assertExitCode(1);
+    result2.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
         containsString("FAILURE testBasicAssertion"));
@@ -75,12 +75,12 @@ public class CachedTestIntegrationTest {
     // Restore the file to its previous state.
     testUtil.makeTestSucceed();
     ProcessResult result3 = workspace.runBuckCommand("test", "//:test");
-    result3.assertExitCode(0);
+    result3.assertSuccess();
 
     // Put the file back in the broken state and make sure the test fails.
     testUtil.makeTestFail();
     ProcessResult result4 = workspace.runBuckCommand("test", "//:test");
-    result4.assertExitCode(1);
+    result4.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result4.getStderr(),
         containsString("FAILURE testBasicAssertion"));
@@ -100,14 +100,14 @@ public class CachedTestIntegrationTest {
 
     // The test should pass out of the box.
     ProcessResult result = workspace.runBuckCommand("test", "//:test");
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     // Edit the test so it should fail and then make sure that it fails.
     testUtil.makeTestFail();
     workspace.runBuckCommand("build", "//:test")
-        .assertExitCode("The test should build successfully, but will fail when executed.", 0);
+        .assertSuccess("The test should build successfully, but will fail when executed.");
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
-    result2.assertExitCode(1);
+    result2.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
         containsString("FAILURE testBasicAssertion"));
@@ -115,16 +115,16 @@ public class CachedTestIntegrationTest {
     // Restore the file to its previous state.
     testUtil.makeTestSucceed();
     workspace.runBuckCommand("build", "//:test")
-        .assertExitCode("The test should build successfully.", 0);
+        .assertSuccess("The test should build successfully.");
     ProcessResult result3 = workspace.runBuckCommand("test", "//:test");
-    result3.assertExitCode(0);
+    result3.assertSuccess();
 
     // Put the file back in the broken state and make sure the test fails.
     testUtil.makeTestFail();
     workspace.runBuckCommand("build", "//:test")
-        .assertExitCode("The test should build successfully, but will fail when executed.", 0);
+        .assertSuccess("The test should build successfully, but will fail when executed.");
     ProcessResult result4 = workspace.runBuckCommand("test", "//:test");
-    result4.assertExitCode(1);
+    result4.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result4.getStderr(),
         containsString("FAILURE testBasicAssertion"));

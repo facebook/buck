@@ -45,7 +45,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
-    result.assertExitCode("buck project should exit cleanly", 0);
+    result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
 
@@ -83,7 +83,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project", "//modules/dep1:dep1");
-    result.assertExitCode("buck project should exit cleanly", 0);
+    result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
 
@@ -125,7 +125,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
-    result.assertExitCode("buck project should exit cleanly", 0);
+    result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
   }

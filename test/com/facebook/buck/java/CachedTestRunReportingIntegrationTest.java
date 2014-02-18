@@ -81,7 +81,11 @@ public class CachedTestRunReportingIntegrationTest {
       throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test");
     workspace.verify();
-    result.assertExitCode(expectSuccess ? 0 : 1);
+    if (expectSuccess) {
+      result.assertSuccess();
+    } else {
+      result.assertTestFailure();
+    }
     // Test that Test status is reported
     assertTrue(result.getStderr().contains("com.example.LameTest"));
     String status = expectSuccess ? "PASS CACHED" : "FAIL CACHED";

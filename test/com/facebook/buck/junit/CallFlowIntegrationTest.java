@@ -42,9 +42,8 @@ public class CallFlowIntegrationTest {
 
     // ExceedsAnnotationTimeoutTest should fail.
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:example");
-    suiteTestResult.assertExitCode(
-        "Test should fail because @AfterClass method is supposed to call exit(42)",
-        1);
+    suiteTestResult.assertFailure(
+        "Test should fail because @AfterClass method is supposed to call exit(42)");
     assertThat(suiteTestResult.getStderr(), containsString("exit code 42"));
   }
 

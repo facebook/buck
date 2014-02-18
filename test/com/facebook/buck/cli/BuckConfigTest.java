@@ -432,7 +432,7 @@ public class BuckConfigTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "--all");
-    result.assertExitCode("buck test --all should exit cleanly", 0);
+    result.assertSuccess("buck test --all should exit cleanly");
   }
 
   @Test

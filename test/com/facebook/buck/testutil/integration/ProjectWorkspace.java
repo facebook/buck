@@ -206,8 +206,9 @@ public class ProjectWorkspace {
      * Returns the exit code from the process.
      * <p>
      * Currently, this method is private because, in practice, any time a client might want to use
-     * it, it is more appropriate to use {@link #assertExitCode(String, int)} instead. If a valid
-     * use case arises, then we should make this getter public.
+     * it, it is more appropriate to use {@link #assertSuccess()} or
+     * {@link #assertFailure()} instead. If a valid use case arises, then we should make this
+     * getter public.
      */
     private int getExitCode() {
       return exitCode;
@@ -221,11 +222,31 @@ public class ProjectWorkspace {
       return stderr;
     }
 
-    public void assertExitCode(int exitCode) {
-      assertExitCode(null, exitCode);
+    public void assertSuccess() {
+      assertExitCode(null, 0);
     }
 
-    public void assertExitCode(@Nullable String message, int exitCode) {
+    public void assertSuccess(String message) {
+      assertExitCode(message, 0);
+    }
+
+    public void assertFailure() {
+      assertExitCode(null, Main.FAIL_EXIT_CODE);
+    }
+
+    public void assertTestFailure() {
+      assertExitCode(null, Main.FAIL_EXIT_CODE);
+    }
+
+    public void assertTestFailure(String message) {
+      assertExitCode(message, Main.FAIL_EXIT_CODE);
+    }
+
+    public void assertFailure(String message) {
+      assertExitCode(message, 1);
+    }
+
+    private void assertExitCode(@Nullable String message, int exitCode) {
       if (exitCode == getExitCode()) {
         return;
       }
@@ -242,6 +263,10 @@ public class ProjectWorkspace {
       System.err.println("=== STDOUT ===");
       System.err.println(getStdout());
       fail(failureMessage);
+    }
+
+    public void assertSpecialExitCode(String message, int exitCode) {
+      assertExitCode(message, exitCode);
     }
   }
 

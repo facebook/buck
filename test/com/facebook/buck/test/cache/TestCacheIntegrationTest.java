@@ -78,7 +78,7 @@ public class TestCacheIntegrationTest {
 
   private String run(String... args) throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
-    result.assertExitCode(0);
+    result.assertSuccess();
     return result.getStderr();
   }
 }

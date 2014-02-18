@@ -71,7 +71,7 @@ public class QuickstartIntegrationTest {
         "--android-sdk",
         androidSdk.toAbsolutePath().toString());
 
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     quickstartWorkspace.verify();
 
@@ -98,7 +98,7 @@ public class QuickstartIntegrationTest {
     // it does not have that dependency.
     result = targetsWorkspace.runBuckCommand("targets");
 
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     targetsWorkspace.verify();
 
@@ -119,7 +119,7 @@ public class QuickstartIntegrationTest {
 
     result = targetsWorkspace.runBuckCommand("build", "app");
 
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     targetsWorkspace.verify();
 

@@ -62,7 +62,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatTakesTooLong");
-    testResult.assertExitCode("Should fail due to exceeding timeout.", 1);
+    testResult.assertTestFailure("Should fail due to exceeding timeout.");
     assertThat(testResult.getStderr(), containsString("timed out after 3000 milliseconds"));
   }
 
@@ -73,7 +73,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatRunsForever");
-    testResult.assertExitCode("Should fail due to exceeding timeout.", 1);
+    testResult.assertTestFailure("Should fail due to exceeding timeout.");
     assertThat(testResult.getStderr(), containsString("timed out after 3000 milliseconds"));
   }
 
@@ -85,7 +85,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test",
         "//:TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation");
-    testResult.assertExitCode(0);
+    testResult.assertSuccess();
   }
 
   @Test
@@ -96,7 +96,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test",
         "//:TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule");
-    testResult.assertExitCode(0);
+    testResult.assertSuccess();
   }
 
   @Test
@@ -107,6 +107,6 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test",
         "//:MultipleTestsThatExpectToBeAbleToReuseTheMainThread");
-    testResult.assertExitCode(0);
+    testResult.assertSuccess();
   }
 }

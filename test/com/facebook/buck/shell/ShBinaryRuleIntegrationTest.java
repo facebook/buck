@@ -54,7 +54,7 @@ public class ShBinaryRuleIntegrationTest {
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:run_example", "-v", "2");
-    buildResult.assertExitCode(0);
+    buildResult.assertSuccess();
 
     // Verify contents of example_out.txt
     File outputFile = workspace.getFile("buck-out/gen/example_out.txt");
@@ -72,7 +72,7 @@ public class ShBinaryRuleIntegrationTest {
 
     // First build only the sh_binary rule itself.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:example_sh", "-v", "2");
-    buildResult.assertExitCode(0);
+    buildResult.assertSuccess();
 
     // Make sure the sh_binary output is executable to begin with.
     String outputPath = "buck-out/gen/__example_sh__/example_sh.sh";
@@ -88,7 +88,7 @@ public class ShBinaryRuleIntegrationTest {
     // sh_binary output from cache. If the executable flag is lost somewhere along the way, this
     // will fail.
     buildResult = workspace.runBuckCommand("build", "//:run_example", "-v", "2");
-    buildResult.assertExitCode("Build failed when rerunning sh_binary from cache.", 0);
+    buildResult.assertSuccess("Build failed when rerunning sh_binary from cache.");
 
     // In addition to running the build, explicitly check that the output file is still executable.
     assertTrue("Output file must be retrieved from cache at '" + outputPath + ".", output.exists());
@@ -104,7 +104,7 @@ public class ShBinaryRuleIntegrationTest {
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//app:create_output_using_node");
-    buildResult.assertExitCode(0);
+    buildResult.assertSuccess();
 
     // Verify contents of output.txt
     File outputFile = workspace.getFile("buck-out/gen/app/output.txt");
@@ -124,7 +124,7 @@ public class ShBinaryRuleIntegrationTest {
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:overwrite");
-    buildResult.assertExitCode(1);
+    buildResult.assertFailure();
 
     assertThat(buildResult.getStderr(), containsString("/overwrite.sh: Permission denied"));
   }

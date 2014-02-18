@@ -63,7 +63,7 @@ public class TimeoutIntegrationTest {
     // ExceedsAnnotationTimeoutTest should fail.
     ProcessResult exceedsAnnotationTimeoutTestResult = workspace.runBuckCommand(
         "test", "//:ExceedsAnnotationTimeoutTest");
-    exceedsAnnotationTimeoutTestResult.assertExitCode("Test should fail due to timeout", 1);
+    exceedsAnnotationTimeoutTestResult.assertTestFailure("Test should fail due to timeout");
     assertThat(exceedsAnnotationTimeoutTestResult.getStderr(),
         containsString(
             "FAILURE testShouldFailDueToExpiredTimeout: test timed out after 1000 milliseconds"));
@@ -71,14 +71,14 @@ public class TimeoutIntegrationTest {
     // TimeoutChangesBehaviorTest should pass.
     ProcessResult timeoutTestWithoutTimeout = workspace.runBuckCommand(
         "test", "//:TimeoutChangesBehaviorTest");
-    timeoutTestWithoutTimeout.assertExitCode(0);
+    timeoutTestWithoutTimeout.assertSuccess();
 
     // TimeoutChangesBehaviorTest with @Test(timeout) specified should fail.
     // See https://github.com/junit-team/junit/issues/686 about why it fails.
     modifyTimeoutInTestAnnotation(PATH_TO_TIMEOUT_BEHAVIOR_TEST, /* addTimeout */ true);
     ProcessResult timeoutTestWithTimeoutOnAnnotation = workspace.runBuckCommand(
         "test", "//:TimeoutChangesBehaviorTest");
-    timeoutTestWithTimeoutOnAnnotation.assertExitCode(1);
+    timeoutTestWithTimeoutOnAnnotation.assertTestFailure();
     assertThat(timeoutTestWithTimeoutOnAnnotation.getStderr(),
         containsString(
             "FAILURE testTimeoutDictatesTheSuccessOfThisTest: " +
@@ -89,7 +89,7 @@ public class TimeoutIntegrationTest {
     insertTimeoutRule(PATH_TO_TIMEOUT_BEHAVIOR_TEST);
     ProcessResult timeoutTestWithTimeoutRule = workspace.runBuckCommand(
         "test", "//:TimeoutChangesBehaviorTest");
-    timeoutTestWithTimeoutRule.assertExitCode(0);
+    timeoutTestWithTimeoutRule.assertSuccess();
 
     workspace.verify();
   }

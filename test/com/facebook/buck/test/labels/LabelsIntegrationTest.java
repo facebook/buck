@@ -86,14 +86,14 @@ public class LabelsIntegrationTest {
 
   private void assertTestsFail(String... args) throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
-    result.assertExitCode(1);
+    result.assertTestFailure();
     assertThat(result.getStderr(), containsString("Earth should be flat!"));
     assertThat(result.getStderr(), containsString("TESTS FAILED: 1 Failures"));
   }
 
   private void assertTestsPass(String... args) throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
-    result.assertExitCode(0);
+    result.assertSuccess();
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
   }
 

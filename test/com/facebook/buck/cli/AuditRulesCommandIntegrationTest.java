@@ -41,19 +41,19 @@ public class AuditRulesCommandIntegrationTest {
 
     // Print all of the rules in a file.
     ProcessResult result1 = workspace.runBuckCommand("audit", "rules", "example/BUCK");
-    result1.assertExitCode(0);
+    result1.assertSuccess();
     assertEquals(workspace.getFileContents("stdout.all"), result1.getStdout());
 
     // Print all of the rules filtered by type.
     ProcessResult result2 = workspace.runBuckCommand(
         "audit", "rules", "--type", "genrule", "example/BUCK");
-    result2.assertExitCode(0);
+    result2.assertSuccess();
     assertEquals(workspace.getFileContents("stdout.genrule"), result2.getStdout());
 
     // Print all of the rules using multiple filters.
     ProcessResult result3 = workspace.runBuckCommand(
         "audit", "rules", "-t", "genrule", "-t", "keystore", "example/BUCK");
-    result3.assertExitCode(0);
+    result3.assertSuccess();
     assertEquals(workspace.getFileContents("stdout.all"), result3.getStdout());
   }
 }

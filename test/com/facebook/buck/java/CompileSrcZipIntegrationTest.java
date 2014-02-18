@@ -38,6 +38,6 @@ public class CompileSrcZipIntegrationTest {
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:lib", "-v", "2");
-    buildResult.assertExitCode("Successful build should exit with 0.", 0);
+    buildResult.assertSuccess("Successful build should exit with 0.");
   }
 }

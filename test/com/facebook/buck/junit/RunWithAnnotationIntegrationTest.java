@@ -49,7 +49,7 @@ public class RunWithAnnotationIntegrationTest {
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:SimpleSuiteTest");
-    suiteTestResult.assertExitCode("Test should pass", 0);
+    suiteTestResult.assertSuccess("Test should pass");
     assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
   }
 
@@ -60,7 +60,7 @@ public class RunWithAnnotationIntegrationTest {
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:FailingSuiteTest");
-    suiteTestResult.assertExitCode("Test should fail because of one of subtests failure", 1);
+    suiteTestResult.assertTestFailure("Test should fail because of one of subtests failure");
     assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
     assertThat(suiteTestResult.getStderr(), containsString("1 Failed"));
   }
@@ -72,7 +72,7 @@ public class RunWithAnnotationIntegrationTest {
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:ParametrizedTest");
-    suiteTestResult.assertExitCode("Test should pass", 0);
+    suiteTestResult.assertSuccess("Test should pass");
     assertThat(suiteTestResult.getStderr(), containsString("4 Passed"));
 
     Document doc = XmlDomParser.parse(new InputSource(new FileReader(workspace.getFile(

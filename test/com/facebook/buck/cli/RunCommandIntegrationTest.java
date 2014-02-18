@@ -16,13 +16,14 @@
 
 package com.facebook.buck.cli;
 
-import org.easymock.EasyMockSupport;
-import org.junit.Rule;
-import org.junit.Test;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+
+import org.easymock.EasyMockSupport;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.io.IOException;
 
@@ -45,7 +46,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
         "one_arg",
         workspace.getFile("output").toPath().toAbsolutePath().toString()
     );
-    result.assertExitCode("buck run should succeed", 0);
+    result.assertSuccess("buck run should succeed");
     System.out.print(result.getStdout());
     workspace.verify();
   }
@@ -59,7 +60,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("run", "//cmd:command");
-    result.assertExitCode("buck run should propagate failure", 5);
+    result.assertSpecialExitCode("buck run should propagate failure", 5);
   }
 
 }
