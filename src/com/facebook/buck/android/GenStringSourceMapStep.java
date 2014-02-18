@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -77,7 +76,7 @@ import java.util.Set;
 public class GenStringSourceMapStep extends AbstractExecutionStep {
 
   private final Path rDotJavaSrcDir;
-  private final Set<String> resDirectories;
+  private final Set<Path> resDirectories;
   private final Path destinationPath;
 
   private HashMap<String, Integer> mapResNameToResId = Maps.newHashMap();
@@ -93,7 +92,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
    */
   public GenStringSourceMapStep(
       Path rDotJavaSrcDir,
-      Set<String> resDirectories,
+      Set<Path> resDirectories,
       Path destinationPath) {
     super("build_string_source_map");
     this.rDotJavaSrcDir = Preconditions.checkNotNull(rDotJavaSrcDir);
@@ -141,8 +140,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
 
     HashMap<String, NativeStringInfo> nativeStrings = new HashMap<String, NativeStringInfo>();
 
-    for (String resDir : resDirectories) {
-      Path stringsPath = Paths.get(resDir, "values", "strings.xml");
+    for (Path resDir : resDirectories) {
+      Path stringsPath = resDir.resolve("values").resolve("strings.xml");
       File stringsFile = filesystem.getFileForRelativePath(stringsPath);
       if (stringsFile.exists()) {
         try {

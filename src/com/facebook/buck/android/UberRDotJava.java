@@ -115,6 +115,7 @@ public class UberRDotJava extends AbstractBuildable implements
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final boolean rDotJavaNeedsDexing;
+  private final boolean shouldBuildStringSourceMap;
 
   @Nullable private BuildOutput buildOutput;
 
@@ -122,12 +123,14 @@ public class UberRDotJava extends AbstractBuildable implements
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourceFilter,
       AndroidResourceDepsFinder androidResourceDepsFinder,
-      boolean rDotJavaNeedsDexing) {
+      boolean rDotJavaNeedsDexing,
+      boolean shouldBuildStringSourceMap) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
+    this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
   }
 
   @Override
@@ -135,7 +138,8 @@ public class UberRDotJava extends AbstractBuildable implements
     return builder
         .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("resourceFilter", resourceFilter.getDescription())
-        .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing);
+        .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
+        .set("shouldBuildStringSourceMap", shouldBuildStringSourceMap);
   }
 
   @Override
@@ -189,8 +193,10 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(
+      BuildContext context,
+      final BuildableContext buildableContext
+  ) throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     AndroidResourceDetails androidResourceDetails =
@@ -222,8 +228,7 @@ public class UberRDotJava extends AbstractBuildable implements
     }
 
     if (!resDirectories.isEmpty()) {
-      generateAndCompileRDotJavaFiles(
-          resDirectories, rDotJavaPackages, steps, buildableContext);
+      generateAndCompileRDotJavaFiles(resDirectories, rDotJavaPackages, steps, buildableContext);
     }
 
     final Optional<DexRDotJavaStep> dexRDotJava = rDotJavaNeedsDexing && !resDirectories.isEmpty()
@@ -377,8 +382,22 @@ public class UberRDotJava extends AbstractBuildable implements
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
     commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
-    // TODO: add command to build the string source map file...
+    if (shouldBuildStringSourceMap) {
+      // Make sure we have an output directory
+      Path outputDirPath = getPathForNativeStringInfoDirectory();
+      commands.add(new MakeCleanDirectoryStep(outputDirPath));
 
+      // Add the step that parses R.txt and all the strings.xml files, and
+      // produces a JSON with android resource id's and xml paths for each string resource.
+      GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
+          rDotJavaSrc,
+          resDirectories,
+          outputDirPath);
+      commands.add(genNativeStringInfo);
+
+      // Cache the generated strings.json file, it will be stored inside outputDirPath
+      buildableContext.recordArtifactsInDirectory(outputDirPath);
+    }
 
     // Compile the R.java files.
     Set<Path> javaSourceFilePaths = Sets.newHashSet();
@@ -393,6 +412,10 @@ public class UberRDotJava extends AbstractBuildable implements
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
     buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
     buildableContext.recordArtifactsInDirectory(rDotJavaBin);
+  }
+
+  private Path getPathForNativeStringInfoDirectory() {
+    return BuildTargets.getBinPath(buildTarget, "__%s_string_source_map__");
   }
 
   /**
@@ -426,6 +449,7 @@ public class UberRDotJava extends AbstractBuildable implements
     @Nullable private FilterResourcesStep.ResourceFilter resourceFilter;
     @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
     private boolean rDotJavaNeedsDexing = false;
+    private boolean shouldBuildStringSourceMap = false;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -467,13 +491,19 @@ public class UberRDotJava extends AbstractBuildable implements
       return this;
     }
 
+    public Builder setBuildStringSourceMap(boolean shouldBuildStringSourceMap) {
+      this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
+      return this;
+    }
+
     @Override
     protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
       return new UberRDotJava(buildTarget,
           resourceCompressionMode,
           resourceFilter,
           androidResourceDepsFinder,
-          rDotJavaNeedsDexing);
+          rDotJavaNeedsDexing,
+          shouldBuildStringSourceMap);
     }
   }
 }

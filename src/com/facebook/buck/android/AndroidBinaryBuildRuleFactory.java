@@ -122,6 +122,9 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
       builder.addCpuFilter(filter);
     }
 
+    // build_string_source_map
+    builder.setBuildStringSourceMap(params.getBooleanAttribute("build_string_source_map"));
+
     // preprocess_java_classes_deps
     for (String dep : params.getOptionalListAttribute("preprocess_java_classes_deps")) {
       BuildTarget buildTarget = params.resolveBuildTarget(dep);

@@ -902,6 +902,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private boolean useAndroidProguardConfigWithOptimizations = false;
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
+    private boolean buildStringSourceMap = false;
     private FilterResourcesStep.ResourceFilter resourceFilter = ResourceFilter.EMPTY_FILTER;
     private ImmutableSet.Builder<TargetCpuType> cpuFilters = ImmutableSet.builder();
     private ImmutableSet.Builder<BuildTarget> preprocessJavaClassesDeps = ImmutableSet.builder();
@@ -965,7 +966,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
               manifest,
               packageType,
               cpuFilters.build(),
-              shouldPreDex);
+              shouldPreDex,
+              this.buildStringSourceMap);
 
       Path primaryDexPath = BuildTargets.getBinPath(getBuildTarget(), ".dex/%s/classes.dex");
       AndroidBinaryGraphEnhancer.DexEnhancementResult dexEnhancementResult;
@@ -1097,6 +1099,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
             buildTarget.getFullyQualifiedName(),
             resourceCompressionMode));
       }
+      return this;
+    }
+
+    public Builder setBuildStringSourceMap(boolean buildStringSourceMap) {
+      this.buildStringSourceMap = buildStringSourceMap;
       return this;
     }
 

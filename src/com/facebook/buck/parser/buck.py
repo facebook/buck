@@ -453,6 +453,7 @@ def android_binary(
       # 1MB of which is taken up by the framework, so that leaves 4MB.
       linear_alloc_hard_limit=4 * 1024 * 1024,
       resource_filter=None,
+      build_string_source_map=False,
       cpu_filters=[],
       preprocess_java_classes_deps=[],
       preprocess_java_classes_bash=None,
@@ -480,6 +481,7 @@ def android_binary(
     'primary_dex_classes_file' : primary_dex_classes_file,
     'linear_alloc_hard_limit' : linear_alloc_hard_limit,
     'resource_filter' : resource_filter,
+    'build_string_source_map' : build_string_source_map,
     'cpu_filters' : cpu_filters,
     'preprocess_java_classes_deps' : preprocess_java_classes_deps,
     'preprocess_java_classes_bash' : preprocess_java_classes_bash,

@@ -184,7 +184,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
               manifest,
               /* packageType */ PackageType.INSTRUMENTED,
               apkUnderTest.getCpuFilters(),
-              /* rDotJavaNeedsDexing */ false);
+              /* rDotJavaNeedsDexing */ false,
+              /* shouldBuildStringSourceMap */ false);
 
       BuildRuleParams newParams = originalParams.copyWithChangedDeps(graphEnhancer.getTotalDeps());
 

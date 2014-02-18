@@ -126,14 +126,16 @@ public class AndroidBinaryGraphEnhancer {
     return new DexEnhancementResult(Optional.of(preDexMerge));
   }
 
-  AaptEnhancementResult addBuildablesToCreateAaptResources(BuildRuleResolver ruleResolver,
+  AaptEnhancementResult addBuildablesToCreateAaptResources(
+      BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourceFilter,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       SourcePath manifest,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters,
-      boolean rDotJavaNeedsDexing) {
+      boolean rDotJavaNeedsDexing,
+      boolean shouldBuildStringSourceMap) {
     BuildTarget buildTargetForResources = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
     BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
         UberRDotJava
@@ -142,7 +144,8 @@ public class AndroidBinaryGraphEnhancer {
             .setResourceCompressionMode(resourceCompressionMode)
             .setResourceFilter(resourceFilter)
             .setAndroidResourceDepsFinder(androidResourceDepsFinder)
-            .setRDotJavaNeedsDexing(rDotJavaNeedsDexing));
+            .setRDotJavaNeedsDexing(rDotJavaNeedsDexing)
+            .setBuildStringSourceMap(shouldBuildStringSourceMap));
     UberRDotJava uberRDotJava = (UberRDotJava) uberRDotJavaBuildRule.getBuildable();
 
     // Create the AaptPackageResourcesBuildable.
