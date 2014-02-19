@@ -49,7 +49,7 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */"");
+            /* ndkVersion */ Optional.<String>absent());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
         .createFromDefaultDirectoryStructure(
@@ -81,8 +81,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromOldUpgradePath = new File(buildToolsDir, "17.0.0");
@@ -127,8 +127,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromFreshDownload = new File(buildToolsDir, "android-4.2.2");
@@ -173,8 +173,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
@@ -207,8 +207,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     try {
       AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
       fail("Should have thrown HumanReadableException");

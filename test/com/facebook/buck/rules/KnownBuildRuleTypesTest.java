@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
@@ -69,8 +70,10 @@ public class KnownBuildRuleTypesTest {
   public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateDefaultJavaLibraryBuildRuleWithAbsentJavac() throws IOException, NoSuchBuildTargetException {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(), Optional.<String>absent()).build();
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(),
+        new FakeAndroidDirectoryResolver()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -91,8 +94,10 @@ public class KnownBuildRuleTypesTest {
           }});
         }});
 
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(), Optional.<String>absent()).build();
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(),
+        new FakeAndroidDirectoryResolver()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -117,8 +122,10 @@ public class KnownBuildRuleTypesTest {
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
-    KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(0, "fakeVersion 0.1", ""), Optional.<String>absent()).build();
+    KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(0, "fakeVersion 0.1", ""),
+        new FakeAndroidDirectoryResolver()).build();
     BuildRuleFactory<?> configuredFactory = configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule configuredRule = configuredFactory.newInstance(params).build(new BuildRuleResolver());
 
@@ -137,8 +144,10 @@ public class KnownBuildRuleTypesTest {
           }});
         }});
 
-    KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(1, "", "error"), Optional.<String>absent()).build();
+    KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(1, "", "error"),
+        new FakeAndroidDirectoryResolver()).build();
     BuildRuleFactory<?> configuredFactory = configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     configuredFactory.newInstance(params).build(new BuildRuleResolver());
   }
@@ -147,8 +156,10 @@ public class KnownBuildRuleTypesTest {
   public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithAbsentJavac() throws IOException, NoSuchBuildTargetException {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(), Optional.<String>absent()).build();
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(),
+        new FakeAndroidDirectoryResolver()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.ANDROID_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 
@@ -169,8 +180,10 @@ public class KnownBuildRuleTypesTest {
           }});
         }});
 
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(buckConfig,
-        new FakeProcessExecutor(), Optional.<String>absent()).build();
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(),
+        new FakeAndroidDirectoryResolver()).build();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.ANDROID_LIBRARY);
     BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
 

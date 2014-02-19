@@ -18,6 +18,7 @@ java_library(
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',

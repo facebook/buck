@@ -44,6 +44,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleBuildRuleFactory;
 import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
@@ -149,14 +150,14 @@ public class KnownBuildRuleTypes {
   public static KnownBuildRuleTypes getConfigured(
       BuckConfig buckConfig,
       ProcessExecutor executor,
-      Optional<String> ndkVersion) {
-    return createConfiguredBuilder(buckConfig, executor, ndkVersion).build();
+      AndroidDirectoryResolver androidDirectoryResolver) {
+    return createConfiguredBuilder(buckConfig, executor, androidDirectoryResolver).build();
   }
 
   public static Builder createConfiguredBuilder(
       BuckConfig buckConfig,
       ProcessExecutor executor,
-      Optional<String> ndkVersion) {
+      AndroidDirectoryResolver androidDirectoryResolver) {
     Optional<Path> javac = buckConfig.getJavac();
 
     Optional<String> javacVersion = Optional.absent();
@@ -179,8 +180,16 @@ public class KnownBuildRuleTypes {
         new JavaLibraryBuildRuleFactory(javac, javacVersion));
     builder.register(BuildRuleType.ANDROID_LIBRARY,
         new AndroidLibraryBuildRuleFactory(javac, javacVersion));
-    builder.register(BuildRuleType.NDK_LIBRARY,
-        new NdkLibraryBuildRuleFactory(ndkVersion));
+
+    Optional<String> ndkVersion = buckConfig.getNdkVersion();
+    // If a NDK version isn't specified, we've got to reach into the runtime environment to find
+    // out which one we will end up using.
+    if (!ndkVersion.isPresent()) {
+      ndkVersion = androidDirectoryResolver.getNdkVersion();
+    }
+
+    builder.register(BuildRuleType.NDK_LIBRARY, new NdkLibraryBuildRuleFactory(ndkVersion));
+
     return builder;
   }
 

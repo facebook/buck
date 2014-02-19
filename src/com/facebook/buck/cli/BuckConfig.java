@@ -610,12 +610,8 @@ public class BuckConfig {
     }
   }
 
-  public Optional<String> getMinimumNdkVersion() {
-    return getValue("ndk", "min_version");
-  }
-
-  public Optional<String> getMaximumNdkVersion() {
-    return getValue("ndk", "max_version");
+  public Optional<String> getNdkVersion() {
+    return getValue("ndk", "ndk_version");
   }
 
   public Optional<Path> getJavac() {
@@ -631,31 +627,6 @@ public class BuckConfig {
       return Optional.of(javac.toPath());
     }
     return Optional.absent();
-  }
-
-  @VisibleForTesting
-  void validateNdkVersion(Path ndkPath, String ndkVersion) {
-    Optional<String> minVersion = getMinimumNdkVersion();
-    Optional<String> maxVersion = getMaximumNdkVersion();
-
-    if (minVersion.isPresent() && maxVersion.isPresent()) {
-      // Example forms: r8, r8b, r9
-      if (ndkVersion.length() < 2) {
-        throw new HumanReadableException("Invalid NDK version: %s", ndkVersion);
-      }
-
-      if (ndkVersion.compareTo(minVersion.get()) < 0 || ndkVersion.compareTo(maxVersion.get()) > 0) {
-        throw new HumanReadableException(
-            "Supported NDK versions are between %s and %s but Buck is configured to use %s from %s",
-            minVersion.get(),
-            maxVersion.get(),
-            ndkVersion,
-            ndkPath.toAbsolutePath());
-      }
-    } else if (minVersion.isPresent() || maxVersion.isPresent()) {
-      throw new HumanReadableException(
-          "Either both min_version and max_version are provided or neither are");
-    }
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {

@@ -38,12 +38,14 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultFileHashCache;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
+import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchServiceWatcher;
@@ -71,7 +73,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
@@ -456,20 +457,20 @@ public final class Main {
       ArtifactCacheFactory artifactCacheFactory = new LoggingArtifactCacheFactory(buildEventBus);
 
       // Configure the AndroidDirectoryResolver.
+      PropertyFinder propertyFinder = new DefaultPropertyFinder(projectFilesystem);
       AndroidDirectoryResolver androidDirectoryResolver =
-          new DefaultAndroidDirectoryResolver(projectFilesystem);
-      Optional<Path> ndkDir = androidDirectoryResolver.findAndroidNdkDir();
-      Optional<String> ndkVersion = Optional.absent();
-      if (ndkDir.isPresent()) {
-        ndkVersion = Optional.of(androidDirectoryResolver.getNdkVersion(ndkDir.get()));
-        config.validateNdkVersion(ndkDir.get(), ndkVersion.get());
-      }
+          new DefaultAndroidDirectoryResolver(
+              projectFilesystem,
+              config.getNdkVersion(),
+              propertyFinder);
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
 
       KnownBuildRuleTypes buildRuleTypes =
-          KnownBuildRuleTypes.getConfigured(config, new ProcessExecutor(console), ndkVersion);
+          KnownBuildRuleTypes.getConfigured(config,
+              new ProcessExecutor(console),
+              androidDirectoryResolver);
 
       if (isDaemon) {
         parser = getParserFromDaemon(context, projectFilesystem, config, console, commandEvent);

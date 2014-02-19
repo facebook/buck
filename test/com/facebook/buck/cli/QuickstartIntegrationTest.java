@@ -25,8 +25,10 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -37,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Integration test for the {@code buck quickstart} command.
@@ -58,8 +61,12 @@ public class QuickstartIntegrationTest {
         this, "empty_project", quickstartDirectory);
     quickstartWorkspace.setUp();
 
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+
     AndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(new ProjectFilesystem(new File(".")));
+        new DefaultAndroidDirectoryResolver(projectFilesystem,
+            Optional.<String>absent(),
+            new DefaultPropertyFinder(projectFilesystem));
 
     // looks at local.properties, ANDROID_SDK, and ANDROID_HOME
     Path androidSdk =

@@ -13,15 +13,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.util;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
-public interface PropertyFinder {
-  Optional<Path> findDirectoryByPropertiesThenEnvironmentVariable(
-      String propertyName,
-      String... environmentVariables);
+public class FakePropertyFinder implements PropertyFinder {
+  private final ImmutableMap<String, Optional<Path>> propertyMap;
+
+  public FakePropertyFinder(ImmutableMap<String, Optional<Path>> propertyMap) {
+    this.propertyMap = Preconditions.checkNotNull(propertyMap);
+  }
+
+  @Override
+  public Optional<Path> findDirectoryByPropertiesThenEnvironmentVariable(
+      String propertyName, String... environmentVariables) {
+    return propertyMap.get(propertyName);
+  }
 }

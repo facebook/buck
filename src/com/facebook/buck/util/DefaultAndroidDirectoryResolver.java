@@ -17,6 +17,8 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import java.nio.file.Path;
 import java.util.StringTokenizer;
@@ -26,24 +28,42 @@ import java.util.StringTokenizer;
  */
 public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver {
   private final ProjectFilesystem projectFilesystem;
+  private final Optional<String> targetNdkVersion;
+  private final PropertyFinder propertyFinder;
 
-  public DefaultAndroidDirectoryResolver(ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = projectFilesystem;
+  private final Supplier<Optional<Path>> sdkSupplier;
+  private final Supplier<Optional<Path>> ndkSupplier;
+
+
+
+  public DefaultAndroidDirectoryResolver(
+      ProjectFilesystem projectFilesystem,
+      Optional<String> targetNdkVersion,
+      PropertyFinder propertyFinder) {
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.targetNdkVersion = Preconditions.checkNotNull(targetNdkVersion);
+    this.propertyFinder = Preconditions.checkNotNull(propertyFinder);
+
+    this.sdkSupplier =
+        Suppliers.memoize(new Supplier<Optional<Path>>() {
+          @Override
+          public Optional<Path> get() {
+            return getSdkPathFromSdkDir();
+          }
+        });
+
+    this.ndkSupplier =
+        Suppliers.memoize(new Supplier<Optional<Path>>() {
+          @Override
+          public Optional<Path> get() {
+            return getNdkPathFromNdkDir().or(getNdkPathFromNdkRepository());
+          }
+        });
   }
 
   @Override
   public Optional<Path> findAndroidSdkDirSafe() {
-    Optional<Path> androidSdkDir = PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
-        projectFilesystem,
-        "sdk.dir",
-        "ANDROID_SDK",
-        "ANDROID_HOME");
-    if (androidSdkDir.isPresent()) {
-      Preconditions.checkArgument(androidSdkDir.get().toFile().isDirectory(),
-          "The location of your Android SDK %s must be a directory",
-          androidSdkDir.get());
-    }
-    return androidSdkDir;
+    return sdkSupplier.get();
   }
 
   @Override
@@ -57,29 +77,108 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
   @Override
   public Optional<Path> findAndroidNdkDir() {
-    Optional<Path> path =
-        PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
-            projectFilesystem,
-            "ndk.dir",
-            "ANDROID_NDK");
+    return ndkSupplier.get();
+  }
+
+  @Override
+  public Optional<String> getNdkVersion() {
+    Optional<Path> ndkPath = findAndroidNdkDir();
+    if (!ndkPath.isPresent()) {
+      return Optional.absent();
+    }
+    return findNdkVersionFromPath(ndkPath.get());
+  }
+
+  private Optional<String> findNdkVersionFromPath(Path ndkPath) {
+    Path releaseVersion =  ndkPath.resolve("RELEASE.TXT");
+    Optional<String> contents = projectFilesystem.readFirstLineFromFile(releaseVersion);
+
+    if (contents.isPresent()) {
+      return Optional.of(new StringTokenizer(contents.get()).nextToken());
+    }
+    return Optional.absent();
+  }
+
+  private Optional<Path> getSdkPathFromSdkDir() {
+    Optional<Path> androidSdkDir =
+        propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+            "sdk.dir",
+            "ANDROID_SDK",
+            "ANDROID_HOME");
+    if (androidSdkDir.isPresent()) {
+      Preconditions.checkArgument(androidSdkDir.get().toFile().isDirectory(),
+          "The location of your Android SDK %s must be a directory",
+          androidSdkDir.get());
+    }
+    return androidSdkDir;
+  }
+
+  private Optional<Path> getNdkPathFromNdkDir() {
+    Optional<Path> path = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+        "ndk.dir",
+        "ANDROID_NDK");
+
+    if (path.isPresent()) {
+      Path ndkPath = path.get();
+      Optional<String> ndkVersionOptional = findNdkVersionFromPath(ndkPath);
+      if (!ndkVersionOptional.isPresent()) {
+        throw new HumanReadableException(
+            "Failed to read NDK version from %s", ndkPath);
+      } else {
+        String ndkVersion = ndkVersionOptional.get();
+        if (targetNdkVersion.isPresent() && !targetNdkVersion.get().equals(ndkVersion)) {
+          throw new HumanReadableException(
+              "Supported NDK version is %s but Buck is configured to use %s with " +
+                  "ndk.dir or ANDROID_NDK",
+              targetNdkVersion.get(),
+              ndkVersion);
+        }
+      }
+    }
     return path;
   }
 
-  /**
-   * @return The NDK version being used to build, parsed from RELEASE.TXT in the NDK directory.
-   */
-  @Override
-  public String getNdkVersion(Path ndkPath) {
-    Path releaseVersion =  ndkPath.resolve("RELEASE.TXT");
-    Optional<String> contents = projectFilesystem.readFirstLineFromFile(releaseVersion);
-    String version;
+  private Optional<Path> getNdkPathFromNdkRepository() {
+    Optional<Path> repositoryPathOptional =
+        propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+            "ndk.repository",
+            "ANDROID_NDK_REPOSITORY");
 
-    if (contents.isPresent()) {
-      version = new StringTokenizer(contents.get()).nextToken();
-    } else {
-      throw new HumanReadableException(
-          "Failed to read NDK version from %s", releaseVersion);
+    Optional<Path> path = Optional.absent();
+
+    if (repositoryPathOptional.isPresent()) {
+      Path repositoryPath = repositoryPathOptional.get();
+
+      String newestVersion = "";
+
+      for (Path potentialNdkPath :
+          projectFilesystem.getDirectoryContents(repositoryPath)) {
+        if (potentialNdkPath.toFile().isDirectory()) {
+          Optional<String> ndkVersion = findNdkVersionFromPath(potentialNdkPath);
+          // For each directory found, first check to see if it is in fact something we
+          // believe to be a NDK directory.  If it is, check to see if we have a
+          // target version and if this NDK directory matches it.  If not, choose the
+          // newest version.
+          //
+          // It is possible to collapse this all into one if statement, but it is
+          // significantly harder to grok.
+          if (ndkVersion.isPresent()) {
+            if (targetNdkVersion.isPresent()) {
+              if (targetNdkVersion.get().equals(ndkVersion.get())) {
+                return Optional.of(potentialNdkPath);
+              }
+            } else if (ndkVersion.get().compareTo(newestVersion) > 0) {
+              path = Optional.of(potentialNdkPath);
+              newestVersion = ndkVersion.get();
+            }
+          }
+        }
+      }
+      if (!path.isPresent()) {
+        throw new HumanReadableException(
+            "Couldn't find a valid NDK under %s", repositoryPath);
+      }
     }
-    return version;
+    return path;
   }
 }
