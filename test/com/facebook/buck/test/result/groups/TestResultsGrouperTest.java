@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.test.resultgroups;
+package com.facebook.buck.test.result.groups;
 
 import static org.junit.Assert.assertEquals;
 

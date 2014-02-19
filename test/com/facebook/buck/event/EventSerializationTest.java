@@ -37,7 +37,7 @@ import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
-import com.facebook.buck.test.resulttype.ResultType;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;

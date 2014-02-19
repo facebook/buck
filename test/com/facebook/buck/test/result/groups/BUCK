@@ -17,12 +17,12 @@ java_library(
 )
 
 java_test(
-  name = 'resultgroups',
+  name = 'groups',
   srcs = [
     'MockedMealTest.java',
     'VacationIntegrationTest.java',
   ],
-  source_under_test = ['//src/com/facebook/buck/test/resultgroups:resultgroups'],
+  source_under_test = ['//src/com/facebook/buck/test/result/groups:groups'],
   deps = [
     ':fixtures',
     '//lib:easymock',
@@ -33,7 +33,7 @@ java_test(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/test/resultgroups:resultgroups',
+    '//src/com/facebook/buck/test/result/groups:groups',
     '//src/com/facebook/buck/test:test',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],

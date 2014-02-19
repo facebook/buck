@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.test.resulttype;
+package com.facebook.buck.test.result.type;
 
 public enum ResultType {
   SUCCESS,

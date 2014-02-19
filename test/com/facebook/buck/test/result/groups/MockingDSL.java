@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.test.resultgroups;
+package com.facebook.buck.test.result.groups;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;

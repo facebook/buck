@@ -16,7 +16,7 @@
 
 package com.facebook.buck.junit;
 
-import com.facebook.buck.test.resulttype.ResultType;
+import com.facebook.buck.test.result.type.ResultType;
 
 import org.junit.runner.Description;
 import org.junit.runner.Result;

@@ -14,18 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.test.resultgroups;
+package com.facebook.buck.test.result.groups;
 
-import static com.facebook.buck.test.resultgroups.VacationFixture.CURRENCY_TEST;
-import static com.facebook.buck.test.resultgroups.VacationFixture.HAVEMIND_TEST;
-import static com.facebook.buck.test.resultgroups.VacationFixture.LOCATION_TEST;
-import static com.facebook.buck.test.resultgroups.VacationFixture.MEDICINE_TEST;
-import static com.facebook.buck.test.resultgroups.VacationFixture.PASSPORT_TEST;
-import static com.facebook.buck.test.resultgroups.VacationFixture.READBOOK_TEST;
-import static com.facebook.buck.test.resultgroups.VacationFixture.ResultType;
-import static com.facebook.buck.test.resultgroups.VacationFixture.TestName;
-import static com.facebook.buck.test.resultgroups.VacationFixture.VACATION_TEST;
-import static com.facebook.buck.test.resultgroups.VacationFixture.WEEPHOTO_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.CURRENCY_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.HAVEMIND_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.LOCATION_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.MEDICINE_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.PASSPORT_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.READBOOK_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.ResultType;
+import static com.facebook.buck.test.result.groups.VacationFixture.TestName;
+import static com.facebook.buck.test.result.groups.VacationFixture.VACATION_TEST;
+import static com.facebook.buck.test.result.groups.VacationFixture.WEEPHOTO_TEST;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;

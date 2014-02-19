@@ -16,7 +16,7 @@
 
 package com.facebook.buck.test;
 
-import com.facebook.buck.test.resulttype.ResultType;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;

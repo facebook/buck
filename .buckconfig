@@ -19,7 +19,7 @@
       test/com/facebook/buck/shell/testdata, \
       test/com/facebook/buck/test/cache/testdata, \
       test/com/facebook/buck/test/labels/testdata, \
-      test/com/facebook/buck/test/resultgroups/testdata, \
+      test/com/facebook/buck/test/result/groups/testdata, \
       third-party/java/dx-from-kitkat
 
     # Common temp file patterns:

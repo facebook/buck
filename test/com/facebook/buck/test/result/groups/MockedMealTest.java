@@ -14,14 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.test.resultgroups;
+package com.facebook.buck.test.result.groups;
 
-import static com.facebook.buck.test.resultgroups.MockingDSL.deps;
-import static com.facebook.buck.test.resultgroups.MockingDSL.failTestsAndCapture;
-import static com.facebook.buck.test.resultgroups.MockingDSL.mockLibrary;
-import static com.facebook.buck.test.resultgroups.MockingDSL.mockTest;
-import static com.facebook.buck.test.resultgroups.MockingDSL.passTests;
-import static com.facebook.buck.test.resultgroups.MockingDSL.sourceUnderTest;
+import static com.facebook.buck.test.result.groups.MockingDSL.deps;
+import static com.facebook.buck.test.result.groups.MockingDSL.failTestsAndCapture;
+import static com.facebook.buck.test.result.groups.MockingDSL.mockLibrary;
+import static com.facebook.buck.test.result.groups.MockingDSL.mockTest;
+import static com.facebook.buck.test.result.groups.MockingDSL.passTests;
+import static com.facebook.buck.test.result.groups.MockingDSL.sourceUnderTest;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 import static org.easymock.EasyMock.replay;

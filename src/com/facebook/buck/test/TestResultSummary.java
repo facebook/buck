@@ -16,7 +16,7 @@
 
 package com.facebook.buck.test;
 
-import com.facebook.buck.test.resulttype.ResultType;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;

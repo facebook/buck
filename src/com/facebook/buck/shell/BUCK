@@ -54,7 +54,7 @@ java_library(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/step:step',
-    '//src/com/facebook/buck/test/resulttype:resulttype',
+    '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util:exceptions',
