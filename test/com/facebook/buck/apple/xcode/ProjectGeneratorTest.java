@@ -16,6 +16,10 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRuleResolver;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -29,7 +33,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
@@ -43,11 +46,9 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
@@ -57,15 +58,11 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ConstructorArg;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.DescribedRule;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
@@ -76,10 +73,8 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -96,7 +91,6 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -133,9 +127,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testProjectStructureForEmptyProject() throws IOException {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.<BuildTarget>of());
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of());
 
     Path outputWorkspaceBundlePath = OUTPUT_DIRECTORY.resolve(PROJECT_NAME + ".xcworkspace");
     Path outputWorkspaceFilePath = outputWorkspaceBundlePath.resolve("contents.xcworkspacedata");
@@ -158,24 +152,26 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testSchemeGeneration() throws IOException {
-    BuildRule rootRule = createXcodeNativeRule(
+    BuildRule rootRule = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "root"),
-        ImmutableSortedSet.<BuildRule>of());
-    BuildRule leftRule = createXcodeNativeRule(
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+    BuildRule leftRule = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "left"),
-        ImmutableSortedSet.of(rootRule));
-    BuildRule rightRule = createXcodeNativeRule(
+        ImmutableSortedSet.of(rootRule),
+        iosLibraryDescription);
+    BuildRule rightRule = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "right"),
-        ImmutableSortedSet.of(rootRule));
-    BuildRule childRule = createXcodeNativeRule(
+        ImmutableSortedSet.of(rootRule),
+        iosLibraryDescription);
+    BuildRule childRule = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "child"),
-        ImmutableSortedSet.of(leftRule, rightRule));
+        ImmutableSortedSet.of(leftRule, rightRule),
+        iosLibraryDescription);
 
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(
-        rootRule, leftRule, rightRule, childRule));
-
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.of(childRule.getBuildTarget()));
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rootRule, leftRule, rightRule, childRule),
+        ImmutableSet.of(childRule.getBuildTarget()));
 
     // Generate the project.
     projectGenerator.createXcodeProjects();
@@ -209,22 +205,22 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testWorkspaceGeneration() throws IOException {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.<BuildTarget>of());
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of());
     projectGenerator.createXcodeProjects();
 
     Document workspace = projectGenerator.getGeneratedWorkspace();
     assertThat(workspace, hasXPath("/Workspace[@version = \"1.0\"]"));
-    assertThat(workspace,
+    assertThat(
+        workspace,
         hasXPath("/Workspace/FileRef/@location", equalTo("container:" + PROJECT_CONTAINER)));
   }
 
   @Test
   public void testProjectFileSigning() throws IOException {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.<BuildTarget>of());
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<BuildRule>of(), ImmutableSet.<BuildTarget>of());
 
     projectGenerator.createXcodeProjects();
 
@@ -237,12 +233,22 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testXcodeNativeRule() throws IOException {
-    BuildRule rule = createXcodeNativeRule(
+    BuildRule rule = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "rule"),
-        ImmutableSortedSet.<BuildRule>of());
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSortedSet.<BuildRule>of(),
+        xcodeNativeDescription,
+        new Function<XcodeNativeDescription.Arg, XcodeNativeDescription.Arg>() {
+          @Override
+          public XcodeNativeDescription.Arg apply(XcodeNativeDescription.Arg input) {
+            input.product = "libfoo.a";
+            input.targetGid = "00DEADBEEF";
+            input.projectContainerPath = new FileSourcePath("foo.xcodeproj");
+            return input;
+          }
+        });
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -286,10 +292,10 @@ public class ProjectGeneratorTest {
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
         iosLibraryDescription.createBuildable(params, arg), params);
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
 
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -344,10 +350,10 @@ public class ProjectGeneratorTest {
     BuildRule rule = new DescribedRule(
         IosTestDescription.TYPE,
         iosTestDescription.createBuildable(params, arg), params);
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
 
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -363,15 +369,17 @@ public class ProjectGeneratorTest {
         target, ImmutableMap.of(
         "foo.m", Optional.of("-foo")));
 
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of(
         "$SDKROOT/Foo.framework"));
   }
 
   @Test
   public void testIosBinaryRule() throws IOException {
-    BuildRule depRule = createXcodeNativeRule(
-        new BuildTarget("//dep", "dep"), ImmutableSortedSet.<BuildRule>of());
+    BuildRule depRule = createBuildRuleWithDefaults(
+        new BuildTarget("//dep", "dep"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
     BuildRuleParams params = new FakeBuildRuleParams(
         new BuildTarget("//foo", "binary"), ImmutableSortedSet.of(depRule));
 
@@ -387,10 +395,10 @@ public class ProjectGeneratorTest {
     BuildRule rule = new DescribedRule(
         IosBinaryDescription.TYPE,
         iosBinaryDescription.createBuildable(params, arg), params);
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
 
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -402,12 +410,12 @@ public class ProjectGeneratorTest {
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo")));
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
             "$SDKROOT/Foo.framework",
             // Propagated library from deps.
-            "$BUILT_PRODUCTS_DIR/libfoo.a"));
+            "$BUILT_PRODUCTS_DIR/libdep.a"));
   }
 
   @Test
@@ -439,7 +447,7 @@ public class ProjectGeneratorTest {
 
     buildRuleResolver.addToIndex(libTarget, rule);
 
-    ProjectGenerator projectGenerator = createProjectGenerator(
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
@@ -450,7 +458,7 @@ public class ProjectGeneratorTest {
     assertThat(target.getName(), equalTo("//foo:lib"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
-    PBXShellScriptBuildPhase shellScriptBuildPhase = getSingletonPhaseByType(
+    PBXShellScriptBuildPhase shellScriptBuildPhase = ProjectGeneratorTestUtils.getSingletonPhaseByType(
         target,
         PBXShellScriptBuildPhase.class);
 
@@ -472,14 +480,22 @@ public class ProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest
 
-    BuildRule barLib = createXcodeNativeRule(
-        new BuildTarget("//bar", "lib"), ImmutableSortedSet.<BuildRule>of());
-    BuildRule fooLib = createXcodeNativeRule(
-        new BuildTarget("//foo", "lib"), ImmutableSortedSet.of(barLib));
-    BuildRule fooBin = createXcodeNativeRule(
-        new BuildTarget("//foo", "bin"), ImmutableSortedSet.of(fooLib));
-    BuildRule bazLib = createXcodeNativeRule(
-        new BuildTarget("//baz", "lib"), ImmutableSortedSet.of(fooLib));
+    BuildRule barLib = createBuildRuleWithDefaults(
+        new BuildTarget("//bar", "lib"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+    BuildRule fooLib = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "lib"),
+        ImmutableSortedSet.of(barLib),
+        iosLibraryDescription);
+    BuildRule fooBin = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "bin"),
+        ImmutableSortedSet.of(fooLib),
+        iosBinaryDescription);
+    BuildRule bazLib = createBuildRuleWithDefaults(
+        new BuildTarget("//baz", "lib"),
+        ImmutableSortedSet.of(fooLib),
+        iosLibraryDescription);
 
     BuildRule bazLibTest = createIosTestRule(
         new BuildTarget("//baz", "test"),
@@ -494,30 +510,41 @@ public class ProjectGeneratorTest {
         ImmutableSortedSet.of(fooBin),
         ImmutableSortedSet.of(fooBin));
 
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(
-        barLib, fooLib, fooBin, bazLib, bazLibTest, fooLibTest, fooBinTest));
-
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.of(fooBin.getBuildTarget()));
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(barLib, fooLib, fooBin, bazLib, bazLibTest, fooLibTest, fooBinTest),
+        ImmutableSet.of(fooBin.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
-    assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
-    assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
-    assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//bar:lib");
-    assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin-test");
-    assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib-test");
-    assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//baz:lib");
+    assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin");
+    assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//bar:lib");
+    assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin-test");
+    assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib-test");
+    assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//baz:lib");
   }
 
   @Test
   public void generatedGidsForTargetsAreStable() throws IOException {
-    BuildRule fooLib = createXcodeNativeRule(
+    BuildRule fooLib = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "foo"),
-        ImmutableSortedSet.<BuildRule>of());
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(fooLib));
+        ImmutableSortedSet.<BuildRule>of(),
+        xcodeNativeDescription);
 
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableSet.of(fooLib.getBuildTarget()));
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fooLib),
+        ImmutableSet.of(fooLib.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -525,7 +552,8 @@ public class ProjectGeneratorTest {
         "//foo:foo");
     String expectedGID = String.format(
         "%08X%08X%08X", target.isa().hashCode(), target.getName().hashCode(), 0);
-    assertEquals("expected GID has correct value (value from which it's derived have not changed)",
+    assertEquals(
+        "expected GID has correct value (value from which it's derived have not changed)",
         "93C1B2AA2245423200000000", expectedGID);
     assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
   }
@@ -560,27 +588,38 @@ public class ProjectGeneratorTest {
         ImmutableSortedSet.of(libraryRule),
         iosBinaryDescription);
 
-    BuildRuleResolver resolver = new BuildRuleResolver(ImmutableSet.of(
-        resourceRule, libraryRule, testRule, binaryRule));
-    ProjectGenerator projectGenerator = createProjectGenerator(
-        resolver, ImmutableSet.of(testRule.getBuildTarget(), binaryRule.getBuildTarget()));
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(resourceRule, libraryRule, testRule, binaryRule),
+        ImmutableSet.of(testRule.getBuildTarget(), binaryRule.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget testTarget = assertTargetExistsAndReturnTarget(generatedProject, "//foo:test");
+    PBXTarget testTarget = assertTargetExistsAndReturnTarget(
+        generatedProject,
+        "//foo:test");
     assertHasSingletonResourcesPhaseWithEntries(testTarget, "foo.png", "foodir");
-    PBXTarget binTarget = assertTargetExistsAndReturnTarget(generatedProject, "//foo:bin");
+    PBXTarget binTarget = assertTargetExistsAndReturnTarget(
+        generatedProject,
+        "//foo:bin");
     assertHasSingletonResourcesPhaseWithEntries(binTarget, "foo.png", "foodir");
   }
 
-  private ProjectGenerator createProjectGenerator(
-      BuildRuleResolver buildRuleResolver, ImmutableSet<BuildTarget> initialBuildTargets) {
-    DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleResolver);
-    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
-    for (BuildRule rule : graph.getNodes()) {
-      targets.add(rule.getBuildTarget());
-    }
-    PartialGraph partialGraph = PartialGraphFactory.newInstance(graph, targets.build());
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      BuildRuleResolver resolver, ImmutableSet<BuildTarget> initialBuildTargets) {
+    return createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRuleResolver(resolver),
+        initialBuildTargets);
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      ImmutableSet<BuildRule> rules, ImmutableSet<BuildTarget> initialBuildTargets) {
+    return createProjectGeneratorForCombinedProject(
+        createPartialGraphFromBuildRules(rules),
+        initialBuildTargets);
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      PartialGraph partialGraph, ImmutableSet<BuildTarget> initialBuildTargets) {
     return new ProjectGenerator(
         partialGraph,
         initialBuildTargets,
@@ -588,23 +627,6 @@ public class ProjectGeneratorTest {
         executionContext,
         OUTPUT_DIRECTORY,
         PROJECT_NAME);
-  }
-
-  /**
-   * Create a xcode_native rule. Useful for testing the rule-type agnostic parts of the project
-   * generator, as this is the simplest rule that the project generator handles.
-   */
-  private BuildRule createXcodeNativeRule(
-      BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(target, deps);
-    XcodeNativeDescription.Arg arg = xcodeNativeDescription.createUnpopulatedConstructorArg();
-    arg.projectContainerPath = new FileSourcePath("foo.xcodeproj");
-    arg.targetGid = "00DEADBEEF";
-    arg.product = "libfoo.a";
-    return new DescribedRule(
-        XcodeNativeDescription.TYPE,
-        xcodeNativeDescription.createBuildable(buildRuleParams, arg),
-        buildRuleParams);
   }
 
   private BuildRule createIosTestRule(
@@ -623,67 +645,6 @@ public class ProjectGeneratorTest {
         iosTestDescription.getBuildRuleType(),
         iosTestDescription.createBuildable(buildRuleParams, arg),
         buildRuleParams);
-  }
-
-  private <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
-      BuildTarget target,
-      ImmutableSortedSet<BuildRule> deps,
-      Description<T> description) {
-    return createBuildRuleWithDefaults(target, deps, description, Functions.<T>identity());
-  }
-
-  /**
-   * Helper function to create a build rule for a description, initializing fields to empty values,
-   * and allowing a user to override specific fields.
-   */
-  private <T extends ConstructorArg> BuildRule createBuildRuleWithDefaults(
-      BuildTarget target,
-      ImmutableSortedSet<BuildRule> deps,
-      Description<T> description,
-      Function<T, T> overrides) {
-    T arg = description.createUnpopulatedConstructorArg();
-    for (Field field : arg.getClass().getFields()) {
-      Object value;
-      if (field.getType().isAssignableFrom(ImmutableSortedSet.class)) {
-        value = ImmutableSortedSet.of();
-      } else if (field.getType().isAssignableFrom(ImmutableList.class)) {
-        value = ImmutableList.of();
-      } else if (field.getType().isAssignableFrom(ImmutableMap.class)) {
-        value = ImmutableMap.of();
-      } else if (field.getType().isAssignableFrom(Optional.class)) {
-        value = Optional.absent();
-      } else if (field.getType().isAssignableFrom(String.class)) {
-        value = "";
-      } else if (field.getType().isAssignableFrom(Path.class)) {
-        value = Paths.get("");
-      } else if (field.getType().isPrimitive()) {
-        // do nothing, these are initialized with a zero value
-        continue;
-      } else {
-        // user should provide
-        continue;
-      }
-      try {
-        field.set(arg, value);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(target, deps);
-    return new DescribedRule(
-        description.getBuildRuleType(),
-        description.createBuildable(buildRuleParams, overrides.apply(arg)),
-        buildRuleParams);
-  }
-
-  private PBXTarget assertTargetExistsAndReturnTarget(PBXProject generatedProject, String name) {
-    for (PBXTarget target : generatedProject.getTargets()) {
-      if (target.getName().equals(name)) {
-        return target;
-      }
-    }
-    fail("No generated target with name: " + name);
-    return null;
   }
 
   private void assertHasConfigurations(PBXTarget target, String... names) {
@@ -709,7 +670,7 @@ public class ProjectGeneratorTest {
       ImmutableMap<String, Optional<String>> sourcesAndFlags) {
 
     PBXSourcesBuildPhase sourcesBuildPhase =
-        getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
 
     assertEquals(
         "Sources build phase should have correct number of sources",
@@ -747,35 +708,9 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private void assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-      PBXTarget target, ImmutableList<String> frameworks) {
-    PBXFrameworksBuildPhase buildPhase =
-        getSingletonPhaseByType(target, PBXFrameworksBuildPhase.class);
-    assertEquals("Framework phase should have right number of elements",
-        frameworks.size(), buildPhase.getFiles().size());
-
-    for (PBXBuildFile file : buildPhase.getFiles()) {
-      PBXReference.SourceTree sourceTree = file.getFileRef().getSourceTree();
-      switch (sourceTree) {
-        case GROUP:
-          fail("Should not emit frameworks with sourceTree <group>");
-          break;
-        case ABSOLUTE:
-          fail("Should not emit frameworks with sourceTree <absolute>");
-          break;
-        default:
-          String serialized = "$" + sourceTree + "/" + file.getFileRef().getPath();
-          assertTrue(
-              "Framework should be listed in list of expected frameworks: " + serialized,
-              frameworks.contains(serialized));
-          break;
-      }
-    }
-  }
-
   private void assertHasSingletonResourcesPhaseWithEntries(PBXTarget target, String... resources) {
     PBXResourcesBuildPhase buildPhase =
-        getSingletonPhaseByType(target, PBXResourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXResourcesBuildPhase.class);
     assertEquals("Resources phase should have right number of elements",
         resources.length, buildPhase.getFiles().size());
 
@@ -792,22 +727,6 @@ public class ProjectGeneratorTest {
           "Resource should be in list of expected resources: " + source,
           expectedResourceSet.contains(source));
     }
-  }
-
-  private static <T extends PBXBuildPhase> T getSingletonPhaseByType(
-      PBXTarget target, final Class<T> cls) {
-    Iterable<PBXBuildPhase> buildPhases =
-        Iterables.filter(
-            target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-          @Override
-          public boolean apply(PBXBuildPhase input) {
-            return cls.isInstance(input);
-          }
-        });
-    assertEquals("Build phase should be singleton", 1, Iterables.size(buildPhases));
-    @SuppressWarnings("unchecked")
-    T element = (T) Iterables.getOnlyElement(buildPhases);
-    return element;
   }
 
   private void verifyGeneratedSignedSourceTarget(PBXTarget target) {

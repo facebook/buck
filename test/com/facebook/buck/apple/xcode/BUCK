@@ -1,6 +1,8 @@
 java_test(
   name = 'xcode',
-  srcs = ['XcodeprojSerializerTest.java'],
+  srcs = [
+    'XcodeprojSerializerTest.java'
+  ],
   source_under_test = [
     '//src/com/facebook/buck/apple/xcode:xcode',
   ],
@@ -15,7 +17,10 @@ java_test(
 
 java_test(
   name = 'project_generator',
-  srcs = ['ProjectGeneratorTest.java'],
+  srcs = [
+    'ProjectGeneratorTest.java',
+    'ProjectGeneratorTestUtils.java',
+  ],
   source_under_test = ['//src/com/facebook/buck/apple/xcode:project_generator'],
   deps = [
     '//lib:easymock',
