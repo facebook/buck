@@ -29,6 +29,7 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LogEvent;
+import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.AndroidManifestReader;
@@ -231,25 +232,29 @@ public class AdbHelper {
    *  devices will be used to install the apk if needed.
    */
   public boolean adbCall(AdbCallable adbCallable) {
+    List<IDevice> devices;
 
-    // Initialize adb connection.
-    AndroidDebugBridge adb = createAdb(context);
-    if (adb == null) {
-      console.printBuildFailure("Failed to create adb connection.");
-      return false;
-    }
+    try (TraceEventLogger ignored = TraceEventLogger.start(buckEventBus, "set_up_adb_call")) {
 
-    // Build list of matching devices.
-    List<IDevice> devices = filterDevices(adb.getDevices());
-    if (devices == null) {
-      if (buckConfig.getRestartAdbOnFailure()) {
-        console.printErrorText("No devices found with adb, restarting adb-server.");
-        adb.restart();
-        devices = filterDevices(adb.getDevices());
+      // Initialize adb connection.
+      AndroidDebugBridge adb = createAdb(context);
+      if (adb == null) {
+        console.printBuildFailure("Failed to create adb connection.");
+        return false;
       }
 
+      // Build list of matching devices.
+      devices = filterDevices(adb.getDevices());
       if (devices == null) {
-        return false;
+        if (buckConfig.getRestartAdbOnFailure()) {
+          console.printErrorText("No devices found with adb, restarting adb-server.");
+          adb.restart();
+          devices = filterDevices(adb.getDevices());
+        }
+
+        if (devices == null) {
+            return false;
+        }
       }
     }
 
