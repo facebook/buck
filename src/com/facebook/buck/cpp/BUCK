@@ -1,0 +1,20 @@
+java_library(
+  name = 'rules',
+  srcs = glob(['*.java']),
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/parser:rule_pattern',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:io',
+  ],
+  visibility = [
+    'PUBLIC'
+  ]
+)

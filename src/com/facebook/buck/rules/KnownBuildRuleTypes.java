@@ -33,6 +33,8 @@ import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cpp.CppBinaryDescription;
+import com.facebook.buck.cpp.CppLibraryDescription;
 import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
@@ -120,6 +122,8 @@ public class KnownBuildRuleTypes {
     builder.register(new IosLibraryDescription());
     builder.register(new IosTestDescription());
     builder.register(new IosResourceDescription());
+    builder.register(new CppBinaryDescription());
+    builder.register(new CppLibraryDescription());
     builder.register(new PythonLibraryDescription());
     builder.register(new PythonBinaryDescription());
     builder.register(new XcodeProjectConfigDescription());

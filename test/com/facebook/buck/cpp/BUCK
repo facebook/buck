@@ -1,0 +1,28 @@
+java_test(
+  name = 'cpp',
+  srcs = glob(['*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/cpp:rules',
+  ],
+  deps = [
+    '//lib:easymock',
+    '//lib:guava',
+    '//lib:junit',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/event:event',
+    '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/step:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//src/com/facebook/buck/cpp:rules',
+  ],
+)
