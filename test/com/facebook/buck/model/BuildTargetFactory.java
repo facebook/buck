@@ -31,6 +31,10 @@ public class BuildTargetFactory {
   public static BuildTarget newInstance(String fullyQualifiedName) {
     String[] parts = fullyQualifiedName.split(":");
     Preconditions.checkArgument(parts.length == 2);
-    return new BuildTarget(parts[0], parts[1]);
+    String[] nameAndFlavor = parts[1].split("#");
+    if (nameAndFlavor.length != 2) {
+      return new BuildTarget(parts[0], parts[1]);
+    }
+    return new BuildTarget(parts[0], nameAndFlavor[0], nameAndFlavor[1]);
   }
 }
