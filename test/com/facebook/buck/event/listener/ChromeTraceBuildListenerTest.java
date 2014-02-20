@@ -26,6 +26,8 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
+import com.facebook.buck.event.TraceEvent;
+import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -175,6 +177,14 @@ public class ChromeTraceBuildListenerTest {
     rawEventBus.post(ruleFinished);
     rawEventBus.post(stepFinished);
 
+    try (TraceEventLogger ignored = TraceEventLogger.start(
+        eventBus, "planning", ImmutableMap.of("nefarious", "true")
+    )) {
+      eventBus.post(new TraceEvent("scheming", ChromeTraceEvent.Phase.BEGIN));
+      eventBus.post(new TraceEvent("scheming", ChromeTraceEvent.Phase.END,
+          ImmutableMap.<String, String>of("success", "false")));
+    }
+
     eventBus.post(BuildEvent.finished(buildTargets, 0));
     eventBus.post(CommandEvent.finished("party",
         ImmutableList.of("arg1", "arg2"),
@@ -190,7 +200,7 @@ public class ChromeTraceBuildListenerTest {
         resultFile,
         new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertEquals(12, resultMap.size());
+    assertEquals(16, resultMap.size());
 
     assertEquals("party", resultMap.get(0).getName());
     assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(0).getPhase());
@@ -240,17 +250,33 @@ public class ChromeTraceBuildListenerTest {
             "success_type", "BUILT_LOCALLY"),
         resultMap.get(9).getArgs());
 
-    assertEquals("build", resultMap.get(10).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(10).getPhase());
+    assertEquals("planning", resultMap.get(10).getName());
+    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(10).getPhase());
+    assertEquals(ImmutableMap.of("nefarious", "true"), resultMap.get(10).getArgs());
 
-    assertEquals("party", resultMap.get(11).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(11).getPhase());
+    assertEquals("scheming", resultMap.get(11).getName());
+    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(11).getPhase());
+    assertEquals(ImmutableMap.of(), resultMap.get(11).getArgs());
+
+    assertEquals("scheming", resultMap.get(12).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(12).getPhase());
+    assertEquals(ImmutableMap.of("success", "false"), resultMap.get(12).getArgs());
+
+    assertEquals("planning", resultMap.get(13).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(13).getPhase());
+    assertEquals(ImmutableMap.of(), resultMap.get(13).getArgs());
+
+    assertEquals("build", resultMap.get(14).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(14).getPhase());
+
+    assertEquals("party", resultMap.get(15).getName());
+    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(15).getPhase());
     assertEquals(
         ImmutableMap.of(
             "command_args", "arg1 arg2",
             "daemon", "true"
             ),
-        resultMap.get(11).getArgs());
+        resultMap.get(15).getArgs());
 
     verify(context);
   }
