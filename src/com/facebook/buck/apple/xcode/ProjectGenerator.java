@@ -103,7 +103,7 @@ public class ProjectGenerator {
 
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
-  private final LoadingCache<BuildRule, PBXTarget> buildRuleToXcodeTarget;
+  private final LoadingCache<BuildRule, Optional<PBXTarget>> buildRuleToXcodeTarget;
   private XCScheme scheme = null;
   private Document workspace = null;
 
@@ -128,10 +128,10 @@ public class ProjectGenerator {
     project.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Release");
 
     this.buildRuleToXcodeTarget = CacheBuilder.newBuilder().build(
-        new CacheLoader<BuildRule, PBXTarget>() {
+        new CacheLoader<BuildRule, Optional<PBXTarget>>() {
           @Override
-          public PBXTarget load(BuildRule key) throws Exception {
-            return generateTargetForBuildRule(key).orNull();
+          public Optional<PBXTarget> load(BuildRule key) throws Exception {
+            return generateTargetForBuildRule(key);
           }
         });
   }
@@ -592,14 +592,14 @@ public class ProjectGenerator {
   private static XCScheme createScheme(
       PartialGraph partialGraph,
       Path projectPath,
-      final Map<BuildRule, PBXTarget> ruleToTargetMap) throws IOException {
+      final Map<BuildRule, Optional<PBXTarget>> ruleToTargetMap) throws IOException {
 
     List<BuildRule> orderedBuildRules = TopologicalSort.sort(
         partialGraph.getDependencyGraph(),
         new Predicate<BuildRule>() {
           @Override
           public boolean apply(@Nullable BuildRule input) {
-            return ruleToTargetMap.containsKey(input);
+            return ruleToTargetMap.containsKey(input) && ruleToTargetMap.get(input).isPresent();
           }
         });
 
@@ -607,7 +607,7 @@ public class ProjectGenerator {
     for (BuildRule rule : orderedBuildRules) {
       scheme.addBuildAction(
           projectPath.getFileName().toString(),
-          ruleToTargetMap.get(rule).getGlobalID());
+          ruleToTargetMap.get(rule).get().getGlobalID());
     }
 
     return scheme;
@@ -708,7 +708,8 @@ public class ProjectGenerator {
               return;
             }
             if (node.getType().equals(IosLibraryDescription.TYPE)) {
-              PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(node);
+              PBXNativeTarget target =
+                  (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(node).get();
               result.add(target.getProductReference());
             } else if (node.getType().equals(XcodeNativeDescription.TYPE)) {
               XcodeNative xcodeNative = (XcodeNative) node.getBuildable();
