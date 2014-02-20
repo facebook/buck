@@ -150,7 +150,7 @@ public final class Main {
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
       webServer = createWebServer(config, console, projectFilesystem);
-      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
     }
 
     private ProjectFilesystemWatcher createWatcher(ProjectFilesystem projectFilesystem)
@@ -477,7 +477,7 @@ public final class Main {
 
       } else {
         // Initialize logging and create new Parser for new process.
-        JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+        JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
         parser = new Parser(projectFilesystem,
             buildRuleTypes,
             console,
