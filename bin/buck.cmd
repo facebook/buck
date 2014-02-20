@@ -96,7 +96,7 @@ set BUCK_JAVA_CLASSPATH=^
 %BUCK_DIRECTORY%\src;^
 %BUCK_DIRECTORY%\build\classes;^
 %BUCK_DIRECTORY%\lib\args4j-2.0.26.jar;^
-%BUCK_DIRECTORY%\lib\ddmlib-r21.jar;^
+%BUCK_DIRECTORY%\lib\ddmlib-22.5.3.jar;^
 %BUCK_DIRECTORY%\lib\guava-15.0.jar;^
 %BUCK_DIRECTORY%\lib\ini4j-0.5.2.jar;^
 %BUCK_DIRECTORY%\lib\jackson-annotations-2.0.5.jar;^

@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -65,8 +66,8 @@ public class AdbHelper {
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
   // Taken from ddms source code.
-  public static final int INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
-  public static final int GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
+  public static final long INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
+  public static final long GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
@@ -491,7 +492,11 @@ public class AdbHelper {
   private String deviceGetExternalStorage(IDevice device) throws TimeoutException,
       AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
     CollectingOutputReceiver receiver = new CollectingOutputReceiver();
-    device.executeShellCommand("echo $EXTERNAL_STORAGE", receiver, AdbHelper.GETPROP_TIMEOUT);
+    device.executeShellCommand(
+        "echo $EXTERNAL_STORAGE",
+        receiver,
+        AdbHelper.GETPROP_TIMEOUT,
+        TimeUnit.MILLISECONDS);
     String value = receiver.getOutput().trim();
     if (value.isEmpty()) {
       return null;
@@ -574,7 +579,8 @@ public class AdbHelper {
       device.executeShellCommand(
           String.format("am start -n %s", activityToRun),
           receiver,
-          AdbHelper.INSTALL_TIMEOUT);
+          AdbHelper.INSTALL_TIMEOUT,
+          TimeUnit.MILLISECONDS);
       return receiver.getErrorMessage();
     } catch (Exception e) {
       return e.toString();
@@ -670,7 +676,8 @@ public class AdbHelper {
       device.executeShellCommand(
           "pm uninstall " + (keepData ? "-k " : "") + packageName,
           receiver,
-          AdbHelper.INSTALL_TIMEOUT);
+          AdbHelper.INSTALL_TIMEOUT,
+          TimeUnit.MILLISECONDS);
       return receiver.getErrorMessage();
     } catch (TimeoutException e) {
       throw new InstallException(e);

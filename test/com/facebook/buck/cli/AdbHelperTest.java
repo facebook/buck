@@ -37,6 +37,7 @@ import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class AdbHelperTest {
@@ -71,7 +72,11 @@ public class AdbHelperTest {
   private TestDevice createDeviceForShellCommandTest(final String output) {
     return new TestDevice() {
       @Override
-      public void executeShellCommand(String cmd, IShellOutputReceiver receiver, int timeout) {
+      public void executeShellCommand(
+          String cmd,
+          IShellOutputReceiver receiver,
+          long timeout,
+          TimeUnit timeoutUnit) {
         byte[] outputBytes = output.getBytes();
         receiver.addOutput(outputBytes, 0, outputBytes.length);
         receiver.flush();

@@ -23,6 +23,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.RawImage;
+import com.android.ddmlib.ScreenRecorderOptions;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
@@ -33,6 +34,7 @@ import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Basic implementation of IDevice for mocking purposes.
@@ -168,6 +170,11 @@ public class TestDevice implements IDevice {
   }
 
   @Override
+  public boolean supportsFeature(Feature feature) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public String getMountPoint(String s) {
     throw new UnsupportedOperationException();
   }
@@ -210,15 +217,43 @@ public class TestDevice implements IDevice {
   }
 
   @Override
+  public void startScreenRecorder(
+      String remoteFilePath,
+      ScreenRecorderOptions options,
+      IShellOutputReceiver receiver)
+      throws
+      TimeoutException,
+      AdbCommandRejectedException,
+      IOException,
+      ShellCommandUnresponsiveException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void executeShellCommand(String s, IShellOutputReceiver iShellOutputReceiver)
       throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
       IOException {
     throw new UnsupportedOperationException();
   }
 
+  @Deprecated
   @Override
   public void executeShellCommand(String s, IShellOutputReceiver iShellOutputReceiver, int i)
       throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+      IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void executeShellCommand(
+      String command,
+      IShellOutputReceiver receiver,
+      long maxTimeToOutputResponse,
+      TimeUnit maxTimeUnits)
+      throws
+      TimeoutException,
+      AdbCommandRejectedException,
+      ShellCommandUnresponsiveException,
       IOException {
     throw new UnsupportedOperationException();
   }

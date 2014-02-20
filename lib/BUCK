@@ -14,7 +14,8 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'ddmlib',
-  binary_jar = 'ddmlib-r21.jar',
+  binary_jar = 'ddmlib-22.5.3.jar',
+  source_jar = 'ddmlib-22.5.3-sources.jar',
   visibility = [
     'PUBLIC',
   ],
