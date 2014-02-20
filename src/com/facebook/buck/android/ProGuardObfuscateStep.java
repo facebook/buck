@@ -28,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,6 +57,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Path generatedProGuardConfig,
       Set<Path> customProguardConfigs,
       boolean useProguardOptimizations,
+      Optional<Integer> optimizationPasses,
       Map<Path, Path> inputAndOutputEntries,
       Set<String> additionalLibraryJarsForProguard,
       Path proguardDirectory) {
@@ -66,6 +68,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         generatedProGuardConfig,
         customProguardConfigs,
         useProguardOptimizations,
+        optimizationPasses,
         inputAndOutputEntries,
         additionalLibraryJarsForProguard,
         proguardDirectory,
@@ -184,6 +187,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     private final Map<Path, Path> inputAndOutputEntries;
     private final Set<String> additionalLibraryJarsForProguard;
     private final boolean useAndroidProguardConfigWithOptimizations;
+    private final Optional<Integer> optimizationPasses;
     private final Path proguardDirectory;
     private final Path pathToProGuardCommandLineArgsFile;
 
@@ -202,6 +206,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         Path generatedProGuardConfig,
         Set<Path> customProguardConfigs,
         boolean useProguardOptimizations,
+        Optional<Integer> optimizationPasses,
         Map<Path, Path> inputAndOutputEntries,
         Set<String> additionalLibraryJarsForProguard,
         Path proguardDirectory,
@@ -210,6 +215,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       this.generatedProGuardConfig = Preconditions.checkNotNull(generatedProGuardConfig);
       this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
       this.useAndroidProguardConfigWithOptimizations = useProguardOptimizations;
+      this.optimizationPasses = Preconditions.checkNotNull(optimizationPasses);
       this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
       this.additionalLibraryJarsForProguard = ImmutableSet.copyOf(additionalLibraryJarsForProguard);
       this.proguardDirectory = Preconditions.checkNotNull(proguardDirectory);
@@ -248,6 +254,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
       if (useAndroidProguardConfigWithOptimizations) {
         args.add("-include")
             .add(androidPlatformTarget.getOptimizedProguardConfig().getAbsolutePath());
+        if (optimizationPasses.isPresent()) {
+          args.add("-optimizationpasses").add(optimizationPasses.get().toString());
+        }
       } else {
         args.add("-include").add(androidPlatformTarget.getProguardConfig().getAbsolutePath());
       }

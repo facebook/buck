@@ -155,6 +155,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
   private final boolean useAndroidProguardConfigWithOptimizations;
+  private final Optional<Integer> optimizationPasses;
   private final Optional<SourcePath> proguardConfig;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<TargetCpuType> cpuFilters;
@@ -182,6 +183,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<BuildRule> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
       boolean useAndroidProguardConfigWithOptimizations,
+      Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       ResourceCompressionMode resourceCompressionMode,
       Set<TargetCpuType> cpuFilters,
@@ -202,6 +204,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
+    this.optimizationPasses = Preconditions.checkNotNull(proguardOptimizationPasses);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
@@ -239,6 +242,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("packageType", packageType.toString())
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
+        .set("optimizationPasses", optimizationPasses.toString())
         .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
         .set("preprocessJavaClassesBash", preprocessJavaClassesBash)
@@ -284,6 +288,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   public Optional<String> getPreprocessJavaClassesBash() {
     return preprocessJavaClassesBash;
+  }
+
+  public Optional<Integer> getOptimizationPasses() {
+    return optimizationPasses;
   }
 
   /**
@@ -701,6 +709,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
         useAndroidProguardConfigWithOptimizations,
+        optimizationPasses,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
         proguardDirectory);
@@ -900,6 +909,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private boolean disablePreDex = false;
     private DexSplitMode dexSplitMode = DexSplitMode.NO_SPLIT;
     private boolean useAndroidProguardConfigWithOptimizations = false;
+    private Optional<Integer> optimizationPasses = Optional.absent();
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
     private boolean buildStringSourceMap = false;
@@ -995,6 +1005,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           buildRulesToExcludeFromDex,
           dexSplitMode,
           useAndroidProguardConfigWithOptimizations,
+          optimizationPasses,
           proguardConfig,
           resourceCompressionMode,
           cpuFilters.build(),
@@ -1075,6 +1086,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     public Builder setUseAndroidProguardConfigWithOptimizations(
         boolean useAndroidProguardConfigWithOptimizations) {
       this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
+      return this;
+    }
+
+    public Builder setOptimizationPasses(Optional<Integer> optimizationPasses) {
+      this.optimizationPasses = optimizationPasses;
       return this;
     }
 

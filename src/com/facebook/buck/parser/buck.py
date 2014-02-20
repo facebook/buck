@@ -445,6 +445,7 @@ def android_binary(
       disable_pre_dex=False,
       dex_compression='jar',
       use_android_proguard_config_with_optimizations=False,
+      optimization_passes=None,
       proguard_config=None,
       resource_compression=None,
       primary_dex_patterns=None,
@@ -475,6 +476,7 @@ def android_binary(
     'dex_compression': dex_compression,
     'use_android_proguard_config_with_optimizations':
         use_android_proguard_config_with_optimizations,
+    'optimization_passes': optimization_passes,
     'proguard_config' : proguard_config,
     'resource_compression' : resource_compression,
     'primary_dex_patterns' : primary_dex_patterns,

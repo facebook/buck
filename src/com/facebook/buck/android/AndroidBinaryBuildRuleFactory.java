@@ -102,6 +102,11 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
         params.getBooleanAttribute("use_android_proguard_config_with_optimizations");
     builder.setUseAndroidProguardConfigWithOptimizations(useAndroidProguardConfigWithOptimizations);
 
+    // optimization_passes
+    Optional<Integer> optimizationPasses =
+        params.getOptionalIntegerAttribute("optimization_passes");
+    builder.setOptimizationPasses(optimizationPasses);
+
     // proguard_config
     Optional<SourcePath> proguardConfig = params.getOptionalSourcePath("proguard_config", builder);
     builder.setProguardConfig(proguardConfig);

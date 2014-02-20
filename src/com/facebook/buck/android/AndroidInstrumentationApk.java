@@ -76,6 +76,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         // Do not split the test apk even if the tested apk is split
         DexSplitMode.NO_SPLIT,
         apkUnderTest.isUseAndroidProguardConfigWithOptimizations(),
+        apkUnderTest.getOptimizationPasses(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getResourceCompressionMode(),
         apkUnderTest.getCpuFilters(),
