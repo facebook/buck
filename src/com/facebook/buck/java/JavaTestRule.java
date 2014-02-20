@@ -18,8 +18,8 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.DummyRDotJava;
-import com.facebook.buck.android.JavaLibraryGraphEnhancer;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.model.BuildTarget;
@@ -425,8 +425,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+      AndroidLibraryGraphEnhancer.Result result =
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ false);
 

@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class JavaLibraryGraphEnhancer {
+public class AndroidLibraryGraphEnhancer {
 
   private static final String DUMMY_R_DOT_JAVA_FLAVOR = "dummy_r_dot_java";
 
@@ -34,7 +34,7 @@ public class JavaLibraryGraphEnhancer {
   private final BuildRuleParams originalBuildRuleParams;
   private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
 
-  public JavaLibraryGraphEnhancer(
+  public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
       AbstractBuildRuleBuilderParams buildRuleBuilderParams) {

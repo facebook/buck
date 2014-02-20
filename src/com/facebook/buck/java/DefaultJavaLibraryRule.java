@@ -19,8 +19,8 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.DummyRDotJava;
-import com.facebook.buck.android.JavaLibraryGraphEnhancer;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -900,8 +900,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+      AndroidLibraryGraphEnhancer.Result result =
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ false);
 

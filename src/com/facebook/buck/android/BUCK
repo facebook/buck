@@ -3,7 +3,7 @@ R_DOT_JAVA_SRCS = [
   'DummyRDotJavaAbiRule.java',
   'GenRDotJavaStep.java',
   'HasAndroidResourceDeps.java',
-  'JavaLibraryGraphEnhancer.java',
+  'AndroidLibraryGraphEnhancer.java',
   'MergeAndroidResourcesStep.java',
   'UberRDotJavaUtil.java',
 ]

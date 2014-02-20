@@ -149,8 +149,8 @@ public class RobolectricTestRule extends JavaTestRule {
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+      AndroidLibraryGraphEnhancer.Result result =
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ true);
 

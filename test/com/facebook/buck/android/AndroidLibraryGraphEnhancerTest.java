@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.JavaLibraryGraphEnhancer.Result;
+import static com.facebook.buck.android.AndroidLibraryGraphEnhancer.Result;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -39,13 +39,13 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 
-public class JavaLibraryGraphEnhancerTest {
+public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testEmptyResources() {
     BuildTarget buildTarget = new BuildTarget("//java/com/example", "library");
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget);
-    JavaLibraryGraphEnhancer graphEnhancer = new JavaLibraryGraphEnhancer(
+    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
         new FakeAbstractBuildRuleBuilderParams());
@@ -74,7 +74,7 @@ public class JavaLibraryGraphEnhancerTest {
         buildTarget,
         ImmutableSortedSet.<BuildRule>of(resourceRule1, resourceRule2));
 
-    JavaLibraryGraphEnhancer graphEnhancer = new JavaLibraryGraphEnhancer(
+    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget, buildRuleParams, new FakeAbstractBuildRuleBuilderParams());
     Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
