@@ -17,11 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.Label;
-import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import org.kohsuke.args4j.CmdLineException;
@@ -32,6 +30,7 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -57,7 +56,7 @@ class TestLabelOptions {
       name = "--exclude",
       usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN.",
       handler = LabelsOptionHandler.class)
-  private Map<Integer,LabelSetSelector> excludedLabelSets;
+  private Map<Integer,LabelSelector> excludedLabelSets;
 
   @Option(
       name = "--labels",
@@ -67,23 +66,20 @@ class TestLabelOptions {
           "The first matching statement is used to decide whether to " +
           "include or exclude a test rule.",
       handler = LabelsOptionHandler.class)
-  private Map<Integer,LabelSetSelector> includedLabelSets;
+  private Map<Integer,LabelSelector> includedLabelSets;
 
-  private Supplier<ImmutableList<LabelSetSelector>> supplier =
-      Suppliers.memoize(new Supplier<ImmutableList<LabelSetSelector>>() {
+  private Supplier<ImmutableList<LabelSelector>> supplier =
+      Suppliers.memoize(new Supplier<ImmutableList<LabelSelector>>() {
         @Override
-        public ImmutableList<LabelSetSelector> get() {
-          TreeMap<Integer,LabelSetSelector> all = Maps.newTreeMap();
+        public ImmutableList<LabelSelector> get() {
+          TreeMap<Integer,LabelSelector> all = Maps.newTreeMap();
           all.putAll(includedLabelSets);
 
           // Invert the sense of anything given to --exclude.
           // This means we could --exclude !includeMe  ...lolololol
           for (Integer ordinal : excludedLabelSets.keySet()) {
-            LabelSetSelector original = excludedLabelSets.get(ordinal);
-            LabelSetSelector inverted = new LabelSetSelector(
-                !original.isInclusive,
-                original.labels);
-            all.put(ordinal, inverted);
+            LabelSelector original = excludedLabelSets.get(ordinal);
+            all.put(ordinal, original.invert());
           }
 
           return ImmutableList.copyOf(all.values());
@@ -92,21 +88,24 @@ class TestLabelOptions {
 
 
   public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<Label> rawLabels) {
-    ImmutableList<LabelSetSelector> labelSetSelectors = supplier.get();
-    for (LabelSetSelector labelSetSelector : labelSetSelectors) {
-      if (rawLabels.containsAll(labelSetSelector.labels)) {
-        return labelSetSelector.isInclusive;
+    ImmutableList<LabelSelector> labelSelectors = supplier.get();
+    for (LabelSelector labelSelector : labelSelectors) {
+      if (labelSelector.matches(rawLabels)) {
+        return labelSelector.isInclusive();
       }
     }
 
-    Set<Label> defaultExcludedLabels = buckConfig.getDefaultExcludedLabels();
-    if (!defaultExcludedLabels.isEmpty() && rawLabels.containsAll(defaultExcludedLabels)) {
-      return false;
+    List<String> defaultRawExcludedLabelSelectors = buckConfig.getDefaultRawExcludedLabelSelectors();
+    for (String raw : defaultRawExcludedLabelSelectors) {
+      LabelSelector labelSelector = LabelSelector.fromString(raw).invert();
+      if (labelSelector.matches(rawLabels)) {
+        return labelSelector.isInclusive();
+      }
     }
 
     boolean defaultResult = true;
-    for (LabelSetSelector labelSetSelector : labelSetSelectors) {
-      if (labelSetSelector.isInclusive) {
+    for (LabelSelector labelSelector : labelSelectors) {
+      if (labelSelector.isInclusive()) {
         defaultResult = false;
       }
     }
@@ -114,17 +113,7 @@ class TestLabelOptions {
     return defaultResult;
   }
 
-  static class LabelSetSelector {
-    final boolean isInclusive;
-    final Set<Label> labels;
-
-    LabelSetSelector(boolean isInclusive, Set<Label> labels) {
-      this.isInclusive = isInclusive;
-      this.labels = labels;
-    }
-  }
-
-  public static class LabelsOptionHandler extends OptionHandler<Map<Integer,LabelSetSelector>> {
+  public static class LabelsOptionHandler extends OptionHandler<Map<Integer,LabelSelector>> {
 
     /**
      * Shared across all instances of this handler, to keep track of the order of label rules given
@@ -132,13 +121,12 @@ class TestLabelOptions {
      */
     private static final AtomicInteger ordinal = new AtomicInteger();
 
-    private final Splitter splitter = Splitter.on(LABEL_SEPERATOR).trimResults().omitEmptyStrings();
-    private final Map<Integer,LabelSetSelector> labels = Maps.newHashMap();
+    private final Map<Integer,LabelSelector> labels = Maps.newHashMap();
 
     public LabelsOptionHandler(
         CmdLineParser parser,
         OptionDef option,
-        Setter<Map<Integer,LabelSetSelector>> setter) throws CmdLineException {
+        Setter<Map<Integer,LabelSelector>> setter) throws CmdLineException {
       super(parser, option, setter);
       setter.addValue(labels);
     }
@@ -151,22 +139,7 @@ class TestLabelOptions {
         if (parameter.charAt(0) == '-') {
           break;
         }
-
-        boolean isInclusive = true;
-        if (parameter.charAt(0) == '!') {
-          isInclusive = false;
-          parameter = parameter.substring(1);
-        }
-
-        ImmutableSet.Builder<Label> labelBuilder = new ImmutableSet.Builder<>();
-        Iterable<String> labelStrings = splitter.split(parameter);
-        for (String labelString : labelStrings) {
-          BuckConfig.validateLabelName(labelString);
-          labelBuilder.add(new Label(labelString));
-        }
-
-        LabelSetSelector labelSetSelector = new LabelSetSelector(isInclusive, labelBuilder.build());
-        labels.put(ordinal.getAndIncrement(), labelSetSelector);
+        labels.put(ordinal.getAndIncrement(), LabelSelector.fromString(parameter));
       }
       return index;
     }

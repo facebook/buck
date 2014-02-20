@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -354,8 +353,8 @@ public class BuckConfigTest {
     BuckConfig config = createWithDefaultFilesystem(reader, null);
 
     assertEquals(
-        ImmutableSet.of(new Label("windows"), new Label("linux")),
-        config.getDefaultExcludedLabels());
+        ImmutableList.of("windows", "linux"),
+        config.getDefaultRawExcludedLabelSelectors());
   }
 
   @Test

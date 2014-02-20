@@ -620,7 +620,7 @@ public class TestCommandTest {
         ImmutableMap.<String, Map<String, String>>of(
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
-    assertThat(config.getDefaultExcludedLabels(), contains(new Label("e2e")));
+    assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommandOptions options = new TestCommandOptions(config);
 
     new CmdLineParserAdditionalOptions(options).parseArgument();
@@ -635,7 +635,7 @@ public class TestCommandTest {
         ImmutableMap.<String, Map<String, String>>of(
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
-    assertThat(config.getDefaultExcludedLabels(), contains(new Label("e2e")));
+    assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommandOptions options = new TestCommandOptions(config);
 
     new CmdLineParserAdditionalOptions(options).parseArgument("--include", "e2e");
@@ -650,7 +650,7 @@ public class TestCommandTest {
         ImmutableMap.<String, Map<String, String>>of(
             "test",
             ImmutableMap.of("excluded_labels", excludedLabel)));
-    assertThat(config.getDefaultExcludedLabels(), contains(new Label(excludedLabel)));
+    assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));
     TestCommandOptions options = new TestCommandOptions(config);
 
     new CmdLineParserAdditionalOptions(options).parseArgument("//example:test");
