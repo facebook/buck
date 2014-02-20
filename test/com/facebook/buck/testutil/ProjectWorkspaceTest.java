@@ -26,8 +26,10 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreFiles;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 import org.junit.Test;
 
@@ -62,5 +64,20 @@ public class ProjectWorkspaceTest {
         successTypes.get(BuildTargetFactory.newInstance("//example/base:one")).get());
     assertFalse(
         successTypes.get(BuildTargetFactory.newInstance("//example/base:two")).isPresent());
+  }
+
+  @Test
+  public void testWriteContentsToPath() throws IOException {
+    File templateDir = Files.createTempDir();
+    File testFile = new File(templateDir, "test.file");
+    Files.write("hello world".getBytes(), testFile);
+
+    DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+    tmpFolder.create();
+
+    ProjectWorkspace workspace = new ProjectWorkspace(templateDir, tmpFolder);
+    workspace.writeContentsToPath("bye world", "test.file");
+
+    assertEquals("bye world", Files.toString(workspace.getFile("test.file"), Charsets.UTF_8));
   }
 }

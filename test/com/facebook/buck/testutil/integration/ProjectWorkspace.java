@@ -196,6 +196,11 @@ public class ProjectWorkspace {
     return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
   }
 
+  public void writeContentsToPath(String contents, String pathRelativeToProjectRoot)
+      throws IOException {
+    Files.write(contents.getBytes(Charsets.UTF_8), getFile(pathRelativeToProjectRoot));
+  }
+
   /**
    * @return the specified path resolved against the root of this workspace.
    */
