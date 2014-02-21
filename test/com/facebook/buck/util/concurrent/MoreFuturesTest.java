@@ -74,7 +74,7 @@ public class MoreFuturesTest {
     final AtomicBoolean sawInterruption = new AtomicBoolean();
     // Used to spin the CPU to minimize the chance of a spurious test pass.
     final AtomicInteger doNotOptimizeMe = new AtomicInteger();
-    final int SPIN_COUNT = 256;
+    final int spinCount = 256;
 
     // Future that the background thread will test.
     // Don't make this into an immediate future, since they never throw InterruptedException.
@@ -101,7 +101,7 @@ public class MoreFuturesTest {
           while (true) {
 
             // Spin some CPU to minimize the chance of interrupting after we check the future.
-            for (int i = 0; i < SPIN_COUNT; i++) {
+            for (int i = 0; i < spinCount; i++) {
               doNotOptimizeMe.incrementAndGet();
             }
 

@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class IosTestDescription implements Description<IosTestDescription.Arg> {
-  public static BuildRuleType TYPE = new BuildRuleType("ios_test");
+  public static final BuildRuleType TYPE = new BuildRuleType("ios_test");
 
   @Override
   public BuildRuleType getBuildRuleType() {

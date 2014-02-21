@@ -103,7 +103,7 @@ public class AndroidBinaryGraphEnhancerTest {
     expect(uberRDotJava.getBuildTarget()).andStubReturn(uberRDotJavaTarget);
     replay(uberRDotJava);
     BuildRule uberRDotJavaRule = new AbstractBuildable.AnonymousBuildRule(
-        BuildRuleType._UBER_R_DOT_JAVA,
+        BuildRuleType.UBER_R_DOT_JAVA,
         uberRDotJava,
         new BuildRuleParams(
             uberRDotJavaTarget,

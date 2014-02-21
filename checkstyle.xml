@@ -62,6 +62,18 @@ page at http://checkstyle.sourceforge.net/config.html -->
       <property name="tokens" value="STATIC_IMPORT, IMPORT"/>
     </module>
 
+    <module name="IllegalImport"/>
+
+    <!--
+
+    CLASS CHECKS
+
+    -->
+   
+    <module name="HideUtilityClassConstructor"/>
+
+    <module name="MutableException"/>
+
     <!--
 
     NAMING CHECKS
@@ -76,7 +88,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
       <!-- Here the default checkstyle rule restricts package name parts to
         seven characters, this is not in line with common practice at Google.
       -->
-      <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]{1,})*$"/>
+      <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
       <property name="severity" value="warning"/>
     </module>
 
@@ -101,17 +113,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
       <property name="severity" value="warning"/>
     </module>
 
-    <module name="StaticVariableNameCheck">
-      <!-- Validates static, non-final fields against the supplied
-      expression "^[a-z][a-zA-Z0-9]*_?$". -->
-      <metadata name="altname" value="StaticVariableName"/>
-      <property name="applyToPublic" value="true"/>
-      <property name="applyToProtected" value="true"/>
-      <property name="applyToPackage" value="true"/>
-      <property name="applyToPrivate" value="true"/>
-      <property name="format" value="^[a-z][a-zA-Z0-9]*_?$"/>
-      <property name="severity" value="warning"/>
-    </module>
+    <module name="StaticVariableName" />
 
     <module name="MemberNameCheck">
       <!-- Validates non-static members against the supplied expression. -->
@@ -125,9 +127,6 @@ page at http://checkstyle.sourceforge.net/config.html -->
     </module>
 
     <module name="MethodNameCheck">
-      <!-- Validates identifiers for method names. -->
-      <metadata name="altname" value="MethodName"/>
-      <property name="format" value="^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$"/>
       <property name="severity" value="warning"/>
     </module>
 

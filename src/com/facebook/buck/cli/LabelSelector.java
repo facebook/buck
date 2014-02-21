@@ -27,7 +27,8 @@ public class LabelSelector {
   private final boolean isInclusive;
   private final Set<Label> labels;
 
-  private static final Splitter splitter = Splitter.on(TestLabelOptions.LABEL_SEPERATOR).trimResults().omitEmptyStrings();
+  private static final Splitter splitter =
+      Splitter.on(TestLabelOptions.LABEL_SEPERATOR).trimResults().omitEmptyStrings();
 
   static LabelSelector fromString(String raw) {
     Preconditions.checkNotNull(raw);

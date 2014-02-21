@@ -111,7 +111,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private static final long FROYO_DEFLATE_LIMIT_BYTES = 1 << 20;
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
-  static EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
+  static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
       DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
       DxStep.Option.NO_OPTIMIZE);
 

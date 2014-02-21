@@ -28,14 +28,14 @@ public final class Escaper {
   /** Utility class: do not instantiate. */
   private Escaper() {}
 
-  private static CharMatcher BASH_SPECIAL_CHARS = CharMatcher.anyOf("<>|!?*[]$\\(){}\"'`&;=")
+  private static final CharMatcher BASH_SPECIAL_CHARS = CharMatcher.anyOf("<>|!?*[]$\\(){}\"'`&;=")
       .or(CharMatcher.WHITESPACE);
 
   /**
    * Bash quoting {@link com.google.common.base.Function Function} which can be passed to
    * {@link com.google.common.collect.Iterables#transform Iterables.transform()}.
    */
-  public static Function<String, String> BASH_ESCAPER = new Function<String, String>() {
+  public static final Function<String, String> BASH_ESCAPER = new Function<String, String>() {
     @Override
     public String apply(String s) {
       return Escaper.escapeAsBashString(s);

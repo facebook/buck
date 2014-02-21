@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class PythonLibraryDescription implements Description<Arg> {
 
-  public static BuildRuleType TYPE = new BuildRuleType("python_library");
+  public static final BuildRuleType TYPE = new BuildRuleType("python_library");
 
   public static class Arg implements ConstructorArg {
     public ImmutableSortedSet<SourcePath> srcs;

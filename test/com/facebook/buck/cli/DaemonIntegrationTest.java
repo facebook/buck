@@ -133,8 +133,8 @@ public class DaemonIntegrationTest {
   }
 
   private InputStream createHeartbeatStream(int count) {
-    final int BYTES_PER_HEARTBEAT = 5;
-    byte[] bytes = new byte[BYTES_PER_HEARTBEAT * count];
+    final int bytesPerHeartbeat = 5;
+    byte[] bytes = new byte[bytesPerHeartbeat * count];
     Arrays.fill(bytes, NGConstants.CHUNKTYPE_HEARTBEAT);
     return new ByteArrayInputStream(bytes);
   }

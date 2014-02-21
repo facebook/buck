@@ -51,7 +51,7 @@ import javax.annotation.Nullable;
 public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> {
 
   /** Indent to use in generated build file. */
-  private static String INDENT = "  ";
+  private static final String INDENT = "  ";
 
   /**
    * Properties from the JSON produced by {@code buck.py} that start with this prefix do not

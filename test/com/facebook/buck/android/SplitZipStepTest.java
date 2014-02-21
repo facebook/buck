@@ -270,9 +270,9 @@ public class SplitZipStepTest {
 
   @Test
   public void testClassFilePattern() {
-    assertTrue(SplitZipStep.classFilePattern.matcher(
+    assertTrue(SplitZipStep.CLASS_FILE_PATTERN.matcher(
         "com/facebook/orca/threads/ParticipantInfo.class").matches());
-    assertTrue(SplitZipStep.classFilePattern.matcher(
+    assertTrue(SplitZipStep.CLASS_FILE_PATTERN.matcher(
         "com/facebook/orca/threads/ParticipantInfo$1.class").matches());
   }
 }

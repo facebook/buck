@@ -40,7 +40,7 @@ public class DummyRDotJavaAbiRule extends AbstractCachingBuildRule implements Ja
 
   @Override
   public BuildRuleType getType() {
-    return BuildRuleType._DUMMY_R_DOT_JAVA;
+    return BuildRuleType.DUMMY_R_DOT_JAVA;
   }
 
   @Nullable

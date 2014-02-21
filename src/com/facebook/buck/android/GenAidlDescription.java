@@ -31,7 +31,7 @@ import java.nio.file.Path;
 
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
-  public static BuildRuleType TYPE = new BuildRuleType("gen_aidl");
+  public static final BuildRuleType TYPE = new BuildRuleType("gen_aidl");
 
   @Override
   public BuildRuleType getBuildRuleType() {

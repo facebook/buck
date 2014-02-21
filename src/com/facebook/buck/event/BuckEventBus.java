@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class BuckEventBus implements Closeable {
 
-  public static int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
+  public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
 
-  private static Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER = new Supplier<Long>() {
+  private static final Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER = new Supplier<Long>() {
     @Override
     public Long get() {
       return Thread.currentThread().getId();

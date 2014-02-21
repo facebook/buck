@@ -46,7 +46,7 @@ public class IntermediateDexRule extends AbstractCachingBuildRule implements Abi
 
   @Override
   public BuildRuleType getType() {
-    return BuildRuleType._PRE_DEX;
+    return BuildRuleType.PRE_DEX;
   }
 
   /**

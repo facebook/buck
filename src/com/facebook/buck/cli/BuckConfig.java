@@ -305,7 +305,7 @@ public class BuckConfig {
    */
   public ImmutableSet<Path> getIgnorePaths() {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
-    final String IGNORE_KEY = "ignore";
+    final String ignoreKey = "ignore";
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
     builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
@@ -320,12 +320,12 @@ public class BuckConfig {
       }
     }
 
-    if (projectConfig.containsKey(IGNORE_KEY)) {
+    if (projectConfig.containsKey(ignoreKey)) {
       builder.addAll(MorePaths.asPaths(
           Splitter.on(',')
             .omitEmptyStrings()
             .trimResults()
-            .split(projectConfig.get(IGNORE_KEY))));
+            .split(projectConfig.get(ignoreKey))));
     }
 
     // Normalize paths in order to eliminate trailing '/' characters and whatnot.
@@ -334,13 +334,13 @@ public class BuckConfig {
 
   public ImmutableSet<Pattern> getTempFilePatterns() {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
-    final String TEMP_FILES_KEY = "temp_files";
+    final String tempFilesKey = "temp_files";
     ImmutableSet.Builder<Pattern> builder = ImmutableSet.builder();
-    if (projectConfig.containsKey(TEMP_FILES_KEY)) {
+    if (projectConfig.containsKey(tempFilesKey)) {
       for (String regex : Splitter.on(',')
           .omitEmptyStrings()
           .trimResults()
-          .split(projectConfig.get(TEMP_FILES_KEY))) {
+          .split(projectConfig.get(tempFilesKey))) {
         builder.add(Pattern.compile(regex));
       }
     }

@@ -51,7 +51,7 @@ public enum SizeUnit {
     }
   }
 
-  private static ImmutableMap<String, SizeUnit> SHORT_TO_CODE =
+  private static final ImmutableMap<String, SizeUnit> SHORT_TO_CODE =
       ImmutableMap.<String, SizeUnit>builder()
         .put("b", BYTES)
         .put("kb", KILOBYTES)
@@ -64,7 +64,7 @@ public enum SizeUnit {
         .put("terabytes", TERABYTES)
         .build();
 
-  private static Pattern SIZE_PATTERN = Pattern.compile("([\\d]+(?:\\.[\\d]+)?)\\s*((?:" +
+  private static final Pattern SIZE_PATTERN = Pattern.compile("([\\d]+(?:\\.[\\d]+)?)\\s*((?:" +
       Joiner.on(")|(?:").join(SHORT_TO_CODE.keySet()) + "))",
       Pattern.CASE_INSENSITIVE);
 

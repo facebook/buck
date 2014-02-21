@@ -42,14 +42,14 @@ class VacationFixture extends ExternalResource {
       "^(\\w+) .+? (com\\.example\\.\\S+)$",
       Pattern.MULTILINE);
 
-  static TestName VACATION_TEST = new TestName("com.example.vacation.VacationTest");
-  static TestName LOCATION_TEST = new TestName("com.example.vacation.LocationTest");
-  static TestName READBOOK_TEST = new TestName("com.example.vacation.ReadBookTest");
-  static TestName HAVEMIND_TEST = new TestName("com.example.vacation.HaveMindTest");
-  static TestName PASSPORT_TEST = new TestName("com.example.vacation.PassportTest");
-  static TestName WEEPHOTO_TEST = new TestName("com.example.vacation.WeePhotoTest");
-  static TestName MEDICINE_TEST = new TestName("com.example.vacation.MedicineTest");
-  static TestName CURRENCY_TEST = new TestName("com.example.vacation.CurrencyTest");
+  static final TestName VACATION_TEST = new TestName("com.example.vacation.VacationTest");
+  static final TestName LOCATION_TEST = new TestName("com.example.vacation.LocationTest");
+  static final TestName READBOOK_TEST = new TestName("com.example.vacation.ReadBookTest");
+  static final TestName HAVEMIND_TEST = new TestName("com.example.vacation.HaveMindTest");
+  static final TestName PASSPORT_TEST = new TestName("com.example.vacation.PassportTest");
+  static final TestName WEEPHOTO_TEST = new TestName("com.example.vacation.WeePhotoTest");
+  static final TestName MEDICINE_TEST = new TestName("com.example.vacation.MedicineTest");
+  static final TestName CURRENCY_TEST = new TestName("com.example.vacation.CurrencyTest");
 
   private ProjectWorkspace workspace;
   private DebuggableTemporaryFolder temporaryFolder;

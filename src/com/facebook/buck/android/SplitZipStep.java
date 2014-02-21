@@ -76,7 +76,7 @@ public class SplitZipStep implements Step {
   private static final int ZIP_SIZE_HARD_LIMIT = ZIP_SIZE_SOFT_LIMIT + (2 * 1024 * 1024);
 
   @VisibleForTesting
-  static final Pattern classFilePattern = Pattern.compile("^([\\w/$]+)\\.class");
+  static final Pattern CLASS_FILE_PATTERN = Pattern.compile("^([\\w/$]+)\\.class");
 
   private final Set<Path> inputPathsToSplit;
   private final Path secondaryJarMetaPath;
@@ -311,7 +311,7 @@ public class SplitZipStep implements Step {
   private static String findAnyClass(File jarFile) throws IOException {
     try (ZipFile inZip = new ZipFile(jarFile)) {
       for (ZipEntry entry : Collections.list(inZip.entries())) {
-        Matcher m = classFilePattern.matcher(entry.getName());
+        Matcher m = CLASS_FILE_PATTERN.matcher(entry.getName());
         if (m.matches()) {
           return m.group(1).replace('/', '.');
         }

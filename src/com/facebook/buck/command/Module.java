@@ -35,7 +35,7 @@ import java.util.SortedSet;
 @VisibleForTesting
 final class Module implements Comparable<Module> {
 
-  private static Comparator<SourceFolder> ALPHABETIZER = new Comparator<SourceFolder>() {
+  private static final Comparator<SourceFolder> ALPHABETIZER = new Comparator<SourceFolder>() {
 
     @Override
     public int compare(SourceFolder a, SourceFolder b) {

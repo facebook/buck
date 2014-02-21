@@ -26,7 +26,8 @@ public class AnnotationProcessingDataDecorators {
   /** Utility class: do not instantiate. */
   private AnnotationProcessingDataDecorators() {}
 
-  private static AnnotationProcessingDataDecorator IDENTITY = new AnnotationProcessingDataDecorator() {
+  private static final AnnotationProcessingDataDecorator IDENTITY =
+      new AnnotationProcessingDataDecorator() {
     @Override
     public AnnotationProcessingData decorate(AnnotationProcessingData annotationProcessingData) {
       return annotationProcessingData;

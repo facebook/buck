@@ -44,7 +44,7 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
   /**
    * Extensions of files we don't want to DEFLATE (e.g. already compressed).
    */
-  private final Set<String> EXTENSIONS_NOT_TO_DEFLATE = ImmutableSet.of(
+  private static final Set<String> EXTENSIONS_NOT_TO_DEFLATE = ImmutableSet.of(
       "gzip",
       "jar",
       "jpg",

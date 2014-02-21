@@ -457,7 +457,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
     @Override
     protected BuildRuleType getType() {
-      return BuildRuleType._UBER_R_DOT_JAVA;
+      return BuildRuleType.UBER_R_DOT_JAVA;
     }
 
     @Override

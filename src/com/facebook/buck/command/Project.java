@@ -129,7 +129,7 @@ public class Project {
    * again, which causes IntelliJ to go and index the world. Empirically, it seems that if we do
    * not write them at all, IntelliJ can live without them.
    */
-  private static boolean GENERATE_PROPERTIES_FILES = false;
+  private static final boolean GENERATE_PROPERTIES_FILES = false;
 
   private final PartialGraph partialGraph;
   private final BuildFileTree buildFileTree;

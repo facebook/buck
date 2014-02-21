@@ -314,7 +314,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
 
     @Override
     protected BuildRuleType getType() {
-      return BuildRuleType._DEX_MERGE;
+      return BuildRuleType.DEX_MERGE;
     }
 
     @Override

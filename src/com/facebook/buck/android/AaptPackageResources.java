@@ -301,7 +301,7 @@ public class AaptPackageResources extends AbstractBuildable {
 
     @Override
     protected BuildRuleType getType() {
-      return BuildRuleType._AAPT_PACKAGE;
+      return BuildRuleType.AAPT_PACKAGE;
     }
 
     @Override

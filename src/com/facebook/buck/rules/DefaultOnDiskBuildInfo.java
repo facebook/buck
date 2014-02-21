@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
-  private static Function<String, ImmutableList<String>> TO_STRINGS =
+  private static final Function<String, ImmutableList<String>> TO_STRINGS =
       new Function<String, ImmutableList<String>>() {
     @Override
     public ImmutableList<String> apply(String input) {

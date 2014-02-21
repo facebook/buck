@@ -154,7 +154,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath);
   }
 
-  private final JarResolver JAR_RESOLVER =
+  private static final JarResolver JAR_RESOLVER =
       new JarResolver() {
     @Override
     public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {

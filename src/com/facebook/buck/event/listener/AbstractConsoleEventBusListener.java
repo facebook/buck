@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  * build to {@code stderr}.
  */
 public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
-  protected static final DecimalFormat timeFormatter = new DecimalFormat("0.0s");
+  protected static final DecimalFormat TIME_FORMATTER = new DecimalFormat("0.0s");
   protected static final long UNFINISHED_EVENT_PAIR = -1;
   protected final Console console;
   protected final Clock clock;
@@ -81,7 +81,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {
-    return timeFormatter.format(elapsedTimeMs / 1000.0);
+    return TIME_FORMATTER.format(elapsedTimeMs / 1000.0);
   }
 
 
