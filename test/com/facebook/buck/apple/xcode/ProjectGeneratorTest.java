@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.xml.HasXPath.hasXPath;
 import static org.junit.Assert.assertEquals;
@@ -46,10 +47,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
@@ -91,6 +94,10 @@ public class ProjectGeneratorTest {
   private static final Path OUTPUT_DIRECTORY = Paths.get("_gen");
   private static final String PROJECT_NAME = "GeneratedProject";
   private static final String PROJECT_CONTAINER = PROJECT_NAME + ".xcodeproj";
+  private static final Path OUTPUT_PROJECT_BUNDLE_PATH =
+      OUTPUT_DIRECTORY.resolve(PROJECT_CONTAINER);
+  private static final Path OUTPUT_PROJECT_FILE_PATH =
+      OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
 
   private ProjectFilesystem projectFilesystem;
   private XcodeNativeDescription xcodeNativeDescription;
@@ -113,19 +120,16 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(
         buildRuleResolver, ImmutableList.<BuildTarget>of());
 
-    Path outputProjectBundlePath = OUTPUT_DIRECTORY.resolve(PROJECT_CONTAINER);
-    Path outputProjectFilePath = outputProjectBundlePath.resolve("project.pbxproj");
-
     Path outputWorkspaceBundlePath = OUTPUT_DIRECTORY.resolve(PROJECT_NAME + ".xcworkspace");
     Path outputWorkspaceFilePath = outputWorkspaceBundlePath.resolve("contents.xcworkspacedata");
 
-    Path outputSchemeFolderPath = outputProjectBundlePath.resolve(
+    Path outputSchemeFolderPath = OUTPUT_PROJECT_BUNDLE_PATH.resolve(
         Paths.get("xcshareddata", "xcschemes"));
     Path outputSchemePath = outputSchemeFolderPath.resolve("Scheme.xcscheme");
 
     projectGenerator.createXcodeProjects();
 
-    Optional<String> pbxproj = projectFilesystem.readFileIfItExists(outputProjectFilePath);
+    Optional<String> pbxproj = projectFilesystem.readFileIfItExists(OUTPUT_PROJECT_FILE_PATH);
     assertTrue(pbxproj.isPresent());
 
     Optional<String> xcworkspacedata = projectFilesystem.readFileIfItExists(outputWorkspaceFilePath);
@@ -200,6 +204,21 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testProjectFileSigning() throws IOException {
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    ProjectGenerator projectGenerator = createProjectGenerator(
+        buildRuleResolver, ImmutableList.<BuildTarget>of());
+
+    projectGenerator.createXcodeProjects();
+
+    Optional<String> pbxproj = projectFilesystem.readFileIfItExists(OUTPUT_PROJECT_FILE_PATH);
+    assertTrue(pbxproj.isPresent());
+    assertEquals(
+        SourceSigner.SignatureStatus.OK,
+        SourceSigner.getSignatureStatus(pbxproj.get()));
+  }
+
+  @Test
   public void testXcodeNativeRule() throws IOException {
     BuildRule rule = createXcodeNativeRule(
         new BuildTarget("//foo", "rule"),
@@ -211,7 +230,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    assertThat(project.getTargets(), hasSize(1));
+    assertThat(project.getTargets(), hasSize(2));
     PBXTarget target = project.getTargets().get(0);
     assertThat(target.getName(), equalTo("//foo:rule"));
     assertThat(target.isa(), equalTo("PBXAggregateTarget"));
@@ -223,6 +242,8 @@ public class ProjectGeneratorTest {
         equalTo(PBXFileReference.SourceTree.ABSOLUTE));
     assertThat(proxy.getContainerPortal().getPath(), endsWith("foo.xcodeproj"));
     assertThat(proxy.getRemoteGlobalIDString(), equalTo("00DEADBEEF"));
+
+    verifyGeneratedSignedSourceTarget(project.getTargets().get(1));
 
     PBXGroup projectReferenceGroup =
         project.getMainGroup().getOrCreateChildGroupByName("Project References");
@@ -521,5 +542,15 @@ public class ProjectGeneratorTest {
     @SuppressWarnings("unchecked")
     T element = (T) Iterables.getOnlyElement(buildPhases);
     return element;
+  }
+
+  private void verifyGeneratedSignedSourceTarget(PBXTarget target) {
+    Iterable<PBXShellScriptBuildPhase> shellSteps = Iterables.filter(
+        target.getBuildPhases(), PBXShellScriptBuildPhase.class);
+    assertEquals(1, Iterables.size(shellSteps));
+    PBXShellScriptBuildPhase generatedScriptPhase = Iterables.get(shellSteps, 0);
+    assertThat(
+        generatedScriptPhase.getShellScript(),
+        containsString(SourceSigner.SIGNED_SOURCE_PLACEHOLDER));
   }
 }

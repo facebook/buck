@@ -40,11 +40,13 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
@@ -160,6 +162,7 @@ public class ProjectGenerator {
         // Trigger the loading cache to call the generateTargetForBuildRule function.
         buildRuleToXcodeTarget.getUnchecked(rule);
       }
+      addGeneratedSignedSourceTarget(project);
       writeProjectFile(project);
       scheme = createScheme(partialGraph, projectPath, buildRuleToXcodeTarget.asMap());
       writeWorkspace(projectPath);
@@ -496,13 +499,33 @@ public class ProjectGenerator {
     }
   }
 
+  private void addGeneratedSignedSourceTarget(PBXProject project) {
+    PBXAggregateTarget target = new PBXAggregateTarget("GeneratedSignedSourceTarget");
+    PBXShellScriptBuildPhase generatedSignedSourceScriptPhase = new PBXShellScriptBuildPhase();
+    generatedSignedSourceScriptPhase.setShellScript(
+        "# Do not change or remove this. This is a generated script phase\n" +
+        "# used solely to include a signature in the generated Xcode project.\n" +
+        "# " + SourceSigner.SIGNED_SOURCE_PLACEHOLDER
+    );
+    target.getBuildPhases().add(generatedSignedSourceScriptPhase);
+    project.getTargets().add(target);
+  }
+
   private Path writeProjectFile(PBXProject project) throws IOException {
     XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(0), project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);
     Path serializedProject = xcodeprojDir.resolve("project.pbxproj");
-    projectFilesystem.writeContentsToPath(rootObject.toXMLPropertyList(), serializedProject);
+    String unsignedXmlProject = rootObject.toXMLPropertyList();
+    Optional<String> signedXmlProject = SourceSigner.sign(unsignedXmlProject);
+    String contentsToWrite;
+    if (signedXmlProject.isPresent()) {
+      contentsToWrite = signedXmlProject.get();
+    } else {
+      contentsToWrite = unsignedXmlProject;
+    }
+    projectFilesystem.writeContentsToPath(contentsToWrite, serializedProject);
     return xcodeprojDir;
   }
 
