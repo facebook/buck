@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
@@ -95,7 +96,8 @@ public class AndroidBinaryGraphEnhancerTest {
         pathRelativizer,
         ruleKeyBuilderFactory);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        originalParams);
+        originalParams,
+        JavacOptions.DEFAULTS);
 
     UberRDotJava uberRDotJava = createMock(UberRDotJava.class);
     BuildTarget uberRDotJavaTarget =

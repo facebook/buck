@@ -146,14 +146,16 @@ public class UberRDotJavaUtil {
       };
 
   static JavacStep createJavacStepForUberRDotJavaFiles(
-      Set<Path> javaSourceFilePaths, Path outputDirectory) {
-    // TODO(user): This method should also take in javacOptions and buildtarget.
+      Set<Path> javaSourceFilePaths,
+      Path outputDirectory,
+      JavacOptions javacOptions,
+      BuildTarget buildTarget) {
     return createJavacStepForDummyRDotJavaFiles(
         javaSourceFilePaths,
         outputDirectory,
         /* pathToOutputAbiFile */ Optional.<Path>absent(),
-        /* javacOptions */ JavacOptions.DEFAULTS,
-        /* buildTarget */ null);
+        javacOptions,
+        buildTarget);
   }
 
   static JavacStep createJavacStepForDummyRDotJavaFiles(

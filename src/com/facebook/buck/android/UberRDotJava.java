@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.UberRDotJava.BuildOutput;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -65,6 +66,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
   private final BuildTarget buildTarget;
   private final ResourcesFilter resourcesFilter;
+  private final JavacOptions javacOptions;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
@@ -73,11 +75,13 @@ public class UberRDotJava extends AbstractBuildable implements
 
   UberRDotJava(BuildTarget buildTarget,
       ResourcesFilter resourcesFilter,
+      JavacOptions javacOptions,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
@@ -85,6 +89,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
+    javacOptions.appendToRuleKey(builder);
     return builder
         .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
         .set("shouldBuildStringSourceMap", shouldBuildStringSourceMap);
@@ -255,7 +260,10 @@ public class UberRDotJava extends AbstractBuildable implements
       javaSourceFilePaths.add(path);
     }
     JavacStep javac = UberRDotJavaUtil.createJavacStepForUberRDotJavaFiles(
-        javaSourceFilePaths, rDotJavaBin);
+        javaSourceFilePaths,
+        rDotJavaBin,
+        javacOptions,
+        buildTarget);
     commands.add(javac);
 
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
@@ -292,6 +300,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
     @Nullable private ResourcesFilter resourcesFilter;
     @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
+    @Nullable private JavacOptions javacOptions;
     private boolean rDotJavaNeedsDexing = false;
     private boolean shouldBuildStringSourceMap = false;
 
@@ -326,6 +335,11 @@ public class UberRDotJava extends AbstractBuildable implements
       return this;
     }
 
+    public Builder setJavacOptions(JavacOptions javacOptions) {
+      this.javacOptions = javacOptions;
+      return this;
+    }
+
     public Builder setRDotJavaNeedsDexing(boolean rDotJavaNeedsDexing) {
       this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
       return this;
@@ -340,6 +354,7 @@ public class UberRDotJava extends AbstractBuildable implements
     protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
       return new UberRDotJava(buildTarget,
           resourcesFilter,
+          javacOptions,
           androidResourceDepsFinder,
           rDotJavaNeedsDexing,
           shouldBuildStringSourceMap);

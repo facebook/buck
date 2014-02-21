@@ -16,9 +16,10 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
@@ -146,7 +147,9 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           .addAll(apkUnderTest.getBuildRulesToExcludeFromDex())
           .addAll(Classpaths.getClasspathEntries(apkUnderTest.getClasspathDeps()).keySet())
           .build();
-      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(originalParams);
+      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+          originalParams,
+          JavacOptions.DEFAULTS);
 
       ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk =
           getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build());

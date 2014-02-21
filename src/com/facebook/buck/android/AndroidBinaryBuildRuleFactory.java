@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.ZipSplitter;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -24,15 +25,27 @@ import com.facebook.buck.rules.AbstractBuildRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.util.List;
 
-public class AndroidBinaryBuildRuleFactory extends
-    AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
+public class AndroidBinaryBuildRuleFactory
+    extends AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
+
+  private final JavacOptions javacOptions;
+
+  public AndroidBinaryBuildRuleFactory() {
+    this(JavacOptions.DEFAULTS);
+  }
+
+  public AndroidBinaryBuildRuleFactory(JavacOptions javacOptions) {
+    super();
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
+  }
 
   @Override
   public AndroidBinaryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
-    return AndroidBinaryRule.newAndroidBinaryRuleBuilder(params);
+    return AndroidBinaryRule.newAndroidBinaryRuleBuilder(params, javacOptions);
   }
 
   @Override

@@ -20,11 +20,12 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.android.common.SdkConstants;
-import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -887,7 +888,13 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   }
 
   public static Builder newAndroidBinaryRuleBuilder(AbstractBuildRuleBuilderParams params) {
-    return new Builder(params);
+    return newAndroidBinaryRuleBuilder(params, JavacOptions.DEFAULTS);
+  }
+
+  public static Builder newAndroidBinaryRuleBuilder(
+      AbstractBuildRuleBuilderParams params,
+      JavacOptions javacOptions) {
+    return new Builder(params, javacOptions);
   }
 
   /**
@@ -906,6 +913,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   public static class Builder extends AbstractBuildRuleBuilder<AndroidBinaryRule> {
     private static final PackageType DEFAULT_PACKAGE_TYPE = PackageType.DEBUG;
 
+    private final JavacOptions javacOptions;
     private SourcePath manifest;
     private String target;
 
@@ -928,8 +936,9 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private ImmutableSet.Builder<BuildTarget> preprocessJavaClassesDeps = ImmutableSet.builder();
     private Optional<String> preprocessJavaClassesBash = Optional.absent();
 
-    private Builder(AbstractBuildRuleBuilderParams params) {
+    private Builder(AbstractBuildRuleBuilderParams params, JavacOptions javacOptions) {
       super(params);
+      this.javacOptions = Preconditions.checkNotNull(javacOptions);
     }
 
     @Override
@@ -952,7 +961,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           new AndroidTransitiveDependencyGraph(classpathDeps);
 
       BuildRuleParams originalParams = createBuildRuleParams(ruleResolver);
-      AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(originalParams);
+      AndroidBinaryGraphEnhancer graphEnhancer =
+          new AndroidBinaryGraphEnhancer(originalParams, javacOptions);
       final ImmutableSortedSet<BuildRule> originalDeps = originalParams.getDeps();
 
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex =

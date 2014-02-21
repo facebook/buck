@@ -22,6 +22,7 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibraryRule;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -48,8 +50,9 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
   private final ImmutableSortedSet.Builder<BuildRule> totalDeps;
+  private final JavacOptions javacOptions;
 
-  AndroidBinaryGraphEnhancer(BuildRuleParams originalParams) {
+  AndroidBinaryGraphEnhancer(BuildRuleParams originalParams, JavacOptions javacOptions) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
     this.buildRuleBuilderParams = new DefaultBuildRuleBuilderParams(
@@ -58,6 +61,8 @@ public class AndroidBinaryGraphEnhancer {
     this.totalDeps = ImmutableSortedSet.naturalOrder();
 
     totalDeps.addAll(originalDeps);
+
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
   }
 
   /**
@@ -155,6 +160,7 @@ public class AndroidBinaryGraphEnhancer {
             .setBuildTarget(buildTargetForUberRDotJava)
             .setResourcesFilter(resourcesFilter)
             .setAndroidResourceDepsFinder(androidResourceDepsFinder)
+            .setJavacOptions(javacOptions)
             .setRDotJavaNeedsDexing(rDotJavaNeedsDexing)
             .setBuildStringSourceMap(shouldBuildStringSourceMap)
     );

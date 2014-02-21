@@ -35,6 +35,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreBuildRuleFactory;
 import com.facebook.buck.java.PrebuiltJarBuildRuleFactory;
 import com.facebook.buck.parcelable.GenParcelableBuildRuleFactory;
@@ -181,6 +182,12 @@ public class KnownBuildRuleTypes {
         new JavaLibraryBuildRuleFactory(javac, javacVersion));
     builder.register(BuildRuleType.ANDROID_LIBRARY,
         new AndroidLibraryBuildRuleFactory(javac, javacVersion));
+    builder.register(BuildRuleType.ANDROID_BINARY,
+        new AndroidBinaryBuildRuleFactory(
+            JavacOptions.builder(JavacOptions.DEFAULTS)
+                .setPathToJavac(javac)
+                .setJavacVersion(javacVersion)
+                .build()));
 
     Optional<String> ndkVersion = buckConfig.getNdkVersion();
     // If a NDK version isn't specified, we've got to reach into the runtime environment to find
