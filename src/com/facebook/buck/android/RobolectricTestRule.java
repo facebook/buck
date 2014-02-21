@@ -50,17 +50,17 @@ import java.util.Set;
 
 public class RobolectricTestRule extends JavaTestRule {
 
-  private final static BuildableProperties PROPERTIES = new BuildableProperties(
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(
       ANDROID, LIBRARY, TEST);
 
   /**
    * Used by robolectric test runner to get list of resource directories that
    * can be used for tests.
    */
-  final static String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
+  static final String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_res_directories";
 
-  private final static Function<HasAndroidResourceDeps, Path> RESOURCE_DIRECTORY_FUNCTION =
+  private static final Function<HasAndroidResourceDeps, Path> RESOURCE_DIRECTORY_FUNCTION =
       new Function<HasAndroidResourceDeps, Path>() {
     @Override
     public Path apply(HasAndroidResourceDeps input) {
@@ -144,7 +144,8 @@ public class RobolectricTestRule extends JavaTestRule {
       ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();
       allVmArgs.addAll(vmArgs);
 
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
+      AnnotationProcessingParams processingParams =
+          getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);

@@ -24,7 +24,8 @@ import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
-public class AndroidResourceBuildRuleFactory extends AbstractBuildRuleFactory<AndroidResourceRule.Builder> {
+public class AndroidResourceBuildRuleFactory extends
+    AbstractBuildRuleFactory<AndroidResourceRule.Builder> {
 
   @Override
   public AndroidResourceRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {

@@ -66,9 +66,10 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AndroidResourceRule extends DoNotUseAbstractBuildable implements HasAndroidResourceDeps {
+public class AndroidResourceRule extends
+    DoNotUseAbstractBuildable implements HasAndroidResourceDeps {
 
-  private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /** {@link Function} that invokes {@link #getRes()} on an {@link AndroidResourceRule}. */
   private static final Function<HasAndroidResourceDeps, Path> GET_RES_FOR_RULE =
@@ -180,8 +181,8 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable implements Ha
     MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(pathToTextSymbolsDir);
 
     // Searching through the deps, find any additional res directories to pass to aapt.
-    ImmutableList<HasAndroidResourceDeps> androidResourceDeps = UberRDotJavaUtil.getAndroidResourceDeps(
-        this);
+    ImmutableList<HasAndroidResourceDeps> androidResourceDeps =
+        UberRDotJavaUtil.getAndroidResourceDeps(this);
     Set<Path> resDirectories = ImmutableSet.copyOf(
         Iterables.transform(androidResourceDeps, GET_RES_FOR_RULE));
 

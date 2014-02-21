@@ -59,7 +59,8 @@ import javax.annotation.Nullable;
  * generate a corresponding {@code R.class} file. These are called "dummy" {@code R.java} files
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
-public class DummyRDotJava extends AbstractBuildable implements InitializableFromDisk<Sha1HashCode> {
+public class DummyRDotJava extends
+    AbstractBuildable implements InitializableFromDisk<Sha1HashCode> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final BuildTarget buildTarget;
@@ -223,7 +224,8 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
       return this;
     }
 
-    public Builder setAndroidResourceDeps(ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
+    public Builder setAndroidResourceDeps(
+        ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
       this.androidResourceDeps = Preconditions.checkNotNull(androidResourceDeps);
       for (HasAndroidResourceDeps dep : androidResourceDeps) {
         addDep(dep.getBuildTarget());

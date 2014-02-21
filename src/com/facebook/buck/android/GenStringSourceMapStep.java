@@ -54,7 +54,8 @@ import java.util.Set;
  * where:
  * <ul>
  *   <li>androidResourceId is the integer value, assigned by aapt, extracted from R.txt
- *   <li>stringsXmlPath is the path to the first strings.xml file where this string resource was found.
+ *   <li>stringsXmlPath is the path to the first strings.xml file where this string resource was
+ *   found.
  * </ul>
  * <p/>
  * Example:
@@ -128,7 +129,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       ProjectFilesystem filesystem = context.getProjectFilesystem();
       mapper.writeValue(filesystem.getFileForRelativePath(outputPath), nativeStrings);
     } catch (IOException ex) {
-      context.logError(ex, "Failed when trying to save the output file: '%s'", outputPath.toString());
+      context.logError(
+          ex, "Failed when trying to save the output file: '%s'", outputPath.toString());
       return 1;
     }
 
@@ -206,7 +208,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // resource originated from
 
     public NativeStringInfo(Integer androidResourceId, String stringsXmlPath) {
-      this.androidResourceId = String.format("0x%08X", Preconditions.checkNotNull(androidResourceId));
+      this.androidResourceId =
+          String.format("0x%08X", Preconditions.checkNotNull(androidResourceId));
       this.stringsXmlPath = Preconditions.checkNotNull(stringsXmlPath);
     }
 

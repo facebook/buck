@@ -111,7 +111,8 @@ public class SplitZipStep implements Step {
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output).
-   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter} will be used. Also,
+   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter}
+   *     will be used. Also,
    *     {@code linearAllocHardLimit} must have a positive value in this case.
    */
   public SplitZipStep(
@@ -177,7 +178,7 @@ public class SplitZipStep implements Step {
           projectFilesystem.getFileForRelativePath(pathToReportDir))
           .execute();
 
-      try(BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
+      try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
           Charsets.UTF_8)) {
         writeMetaList(secondaryMetaInfoWriter, secondaryZips, dexStore);
       }

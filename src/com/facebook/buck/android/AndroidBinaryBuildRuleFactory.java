@@ -27,7 +27,8 @@ import com.google.common.base.Optional;
 
 import java.util.List;
 
-public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
+public class AndroidBinaryBuildRuleFactory extends
+    AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
 
   @Override
   public AndroidBinaryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
@@ -69,9 +70,10 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     // use_split_dex
     boolean useSplitDex = params.getBooleanAttribute("use_split_dex");
 
-    ZipSplitter.DexSplitStrategy dexSplitStrategy = params.getBooleanAttribute("minimize_primary_dex_size")
-        ? ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
-        : ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
+    ZipSplitter.DexSplitStrategy dexSplitStrategy =
+        params.getBooleanAttribute("minimize_primary_dex_size") ?
+            ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE :
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
 
     // disable_pre_dex
     builder.setDisablePreDex(params.getBooleanAttribute("disable_pre_dex"));
@@ -112,7 +114,8 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     builder.setProguardConfig(proguardConfig);
 
     // resource_compression
-    Optional<String> resourceCompression = params.getOptionalStringAttribute("resource_compression");
+    Optional<String> resourceCompression =
+        params.getOptionalStringAttribute("resource_compression");
     if (resourceCompression.isPresent()) {
       builder.setResourceCompressionMode(resourceCompression.get());
     }

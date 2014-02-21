@@ -44,7 +44,8 @@ import java.io.IOException;
  * Apk that functions as a test package in Android.
  * <p>
  * Android's
- * <a href="http://developer.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
+ * <a href="http://developer.android.com/tools/testing/testing_android.html">
+ *   Testing Fundamentals</a>
  * documentation includes a diagram that shows the relationship between an "application package" and
  * a "test package" when running a test. This corresponds to a test package. Note that a test
  * package has an interesting quirk where it is <em>compiled against</em> an application package,
@@ -159,7 +160,8 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           buildRulesToExcludeFromDex) {
         @Override
         protected ImmutableList<HasAndroidResourceDeps> findMyAndroidResourceDeps() {
-          // Filter out the AndroidResourceRules that are needed by this APK but not the APK under test.
+          // Filter out the AndroidResourceRules that are needed by this APK but not the APK under
+          // test.
           ImmutableSet<HasAndroidResourceDeps> originalResources = ImmutableSet.copyOf(
               UberRDotJavaUtil.getAndroidResourceDeps(apkUnderTest));
           ImmutableList<HasAndroidResourceDeps> instrumentationResources =

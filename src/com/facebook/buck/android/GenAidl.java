@@ -62,7 +62,7 @@ import javax.annotation.Nullable;
  */
 public class GenAidl extends AbstractBuildable {
 
-  private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 
   private final BuildTarget buildTarget;
   private final Path aidlFilePath;

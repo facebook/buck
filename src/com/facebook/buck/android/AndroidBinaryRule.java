@@ -645,7 +645,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     Preconditions.checkArgument(!classpathEntry.isAbsolute(),
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
-    String obfuscatedName = Files.getNameWithoutExtension(classpathEntry.toString()) + "-obfuscated.jar";
+    String obfuscatedName =
+        Files.getNameWithoutExtension(classpathEntry.toString()) + "-obfuscated.jar";
     Path dirName = classpathEntry.getParent();
     Path outputJar = getPathForProGuardDirectory().resolve(dirName).resolve(obfuscatedName);
     return outputJar;
@@ -704,7 +705,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         });
 
     // Run ProGuard on the classpath entries.
-    // TODO: ProGuardObfuscateStep's final argument should be a Path
+    // TODO(user): ProGuardObfuscateStep's final argument should be a Path
     Step obfuscateCommand = ProGuardObfuscateStep.create(
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
@@ -748,7 +749,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Optional<Path> proguardFullConfigFile = Optional.absent();
       Optional<Path> proguardMappingFile = Optional.absent();
       if (packageType.isBuildWithObfuscation()) {
-        proguardFullConfigFile = Optional.of(getPathForProGuardDirectory().resolve("configuration.txt"));
+        proguardFullConfigFile =
+            Optional.of(getPathForProGuardDirectory().resolve("configuration.txt"));
         proguardMappingFile = Optional.of(getPathForProGuardDirectory().resolve("mapping.txt"));
       }
 

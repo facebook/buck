@@ -125,7 +125,8 @@ public class ApkBuilderStep implements Step {
           output);
       builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
-        builder.addNativeLibraries(projectFilesystem.getFileForRelativePath(nativeLibraryDirectory));
+        builder.addNativeLibraries(
+            projectFilesystem.getFileForRelativePath(nativeLibraryDirectory));
       }
       for (String assetDirectory : assetDirectories) {
         builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));

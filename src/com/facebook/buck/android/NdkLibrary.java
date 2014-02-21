@@ -63,7 +63,7 @@ import javax.annotation.Nullable;
  */
 public class NdkLibrary extends AbstractBuildable implements NativeLibraryBuildable {
 
-  private final static BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /** @see NativeLibraryBuildable#isAsset() */
   private final boolean isAsset;

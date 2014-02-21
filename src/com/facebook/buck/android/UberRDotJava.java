@@ -164,7 +164,8 @@ public class UberRDotJava extends AbstractBuildable implements
     Preconditions.checkState(rDotJavaNeedsDexing,
         "Error trying to get R.java dex file: R.java is not supposed to be dexed.");
 
-    final Optional<Integer> linearAllocSizeEstimate = getBuildOutput().rDotJavaDexLinearAllocEstimate;
+    final Optional<Integer> linearAllocSizeEstimate =
+        getBuildOutput().rDotJavaDexLinearAllocEstimate;
     if (!linearAllocSizeEstimate.isPresent()) {
       return Optional.absent();
     }

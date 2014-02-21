@@ -124,14 +124,20 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     return newAndroidLibraryRuleBuilder(Optional.<Path>absent(), Optional.<String>absent(), params);
   }
 
-  public static Builder newAndroidLibraryRuleBuilder(Optional<Path> javac, Optional<String> javacVersion, AbstractBuildRuleBuilderParams params) {
+  public static Builder newAndroidLibraryRuleBuilder(
+      Optional<Path> javac,
+      Optional<String> javacVersion,
+      AbstractBuildRuleBuilderParams params) {
     return new Builder(javac, javacVersion, params);
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
     private Optional<Path> manifestFile = Optional.absent();
 
-    private Builder(Optional<Path> javac, Optional<String> javacVersion, AbstractBuildRuleBuilderParams params) {
+    private Builder(
+        Optional<Path> javac,
+        Optional<String> javacVersion,
+        AbstractBuildRuleBuilderParams params) {
       super(javac, javacVersion, params);
     }
 

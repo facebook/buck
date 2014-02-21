@@ -26,6 +26,10 @@ import java.util.regex.Pattern;
  * Parser for ProGuard-generated mapping files.  Currently only handles class mapping.
  */
 public class ProguardMapping {
+
+  /** Utility class: do not instantiate. */
+  private ProguardMapping() {}
+
   private static final Pattern CLASS_LINE_PATTERN = Pattern.compile("([\\w.$]+) -> ([\\w.$]+):");
 
   public static Map<String, String> readClassMapping(Iterable<String> lines) {
