@@ -49,7 +49,7 @@ public class XmlTestResultParser {
 
   private static TestCaseSummary doParse(String xml) throws IOException {
     Document doc = XmlDomParser.parse(new InputSource(new StringReader(xml)),
-        /* namespaceAware */ false);
+        /* namespaceAware */ true);
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testcase".equals(root.getTagName()));
     String testCaseName = root.getAttribute("name");
