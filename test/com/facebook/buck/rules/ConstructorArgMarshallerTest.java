@@ -61,7 +61,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldNotPopulateAnEmptyArg() {
-    class Dto {
+    class Dto implements ConstructorArg {
     }
 
     Dto dto = new Dto();
@@ -75,7 +75,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateAStringValue() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public String name;
     }
 
@@ -90,7 +90,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateABooleanValue() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public boolean value;
     }
 
@@ -104,7 +104,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateBuildTargetValues() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public BuildTarget target;
       public BuildTarget local;
     }
@@ -123,7 +123,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateANumericValue() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public long number;
     }
 
@@ -137,7 +137,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateAPathValue() {
-    class Dto {
+    class Dto implements ConstructorArg {
       @Hint(name = "some_path")
       public Path somePath;
     }
@@ -152,7 +152,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateSourcePaths() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public SourcePath filePath;
       public SourcePath targetPath;
     }
@@ -173,7 +173,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateAnImmutableSortedSet() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public ImmutableSortedSet<BuildTarget> deps;
     }
 
@@ -193,7 +193,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateSets() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public Set<Path> paths;
     }
 
@@ -211,7 +211,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldPopulateLists() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public List<String> list;
     }
 
@@ -227,7 +227,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void collectionsCanBeOptionalAndWillBeSetToAnOptionalEmptyCollectionIfMissing() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public Optional<Set<BuildTarget>> targets;
     }
 
@@ -242,7 +242,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test(expected = RuntimeException.class)
   public void shouldBeAnErrorToAttemptToSetASingleValueToACollection() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public String file;
     }
 
@@ -255,7 +255,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test(expected = RuntimeException.class)
   public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public Set<String> strings;
     }
 
@@ -268,7 +268,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test(expected = RuntimeException.class)
   public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public Set<String> strings;
     }
 
@@ -282,7 +282,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldNormalizePaths() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public Path path;
     }
 
@@ -297,7 +297,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void lowerBoundGenericTypesCauseAnException() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public List<? super BuildTarget> nope;
     }
 
@@ -309,7 +309,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   public void shouldSetBuildTargetParameters() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public BuildTarget single;
       public BuildTarget sameBuildFileTarget;
       public List<BuildTarget> targets;
@@ -335,7 +335,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldSetBuildRulesIfRequested() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public BuildRule directDep;
     }
 
@@ -356,7 +356,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public List<? extends SourcePath> yup;
     }
 
@@ -374,7 +374,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void canPopulateSimpleConstructorArgFromBuildFactoryParams() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public String required;
       public Optional<String> notRequired;
 
@@ -425,7 +425,7 @@ public class ConstructorArgMarshallerTest {
    * what we want as authors of buildables. Handle that case.
    */
   public void shouldPopulateDefaultValuesAsBeingAbsent() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public Optional<String> noString;
       public Optional<String> defaultString;
 
@@ -448,7 +448,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldResolveBuildRulesFromTargetsAndAssignToFields() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public BuildRule rule;
     }
 
@@ -468,7 +468,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldResolveCollectionOfSourcePaths() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public ImmutableSortedSet<SourcePath> srcs;
     }
 
@@ -497,7 +497,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void shouldBeAbleToSetGenfilesProperly() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public Path path;
       public SourcePath sourcePath;
     }

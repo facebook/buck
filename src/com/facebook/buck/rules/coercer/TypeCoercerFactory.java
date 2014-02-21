@@ -34,6 +34,10 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
 
+/**
+ * Create {@link TypeCoercer}s that can convert incoming java structures (from json) into particular
+ * types.
+ */
 public class TypeCoercerFactory {
   private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();

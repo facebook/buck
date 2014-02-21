@@ -117,7 +117,7 @@ public class DescribedRuleBuilderTest extends EasyMockSupport {
     return params;
   }
 
-  private static class Arg {
+  private static class Arg implements ConstructorArg {
     @SuppressWarnings("unused")
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }

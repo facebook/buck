@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.rules.ConstructorArg;
+
 import java.util.Set;
 import java.nio.file.Path;
 
@@ -23,7 +25,7 @@ import java.nio.file.Path;
  * Arguments common to {@link IosResourceDescription} and
  * {@link OsxResourceDescription}.
  */
-public class AppleResourceDescriptionArg {
+public class AppleResourceDescriptionArg implements ConstructorArg {
   public Set<Path> dirs;
   public Set<Path> files;
 }

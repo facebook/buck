@@ -57,6 +57,7 @@ java_library(
     'BuildRuleType.java',
     'BuildTargetSourcePath.java',
     'CacheResult.java',
+    'ConstructorArg.java',
     'ConstructorArgMarshaller.java',
     'DefaultBuildRuleBuilderParams.java',
     'DefaultOnDiskBuildInfo.java',

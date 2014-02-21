@@ -25,7 +25,7 @@ package com.facebook.buck.rules;
  *           is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  *
  */
-public interface Description<T> {
+public interface Description<T extends ConstructorArg> {
 
   /**
    * @return The {@link BuildRuleType} being described.
@@ -34,7 +34,7 @@ public interface Description<T> {
 
   /**
    * @return An instance of the argument that must later be passed to
-   *     {@link #createBuildable(BuildRuleParams, Object)}.
+   *     {@link #createBuildable(BuildRuleParams, T)}.
    * @see ConstructorArgMarshaller
    *
    */

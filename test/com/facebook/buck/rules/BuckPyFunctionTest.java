@@ -46,7 +46,7 @@ public class BuckPyFunctionTest {
 
   @Test
   public void nameWillBeAddedIfMissing() {
-    class NoName { public String random; }
+    class NoName implements ConstructorArg { public String random; }
 
     String definition = buckPyFunction.toPythonFunction(new BuildRuleType("bad"), new NoName());
 
@@ -55,7 +55,7 @@ public class BuckPyFunctionTest {
 
   @Test
   public void visibilityWillBeAddedIfMissing() {
-    class NoVis { public String random; }
+    class NoVis implements ConstructorArg { public String random; }
 
     String definition = buckPyFunction.toPythonFunction(new BuildRuleType("bad"), new NoVis());
 
@@ -64,7 +64,7 @@ public class BuckPyFunctionTest {
 
   @Test
   public void shouldOnlyIncludeTheNameFieldOnce() {
-    class Named { public String name; }
+    class Named implements ConstructorArg { public String name; }
 
     String definition = buckPyFunction.toPythonFunction(new BuildRuleType("named"), new Named());
 
@@ -83,14 +83,14 @@ public class BuckPyFunctionTest {
 
   @Test(expected = HumanReadableException.class)
   public void theNameFieldMustBeAString() {
-    class BadName { public int name; }
+    class BadName implements ConstructorArg { public int name; }
 
     buckPyFunction.toPythonFunction(new BuildRuleType("nope"), new BadName());
   }
 
   @Test
   public void optionalFieldsAreGivenSensibleDefaultValues() {
-    class LotsOfOptions {
+    class LotsOfOptions implements ConstructorArg {
       public Optional<String> thing;
       public Optional<List<BuildTarget>> targets;
       public Optional<Integer> version;
@@ -104,7 +104,7 @@ public class BuckPyFunctionTest {
 
   @Test
   public void optionalFieldsAreListedAfterMandatoryOnes() {
-    class Either {
+    class Either implements ConstructorArg {
       // Alphabetical ordering is deliberate.
       public Optional<String> cat;
       public String dog;
@@ -133,7 +133,7 @@ public class BuckPyFunctionTest {
 
   @Test(expected = HumanReadableException.class)
   public void visibilityOptionsMustNotBeSetAsTheyArePassedInBuildRuleParamsLater() {
-    class Visible {
+    class Visible implements ConstructorArg {
       public Set<BuildTargetPattern> visibility;
     }
 
@@ -142,7 +142,7 @@ public class BuckPyFunctionTest {
 
   @Test
   public void shouldConvertCamelCaseFieldNameToSnakeCaseParameter() {
-    class Dto {
+    class Dto implements ConstructorArg {
       public String someField;
 
       @Hint(name = "all_this_was_fields")

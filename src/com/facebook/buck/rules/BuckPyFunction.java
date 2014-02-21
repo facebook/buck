@@ -37,7 +37,7 @@ public class BuckPyFunction {
     this.argMarshaller = Preconditions.checkNotNull(argMarshaller);
   }
 
-  public String toPythonFunction(BuildRuleType type, Object dto) {
+  public String toPythonFunction(BuildRuleType type, ConstructorArg dto) {
     Preconditions.checkNotNull(type);
     Preconditions.checkNotNull(dto);
 

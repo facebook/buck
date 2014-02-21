@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -41,7 +42,7 @@ public class ExportFileDescription implements Description<ExportFileDescription.
     return new ExportFile(params, args);
   }
 
-  public class Arg {
+  public class Arg implements ConstructorArg {
     public Optional<? extends SourcePath> src;
     public Optional<String> out;
   }
