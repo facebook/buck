@@ -44,6 +44,7 @@ java_test(
     '//test/com/facebook/buck/util:testutil',
     '//test/com/facebook/buck/util/concurrent:testutil',
     '//test/com/facebook/buck/testutil:testutil',
+    '//third-party/java/asm:asm',
   ],
   source_under_test = [
     '//src/com/facebook/buck/android:exceptions',

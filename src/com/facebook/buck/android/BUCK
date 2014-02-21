@@ -165,6 +165,7 @@ java_library(
     '//src/com/facebook/buck/zip:steps',
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/aosp:aosp',
+    '//third-party/java/asm:asm',
   ],
   visibility = ['PUBLIC'],
 )
