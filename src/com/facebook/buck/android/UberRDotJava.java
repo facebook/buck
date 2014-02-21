@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.UberRDotJava.BuildOutput;
-import com.facebook.buck.java.JavacInMemoryStep;
+import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
@@ -254,7 +254,7 @@ public class UberRDotJava extends AbstractBuildable implements
       Path path = rDotJavaSrc.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java");
       javaSourceFilePaths.add(path);
     }
-    JavacInMemoryStep javac = UberRDotJavaUtil.createJavacInMemoryCommandForRDotJavaFiles(
+    JavacStep javac = UberRDotJavaUtil.createJavacStepForUberRDotJavaFiles(
         javaSourceFilePaths, rDotJavaBin);
     commands.add(javac);
 

@@ -151,11 +151,12 @@ public class RobolectricTestRule extends JavaTestRule {
       AnnotationProcessingParams processingParams =
           getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
+      JavacOptions options = javacOptions.build();
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
 
       AndroidLibraryGraphEnhancer.Result result =
-          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params, options)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ true);
 
@@ -172,7 +173,7 @@ public class RobolectricTestRule extends JavaTestRule {
           contacts,
           proguardConfig,
           additionalClasspathEntries,
-          javacOptions.build(),
+          options,
           allVmArgs.build(),
           sourceUnderTest,
           result.getOptionalDummyRDotJava());

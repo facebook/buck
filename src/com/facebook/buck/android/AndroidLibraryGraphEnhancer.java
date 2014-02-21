@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildRule;
@@ -33,11 +34,13 @@ public class AndroidLibraryGraphEnhancer {
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;
   private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
+  private final JavacOptions javacOptions;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
-      AbstractBuildRuleBuilderParams buildRuleBuilderParams) {
+      AbstractBuildRuleBuilderParams buildRuleBuilderParams,
+      JavacOptions javacOptions) {
     Preconditions.checkNotNull(buildTarget);
     this.dummyRDotJavaBuildTarget = new BuildTarget(
         buildTarget.getBaseName(),
@@ -45,6 +48,14 @@ public class AndroidLibraryGraphEnhancer {
         DUMMY_R_DOT_JAVA_FLAVOR);
     this.originalBuildRuleParams = Preconditions.checkNotNull(buildRuleParams);
     this.buildRuleBuilderParams = Preconditions.checkNotNull(buildRuleBuilderParams);
+    // Override javacoptions because DummyRDotJava doesn't require annotation processing
+    // params data and more importantly, because javacoptions' rule key is not available when
+    // DummyRDotJava is built.
+    Preconditions.checkNotNull(javacOptions);
+    this.javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
+        .setPathToJavac(javacOptions.getPathToJavac())
+        .setJavacVersion(javacOptions.getJavacVersion())
+        .build();
   }
 
   public Result createBuildableForAndroidResources(
@@ -62,7 +73,8 @@ public class AndroidLibraryGraphEnhancer {
         DummyRDotJava
             .newDummyRDotJavaBuildableBuilder(buildRuleBuilderParams)
             .setBuildTarget(dummyRDotJavaBuildTarget)
-            .setAndroidResourceDeps(androidResourceDeps));
+            .setAndroidResourceDeps(androidResourceDeps)
+            .setJavacOptions(javacOptions));
     final DummyRDotJava dummyRDotJava = (DummyRDotJava) dummyRDotJavaBuildRule.getBuildable();
 
     ImmutableSortedSet<BuildRule> totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()

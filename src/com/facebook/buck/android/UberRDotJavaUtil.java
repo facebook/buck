@@ -20,6 +20,9 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.JavacStep;
+import com.facebook.buck.java.JavacStepUtil;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
@@ -142,28 +145,38 @@ public class UberRDotJavaUtil {
         }
       };
 
-  static JavacInMemoryStep createJavacInMemoryCommandForRDotJavaFiles(
+  static JavacStep createJavacStepForUberRDotJavaFiles(
       Set<Path> javaSourceFilePaths, Path outputDirectory) {
-    return createJavacInMemoryCommandForRDotJavaFiles(
-        javaSourceFilePaths, outputDirectory, Optional.<Path>absent());
+    // TODO(user): This method should also take in javacOptions and buildtarget.
+    return createJavacStepForDummyRDotJavaFiles(
+        javaSourceFilePaths,
+        outputDirectory,
+        /* pathToOutputAbiFile */ Optional.<Path>absent(),
+        /* javacOptions */ JavacOptions.DEFAULTS,
+        /* buildTarget */ null);
   }
 
-  static JavacInMemoryStep createJavacInMemoryCommandForRDotJavaFiles(
+  static JavacStep createJavacStepForDummyRDotJavaFiles(
       Set<Path> javaSourceFilePaths,
       Path outputDirectory,
-      Optional<Path> pathToOutputAbiFile) {
+      Optional<Path> pathToOutputAbiFile,
+      JavacOptions javacOptions,
+      BuildTarget buildTarget) {
 
-    ImmutableSet<String> classpathEntries = ImmutableSet.of();
-    return new JavacInMemoryStep(
+    return JavacStepUtil.createJavacStep(
         outputDirectory,
         javaSourceFilePaths,
         ImmutableSet.<String>of(),
-        classpathEntries,
-        JavacOptions.DEFAULTS,
+        /* classpathEntries */ ImmutableSet.<String>of(),
+        JavacOptions.builder(JavacOptions.DEFAULTS)
+            .setPathToJavac(javacOptions.getPathToJavac())
+            .setJavacVersion(javacOptions.getJavacVersion())
+            .build(),
         pathToOutputAbiFile,
         Optional.<String>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
-        /* pathToSrcsList */ Optional.<Path>absent());
+        /* pathToSrcsList */ Optional.<Path>absent(),
+        buildTarget);
   }
 }

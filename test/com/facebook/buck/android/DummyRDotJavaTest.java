@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -72,7 +73,8 @@ public class DummyRDotJavaTest {
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         ImmutableList.<HasAndroidResourceDeps>of(resourceRule1, resourceRule2),
-        BuildTargetFactory.newInstance("//java/base:rule"));
+        BuildTargetFactory.newInstance("//java/base:rule"),
+        JavacOptions.DEFAULTS);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
@@ -108,8 +110,10 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testRDotJavaBinFolder() {
-    DummyRDotJava dummyRDotJava = new DummyRDotJava(ImmutableList.<HasAndroidResourceDeps>of(),
-        BuildTargetFactory.newInstance("//java/com/example:library"));
+    DummyRDotJava dummyRDotJava = new DummyRDotJava(
+        ImmutableList.<HasAndroidResourceDeps>of(),
+        BuildTargetFactory.newInstance("//java/com/example:library"),
+        JavacOptions.DEFAULTS);
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
   }
@@ -118,7 +122,8 @@ public class DummyRDotJavaTest {
   public void testInitializeFromDisk() {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         ImmutableList.<HasAndroidResourceDeps>of(),
-        BuildTargetFactory.newInstance("//java/base:rule"));
+        BuildTargetFactory.newInstance("//java/base:rule"),
+        JavacOptions.DEFAULTS);
 
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     String keyHash = Strings.repeat("a", 40);
@@ -137,10 +142,12 @@ public class DummyRDotJavaTest {
                                                  String pathToAbiOutputFile) {
     Set<Path> javaSourceFiles = ImmutableSet.of(
         Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com.facebook/R.java"));
-    return UberRDotJavaUtil.createJavacInMemoryCommandForRDotJavaFiles(
+    return UberRDotJavaUtil.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,
         Paths.get(rDotJavaClassesFolder),
-        Optional.of(Paths.get(pathToAbiOutputFile)))
+        Optional.of(Paths.get(pathToAbiOutputFile)),
+        /* javacOptions */ JavacOptions.DEFAULTS,
+        /* buildTarget */ null)
         .getDescription(TestExecutionContext.newInstance());
   }
 

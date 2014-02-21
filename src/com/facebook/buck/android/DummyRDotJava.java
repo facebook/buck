@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavacInMemoryStep;
+import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
@@ -63,6 +64,7 @@ public class DummyRDotJava extends AbstractBuildable
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final BuildTarget buildTarget;
+  private final JavacOptions javacOptions;
 
   @VisibleForTesting
   static final String METADATA_KEY_FOR_ABI_KEY = "DUMMY_R_DOT_JAVA_ABI_KEY";
@@ -71,9 +73,11 @@ public class DummyRDotJava extends AbstractBuildable
 
   public DummyRDotJava(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      JavacOptions javacOptions) {
     this.androidResourceDeps = Preconditions.checkNotNull(androidResourceDeps);
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    this.javacOptions = Preconditions.checkNotNull(javacOptions);
   }
 
   @Override
@@ -126,15 +130,19 @@ public class DummyRDotJava extends AbstractBuildable
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi");
 
     // Compile the .java files.
-    final JavacInMemoryStep javacInMemoryStep =
-        UberRDotJavaUtil.createJavacInMemoryCommandForRDotJavaFiles(
-            javaSourceFilePaths, rDotJavaClassesFolder, Optional.of(pathToAbiOutputFile));
-    steps.add(javacInMemoryStep);
+    final JavacStep javacStep =
+        UberRDotJavaUtil.createJavacStepForDummyRDotJavaFiles(
+            javaSourceFilePaths,
+            rDotJavaClassesFolder,
+            Optional.of(pathToAbiOutputFile),
+            javacOptions,
+            buildTarget);
+    steps.add(javacStep);
 
     steps.add(new AbstractExecutionStep("record_abi_key") {
       @Override
       public int execute(ExecutionContext context) {
-        Sha1HashCode abiKey = javacInMemoryStep.getAbiKey();
+        Sha1HashCode abiKey = javacStep.getAbiKey();
         Preconditions.checkNotNull(abiKey,
             "Javac step must create a non-null ABI key for this rule.");
         buildableContext.addMetadata(METADATA_KEY_FOR_ABI_KEY, abiKey.getHash());
@@ -152,7 +160,7 @@ public class DummyRDotJava extends AbstractBuildable
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder;
+    return javacOptions.appendToRuleKey(builder);
   }
 
   private static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {
@@ -183,6 +191,11 @@ public class DummyRDotJava extends AbstractBuildable
 
   public ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps() {
     return androidResourceDeps;
+  }
+
+  @VisibleForTesting
+  JavacOptions getJavacOptions() {
+    return javacOptions;
   }
 
   @Override
@@ -225,6 +238,8 @@ public class DummyRDotJava extends AbstractBuildable
   public static class Builder extends AbstractBuildRuleBuilder<DummyRDotJavaAbiRule> {
 
     @Nullable private ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
+    @Nullable
+    private JavacOptions javacOptions;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -233,7 +248,8 @@ public class DummyRDotJava extends AbstractBuildable
     @Override
     public DummyRDotJavaAbiRule build(BuildRuleResolver ruleResolver) {
       BuildRuleParams params = createBuildRuleParams(ruleResolver);
-      DummyRDotJava dummyRDotJava = new DummyRDotJava(androidResourceDeps, buildTarget);
+      DummyRDotJava dummyRDotJava =
+          new DummyRDotJava(androidResourceDeps, buildTarget, javacOptions);
       return new DummyRDotJavaAbiRule(dummyRDotJava, params);
     }
 
@@ -249,6 +265,11 @@ public class DummyRDotJava extends AbstractBuildable
       for (HasAndroidResourceDeps dep : androidResourceDeps) {
         addDep(dep.getBuildTarget());
       }
+      return this;
+    }
+
+    public Builder setJavacOptions(JavacOptions javacOptions) {
+      this.javacOptions = Preconditions.checkNotNull(javacOptions);
       return this;
     }
   }

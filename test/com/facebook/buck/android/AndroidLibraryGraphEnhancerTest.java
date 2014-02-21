@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.JavaAbiRule;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,7 +50,8 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        new FakeAbstractBuildRuleBuilderParams());
+        new FakeAbstractBuildRuleBuilderParams(),
+        JavacOptions.DEFAULTS);
     Result result = graphEnhancer.createBuildableForAndroidResources(new BuildRuleResolver(),
         /* createdBuildableIfEmptyDeps */ false);
     assertFalse(result.getOptionalDummyRDotJava().isPresent());
@@ -75,7 +78,10 @@ public class AndroidLibraryGraphEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(resourceRule1, resourceRule2));
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
-        buildTarget, buildRuleParams, new FakeAbstractBuildRuleBuilderParams());
+        buildTarget,
+        buildRuleParams,
+        new FakeAbstractBuildRuleBuilderParams(),
+        JavacOptions.DEFAULTS);
     Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
 
@@ -97,5 +103,42 @@ public class AndroidLibraryGraphEnhancerTest {
         ImmutableSet.of("//android_res/com/example:res1", "//android_res/com/example:res2"),
         FluentIterable.from(dummyRDotJavaRule.getDeps())
             .transform(Functions.toStringFunction()).toSet());
+  }
+
+  @Test
+  public void testCreatedBuildableHasOverriddenJavacConfig() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    AndroidResourceRule resourceRule1 = ruleResolver.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
+            .setRDotJavaPackage("com.facebook")
+            .setRes(Paths.get("android_res/com/example/res1")));
+    AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
+        AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
+            .setRDotJavaPackage("com.facebook")
+            .setRes(Paths.get("android_res/com/example/res2")));
+
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParams(
+        buildTarget,
+        ImmutableSortedSet.<BuildRule>of(resourceRule1, resourceRule2));
+
+    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
+        buildTarget,
+        buildRuleParams,
+        new FakeAbstractBuildRuleBuilderParams(),
+        JavacOptions.builder(JavacOptions.DEFAULTS)
+            .setPathToJavac(Optional.of(Paths.get("javac")))
+            .setJavacVersion(Optional.of("1.7"))
+            .build());
+    Result result = graphEnhancer.createBuildableForAndroidResources(ruleResolver,
+        /* createBuildableIfEmptyDeps */ false);
+
+    Optional<DummyRDotJava> dummyRDotJava = result.getOptionalDummyRDotJava();
+    assertTrue(dummyRDotJava.isPresent());
+    JavacOptions javacOptions = dummyRDotJava.get().getJavacOptions();
+    assertEquals(Paths.get("javac"), javacOptions.getPathToJavac().get());
+    assertEquals("1.7", javacOptions.getJavacVersion().get());
   }
 }

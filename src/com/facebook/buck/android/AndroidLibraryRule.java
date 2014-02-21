@@ -125,9 +125,10 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
+      JavacOptions options = javacOptions.build();
 
       AndroidLibraryGraphEnhancer.Result result =
-          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params, options)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ false);
 
@@ -143,7 +144,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           additionalClasspathEntries,
-          javacOptions.build(),
+          options,
           manifestFile);
     }
 

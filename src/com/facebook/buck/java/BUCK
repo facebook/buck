@@ -78,6 +78,7 @@ java_library(
     'JarDirectoryStep.java',
     'JavacInMemoryStep.java',
     'JavacStep.java',
+    'JavacStepUtil.java',
     'JUnitStep.java',
     'ZipEntryJavaFileObject.java',
   ],
