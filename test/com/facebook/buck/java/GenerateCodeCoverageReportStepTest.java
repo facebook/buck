@@ -29,11 +29,11 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
-import java.util.List;
-import java.util.Set;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
 
 public class GenerateCodeCoverageReportStepTest {
 

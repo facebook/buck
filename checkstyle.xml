@@ -42,6 +42,8 @@ page at http://checkstyle.sourceforge.net/config.html -->
 
     -->
 
+    <module name="AvoidStarImport" />
+
     <module name="RedundantImport">
       <!-- Checks for redundant import statements. -->
       <property name="severity" value="error"/>
@@ -51,7 +53,10 @@ page at http://checkstyle.sourceforge.net/config.html -->
       <!-- Checks for out of order import statements. -->
 
       <property name="severity" value="warning"/>
-      <property name="groups" value="com.google,android,junit,net,org,java,javax"/>
+      <!-- Turn off import ordering until we can get IntelliJ to do the right
+            thing by default.
+      -->
+      <property name="ordered" value="false"/>
       <!-- This ensures that static imports go first. -->
       <property name="option" value="top"/>
       <property name="tokens" value="STATIC_IMPORT, IMPORT"/>

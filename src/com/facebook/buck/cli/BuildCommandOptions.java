@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.ArtifactCache;
@@ -40,9 +43,6 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.util.List;
-
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 public class BuildCommandOptions extends AbstractCommandOptions {
 

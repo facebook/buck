@@ -43,6 +43,7 @@ import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -332,7 +333,8 @@ public class AaptPackageResources extends AbstractBuildable {
     }
 
     @Override
-    protected AaptPackageResources newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
+    protected AaptPackageResources newBuildable(BuildRuleParams params,
+        BuildRuleResolver resolver) {
       return new AaptPackageResources(getBuildTarget(),
           manifest,
           uberRDotJava,

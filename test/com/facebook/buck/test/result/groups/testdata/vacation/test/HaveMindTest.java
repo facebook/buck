@@ -16,8 +16,6 @@
 
 package com.example.vacation;
 
-import com.example.vacation.FlagFile;
-
 import org.junit.Test;
 
 public class HaveMindTest {

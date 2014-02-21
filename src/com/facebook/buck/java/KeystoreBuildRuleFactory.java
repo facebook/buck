@@ -17,10 +17,10 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.java.Keystore.Builder;
-import com.facebook.buck.rules.AbstractTestRuleFactory;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractTestRuleFactory;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 
 public class KeystoreBuildRuleFactory extends AbstractTestRuleFactory<Keystore.Builder> {
 

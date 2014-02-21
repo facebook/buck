@@ -24,8 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.util.Set;
 import java.nio.file.Path;
+import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
 

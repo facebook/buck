@@ -16,16 +16,15 @@
 
 package com.facebook.buck.apple.xcode.xcconfig;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.FakeReadonlyProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;

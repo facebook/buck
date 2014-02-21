@@ -16,9 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.common.base.Optional;
 
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**

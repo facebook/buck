@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
@@ -32,9 +35,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
-
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 /**
  * Base class for commands that use the AndroidDebugBridge to run commands on devices.
