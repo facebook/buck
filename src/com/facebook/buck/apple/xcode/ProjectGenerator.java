@@ -62,12 +62,14 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -165,7 +167,7 @@ public class ProjectGenerator {
 
   public void createXcodeProjects() throws IOException {
     try {
-      ImmutableList<BuildRule> allRules = getAllRules(partialGraph, initialTargets);
+      Iterable<BuildRule> allRules = getAllRules(partialGraph, initialTargets);
       for (BuildRule rule : allRules) {
         // Trigger the loading cache to call the generateTargetForBuildRule function.
         buildRuleToXcodeTarget.getUnchecked(rule);
@@ -204,41 +206,30 @@ public class ProjectGenerator {
     }
   }
 
-  private static ImmutableList<BuildRule> getAllRules(
+  private static ImmutableSet<BuildRule> getAllRules(
       PartialGraph graph,
       Iterable<BuildTarget> initialTargets) {
 
-    ImmutableList.Builder<BuildRule> initialRules = ImmutableList.builder();
+    ImmutableList.Builder<BuildRule> initialRulesBuilder = ImmutableList.builder();
     for (BuildTarget target : initialTargets) {
-      BuildRule rule = graph.getDependencyGraph().findBuildRuleByTarget(target);
-      initialRules.add(rule);
+      initialRulesBuilder.add(graph.getDependencyGraph().findBuildRuleByTarget(target));
     }
 
-    final ImmutableList.Builder<BuildRule> buildRules = ImmutableList.builder();
-    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
-        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
-          @Override
-          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
-            return node.getDeps().iterator();
-          }
-          @Override
-          protected void onNodeExplored(BuildRule node) {
-          }
-          @Override
-          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
-            buildRules.addAll(nodesInExplorationOrder);
-          }
-        };
-    try {
-      traversal.traverse(initialRules.build());
-    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
-      throw new HumanReadableException(e,
-          "Cycle detected while gathering build rule dependencies for project generation:\n " +
-              e.getMessage());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    ImmutableSet<BuildRule> buildRules = gatherTransitiveDependencies(initialRulesBuilder.build());
+    ImmutableMultimap<BuildRule, BuildRule> ruleToTestRules = buildRuleToTestRulesMap(graph);
+
+    // Extract the test rules for the initial rules and their dependencies.
+    ImmutableSet.Builder<BuildRule> testRulesBuilder = ImmutableSet.builder();
+    for (BuildRule rule : buildRules) {
+      testRulesBuilder.addAll(ruleToTestRules.get(rule));
     }
-    return buildRules.build();
+    ImmutableSet<BuildRule> additionalBuildRules = gatherTransitiveDependencies(
+        testRulesBuilder.build());
+
+    return ImmutableSet.<BuildRule>builder()
+        .addAll(buildRules)
+        .addAll(additionalBuildRules)
+        .build();
   }
 
   private PBXNativeTarget generateIosLibraryTarget(
@@ -287,7 +278,7 @@ public class ProjectGenerator {
     // -- configurations
     Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
     setTargetConfigurations(rule.getBuildTarget(), target, targetGroup, buildable.getConfigurations(),
-        ImmutableMap.<String, String>of("INFOPLIST_FILE", infoPlistPath.toString()));
+        ImmutableMap.of("INFOPLIST_FILE", infoPlistPath.toString()));
 
     // -- phases
     // TODO (Task #3772930): Go through all dependencies of the rule
@@ -525,8 +516,9 @@ public class ProjectGenerator {
       Path path = Paths.get(framework);
       if (path.startsWith("$SDKROOT")) {
         Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
-        PBXFileReference fileReference = sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(PBXReference.SourceTree.SDKROOT, sdkRootRelativePath));
+        PBXFileReference fileReference =
+            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(PBXReference.SourceTree.SDKROOT, sdkRootRelativePath));
         frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
       } else if (!path.toString().startsWith("$")) {
         // regular path
@@ -780,7 +772,8 @@ public class ProjectGenerator {
                   (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(node).get();
               result.add(target.getProductReference());
             } else if (node.getType().equals(XcodeNativeDescription.TYPE)) {
-              XcodeNative xcodeNative = (XcodeNative) node.getBuildable();
+              XcodeNative xcodeNative =
+                  (XcodeNative) Preconditions.checkNotNull(node.getBuildable());
               PBXFileReference reference = project.getMainGroup()
                   .getOrCreateChildGroupByName("Frameworks")
                   .getOrCreateFileReferenceBySourceTreePath(new SourceTreePath(
@@ -799,5 +792,54 @@ public class ProjectGenerator {
       throw new HumanReadableException(e, e.getMessage());
     }
     return result.build();
+  }
+
+  /**
+   * Create a map from targets to the tests that test them by examining
+   * {@link com.facebook.buck.apple.IosTest#getSourceUnderTest()}.
+   */
+  private static ImmutableMultimap<BuildRule, BuildRule> buildRuleToTestRulesMap(
+      PartialGraph graph) {
+    ImmutableMultimap.Builder<BuildRule, BuildRule> ruleToTestRulesBuilder =
+        ImmutableMultimap.builder();
+    for (BuildTarget target : graph.getTargets()) {
+      BuildRule rule = graph.getDependencyGraph().findBuildRuleByTarget(target);
+      if (rule.getType().equals(IosTestDescription.TYPE)) {
+        IosTest testBuildable = (IosTest) Preconditions.checkNotNull(rule.getBuildable());
+        for (BuildRule sourceRule : testBuildable.getSourceUnderTest()) {
+          ruleToTestRulesBuilder.put(sourceRule, rule);
+        }
+      }
+    }
+    return ruleToTestRulesBuilder.build();
+  }
+
+  private static ImmutableSet<BuildRule> gatherTransitiveDependencies(
+      Iterable<? extends BuildRule> initial) {
+    final ImmutableSet.Builder<BuildRule> buildRulesBuilder = ImmutableSet.builder();
+    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> allDependenciesTraversal =
+        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
+          @Override
+          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
+            return node.getDeps().iterator();
+          }
+          @Override
+          protected void onNodeExplored(BuildRule node) {
+          }
+          @Override
+          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
+            buildRulesBuilder.addAll(nodesInExplorationOrder);
+          }
+        };
+    try {
+      allDependenciesTraversal.traverse(initial);
+    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new HumanReadableException(e,
+          "Cycle detected while gathering build rule dependencies for project generation:\n " +
+              e.getMessage());
+    } catch(IOException e) {
+      throw new RuntimeException(e);
+    }
+    return buildRulesBuilder.build();
   }
 }

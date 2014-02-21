@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -47,6 +48,7 @@ public class IosTest extends AbstractBuildable {
   private final ImmutableSortedSet<SourcePath> resources;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
+  private final ImmutableSortedSet<BuildRule> sourceUnderTest;
 
   public IosTest(IosTestDescription.Arg arg) {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
@@ -54,6 +56,7 @@ public class IosTest extends AbstractBuildable {
     headers = Preconditions.checkNotNull(arg.headers);
     resources = Preconditions.checkNotNull(arg.resources);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
+    sourceUnderTest = Preconditions.checkNotNull(arg.sourceUnderTest);
 
     ImmutableSortedSet.Builder<SourcePath> srcsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlagsBuilder = ImmutableMap.builder();
@@ -80,6 +83,10 @@ public class IosTest extends AbstractBuildable {
 
   public ImmutableMap<SourcePath, String> getPerFileCompilerFlags() {
     return perFileCompilerFlags;
+  }
+
+  public ImmutableSortedSet<BuildRule> getSourceUnderTest() {
+    return sourceUnderTest;
   }
 
   public ImmutableSortedSet<SourcePath> getHeaders() {

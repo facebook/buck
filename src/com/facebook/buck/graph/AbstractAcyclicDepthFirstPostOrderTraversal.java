@@ -44,7 +44,7 @@ public abstract class AbstractAcyclicDepthFirstPostOrderTraversal<T> {
    * @throws CycleException if a cycle is found while performing the traversal.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public void traverse(Iterable<T> initialNodes) throws CycleException, IOException {
+  public void traverse(Iterable<? extends T> initialNodes) throws CycleException, IOException {
     // This corresponds to the current chain of nodes being explored. Enforcing this invariant makes
     // this data structure useful for debugging.
     Deque<Explorable> toExplore = Lists.newLinkedList();
