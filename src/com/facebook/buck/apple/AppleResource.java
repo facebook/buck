@@ -73,7 +73,7 @@ public class AppleResource extends AbstractBuildable {
     Path baseOutputDirectory = Paths.get(
         BuckConstant.BIN_DIR,
         target.getBasePath(),
-        target.getShortName() + ".app"); // TODO: This is hokey, just a hack to get started.
+        target.getShortName() + ".app"); // TODO(user): This is hokey, just a hack to get started.
     if (outputPathSubdirectory.isPresent()) {
       this.outputDirectory = baseOutputDirectory.resolve(outputPathSubdirectory.get());
     } else {

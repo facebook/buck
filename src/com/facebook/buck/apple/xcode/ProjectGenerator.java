@@ -258,7 +258,7 @@ public class ProjectGenerator {
         buildable.getConfigurations(), ImmutableMap.<String, String>of());
 
     // -- build phases
-    // TODO (Task #3772930): Go through all dependencies of the rule
+    // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
@@ -287,11 +287,15 @@ public class ProjectGenerator {
 
     // -- configurations
     Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
-    setTargetConfigurations(rule.getBuildTarget(), target, targetGroup, buildable.getConfigurations(),
-        ImmutableMap.of("INFOPLIST_FILE", infoPlistPath.toString()));
+    setTargetConfigurations(rule.getBuildTarget(),
+        target,
+        targetGroup,
+        buildable.getConfigurations(),
+        ImmutableMap.of(
+            "INFOPLIST_FILE", infoPlistPath.toString()));
 
     // -- phases
-    // TODO (Task #3772930): Go through all dependencies of the rule
+    // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
@@ -333,7 +337,7 @@ public class ProjectGenerator {
         ImmutableMap.of("INFOPLIST_FILE", infoPlistPath.toString()));
 
     // -- phases
-    // TODO (Task #3772930): Go through all dependencies of the rule
+    // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
@@ -886,7 +890,7 @@ public class ProjectGenerator {
       throw new HumanReadableException(e,
           "Cycle detected while gathering build rule dependencies for project generation:\n " +
               e.getMessage());
-    } catch(IOException e) {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
     return buildRulesBuilder.build();

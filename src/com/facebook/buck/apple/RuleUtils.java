@@ -27,6 +27,10 @@ import com.google.common.collect.ImmutableSortedSet;
  * Common conversion functions from raw Description Arg specifications.
  */
 public class RuleUtils {
+
+  /** Utility class: do not instantiate. */
+  private RuleUtils() {}
+
   /**
    * Extract the source paths and flags from the input list and populate the output collections.
    *

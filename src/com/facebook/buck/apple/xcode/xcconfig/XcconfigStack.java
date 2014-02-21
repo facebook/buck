@@ -78,7 +78,8 @@ public final class XcconfigStack {
    * Builder class for XcconfigStack objects.
    *
    * Layers and settings are taken by increasing order of priority (last one wins).
-   * $(inherited) tokens are replaced by (internal, generated, indirect) references to the previous layers.
+   * $(inherited) tokens are replaced by (internal, generated, indirect) references to the previous
+   * layers.
    */
   public static class Builder {
 
@@ -219,7 +220,8 @@ public final class XcconfigStack {
     public XcconfigStack build() {
       pushLayer();
 
-      ImmutableMultimap.Builder<String, PredicatedConfigValue> builder = ImmutableMultimap.builder();
+      ImmutableMultimap.Builder<String, PredicatedConfigValue> builder =
+          ImmutableMultimap.builder();
       List<String> keys = new ArrayList<String>(stack.keySet());
       Collections.sort(keys);
       for (String key : keys) {

@@ -103,7 +103,8 @@ public class IosTest extends AbstractBuildable {
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
+  public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+      throws IOException {
     return ImmutableList.of();
   }
 
