@@ -161,12 +161,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final Path primaryDexPath;
   private final UberRDotJava uberRDotJava;
-  private final AaptPackageResources aaptPackageResourcesBuildable;
+  private final AaptPackageResources aaptPackageResources;
   private final Optional<PreDexMerge> preDexMerge;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
-  private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
   /**
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
@@ -189,12 +188,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<TargetCpuType> cpuFilters,
       Path primaryDexPath,
       UberRDotJava uberRDotJava,
-      AaptPackageResources aaptPackageResourcesBuildable,
+      AaptPackageResources aaptPackageResources,
       Optional<PreDexMerge> preDexMerge,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      AndroidTransitiveDependencyGraph transitiveDependencyGraph) {
+      AndroidResourceDepsFinder androidResourceDepsFinder) {
     super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
@@ -210,12 +208,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
-    this.aaptPackageResourcesBuildable = Preconditions.checkNotNull(aaptPackageResourcesBuildable);
+    this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
-    this.transitiveDependencyGraph = Preconditions.checkNotNull(transitiveDependencyGraph);
   }
 
   @Override
@@ -252,10 +249,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   public ImmutableSortedSet<BuildRule> getBuildRulesToExcludeFromDex() {
     return buildRulesToExcludeFromDex;
-  }
-
-  public AndroidTransitiveDependencyGraph getTransitiveDependencyGraph() {
-    return transitiveDependencyGraph;
   }
 
   public Optional<SourcePath> getProguardConfig() {
@@ -424,7 +417,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         steps);
 
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
-        aaptPackageResourcesBuildable.getResourceApkPath(),
+        aaptPackageResources.getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
         /* javaResourcesDirectories */ ImmutableSet.<String>of(),
@@ -680,7 +673,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Generate a file of ProGuard config options using aapt.
     Path generatedProGuardConfig = proguardDirectory.resolve("proguard.txt");
     GenProGuardConfigStep genProGuardConfig = new GenProGuardConfigStep(
-        aaptPackageResourcesBuildable.getAndroidManifestXml(),
+        aaptPackageResources.getAndroidManifestXml(),
         resDirectories,
         generatedProGuardConfig);
     steps.add(genProGuardConfig);
@@ -730,7 +723,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    *     their way into the final APK structure (but not necessarily into the
    *     primary dex).
    * @param secondaryDexDirectories The contract for updating this builder must match that
-   *     of {@link #mergePreDexedArtifactsIntoMultipleDexFiles}.
+   *     of {@link PreDexMerge#getSecondaryDexDirectories()}.
    * @param steps List of steps to add to.
    * @param primaryDexPath Output path for the primary dex file.
    */
@@ -1017,8 +1010,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           dexEnhancementResult.getPreDexMerge(),
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,
-          androidResourceDepsFinder,
-          androidTransitiveDependencyGraph);
+          androidResourceDepsFinder);
     }
 
     @Override

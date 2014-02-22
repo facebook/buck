@@ -65,8 +65,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResourcesBuildable,
       AndroidResourceDepsFinder androidResourceDepsFinder,
-      ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk,
-      AndroidTransitiveDependencyGraph androidTransitiveDependencyGraph) {
+      ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk) {
     super(buildRuleParams,
         manifest,
         apkUnderTest.getTarget(),
@@ -87,8 +86,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         Optional.<PreDexMerge>absent(),
         apkUnderTest.getPreprocessJavaClassesDeps(),
         apkUnderTest.getPreprocessJavaClassesBash(),
-        androidResourceDepsFinder,
-        androidTransitiveDependencyGraph);
+        androidResourceDepsFinder);
     this.apkUnderTest = apkUnderTest;
     this.classpathDepsForInstrumentationApk = Preconditions.checkNotNull(
         classpathDepsForInstrumentationApk);
@@ -200,8 +198,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           aaptEnhancementResult.getUberRDotJava(),
           aaptEnhancementResult.getAaptPackageResources(),
           androidResourceDepsFinder,
-          getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()),
-          androidTransitiveDependencyGraph);
+          getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()));
     }
 
     public Builder setManifest(SourcePath manifest) {
