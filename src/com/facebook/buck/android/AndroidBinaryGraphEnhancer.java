@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidBinaryRule.PackageType;
 import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibraryRule;
 import com.facebook.buck.model.BuildTarget;
@@ -40,6 +40,7 @@ public class AndroidBinaryGraphEnhancer {
 
   private static final String DEX_FLAVOR = "dex";
   private static final String DEX_MERGE_FLAVOR = "dex_merge";
+  private static final String RESOURCES_FILTER_FLAVOR = "resources_filter";
   private static final String UBER_R_DOT_JAVA_FLAVOR = "uber_r_dot_java";
   private static final String AAPT_PACKAGE_FLAVOR = "aapt_package";
 
@@ -136,16 +137,27 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<TargetCpuType> cpuFilters,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
-    BuildTarget buildTargetForResources = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
+    BuildTarget buildTargetForFilterResources =
+        createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR);
+    BuildRule resourcesFilterBuildRule = ruleResolver.buildAndAddToIndex(
+        ResourcesFilter
+            .newResourcesFilterBuilder(buildRuleBuilderParams)
+            .setBuildTarget(buildTargetForFilterResources)
+            .setResourceCompressionMode(resourceCompressionMode)
+            .setResourceFilter(resourceFilter)
+            .setAndroidResourceDepsFinder(androidResourceDepsFinder));
+    ResourcesFilter resourcesFilter = (ResourcesFilter) resourcesFilterBuildRule.getBuildable();
+
+    BuildTarget buildTargetForUberRDotJava = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
     BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
         UberRDotJava
             .newUberRDotJavaBuilder(buildRuleBuilderParams)
-            .setBuildTarget(buildTargetForResources)
-            .setResourceCompressionMode(resourceCompressionMode)
-            .setResourceFilter(resourceFilter)
+            .setBuildTarget(buildTargetForUberRDotJava)
+            .setResourcesFilter(resourcesFilter)
             .setAndroidResourceDepsFinder(androidResourceDepsFinder)
             .setRDotJavaNeedsDexing(rDotJavaNeedsDexing)
-            .setBuildStringSourceMap(shouldBuildStringSourceMap));
+            .setBuildStringSourceMap(shouldBuildStringSourceMap)
+    );
     UberRDotJava uberRDotJava = (UberRDotJava) uberRDotJavaBuildRule.getBuildable();
 
     // Create the AaptPackageResourcesBuildable.
@@ -155,6 +167,7 @@ public class AndroidBinaryGraphEnhancer {
             .newAaptPackageResourcesBuildableBuilder(buildRuleBuilderParams)
             .setBuildTarget(buildTargetForAapt)
             .setAllParams(manifest,
+                resourcesFilter,
                 uberRDotJava,
                 androidResourceDepsFinder.getAndroidTransitiveDependencies()
                     .nativeTargetsWithAssets,
@@ -164,11 +177,12 @@ public class AndroidBinaryGraphEnhancer {
         (AaptPackageResources) aaptPackageResourcesBuildRule.getBuildable();
 
     totalDeps
+        .add(resourcesFilterBuildRule)
         .add(uberRDotJavaBuildRule)
         .add(aaptPackageResourcesBuildRule)
         .build();
 
-    return new AaptEnhancementResult(uberRDotJava, aaptPackageResources);
+    return new AaptEnhancementResult(resourcesFilter, uberRDotJava, aaptPackageResources);
   }
 
   /**
@@ -182,16 +196,22 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   static class AaptEnhancementResult {
+    private final ResourcesFilter resourcesFilter;
     private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
 
     public AaptEnhancementResult(
+        ResourcesFilter resourcesFilter,
         UberRDotJava uberRDotJava,
         AaptPackageResources aaptPackageBuildable) {
+      this.resourcesFilter = resourcesFilter;
       this.uberRDotJava = uberRDotJava;
       this.aaptPackageResources = aaptPackageBuildable;
     }
 
+    public ResourcesFilter getResourcesFilter() {
+      return resourcesFilter;
+    }
 
     public UberRDotJava getUberRDotJava() {
       return uberRDotJava;

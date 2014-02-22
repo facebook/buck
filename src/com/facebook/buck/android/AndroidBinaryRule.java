@@ -20,8 +20,8 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.android.common.SdkConstants;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -160,6 +160,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final Path primaryDexPath;
+  private final ResourcesFilter resourcesFilter;
   private final UberRDotJava uberRDotJava;
   private final AaptPackageResources aaptPackageResources;
   private final Optional<PreDexMerge> preDexMerge;
@@ -187,6 +188,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       ResourceCompressionMode resourceCompressionMode,
       Set<TargetCpuType> cpuFilters,
       Path primaryDexPath,
+      ResourcesFilter resourcesFilter,
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResources,
       Optional<PreDexMerge> preDexMerge,
@@ -207,6 +209,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
+    this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
@@ -269,6 +272,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   public ImmutableSet<TargetCpuType> getCpuFilters() {
     return this.cpuFilters;
+  }
+
+  @VisibleForTesting
+  ResourcesFilter getResourcesFilter() {
+    return resourcesFilter;
   }
 
   public UberRDotJava getUberRDotJava() {
@@ -413,7 +421,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         context,
         transitiveDependencies,
         dexTransitiveDependencies,
-        uberRDotJava.getResDirectories(),
+        resourcesFilter.getResDirectories(),
         buildableContext,
         steps);
 
@@ -1010,6 +1018,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           resourceCompressionMode,
           cpuFilters.build(),
           primaryDexPath,
+          aaptEnhancementResult.getResourcesFilter(),
           aaptEnhancementResult.getUberRDotJava(),
           aaptEnhancementResult.getAaptPackageResources(),
           dexEnhancementResult.getPreDexMerge(),

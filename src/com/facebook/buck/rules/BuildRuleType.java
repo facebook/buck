@@ -46,6 +46,7 @@ public final class BuildRuleType {
   // Internal rule types. Denoted by leading trailing underscore.
   public static final BuildRuleType AAPT_PACKAGE = new BuildRuleType("_aapt_package");
   public static final BuildRuleType DUMMY_R_DOT_JAVA = new BuildRuleType("_dummy_r_dot_java");
+  public static final BuildRuleType RESOURCES_FILTER = new BuildRuleType("_resources_filter");
   public static final BuildRuleType PRE_DEX = new BuildRuleType("_pre_dex");
   public static final BuildRuleType DEX_MERGE = new BuildRuleType("_dex_merge");
   public static final BuildRuleType UBER_R_DOT_JAVA = new BuildRuleType("_uber_r_dot_java");

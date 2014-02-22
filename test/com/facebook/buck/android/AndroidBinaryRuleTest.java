@@ -381,14 +381,14 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
     Set<Path> resourceDirectories = ImmutableSet.of(Paths.get("one"), Paths.get("two"));
 
-    FilterResourcesStep filterResourcesStep = buildRule.getUberRDotJava()
+    FilterResourcesStep filterResourcesStep = buildRule.getResourcesFilter()
         .createFilterResourcesStep(resourceDirectories,
             /* whitelistedStringsDir */ ImmutableSet.<Path>of());
 
     assertEquals(
         ImmutableSet.of(
-            Paths.get("buck-out/bin/__filtered__target#uber_r_dot_java__/0"),
-            Paths.get("buck-out/bin/__filtered__target#uber_r_dot_java__/1")),
+            Paths.get("buck-out/bin/__filtered__target#resources_filter__/0"),
+            Paths.get("buck-out/bin/__filtered__target#resources_filter__/1")),
         filterResourcesStep.getOutputResourceDirs());
   }
 

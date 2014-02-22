@@ -58,13 +58,15 @@ public class AaptPackageResourcesTest {
    */
   @Test
   public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() throws IOException {
+    ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(uberRDotJava);
+    EasyMock.replay(resourcesFilter, uberRDotJava);
 
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+        resourcesFilter,
         uberRDotJava,
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of());
@@ -77,7 +79,7 @@ public class AaptPackageResourcesTest {
         /* assetsDirectories */ ImmutableSet.<Path>of(),
         commands,
         new FakeDirectoryTraverser());
-    EasyMock.verify(uberRDotJava);
+    EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that no assets/ directory is used.
     assertFalse("There should not be an assets/ directory to pass to aapt.",
@@ -107,8 +109,9 @@ public class AaptPackageResourcesTest {
         null, /* resDirectory */
         "java/src/com/facebook/base/assets2",
         null /* nativeLibsDirectory */);
+    ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(uberRDotJava);
+    EasyMock.replay(resourcesFilter, uberRDotJava);
 
     AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver
         .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
@@ -117,6 +120,7 @@ public class AaptPackageResourcesTest {
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+        resourcesFilter,
         uberRDotJava,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
@@ -140,7 +144,7 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         assetsDirectories, commands, traverser);
-    EasyMock.verify(uberRDotJava);
+    EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that the existing assets/ directory will be passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
@@ -173,13 +177,15 @@ public class AaptPackageResourcesTest {
         null, /* resDirectory */
         "facebook/base/assets2",
         null /* nativeLibsDirectory */);
+    ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(uberRDotJava);
+    EasyMock.replay(resourcesFilter, uberRDotJava);
 
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("facebook/base/AndroidManifest.xml"),
+        resourcesFilter,
         uberRDotJava,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
@@ -216,7 +222,7 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         assetsDirectories, commands, traverser);
-    EasyMock.verify(uberRDotJava);
+    EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that an assets/ directory will be created and passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
