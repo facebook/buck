@@ -30,7 +30,8 @@ import java.util.List;
 
 public class ProjectCommandOptions extends AbstractCommandOptions {
 
-  @Option(name = "--output-path", usage = "project output path, only applicable for 'xcode' target.")
+  @Option(name = "--output-path",
+          usage = "project output path, only applicable for 'xcode' target.")
   private String outputPath;
 
 

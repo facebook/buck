@@ -333,8 +333,13 @@ public class ProjectGenerator {
 
     // -- configurations
     Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
-    setTargetConfigurations(rule.getBuildTarget(), target, targetGroup, buildable.getConfigurations(),
-        ImmutableMap.of("INFOPLIST_FILE", infoPlistPath.toString()));
+    setTargetConfigurations(
+        rule.getBuildTarget(),
+        target,
+        targetGroup,
+        buildable.getConfigurations(),
+        ImmutableMap.of(
+            "INFOPLIST_FILE", infoPlistPath.toString()));
 
     // -- phases
     // TODO(Task #3772930): Go through all dependencies of the rule
@@ -424,7 +429,7 @@ public class ProjectGenerator {
   }
 
   private void addRunScriptBuildPhase(PBXNativeTarget target, Genrule rule) {
-    // TODO: Check and validate dependencies of the script. If it depends on libraries etc.
+    // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
     // we can't handle it currently.
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
     target.getBuildPhases().add(shellScriptBuildPhase);

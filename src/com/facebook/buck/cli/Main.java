@@ -173,7 +173,8 @@ public final class Main {
         ProjectFilesystem projectFilesystem) {
       // Enable the web httpserver if it is given by command line parameter or specified in
       // .buckconfig. The presence of a port number is sufficient.
-      Optional<String> serverPort = Optional.fromNullable(System.getProperty("buck.httpserver.port"));
+      Optional<String> serverPort =
+          Optional.fromNullable(System.getProperty("buck.httpserver.port"));
       if (!serverPort.isPresent()) {
         serverPort = config.getValue("httpserver", "port");
       }
@@ -184,7 +185,8 @@ public final class Main {
           int port = Integer.parseInt(rawPort, 10);
           webServer = Optional.of(new WebServer(port, projectFilesystem, STATIC_CONTENT_DIRECTORY));
         } catch (NumberFormatException e) {
-          console.printErrorText(String.format("Could not parse port for httpserver: %s.", rawPort));
+          console.printErrorText(
+              String.format("Could not parse port for httpserver: %s.", rawPort));
           webServer = Optional.absent();
         }
       } else {
@@ -268,7 +270,7 @@ public final class Main {
     }
   }
 
-  @Nullable volatile private static Daemon daemon;
+  @Nullable private static volatile Daemon daemon;
 
   /**
    * Get or create Daemon.
@@ -360,7 +362,8 @@ public final class Main {
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
-  public int runMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args) throws IOException {
+  public int runMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
+      throws IOException {
     if (args.length == 0) {
       return usage();
     }

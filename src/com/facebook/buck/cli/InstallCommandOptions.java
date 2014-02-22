@@ -93,8 +93,8 @@ public class InstallCommandOptions extends BuildCommandOptions {
     return installViaSd;
   }
 
-
-  public @Nullable String getActivityToStart() {
+  @Nullable
+  public String getActivityToStart() {
     return activity;
   }
 

@@ -647,7 +647,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     } else if (isRunningWithTestSelectors) {
       // As a feature to aid developers, we'll assume that when we are using test selectors,
       // we should always run each test (and never look at the cache.)
-      // TODO When #3090004 and #3436849 are closed we can respect the cache again.
+      // TODO(user) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
     } else if (((successType = test.getBuildResultType()) != null)
                && successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY

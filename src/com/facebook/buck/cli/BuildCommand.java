@@ -123,7 +123,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       build.getStepRunner().getListeningExecutorService().shutdown();
     }
 
-    getBuckEventBus().post(BuildEvent.finished(buildTargets,exitCode));
+    getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
 
     if (exitCode != 0) {
       return exitCode;

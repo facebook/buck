@@ -56,7 +56,7 @@ class TestLabelOptions {
       name = "--exclude",
       usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN.",
       handler = LabelsOptionHandler.class)
-  private Map<Integer,LabelSelector> excludedLabelSets;
+  private Map<Integer, LabelSelector> excludedLabelSets;
 
   @Option(
       name = "--labels",
@@ -66,13 +66,13 @@ class TestLabelOptions {
           "The first matching statement is used to decide whether to " +
           "include or exclude a test rule.",
       handler = LabelsOptionHandler.class)
-  private Map<Integer,LabelSelector> includedLabelSets;
+  private Map<Integer, LabelSelector> includedLabelSets;
 
   private Supplier<ImmutableList<LabelSelector>> supplier =
       Suppliers.memoize(new Supplier<ImmutableList<LabelSelector>>() {
         @Override
         public ImmutableList<LabelSelector> get() {
-          TreeMap<Integer,LabelSelector> all = Maps.newTreeMap();
+          TreeMap<Integer, LabelSelector> all = Maps.newTreeMap();
           all.putAll(includedLabelSets);
 
           // Invert the sense of anything given to --exclude.
@@ -95,7 +95,8 @@ class TestLabelOptions {
       }
     }
 
-    List<String> defaultRawExcludedLabelSelectors = buckConfig.getDefaultRawExcludedLabelSelectors();
+    List<String> defaultRawExcludedLabelSelectors =
+        buckConfig.getDefaultRawExcludedLabelSelectors();
     for (String raw : defaultRawExcludedLabelSelectors) {
       LabelSelector labelSelector = LabelSelector.fromString(raw).invert();
       if (labelSelector.matches(rawLabels)) {
@@ -113,7 +114,7 @@ class TestLabelOptions {
     return defaultResult;
   }
 
-  public static class LabelsOptionHandler extends OptionHandler<Map<Integer,LabelSelector>> {
+  public static class LabelsOptionHandler extends OptionHandler<Map<Integer, LabelSelector>> {
 
     /**
      * Shared across all instances of this handler, to keep track of the order of label rules given
@@ -121,12 +122,12 @@ class TestLabelOptions {
      */
     private static final AtomicInteger ordinal = new AtomicInteger();
 
-    private final Map<Integer,LabelSelector> labels = Maps.newHashMap();
+    private final Map<Integer, LabelSelector> labels = Maps.newHashMap();
 
     public LabelsOptionHandler(
         CmdLineParser parser,
         OptionDef option,
-        Setter<Map<Integer,LabelSelector>> setter) throws CmdLineException {
+        Setter<Map<Integer, LabelSelector>> setter) throws CmdLineException {
       super(parser, option, setter);
       setter.addValue(labels);
     }

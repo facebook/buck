@@ -65,7 +65,7 @@ public class AuditCommandRunner implements CommandRunner {
   }
 
   private void printUsage() {
-    // TODO: implement better way of showing help
+    // TODO(user): implement better way of showing help
     console.getStdOut().println("buck audit <cmd>");
     for (Map.Entry<String, ? extends AbstractCommandRunner<?>> entry :
         getAuditCommands().entrySet()) {

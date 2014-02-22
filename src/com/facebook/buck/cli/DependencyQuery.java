@@ -49,7 +49,7 @@ public class DependencyQuery {
     + "-(\\d*|\\*)>"
     + "(?:\\s+|$)(\\S*)\\s*");
 
-  // TODO: Convert build rules from strings to BuildTargets
+  // TODO(user): Convert build rules from strings to BuildTargets
   private final String target;
   private final Optional<String> source;
   private final Optional<Integer> depth;

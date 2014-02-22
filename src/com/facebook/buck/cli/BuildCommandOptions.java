@@ -81,7 +81,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       });
 
   private void setNumThreadsFromConfig(BuckConfig buckConfig) {
-    ImmutableMap<String,String> build = buckConfig.getEntriesForSection("build");
+    ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
     if (build.containsKey("threads")) {
       try {
         numThreads = Integer.parseInt(build.get("threads"));
