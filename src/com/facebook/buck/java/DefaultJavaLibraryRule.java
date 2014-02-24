@@ -124,10 +124,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       transitiveClasspathEntriesSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
-  private final JavacOptions javacOptions;
-  private final Optional<Path> javac;
-  private final Optional<String> javacVersion;
-  @Nullable private JavaLibraryRule.Data buildOutput;
+
+  private JavacOptions javacOptions;
+
+  @Nullable
+  private JavaLibraryRule.Data buildOutput;
 
   /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
@@ -173,28 +174,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       Set<BuildRule> exportedDeps,
       ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions) {
-    this(
-        buildRuleParams,
-        srcs,
-        resources,
-        proguardConfig,
-        exportedDeps,
-        additionalClasspathEntries,
-        javacOptions,
-        Optional.<Path>absent(),
-        Optional.<String>absent());
-  }
 
-  protected DefaultJavaLibraryRule(
-      BuildRuleParams buildRuleParams,
-      Set<Path> srcs,
-      Set<? extends SourcePath> resources,
-      Optional<Path> proguardConfig,
-      Set<BuildRule> exportedDeps,
-      ImmutableSet<String> additionalClasspathEntries,
-      JavacOptions javacOptions,
-      Optional<Path> javac,
-      Optional<String> javacVersion) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
@@ -202,8 +182,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
     this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.javac = Preconditions.checkNotNull(javac);
-    this.javacVersion = Preconditions.checkNotNull(javacVersion);
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -245,7 +223,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
    * @param outputDirectory Directory to write class files to
    * @param transitiveClasspathEntries Classpaths of all transitive dependencies.
    * @param declaredClasspathEntries Classpaths of all declared dependencies.
-   * @param javacOptions options to use when compiling code.
+   * @param javacOptions javac configuration.
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
    * @param commands List of steps to add to.
    * @return a {@link Supplier} that will return the ABI for this rule after javac is executed.
@@ -259,7 +237,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       BuildDependencies buildDependencies,
       Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRules,
       ImmutableList.Builder<Step> commands,
-      Optional<Path> javac,
       BuildTarget target) {
     // Make sure that this directory exists because ABI information will be written here.
     Step mkdir = new MakeCleanDirectoryStep(getPathToAbiOutputDir());
@@ -273,7 +250,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
       final JavacStep javacStep;
-      if (javac.isPresent()) {
+      if (javacOptions.getPathToJavac().isPresent()) {
         javacStep = new ExternalJavacStep(
             outputDirectory,
             getJavaSrcs(),
@@ -285,7 +262,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             buildDependencies,
             suggestBuildRules,
             Optional.of(pathToSrcsList),
-            javac.get(),
             target);
       } else {
         javacStep = new JavacInMemoryStep(
@@ -414,11 +390,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) throws IOException {
     super.appendToRuleKey(builder);
-    javacOptions.appendToRuleKey(builder);
-    if (javac.isPresent() && javacVersion.isPresent()) {
-      builder.set("javacVersion", javacVersion.get());
-    }
-    return builder;
+    return javacOptions.appendToRuleKey(builder);
   }
 
   @Override
@@ -483,10 +455,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    JavacOptions javacOptions = this.javacOptions;
     // Only override the bootclasspath if this rule is supposed to compile Android code.
     if (getProperties().is(ANDROID)) {
-      javacOptions = JavacOptions.builder(this.javacOptions)
+      this.javacOptions = JavacOptions.builder(javacOptions)
           .setBootclasspath(context.getAndroidBootclasspathSupplier().get())
           .build();
     }
@@ -533,7 +504,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         context.getBuildDependencies(),
         suggestBuildRule,
         steps,
-        javac,
         getBuildTarget());
 
 
@@ -713,7 +683,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
   @VisibleForTesting
   public Optional<Path> getJavac() {
-    return javac;
+    return javacOptions.getPathToJavac();
   }
 
   @VisibleForTesting
@@ -803,8 +773,6 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     protected Set<BuildTarget> exportedDeps = Sets.newHashSet();
     protected JavacOptions.Builder javacOptions = JavacOptions.builder();
     protected Optional<Path> proguardConfig = Optional.absent();
-    protected final Optional<Path> javac;
-    protected final Optional<String> javacVersion;
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
       this(Optional.<Path>absent(), Optional.<String>absent(), params);
@@ -814,9 +782,10 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         Optional<String> javacVersion,
         AbstractBuildRuleBuilderParams params) {
       super(params);
-      this.javac = javac;
-      this.javacVersion = javacVersion;
       this.params = params;
+
+      javacOptions.setPathToJavac(javac);
+      javacOptions.setJavacVersion(javacVersion);
     }
 
     @Override
@@ -834,9 +803,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           /* additionaLClasspathEntries */ ImmutableSet.<String>of(),
-          javacOptions.build(),
-          javac,
-          javacVersion);
+          javacOptions.build());
     }
 
     public AnnotationProcessingParams.Builder getAnnotationProcessingBuilder() {

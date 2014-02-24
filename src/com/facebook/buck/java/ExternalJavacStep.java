@@ -38,7 +38,7 @@ import java.util.Set;
 
 public class ExternalJavacStep extends JavacStep {
 
-  private final Path javac;
+  private final Path pathToJavac;
   private final BuildTarget target;
 
   public ExternalJavacStep(
@@ -52,7 +52,6 @@ public class ExternalJavacStep extends JavacStep {
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList,
-      Path javac,
       BuildTarget target) {
     super(outputDirectory,
         javaSourceFilePaths,
@@ -64,13 +63,13 @@ public class ExternalJavacStep extends JavacStep {
         buildDependencies,
         suggestBuildRules,
         pathToSrcsList);
-    this.javac = Preconditions.checkNotNull(javac);
+    this.pathToJavac = javacOptions.getPathToJavac().get();
     this.target = Preconditions.checkNotNull(target);
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    StringBuilder builder = new StringBuilder(javac.toString());
+    StringBuilder builder = new StringBuilder(pathToJavac.toString());
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, getOptions(context, getClasspathEntries()));
     builder.append(" ");
@@ -86,13 +85,13 @@ public class ExternalJavacStep extends JavacStep {
 
   @Override
   public String getShortName() {
-    return javac.toString();
+    return pathToJavac.toString();
   }
 
   @Override
   protected int buildWithClasspath(ExecutionContext context, Set<String> buildClasspathEntries) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.add(javac.toString());
+    command.add(pathToJavac.toString());
     command.addAll(getOptions(context, buildClasspathEntries));
 
     // Add sources file or sources list to command

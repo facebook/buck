@@ -47,8 +47,9 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
         proguardConfig,
         exportedDeps,
         /* addtionalClasspathEntries */ ImmutableSet.<String>of(),
-        JavacOptions.builder().setAnnotationProcessingData(annotationProcessingParams).build()
-    );
+        JavacOptions.builder()
+            .setAnnotationProcessingData(annotationProcessingParams)
+            .build());
 
     this.ruleInputsAreCached = ruleInputsAreCached;
   }

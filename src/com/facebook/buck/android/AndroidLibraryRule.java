@@ -52,28 +52,6 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   private final Optional<Path> manifestFile;
 
   @VisibleForTesting
-  public AndroidLibraryRule(
-      BuildRuleParams buildRuleParams,
-      Set<Path> srcs,
-      Set<SourcePath> resources,
-      Optional<Path> proguardConfig,
-      Set<BuildRule> exportedDeps,
-      ImmutableSet<String> additionalClasspathEntries,
-      JavacOptions javacOptions,
-      Optional<Path> manifestFile) {
-    this(buildRuleParams,
-        srcs,
-        resources,
-        proguardConfig,
-        exportedDeps,
-        additionalClasspathEntries,
-        javacOptions,
-        Optional.<Path>absent(),
-        Optional.<String>absent(),
-        manifestFile);
-  }
-
-  @VisibleForTesting
   public AndroidLibraryRule(BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
@@ -81,8 +59,6 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
       Set<BuildRule> exportedDeps,
       ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
-      Optional<Path> javac,
-      Optional<String> javacVersion,
       Optional<Path> manifestFile) {
     super(buildRuleParams,
         srcs,
@@ -90,9 +66,7 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
         proguardConfig,
         exportedDeps,
         additionalClasspathEntries,
-        javacOptions,
-        javac,
-        javacVersion);
+        javacOptions);
     this.manifestFile = Preconditions.checkNotNull(manifestFile);
   }
 
@@ -170,8 +144,6 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
           additionalClasspathEntries,
           javacOptions.build(),
-          javac,
-          javacVersion,
           manifestFile);
     }
 

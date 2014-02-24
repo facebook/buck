@@ -190,8 +190,7 @@ public class DefaultJavaLibraryRuleTest {
         /* proguargConfig */ Optional.<Path>absent(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<String>of(),
-        JavacOptions.DEFAULTS
-        );
+        JavacOptions.DEFAULTS);
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -1006,8 +1005,7 @@ public class DefaultJavaLibraryRuleTest {
         /* proguardConfig */ Optional.<Path>absent(),
         exportedDeps,
         /* additionalClasspathEntries */ ImmutableSet.<String>of(),
-        JavacOptions.builder().build()
-        ) {
+        JavacOptions.DEFAULTS) {
       @Override
       public Sha1HashCode getAbiKey() {
         if (partialAbiHash == null) {
@@ -1172,13 +1170,12 @@ public class DefaultJavaLibraryRuleTest {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     rule.createCommandsForJavac(
         rule.getPathToOutputFile(),
-        ImmutableSet.<String>copyOf(rule.getTransitiveClasspathEntries().values()),
-        ImmutableSet.<String>copyOf(rule.getDeclaredClasspathEntries().values()),
+        ImmutableSet.copyOf(rule.getTransitiveClasspathEntries().values()),
+        ImmutableSet.copyOf(rule.getDeclaredClasspathEntries().values()),
         JavacOptions.DEFAULTS,
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacStep.SuggestBuildRules>absent(),
         stepsBuilder,
-        Optional.<Path>absent(),
         libraryOneTarget
     );
 
@@ -1199,15 +1196,17 @@ public class DefaultJavaLibraryRuleTest {
             .addSrc(Paths.get("java/src/com/libone/Bar.java")));
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+    JavacOptions javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
+        .setPathToJavac(Optional.of(Paths.get("javac")))
+        .build();
     rule.createCommandsForJavac(
         rule.getPathToOutputFile(),
-        ImmutableSet.<String>copyOf(rule.getTransitiveClasspathEntries().values()),
-        ImmutableSet.<String>copyOf(rule.getDeclaredClasspathEntries().values()),
-        JavacOptions.DEFAULTS,
+        ImmutableSet.copyOf(rule.getTransitiveClasspathEntries().values()),
+        ImmutableSet.copyOf(rule.getDeclaredClasspathEntries().values()),
+        javacOptions,
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacStep.SuggestBuildRules>absent(),
         stepsBuilder,
-        Optional.<Path>of(new File("javac").toPath()),
         libraryOneTarget
     );
 

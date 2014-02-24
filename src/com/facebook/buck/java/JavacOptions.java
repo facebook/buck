@@ -42,6 +42,8 @@ public class JavacOptions {
   // Fields are initialized in order. We need the default java target level to have been set.
   public static final JavacOptions DEFAULTS = JavacOptions.builder().build();
 
+  private final Optional<Path> pathToJavac;
+  private final Optional<String> javacVersion;
   private final boolean debug;
   private final boolean verbose;
   private final String sourceLevel;
@@ -49,18 +51,31 @@ public class JavacOptions {
   private final AnnotationProcessingData annotationProcessingData;
   private final Optional<String> bootclasspath;
 
-  private JavacOptions(boolean debug,
+  private JavacOptions(
+      Optional<Path> pathToJavac,
+      Optional<String> javacVersion,
+      boolean debug,
       boolean verbose,
       String sourceLevel,
       String targetLevel,
       Optional<String> bootclasspath,
       AnnotationProcessingData annotationProcessingData) {
+    this.pathToJavac = Preconditions.checkNotNull(pathToJavac);
+    this.javacVersion = Preconditions.checkNotNull(javacVersion);
     this.debug = debug;
     this.verbose = verbose;
     this.sourceLevel = Preconditions.checkNotNull(sourceLevel);
     this.targetLevel = Preconditions.checkNotNull(targetLevel);
     this.bootclasspath = Preconditions.checkNotNull(bootclasspath);
     this.annotationProcessingData = Preconditions.checkNotNull(annotationProcessingData);
+  }
+
+  public Optional<Path> getPathToJavac() {
+    return pathToJavac;
+  }
+
+  public Optional<String> getJavacVersion() {
+    return javacVersion;
   }
 
   public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
@@ -146,7 +161,8 @@ public class JavacOptions {
     // TODO(simons): Include bootclasspath params.
     builder.set("sourceLevel", sourceLevel)
         .set("targetLevel", targetLevel)
-        .set("debug", debug);
+        .set("debug", debug)
+        .set("javacVersion", javacVersion.orNull());
 
     return annotationProcessingData.appendToRuleKey(builder);
   }
@@ -173,6 +189,9 @@ public class JavacOptions {
     builder.setAnnotationProcessingData(options.annotationProcessingData);
     builder.setBootclasspath(options.bootclasspath.orNull());
 
+    builder.setPathToJavac(options.getPathToJavac());
+    builder.setJavacVersion(options.getJavacVersion());
+
     return builder;
   }
 
@@ -183,6 +202,8 @@ public class JavacOptions {
     private String targetLevel = DEFAULT_JAVA_TARGET;
     private Optional<String> bootclasspath = Optional.absent();
     private AnnotationProcessingData annotationProcessingData = AnnotationProcessingData.EMPTY;
+    private Optional<Path> pathToJavac = Optional.absent();
+    private Optional<String> javacVersion = Optional.absent();
 
     private Builder() {
     }
@@ -217,8 +238,20 @@ public class JavacOptions {
       return this;
     }
 
+    public Builder setPathToJavac(Optional<Path> pathToJavac) {
+      this.pathToJavac = pathToJavac;
+      return this;
+    }
+
+    public Builder setJavacVersion(Optional<String> javacVersion) {
+      this.javacVersion = javacVersion;
+      return this;
+    }
+
     public JavacOptions build() {
       return new JavacOptions(
+          pathToJavac,
+          javacVersion,
           debug,
           verbose,
           sourceLevel,
