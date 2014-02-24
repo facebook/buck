@@ -67,6 +67,6 @@ public interface OnDiskBuildInfo {
    * Sets the executable flag on the given buildable's output file. Used to work around an issue
    * where executable flags aren't preserved when uploading to cache.
    */
-  // TODO (task #3321496) delete this part of the interface after zipping is fixed.
+  // TODO(task #3321496): Delete this part of the interface after zipping is fixed.
   public void makeOutputFileExecutable(Buildable buildable) throws IOException;
 }

@@ -89,7 +89,7 @@ public class TestSelector {
     Pattern methodPattern = null;
     String[] parts = remainder.split("#");
 
-    try{
+    try {
       switch (parts.length) {
         // "#"
         case 0:

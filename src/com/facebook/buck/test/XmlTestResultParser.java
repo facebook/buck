@@ -35,6 +35,9 @@ import java.util.List;
 
 public class XmlTestResultParser {
 
+  /** Utility Class:  Do not instantiate. */
+  private XmlTestResultParser() {}
+
   public static TestCaseSummary parse(File xmlFile) throws IOException {
     String xmlFileContents = Files.toString(xmlFile, Charsets.UTF_8);
 

@@ -32,7 +32,7 @@ public class TestCaseSummary {
   /**
    * Transformation to annotate TestCaseSummary marking them as being read from cached results
    */
-  public final static Function<TestCaseSummary, TestCaseSummary> TO_CACHED_TRANSFORMATION =
+  public static final Function<TestCaseSummary, TestCaseSummary> TO_CACHED_TRANSFORMATION =
       new Function<TestCaseSummary, TestCaseSummary>() {
 
         @Override

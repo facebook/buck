@@ -94,7 +94,8 @@ public class ZipStep implements Step {
     }
 
     try (
-      BufferedOutputStream baseOut = new BufferedOutputStream(new FileOutputStream(absolutePathToZipFile));
+      BufferedOutputStream baseOut =
+          new BufferedOutputStream(new FileOutputStream(absolutePathToZipFile));
       CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING);
     ) {
       DirectoryTraversal traversal = new DirectoryTraversal(baseDir) {

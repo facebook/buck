@@ -154,7 +154,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
               }
               break;
             case "exists":
-              if (! jsonParser.nextBooleanValue()) {
+              if (!jsonParser.nextBooleanValue()) {
                 builder.setDeletionEvent();
               }
               break;

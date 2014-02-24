@@ -18,6 +18,9 @@ package com.facebook.buck.util;
 
 public class Threads {
 
+  /** Utility class: do not instantiate. */
+  private Threads() {}
+
   public static Thread namedThread(String name, Runnable runnable) {
     Thread newThread = new Thread(runnable);
     newThread.setName(name);

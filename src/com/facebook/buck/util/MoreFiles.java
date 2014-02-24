@@ -63,7 +63,7 @@ public final class MoreFiles {
   /**
    * Sorts by the lastAccessTime in descending order (more recently accessed files are first).
    */
-  private final static Comparator<FileAccessedEntry> SORT_BY_LAST_ACCESSED_TIME_DESC =
+  private static final Comparator<FileAccessedEntry> SORT_BY_LAST_ACCESSED_TIME_DESC =
       new Comparator<FileAccessedEntry>() {
     @Override
     public int compare(FileAccessedEntry a, FileAccessedEntry b) {

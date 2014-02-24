@@ -155,7 +155,8 @@ public class TestSelectorList {
             addRawSelector(line.trim());
             lineNumber++;
           } catch (TestSelectorParseException e) {
-            String message = String.format("Test selector error in %s at line %d", file, lineNumber);
+            String message =
+                String.format("Test selector error in %s at line %d", file, lineNumber);
             throw new TestSelectorParseException(message, e);
           }
         }

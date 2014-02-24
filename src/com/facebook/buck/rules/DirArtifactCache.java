@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 
 public class DirArtifactCache implements ArtifactCache {
 
-  private final static Logger logger = Logger.getLogger(DirArtifactCache.class.getName());
+  private static final Logger logger = Logger.getLogger(DirArtifactCache.class.getName());
 
   private final File cacheDir;
   private final Optional<Long> maxCacheSizeBytes;

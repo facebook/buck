@@ -28,12 +28,16 @@ import java.util.zip.ZipInputStream;
 
 public class Unzip {
 
+  /** Utility class: do not instantiate. */
+  private Unzip() {}
+
   public static void extractZipFile(String zipFile,
       String destination,
       boolean overwriteExistingFiles) throws IOException {
     // Create output directory if it does not exist
     File folder = new File(destination);
-    // TODO UnzipStep could be a CompositeStep with a MakeCleanDirectoryStep for the output dir.
+    // TODO(mbolin): UnzipStep could be a CompositeStep with a MakeCleanDirectoryStep for the output
+    // dir.
     Files.createDirectories(folder.toPath());
 
     try (ZipInputStream zip = new ZipInputStream(new FileInputStream(zipFile))) {

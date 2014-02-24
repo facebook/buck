@@ -100,7 +100,8 @@ public class XzStep implements Step {
   public int execute(ExecutionContext context) {
     try (
         InputStream in = new BufferedInputStream(new FileInputStream(sourceFile.toFile()));
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(getDestinationFile().toFile()));
+        OutputStream out =
+            new BufferedOutputStream(new FileOutputStream(getDestinationFile().toFile()));
         XZOutputStream xzOut = new XZOutputStream(out, new LZMA2Options(compressionLevel), check)
     ) {
       ByteStreams.copy(in, xzOut);

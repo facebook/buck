@@ -37,7 +37,8 @@ public class DescribedRuleFactory<T extends ConstructorArg>
   }
 
   @Override
-  public DescribedRuleBuilder<T> newInstance(BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
+  public DescribedRuleBuilder<T> newInstance(BuildRuleFactoryParams params)
+      throws NoSuchBuildTargetException {
     return new DescribedRuleBuilder<>(description, params);
   }
 }

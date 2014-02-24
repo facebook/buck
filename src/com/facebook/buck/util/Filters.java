@@ -33,6 +33,9 @@ import java.util.Set;
 
 public class Filters {
 
+  /** Utility class: do not instantiate. */
+  private Filters() {}
+
   public enum Density {
     LDPI("ldpi", 120.0),
     NO_QUALIFIER("", 160.0),
@@ -153,7 +156,7 @@ public class Filters {
 
       // This is to make sure we preserve the existing structure of drawable/ files.
       Set<Density> targets = targetDensities;
-      if (available.contains(Density.NO_QUALIFIER) && !available.contains(Density.MDPI) ) {
+      if (available.contains(Density.NO_QUALIFIER) && !available.contains(Density.MDPI)) {
         targets = Sets.newHashSet(Iterables.transform(targetDensities,
             new Function<Density, Density>() {
               @Override

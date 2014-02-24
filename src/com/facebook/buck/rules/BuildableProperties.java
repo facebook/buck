@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import com.google.common.base.Preconditions;
 
 public class BuildableProperties {
-  public final static BuildableProperties NONE = new BuildableProperties();
+  public static final BuildableProperties NONE = new BuildableProperties();
 
   public static enum Kind {
     /**

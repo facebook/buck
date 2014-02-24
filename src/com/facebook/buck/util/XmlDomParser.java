@@ -34,6 +34,9 @@ import javax.xml.parsers.ParserConfigurationException;
 
 public class XmlDomParser {
 
+  /** Utility class: do not instantiate. */
+  private XmlDomParser() {}
+
   public static Document parse(File xml) throws IOException {
     return parse(Files.newInputStreamSupplier(xml).getInput());
   }

@@ -176,7 +176,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     return usedEnvironmentVariablesBuilder.build();
   }
 
-  abstract protected void addEnvironmentVariables(ExecutionContext context,
+  protected abstract void addEnvironmentVariables(ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder);
 
   @Override

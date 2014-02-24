@@ -21,7 +21,8 @@ import com.google.common.base.Preconditions;
 public final class BuildRuleType {
   // TODO(simons): Move each of these closer to the BuildRules they represent.
   public static final BuildRuleType ANDROID_BINARY = new BuildRuleType("android_binary");
-  public static final BuildRuleType ANDROID_INSTRUMENTATION_APK = new BuildRuleType("android_instrumentation_apk");
+  public static final BuildRuleType ANDROID_INSTRUMENTATION_APK =
+      new BuildRuleType("android_instrumentation_apk");
   public static final BuildRuleType ANDROID_LIBRARY = new BuildRuleType("android_library");
   public static final BuildRuleType ANDROID_MANIFEST = new BuildRuleType("android_manifest");
   public static final BuildRuleType ANDROID_RESOURCE = new BuildRuleType("android_resource");
@@ -34,7 +35,8 @@ public final class BuildRuleType {
   public static final BuildRuleType KEYSTORE = new BuildRuleType("keystore");
   public static final BuildRuleType NDK_LIBRARY = new BuildRuleType("ndk_library");
   public static final BuildRuleType PREBUILT_JAR = new BuildRuleType("prebuilt_jar");
-  public static final BuildRuleType PREBUILT_NATIVE_LIBRARY = new BuildRuleType("prebuilt_native_library");
+  public static final BuildRuleType PREBUILT_NATIVE_LIBRARY =
+      new BuildRuleType("prebuilt_native_library");
   public static final BuildRuleType PROJECT_CONFIG = new BuildRuleType("project_config");
   public static final BuildRuleType PYTHON_BINARY = new BuildRuleType("python_binary");
   public static final BuildRuleType ROBOLECTRIC_TEST = new BuildRuleType("robolectric_test");

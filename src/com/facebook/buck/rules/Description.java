@@ -22,7 +22,7 @@ package com.facebook.buck.rules;
  * expected that instances of this class are stateless.
  *
  * @param <T> The object describing the parameters to be passed to the {@link Buildable}. How this
- *           is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
+ *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  *
  */
 public interface Description<T extends ConstructorArg> {

@@ -39,7 +39,9 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
 
   public MakeCleanDirectoryStep(Path pathRelativeToProjectRoot) {
     super(ImmutableList.of(
-        new RmStep(pathRelativeToProjectRoot, true /* shouldForceDeletion */, true /* shouldRecurse */),
+        new RmStep(pathRelativeToProjectRoot,
+            /* shouldForceDeletion */ true,
+            /* shouldRecurse */ true),
         new MkdirStep(pathRelativeToProjectRoot)));
     this.pathRelativeToProjectRoot = pathRelativeToProjectRoot.toString();
   }

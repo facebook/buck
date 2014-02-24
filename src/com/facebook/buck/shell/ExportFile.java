@@ -40,8 +40,10 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Export a file so that it can be easily referenced by other {@link com.facebook.buck.rules.BuildRule}s. There are several
- * valid ways of using export_file (all examples in a build file located at "path/to/buck/BUCK").
+ * Export a file so that it can be easily referenced by other
+ * {@link com.facebook.buck.rules.BuildRule}s. There are several valid ways of using export_file
+ * (all examples in a build file located at "path/to/buck/BUCK").
+ *
  * The most common usage of export_file is:
  * <pre>
  *   export_file(name = 'some-file.html')

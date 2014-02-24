@@ -216,7 +216,9 @@ public class AndroidPlatformTarget {
       Set<String> additionalJarPaths) {
     File androidSdkDir = androidDirectoryResolver.findAndroidSdkDir().toFile();
     if (!androidSdkDir.isAbsolute()) {
-      throw new HumanReadableException("Path to Android SDK must be absolute but was: %s.", androidSdkDir);
+      throw new HumanReadableException(
+          "Path to Android SDK must be absolute but was: %s.",
+          androidSdkDir);
     }
 
     File platformDirectory = new File(androidSdkDir, platformDirectoryPath);

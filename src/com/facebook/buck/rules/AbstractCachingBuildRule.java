@@ -134,7 +134,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   @Override
   public final ListenableFuture<BuildRuleSuccess> build(final BuildContext context) {
     // We use hasBuildStarted as a lock so that we can minimize how much we need to synchronize.
-    synchronized(hasBuildStarted) {
+    synchronized (hasBuildStarted) {
       if (hasBuildStarted.get()) {
         return buildRuleResult;
       } else {

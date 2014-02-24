@@ -113,8 +113,8 @@ public class ProjectFilesystem {
   }
 
   /**
-   * // @deprecated Prefer passing around {@code Path}s instead of {@code File}s or {@code String}s,
-   *  replaced by {@link #ProjectFilesystem(java.nio.file.Path, com.google.common.collect.ImmutableSet)}.
+   *  @deprecated Prefer passing around {@code Path}s instead of {@code File}s or {@code String}s,
+   *      replaced by {@link #ProjectFilesystem(Path, ImmutableSet)}.
    */
   public ProjectFilesystem(File projectRoot, ImmutableSet<Path> ignorePaths) {
     this(projectRoot.toPath(), ignorePaths);
@@ -297,7 +297,8 @@ public class ProjectFilesystem {
 
   /**
    * Resolves the relative path against the project root and then calls
-   * {@link java.nio.file.Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
+   * {@link java.nio.file.Files#createDirectories(java.nio.file.Path,
+   *            java.nio.file.attribute.FileAttribute[])}
    */
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
     java.nio.file.Files.createDirectories(resolve(pathRelativeToProjectRoot));
@@ -387,7 +388,8 @@ public class ProjectFilesystem {
     Path fileToRead = getPathForRelativePath(pathRelativeToProjectRoot);
     if (java.nio.file.Files.isRegularFile(fileToRead)) {
       try {
-        return Optional.of((Reader) new InputStreamReader(java.nio.file.Files.newInputStream(fileToRead)));
+        return Optional.of(
+            (Reader) new InputStreamReader(java.nio.file.Files.newInputStream(fileToRead)));
       } catch (Exception e) {
         throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
       }

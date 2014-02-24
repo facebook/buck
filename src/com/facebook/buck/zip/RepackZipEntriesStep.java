@@ -80,7 +80,8 @@ public class RepackZipEntriesStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try (
-        ZipInputStream in = new ZipInputStream(new BufferedInputStream(new FileInputStream(inputFile.toFile())));
+        ZipInputStream in =
+            new ZipInputStream(new BufferedInputStream(new FileInputStream(inputFile.toFile())));
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile.toFile())
     ) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {

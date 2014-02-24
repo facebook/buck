@@ -34,7 +34,9 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
 
   @Override
   public ImmutableList<T> coerce(
-      BuildRuleResolver buildRuleResolver, Path pathRelativeToProjectRoot, Object object) throws CoerceFailedException {
+      BuildRuleResolver buildRuleResolver,
+      Path pathRelativeToProjectRoot,
+      Object object) throws CoerceFailedException {
     ImmutableList.Builder<T> builder = ImmutableList.builder();
     fill(buildRuleResolver, pathRelativeToProjectRoot, builder, object);
     return builder.build();

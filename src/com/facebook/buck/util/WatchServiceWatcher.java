@@ -39,7 +39,7 @@ import java.util.Map;
 public class WatchServiceWatcher implements ProjectFilesystemWatcher {
 
   private final WatchService watchService;
-  private final Map<WatchKey,Path> keys;
+  private final Map<WatchKey, Path> keys;
   private final EventBus eventBus;
   private final ProjectFilesystem filesystem;
   private final ImmutableSet<Path> ignoredPrefixes;
@@ -60,7 +60,7 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
   @Override
   public void postEvents() throws IOException {
     WatchKey key;
-    while((key = watchService.poll()) != null) {
+    while ((key = watchService.poll()) != null) {
       Path dir = keys.get(key);
       if (dir == null) {
         continue; // Ignored or unknown directory.

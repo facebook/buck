@@ -57,7 +57,8 @@ public abstract class DirectoryTraversal {
     final Path rootPath = root.toPath();
     FileVisitor<Path> visitor = new FileVisitor<Path>() {
       @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+          throws IOException {
         if (ignorePaths.contains(rootPath.relativize(dir))) {
           return FileVisitResult.SKIP_SUBTREE;
         } else {

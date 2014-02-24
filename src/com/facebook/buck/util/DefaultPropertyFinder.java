@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class DefaultPropertyFinder implements PropertyFinder {
-  private final static Path LOCAL_PROPERTIES_PATH = Paths.get("local.properties");
+  private static final Path LOCAL_PROPERTIES_PATH = Paths.get("local.properties");
 
   private final ProjectFilesystem projectFilesystem;
 

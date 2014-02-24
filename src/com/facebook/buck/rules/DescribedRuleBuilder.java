@@ -100,7 +100,8 @@ public class DescribedRuleBuilder<T extends ConstructorArg>
         ruleFactoryParams.getPathRelativizer(),
         ruleFactoryParams.getRuleKeyBuilderFactory());
 
-    ConstructorArgMarshaller inspector = new ConstructorArgMarshaller(Paths.get(target.getBasePath()));
+    ConstructorArgMarshaller inspector =
+        new ConstructorArgMarshaller(Paths.get(target.getBasePath()));
     T arg = description.createUnpopulatedConstructorArg();
     inspector.populate(ruleResolver, ruleFactoryParams, arg);
 
