@@ -152,7 +152,11 @@ public class JarDirectoryStep implements Step {
               alreadyAddedEntries,
               context.getBuckEventBus());
         } else if (file.isDirectory()) {
-          addFilesInDirectoryToJar(file, outputFile, alreadyAddedEntries, context.getBuckEventBus());
+          addFilesInDirectoryToJar(
+              file,
+              outputFile,
+              alreadyAddedEntries,
+              context.getBuckEventBus());
         } else {
           throw new IllegalStateException("Must be a file or directory: " + file);
         }
@@ -206,9 +210,9 @@ public class JarDirectoryStep implements Step {
         // We're in the process of merging a bunch of different jar files. These typically contain
         // just ".class" files and the manifest, but they can also include things like license files
         // from third party libraries and config files. We should include those license files within
-        // the jar we're creating. Extracting them is left as an exercise for the consumer of the jar.
-        // Because we don't know which files are important, the only ones we skip are duplicate class
-        // files.
+        // the jar we're creating. Extracting them is left as an exercise for the consumer of the
+        // jar.  Because we don't know which files are important, the only ones we skip are
+        // duplicate class files.
         if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
           // Duplicate entries. Skip.
           eventBus.post(LogEvent.create(

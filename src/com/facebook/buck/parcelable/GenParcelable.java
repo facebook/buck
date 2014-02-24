@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
 
 public class GenParcelable extends AbstractBuildable {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
 
   private final ImmutableSortedSet<Path> srcs;
   private final String outputDirectory;

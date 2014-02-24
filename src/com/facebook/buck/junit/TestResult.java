@@ -121,8 +121,8 @@ final class TestResult {
         String className = description.getClassName();
         String methodName = description.getMethodName();
         // In practice, I have seen one case of a test having more than one failure:
-        // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2 failures.
-        // However, I am not sure what to make of it, so we let it through.
+        // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2
+        // failures.  However, I am not sure what to make of it, so we let it through.
         if (numFailures < 0) {
           throw new IllegalStateException(String.format(
               "Unexpected number of failures while testing %s#%s(): %d (%s)",

@@ -113,37 +113,24 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibraryRule.Data> {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private final ImmutableSortedSet<Path> srcs;
-
   private final ImmutableSortedSet<SourcePath> resources;
-
   protected final Optional<DummyRDotJava> optionalDummyRDotJava;
-
   private final Optional<Path> outputJar;
-
   private final Optional<Path> proguardConfig;
-
-
   private final ImmutableSortedSet<BuildRule> exportedDeps;
-
-  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>> outputClasspathEntriesSupplier;
-
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
+      outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       transitiveClasspathEntriesSupplier;
-
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
-
   private final JavacOptions javacOptions;
-
   private final Optional<Path> javac;
-
   private final Optional<String> javacVersion;
-
-  @Nullable
-  private JavaLibraryRule.Data buildOutput;
+  @Nullable private JavaLibraryRule.Data buildOutput;
 
   /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
@@ -244,7 +231,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
             }
 
             if (outputJar.isPresent()) {
-              outputClasspathBuilder.put(DefaultJavaLibraryRule.this, getPathToOutputFile().toString());
+              outputClasspathBuilder.put(DefaultJavaLibraryRule.this,
+                  getPathToOutputFile().toString());
             }
 
             return outputClasspathBuilder.build();
@@ -275,7 +263,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
 
             // Only add ourselves to the classpath if there's a jar to be built.
             if (outputJar.isPresent()) {
-              classpathEntries.putAll(DefaultJavaLibraryRule.this, getPathToOutputFile().toString());
+              classpathEntries.putAll(DefaultJavaLibraryRule.this,
+                  getPathToOutputFile().toString());
             }
 
             return classpathEntries.build();
@@ -816,7 +805,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         // Therefore, some path-wrangling is required to produce the correct string.
 
         Path resource = MorePaths.separatorsToUnix(rawResource.resolve(context));
-        String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
+        String javaPackageAsPath =
+            javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
         Path relativeSymlinkPath;
 
 

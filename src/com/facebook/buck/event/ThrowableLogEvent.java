@@ -37,7 +37,7 @@ public class ThrowableLogEvent extends LogEvent {
     return throwable;
   }
 
-  static public ThrowableLogEvent create(Throwable throwable, String message, Object... args) {
+  public static ThrowableLogEvent create(Throwable throwable, String message, Object... args) {
     return new ThrowableLogEvent(throwable, String.format(message, args));
   }
 

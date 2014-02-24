@@ -336,9 +336,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      *     http://stackoverflow.com/questions/2336692/java-multiple-class-declarations-in-one-file)
      *     will generate multiple .class files that do not have '$' in the name.
      * In this method, we perform a strict check for (1) and use a heuristic for (2). It is possible
-     * to filter out the type (2) situation with a stricter check that aligns the package directories
-     * of the .java files and the .class files, but it is a pain to implement. If this heuristic turns
-     * out to be insufficient in practice, then we can fix it.
+     * to filter out the type (2) situation with a stricter check that aligns the package
+     * directories of the .java files and the .class files, but it is a pain to implement.
+     * If this heuristic turns out to be insufficient in practice, then we can fix it.
      *
      * @param sources paths to .java source files that were passed to javac
      * @param jarFile jar where the generated .class files were written
@@ -372,8 +372,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
             return;
           }
 
-          // As a heuristic for case (2) as described in the Javadoc, make sure the name of the .class
-          // file matches the name of a .java file.
+          // As a heuristic for case (2) as described in the Javadoc, make sure the name of the
+          // .class file matches the name of a .java file.
           String nameWithoutDotClass = name.substring(0, name.length() - ".class".length());
           if (!sourceClassNames.contains(nameWithoutDotClass)) {
             return;
@@ -420,7 +420,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     public JavaTestRule build(BuildRuleResolver ruleResolver) {
       ImmutableSet<BuildRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
           ruleResolver);
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
+      AnnotationProcessingParams processingParams =
+          getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);

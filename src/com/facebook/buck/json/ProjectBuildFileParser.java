@@ -333,7 +333,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
     // for the life of this buck invocation. We do this since this is generated in parallel we end
     // up with strange InterruptedExceptions being thrown.
     // TODO(simons): This would be the ideal thing to do.
-//    Path buckDotPy = projectRoot.toPath().resolve(BuckConstant.BIN_DIR).resolve("generated-buck.py");
+    //    Path buckDotPy =
+    //        projectRoot.toPath().resolve(BuckConstant.BIN_DIR).resolve("generated-buck.py");
     Path buckDotPy = Files.createTempFile("buck", ".py");
     Files.createDirectories(buckDotPy.getParent());
 

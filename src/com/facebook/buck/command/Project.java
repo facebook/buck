@@ -276,7 +276,8 @@ public class Project {
       Path pathToImlFile = Paths.get(module.pathToImlFile);
       Path depPathToImlFile = Paths.get(dep.pathToImlFile);
 
-      String relativePath = pathToImlFile.getParent().relativize(depPathToImlFile.getParent()).toString();
+      String relativePath =
+          pathToImlFile.getParent().relativize(depPathToImlFile.getParent()).toString();
 
       // This is probably a self-reference. Ignore it.
       if (relativePath.isEmpty()) {
@@ -450,7 +451,8 @@ public class Project {
         NdkLibrary ndkLibrary = (NdkLibrary) projectRule.getBuildable();
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-        module.nativeLibs = Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
+        module.nativeLibs =
+            Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
       } else if (projectRule instanceof AndroidResourceRule) {
         AndroidResourceRule androidResourceRule = (AndroidResourceRule)projectRule;
         module.resFolder = createRelativePath(androidResourceRule.getRes(), target);
@@ -489,7 +491,8 @@ public class Project {
               "indicating that it is relative to the root of the repository.",
               rootPrefix);
           manifestPath = manifestPath.substring(rootPrefix.length());
-          String relativePathToManifest = Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
+          String relativePathToManifest =
+              Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
           // IntelliJ requires that the path start with a slash to indicate that it is relative to
           // the module.
           module.androidManifest = "/" + relativePathToManifest;
@@ -608,7 +611,9 @@ public class Project {
       // then the corresponding .iml file (in the same directory) should contain:
       //
       // <content url="file://$MODULE_DIR$">
-      //   <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" packagePrefix="com.example.base" />
+      //   <sourceFolder url="file://$MODULE_DIR$"
+      //                 isTestSource="false"
+      //                 packagePrefix="com.example.base" />
       //   <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" />
       //
       //   <!-- It will have an <excludeFolder> for every "subpackage" of com.example.base. -->

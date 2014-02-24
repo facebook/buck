@@ -27,7 +27,8 @@ import com.google.common.base.Optional;
 import java.nio.file.Path;
 import java.util.List;
 
-public class JavaLibraryBuildRuleFactory extends AbstractBuildRuleFactory<DefaultJavaLibraryRule.Builder> {
+public class JavaLibraryBuildRuleFactory extends
+    AbstractBuildRuleFactory<DefaultJavaLibraryRule.Builder> {
 
   public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 

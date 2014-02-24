@@ -48,7 +48,8 @@ public class Parser {
     // imports
     Element importsElement = (Element)doc.getElementsByTagName("imports").item(0);
     String importsText = importsElement.getTextContent();
-    Iterable<String> imports = Splitter.on('\n').omitEmptyStrings().trimResults().split(importsText);
+    Iterable<String> imports =
+        Splitter.on('\n').omitEmptyStrings().trimResults().split(importsText);
 
     // defaultFieldVisibility
     Element fieldsElement = (Element)doc.getElementsByTagName("fields").item(0);

@@ -180,7 +180,8 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
         return stronglyConnectedComponent.size() > 1;
       }
     });
-    Iterable<ImmutableSet<T>> immutableCycles = Iterables.transform(cycles, new Function<Set<T>, ImmutableSet<T>>() {
+    Iterable<ImmutableSet<T>> immutableCycles =
+        Iterables.transform(cycles, new Function<Set<T>, ImmutableSet<T>>() {
       @Override
       public ImmutableSet<T> apply(Set<T> cycle) {
         return ImmutableSet.copyOf(cycle);

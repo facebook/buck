@@ -205,7 +205,9 @@ public abstract class JavacStep implements Step {
     return declaredDepsResult;
   }
 
-  protected abstract int buildWithClasspath(ExecutionContext context, Set<String> buildClasspathEntries);
+  protected abstract int buildWithClasspath(
+      ExecutionContext context,
+      Set<String> buildClasspathEntries);
 
   @VisibleForTesting
   static ImmutableSet<String> findFailedImports(String output) {

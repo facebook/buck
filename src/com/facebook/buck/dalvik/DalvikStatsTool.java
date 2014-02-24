@@ -44,6 +44,9 @@ import javax.annotation.Nullable;
  */
 public class DalvikStatsTool {
 
+  /** Utility class: do not instantiate */
+  private DalvikStatsTool() {}
+
   // Reasonable defaults based on dreiss's observations.
   private static final ImmutableMap<Pattern, Integer> PENALTIES =
       ImmutableMap.<Pattern, Integer>builder()
@@ -76,17 +79,24 @@ public class DalvikStatsTool {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof MethodReference)) {
+        return false;
+      }
 
       MethodReference that = (MethodReference) o;
 
-      if (className != null ? !className.equals(that.className) : that.className != null)
+      if (className != null ? !className.equals(that.className) : that.className != null) {
         return false;
-      if (methodDesc != null ? !methodDesc.equals(that.methodDesc) : that.methodDesc != null)
+      }
+      if (methodDesc != null ? !methodDesc.equals(that.methodDesc) : that.methodDesc != null) {
         return false;
-      if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null)
+      }
+      if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null) {
         return false;
+      }
 
       return true;
     }

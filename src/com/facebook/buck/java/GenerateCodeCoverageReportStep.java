@@ -84,7 +84,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
       args.add("emma", "report");
 
-      // Add output directory property so code coverage data lands in the specified output directory.
+      // Add output directory property so code coverage data lands in the specified output
+      // directory.
       args.add(String.format("-D%s=%s", REPORT_OUTPUT_DIR, outputDirectory));
 
       for (String reportFormat : CODE_COVERAGE_OUTPUT_FORMAT) {

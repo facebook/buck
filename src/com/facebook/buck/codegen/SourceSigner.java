@@ -53,9 +53,12 @@ public class SourceSigner {
   @VisibleForTesting
   static final String PLACEHOLDER = "<<SignedSource::*O*zOeWoEQle#+L!plEphiEmie@IsG>>";
 
+  /** Utility Class: do not instantiate */
+  private SourceSigner() {}
+
   /**
    * When generating a new file to be signed, include this placeholder somewhere inside
-   * the contents of the file, then pass it to {@link sign(String)} to sign the contents.
+   * the contents of the file, then pass it to {@link #sign(String)} to sign the contents.
    */
   public static final String SIGNED_SOURCE_PLACEHOLDER = GENERATED + " " + PLACEHOLDER;
 

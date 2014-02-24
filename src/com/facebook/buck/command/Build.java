@@ -170,10 +170,10 @@ public class Build {
 
       @Override
       public Optional<AndroidPlatformTarget> getResult() {
-        // Find an appropriate AndroidPlatformTarget for the target attribute specified in one of the
-        // transitively included android_binary() build rules. If no such target has been specified,
-        // then use a default AndroidPlatformTarget so that it is possible to build non-Android Java
-        // code, as well.
+        // Find an appropriate AndroidPlatformTarget for the target attribute specified in one of
+        // the transitively included android_binary() build rules. If no such target has been
+        // specified, then use a default AndroidPlatformTarget so that it is possible to build
+        // non-Android Java code, as well.
         Optional<AndroidPlatformTarget> result;
         if (androidPlatformTargetId != null) {
           Optional<AndroidPlatformTarget> target = AndroidPlatformTarget.getTargetForId(

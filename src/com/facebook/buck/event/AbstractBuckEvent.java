@@ -89,7 +89,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   @JsonIgnore
-  abstract protected String getValueString();
+  protected abstract String getValueString();
 
   /**
    * The default implementation of equals checks to see if two events are pairs, are on the same

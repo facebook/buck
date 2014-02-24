@@ -37,8 +37,8 @@ import java.util.logging.Level;
 import javax.annotation.Nullable;
 
 /**
- * Base class for {@link BuckEventListener}s responsible for outputting information about the running
- * build to {@code stderr}.
+ * Base class for {@link BuckEventListener}s responsible for outputting information about the
+ * running build to {@code stderr}.
  */
 public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
   protected static final DecimalFormat TIME_FORMATTER = new DecimalFormat("0.0s");

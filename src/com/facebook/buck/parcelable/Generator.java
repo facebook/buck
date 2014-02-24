@@ -279,9 +279,9 @@ public class Generator {
 
     String creatorClassName = clazz.getCreatorClassName();
     out.appendLine("  public static final Parcelable.Creator<%s> CREATOR = " +
-    		"new Parcelable.Creator<%s>() {",
-    		creatorClassName,
-    		creatorClassName);
+        "new Parcelable.Creator<%s>() {",
+        creatorClassName,
+        creatorClassName);
     out.appendLine("    public %s createFromParcel(Parcel in) {", creatorClassName);
     out.appendLine("      return new %s(in);", creatorClassName);
     out.appendLine("    }");

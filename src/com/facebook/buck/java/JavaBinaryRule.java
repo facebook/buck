@@ -59,7 +59,7 @@ import javax.annotation.Nullable;
 public class JavaBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule,
     HasClasspathEntries {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
   @Nullable
   private final String mainClass;

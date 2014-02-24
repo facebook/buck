@@ -23,7 +23,8 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 
 import java.nio.file.Path;
 
-public class PythonBinaryBuildRuleFactory extends AbstractBuildRuleFactory<PythonBinaryRule.Builder> {
+public class PythonBinaryBuildRuleFactory
+    extends AbstractBuildRuleFactory<PythonBinaryRule.Builder> {
 
   @Override
   protected PythonBinaryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {

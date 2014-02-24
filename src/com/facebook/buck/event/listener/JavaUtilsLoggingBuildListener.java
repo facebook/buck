@@ -41,8 +41,8 @@ import java.util.logging.Logger;
  */
 public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
-  private final static Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
-  private final static Level LEVEL = Level.INFO;
+  private static final Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
+  private static final Level LEVEL = Level.INFO;
 
   public static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
     try {

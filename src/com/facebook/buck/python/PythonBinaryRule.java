@@ -47,7 +47,8 @@ import java.util.List;
 
 public class PythonBinaryRule extends DoNotUseAbstractBuildable implements BinaryBuildRule {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
+
   private final Path main;
 
   protected PythonBinaryRule(BuildRuleParams buildRuleParams, Path main) {

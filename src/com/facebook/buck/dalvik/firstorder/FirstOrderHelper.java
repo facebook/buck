@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class FirstOrderHelper {
 
-  private final static Function<Type, String> TYPE_TO_CLASS_NAME = new Function<Type, String>() {
+  private static final Function<Type, String> TYPE_TO_CLASS_NAME = new Function<Type, String>() {
     @Override
     public String apply(Type input) {
       return input.getClassName();
