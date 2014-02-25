@@ -346,7 +346,11 @@ public class ProjectGenerator {
         buildable.getProjectContainerPath().resolve(partialGraph.getDependencyGraph());
     PBXFileReference referencedProject = project.getMainGroup()
         .getOrCreateChildGroupByName("Project References")
-        .getOrCreateFileReferenceBySourceTreePath(SourceTreePath.absolute(referencedProjectPath));
+        .getOrCreateFileReferenceBySourceTreePath(new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            this.outputDirectory.normalize().toAbsolutePath()
+                .relativize(referencedProjectPath.toAbsolutePath()))
+        );
     PBXContainerItemProxy proxy = new PBXContainerItemProxy(
         referencedProject,
         buildable.getTargetGid(),
@@ -389,7 +393,10 @@ public class ProjectGenerator {
 
       PBXFileReference fileReference =
           configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
-              SourceTreePath.absolute(configurationFilePath));
+              new SourceTreePath(
+                  PBXReference.SourceTree.SOURCE_ROOT,
+                  this.repoRootRelativeToOutputDirectory.resolve(configurationFilePath)
+              ));
       XCBuildConfiguration outputConfiguration =
           target.getBuildConfigurationList().getBuildConfigurationsByName()
               .getUnchecked(configuration.getName());
@@ -444,7 +451,10 @@ public class ProjectGenerator {
     for (SourcePath sourcePath : sources) {
       Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
       PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-          SourceTreePath.absolute(projectFilesystem.getPathForRelativePath(path)));
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              this.repoRootRelativeToOutputDirectory.resolve(path)
+          ));
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
       sourcesBuildPhase.getFiles().add(buildFile);
       String customFlags = sourceFlags.get(sourcePath);
@@ -469,7 +479,10 @@ public class ProjectGenerator {
     for (SourcePath sourcePath : headers) {
       Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
       PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
-          SourceTreePath.absolute(projectFilesystem.getPathForRelativePath(path)));
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              this.repoRootRelativeToOutputDirectory.resolve(path)
+          ));
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
       NSDictionary settings = new NSDictionary();
       settings.put("ATTRIBUTES", new NSArray(new NSString("Public")));
@@ -485,7 +498,10 @@ public class ProjectGenerator {
     target.getBuildPhases().add(phase);
     for (Path resource : resources) {
       PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-          SourceTreePath.absolute(projectFilesystem.getFileForRelativePath(resource).toPath()));
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              this.repoRootRelativeToOutputDirectory.resolve(resource)
+          ));
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
       phase.getFiles().add(buildFile);
     }

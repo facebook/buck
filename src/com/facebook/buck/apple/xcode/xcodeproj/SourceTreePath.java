@@ -55,8 +55,4 @@ public class SourceTreePath {
     return Objects.equals(this.sourceTree, that.sourceTree)
         || Objects.equals(this.path, that.path);
   }
-
-  public static SourceTreePath absolute(Path path) {
-    return new SourceTreePath(PBXReference.SourceTree.ABSOLUTE, path.toAbsolutePath());
-  }
 }

@@ -49,6 +49,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
@@ -261,10 +262,8 @@ public class ProjectGeneratorTest {
     assertThat(target.getDependencies(), hasSize(1));
     PBXTargetDependency dependency = target.getDependencies().get(0);
     PBXContainerItemProxy proxy = dependency.getTargetProxy();
-    assertThat(
-        proxy.getContainerPortal().getSourceTree(),
-        equalTo(PBXFileReference.SourceTree.ABSOLUTE));
-    assertThat(proxy.getContainerPortal().getPath(), endsWith("foo.xcodeproj"));
+    String containerPath = assertFileRefIsRelativeAndResolvePath(proxy.getContainerPortal());
+    assertThat(containerPath, endsWith("foo.xcodeproj"));
     assertThat(proxy.getRemoteGlobalIDString(), equalTo("00DEADBEEF"));
 
     verifyGeneratedSignedSourceTarget(project.getTargets().get(1));
@@ -324,12 +323,11 @@ public class ProjectGeneratorTest {
           });
       PBXBuildFile headerBuildFile = Iterables.getOnlyElement(headersBuildPhase.getFiles());
 
+      String headerBuildFilePath = assertFileRefIsRelativeAndResolvePath(
+          headerBuildFile.getFileRef());
       assertEquals(
-          PBXFileReference.SourceTree.ABSOLUTE,
-          headerBuildFile.getFileRef().getSourceTree());
-      assertEquals(
-          projectFilesystem.getRootPath().resolve("foo.h").toAbsolutePath().toString(),
-          headerBuildFile.getFileRef().getPath());
+          projectFilesystem.getRootPath().resolve("foo.h").toAbsolutePath().normalize().toString(),
+          headerBuildFilePath);
     }
   }
 
@@ -631,6 +629,17 @@ public class ProjectGeneratorTest {
         PROJECT_NAME);
   }
 
+  private String assertFileRefIsRelativeAndResolvePath(PBXReference fileRef) {
+    assert(!fileRef.getPath().startsWith("/"));
+    assertEquals(
+        "file path should be relative to project directory",
+        PBXFileReference.SourceTree.SOURCE_ROOT,
+        fileRef.getSourceTree()
+    );
+    return projectFilesystem.resolve(OUTPUT_DIRECTORY).resolve(fileRef.getPath())
+        .normalize().toString();
+  }
+
   private BuildRule createIosTestRule(
       BuildTarget target,
       ImmutableSortedSet<BuildRule> sourceUnderTest,
@@ -683,18 +692,17 @@ public class ProjectGeneratorTest {
         ImmutableMap.builder();
     for (Map.Entry<String, Optional<String>> name : sourcesAndFlags.entrySet()) {
       absolutePathFlagMapBuilder.put(
-          projectFilesystem.getRootPath().resolve(name.getKey()).toAbsolutePath().toString(),
+          projectFilesystem.getRootPath().resolve(name.getKey()).toAbsolutePath()
+              .normalize().toString(),
           name.getValue());
     }
     ImmutableMap<String, Optional<String>> absolutePathFlagMap = absolutePathFlagMapBuilder.build();
 
     for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
-      Optional<String> flags = absolutePathFlagMap.get(file.getFileRef().getPath());
+      String filePath = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
+      Optional<String> flags = absolutePathFlagMap.get(filePath);
       assertNotNull("Source file is expected", flags);
       if (flags.isPresent()) {
-        assertEquals(
-            "Build file path should be absolute",
-            PBXFileReference.SourceTree.ABSOLUTE, file.getFileRef().getSourceTree());
         assertTrue("Build file should have settings dictionary", file.getSettings().isPresent());
 
         NSDictionary buildFileSettings = file.getSettings().get();
@@ -720,12 +728,13 @@ public class ProjectGeneratorTest {
     ImmutableSet.Builder<String> expectedResourceSetBuilder = ImmutableSet.builder();
     for (String resource : resources) {
       expectedResourceSetBuilder.add(
-          projectFilesystem.getRootPath().resolve(resource).toAbsolutePath().toString());
+          projectFilesystem.getRootPath().resolve(resource).toAbsolutePath()
+              .normalize().toString());
     }
     ImmutableSet<String> expectedResourceSet = expectedResourceSetBuilder.build();
 
     for (PBXBuildFile file : buildPhase.getFiles()) {
-      String source = file.getFileRef().getPath();
+      String source = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
       assertTrue(
           "Resource should be in list of expected resources: " + source,
           expectedResourceSet.contains(source));
