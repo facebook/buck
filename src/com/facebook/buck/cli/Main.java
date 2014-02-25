@@ -401,7 +401,7 @@ public final class Main {
     // ignorePaths from a BuckConfig instance, which in turn needs a ProjectFilesystem (i.e. this
     // solves a bootstrapping issue).
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(
-        projectRoot,
+        Paths.get(projectRoot.getPath()),
         createBuckConfig(new ProjectFilesystem(projectRoot), platform).getIgnorePaths());
     BuckConfig config = createBuckConfig(projectFilesystem, platform);
     Verbosity verbosity = VerbosityParser.parse(args);

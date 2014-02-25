@@ -113,14 +113,6 @@ public class ProjectFilesystem {
   }
 
   /**
-   *  @deprecated Prefer passing around {@code Path}s instead of {@code File}s or {@code String}s,
-   *      replaced by {@link #ProjectFilesystem(Path, ImmutableSet)}.
-   */
-  public ProjectFilesystem(File projectRoot, ImmutableSet<Path> ignorePaths) {
-    this(projectRoot.toPath(), ignorePaths);
-  }
-
-  /**
    * // @deprecated Prefer passing around {@code Path}s instead of {@code File}s or {@code String}s,
    *  replaced by {@link #ProjectFilesystem(java.nio.file.Path)}.
    */
