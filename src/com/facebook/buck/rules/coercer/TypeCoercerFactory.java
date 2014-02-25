@@ -144,7 +144,10 @@ public class TypeCoercerFactory {
         // SortedSet is tested second because it is a subclass of Set, and therefore can
         // be assigned to something of type Set, but not vice versa.
         Type elementType = getSingletonTypeParameter(parameterizedType);
-        return new SortedSetTypeCoercer<>(typeCoercerForComparableType(elementType));
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        SortedSetTypeCoercer<?> sortedSetTypeCoercer = new SortedSetTypeCoercer(
+            typeCoercerForComparableType(elementType));
+        return sortedSetTypeCoercer;
       } else if (rawClass.isAssignableFrom(ImmutableMap.class)) {
         Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
             "expected type '%s' to have two parameters", parameterizedType);
@@ -176,4 +179,3 @@ public class TypeCoercerFactory {
     return type.getActualTypeArguments()[0];
   }
 }
-
