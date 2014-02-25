@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PathTypeCoercer extends LeafTypeCoercer<Path> {
+  @Override
   public Class<Path> getOutputClass() {
     return Path.class;
   }

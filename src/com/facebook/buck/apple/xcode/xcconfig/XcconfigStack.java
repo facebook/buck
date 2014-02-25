@@ -115,6 +115,7 @@ public final class XcconfigStack {
         // single human readable message
         String combinedMessage = Joiner.on('\n').join(
             Iterables.transform(Throwables.getCausalChain(e), new Function<Throwable, String>() {
+              @Override
               public String apply(Throwable input) {
                 return input.getMessage();
               }

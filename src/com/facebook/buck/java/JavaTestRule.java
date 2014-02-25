@@ -132,6 +132,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   /**
    * @return A set of rules that this test rule will be testing.
    */
+  @Override
   public ImmutableSet<BuildRule> getSourceUnderTest() {
     return sourceUnderTest;
   }

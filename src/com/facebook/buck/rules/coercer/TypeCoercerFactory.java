@@ -81,7 +81,7 @@ public class TypeCoercerFactory {
 
   public TypeCoercer<?> typeCoercerForType(Type type) {
     if (type instanceof TypeVariable) {
-      type = ((TypeVariable) type).getBounds()[0];
+      type = ((TypeVariable<?>) type).getBounds()[0];
       if (Object.class.equals(type)) {
         throw new IllegalArgumentException("Generic types must be specific: " + type);
       }
@@ -164,7 +164,7 @@ public class TypeCoercerFactory {
 
   private <T extends Comparable<T>> TypeCoercer<T> typeCoercerForComparableType(Type type) {
     Preconditions.checkState(
-        type instanceof Class && Comparable.class.isAssignableFrom((Class) type),
+        type instanceof Class && Comparable.class.isAssignableFrom((Class<?>) type),
         "type '%s' should be a class implementing Comparable",
         type);
 

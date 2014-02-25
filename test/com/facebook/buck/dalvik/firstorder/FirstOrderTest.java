@@ -43,7 +43,7 @@ public class FirstOrderTest {
       new Function<Class<?>, ClassNode>() {
         @Nullable
         @Override
-        public ClassNode apply(@Nullable Class input) {
+        public ClassNode apply(@Nullable Class<?> input) {
           return loadClassNode(input);
         }
       };
@@ -51,7 +51,7 @@ public class FirstOrderTest {
   private static final Function<Class<?>, Type> TYPE_FROM_CLASS = new Function<Class<?>, Type>() {
     @Nullable
     @Override
-    public Type apply(@Nullable Class input) {
+    public Type apply(@Nullable Class<?> input) {
       return Type.getType(input);
     }
   };
@@ -99,6 +99,7 @@ public class FirstOrderTest {
   @Test
   public void testHasField() {
     class TestClass {
+      @SuppressWarnings("unused")
       Dependency a;
     }
 
@@ -114,7 +115,8 @@ public class FirstOrderTest {
   @Test
   public void testHasParameter() {
     class TestClass {
-      void doSomething(Dependency a) {
+      @SuppressWarnings("unused")
+      void doSomething(Dependency dependency) {
       }
     }
 
@@ -130,6 +132,7 @@ public class FirstOrderTest {
   @Test
   public void testHasReturnType() {
     class TestClass {
+      @SuppressWarnings("unused")
       Dependency doSomething() {
         return null;
       }
@@ -191,6 +194,7 @@ public class FirstOrderTest {
   @Test
   public void testInterfaceInheritanceWithField() {
     class TestClass {
+      @SuppressWarnings("unused")
       Derived x;
     }
     DependencyCheck.checkThat(TestClass.class)

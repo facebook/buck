@@ -57,6 +57,7 @@ public class PBXReference extends PBXContainerItem {
       rep = str;
     }
 
+    @Override
     public String toString() {
       return rep;
     }

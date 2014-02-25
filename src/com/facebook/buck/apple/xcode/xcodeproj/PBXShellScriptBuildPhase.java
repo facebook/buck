@@ -16,12 +16,10 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-
-import com.google.common.collect.Lists;
-
 import com.dd.plist.NSArray;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.xcode.XcodeprojSerializer;
+import com.google.common.collect.Lists;
 
 import java.util.List;
 
@@ -80,7 +78,7 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
 
   /**
    * Gets the contents of the shell script to execute under the shell
-   * returned by {@link getShellPath()}.
+   * returned by {@link #getShellPath()}.
    */
   public String getShellScript() {
     return shellScript;

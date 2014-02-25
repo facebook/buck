@@ -36,6 +36,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
     this.pathTypeCoercer = Preconditions.checkNotNull(pathTypeCoercer);
   }
 
+  @Override
   public Class<SourcePath> getOutputClass() {
     return SourcePath.class;
   }

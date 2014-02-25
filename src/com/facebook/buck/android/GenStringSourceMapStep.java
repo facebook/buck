@@ -213,10 +213,12 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       this.stringsXmlPath = Preconditions.checkNotNull(stringsXmlPath);
     }
 
+    @SuppressWarnings("unused") // Used via reflection for JSON serialization.
     public String getAndroidResourceId() {
       return androidResourceId;
     }
 
+    @SuppressWarnings("unused") // Used via reflection for JSON serialization.
     public String getStringsXmlPath() {
       return stringsXmlPath;
     }

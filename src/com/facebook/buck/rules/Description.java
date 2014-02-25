@@ -34,7 +34,7 @@ public interface Description<T extends ConstructorArg> {
 
   /**
    * @return An instance of the argument that must later be passed to
-   *     {@link #createBuildable(BuildRuleParams, T)}.
+   *     {@link #createBuildable(BuildRuleParams, ConstructorArg)}.
    * @see ConstructorArgMarshaller
    *
    */

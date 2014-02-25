@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import java.nio.file.Path;
 
+@SuppressWarnings("serial")
 public class CoerceFailedException extends Exception {
   public CoerceFailedException(String format, Object... args) {
     super(String.format(format, args));

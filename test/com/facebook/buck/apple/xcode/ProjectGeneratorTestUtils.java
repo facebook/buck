@@ -156,6 +156,7 @@ final class ProjectGeneratorTestUtils {
         case ABSOLUTE:
           fail("Should not emit frameworks with sourceTree <absolute>");
           break;
+        // $CASES-OMITTED$
         default:
           String serialized = "$" + sourceTree + "/" + file.getFileRef().getPath();
           assertTrue(

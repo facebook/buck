@@ -32,6 +32,7 @@ import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -89,12 +90,9 @@ public class KnownBuildRuleTypesTest {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        new HashMap<String, Map<String, String>>() {{
-          put("tools", new HashMap<String, String>() {{
-            put("javac", javac.toString());
-          }});
-        }});
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
         buckConfig,
@@ -114,12 +112,9 @@ public class KnownBuildRuleTypesTest {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        new HashMap<String, Map<String, String>>() {{
-          put("tools", new HashMap<String, String>() {{
-            put("javac", javac.toString());
-          }});
-        }});
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.getDefault();
     BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
@@ -142,12 +137,9 @@ public class KnownBuildRuleTypesTest {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        new HashMap<String, Map<String, String>>() {{
-          put("tools", new HashMap<String, String>() {{
-            put("javac", javac.toString());
-          }});
-        }});
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
         buckConfig,
@@ -181,12 +173,9 @@ public class KnownBuildRuleTypesTest {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        new HashMap<String, Map<String, String>>() {{
-          put("tools", new HashMap<String, String>() {{
-            put("javac", javac.toString());
-          }});
-        }});
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
         buckConfig,

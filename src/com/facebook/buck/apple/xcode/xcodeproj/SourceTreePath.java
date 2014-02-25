@@ -42,10 +42,12 @@ public class SourceTreePath {
     return path;
   }
 
+  @Override
   public int hashCode() {
     return Objects.hash(sourceTree, path);
   }
 
+  @Override
   public boolean equals(Object other) {
     if (other == null || !(other instanceof SourceTreePath)) {
       return false;

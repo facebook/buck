@@ -48,6 +48,7 @@ class RenderableTypes {
       case METHOD:
         return new MethodSummary((ExecutableElement) element);
 
+      // $CASES-OMITTED$
       default:
         throw new RuntimeException("Unknown kind: " + element.getKind());
     }

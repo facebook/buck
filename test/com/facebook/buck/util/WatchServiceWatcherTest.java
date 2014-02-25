@@ -112,6 +112,7 @@ public class WatchServiceWatcherTest {
     expect(path.relativize(anyObject(Path.class))).andReturn(Paths.get("SomeClass.java"));
     eventBus.post(anyObject(WatchEvent.class));
     expectLastCall().andDelegateTo(new EventBus() {
+      @Override
       @SuppressWarnings("unchecked") // Allow downcast from obj to WatchEvent<Path>.
       public void post(Object obj) {
         WatchEvent<Path> event = (WatchEvent<Path>) obj;

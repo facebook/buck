@@ -167,6 +167,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
           }
           builder = new PathEventBuilder();
           break;
+        // $CASES-OMITTED$
+        default:
+          break;
       }
       token = jsonParser.nextToken();
     }
