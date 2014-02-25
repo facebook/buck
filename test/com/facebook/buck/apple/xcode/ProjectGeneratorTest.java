@@ -459,9 +459,10 @@ public class ProjectGeneratorTest {
     assertThat(target.getName(), equalTo("//foo:lib"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
-    PBXShellScriptBuildPhase shellScriptBuildPhase = ProjectGeneratorTestUtils.getSingletonPhaseByType(
-        target,
-        PBXShellScriptBuildPhase.class);
+    PBXShellScriptBuildPhase shellScriptBuildPhase =
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(
+            target,
+            PBXShellScriptBuildPhase.class);
 
     assertThat(
         shellScriptBuildPhase.getShellScript(),
