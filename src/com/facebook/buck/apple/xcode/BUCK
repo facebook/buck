@@ -1,6 +1,10 @@
 java_library(
   name = 'project_generator',
-  srcs = ['ProjectGenerator.java'],
+  srcs = [
+    'ProjectGenerator.java',
+    'RuleDependencyFinder.java',
+    'SchemeGenerator.java',
+  ],
   deps = [
     ':xcode',
     '//lib:guava',

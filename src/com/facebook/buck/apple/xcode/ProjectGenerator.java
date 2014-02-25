@@ -51,7 +51,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -68,14 +67,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -86,12 +83,9 @@ import org.w3c.dom.Element;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -113,7 +107,7 @@ public class ProjectGenerator {
   private final ExecutionContext executionContext;
   private final Path outputDirectory;
   private final String projectName;
-  private final ImmutableList<BuildTarget> initialTargets;
+  private final ImmutableSet<BuildTarget> initialTargets;
   private final Path projectPath;
   private final Path repoRootRelativeToOutputDirectory;
 
@@ -125,7 +119,7 @@ public class ProjectGenerator {
 
   public ProjectGenerator(
       PartialGraph partialGraph,
-      ImmutableList<BuildTarget> initialTargets,
+      ImmutableSet<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
       ExecutionContext executionContext,
       Path outputDirectory,
@@ -173,7 +167,7 @@ public class ProjectGenerator {
 
   public void createXcodeProjects() throws IOException {
     try {
-      Iterable<BuildRule> allRules = getAllRules(partialGraph, initialTargets);
+      Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);
       ImmutableMap.Builder<BuildRule, PBXTarget> ruleToTargetMapBuilder = ImmutableMap.builder();
       for (BuildRule rule : allRules) {
         // Trigger the loading cache to call the generateTargetForBuildRule function.
@@ -184,9 +178,10 @@ public class ProjectGenerator {
       }
       addGeneratedSignedSourceTarget(project);
       writeProjectFile(project);
-      scheme = createScheme(partialGraph, projectPath, ruleToTargetMapBuilder.build());
+      scheme = SchemeGenerator.createScheme(
+          partialGraph, projectPath, ruleToTargetMapBuilder.build());
       writeWorkspace(projectPath);
-      writeScheme(scheme, projectPath);
+      SchemeGenerator.writeScheme(projectFilesystem, scheme, projectPath);
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.
@@ -214,32 +209,6 @@ public class ProjectGenerator {
     } else {
       return Optional.absent();
     }
-  }
-
-  private static ImmutableSet<BuildRule> getAllRules(
-      PartialGraph graph,
-      Iterable<BuildTarget> initialTargets) {
-
-    ImmutableList.Builder<BuildRule> initialRulesBuilder = ImmutableList.builder();
-    for (BuildTarget target : initialTargets) {
-      initialRulesBuilder.add(graph.getDependencyGraph().findBuildRuleByTarget(target));
-    }
-
-    ImmutableSet<BuildRule> buildRules = gatherTransitiveDependencies(initialRulesBuilder.build());
-    ImmutableMultimap<BuildRule, BuildRule> ruleToTestRules = buildRuleToTestRulesMap(graph);
-
-    // Extract the test rules for the initial rules and their dependencies.
-    ImmutableSet.Builder<BuildRule> testRulesBuilder = ImmutableSet.builder();
-    for (BuildRule rule : buildRules) {
-      testRulesBuilder.addAll(ruleToTestRules.get(rule));
-    }
-    ImmutableSet<BuildRule> additionalBuildRules = gatherTransitiveDependencies(
-        testRulesBuilder.build());
-
-    return ImmutableSet.<BuildRule>builder()
-        .addAll(buildRules)
-        .addAll(additionalBuildRules)
-        .build();
   }
 
   private PBXNativeTarget generateIosLibraryTarget(
@@ -374,7 +343,7 @@ public class ProjectGenerator {
       BuildRule rule,
       XcodeNative buildable) {
     Path referencedProjectPath =
-        buildable.getProjectContainerPath().resolve(partialGraph.getDependencyGraph()).normalize();
+        buildable.getProjectContainerPath().resolve(partialGraph.getDependencyGraph());
     PBXFileReference referencedProject = project.getMainGroup()
         .getOrCreateChildGroupByName("Project References")
         .getOrCreateFileReferenceBySourceTreePath(SourceTreePath.absolute(referencedProjectPath));
@@ -667,94 +636,6 @@ public class ProjectGenerator {
     return buildTarget.getFullyQualifiedName().replace('/', '-');
   }
 
-  private static XCScheme createScheme(
-      PartialGraph partialGraph,
-      Path projectPath,
-      final Map<BuildRule, PBXTarget> ruleToTargetMap) throws IOException {
-
-    List<BuildRule> orderedBuildRules = TopologicalSort.sort(
-        partialGraph.getDependencyGraph(),
-        new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(@Nullable BuildRule input) {
-            return ruleToTargetMap.containsKey(input);
-          }
-        });
-
-    XCScheme scheme = new XCScheme("Scheme");
-    for (BuildRule rule : orderedBuildRules) {
-      scheme.addBuildAction(
-          projectPath.getFileName().toString(),
-          ruleToTargetMap.get(rule).getGlobalID());
-    }
-
-    return scheme;
-  }
-
-  private void writeScheme(XCScheme scheme, Path projectPath) throws IOException {
-    Path schemeDirectory = projectPath.resolve("xcshareddata/xcschemes");
-    projectFilesystem.mkdirs(schemeDirectory);
-    Path schemePath = schemeDirectory.resolve(scheme.getName() + ".xcscheme");
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      serializeScheme(scheme, outputStream);
-      projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);
-    }
-  }
-
-  private static void serializeScheme(XCScheme scheme, OutputStream stream) {
-    DocumentBuilder docBuilder;
-    Transformer transformer;
-    try {
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-      transformer = TransformerFactory.newInstance().newTransformer();
-    } catch (ParserConfigurationException | TransformerConfigurationException e) {
-      throw new RuntimeException(e);
-    }
-
-    DOMImplementation domImplementation = docBuilder.getDOMImplementation();
-    Document doc = domImplementation.createDocument(null, "Scheme", null);
-    doc.setXmlVersion("1.0");
-
-    Element rootElem = doc.getDocumentElement();
-    rootElem.setAttribute("LastUpgradeVersion", "0500");
-    rootElem.setAttribute("version", "1.7");
-
-    // serialize the scheme
-    Element buildActionElem = doc.createElement("BuildAction");
-    rootElem.appendChild(buildActionElem);
-    buildActionElem.setAttribute("parallelizeBuildables", "NO");
-    buildActionElem.setAttribute("buildImplicitDependencies", "NO");
-
-    Element buildActionEntriesElem = doc.createElement("BuildActionEntries");
-    buildActionElem.appendChild(buildActionEntriesElem);
-
-    for (XCScheme.BuildActionEntry entry : scheme.getBuildAction()) {
-      Element entryElem = doc.createElement("BuildActionEntry");
-      buildActionEntriesElem.appendChild(entryElem);
-      entryElem.setAttribute("buildForRunning", "YES");
-      entryElem.setAttribute("buildForTesting", "YES");
-      entryElem.setAttribute("buildForProfiling", "YES");
-      entryElem.setAttribute("buildForArchiving", "YES");
-      entryElem.setAttribute("buildForAnalyzing", "YES");
-      Element refElem = doc.createElement("BuildableReference");
-      entryElem.appendChild(refElem);
-      refElem.setAttribute("BuildableIdentifier", "primary");
-      refElem.setAttribute("BlueprintIdentifier", entry.getBlueprintIdentifier());
-      refElem.setAttribute("referencedContainer", "container:" + entry.getContainerRelativePath());
-    }
-
-    // write out
-
-    DOMSource source = new DOMSource(doc);
-    StreamResult result = new StreamResult(stream);
-
-    try {
-      transformer.transform(source, result);
-    } catch (TransformerException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   private static String getProductName(BuildTarget buildTarget) {
     return buildTarget.getShortName();
   }
@@ -850,54 +731,5 @@ public class ProjectGenerator {
       throw new RuntimeException(e);
     }
     return filteredRules.build();
-  }
-
-  /**
-   * Create a map from targets to the tests that test them by examining
-   * {@link com.facebook.buck.apple.IosTest#getSourceUnderTest()}.
-   */
-  private static ImmutableMultimap<BuildRule, BuildRule> buildRuleToTestRulesMap(
-      PartialGraph graph) {
-    ImmutableMultimap.Builder<BuildRule, BuildRule> ruleToTestRulesBuilder =
-        ImmutableMultimap.builder();
-    for (BuildTarget target : graph.getTargets()) {
-      BuildRule rule = graph.getDependencyGraph().findBuildRuleByTarget(target);
-      if (rule.getType().equals(IosTestDescription.TYPE)) {
-        IosTest testBuildable = (IosTest) Preconditions.checkNotNull(rule.getBuildable());
-        for (BuildRule sourceRule : testBuildable.getSourceUnderTest()) {
-          ruleToTestRulesBuilder.put(sourceRule, rule);
-        }
-      }
-    }
-    return ruleToTestRulesBuilder.build();
-  }
-
-  private static ImmutableSet<BuildRule> gatherTransitiveDependencies(
-      Iterable<? extends BuildRule> initial) {
-    final ImmutableSet.Builder<BuildRule> buildRulesBuilder = ImmutableSet.builder();
-    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> allDependenciesTraversal =
-        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
-          @Override
-          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
-            return node.getDeps().iterator();
-          }
-          @Override
-          protected void onNodeExplored(BuildRule node) {
-          }
-          @Override
-          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
-            buildRulesBuilder.addAll(nodesInExplorationOrder);
-          }
-        };
-    try {
-      allDependenciesTraversal.traverse(initial);
-    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
-      throw new HumanReadableException(e,
-          "Cycle detected while gathering build rule dependencies for project generation:\n " +
-              e.getMessage());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    return buildRulesBuilder.build();
   }
 }

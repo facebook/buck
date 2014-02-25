@@ -135,7 +135,7 @@ public class ProjectGeneratorTest {
   public void testProjectStructureForEmptyProject() throws IOException {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.<BuildTarget>of());
+        buildRuleResolver, ImmutableSet.<BuildTarget>of());
 
     Path outputWorkspaceBundlePath = OUTPUT_DIRECTORY.resolve(PROJECT_NAME + ".xcworkspace");
     Path outputWorkspaceFilePath = outputWorkspaceBundlePath.resolve("contents.xcworkspacedata");
@@ -175,7 +175,7 @@ public class ProjectGeneratorTest {
         rootRule, leftRule, rightRule, childRule));
 
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(childRule.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(childRule.getBuildTarget()));
 
     // Generate the project.
     projectGenerator.createXcodeProjects();
@@ -211,7 +211,7 @@ public class ProjectGeneratorTest {
   public void testWorkspaceGeneration() throws IOException {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.<BuildTarget>of());
+        buildRuleResolver, ImmutableSet.<BuildTarget>of());
     projectGenerator.createXcodeProjects();
 
     Document workspace = projectGenerator.getGeneratedWorkspace();
@@ -224,7 +224,7 @@ public class ProjectGeneratorTest {
   public void testProjectFileSigning() throws IOException {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.<BuildTarget>of());
+        buildRuleResolver, ImmutableSet.<BuildTarget>of());
 
     projectGenerator.createXcodeProjects();
 
@@ -242,7 +242,7 @@ public class ProjectGeneratorTest {
         ImmutableSortedSet.<BuildRule>of());
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(rule.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -289,7 +289,7 @@ public class ProjectGeneratorTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
 
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(rule.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -347,7 +347,7 @@ public class ProjectGeneratorTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
 
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(rule.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -390,7 +390,7 @@ public class ProjectGeneratorTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(rule));
 
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(rule.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -440,7 +440,7 @@ public class ProjectGeneratorTest {
     buildRuleResolver.addToIndex(libTarget, rule);
 
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(rule.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(rule.getBuildTarget()));
 
     projectGenerator.createXcodeProjects();
 
@@ -498,7 +498,7 @@ public class ProjectGeneratorTest {
         barLib, fooLib, fooBin, bazLib, bazLibTest, fooLibTest, fooBinTest));
 
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(fooBin.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(fooBin.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
     assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
@@ -517,7 +517,7 @@ public class ProjectGeneratorTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver(ImmutableSet.of(fooLib));
 
     ProjectGenerator projectGenerator = createProjectGenerator(
-        buildRuleResolver, ImmutableList.of(fooLib.getBuildTarget()));
+        buildRuleResolver, ImmutableSet.of(fooLib.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -540,7 +540,7 @@ public class ProjectGeneratorTest {
           @Override
           public AppleResourceDescriptionArg apply(AppleResourceDescriptionArg input) {
             input.files = ImmutableSet.<SourcePath>of(new FileSourcePath("foo.png"));
-            input.dirs = ImmutableSet.<Path>of(Paths.get("foodir"));
+            input.dirs = ImmutableSet.of(Paths.get("foodir"));
             return input;
           }
         });
@@ -563,7 +563,7 @@ public class ProjectGeneratorTest {
     BuildRuleResolver resolver = new BuildRuleResolver(ImmutableSet.of(
         resourceRule, libraryRule, testRule, binaryRule));
     ProjectGenerator projectGenerator = createProjectGenerator(
-        resolver, ImmutableList.of(testRule.getBuildTarget(), binaryRule.getBuildTarget()));
+        resolver, ImmutableSet.of(testRule.getBuildTarget(), binaryRule.getBuildTarget()));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
@@ -574,7 +574,7 @@ public class ProjectGeneratorTest {
   }
 
   private ProjectGenerator createProjectGenerator(
-      BuildRuleResolver buildRuleResolver, ImmutableList<BuildTarget> initialBuildTargets) {
+      BuildRuleResolver buildRuleResolver, ImmutableSet<BuildTarget> initialBuildTargets) {
     DependencyGraph graph = RuleMap.createGraphFromBuildRules(buildRuleResolver);
     ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
     for (BuildRule rule : graph.getNodes()) {

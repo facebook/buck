@@ -29,6 +29,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -165,7 +166,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
 
     PartialGraph partialGraph;
-    ImmutableList<BuildTarget> targets;
+    ImmutableSet<BuildTarget> targets;
     try {
       // IOS creates a full graph all the time in order to find tests of targets (which depends
       // on, but is not depended on, by the libraries).
@@ -173,7 +174,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-      targets = getBuildTargets(argumentsAsBuildTargets);
+      targets = ImmutableSet.copyOf(getBuildTargets(argumentsAsBuildTargets));
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
