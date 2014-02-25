@@ -127,8 +127,7 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
     builder.register(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory());
     builder.register(BuildRuleType.GENRULE, new GenruleBuildRuleFactory());
-    builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(Optional.<Path>absent(), Optional.<String>absent()));
+    builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
     builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
