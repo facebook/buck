@@ -70,7 +70,7 @@ public class ExopackageInstaller {
   /**
    * Command line to invoke the agent on the device.
    */
-  private static final String AGENT_INVOKE =
+  private static final String JAVA_AGENT_COMMAND =
       "dalvikvm -classpath " +
       AGENT_DEVICE_PATH + "-1.apk:" + AGENT_DEVICE_PATH + "-2.apk " +
       "com.facebook.buck.android.agent.AgentMain ";
@@ -79,6 +79,8 @@ public class ExopackageInstaller {
    * Port to use for sending dex files.
    */
   private static final int AGENT_PORT = 2828;
+
+  private static final boolean USE_NATIVE_AGENT = true;
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
@@ -92,11 +94,18 @@ public class ExopackageInstaller {
    */
   private IDevice device = null;
 
+  /**
+   * Set after the agent is installed.
+   */
+  private String nativeAgentPath;
+
   @VisibleForTesting
   static class PackageInfo {
     final String apkPath;
+    final String nativeLibPath;
     final String versionCode;
-    private PackageInfo(String apkPath, String versionCode) {
+    private PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
+      this.nativeLibPath = Preconditions.checkNotNull(nativeLibPath);
       this.apkPath = Preconditions.checkNotNull(apkPath);
       this.versionCode = Preconditions.checkNotNull(versionCode);
     }
@@ -148,9 +157,12 @@ public class ExopackageInstaller {
   }
 
   private boolean doInstall() throws Exception {
-    if (!installAgentIfNecessary()) {
+    Optional<PackageInfo> agentInfo = installAgentIfNecessary();
+    if (!agentInfo.isPresent()) {
       return false;
     }
+
+    nativeAgentPath = agentInfo.get().nativeLibPath;
 
     final File apk = apkRule.getApkPath().toFile();
     // TODO(user): Support SD installation.
@@ -176,6 +188,14 @@ public class ExopackageInstaller {
     AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
 
     return true;
+  }
+
+  private String getAgentCommand() {
+    if (USE_NATIVE_AGENT) {
+      return nativeAgentPath + "/libagent.so ";
+    } else {
+      return JAVA_AGENT_COMMAND;
+    }
   }
 
   private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
@@ -214,6 +234,7 @@ public class ExopackageInstaller {
 
     String codePath = null;
     String resourcePath = null;
+    String nativeLibPath = null;
     String versionCode = null;
 
     for (String line : Splitter.on("\r\n").split(lines)) {
@@ -242,6 +263,9 @@ public class ExopackageInstaller {
         case "resourcePath":
           resourcePath = parts.get(1);
           break;
+        case "nativeLibraryPath":
+          nativeLibPath = parts.get(1);
+          break;
         case "versionCode":
           // Extra split to get rid of the SDK thing.
           versionCode = parts.get(1).split(" ", 2)[0];
@@ -257,15 +281,19 @@ public class ExopackageInstaller {
 
     Preconditions.checkNotNull(codePath, "Could not find codePath");
     Preconditions.checkNotNull(resourcePath, "Could not find resourcePath");
+    Preconditions.checkNotNull(nativeLibPath, "Could not find nativeLibraryPath");
     Preconditions.checkNotNull(versionCode, "Could not find versionCode");
     if (!codePath.equals(resourcePath)) {
       throw new IllegalStateException("Code and resource path do not match");
     }
 
-    return Optional.of(new PackageInfo(codePath, versionCode));
+    return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));
   }
 
-  private boolean installAgentIfNecessary() throws Exception {
+  /**
+   * @return  PackageInfo for the agent, or absent if installation failed.
+   */
+  private Optional<PackageInfo> installAgentIfNecessary() throws Exception {
     Optional<PackageInfo> agentInfo = getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
     if (!agentInfo.isPresent()) {
       logFine("Agent not installed.  Installing.");
@@ -275,17 +303,21 @@ public class ExopackageInstaller {
     if (!agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
       return installAgentApk();
     }
-    return true;
+    return agentInfo;
   }
 
-  private boolean installAgentApk() {
+  private Optional<PackageInfo> installAgentApk() throws Exception {
     try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_agent_apk")) {
       String apkFileName = System.getProperty("buck.android_agent_path");
       if (apkFileName == null) {
         throw new RuntimeException("Android agent apk path not specified in properties");
       }
       File apkPath = new File(apkFileName);
-      return adbHelper.installApkOnDevice(device, apkPath, /* installViaSd */ false);
+      boolean success = adbHelper.installApkOnDevice(device, apkPath, /* installViaSd */ false);
+      if (!success) {
+        return Optional.absent();
+      }
+      return getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
     }
   }
 
@@ -313,7 +345,7 @@ public class ExopackageInstaller {
 
   private String getInstalledAppSignature(final String packagePath) throws Exception {
     try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "get_app_signature")) {
-      String command = AGENT_INVOKE + "get-signature " + packagePath;
+      String command = getAgentCommand() + "get-signature " + packagePath;
       logFine("Executing %s", command);
       String output = AdbHelper.executeCommandWithErrorChecking(device, command);
 
@@ -512,7 +544,7 @@ public class ExopackageInstaller {
     }
     String targetFileName = dataDirPrefix + "app_exopackage/secondary-dex/" + basename;
     String command =
-        runAsPrefix + AGENT_INVOKE +
+        runAsPrefix + getAgentCommand() +
             "receive-file " + port + " " + Files.size(source) + " " +
             targetFileName +
             " ; echo -n :$?";

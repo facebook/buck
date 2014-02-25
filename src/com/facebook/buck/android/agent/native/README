@@ -1,0 +1,3 @@
+miniz.c came from http://code.google.com/p/miniz/ r63,
+with some minor modifications to fix a warning and
+allow compression to be disabled

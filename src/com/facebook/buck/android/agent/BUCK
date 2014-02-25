@@ -32,6 +32,7 @@ android_binary(
   keystore = ':debug_keystore',
   deps = [
     ':agent-lib',
+    '//src/com/facebook/buck/android/agent/native:native',
   ],
 )
 

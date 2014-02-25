@@ -84,6 +84,7 @@ public class ExopackageInstallerTest {
     ExopackageInstaller.PackageInfo info = optionalInfo.get();
 
     assertEquals("/data/app/com.facebook.katana-1.apk", info.apkPath);
+    assertEquals("/data/app-lib/com.facebook.katana-1", info.nativeLibPath);
     assertEquals("1640376", info.versionCode);
   }
 }

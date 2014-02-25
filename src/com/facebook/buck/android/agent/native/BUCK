@@ -1,0 +1,7 @@
+ndk_library(
+  name = 'native',
+  flags = [
+    'NDK_APPLICATION_MK=${PWD}/src/com/facebook/buck/android/agent/native/Application.mk',
+  ],
+  visibility = ['PUBLIC'],
+)
