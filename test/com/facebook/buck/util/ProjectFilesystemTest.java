@@ -59,9 +59,11 @@ public class ProjectFilesystemTest {
     tmp.newFolder("foo");
     tmp.newFile("foo/bar.txt");
 
-    assertTrue(filesystem.isFile("foo/bar.txt"));
-    assertFalse(filesystem.isFile("i_do_not_exist"));
-    assertFalse("foo/ is a directory, but not an ordinary file", filesystem.isFile("foo"));
+    assertTrue(filesystem.isFile(Paths.get("foo/bar.txt")));
+    assertFalse(filesystem.isFile(Paths.get("i_do_not_exist")));
+    assertFalse(
+        "foo/ is a directory, but not an ordinary file",
+        filesystem.isFile(Paths.get("foo")));
   }
 
   @Test

@@ -20,25 +20,24 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 
 public class RunShTestAndRecordResultStep implements Step {
 
   private Path pathToShellScript;
-  private String pathToTestResultFile;
+  private Path pathToTestResultFile;
 
-  public RunShTestAndRecordResultStep(Path pathToShellScript, String pathToTestResultFile) {
+  public RunShTestAndRecordResultStep(Path pathToShellScript, Path pathToTestResultFile) {
     this.pathToShellScript = Preconditions.checkNotNull(pathToShellScript);
     this.pathToTestResultFile = Preconditions.checkNotNull(pathToTestResultFile);
   }
@@ -108,10 +107,9 @@ public class RunShTestAndRecordResultStep implements Step {
     }
 
     ObjectMapper mapper = new ObjectMapper();
-    try {
-      mapper.writeValue(
-          Files.newWriter(new File(pathToTestResultFile), Charsets.UTF_8),
-          summary);
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    try (OutputStream outputStream = filesystem.newFileOutputStream(pathToTestResultFile)) {
+      mapper.writeValue(outputStream, summary);
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }

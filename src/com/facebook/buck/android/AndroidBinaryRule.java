@@ -336,7 +336,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         steps.add(new Step() {
           @Override
           public int execute(ExecutionContext context) {
-            if (!context.getProjectFilesystem().exists(libSourceDir.toString())) {
+            if (!context.getProjectFilesystem().exists(libSourceDir)) {
               return 0;
             }
             if (mkDirStep.execute(context) == 0 && copyStep.execute(context) == 0) {

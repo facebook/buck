@@ -222,14 +222,6 @@ public class ProjectFilesystem {
   }
 
   /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *    {@link #isFile(java.nio.file.Path)}.
-   */
-  public boolean isFile(String pathRelativeToProjectRoot) {
-    return isFile(Paths.get(pathRelativeToProjectRoot));
-  }
-
-  /**
    * Checks whether there is a normal file at the specified path.
    */
   public boolean isFile(Path pathRelativeToProjectRoot) {
@@ -343,6 +335,11 @@ public class ProjectFilesystem {
     }
   }
 
+  public OutputStream newFileOutputStream(Path pathRelativeToProjectRoot)
+    throws IOException {
+    return java.nio.file.Files.newOutputStream(getPathForRelativePath(pathRelativeToProjectRoot));
+  }
+
   /**
    * @param inputStream Source of the bytes. This method does not close this stream.
    */
@@ -411,14 +408,6 @@ public class ProjectFilesystem {
     Preconditions.checkNotNull(pathRelativeToProjectRoot);
     Path file = getPathForRelativePath(pathRelativeToProjectRoot);
     return readFirstLineFromFile(file);
-  }
-
-  /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *  {@link #readFirstLineFromFile(java.nio.file.Path)}.
-   */
-  public Optional<String> readFirstLineFromFile(File file) {
-    return readFirstLineFromFile(file.toPath());
   }
 
   /**
