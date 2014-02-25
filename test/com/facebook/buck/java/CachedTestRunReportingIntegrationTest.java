@@ -34,7 +34,7 @@ import java.nio.charset.Charset;
 
 public class CachedTestRunReportingIntegrationTest {
 
-  private final static Charset CHARSET_FOR_TEST = Charsets.UTF_8;
+  private static final Charset CHARSET_FOR_TEST = Charsets.UTF_8;
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();

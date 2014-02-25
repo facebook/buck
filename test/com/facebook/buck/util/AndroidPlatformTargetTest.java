@@ -103,9 +103,12 @@ public class AndroidPlatformTargetTest {
     assertEquals(
         ImmutableList.of(
             MorePaths.newPathInstance(new File(androidSdkDir, "platforms/android-17/android.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
@@ -149,9 +152,12 @@ public class AndroidPlatformTargetTest {
     assertEquals(
         ImmutableList.of(
             MorePaths.newPathInstance(new File(androidSdkDir, "platforms/android-17/android.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
@@ -191,7 +197,9 @@ public class AndroidPlatformTargetTest {
     new File(buildToolsDir, "16.0.0").mkdir();
 
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
-        AndroidPlatformTarget.getTargetForId("Google Inc.:Google APIs:17", androidDirectoryResolver);
+        AndroidPlatformTarget.getTargetForId(
+            "Google Inc.:Google APIs:17",
+            androidDirectoryResolver);
     assertTrue(androidPlatformTargetOption.isPresent());
 
     assertEquals(

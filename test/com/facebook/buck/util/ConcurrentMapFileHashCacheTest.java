@@ -36,7 +36,8 @@ public class ConcurrentMapFileHashCacheTest {
 
   @Test
   public void whenPathIsPutCacheContainsPath() {
-    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     Path path = new File("SomeClass.java").toPath();
     cache.loadingCache.put(path, HashCode.fromInt(42));
     assertTrue("Cache should contain path", cache.contains(path));
@@ -44,7 +45,8 @@ public class ConcurrentMapFileHashCacheTest {
 
   @Test
   public void whenPathIsPutPathGetReturnsHash() {
-    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     Path path = new File("SomeClass.java").toPath();
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
@@ -53,7 +55,8 @@ public class ConcurrentMapFileHashCacheTest {
 
   @Test
   public void whenNotifiedOfOverflowEventCacheIsCleared() throws IOException {
-    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     Path path = new File("SomeClass.java").toPath();
     HashCode hash = HashCode.fromInt(42);
     cache.loadingCache.put(path, hash);
@@ -63,7 +66,8 @@ public class ConcurrentMapFileHashCacheTest {
 
   @Test
   public void whenNotifiedOfCreateEventCacheEntryIsRemoved() throws IOException {
-    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     File file = new File("SomeClass.java");
     Path path = file.toPath();
     HashCode hash = HashCode.fromInt(42);
@@ -74,7 +78,8 @@ public class ConcurrentMapFileHashCacheTest {
 
   @Test
   public void whenNotifiedOfChangeEventCacheEntryIsRemoved() throws IOException {
-    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     File file = new File("SomeClass.java");
     Path path = file.toPath();
     HashCode hash = HashCode.fromInt(42);
@@ -85,7 +90,8 @@ public class ConcurrentMapFileHashCacheTest {
 
   @Test
   public void whenNotifiedOfDeleteEventCacheEntryIsRemoved() throws IOException {
-    DefaultFileHashCache cache = new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new ProjectFilesystem(new File(".")), new TestConsole());
     File file = new File("SomeClass.java");
     Path path = file.toPath();
     HashCode hash = HashCode.fromInt(42);

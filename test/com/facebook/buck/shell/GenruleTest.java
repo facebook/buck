@@ -208,7 +208,9 @@ public class GenruleTest {
         thirdMkdirCommand.getPath());
 
     MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
-    assertEquals(Paths.get("src/com/facebook/katana/convert_to_katana.py"), linkSource1.getSource());
+    assertEquals(
+        Paths.get("src/com/facebook/katana/convert_to_katana.py"),
+        linkSource1.getSource());
     assertEquals(Paths.get(pathToSrcDir + "/convert_to_katana.py"), linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
@@ -226,7 +228,11 @@ public class GenruleTest {
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
-        ImmutableList.of("/bin/bash", "-e", "-c", "python convert_to_katana.py AndroidManifest.xml > $OUT"),
+        ImmutableList.of(
+            "/bin/bash",
+            "-e",
+            "-c",
+            "python convert_to_katana.py AndroidManifest.xml > $OUT"),
         genruleCommand.getShellCommand(executionContext));
   }
 
@@ -299,8 +305,10 @@ public class GenruleTest {
   @Test
   public void testLocationBuildTargetPattern() {
     Pattern buildTargetPattern = AbstractGenruleStep.BUILD_TARGET_PATTERN;
-    assertTrue(buildTargetPattern.matcher("$(location //first-party/orca/orcaapp:manifest)").find());
-    assertFalse(buildTargetPattern.matcher("\\$(location //first-party/orca/orcaapp:manifest)").find());
+    assertTrue(
+        buildTargetPattern.matcher("$(location //first-party/orca/orcaapp:manifest)").find());
+    assertFalse(
+        buildTargetPattern.matcher("\\$(location //first-party/orca/orcaapp:manifest)").find());
     assertFalse(buildTargetPattern.matcher("$(location first-party/orca/orcaapp:manifest)").find());
     assertTrue(buildTargetPattern.matcher("$(location :manifest)").find());
     assertTrue(buildTargetPattern.matcher("$(location   :manifest)").find());
@@ -460,7 +468,8 @@ public class GenruleTest {
 
     JavaBinaryRule javaBinary = ruleResolver.buildAndAddToIndex(
         JavaBinaryRule.newJavaBinaryRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"))
+        .setBuildTarget(
+            BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator"))
         .setMainClass("com.facebook.util.ManifestGenerator")
         .addDep(javaLibrary.getBuildTarget()));
 

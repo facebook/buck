@@ -79,7 +79,8 @@ public class NdkLibraryTest {
 
     assertTrue(ndkLibrary.getProperties().is(ANDROID));
     assertTrue(ndkLibrary.isAsset());
-    assertEquals(Paths.get(BuckConstant.GEN_DIR, basePath, "__libbase"), ndkLibrary.getLibraryPath());
+    assertEquals(Paths.get(BuckConstant.GEN_DIR, basePath, "__libbase"),
+        ndkLibrary.getLibraryPath());
 
     MoreAsserts.assertListEquals(
         ImmutableList.of(

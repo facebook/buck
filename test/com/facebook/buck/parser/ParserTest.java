@@ -523,7 +523,8 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_CREATE);
+    WatchEvent<Path> event = createPathEvent(includedByBuildFile,
+        StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -544,7 +545,8 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchEvent<Path> event = createPathEvent(includedByBuildFile,
+        StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -565,7 +567,8 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_DELETE);
+    WatchEvent<Path> event = createPathEvent(includedByBuildFile,
+        StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1096,7 +1099,9 @@ public class ParserTest extends EasyMockSupport {
     private final KnownBuildRuleTypes buildRuleTypes;
     public int calls = 0;
 
-    public TestProjectBuildFileParserFactory(ProjectFilesystem projectFilesystem, KnownBuildRuleTypes buildRuleTypes) {
+    public TestProjectBuildFileParserFactory(
+        ProjectFilesystem projectFilesystem,
+        KnownBuildRuleTypes buildRuleTypes) {
       this.projectFilesystem = projectFilesystem;
       this.buildRuleTypes = buildRuleTypes;
     }

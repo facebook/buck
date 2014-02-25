@@ -155,7 +155,9 @@ public class XcconfigStackTest {
     ));
     XcconfigStack.Builder builder = XcconfigStack.builder();
     try {
-      builder.addSettingsFromFile(projectFilesystem, ImmutableList.<Path>of(), Paths.get("foo.xcconfig"));
+      builder.addSettingsFromFile(projectFilesystem,
+          ImmutableList.<Path>of(),
+          Paths.get("foo.xcconfig"));
     } catch (HumanReadableException e) {
       assertThat(e.getHumanReadableErrorMessage(), containsString(
           "In file: bar.xcconfig\n" +

@@ -250,7 +250,8 @@ public class DefaultJavaLibraryRuleIntegrationTest {
     buildResult2.assertSuccess("Successful build should exit with 0.");
 
     assertThat(utilRuleKey, not(equalTo(getContents("buck-out/bin/.util/metadata/RULE_KEY"))));
-    assertThat(utilRuleKeyNoDeps, not(equalTo(getContents("buck-out/bin/.util/metadata/RULE_KEY_NO_DEPS"))));
+    assertThat(utilRuleKeyNoDeps,
+        not(equalTo(getContents("buck-out/bin/.util/metadata/RULE_KEY_NO_DEPS"))));
     assertEquals(utilAbi, getContents("buck-out/bin/.util/metadata/ABI_KEY"));
     assertEquals(utilAbiForDeps, getContents("buck-out/bin/.util/metadata/ABI_KEY_FOR_DEPS"));
 

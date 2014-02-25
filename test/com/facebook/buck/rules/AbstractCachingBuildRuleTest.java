@@ -207,7 +207,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     // The dependent rule will be built immediately with a distinct rule key.
     expect(dep.build(context)).andReturn(
-        Futures.immediateFuture(new BuildRuleSuccess(dep, BuildRuleSuccess.Type.FETCHED_FROM_CACHE)));
+        Futures.immediateFuture(
+            new BuildRuleSuccess(dep, BuildRuleSuccess.Type.FETCHED_FROM_CACHE)));
     expect(dep.getRuleKey()).andReturn(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208"));
 
     // Add a build step so we can verify that the steps are executed.
@@ -339,7 +340,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
          .setRuleKey(reverse(buildRule.getRuleKey()))
          // However, the RuleKey not including the deps in memory should be the same as the one on
          // disk.
-         .setRuleKeyWithoutDeps(new RuleKey(TestAbstractCachingBuildRule.RULE_KEY_WITHOUT_DEPS_HASH))
+         .setRuleKeyWithoutDeps(
+             new RuleKey(TestAbstractCachingBuildRule.RULE_KEY_WITHOUT_DEPS_HASH))
          // Similarly, the ABI key for the deps in memory should be the same as the one on disk.
         .putMetadata(
             AbstractCachingBuildRule.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
@@ -358,7 +360,7 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
 
     ListenableFuture<BuildRuleSuccess> result = buildRule.build(buildContext);
     assertTrue("We expect build() to be synchronous in this case, " +
-    		       "so the future should already be resolved.",
+               "so the future should already be resolved.",
                MoreFutures.isSuccess(result));
 
     BuildRuleSuccess success = result.get();
@@ -379,7 +381,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
   }
 
   @Test
-  public void testAbiKeyAutomaticallyPopulated() throws IOException, ExecutionException, InterruptedException {
+  public void testAbiKeyAutomaticallyPopulated()
+      throws IOException, ExecutionException, InterruptedException {
     BuildRuleParams buildRuleParams = new FakeBuildRuleParams(buildTarget);
     TestAbstractCachingBuildRule buildRule =
         new LocallyBuiltTestAbstractCachingBuildRule(buildRuleParams);

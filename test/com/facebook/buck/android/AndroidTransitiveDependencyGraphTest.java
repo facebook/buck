@@ -72,7 +72,8 @@ public class AndroidTransitiveDependencyGraphTest {
 
     BuildRule prebuiltNativeLibraryBuild = ruleResolver.buildAndAddToIndex(
         PrebuiltNativeLibrary.newPrebuiltNativeLibrary(new FakeAbstractBuildRuleBuilderParams())
-        .setBuildTarget(BuildTargetFactory.newInstance("//java/com/facebook/prebuilt_native_library:library"))
+        .setBuildTarget(BuildTargetFactory.newInstance(
+            "//java/com/facebook/prebuilt_native_library:library"))
         .setNativeLibsDirectory(Paths.get("/java/com/facebook/prebuilt_native_library/libs"))
         .setIsAsset(true)
         .addVisibilityPattern(BuildTargetPattern.MATCH_ALL));
@@ -112,20 +113,20 @@ public class AndroidTransitiveDependencyGraphTest {
     // Verify that the correct transitive dependencies are found.
     AndroidTransitiveDependencies transitiveDeps = binaryRule.findTransitiveDependencies();
     AndroidDexTransitiveDependencies dexTransitiveDeps =
-    		binaryRule.findDexTransitiveDependencies();
+        binaryRule.findDexTransitiveDependencies();
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
         ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
         dexTransitiveDeps.classpathEntriesToDex);
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
-            "resources need to be extracted and repacked in the APK. If this is done, then code in " +
-            "the guava-10.0.1.dex.1.jar in the APK's assets/ tmp may try to load the resource " +
-            "from the APK as a ZipFileEntry rather than as a resource within guava-10.0.1.dex.1.jar. " +
-            "Loading a resource in this way could take substantially longer. Specifically, this was " +
-            "observed to take over one second longer to load the resource in fb4a. Because the " +
-            "resource was loaded on startup, this introduced a substantial regression in the startup " +
-            "time for the fb4a app.",
+            "resources need to be extracted and repacked in the APK. If this is done, then code " +
+            "in the guava-10.0.1.dex.1.jar in the APK's assets/ tmp may try to load the resource " +
+            "from the APK as a ZipFileEntry rather than as a resource within " +
+            "guava-10.0.1.dex.1.jar. Loading a resource in this way could take substantially " +
+            "longer. Specifically, this was observed to take over one second longer to load " +
+            "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
+            "substantial regression in the startup time for the fb4a app.",
         ImmutableSet.of("third_party/jsr-305/jsr305.jar"),
         dexTransitiveDeps.pathsToThirdPartyJars);
     assertEquals(
@@ -198,7 +199,8 @@ public class AndroidTransitiveDependencyGraphTest {
         .findDexTransitiveDependencies();
     assertEquals(
         "Classpath entries should include facebook/base but not keystore/base.",
-        ImmutableSet.of(BuckConstant.GEN_DIR + "/java/com/facebook/base/lib__base__output/base.jar"),
+        ImmutableSet.of(
+            BuckConstant.GEN_DIR + "/java/com/facebook/base/lib__base__output/base.jar"),
         androidTransitiveDeps.classpathEntriesToDex);
   }
 }

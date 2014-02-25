@@ -48,7 +48,7 @@ public class LabelsIntegrationTest {
 
   @Test
   public void shouldFailWithExplicitTargetsThatReferToFailingTests() throws IOException {
-    assertTestsFail("test","//test:geometry", "//test:orientation");
+    assertTestsFail("test", "//test:geometry", "//test:orientation");
   }
 
   @Test

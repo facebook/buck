@@ -33,6 +33,8 @@ import org.easymock.Capture;
 import java.util.Comparator;
 
 class MockingDSL {
+  private MockingDSL() {}
+
   static BuildRule mockLibrary(String baseName, String shortName) {
     BuildRule mock = createMock(BuildRule.class);
     BuildTarget buildTarget = new BuildTarget(baseName, shortName);

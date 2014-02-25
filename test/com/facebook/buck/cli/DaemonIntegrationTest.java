@@ -267,7 +267,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenSourceInputInvalidatedThenRebuildFails() throws IOException, InterruptedException {
+  public void whenSourceInputInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "file_watching", tmp);
     workspace.setUp();

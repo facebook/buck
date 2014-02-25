@@ -661,7 +661,8 @@ public class TestCommandTest {
         BuildTargetFactory.newInstance("//example:test"),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* visibility */ ImmutableSet.<BuildTargetPattern>of());
-    Iterable<TestRule> filtered = TestCommand.filterTestRules(options, ImmutableSet.<TestRule>of(rule));
+    Iterable<TestRule> filtered =
+        TestCommand.filterTestRules(options, ImmutableSet.<TestRule>of(rule));
 
     assertEquals(rule, Iterables.getOnlyElement(filtered));
   }

@@ -143,7 +143,8 @@ public class ProjectGeneratorTest {
     Optional<String> pbxproj = projectFilesystem.readFileIfItExists(OUTPUT_PROJECT_FILE_PATH);
     assertTrue(pbxproj.isPresent());
 
-    Optional<String> xcworkspacedata = projectFilesystem.readFileIfItExists(outputWorkspaceFilePath);
+    Optional<String> xcworkspacedata =
+        projectFilesystem.readFileIfItExists(outputWorkspaceFilePath);
     assertTrue(xcworkspacedata.isPresent());
 
     Optional<String> xcscheme = projectFilesystem.readFileIfItExists(outputSchemePath);
@@ -677,7 +678,8 @@ public class ProjectGeneratorTest {
         sourcesAndFlags.size(), sourcesBuildPhase.getFiles().size());
 
     // map keys to absolute paths
-    ImmutableMap.Builder<String, Optional<String>> absolutePathFlagMapBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, Optional<String>> absolutePathFlagMapBuilder =
+        ImmutableMap.builder();
     for (Map.Entry<String, Optional<String>> name : sourcesAndFlags.entrySet()) {
       absolutePathFlagMapBuilder.put(
           projectFilesystem.getRootPath().resolve(name.getKey()).toAbsolutePath().toString(),

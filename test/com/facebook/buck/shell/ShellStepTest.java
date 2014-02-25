@@ -203,14 +203,14 @@ public class ShellStepTest extends EasyMockSupport {
 
   @Test
   public void testDescriptionWithPath() {
-    ShellStep command = createCommand(ImmutableMap.<String,String>of(), ARGS, PATH);
+    ShellStep command = createCommand(ImmutableMap.<String, String>of(), ARGS, PATH);
     assertEquals(String.format("(cd '%s' && bash -c 'echo $V1 $V2')", PATH.getPath()),
         command.getDescription(context));
   }
 
   @Test
   public void testDescription() {
-    ShellStep command = createCommand(ImmutableMap.<String,String>of(), ARGS, null);
+    ShellStep command = createCommand(ImmutableMap.<String, String>of(), ARGS, null);
     assertEquals("bash -c 'echo $V1 $V2'", command.getDescription(context));
   }
 

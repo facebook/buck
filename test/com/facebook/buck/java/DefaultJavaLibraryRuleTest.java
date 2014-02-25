@@ -169,7 +169,8 @@ public class DefaultJavaLibraryRuleTest {
             BIN_PATH.resolve("android/java/lib__resources__classes/com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
-            BIN_PATH.resolve("android/java/lib__resources__classes/com/facebook/common/util/data.json")));
+            BIN_PATH.resolve(
+                "android/java/lib__resources__classes/com/facebook/common/util/data.json")));
     MoreAsserts.assertListEquals(expected, commands.build());
   }
 
@@ -200,10 +201,12 @@ public class DefaultJavaLibraryRuleTest {
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/base/data.json"),
-            BIN_PATH.resolve("android/java/src/lib__resources__classes/com/facebook/base/data.json")),
+            BIN_PATH.resolve(
+                "android/java/src/lib__resources__classes/com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
-            BIN_PATH.resolve("android/java/src/lib__resources__classes/com/facebook/common/util/data.json")));
+            BIN_PATH.resolve(
+                "android/java/src/lib__resources__classes/com/facebook/common/util/data.json")));
     assertEquals(expected, commands.build());
     MoreAsserts.assertListEquals(expected, commands.build());
   }
@@ -237,10 +240,14 @@ public class DefaultJavaLibraryRuleTest {
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/base/data.json"),
-            BIN_PATH.resolve("android/java/src/com/facebook/lib__resources__classes/com/facebook/base/data.json")),
+            BIN_PATH.resolve(
+                "android/java/src/com/facebook/lib__resources__classes/" +
+                    "com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
-            BIN_PATH.resolve("android/java/src/com/facebook/lib__resources__classes/com/facebook/common/util/data.json")));
+            BIN_PATH.resolve(
+                "android/java/src/com/facebook/lib__resources__classes/" +
+                    "com/facebook/common/util/data.json")));
     MoreAsserts.assertListEquals(expected, commands.build());
   }
 
@@ -537,7 +544,8 @@ public class DefaultJavaLibraryRuleTest {
     AnnotationProcessingScenario scenario = new AnnotationProcessingScenario();
     scenario.addAnnotationProcessorTarget(AnnotationProcessorTarget.VALID_JAVA_BINARY);
 
-    scenario.getAnnotationProcessingParamsBuilder().addAllProcessors(ImmutableList.of("MyProcessor"));
+    scenario.getAnnotationProcessingParamsBuilder().addAllProcessors(
+        ImmutableList.of("MyProcessor"));
     scenario.getAnnotationProcessingParamsBuilder().addParameter("MyParameter");
     scenario.getAnnotationProcessingParamsBuilder().addParameter("MyKey=MyValue");
     scenario.getAnnotationProcessingParamsBuilder().setProcessOnly(true);
@@ -834,7 +842,8 @@ public class DefaultJavaLibraryRuleTest {
         libWithExport.getAbiKey().getHash());
 
     assertEquals(
-        "getAbiKey() should not include the dependencies' ABI keys for the rule with export_deps=false.",
+        "getAbiKey() should not include the dependencies' ABI keys for the rule with " +
+            "export_deps=false.",
         libNoExportAbiKeyHash,
         libNoExport.getAbiKey().getHash());
   }

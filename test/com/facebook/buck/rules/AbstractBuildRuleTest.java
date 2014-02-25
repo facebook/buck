@@ -40,10 +40,14 @@ import javax.annotation.Nullable;
 
 public class AbstractBuildRuleTest {
 
-  private static final BuildTarget orcaTarget = new BuildTarget("//src/com/facebook/orca", "orca");
-  private static final BuildTarget publicTarget = new BuildTarget("//src/com/facebook/for", "everyone");
-  private static final BuildTarget nonPublicTarget1 = new BuildTarget("//src/com/facebook/something1", "nonPublic");
-  private static final BuildTarget nonPublicTarget2 = new BuildTarget("//src/com/facebook/something2", "nonPublic");
+  private static final BuildTarget orcaTarget =
+      new BuildTarget("//src/com/facebook/orca", "orca");
+  private static final BuildTarget publicTarget =
+      new BuildTarget("//src/com/facebook/for", "everyone");
+  private static final BuildTarget nonPublicTarget1 =
+      new BuildTarget("//src/com/facebook/something1", "nonPublic");
+  private static final BuildTarget nonPublicTarget2 =
+      new BuildTarget("//src/com/facebook/something2", "nonPublic");
 
   private static final ImmutableSet<BuildRule> noDeps = ImmutableSet.of();
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
@@ -64,10 +68,12 @@ public class AbstractBuildRuleTest {
         ImmutableSet.<BuildTargetPattern>of(
             new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
     BuildRule nonPublicBuildRule2 = createRule(nonPublicTarget2, noDeps,
-        ImmutableSet.<BuildTargetPattern>of(new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+        ImmutableSet.<BuildTargetPattern>of(
+            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
     AbstractBuildRule orcaRule = createRule(orcaTarget,
         ImmutableSet.of(nonPublicBuildRule1, nonPublicBuildRule2),
         noVisibilityPatterns);
+
     assertTrue(shouldBeVisibleMessage(nonPublicBuildRule1, orcaTarget),
         nonPublicBuildRule1.isVisibleTo(orcaTarget));
     assertTrue(shouldBeVisibleMessage(nonPublicBuildRule2, orcaTarget),
@@ -106,16 +112,19 @@ public class AbstractBuildRuleTest {
   public void testVisibilityMix() {
     BuildRule nonPublicBuildRule1 = createRule(nonPublicTarget1,
         noDeps,
-        ImmutableSet.<BuildTargetPattern>of(new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+        ImmutableSet.<BuildTargetPattern>of(
+            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
     BuildRule nonPublicBuildRule2 = createRule(nonPublicTarget2,
         noDeps,
-        ImmutableSet.<BuildTargetPattern>of(new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
+        ImmutableSet.<BuildTargetPattern>of(
+            new SingletonBuildTargetPattern(orcaTarget.getFullyQualifiedName())));
     BuildRule publicBuildRule = createRule(publicTarget,
         noDeps,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
     AbstractBuildRule orcaRule = createRule(orcaTarget,
         ImmutableSet.of(publicBuildRule, nonPublicBuildRule1, nonPublicBuildRule2),
         noVisibilityPatterns);
+
     assertTrue(shouldBeVisibleMessage(nonPublicBuildRule1, orcaTarget),
         nonPublicBuildRule1.isVisibleTo(orcaTarget));
     assertTrue(shouldBeVisibleMessage(nonPublicBuildRule2, orcaTarget),

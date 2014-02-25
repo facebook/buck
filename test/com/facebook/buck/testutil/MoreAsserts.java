@@ -136,7 +136,8 @@ public final class MoreAsserts {
       ++index;
     }
     if (observedIter.hasNext()) {
-      fail(prefixWithUserMessage(userMessage, "Extraneous item " + index + " in the observed list"));
+      fail(
+          prefixWithUserMessage(userMessage, "Extraneous item " + index + " in the observed list"));
     }
   }
 
@@ -169,7 +170,8 @@ public final class MoreAsserts {
   }
 
   /**
-   * Asserts that every {@link com.facebook.buck.step.Step} in the observed list is a {@link com.facebook.buck.shell.ShellStep} whose shell
+   * Asserts that every {@link com.facebook.buck.step.Step} in the observed list is a
+   * {@link com.facebook.buck.shell.ShellStep} whose shell
    * command arguments match those of the corresponding entry in the expected list.
    */
   public static void assertShellCommands(
@@ -196,7 +198,7 @@ public final class MoreAsserts {
     }
 
     if (observedIter.hasNext()) {
-      failWith(userMessage,"Extra observed command: " + observedIter.next());
+      failWith(userMessage, "Extra observed command: " + observedIter.next());
     }
   }
 

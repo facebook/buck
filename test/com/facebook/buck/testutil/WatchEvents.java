@@ -23,6 +23,8 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
 
 public class WatchEvents {
+  private WatchEvents() {}
+
   public static WatchEvent<Path> createPathEvent(final File file, final Kind<Path> kind) {
     return new WatchEvent<Path>() {
       @Override

@@ -145,7 +145,9 @@ public class AaptPackageResourcesTest {
     // Verify that the existing assets/ directory will be passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
     assertEquals(
-        "Even though there is only one assets directory, the one in " + BIN_DIR + " should be used.",
+        "Even though there is only one assets directory, the one in " +
+            BIN_DIR +
+            " should be used.",
         aaptPackageResources.getPathToAllAssetsDirectory(),
         allAssetsDirectory.get());
   }
@@ -224,13 +226,16 @@ public class AaptPackageResourcesTest {
         new MakeCleanDirectoryStep(BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__")),
         new MkdirAndSymlinkFileStep(
             Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"),
-            BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),
+            BIN_PATH.resolve(
+                "facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),
         new MkdirAndSymlinkFileStep(
             Paths.get("facebook/base/assets2/fonts/Theinhardt-Medium.otf"),
-            BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Medium.otf")),
+            BIN_PATH.resolve(
+                "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Medium.otf")),
         new MkdirAndSymlinkFileStep(
             Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"),
-            BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf")));
+            BIN_PATH.resolve(
+                "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf")));
     MoreAsserts.assertListEquals(expectedCommands, commands.build());
   }
 

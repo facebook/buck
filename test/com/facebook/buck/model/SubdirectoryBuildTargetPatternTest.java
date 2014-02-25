@@ -26,7 +26,8 @@ public class SubdirectoryBuildTargetPatternTest {
 
   @Test
   public void testApply() {
-    SubdirectoryBuildTargetPattern pattern = new SubdirectoryBuildTargetPattern("src/com/facebook/buck/");
+    SubdirectoryBuildTargetPattern pattern =
+        new SubdirectoryBuildTargetPattern("src/com/facebook/buck/");
 
     assertFalse(pattern.apply(null));
     assertTrue(pattern.apply(new BuildTarget("//src/com/facebook/buck", "buck")));

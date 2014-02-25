@@ -67,7 +67,8 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateDefaultJavaLibraryBuildRuleWithAbsentJavac() throws IOException, NoSuchBuildTargetException {
+  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithAbsentJavac()
+      throws IOException, NoSuchBuildTargetException {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
@@ -83,7 +84,8 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateDefaultJavaLibraryBuildRuleWithJavacSet() throws IOException, NoSuchBuildTargetException {
+  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacSet()
+      throws IOException, NoSuchBuildTargetException {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
@@ -107,7 +109,8 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateDefaultJavaLibraryBuildRuleWithDifferentRuleKey() throws IOException, NoSuchBuildTargetException {
+  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
+      throws IOException, NoSuchBuildTargetException {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
@@ -126,14 +129,16 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         new FakeProcessExecutor(0, "fakeVersion 0.1", ""),
         new FakeAndroidDirectoryResolver()).build();
-    BuildRuleFactory<?> configuredFactory = configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
+    BuildRuleFactory<?> configuredFactory =
+        configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule configuredRule = configuredFactory.newInstance(params).build(new BuildRuleResolver());
 
     assertNotEquals(rule.getRuleKey(), configuredRule.getRuleKey());
   }
 
   @Test(expected = HumanReadableException.class)
-  public void whenJavacWithoutVersionSupportIsSetInBuckCreateConfiguredBuildRulesThrowsException() throws IOException, NoSuchBuildTargetException {
+  public void whenJavacWithoutVersionSupportIsSetInBuckCreateConfiguredBuildRulesThrowsException()
+      throws IOException, NoSuchBuildTargetException {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
@@ -148,12 +153,14 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         new FakeProcessExecutor(1, "", "error"),
         new FakeAndroidDirectoryResolver()).build();
-    BuildRuleFactory<?> configuredFactory = configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
+    BuildRuleFactory<?> configuredFactory =
+        configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     configuredFactory.newInstance(params).build(new BuildRuleResolver());
   }
 
   @Test
-  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithAbsentJavac() throws IOException, NoSuchBuildTargetException {
+  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryRuleWithAbsentJavac()
+      throws IOException, NoSuchBuildTargetException {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
@@ -169,7 +176,8 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithJavacSet() throws IOException, NoSuchBuildTargetException {
+  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithJavacSet()
+      throws IOException, NoSuchBuildTargetException {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 

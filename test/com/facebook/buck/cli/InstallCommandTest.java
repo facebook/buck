@@ -213,8 +213,9 @@ public class InstallCommandTest {
     };
 
     for (int i = 0; i < devices.length; i++) {
-      InstallCommandOptions options = getOptions(
-          TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG,devices[i].getSerialNumber());
+      InstallCommandOptions options = getOptions(TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG,
+          devices[i].getSerialNumber());
+
       List<IDevice> filteredDevices = installCommand.filterDevices(
           devices, options.adbOptions(), options.targetDeviceOptions());
       assertNotNull(filteredDevices);

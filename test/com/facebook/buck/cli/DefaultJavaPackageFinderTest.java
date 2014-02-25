@@ -119,7 +119,8 @@ public class DefaultJavaPackageFinderTest {
     assertEquals(
         "Prefixes take precedence over path elements",
         "com/example/base/",
-        javaPackageFinder.findJavaPackageFolderForPath("/java/main/src/com/example/base/Base.java"));
+        javaPackageFinder.findJavaPackageFolderForPath(
+            "/java/main/src/com/example/base/Base.java"));
   }
 
   @Test

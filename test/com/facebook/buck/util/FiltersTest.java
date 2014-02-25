@@ -163,7 +163,8 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterRemovesUnneededResources() {
-    Set<File> lmdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), false);
+    Set<File> lmdpi =
+        Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), false);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
@@ -192,7 +193,8 @@ public class FiltersTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterWithDownscale() {
-    Set<File> lmdpi = Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), true);
+    Set<File> lmdpi =
+        Filters.filterByDensity(candidates, ImmutableSet.of(Density.LDPI, Density.MDPI), true);
     Iterable<Path> keepPaths = Iterables.concat(
         paths("dmhx.png", MDPI),
         paths("dmh.png", MDPI),
@@ -307,7 +309,8 @@ public class FiltersTest {
 
   @Test
   public void testImageDensityFilter() {
-    Set<File> filesToRemove = Filters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
+    Set<File> filesToRemove =
+        Filters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
     Predicate<File> predicate = Filters.createImageDensityFilter(
          candidates, ImmutableSet.of(Density.MDPI), false);
     assertFalse(candidates.isEmpty());

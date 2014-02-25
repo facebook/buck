@@ -42,7 +42,7 @@ public class BuildFileToJsonParserTest {
     String json =
         "{" +
           "\"srcs\": [\"src/com/facebook/buck/Bar.java\", \"src/com/facebook/buck/Foo.java\"]" +
-    		"}";
+        "}";
 
     try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, false /* isServerMode */)) {
       assertEquals(

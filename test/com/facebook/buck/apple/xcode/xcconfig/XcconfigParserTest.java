@@ -149,7 +149,7 @@ public class XcconfigParserTest {
   @Test
   public void testMultiFileParsing() throws ParseException, IOException {
 
-    ImmutableMap<String,String> files = ImmutableMap.of(
+    ImmutableMap<String, String> files = ImmutableMap.of(
         "file1.xcconfig", s2 + "\n" + s3,
         "folder/file2.xcconfig", s1 + "\n" + "#include \"../file1.xcconfig\""
     );

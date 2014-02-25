@@ -140,7 +140,8 @@ public class AuditClasspathCommandTest {
         JavaTestRule.newJavaTestRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//:project-tests"))
             .addDep(BuildTargetFactory.newInstance("//:test-java-library"))
-            .setSourceUnderTest(ImmutableSet.of(BuildTargetFactory.newInstance("//:test-java-library")))
+            .setSourceUnderTest(
+                ImmutableSet.of(BuildTargetFactory.newInstance("//:test-java-library")))
             .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java")));
     PartialGraph partialGraph2 = createGraphFromBuildRules(ruleResolver, targets);
     auditClasspathCommand.printClasspath(partialGraph2);

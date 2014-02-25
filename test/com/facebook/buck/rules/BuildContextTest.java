@@ -68,7 +68,8 @@ public class BuildContextTest {
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
 
-    String androidBootclasspath = MorePaths.newPathInstance(androidBootclasspathSupplier.get()).toString();
+    String androidBootclasspath =
+        MorePaths.newPathInstance(androidBootclasspathSupplier.get()).toString();
     assertEquals(
         "add-ons/addon-google_apis-google-15/libs/effects.jar:" +
         "add-ons/addon-google_apis-google-15/libs/maps.jar:" +

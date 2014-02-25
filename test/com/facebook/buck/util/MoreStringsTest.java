@@ -70,11 +70,13 @@ public class MoreStringsTest {
         2,
         MoreStrings.getLevenshteinDistance("BIULD", "BUILD"));
     assertEquals(
-        "The distance between 'INSTALL' and 'AUDIT' should be 7 (e.g., 5 substitutions + 2 deletions).",
+        "The distance between 'INSTALL' and 'AUDIT' should be 7 " +
+            "(e.g., 5 substitutions + 2 deletions).",
         7,
         MoreStrings.getLevenshteinDistance("INSTALL", "AUDIT"));
     assertEquals(
-        "The distance between 'aaa' and 'bbbbbb' should be 6 (e.g., 3 substitutions + 3 insertions).",
+        "The distance between 'aaa' and 'bbbbbb' should be 6 " +
+            "(e.g., 3 substitutions + 3 insertions).",
         6,
         MoreStrings.getLevenshteinDistance("aaa", "bbbbbb"));
     assertEquals(

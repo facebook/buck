@@ -38,7 +38,7 @@ import java.nio.file.Path;
 
 public class FakeJavaLibraryRule extends FakeBuildRule implements JavaLibraryRule {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private ImmutableSortedSet<Path> srcs = ImmutableSortedSet.of();
 

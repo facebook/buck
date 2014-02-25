@@ -48,8 +48,10 @@ public class ProjectWorkspaceTest {
         this, "dir_doesnt_exist", tmpFolder);
 
     List<String> buildLogLines = Lists.newArrayList(
-        "735 INFO  BuildRuleFinished(//example/base:one): SUCCESS MISS BUILT_LOCALLY 489e1b85f804dc0f66545f2ce06f57ee85204747",
-        "735 INFO  BuildRuleFinished(//example/base:two): SUCCESS MISS MISSING 489e1b85f804dc0f66545f2ce06f57ee85204747");
+        "735 INFO  BuildRuleFinished(//example/base:one): " +
+            "SUCCESS MISS BUILT_LOCALLY 489e1b85f804dc0f66545f2ce06f57ee85204747",
+        "735 INFO  BuildRuleFinished(//example/base:two): " +
+            "SUCCESS MISS MISSING 489e1b85f804dc0f66545f2ce06f57ee85204747");
 
     tmpFolder.newFolder("buck-out");
     tmpFolder.newFolder("buck-out/bin");

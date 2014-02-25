@@ -64,14 +64,14 @@ public class JavacInMemoryStepIntegrationTest {
             "-processorpath %s " +
             "-processor %s " +
             "-A%s=%s " +
-        		"-d %s " +
+            "-d %s " +
             "-classpath '' " +
             "@" + pathToSrcsList.toString(),
-        		AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
-        		AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
-        		AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,
-        		pathToAbiFile,
-        		pathToOutputDir),
+            AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
+            AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
+            AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,
+            pathToAbiFile,
+            pathToOutputDir),
         javac.getDescription(executionContext));
   }
 

@@ -93,7 +93,7 @@ public class VacationIntegrationTest {
   }
 
   private void assertResult(
-      Map<VacationFixture.TestName,VacationFixture.ResultType> results,
+      Map<VacationFixture.TestName, VacationFixture.ResultType> results,
       ResultType expectedResultType,
       TestName... testNames) {
     for (TestName testName : testNames) {

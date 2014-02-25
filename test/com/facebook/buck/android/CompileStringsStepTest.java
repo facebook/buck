@@ -55,7 +55,8 @@ public class CompileStringsStepTest extends EasyMockSupport {
   private static final Path FIRST_FILE = TESTDATA_DIR.resolve("first/res/values-es/strings.xml");
   private static final Path SECOND_FILE = TESTDATA_DIR.resolve("second/res/values-es/strings.xml");
   private static final Path THIRD_FILE = TESTDATA_DIR.resolve("third/res/values-pt/strings.xml");
-  private static final Path FOURTH_FILE = TESTDATA_DIR.resolve("third/res/values-pt-rBR/strings.xml");
+  private static final Path FOURTH_FILE =
+      TESTDATA_DIR.resolve("third/res/values-pt-rBR/strings.xml");
 
   @Test
   public void testStringFilePattern() {

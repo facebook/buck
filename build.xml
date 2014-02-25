@@ -262,7 +262,7 @@
     <fileset dir="${basedir}/pmd" includes="*.jar" />
   </path>
 
-  <target name="lint">
+  <target name="pmd">
     <taskdef name="pmd"
              classpathref="pmd-classpath"
              classname="net.sourceforge.pmd.ant.PMDTask"
@@ -300,6 +300,8 @@
       <formatter type="plain"/>
     </checkstyle>
   </target>
+
+  <target name="lint" depends="pmd, checkstyle" />
 
   <target name="test" depends="java-test, py-test" description="runs the unit tests" />
 

@@ -111,7 +111,8 @@ public class TracesHelperTest extends EasyMockSupport {
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("b");
     assertEquals(
-        "TracesHelper should not be able to extract the command because there is no name attribute.",
+        "TracesHelper should not be able to extract the command because there is no name " +
+            "attribute.",
         Optional.absent(),
         traceAttributes.getCommand());
     assertEquals(2000L, traceAttributes.getLastModifiedTime());
@@ -149,7 +150,8 @@ public class TracesHelperTest extends EasyMockSupport {
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("c");
     assertEquals(
-        "TracesHelper should not be able to extract the command because there is no command_args attribute.",
+        "TracesHelper should not be able to extract the command because there is no " +
+            "command_args attribute.",
         Optional.absent(),
         traceAttributes.getCommand());
     assertEquals(2000L, traceAttributes.getLastModifiedTime());

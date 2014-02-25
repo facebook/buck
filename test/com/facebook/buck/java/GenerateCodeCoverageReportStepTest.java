@@ -101,22 +101,24 @@ public class GenerateCodeCoverageReportStepTest {
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(context.isJacocoEnabled()).andReturn(true).times(1);
-    expect(context.getProjectFilesystem()).andReturn(new ProjectFilesystem(new File("."))).anyTimes();
+    expect(
+        context.getProjectFilesystem()).andReturn(new ProjectFilesystem(new File("."))).anyTimes();
     replay(context);
 
     ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();
 
     shellCommandBuilder.add(
         "java",
-        "-classpath",String.format("%s/*:%s/../report-generator-build/",
-        JUnitStep.PATH_TO_JACOCO_JARS,JUnitStep.PATH_TO_JACOCO_JARS),
-        String.format("-Djacoco.output.dir=%s",outputDirectory),
-        String.format("-Djacoco.exec.data.file=%s",JUnitStep.JACOCO_EXEC_COVERAGE_FILE),
-        String.format("-Dclasses.dir=%s",String.format("%s/%s:%s/%s",
-            new File(".").getAbsoluteFile().toPath().normalize(),
-            "parentDirectory1/classes",
-            new File(".").getAbsoluteFile().toPath().normalize(),
-            "root/parentDirectory/classes")),
+        "-classpath", String.format("%s/*:%s/../report-generator-build/",
+        JUnitStep.PATH_TO_JACOCO_JARS, JUnitStep.PATH_TO_JACOCO_JARS),
+        String.format("-Djacoco.output.dir=%s", outputDirectory),
+        String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE),
+        String.format("-Dclasses.dir=%s",
+            String.format("%s/%s:%s/%s",
+                new File(".").getAbsoluteFile().toPath().normalize(),
+                "parentDirectory1/classes",
+                new File(".").getAbsoluteFile().toPath().normalize(),
+                "root/parentDirectory/classes")),
         String.format("-Dsrc.dir=%s", "src"),
         "ReportGenerator");
 

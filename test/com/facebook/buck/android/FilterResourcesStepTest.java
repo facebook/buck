@@ -49,11 +49,11 @@ import java.util.Set;
 
 public class FilterResourcesStepTest {
 
-  private final static String first = "/first-path/res";
-  private final static String second = "/second-path/res";
-  private final static String third = "/third-path/res";
+  private static final String first = "/first-path/res";
+  private static final String second = "/second-path/res";
+  private static final String third = "/third-path/res";
 
-  private final static ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
+  private static final ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
       ImmutableBiMap.of(
           Paths.get(first), Paths.get("/dest/1"),
           Paths.get(second), Paths.get("/dest/2"),
@@ -192,7 +192,8 @@ public class FilterResourcesStepTest {
 
     // Ensure the right filter is created.
     Set<Path> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet());
-    Predicate<File> expectedPred = Filters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
+    Predicate<File> expectedPred =
+        Filters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
     Predicate<File> capturedPred = predCapture.getValue();
     for (Path drawablePath : drawables) {
       File drawableFile = drawablePath.toFile();

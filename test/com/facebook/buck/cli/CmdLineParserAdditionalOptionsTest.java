@@ -84,12 +84,12 @@ public class CmdLineParserAdditionalOptionsTest {
      parser = new CmdLineParserAdditionalOptions(options);
   }
 
-  @Test(expected=IllegalAnnotationError.class)
+  @Test(expected = IllegalAnnotationError.class)
   public void testDuplicateAdditionalOptionsClass() {
       new CmdLineParserAdditionalOptions(new DuplicateOptions());
   }
 
-  @Test(expected=IllegalAnnotationError.class)
+  @Test(expected = IllegalAnnotationError.class)
   public void testRecursiveAdditionalOptions() {
       new CmdLineParserAdditionalOptions(new InfiniteOptions());
   }

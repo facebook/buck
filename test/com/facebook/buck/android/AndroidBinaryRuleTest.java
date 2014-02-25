@@ -119,11 +119,13 @@ public class AndroidBinaryRuleTest {
     verify(context);
 
     MakeCleanDirectoryStep expectedClean =
-        new MakeCleanDirectoryStep(Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
+        new MakeCleanDirectoryStep(
+            Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
 
     GenProGuardConfigStep expectedGenProguard =
         new GenProGuardConfigStep(
-            Paths.get("buck-out/bin/java/src/com/facebook/base/__manifest_apk#aapt_package__/AndroidManifest.xml"),
+            Paths.get("buck-out/bin/java/src/com/facebook/base/" +
+                "__manifest_apk#aapt_package__/AndroidManifest.xml"),
             ImmutableSet.<String>of(),
             Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
 
@@ -134,10 +136,13 @@ public class AndroidBinaryRuleTest {
           false,
           Optional.<Integer>absent(),
           ImmutableMap.of(
-              Paths.get("buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
-              Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/java/src/com/" +
-                  "facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
-          ImmutableSet.of("buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
+              Paths.get(
+                  "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
+              Paths.get(
+                  "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/" +
+                  "java/src/com/facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
+          ImmutableSet.of(
+              "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
           Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
 
     assertEquals(
@@ -160,7 +165,8 @@ public class AndroidBinaryRuleTest {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
       AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
-          AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+          AndroidResourceRule.newAndroidResourceRuleBuilder(
+              new FakeAbstractBuildRuleBuilderParams())
           .setAssetsDirectory(Paths.get(assetDirectory))
           .setRes(resDirectory == null ? null : Paths.get(resDirectory))
           .setBuildTarget(resourceOnebuildTarget));
