@@ -307,6 +307,11 @@ public class ProjectFilesystem {
     }
   }
 
+  public long getLastModifiedTime(Path pathRelativeToProjectRoot) throws IOException {
+    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
+    return java.nio.file.Files.getLastModifiedTime(path).toMillis();
+  }
+
   /**
    * Recursively delete everything under the specified path.
    */
