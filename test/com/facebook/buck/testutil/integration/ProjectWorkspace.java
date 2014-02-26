@@ -186,6 +186,14 @@ public class ProjectWorkspace {
     return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
   }
 
+  public void replaceFileContents(String pathRelativeToProjectRoot,
+      String target,
+      String replacement) throws IOException {
+    String fileContents = getFileContents(pathRelativeToProjectRoot);
+    fileContents = fileContents.replace(target, replacement);
+    writeContentsToPath(fileContents, pathRelativeToProjectRoot);
+  }
+
   public void writeContentsToPath(String contents, String pathRelativeToProjectRoot)
       throws IOException {
     Files.write(contents.getBytes(Charsets.UTF_8), getFile(pathRelativeToProjectRoot));

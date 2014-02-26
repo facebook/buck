@@ -52,9 +52,7 @@ public class AndroidXmlFileIntegrationTest {
 
   @Test
   public void testEditingStringOnlyBuildsResourceRule() throws IOException {
-    String stringsXmlFileContents = workspace.getFileContents(PATH_TO_STRINGS_XML);
-    stringsXmlFileContents = stringsXmlFileContents.replace("Hello", "Bye");
-    workspace.writeContentsToPath(stringsXmlFileContents, PATH_TO_STRINGS_XML);
+    workspace.replaceFileContents(PATH_TO_STRINGS_XML, "Hello", "Bye");
 
     workspace.resetBuildLogFile();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
@@ -70,12 +68,11 @@ public class AndroidXmlFileIntegrationTest {
 
   @Test
   public void testEditingColorOnlyBuildsResourceRule() throws IOException {
-    String layoutXmlFileContents = workspace.getFileContents(PATH_TO_LAYOUT_XML);
-    layoutXmlFileContents = layoutXmlFileContents.replace("white", "black");
-    workspace.writeContentsToPath(layoutXmlFileContents, PATH_TO_LAYOUT_XML);
+    workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "white", "black");
 
     workspace.resetBuildLogFile();
-    workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
@@ -87,14 +84,13 @@ public class AndroidXmlFileIntegrationTest {
 
   @Test
   public void testAddingAStringBuildsAllRules() throws IOException {
-    String stringsXmlFileContents = workspace.getFileContents(PATH_TO_STRINGS_XML);
-    stringsXmlFileContents = stringsXmlFileContents.replace(
+    workspace.replaceFileContents(PATH_TO_STRINGS_XML,
         "</resources>",
         "<string name=\"base_text\">Goodbye!</string></resources>");
-    workspace.writeContentsToPath(stringsXmlFileContents, PATH_TO_STRINGS_XML);
 
     workspace.resetBuildLogFile();
-    workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
@@ -106,12 +102,8 @@ public class AndroidXmlFileIntegrationTest {
 
   @Test
   public void testRenamingAStringBuildsAllRules() throws IOException {
-    String stringsXmlFileContents = workspace.getFileContents(PATH_TO_STRINGS_XML);
-    stringsXmlFileContents = stringsXmlFileContents.replace("base_button", "base_text");
-    workspace.writeContentsToPath(stringsXmlFileContents, PATH_TO_STRINGS_XML);
-    String layoutXmlFileContents = workspace.getFileContents(PATH_TO_LAYOUT_XML);
-    layoutXmlFileContents = layoutXmlFileContents.replace("base_button", "base_text");
-    workspace.writeContentsToPath(layoutXmlFileContents, PATH_TO_LAYOUT_XML);
+    workspace.replaceFileContents(PATH_TO_STRINGS_XML, "base_button", "base_text");
+    workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "base_button", "base_text");
 
     workspace.resetBuildLogFile();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
@@ -127,11 +119,9 @@ public class AndroidXmlFileIntegrationTest {
 
   @Test
   public void testTransitiveResourceRuleAbi() throws IOException {
-    String stringsXmlFileContents = workspace.getFileContents(PATH_TO_STRINGS_XML);
-    stringsXmlFileContents = stringsXmlFileContents.replace(
+    workspace.replaceFileContents(PATH_TO_STRINGS_XML,
         "</resources>",
         "<string name=\"base_text\">Goodbye!</string></resources>");
-    workspace.writeContentsToPath(stringsXmlFileContents, PATH_TO_STRINGS_XML);
 
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", "//java/com/sample/lib:lib_using_transitive_empty_res");
