@@ -16,22 +16,16 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertEquals;
-
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Optional;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class AndroidXmlFileIntegrationTest {
 
@@ -66,22 +60,12 @@ public class AndroidXmlFileIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
     result.assertSuccess();
 
-    Map<BuildTarget, Optional<BuildRuleSuccess.Type>> successTypes =
-        workspace.getBuildRuleSuccessTypes();
+    BuckBuildLog buildLog = workspace.getBuildLog();
 
-    assertEquals(
-        BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-        successTypes.get(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)).get());
-    assertEquals(
-        BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-        successTypes.get(
-            BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dummy_r_dot_java")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/top:top")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/base:base")).get());
+    buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
+    buildLog.assertTargetHadMatchingDepsAbi("//res/com/sample/top:top");
+    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingDepsAbi(MAIN_BUILD_TARGET);
   }
 
   @Test
@@ -93,21 +77,12 @@ public class AndroidXmlFileIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
 
-    Map<BuildTarget, Optional<BuildRuleSuccess.Type>> successTypes =
-        workspace.getBuildRuleSuccessTypes();
-    assertEquals(
-        BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-        successTypes.get(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)).get());
-    assertEquals(
-        BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-        successTypes.get(
-            BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dummy_r_dot_java")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/top:top")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.MATCHING_RULE_KEY,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/base:base")).get());
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetHadMatchingRuleKey("//res/com/sample/base:base");
+    buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
+    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingDepsAbi(MAIN_BUILD_TARGET);
   }
 
   @Test
@@ -121,21 +96,12 @@ public class AndroidXmlFileIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
 
-    Map<BuildTarget, Optional<BuildRuleSuccess.Type>> successTypes =
-        workspace.getBuildRuleSuccessTypes();
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(
-            BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dummy_r_dot_java")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/top:top")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/base:base")).get());
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
+    buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetBuiltLocally(MAIN_BUILD_TARGET);
   }
 
   @Test
@@ -151,21 +117,12 @@ public class AndroidXmlFileIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
     result.assertSuccess();
 
-    Map<BuildTarget, Optional<BuildRuleSuccess.Type>> successTypes =
-        workspace.getBuildRuleSuccessTypes();
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(
-            BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dummy_r_dot_java")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/top:top")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance("//res/com/sample/base:base")).get());
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
+    buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetBuiltLocally(MAIN_BUILD_TARGET);
   }
 
   @Test
@@ -179,16 +136,10 @@ public class AndroidXmlFileIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", "//java/com/sample/lib:lib_using_transitive_empty_res");
 
-    Map<BuildTarget, Optional<BuildRuleSuccess.Type>> successTypes =
-        workspace.getBuildRuleSuccessTypes();
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(BuildTargetFactory.newInstance(
-                "//java/com/sample/lib:lib_using_transitive_empty_res")).get());
-    assertEquals(
-        BuildRuleSuccess.Type.BUILT_LOCALLY,
-        successTypes.get(
-            BuildTargetFactory.newInstance(
-                "//java/com/sample/lib:lib_using_transitive_empty_res#dummy_r_dot_java")).get());
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib_using_transitive_empty_res");
+    buildLog.assertTargetBuiltLocally(
+        "//java/com/sample/lib:lib_using_transitive_empty_res#dummy_r_dot_java");
   }
 }
