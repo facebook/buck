@@ -99,7 +99,9 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(String buildId) {}
+  public void outputTrace(String buildId) {
+    closeLogFile();
+  }
 
   private static class BuildEventFormatter extends Formatter {
 
