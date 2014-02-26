@@ -33,6 +33,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -42,7 +43,6 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -57,7 +57,7 @@ public class KnownBuildRuleTypesTest {
   public static void setupBuildParams() throws IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(folder.getRoot());
     params = new BuildRuleFactoryParams(
-        new HashMap<String, Object>(),
+        Maps.<String, Object>newHashMap(),
         filesystem,
         BuildFileTree.constructBuildFileTree(filesystem),
         new BuildTargetParser(filesystem),

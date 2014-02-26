@@ -140,7 +140,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   private Map<String, NativeStringInfo> parseStringFiles(ExecutionContext context) {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
 
-    HashMap<String, NativeStringInfo> nativeStrings = new HashMap<String, NativeStringInfo>();
+    Map<String, NativeStringInfo> nativeStrings = Maps.newHashMap();
 
     for (Path resDir : resDirectories) {
       Path stringsPath = resDir.resolve("values").resolve("strings.xml");
@@ -181,7 +181,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   void scrapeNodes(
       NodeList nodes,
       String stringsFilePath,
-      HashMap<String, NativeStringInfo> nativeStrings) {
+      Map<String, NativeStringInfo> nativeStrings) {
     for (int i = 0; i < nodes.getLength(); ++i) {
       Node node = nodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();

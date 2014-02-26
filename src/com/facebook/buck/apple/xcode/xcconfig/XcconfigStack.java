@@ -31,11 +31,12 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,9 +95,9 @@ public final class XcconfigStack {
 
     public Builder(String aliasPrefix) {
       stack = ArrayListMultimap.create();
-      keyAliases = new HashMap<String, String>();
-      currentLayer = new ArrayList<PredicatedConfigValue>();
-      currentKeyAliases = new HashMap<String, String>();
+      keyAliases = Maps.newHashMap();
+      currentLayer = Lists.newArrayList();
+      currentKeyAliases = Maps.newHashMap();
       currentCounter = 0;
       prefix = aliasPrefix;
     }
@@ -175,7 +176,7 @@ public final class XcconfigStack {
         addSettingToLayer(stack, setting);
       }
       currentLayer = new ArrayList<PredicatedConfigValue>();
-      currentKeyAliases = new HashMap<String, String>();
+      currentKeyAliases = Maps.newHashMap();
       currentCounter += 1;
     }
 
