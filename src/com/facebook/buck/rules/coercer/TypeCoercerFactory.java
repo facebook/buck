@@ -58,6 +58,14 @@ public class TypeCoercerFactory {
         }
       };
 
+  private final TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
+
+  private final TypeCoercer<AppleSource> appleSourceTypeCoercer =
+    new AppleSourceTypeCoercer(
+        sourcePathTypeCoercer,
+        new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
+        stringTypeCoercer);
+
   private final TypeCoercer<?>[] nonContainerTypeCoercers = {
       // special classes
       pathTypeCoercer,
@@ -67,7 +75,7 @@ public class TypeCoercerFactory {
       buildTargetPatternTypeCoercer,
 
       // identity
-      new IdentityTypeCoercer<>(String.class),
+      stringTypeCoercer,
       new IdentityTypeCoercer<>(Boolean.class),
 
       // numeric
@@ -77,6 +85,9 @@ public class TypeCoercerFactory {
       new NumberTypeCoercer<>(Long.class),
       new NumberTypeCoercer<>(Short.class),
       new NumberTypeCoercer<>(Byte.class),
+
+      // other simple
+      appleSourceTypeCoercer,
   };
 
   public TypeCoercer<?> typeCoercerForType(Type type) {
