@@ -30,12 +30,12 @@ import java.util.Set;
 public class GenProGuardConfigStep extends ShellStep {
 
   private final Path androidManifestPath;
-  private final Set<String> resDirectories;
+  private final Set<Path> resDirectories;
   private final Path proguardConfigurationPath;
 
   public GenProGuardConfigStep(
       Path androidManifestPath,
-      Set<String> resDirectories,
+      Set<Path> resDirectories,
       Path proguardConfigurationPath) {
     this.androidManifestPath = Preconditions.checkNotNull(androidManifestPath);
     this.resDirectories = ImmutableSet.copyOf(resDirectories);
@@ -58,8 +58,8 @@ public class GenProGuardConfigStep extends ShellStep {
     args.add("-G").add(proguardConfigurationPath.toString());
 
     // Add all of the res/ directories.
-    for (String res : resDirectories) {
-      args.add("-S").add(res);
+    for (Path res : resDirectories) {
+      args.add("-S").add(res.toString());
     }
 
     // Add the remaining flags.

@@ -36,8 +36,7 @@ import java.util.Set;
 public class AaptStep extends ShellStep {
 
   private final Path androidManifest;
-  // TODO(simons): Set<Path>
-  private final Set<String> resDirectories;
+  private final ImmutableSet<Path> resDirectories;
   private final Optional<Path> assetsDirectory;
   private final Path pathToOutputApkFile;
 
@@ -46,7 +45,7 @@ public class AaptStep extends ShellStep {
 
   public AaptStep(
       Path androidManifest,
-      Set<String> resDirectories,
+      Set<Path> resDirectories,
       Optional<Path> assetsDirectory,
       Path pathToOutputApkFile,
       boolean isCrunchPngFiles) {
@@ -88,8 +87,8 @@ public class AaptStep extends ShellStep {
 
     // Include all of the res/ directories.
     builder.add("--auto-add-overlay");
-    for (String res : resDirectories) {
-      builder.add("-S", res);
+    for (Path res : resDirectories) {
+      builder.add("-S", res.toString());
     }
 
     // Include the assets/ directory, if any.

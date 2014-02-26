@@ -464,7 +464,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       BuildContext context,
       final AndroidTransitiveDependencies transitiveDependencies,
       final AndroidDexTransitiveDependencies dexTransitiveDependencies,
-      ImmutableSet<String> resDirectories,
+      ImmutableSet<Path> resDirectories,
       ImmutableList.Builder<Step> steps) {
     // Execute preprocess_java_classes_binary, if appropriate.
     ImmutableSet<Path> classpathEntriesToDex;
@@ -654,7 +654,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,
-      Set<String> resDirectories) {
+      Set<Path> resDirectories) {
     final ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesMap =
         getTransitiveClasspathEntries();
     ImmutableSet.Builder<String> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();

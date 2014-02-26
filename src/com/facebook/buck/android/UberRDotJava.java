@@ -152,7 +152,7 @@ public class UberRDotJava extends AbstractBuildable implements
     return null;
   }
 
-  public ImmutableSet<String> getResDirectories() {
+  public ImmutableSet<Path> getResDirectories() {
     return getBuildOutput().resDirectories;
   }
 
@@ -270,7 +270,9 @@ public class UberRDotJava extends AbstractBuildable implements
         : Optional.<Integer>absent();
 
     return new BuildOutput(
-      ImmutableSet.copyOf(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get()),
+      FluentIterable.from(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get())
+            .transform(MorePaths.TO_PATH)
+            .toSet(),
       FluentIterable.from(onDiskBuildInfo.getValues(NON_ENGLISH_STRING_FILES_KEY).get())
           .transform(MorePaths.TO_PATH)
           .toSet(),
@@ -293,11 +295,11 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   public static class BuildOutput {
-    private final ImmutableSet<String> resDirectories;
+    private final ImmutableSet<Path> resDirectories;
     private final ImmutableSet<Path> nonEnglishStringFiles;
     private final Optional<Integer> rDotJavaDexLinearAllocEstimate;
 
-    public BuildOutput(ImmutableSet<String> resDirectories,
+    public BuildOutput(ImmutableSet<Path> resDirectories,
         ImmutableSet<Path> nonEnglishStringFiles,
         Optional<Integer> rDotJavaDexLinearAllocSizeEstimate) {
       this.resDirectories = Preconditions.checkNotNull(resDirectories);

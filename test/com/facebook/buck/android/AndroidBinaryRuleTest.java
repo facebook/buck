@@ -115,7 +115,7 @@ public class AndroidBinaryRuleTest {
         classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
-        ImmutableSet.<String>of());
+        ImmutableSet.<Path>of());
     verify(context);
 
     MakeCleanDirectoryStep expectedClean =
@@ -126,7 +126,7 @@ public class AndroidBinaryRuleTest {
         new GenProGuardConfigStep(
             Paths.get("buck-out/bin/java/src/com/facebook/base/" +
                 "__manifest_apk#aapt_package__/AndroidManifest.xml"),
-            ImmutableSet.<String>of(),
+            ImmutableSet.<Path>of(),
             Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
 
     Step expectedObfuscation =
