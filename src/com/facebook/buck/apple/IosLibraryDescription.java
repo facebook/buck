@@ -23,8 +23,8 @@ import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,7 +57,7 @@ public class IosLibraryDescription implements Description<IosLibraryDescription.
     public ImmutableMap<
         String,
         ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
-    public ImmutableList<Either<SourcePath, Pair<SourcePath, String>>> srcs;
+    public ImmutableList<AppleSource> srcs;
     public ImmutableSortedSet<SourcePath> headers;
 
     /**

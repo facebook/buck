@@ -68,6 +68,7 @@ import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.buck.shell.Genrule;
@@ -285,9 +286,9 @@ public class ProjectGeneratorTest {
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
     arg.srcs = ImmutableList.of(
-        Either.<SourcePath, Pair<SourcePath, String>>ofRight(
+        AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
-        Either.<SourcePath, Pair<SourcePath, String>>ofLeft(new FileSourcePath("bar.m")));
+        AppleSource.ofSourcePath(new FileSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
@@ -341,7 +342,7 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
-    arg.srcs = ImmutableList.of(Either.<SourcePath, Pair<SourcePath, String>>ofRight(
+    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
         new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
     arg.sourceUnderTest = ImmutableSortedSet.of();
@@ -387,7 +388,7 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
-    arg.srcs = ImmutableList.of(Either.<SourcePath, Pair<SourcePath, String>>ofRight(
+    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
         new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
 
@@ -436,9 +437,8 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
     arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
-    arg.srcs = ImmutableList.of(
-        Either.<SourcePath, Pair<SourcePath, String>>ofRight(
-            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
+    arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
+        new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,

@@ -48,6 +48,7 @@ public class IosTest extends AbstractBuildable {
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
   private final ImmutableSortedSet<BuildRule> sourceUnderTest;
+  private final ImmutableList<GroupedSource> groupedSrcs;
 
   public IosTest(IosTestDescription.Arg arg) {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
@@ -58,9 +59,15 @@ public class IosTest extends AbstractBuildable {
 
     ImmutableSortedSet.Builder<SourcePath> srcsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlagsBuilder = ImmutableMap.builder();
-    RuleUtils.extractSourcePaths(srcsBuilder, perFileCompileFlagsBuilder, arg.srcs);
+    ImmutableList.Builder<GroupedSource> groupedSourcesBuilder = ImmutableList.builder();
+    RuleUtils.extractSourcePaths(
+        srcsBuilder,
+        perFileCompileFlagsBuilder,
+        groupedSourcesBuilder,
+        arg.srcs);
     srcs = srcsBuilder.build();
     perFileCompilerFlags = perFileCompileFlagsBuilder.build();
+    groupedSrcs = groupedSourcesBuilder.build();
   }
 
   public Path getInfoPlist() {
@@ -89,6 +96,10 @@ public class IosTest extends AbstractBuildable {
 
   public ImmutableSortedSet<SourcePath> getHeaders() {
     return headers;
+  }
+
+  public ImmutableList<GroupedSource> getGroupedSrcs() {
+    return groupedSrcs;
   }
 
   @Nullable

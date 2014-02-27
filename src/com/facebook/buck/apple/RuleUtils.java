@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,21 +36,43 @@ public class RuleUtils {
    *
    * @param outputSources source file names will be added to this builder
    * @param outputPerFileCompileFlags per file compile flags will be added to this builder
-   * @param items input list of path/path-flags
+   * @param outputGroupedSources The ordered tree of sources and source groups (as
+   *        they should appear in a generated Xcode project) will be added to
+   *        this builder.
+   * @param items input list of sources
    */
   public static void extractSourcePaths(
       ImmutableSortedSet.Builder<SourcePath> outputSources,
       ImmutableMap.Builder<SourcePath, String> outputPerFileCompileFlags,
-      ImmutableList<Either<SourcePath, Pair<SourcePath, String>>> items) {
-    for (Either<SourcePath, Pair<SourcePath, String>> item : items) {
-      if (item.isLeft()) {
-        outputSources.add(item.getLeft());
-      } else if (item.isRight()) {
-        Pair<SourcePath, String> pair = item.getRight();
-        outputSources.add(pair.getFirst());
-        outputPerFileCompileFlags.put(pair.getFirst(), pair.getSecond());
-      } else {
-        throw new RuntimeException("Impossible: Either contains neither left nor right value.");
+      ImmutableList.Builder<GroupedSource> outputGroupedSources,
+      ImmutableList<AppleSource> items) {
+    for (AppleSource item : items) {
+      switch (item.getType()) {
+        case SOURCE_PATH:
+          outputSources.add(item.getSourcePath());
+          outputGroupedSources.add(GroupedSource.ofSourcePath(item.getSourcePath()));
+          break;
+        case SOURCE_PATH_WITH_FLAGS:
+          Pair<SourcePath, String> pair = item.getSourcePathWithFlags();
+          outputSources.add(pair.getFirst());
+          outputGroupedSources.add(GroupedSource.ofSourcePath(pair.getFirst()));
+          outputPerFileCompileFlags.put(pair.getFirst(), pair.getSecond());
+          break;
+        case SOURCE_GROUP:
+          Pair<String, ImmutableList<AppleSource>> sourceGroup = item.getSourceGroup();
+          String sourceGroupName = sourceGroup.getFirst();
+          ImmutableList<AppleSource> sourceGroupItems = sourceGroup.getSecond();
+          ImmutableList.Builder<GroupedSource> nestedSourceGroups = ImmutableList.builder();
+          extractSourcePaths(
+              outputSources,
+              outputPerFileCompileFlags,
+              nestedSourceGroups,
+              sourceGroupItems);
+          outputGroupedSources.add(
+              GroupedSource.ofSourceGroup(sourceGroupName, nestedSourceGroups.build()));
+          break;
+        default:
+          throw new RuntimeException("Unhandled AppleSource item type: " + item.getType());
       }
     }
   }

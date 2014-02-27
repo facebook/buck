@@ -44,6 +44,7 @@ public class IosLibrary extends AbstractBuildable {
   private final ImmutableSortedSet<SourcePath> headers;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
+  private final ImmutableList<GroupedSource> groupedSrcs;
 
   public IosLibrary(IosLibraryDescription.Arg arg) {
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
@@ -52,9 +53,15 @@ public class IosLibrary extends AbstractBuildable {
 
     ImmutableSortedSet.Builder<SourcePath> srcsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlagsBuilder = ImmutableMap.builder();
-    RuleUtils.extractSourcePaths(srcsBuilder, perFileCompileFlagsBuilder, arg.srcs);
+    ImmutableList.Builder<GroupedSource> groupedSourcesBuilder = ImmutableList.builder();
+    RuleUtils.extractSourcePaths(
+        srcsBuilder,
+        perFileCompileFlagsBuilder,
+        groupedSourcesBuilder,
+        arg.srcs);
     srcs = srcsBuilder.build();
     perFileCompilerFlags = perFileCompileFlagsBuilder.build();
+    groupedSrcs = groupedSourcesBuilder.build();
   }
 
   public ImmutableSet<XcodeRuleConfiguration> getConfigurations() {
@@ -75,6 +82,10 @@ public class IosLibrary extends AbstractBuildable {
 
   public ImmutableMap<SourcePath, String> getPerFileCompilerFlags() {
     return perFileCompilerFlags;
+  }
+
+  public ImmutableList<GroupedSource> getGroupedSrcs() {
+    return groupedSrcs;
   }
 
   @Nullable

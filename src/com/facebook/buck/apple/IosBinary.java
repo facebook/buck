@@ -45,6 +45,7 @@ public class IosBinary extends AbstractBuildable {
   private final ImmutableSortedSet<SourcePath> headers;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
+  private final ImmutableList<GroupedSource> groupedSrcs;
 
   public IosBinary(IosBinaryDescription.Arg arg) {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
@@ -54,9 +55,15 @@ public class IosBinary extends AbstractBuildable {
 
     ImmutableSortedSet.Builder<SourcePath> srcsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlagsBuilder = ImmutableMap.builder();
-    RuleUtils.extractSourcePaths(srcsBuilder, perFileCompileFlagsBuilder, arg.srcs);
+    ImmutableList.Builder<GroupedSource> groupedSourcesBuilder = ImmutableList.builder();
+    RuleUtils.extractSourcePaths(
+        srcsBuilder,
+        perFileCompileFlagsBuilder,
+        groupedSourcesBuilder,
+        arg.srcs);
     srcs = srcsBuilder.build();
     perFileCompilerFlags = perFileCompileFlagsBuilder.build();
+    groupedSrcs = groupedSourcesBuilder.build();
   }
 
   public Path getInfoPlist() {
@@ -81,6 +88,10 @@ public class IosBinary extends AbstractBuildable {
 
   public ImmutableMap<SourcePath, String> getPerFileCompilerFlags() {
     return perFileCompilerFlags;
+  }
+
+  public ImmutableList<GroupedSource> getGroupedSrcs() {
+    return groupedSrcs;
   }
 
   @Nullable
