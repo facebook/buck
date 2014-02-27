@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
@@ -110,13 +111,24 @@ public class AndroidBinaryRuleTest {
         FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
             .transform(MorePaths.TO_PATH)
             .toSet();
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+
     androidBinary.addProguardCommands(
         context,
         classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
-        ImmutableSet.<Path>of());
+        ImmutableSet.<Path>of(),
+        buildableContext);
     verify(context);
+
+    ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
+        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/configuration.txt"),
+        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/mapping.txt"));
+
+    assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
+
+    buildableContext = new FakeBuildableContext();
 
     MakeCleanDirectoryStep expectedClean =
         new MakeCleanDirectoryStep(
@@ -143,11 +155,14 @@ public class AndroidBinaryRuleTest {
                   "java/src/com/facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
           ImmutableSet.of(
               "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
-          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
+          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"),
+          buildableContext);
 
     assertEquals(
         ImmutableList.of(expectedClean, expectedGenProguard, expectedObfuscation),
         commands.build());
+
+    assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
   }
 
   static JavaLibraryRule createAndroidLibraryRule(String buildTarget,

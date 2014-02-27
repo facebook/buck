@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.CompositeStep;
@@ -39,6 +40,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -60,7 +62,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Optional<Integer> optimizationPasses,
       Map<Path, Path> inputAndOutputEntries,
       Set<String> additionalLibraryJarsForProguard,
-      Path proguardDirectory) {
+      Path proguardDirectory,
+      BuildableContext buildableContext) {
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 
@@ -76,6 +79,11 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
         inputAndOutputEntries, pathToProGuardCommandLineArgsFile);
+
+
+    buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
+    buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
+
 
     return new CompositeStep(ImmutableList.of(commandLineHelperStep, proGuardStep));
   }
@@ -280,13 +288,18 @@ public final class ProGuardObfuscateStep extends ShellStep {
       args.add("-libraryjars").add(pathJoiner.join(libraryJars));
 
       // -dump
-      args.add("-dump").add(proguardDirectory + "/dump.txt");
-      args.add("-printseeds").add(proguardDirectory + "/seeds.txt");
-      args.add("-printusage").add(proguardDirectory + "/usage.txt");
-      args.add("-printmapping").add(proguardDirectory + "/mapping.txt");
-      args.add("-printconfiguration").add(proguardDirectory + "/configuration.txt");
+      args.add("-printmapping").add(getMappingTxt().toString());
+      args.add("-printconfiguration").add(getConfigurationTxt().toString());
 
       return args.build();
+    }
+
+    public Path getConfigurationTxt() {
+      return Paths.get(proguardDirectory + "/configuration.txt");
+    }
+
+    public Path getMappingTxt() {
+      return Paths.get(proguardDirectory + "/mapping.txt");
     }
 
     @Override

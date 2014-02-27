@@ -414,6 +414,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         transitiveDependencies,
         dexTransitiveDependencies,
         uberRDotJava.getResDirectories(),
+        buildableContext,
         steps);
 
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
@@ -465,6 +466,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       final AndroidTransitiveDependencies transitiveDependencies,
       final AndroidDexTransitiveDependencies dexTransitiveDependencies,
       ImmutableSet<Path> resDirectories,
+      BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
     // Execute preprocess_java_classes_binary, if appropriate.
     ImmutableSet<Path> classpathEntriesToDex;
@@ -522,7 +524,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           classpathEntriesToDex,
           transitiveDependencies.proguardConfigs,
           steps,
-          resDirectories);
+          resDirectories,
+          buildableContext);
     }
 
     // Create the final DEX (or set of DEX files in the case of split dex).
@@ -654,7 +657,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,
-      Set<Path> resDirectories) {
+      Set<Path> resDirectories,
+      BuildableContext buildableContext) {
     final ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesMap =
         getTransitiveClasspathEntries();
     ImmutableSet.Builder<String> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
@@ -706,7 +710,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         optimizationPasses,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
-        proguardDirectory);
+        proguardDirectory,
+        buildableContext);
     steps.add(obfuscateCommand);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
