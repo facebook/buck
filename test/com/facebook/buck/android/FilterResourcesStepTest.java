@@ -135,7 +135,7 @@ public class FilterResourcesStepTest {
         scaler);
 
     EasyMock
-      .expect(finder.findDrawables(inResDirToOutResDirMap.keySet()))
+      .expect(finder.findDrawables(inResDirToOutResDirMap.keySet(), filesystem))
       .andAnswer(new IAnswer<Set<Path>>() {
         @SuppressWarnings("unchecked")
         @Override
@@ -156,7 +156,7 @@ public class FilterResourcesStepTest {
 
     // Called by the downscaling step.
     EasyMock
-      .expect(finder.findDrawables(inResDirToOutResDirMap.values()))
+      .expect(finder.findDrawables(inResDirToOutResDirMap.values(), filesystem))
       .andAnswer(new IAnswer<Set<Path>>() {
         @SuppressWarnings("unchecked")
         @Override
@@ -192,7 +192,7 @@ public class FilterResourcesStepTest {
     assertEquals(dirMapBuilder.build(), dirMapCapture.getValue());
 
     // Ensure the right filter is created.
-    Set<Path> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet());
+    Set<Path> drawables = finder.findDrawables(inResDirToOutResDirMap.keySet(), filesystem);
     Predicate<Path> expectedPred =
         Filters.createImageDensityFilter(drawables, ImmutableSet.of(targetDensity), false);
     Predicate<Path> capturedPred = predCapture.getValue();
