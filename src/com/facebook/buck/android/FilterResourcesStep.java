@@ -278,7 +278,7 @@ public class FilterResourcesStep implements Step {
         throws IOException {
       final ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
       for (Path dir : dirs) {
-        filesystem.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+        filesystem.walkRelativeFileTree(dir, new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
                 if (DRAWABLE_PATH_PATTERN.matcher(path.toString()).matches() &&

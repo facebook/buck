@@ -68,7 +68,7 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
     }
     filesystem.mkdirs(destDir);
 
-    filesystem.walkFileTree(srcDir, new SimpleFileVisitor<Path>() {
+    filesystem.walkRelativeFileTree(srcDir, new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path srcPath, BasicFileAttributes attributes)
               throws IOException {
