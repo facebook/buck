@@ -64,23 +64,24 @@ public class AppleSource {
       @Nullable Pair<SourcePath, String> sourcePathWithFlags,
       @Nullable Pair<String, ImmutableList<AppleSource>> sourceGroup) {
     this.type = Preconditions.checkNotNull(type);
-    Preconditions.checkState(
-        sourcePath != null || sourcePathWithFlags != null || sourceGroup != null,
-        "At least one of sourcePath, sourcePathWithFlags, or sourceGroup must be non-null");
-    if (sourcePath != null) {
-      Preconditions.checkState(
-          sourcePathWithFlags == null && sourceGroup == null,
-          "If sourcePath is non-null, sourcePathWithFlags and sourceGroup must be null");
-    }
-    if (sourcePathWithFlags != null) {
-      Preconditions.checkState(
-          sourcePath == null && sourceGroup == null,
-          "If sourcePathWithFlags is non-null, sourcePath and sourceGroup must be null");
-    }
-    if (sourceGroup != null) {
-      Preconditions.checkState(
-          sourcePath == null && sourcePathWithFlags == null,
-          "If sourceGroup is non-null, sourcePath and sourcePathWithFlags must be null");
+    switch (type) {
+      case SOURCE_PATH:
+        Preconditions.checkNotNull(sourcePath);
+        Preconditions.checkArgument(sourcePathWithFlags == null);
+        Preconditions.checkArgument(sourceGroup == null);
+        break;
+      case SOURCE_PATH_WITH_FLAGS:
+        Preconditions.checkArgument(sourcePath == null);
+        Preconditions.checkNotNull(sourcePathWithFlags);
+        Preconditions.checkArgument(sourceGroup == null);
+        break;
+      case SOURCE_GROUP:
+        Preconditions.checkArgument(sourcePath == null);
+        Preconditions.checkArgument(sourcePathWithFlags == null);
+        Preconditions.checkNotNull(sourceGroup);
+        break;
+      default:
+        throw new IllegalArgumentException("Unrecognized type: " + type);
     }
     this.sourcePath = sourcePath;
     this.sourcePathWithFlags = sourcePathWithFlags;
@@ -123,7 +124,7 @@ public class AppleSource {
    * Creates an {@link AppleSource} given a {@link SourcePath}.
    */
   public static AppleSource ofSourcePath(SourcePath sourcePath) {
-    return new AppleSource(Type.SOURCE_GROUP, sourcePath, null, null);
+    return new AppleSource(Type.SOURCE_PATH, sourcePath, null, null);
   }
 
   /**
