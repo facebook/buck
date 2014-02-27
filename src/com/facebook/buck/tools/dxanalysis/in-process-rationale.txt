@@ -1,0 +1,182 @@
+This is a rationale for why I think it's safe to run DX in-process in buckd.
+Everything in here needs to be re-checked when DX is updated.
+
+As an indirect argument, Eclipse apparently already does this.
+The code is at
+https://android.googlesource.com/platform/sdk/+/android-4.4.2_r2/eclipse/plugins/com.android.ide.eclipse.adt/src/com/android/ide/eclipse/adt/internal/build/DexWrapper.java
+The code in DX is clearly meant to enable this.
+See the first few lines of
+https://github.com/android/platform_dalvik/blob/android-4.4.2_r1/dx/src/com/android/dx/command/dexer/Main.java#L210
+and the commit message for
+https://github.com/android/platform_dalvik/commit/7aa5ce7e990dc3766eba97cd0932b62e4de21503
+
+However, just because Eclipse ADT does it, doesn't mean it's safe.
+Plus, the use of statics in Main clearly won't support multiple *concurrent*
+runs of DX.  We need to go deeper.
+
+A few possible problems are easy to rule out:
+- System.exit() is not called from any method but the top-level entry points
+  (which we aren't using).
+- System properties are not used.
+- There are no instances of "synchronized (Foo.class)".
+- Files.deleteOnExit is not used except in test code.
+- There are not shutdown hooks used.
+- There's no networking going on.
+- There are no global loggers in use.
+
+These were just checked with grep, but they don't seem like things
+DX would be likely to use.
+
+This leaves a few possible problems:
+- Mutable statics and statics used as locks
+- Failure to clean up external resources
+- Static synchronized methods
+- Use of System.out and System.err
+
+Static synchronized methods are easy to find with static analysis.
+There are none.
+
+The only external resources used during dexing are the input and output files
+and the thread pool (if we are doing multi-threaded dexing).
+I added diffs to make sure these are cleaned up.
+
+Most output in the dexer goes through DexConsole.
+There are other parts of the codebase that use System.out/err,
+but I don't think they are reachable from the dexer.
+We could use Proguard to verify this.
+
+Mutable statics are the tough one.
+
+I wrote a static analysis tool to identify deeply immutable object types
+and find static members that are (transitively) mutable.
+I've annotated the output with justifications for why I think each is safe.
+When upgrading dx, you can look for any new unsafe members by running
+buck build //src/com/facebook/buck/tools/dxanalysis:dxanalysis && comm -23 <(java -jar buck-out/gen/src/com/facebook/buck/tools/dxanalysis/dxanalysis.jar build/dx.jar | sort) <(sort src/com/facebook/buck/tools/dxanalysis/in-process-checklist.txt)
+
+Some of the members require a more detailed explanation, which I give here.
+
+For context DX has two main phases:
+- Collecting and transforming the inputs.
+- Serializing dexed classes into its output.
+
+One of my biggest areas for concern was that the internal ids
+used in the dex files would leak into mutable statics.
+The good news is that this id mapping is done entirely in the second phase
+and is entirely contained in subclasses of Section, which do not use statics.
+This makes the whole second section and the whole issue internal ids
+nearly risk free, which is great.
+
+The first phase turns out to be a much bigger problem.
+It uses *lots* of mutable statics.  However, after careful analysis and
+a few diffs, I believe they are all safe.
+
+A few points of DX's design help us here.  The first phase is parallelizable
+with the --num-threads argument to DX, so all of its structures are
+concurrency-safe for threads operating on a single output dex file.
+Since KitKat, a single DX process can also produce multiple output dex files
+from a single input (though not in multi-threaded mode), so it would be
+difficult these modes to work properly if any truly task-specific data
+were leaking into statics.
+
+The mutable statics take two major forms:
+- Intern tables for objects that are interned.
+- Static constants to provide quick access to well-known objects.
+
+Let's start by discussing the class "Type".  My analyzer identifies this class
+as mutable, it is interned, and there are lots of static instances.
+However, I believe it is "semantically immutable", and therefore safe to use
+in multiple concurrent executions.
+Type is effectively the parsed form of a Java type descriptor, so nothing
+about it changes across multiple DX operations: everything about it is purely
+a function of the descriptor that identifies it.
+
+The only non-final fields of Type are references to other related types:
+array and array component types, and normal ("initialized") types for types
+that represent uninitialized objects (which contain no special data other than
+the position in a method that they were created).
+
+Therefore, I believe that the same global set of Type objects is safe to share
+across all DX invocations.  This means that both the static references to Type
+objects and the Type intern table are safe.
+
+Next, consider StdTypeList.  This is just a list of Type objects, which we
+already know are safe.  It does expose a "set" method, but this is only
+used on freshly-allocated StdTypeList instances that are being initialized.
+Therefore, all of the fully initialized instances are effectively immutable,
+and therefore safe.
+
+Prototype is basically like Type, but with more fields.
+It is basically the parsed form of a Java method descriptor.
+It is safe to share between instances for the same reason as Type:
+It just contains its descriptor, a Type for the return type,
+and a StdTypeList for the arguments (plus a lazily computed transformed
+parameter type list).  All of these fields will be valid in any DX invocation.
+
+Rop is a bundle containing final ints, strings, a Type, and TypeLists.
+All of the static instances of Rop are constructed with static instances of
+Type and StdTypeList, so they are all safe, and also safe to use in
+RopToDop#MAP.
+
+Several subclasses of TypedConstant (starting with "Cst") are
+effectively immutable.
+
+CstString is just a wrapper around a String, which also caches a ByteArray
+representing the encoded value.  ByteArray is technically mutable if it
+is constructed with a byte array that someone else maintains a reference to,
+but all of the CstString instances used in static contexts are constructed
+with Strings, which makes them immutable.
+
+CstType is just a wrapper around a Type, which also caches a CstString
+representing the descriptor.  The CstString is always constructed with a
+String argument, so CstType is as safe as Type.
+
+CstNat is just a bundle of two CstStrings.
+
+CstMethodRef is just a Prototype, CstNat, and CstString, so it is safe.
+
+This leaves five potentially unsafe static members
+
+dx/rop/cst/CstType#interns
+dx/rop/type/Prototype#internTable
+dx/rop/type/Type#internTable
+
+These are intern tables for Type, CstType, and Prototype.
+As explained above, I think all of these types are effectively immutable
+and contain no per-task information, so they are safe to intern across
+invocations.  The intern tables are already thread-safe.
+
+I made them use weak values to avoid retaining lots of unnecessary memory
+in buckd between invocations.  This should be safe because all of these
+objects will be reconstructed on-demand.  Whenever one is collected,
+there will be no remaining references to the old instance, so there is
+no risk of a == comparison spuriously failing.
+
+The maps provided by MapMaker support atomic operations,
+but I'm not using them.  More profiling might suggest that we could
+get a perf win here.
+
+After a large build, and doing a gc, buckd consumes about 50 extra MB of heap
+with in-process DX vs without.  If we want to reduce this, I think the first
+step would be
+(1) GC after build to collect weak references,
+(2) do a "deep clean" of these maps (Guava currently doesn't support
+    doing a full clean or shrinking the hash tables), and
+(3) doing another gc to collect the tables and interned strings.
+
+com/android/dx/rop/code/RegisterSpec#theInterns
+com/android/dx/rop/code/RegisterSpec#theInterningItem
+
+I don't think these are safe to intern.  They contain a TypeBearer,
+which is implemented by lots of classes. I created a flag to disable interning.
+This is potentially unsafe because it could violate an implicit assumption
+that two instances are only equivalent if they are they same object.
+Fortunately, this is unlikely because RegisterSpec.make's docblock
+specifically says that it is not required to return a shared instance.
+However, I wanted to be more sure.
+
+IdentityHashMap and identityHashCode are not used with RegisterSpec.
+The most likely issue would be a change in behavior because
+two instances are compared with "==", which returns false instead of true.
+I added a static analyzer to find all instances of RegisterSpec
+(or its interfaces) being compared with ==.
+See in-process-checklist.txt for justifications for the safety of each.

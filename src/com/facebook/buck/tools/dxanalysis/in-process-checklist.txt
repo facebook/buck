@@ -1,0 +1,495 @@
+Mut-final static field: com/android/dx/rop/type/Type#BOOLEAN
+Mut-final static field: com/android/dx/rop/type/Type#BYTE
+Mut-final static field: com/android/dx/rop/type/Type#CHAR
+Mut-final static field: com/android/dx/rop/type/Type#DOUBLE
+Mut-final static field: com/android/dx/rop/type/Type#FLOAT
+Mut-final static field: com/android/dx/rop/type/Type#INT
+Mut-final static field: com/android/dx/rop/type/Type#LONG
+Mut-final static field: com/android/dx/rop/type/Type#SHORT
+Mut-final static field: com/android/dx/rop/type/Type#VOID
+Mut-final static field: com/android/dx/rop/type/Type#KNOWN_NULL
+Mut-final static field: com/android/dx/rop/type/Type#RETURN_ADDRESS
+Mut-final static field: com/android/dx/rop/type/Type#ANNOTATION
+Mut-final static field: com/android/dx/rop/type/Type#CLASS
+Mut-final static field: com/android/dx/rop/type/Type#CLONEABLE
+Mut-final static field: com/android/dx/rop/type/Type#OBJECT
+Mut-final static field: com/android/dx/rop/type/Type#SERIALIZABLE
+Mut-final static field: com/android/dx/rop/type/Type#STRING
+Mut-final static field: com/android/dx/rop/type/Type#THROWABLE
+Mut-final static field: com/android/dx/rop/type/Type#BOOLEAN_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#BYTE_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#CHARACTER_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#DOUBLE_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#FLOAT_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#INTEGER_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#LONG_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#SHORT_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#VOID_CLASS
+Mut-final static field: com/android/dx/rop/type/Type#BOOLEAN_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#BYTE_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#CHAR_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#DOUBLE_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#FLOAT_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#INT_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#LONG_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#OBJECT_ARRAY
+Mut-final static field: com/android/dx/rop/type/Type#SHORT_ARRAY
+  See full rationale.
+
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#LONG
+Mut-final static field: com/android/dx/rop/type/StdTypeList#FLOAT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#DOUBLE
+Mut-final static field: com/android/dx/rop/type/StdTypeList#OBJECT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#RETURN_ADDRESS
+Mut-final static field: com/android/dx/rop/type/StdTypeList#THROWABLE
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#LONG_LONG
+Mut-final static field: com/android/dx/rop/type/StdTypeList#FLOAT_FLOAT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#DOUBLE_DOUBLE
+Mut-final static field: com/android/dx/rop/type/StdTypeList#OBJECT_OBJECT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT_OBJECT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#LONG_OBJECT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#FLOAT_OBJECT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#DOUBLE_OBJECT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#LONG_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INTARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#LONGARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#FLOATARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#DOUBLEARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#OBJECTARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#BOOLEANARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#BYTEARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#CHARARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#SHORTARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT_INTARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#LONG_LONGARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#FLOAT_FLOATARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#DOUBLE_DOUBLEARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#OBJECT_OBJECTARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT_BOOLEANARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT_BYTEARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT_CHARARR_INT
+Mut-final static field: com/android/dx/rop/type/StdTypeList#INT_SHORTARR_INT
+  See full rationale.
+
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_ArithmeticException
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_ArrayIndexOutOfBoundsException
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_ArrayStoreException
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_ClassCastException
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_Error
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_IllegalMonitorStateException
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_NegativeArraySizeException
+Mut-final static field: com/android/dx/rop/code/Exceptions#TYPE_NullPointerException
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error_ArithmeticException
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error_ClassCastException
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error_NegativeArraySizeException
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error_NullPointerException
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error_Null_ArrayIndexOutOfBounds
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error_Null_ArrayIndex_ArrayStore
+Mut-final static field: com/android/dx/rop/code/Exceptions#LIST_Error_Null_IllegalMonitorStateException
+  See full rationale.
+
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#ANNOTATION_DEFAULT_TYPE
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#ENCLOSING_CLASS_TYPE
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#ENCLOSING_METHOD_TYPE
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#INNER_CLASS_TYPE
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#MEMBER_CLASSES_TYPE
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#SIGNATURE_TYPE
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#THROWS_TYPE
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#ACCESS_FLAGS_STRING
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#NAME_STRING
+Mut-final static field: com/android/dx/dex/file/AnnotationUtils#VALUE_STRING
+  See full rationale.
+
+Mut-final static field: com/android/dx/rop/code/Rops#NOP
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_INT
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_RETURN_ADDRESS
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_PARAM_INT
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_PARAM_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_PARAM_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_PARAM_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#MOVE_PARAM_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#CONST_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#CONST_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#CONST_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#CONST_OBJECT_NOTHROW
+Mut-final static field: com/android/dx/rop/code/Rops#GOTO
+Mut-final static field: com/android/dx/rop/code/Rops#IF_EQZ_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_NEZ_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_LTZ_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_GEZ_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_LEZ_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_GTZ_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_EQZ_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_NEZ_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_EQ_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_NE_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_LT_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_GE_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_LE_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_GT_INT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_EQ_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#IF_NE_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#SWITCH
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_INT
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_INT
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_INT
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_INT
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#REM_INT
+Mut-final static field: com/android/dx/rop/code/Rops#REM_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#REM_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#REM_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#NEG_INT
+Mut-final static field: com/android/dx/rop/code/Rops#NEG_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#NEG_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#NEG_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#AND_INT
+Mut-final static field: com/android/dx/rop/code/Rops#AND_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#OR_INT
+Mut-final static field: com/android/dx/rop/code/Rops#OR_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#XOR_INT
+Mut-final static field: com/android/dx/rop/code/Rops#XOR_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#SHL_INT
+Mut-final static field: com/android/dx/rop/code/Rops#SHL_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#SHR_INT
+Mut-final static field: com/android/dx/rop/code/Rops#SHR_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#USHR_INT
+Mut-final static field: com/android/dx/rop/code/Rops#USHR_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#NOT_INT
+Mut-final static field: com/android/dx/rop/code/Rops#NOT_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_CONST_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#ADD_CONST_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_CONST_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#SUB_CONST_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_CONST_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#MUL_CONST_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_CONST_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#DIV_CONST_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#REM_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#REM_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#REM_CONST_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#REM_CONST_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#AND_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#AND_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#OR_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#OR_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#XOR_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#XOR_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#SHL_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#SHL_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#SHR_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#SHR_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#USHR_CONST_INT
+Mut-final static field: com/android/dx/rop/code/Rops#USHR_CONST_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#CMPL_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#CMPL_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#CMPL_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#CMPG_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#CMPG_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_L2I
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_F2I
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_D2I
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_I2L
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_F2L
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_D2L
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_I2F
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_L2F
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_D2F
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_I2D
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_L2D
+Mut-final static field: com/android/dx/rop/code/Rops#CONV_F2D
+Mut-final static field: com/android/dx/rop/code/Rops#TO_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#TO_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#TO_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#RETURN_VOID
+Mut-final static field: com/android/dx/rop/code/Rops#RETURN_INT
+Mut-final static field: com/android/dx/rop/code/Rops#RETURN_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#RETURN_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#RETURN_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#RETURN_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#ARRAY_LENGTH
+Mut-final static field: com/android/dx/rop/code/Rops#THROW
+Mut-final static field: com/android/dx/rop/code/Rops#MONITOR_ENTER
+Mut-final static field: com/android/dx/rop/code/Rops#MONITOR_EXIT
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_INT
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_BOOLEAN
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#AGET_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_INT
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_BOOLEAN
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#APUT_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_INSTANCE
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_INT
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_BOOLEAN
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#NEW_ARRAY_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#CHECK_CAST
+Mut-final static field: com/android/dx/rop/code/Rops#INSTANCE_OF
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_INT
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_BOOLEAN
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#GET_FIELD_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_INT
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_BOOLEAN
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#GET_STATIC_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_INT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_BOOLEAN
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_FIELD_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_INT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_BOOLEAN
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_BYTE
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_CHAR
+Mut-final static field: com/android/dx/rop/code/Rops#PUT_STATIC_SHORT
+Mut-final static field: com/android/dx/rop/code/Rops#MARK_LOCAL_INT
+Mut-final static field: com/android/dx/rop/code/Rops#MARK_LOCAL_LONG
+Mut-final static field: com/android/dx/rop/code/Rops#MARK_LOCAL_FLOAT
+Mut-final static field: com/android/dx/rop/code/Rops#MARK_LOCAL_DOUBLE
+Mut-final static field: com/android/dx/rop/code/Rops#MARK_LOCAL_OBJECT
+Mut-final static field: com/android/dx/rop/code/Rops#FILL_ARRAY_DATA
+  See full rationale.
+
+Mut-final static field: com/android/dx/rop/cst/CstType#OBJECT
+Mut-final static field: com/android/dx/rop/cst/CstType#BOOLEAN
+Mut-final static field: com/android/dx/rop/cst/CstType#BYTE
+Mut-final static field: com/android/dx/rop/cst/CstType#CHARACTER
+Mut-final static field: com/android/dx/rop/cst/CstType#DOUBLE
+Mut-final static field: com/android/dx/rop/cst/CstType#FLOAT
+Mut-final static field: com/android/dx/rop/cst/CstType#LONG
+Mut-final static field: com/android/dx/rop/cst/CstType#INTEGER
+Mut-final static field: com/android/dx/rop/cst/CstType#SHORT
+Mut-final static field: com/android/dx/rop/cst/CstType#VOID
+Mut-final static field: com/android/dx/rop/cst/CstType#BOOLEAN_ARRAY
+Mut-final static field: com/android/dx/rop/cst/CstType#BYTE_ARRAY
+Mut-final static field: com/android/dx/rop/cst/CstType#CHAR_ARRAY
+Mut-final static field: com/android/dx/rop/cst/CstType#DOUBLE_ARRAY
+Mut-final static field: com/android/dx/rop/cst/CstType#FLOAT_ARRAY
+Mut-final static field: com/android/dx/rop/cst/CstType#LONG_ARRAY
+Mut-final static field: com/android/dx/rop/cst/CstType#INT_ARRAY
+Mut-final static field: com/android/dx/rop/cst/CstType#SHORT_ARRAY
+  See full rationale.
+
+Mut-final static field: com/android/dx/cf/code/RopperMachine#ARRAY_REFLECT_TYPE
+Mut-final static field: com/android/dx/cf/code/RopperMachine#MULTIANEWARRAY_METHOD
+  See full rationale.
+
+Mut-final static field: com/android/dx/rop/code/RegisterSpec#theInterns
+Mut-final static field: com/android/dx/rop/code/RegisterSpec#theInterningItem
+Mut-final static field: com/android/dx/rop/cst/CstType#interns
+Mut-final static field: com/android/dx/rop/type/Prototype#internTable
+Mut-final static field: com/android/dx/rop/type/Type#internTable
+  See full rationale.
+
+Mut-final static field: com/android/dex/TypeList#EMPTY
+  This class has two final fields, and in this instance they are
+  a null reference and a zero-length array, which are both immutable.
+
+Mut-final static field: com/android/dx/rop/code/RegisterSpecSet#EMPTY
+Mut-final static field: com/android/dx/rop/annotation/Annotations#EMPTY
+Mut-final static field: com/android/dx/util/IntList#EMPTY
+  These classes uses MutabilityControl to make instances immutable, and the
+  EMPTY instances are made immutable during static initialization.
+  (I had to modify RegisterSpecSet to call setImmutable and add a few calls
+  to throwIfImmutable in RegisterSpecSet and IntList.)
+
+Mut-final static field: com/android/dx/cf/code/ByteCatchList#EMPTY
+Mut-final static field: com/android/dx/cf/code/LineNumberList#EMPTY
+Mut-final static field: com/android/dx/cf/code/LocalVariableList#EMPTY
+Mut-final static field: com/android/dx/dex/code/CatchHandlerList#EMPTY
+Mut-final static field: com/android/dx/dex/code/CatchTable#EMPTY
+Mut-final static field: com/android/dx/dex/code/LocalList#EMPTY
+Mut-final static field: com/android/dx/dex/code/PositionList#EMPTY
+Mut-final static field: com/android/dx/rop/annotation/AnnotationsList#EMPTY
+Mut-final static field: com/android/dx/rop/code/RegisterSpecList#EMPTY
+Mut-final static field: com/android/dx/rop/type/StdTypeList#EMPTY
+  These are all empty instances of FixedSizeList.  FixSizeList does not
+  allow itself to grow, so every zero-length instance is immutable.
+  I also checked that all of these subclasses have no non-static fields
+  of their own (which could be checked by the analyzer if we want)
+  and that they are initialized with a zero size that is passed to the
+  super constructor (which would be insane if they were not).
+
+Mut-final static field: org/junit/internal/runners/rules/RuleFieldValidator#$VALUES
+Mut-final static field: org/junit/runners/MethodSorters#$VALUES
+Mut-final static field: com/android/dx/command/annotool/Main$PrintType#$VALUES
+Mut-final static field: com/android/dx/dex/code/LocalList$Disposition#$VALUES
+Mut-final static field: com/android/dx/dex/file/ItemType#$VALUES
+Mut-final static field: com/android/dx/dex/file/MixedItemSection$SortType#$VALUES
+Mut-final static field: com/android/dx/io/IndexType#$VALUES
+Mut-final static field: com/android/dx/io/instructions/InstructionCodec#$VALUES
+Mut-final static field: com/android/dx/merge/CollisionPolicy#$VALUES
+Mut-final static field: com/android/dx/rop/annotation/AnnotationVisibility#$VALUES
+Mut-final static field: com/android/dx/ssa/EscapeAnalysis$EscapeState#$VALUES
+Mut-final static field: com/android/dx/ssa/Optimizer$OptionalStep#$VALUES
+Mut-final static field: com/android/dx/ssa/back/LivenessAnalyzer$NextFunction#$VALUES
+  These are implementation details of Enum types,
+  which can't actually be mutated.
+
+Mut-final static field: com/android/dx/command/annotool/AnnotationLister$2#$SwitchMap$com$android$dx$command$annotool$Main$PrintType
+Mut-final static field: com/android/dx/dex/file/AnnotationItem$1#$SwitchMap$com$android$dx$rop$annotation$AnnotationVisibility
+Mut-final static field: com/android/dx/dex/file/MixedItemSection$2#$SwitchMap$com$android$dx$dex$file$MixedItemSection$SortType
+Mut-final static field: com/android/dx/io/CodeReader$1#$SwitchMap$com$android$dx$io$IndexType
+Mut-final static field: com/android/dx/ssa/back/LivenessAnalyzer$1#$SwitchMap$com$android$dx$ssa$back$LivenessAnalyzer$NextFunction
+  These are switch tables, which can't actually be mutated.
+
+Mut-final static field: com/android/dx/cf/code/ByteOps#OPCODE_INFO
+Mut-final static field: com/android/dx/cf/code/ByteOps#OPCODE_NAMES
+Mut-final static field: com/android/dx/command/dexer/Main#JAVAX_CORE
+Mut-final static field: com/android/dx/dex/code/Dops#DOPS
+Mut-final static field: com/android/dx/io/OpcodeInfo#INFO
+  Private final arrays that are initialized statically, never mutated,
+  and have immutable values.
+  (OPCODE_NAMES is partially lazily initialized, but that's okay.)
+
+Mut-final static field: com/android/dx/dex/code/RopToDop#MAP
+  Initialized statically and never mutated.  The value type (Dop) was
+  identified as immutable by the analyzer (which is why the static final Dop
+  fields in Dops are not warnings).  See the full rationale for why I believe
+  they key type (Rop) is safe to use in a static context.  (Note that all of
+  the actual keys here are static fields in Rops.)
+
+Mut-final static field: com/android/dx/rop/cst/CstInteger#cache
+  A private array whose members are immutable.  This array actually is
+  mutated at runtime, but see CstInteger.make()'s internal comment about
+  synchronization.  I believe that same reasoning makes this field
+  in-process-safe.
+
+Mut-final static field: com/android/dx/rop/code/SourcePosition#NO_INFO
+  This is flagged because its (final) CstString field is considered a mutable
+  type, but this instance has a null reference for that field.
+
+Mut-final static field: com/android/dx/rop/cst/CstString#EMPTY_STRING
+Mut-final static field: com/android/dx/rop/cst/CstNat#PRIMITIVE_TYPE_NAT
+  These are flagged because CstString is technically mutable,
+  because ByteArray is technically mutable.  But ByteArray doesn't
+  actually allow itself to be mutated, so these are safe.
+  (And if anything actually mutated them, it would be insanity.)
+  (Note that a mutable byte[] can be passed to the constructor of
+  ByteArray, which can cause it to be mutated behind its back,
+  but all of these instances use the CstString(String) constructor,
+  which doesn't permit this.)
+
+Mut-final static field: com/android/dex/Dex#EMPTY_SHORT_ARRAY
+  This final field is statically initialized to a zero-length array,
+  which is immutable.
+
+Mut-final static field: com/android/dx/cf/direct/ClassPathOpener#acceptAll
+Mut-final static field: com/android/dx/dex/file/MixedItemSection#TYPE_SORTER
+Mut-final static field: com/android/dx/merge/SortableType#NULLS_LAST_ORDER
+Mut-final static field: com/android/dx/ssa/SsaBasicBlock#LABEL_COMPARATOR
+  These fields hold instance of empty (mostly anonymous) classes
+  that implement functional interfaces (like Comparator).  They are flagged
+  because the declared type of the fields is a generic interface.
+  It might be worth extending the analyzer to notice the classes they
+  are assigned from.
+
+Non-final static field: com/android/dx/dex/code/InsnFormat#ALLOW_EXTENDED_OPCODES
+Non-final static field: com/android/dx/ssa/ConstCollector#COLLECT_STRINGS
+Non-final static field: com/android/dx/ssa/ConstCollector#COLLECT_ONE_LOCAL
+Non-final static field: com/android/dx/rop/code/RegisterSpec#DISABLE_INTERNING
+Non-final static field: com/android/dx/ssa/DomFront#DEBUG
+  Private boolean fields that are never assigned.  The analyzer could be
+  improved to automatically detect these.  (Which would probably be a good
+  idea if we're getting ready to upgrade, so we don't have to hand-check them
+  all again.)
+
+Mut-final static field: com/android/dx/command/dexer/Main#CREATED_BY
+  Effectively immutable.  A cached Jar attribute.
+
+
+RegisterSpec comparison: com/android/dx/rop/code/Insn.equalsHandleNulls
+RegisterSpec comparison: com/android/dx/ssa/SsaRenamer.equalsHandlesNulls
+  These both double-check the result with .equals()
+
+RegisterSpec comparison: com/android/dx/cf/code/Merger.mergeLocals
+RegisterSpec comparison: com/android/dx/cf/code/Merger.mergeStack
+  These both call mergeType, then compare the result to the first argument.
+  mergeType always returns its first argument, null, or a Type object.
+  None of these allow two different RegisterSpecs to be compared with ==.
+
+RegisterSpec comparison: com/android/dx/rop/code/RegisterSpec.intersect
+  The first one just compares this and other as a quick check.
+  I added a check for .equals() below to avoid allocating a new object
+  when a RegisterSpec is intersected with an equivalent one.
+
+RegisterSpec comparison: com/android/dx/rop/code/RegisterSpec.intersect
+  The second one is comparing resultTypeBearer to this.type.
+  resultTypeBearer was just assigned to either this.type
+  (in which case both the old and new code would return true)
+  or a Type object (in which case both would return false),
+  so there is no change in behavior here.
+
+RegisterSpec comparison: com/android/dx/rop/code/RegisterSpecSet.equals
+  This is double-checked by calling .equals()
+
+RegisterSpec comparison: com/android/dx/rop/code/RegisterSpecSet.intersect
+  This appears to be an "optimization" to avoid an array assignment,
+  but assigning an equivalent RegisterSpec should be benign.
+
+RegisterSpec comparison: com/android/dx/ssa/PhiInsn.mapSourceRegisters
+  A false positive here just forces an unnecessary call to onSourceChanged(),
+  but I added a quick return there if the two RegisterSpecs have the same
+  register.
