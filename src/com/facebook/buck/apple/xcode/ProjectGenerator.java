@@ -76,6 +76,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.w3c.dom.DOMImplementation;
@@ -86,6 +87,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import javax.annotation.Nullable;
@@ -103,6 +105,36 @@ import javax.xml.transform.stream.StreamResult;
  * Generator for xcode project and associated files from a set of xcode/ios rules.
  */
 public class ProjectGenerator {
+  public enum Option {
+    /**
+     * Generate a build scheme
+     */
+    GENERATE_SCHEME,
+
+    /**
+     * generate native xcode targets for dependent build targets.
+     */
+    GENERATE_TARGETS_FOR_DEPENDENCIES,
+
+    /**
+     * Generate a workspace
+     */
+    GENERATE_WORKSPACE,
+    ;
+  }
+
+  /**
+   * Standard options for generating a combined project
+   */
+  public static final Option[] COMBINED_PROJECT_OPTIONS = new Option[] {
+      Option.GENERATE_SCHEME,
+      Option.GENERATE_TARGETS_FOR_DEPENDENCIES,
+      Option.GENERATE_WORKSPACE,
+  };
+
+  public static final Option[] SEPARATED_PROJECT_OPTIONS = new Option[] {
+  };
+
   private final PartialGraph partialGraph;
   private final ProjectFilesystem projectFilesystem;
   private final ExecutionContext executionContext;
@@ -111,6 +143,8 @@ public class ProjectGenerator {
   private final ImmutableSet<BuildTarget> initialTargets;
   private final Path projectPath;
   private final Path repoRootRelativeToOutputDirectory;
+
+  private final ImmutableSet<Option> options;
 
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
@@ -124,13 +158,15 @@ public class ProjectGenerator {
       ProjectFilesystem projectFilesystem,
       ExecutionContext executionContext,
       Path outputDirectory,
-      String projectName) {
+      String projectName,
+      Option... options) {
     this.partialGraph = partialGraph;
     this.initialTargets = initialTargets;
     this.projectFilesystem = projectFilesystem;
     this.executionContext = executionContext;
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
+    this.options = Sets.immutableEnumSet(Arrays.asList(options));
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.repoRootRelativeToOutputDirectory =
@@ -171,18 +207,26 @@ public class ProjectGenerator {
       Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);
       ImmutableMap.Builder<BuildRule, PBXTarget> ruleToTargetMapBuilder = ImmutableMap.builder();
       for (BuildRule rule : allRules) {
-        // Trigger the loading cache to call the generateTargetForBuildRule function.
-        Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
-        if (target.isPresent()) {
-          ruleToTargetMapBuilder.put(rule, target.get());
+        if (isBuiltByCurrentProject(rule)) {
+          // Trigger the loading cache to call the generateTargetForBuildRule function.
+          Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
+          if (target.isPresent()) {
+            ruleToTargetMapBuilder.put(rule, target.get());
+          }
         }
       }
       addGeneratedSignedSourceTarget(project);
       writeProjectFile(project);
-      scheme = SchemeGenerator.createScheme(
-          partialGraph, projectPath, ruleToTargetMapBuilder.build());
-      writeWorkspace(projectPath);
-      SchemeGenerator.writeScheme(projectFilesystem, scheme, projectPath);
+
+      if (options.contains(Option.GENERATE_WORKSPACE)) {
+        writeWorkspace(projectPath);
+      }
+
+      if (options.contains(Option.GENERATE_SCHEME)) {
+        scheme = SchemeGenerator.createScheme(
+            partialGraph, projectPath, ruleToTargetMapBuilder.build());
+        SchemeGenerator.writeScheme(projectFilesystem, scheme, projectPath);
+      }
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.
@@ -195,6 +239,9 @@ public class ProjectGenerator {
   }
 
   private Optional<PBXTarget> generateTargetForBuildRule(BuildRule rule) throws IOException {
+    Preconditions.checkState(
+        isBuiltByCurrentProject(rule),
+        "should not generate rule if it shouldn't be built by current project");
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
       return Optional.of((PBXTarget) generateIosLibraryTarget(
           project, rule, (IosLibrary) rule.getBuildable()));
@@ -606,6 +653,9 @@ public class ProjectGenerator {
     project.getTargets().add(target);
   }
 
+  /**
+   * Create the project bundle structure and write {@code project.pbxproj}.
+   */
   private Path writeProjectFile(PBXProject project) throws IOException {
     XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(0), project);
     NSDictionary rootObject = serializer.toPlist();
@@ -624,6 +674,11 @@ public class ProjectGenerator {
     return xcodeprojDir;
   }
 
+  /**
+   * Create the workspace bundle structure and write the workspace file.
+   *
+   * Updates {@link #workspace} with the written document for examination.
+   */
   private void writeWorkspace(Path xcodeprojDir) throws IOException {
     DocumentBuilder docBuilder;
     Transformer transformer;
@@ -734,24 +789,48 @@ public class ProjectGenerator {
             new Function<BuildRule, PBXFileReference>() {
               @Override
               public PBXFileReference apply(BuildRule input) {
-                if (input.getType().equals(IosLibraryDescription.TYPE)) {
-                  PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(
-                      input).get();
-                  return target.getProductReference();
-                } else if (input.getType().equals(XcodeNativeDescription.TYPE)) {
-                  XcodeNative xcodeNative = (XcodeNative) input.getBuildable();
-                  return project.getMainGroup()
-                      .getOrCreateChildGroupByName("Frameworks")
-                      .getOrCreateFileReferenceBySourceTreePath(
-                          new SourceTreePath(
-                              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                              Paths.get(xcodeNative.getProduct())));
-                } else {
-                  throw new RuntimeException("Unexpected type: " + input.getType());
-                }
+                return getLibraryFileReferenceForRule(input);
               }
             }
         ).toSet();
+  }
+
+  private PBXFileReference getLibraryFileReferenceForRule(BuildRule rule) {
+    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      if (isBuiltByCurrentProject(rule)) {
+        PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(rule).get();
+        return target.getProductReference();
+      } else {
+        return project.getMainGroup()
+            .getOrCreateChildGroupByName("Frameworks")
+            .getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                    Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
+      }
+    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
+      XcodeNative xcodeNative = (XcodeNative) Preconditions.checkNotNull(rule.getBuildable());
+      return project.getMainGroup()
+          .getOrCreateChildGroupByName("Frameworks")
+          .getOrCreateFileReferenceBySourceTreePath(
+              new SourceTreePath(
+                  PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                  Paths.get(xcodeNative.getProduct())));
+    } else {
+      throw new RuntimeException("Unexpected type: " + rule.getType());
+    }
+  }
+
+  /**
+   * Whether a given build rule is built by the project being generated, or being build elsewhere.
+   */
+  private boolean isBuiltByCurrentProject(BuildRule rule) {
+    return options.contains(Option.GENERATE_TARGETS_FOR_DEPENDENCIES)
+        || initialTargets.contains(rule.getBuildTarget());
+  }
+
+  private static String getLibraryNameFromTargetName(String string) {
+    return "lib" + string + ".a";
   }
 
   /**

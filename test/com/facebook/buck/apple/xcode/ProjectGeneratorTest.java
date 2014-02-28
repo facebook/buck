@@ -685,7 +685,8 @@ public class ProjectGeneratorTest {
         projectFilesystem,
         executionContext,
         OUTPUT_DIRECTORY,
-        PROJECT_NAME);
+        PROJECT_NAME,
+        ProjectGenerator.COMBINED_PROJECT_OPTIONS);
   }
 
   private String assertFileRefIsRelativeAndResolvePath(PBXReference fileRef) {

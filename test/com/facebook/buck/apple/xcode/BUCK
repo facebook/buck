@@ -18,8 +18,10 @@ java_test(
 java_test(
   name = 'project_generator',
   srcs = [
+    'Matchers.java',
     'ProjectGeneratorTest.java',
     'ProjectGeneratorTestUtils.java',
+    'SeparatedProjectGeneratorTest.java',
   ],
   source_under_test = ['//src/com/facebook/buck/apple/xcode:project_generator'],
   deps = [
@@ -41,6 +43,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/parser:PartialGraphFactory',

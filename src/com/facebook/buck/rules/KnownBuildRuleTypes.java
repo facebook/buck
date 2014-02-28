@@ -30,6 +30,7 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
+import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
@@ -117,6 +118,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosLibraryDescription());
     builder.register(new IosTestDescription());
     builder.register(new PythonLibraryDescription());
+    builder.register(new XcodeProjectConfigDescription());
     builder.register(new XcodeNativeDescription());
 
     // TODO(simons): Consider once more whether we actually want to have default rules
