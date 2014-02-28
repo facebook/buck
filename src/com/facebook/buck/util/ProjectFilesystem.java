@@ -43,6 +43,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -50,6 +51,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -227,6 +229,39 @@ public class ProjectFilesystem {
   public boolean isFile(Path pathRelativeToProjectRoot) {
     return java.nio.file.Files.isRegularFile(
         getPathForRelativePath(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to
+   * the project root.
+   */
+  public void walkRelativeFileTree(
+      Path pathRelativeToProjectRoot,
+      final FileVisitor<Path> fileVisitor) throws IOException {
+    Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
+    java.nio.file.Files.walkFileTree(rootPath, new FileVisitor<Path>() {
+          @Override
+          public FileVisitResult preVisitDirectory(
+              Path dir, BasicFileAttributes attrs) throws IOException {
+            return fileVisitor.preVisitDirectory(projectRoot.relativize(dir), attrs);
+          }
+
+          @Override
+          public FileVisitResult visitFile(
+              Path file, BasicFileAttributes attrs) throws IOException {
+            return fileVisitor.visitFile(projectRoot.relativize(file), attrs);
+          }
+
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+            return fileVisitor.visitFileFailed(projectRoot.relativize(file), exc);
+          }
+
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            return fileVisitor.postVisitDirectory(projectRoot.relativize(dir), exc);
+          }
+        });
   }
 
   /**
