@@ -158,14 +158,12 @@ public class SmartDexingStep implements Step {
             outputToInputs.keySet(),
             projectFilesystem);
       }
-      return 0;
-    } catch (StepFailedException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
+    } catch (StepFailedException | IOException e) {
+      context.logError(e, "There was an error in smart dexing step.");
       return 1;
     }
+
+    return 0;
   }
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
