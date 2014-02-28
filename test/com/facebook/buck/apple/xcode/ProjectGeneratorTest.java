@@ -235,6 +235,65 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testLibrarySourceGroups() throws IOException {
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "lib"), ImmutableSortedSet.<BuildRule>of());
+    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.headers = ImmutableSortedSet.of();
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group1",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-Wall"))))),
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("baz.m")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("blech.m"), "-fobjc-arc"))))
+        ));
+    arg.frameworks = ImmutableSortedSet.of();
+    BuildRule rule = new DescribedRule(
+        IosLibraryDescription.TYPE,
+        iosLibraryDescription.createBuildable(params, arg), params);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(sourcesGroup.getChildren(), hasSize(2));
+
+    PBXGroup group1 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 0);
+    assertEquals("Group1", group1.getName());
+    assertThat(group1.getChildren(), hasSize(2));
+    PBXFileReference fileRefFoo = (PBXFileReference)Iterables.get(group1.getChildren(), 0);
+    assertEquals("foo.m", fileRefFoo.getName());
+    PBXFileReference fileRefBar = (PBXFileReference)Iterables.get(group1.getChildren(), 1);
+    assertEquals("bar.m", fileRefBar.getName());
+
+    PBXGroup group2 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 1);
+    assertEquals("Group2", group2.getName());
+    assertThat(group2.getChildren(), hasSize(2));
+    PBXFileReference fileRefBaz = (PBXFileReference)Iterables.get(group2.getChildren(), 0);
+    assertEquals("baz.m", fileRefBaz.getName());
+    PBXFileReference fileRefBlech = (PBXFileReference)Iterables.get(group2.getChildren(), 1);
+    assertEquals("blech.m", fileRefBlech.getName());
+  }
+
+  @Test
   public void testXcodeNativeRule() throws IOException {
     BuildRule rule = createBuildRuleWithDefaults(
         new BuildTarget("//foo", "rule"),

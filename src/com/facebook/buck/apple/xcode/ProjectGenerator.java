@@ -20,6 +20,7 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleResource;
+import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.IosBinary;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibrary;
@@ -231,7 +232,10 @@ public class ProjectGenerator {
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
-        target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
+        target,
+        targetGroup,
+        buildable.getGroupedSrcs(),
+        buildable.getPerFileCompilerFlags());
     addHeadersBuildPhase(target, targetGroup, buildable.getHeaders());
 
     // -- products
@@ -268,7 +272,10 @@ public class ProjectGenerator {
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
-        target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
+        target,
+        targetGroup,
+        buildable.getGroupedSrcs(),
+        buildable.getPerFileCompilerFlags());
     addFrameworksBuildPhase(
         rule.getBuildTarget(),
         target,
@@ -315,7 +322,10 @@ public class ProjectGenerator {
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
-        target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
+        target,
+        targetGroup,
+        buildable.getGroupedSrcs(),
+        buildable.getPerFileCompilerFlags());
     addFrameworksBuildPhase(
         rule.getBuildTarget(),
         target,
@@ -437,32 +447,77 @@ public class ProjectGenerator {
    *
    * @param target      Target to add the build phase to.
    * @param targetGroup Group to link the source files to.
-   * @param sources        Sources to include in the build phase, path relative to project root.
+   * @param groupedSources Grouped sources to include in the build
+   *        phase, path relative to project root.
    * @param sourceFlags    Source to compiler flag mapping.
    */
   private void addSourcesBuildPhase(
       PBXNativeTarget target,
       PBXGroup targetGroup,
-      Iterable<SourcePath> sources,
+      Iterable<GroupedSource> groupedSources,
       ImmutableMap<SourcePath, String> sourceFlags) {
     PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+    // Sources groups stay in the order in which they're declared in the BUCK file.
+    sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
     PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
     target.getBuildPhases().add(sourcesBuildPhase);
-    for (SourcePath sourcePath : sources) {
-      Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
-      PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-          new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              this.repoRootRelativeToOutputDirectory.resolve(path)
-          ));
-      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-      sourcesBuildPhase.getFiles().add(buildFile);
-      String customFlags = sourceFlags.get(sourcePath);
-      if (customFlags != null) {
-        NSDictionary settings = new NSDictionary();
-        settings.put("COMPILER_FLAGS", customFlags);
-        buildFile.setSettings(Optional.of(settings));
+
+    addGroupedSourcesToBuildPhase(
+        sourcesGroup,
+        sourcesBuildPhase,
+        groupedSources,
+        sourceFlags);
+  }
+
+  private void addGroupedSourcesToBuildPhase(
+      PBXGroup sourcesGroup,
+      PBXSourcesBuildPhase sourcesBuildPhase,
+      Iterable<GroupedSource> groupedSources,
+      ImmutableMap<SourcePath, String> sourceFlags) {
+    for (GroupedSource groupedSource : groupedSources) {
+      switch (groupedSource.getType()) {
+        case SOURCE_PATH:
+          addSourcePathToBuildPhase(
+              groupedSource.getSourcePath(),
+              sourcesGroup,
+              sourcesBuildPhase,
+              sourceFlags);
+          break;
+        case SOURCE_GROUP:
+          PBXGroup newSourceGroup = sourcesGroup.getOrCreateChildGroupByName(
+              groupedSource.getSourceGroupName());
+          // Sources groups stay in the order in which they're declared in the BUCK file.
+          newSourceGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
+          addGroupedSourcesToBuildPhase(
+              newSourceGroup,
+              sourcesBuildPhase,
+              groupedSource.getSourceGroup(),
+              sourceFlags);
+          break;
+        default:
+          throw new RuntimeException("Unhandled grouped source type: " + groupedSource.getType());
       }
+    }
+  }
+
+  private void addSourcePathToBuildPhase(
+      SourcePath sourcePath,
+      PBXGroup sourcesGroup,
+      PBXSourcesBuildPhase sourcesBuildPhase,
+      ImmutableMap<SourcePath, String> sourceFlags) {
+    Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
+    PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            this.repoRootRelativeToOutputDirectory.resolve(path)
+        ));
+    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    sourcesBuildPhase.getFiles().add(buildFile);
+    String customFlags = sourceFlags.get(sourcePath);
+    if (customFlags != null) {
+      NSDictionary settings = new NSDictionary();
+      settings.put("COMPILER_FLAGS", customFlags);
+      buildFile.setSettings(Optional.of(settings));
     }
   }
 
