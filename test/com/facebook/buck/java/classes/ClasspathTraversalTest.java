@@ -22,8 +22,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
@@ -43,6 +44,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
@@ -52,7 +54,7 @@ public class ClasspathTraversalTest {
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
 
-  private static Collection<FileLike> traverse(Collection<File> files) throws IOException {
+  private static Map<FileLike, String> traverse(Collection<File> files) throws IOException {
     Collection<Path> paths = FluentIterable.from(files)
         .transform(new Function<File, Path>() {
       @Override
@@ -60,12 +62,21 @@ public class ClasspathTraversalTest {
         return file.toPath();
       }
     }).toList();
-    final ImmutableList.Builder<FileLike> completeList = ImmutableList.builder();
+    final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
     traverser.traverse(new ClasspathTraversal(paths, new ProjectFilesystem(Paths.get("."))) {
       @Override
       public void visit(FileLike fileLike) {
-        completeList.add(fileLike);
+        String contents;
+        try {
+          contents = CharStreams.toString(
+              CharStreams.newReaderSupplier(
+                  new FileLikeInputSupplier(fileLike),
+                  Charsets.UTF_8));
+        } catch (IOException e) {
+          throw Throwables.propagate(e);
+        }
+        completeList.put(fileLike, contents);
       }
     });
     return completeList.build();
@@ -73,11 +84,11 @@ public class ClasspathTraversalTest {
 
   private static void verifyFileLike(int expectedFiles, File... paths) throws IOException {
     int fileLikeCount = 0;
-    for (FileLike fileLike : traverse(Lists.newArrayList(paths))) {
-      String contents = CharStreams.toString(
-          CharStreams.newReaderSupplier(new FileLikeInputSupplier(fileLike),
-              Charsets.UTF_8));
-      assertEquals("Relative file-like path mismatch", contents, fileLike.getRelativePath());
+    for (Map.Entry<FileLike, String> entry : traverse(Lists.newArrayList(paths)).entrySet()) {
+      assertEquals(
+          "Relative file-like path mismatch",
+          entry.getValue(),
+          entry.getKey().getRelativePath());
       fileLikeCount++;
     }
     assertEquals(expectedFiles, fileLikeCount);
@@ -136,7 +147,7 @@ public class ClasspathTraversalTest {
       zipOut.close();
     }
 
-    Collection<FileLike> entries = traverse(Collections.singleton(file));
+    Collection<FileLike> entries = traverse(Collections.singleton(file)).keySet();
     assertEquals(1, entries.size());
     FileLike entry = Iterables.getFirst(entries, null);
     assertEquals("CRC of input text should equal FileLike#fastHash",

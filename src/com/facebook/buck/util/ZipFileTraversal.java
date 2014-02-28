@@ -25,7 +25,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public abstract class ZipFileTraversal {
-  private ZipFile zipFile;
   private final File file;
 
   public ZipFileTraversal(File file) {
@@ -35,11 +34,12 @@ public abstract class ZipFileTraversal {
   public abstract void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException;
 
   public final void traverse() throws IOException {
-    zipFile = new ZipFile(file);
-    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry entry = entries.nextElement();
-      visit(zipFile, entry);
+    try (ZipFile zipFile = new ZipFile(file)) {
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry entry = entries.nextElement();
+        visit(zipFile, entry);
+      }
     }
   }
 }
