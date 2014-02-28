@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.xcode.ProjectGenerator;
-import com.facebook.buck.apple.xcode.SeparatedProjectGenerator;
+import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -197,7 +197,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     } else {
       // Generate projects based on xcode_project_config rules, and place them in the same directory
       // as the Buck file.
-      SeparatedProjectGenerator projectGenerator = new SeparatedProjectGenerator(
+      SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           getProjectFilesystem(),
           partialGraph,
           executionContext,

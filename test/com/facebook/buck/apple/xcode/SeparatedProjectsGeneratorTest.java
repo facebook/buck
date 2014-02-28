@@ -21,8 +21,9 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasS
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -42,6 +43,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,7 +53,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-public class SeparatedProjectGeneratorTest {
+public class SeparatedProjectsGeneratorTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
   private final IosLibraryDescription iosLibraryDescription = new IosLibraryDescription();
@@ -68,7 +70,7 @@ public class SeparatedProjectGeneratorTest {
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule));
 
-    SeparatedProjectGenerator generator = new SeparatedProjectGenerator(
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         partialGraph,
         executionContext,
@@ -88,7 +90,7 @@ public class SeparatedProjectGeneratorTest {
         ImmutableSet.of(rule));
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule, configRule));
-    SeparatedProjectGenerator generator = new SeparatedProjectGenerator(
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         partialGraph,
         executionContext,
@@ -126,20 +128,26 @@ public class SeparatedProjectGeneratorTest {
         ImmutableSet.of(rule));
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule, configRule));
-    SeparatedProjectGenerator generator = new SeparatedProjectGenerator(
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         partialGraph,
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()));
     generator.generateProjects();
 
-    PBXProject project = generator.getProjectGenerators().get(configRule.getBuildTarget())
+    PBXProject project = Preconditions.checkNotNull(generator.getProjectGenerators())
+        .get(configRule.getBuildTarget())
         .getGeneratedProject();
 
-    assertThat(project.getTargets(), containsInAnyOrder(
-        isTargetWithName("//foo/bar:somelib"),
-        // auto-generated signed-source rule
-        instanceOf(PBXAggregateTarget.class)));
+    assertThat("Has only two targets", project.getTargets(), hasSize(2));
+    assertThat(
+        "One of the targets is the named target",
+        project.getTargets(),
+        hasItem(isTargetWithName("//foo/bar:somelib")));
+    assertThat(
+        "Only other target is signed-source target",
+        project.getTargets(),
+        hasItem(isA(PBXAggregateTarget.class)));
   }
 
   @Test
@@ -158,14 +166,15 @@ public class SeparatedProjectGeneratorTest {
         ImmutableSet.of(rule));
     PartialGraph partialGraph = createPartialGraphFromBuildRules(
         ImmutableSet.of(rule, configRule));
-    SeparatedProjectGenerator generator = new SeparatedProjectGenerator(
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         partialGraph,
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()));
     generator.generateProjects();
 
-    PBXProject project = generator.getProjectGenerators().get(configRule.getBuildTarget())
+    PBXProject project = Preconditions.checkNotNull(generator.getProjectGenerators())
+        .get(configRule.getBuildTarget())
         .getGeneratedProject();
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(

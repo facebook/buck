@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 /**
  * Generate separate xcode projects based on the given xcode_project_config rules
  */
-public class SeparatedProjectGenerator {
+public class SeparatedProjectsGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final PartialGraph partialGraph;
   private final ExecutionContext executionContext;
@@ -49,7 +49,7 @@ public class SeparatedProjectGenerator {
    */
   private ImmutableMap<BuildTarget, ProjectGenerator> projectGenerators;
 
-  public SeparatedProjectGenerator(
+  public SeparatedProjectsGenerator(
       ProjectFilesystem projectFilesystem,
       PartialGraph partialGraph,
       ExecutionContext executionContext,
