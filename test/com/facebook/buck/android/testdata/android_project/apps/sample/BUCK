@@ -33,6 +33,18 @@ android_binary(
   resource_filter = ['hdpi', 'xhdpi']
 )
 
+android_binary(
+  name = 'app_comp_str',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:16',
+  keystore = ':debug_keystore',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+  resource_compression = 'enabled_with_strings_as_assets',
+)
+
 keystore(
   name = 'debug_keystore',
   store = 'debug.keystore',
