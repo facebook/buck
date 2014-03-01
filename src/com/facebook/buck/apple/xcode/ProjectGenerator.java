@@ -135,6 +135,9 @@ public class ProjectGenerator {
      * project.
      */
     REFERENCE_EXISTING_XCCONFIGS,
+
+    /** Use short BuildTarget name instead of full name for targets */
+    USE_SHORT_NAMES_FOR_TARGETS,
     ;
   }
 
@@ -149,6 +152,7 @@ public class ProjectGenerator {
 
   public static final Option[] SEPARATED_PROJECT_OPTIONS = new Option[] {
       Option.REFERENCE_EXISTING_XCCONFIGS,
+      Option.USE_SHORT_NAMES_FOR_TARGETS,
   };
 
   private final PartialGraph partialGraph;
@@ -298,11 +302,10 @@ public class ProjectGenerator {
       BuildRule rule,
       IosLibrary buildable)
       throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(rule.getFullyQualifiedName());
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(PBXTarget.ProductType.IOS_LIBRARY);
 
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
     setTargetBuildConfigurations(
@@ -334,11 +337,10 @@ public class ProjectGenerator {
 
   private PBXNativeTarget generateIosTestTarget(
       PBXProject project, BuildRule rule, IosTest buildable) throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(rule.getFullyQualifiedName());
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(PBXTarget.ProductType.IOS_TEST);
 
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
     Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
@@ -384,11 +386,10 @@ public class ProjectGenerator {
   private PBXNativeTarget generateIOSBinaryTarget(
       PBXProject project, BuildRule rule, IosBinary buildable)
       throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(rule.getFullyQualifiedName());
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(PBXTarget.ProductType.IOS_BINARY);
 
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
     Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
@@ -448,7 +449,7 @@ public class ProjectGenerator {
         referencedProject,
         buildable.getTargetGid(),
         PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
-    PBXAggregateTarget target = new PBXAggregateTarget(rule.getFullyQualifiedName());
+    PBXAggregateTarget target = new PBXAggregateTarget(getXcodeTargetName(rule));
     target.getDependencies().add(new PBXTargetDependency(proxy));
     project.getTargets().add(target);
     return target;
@@ -910,6 +911,12 @@ public class ProjectGenerator {
 
   private static String getLibraryNameFromTargetName(String string) {
     return "lib" + string + ".a";
+  }
+
+  private String getXcodeTargetName(BuildRule rule) {
+    return options.contains(Option.USE_SHORT_NAMES_FOR_TARGETS)
+        ? rule.getBuildTarget().getShortName()
+        : rule.getBuildTarget().getFullyQualifiedName();
   }
 
   /**

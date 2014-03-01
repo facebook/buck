@@ -33,6 +33,7 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -64,6 +65,7 @@ public class SeparatedProjectsGeneratorTest {
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
   private final IosLibraryDescription iosLibraryDescription = new IosLibraryDescription();
   private final IosBinaryDescription iosBinaryDescription = new IosBinaryDescription();
+  private final IosTestDescription iosTestDescription = new IosTestDescription();
   private final XcodeProjectConfigDescription xcodeProjectConfigDescription =
       new XcodeProjectConfigDescription();
 
@@ -147,7 +149,7 @@ public class SeparatedProjectsGeneratorTest {
     assertThat(
         "One of the targets is the named target",
         project.getTargets(),
-        hasItem(isTargetWithName("//foo/bar:somelib")));
+        hasItem(isTargetWithName("somelib")));
     assertThat(
         "Only other target is signed-source target",
         project.getTargets(),
@@ -178,7 +180,7 @@ public class SeparatedProjectsGeneratorTest {
     generator.generateProjects();
 
     PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "bin");
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of("$BUILT_PRODUCTS_DIR/libsomedep.a"));
@@ -226,7 +228,7 @@ public class SeparatedProjectsGeneratorTest {
         projectLevelConfig.getBaseConfigurationReference().getPath());
 
     XCBuildConfiguration targetLevelConfig =
-        ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "//foo:rule")
+        ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "rule")
             .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     assertNotNull("should have target level Debug config", targetLevelConfig);
     assertNotNull(
@@ -314,7 +316,7 @@ public class SeparatedProjectsGeneratorTest {
 
     {
       XCBuildConfiguration targetLevelConfig =
-          ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "//foo:rule1")
+          ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "rule1")
               .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
       assertNotNull("should have target level Debug config", targetLevelConfig);
       assertEquals(new NSString("t1"), targetLevelConfig.getBuildSettings().get("TARGET_FLAG1"));
@@ -325,7 +327,7 @@ public class SeparatedProjectsGeneratorTest {
 
     {
       XCBuildConfiguration targetLevelConfig =
-          ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "//foo:rule2")
+          ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "rule2")
               .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
       assertNotNull("should have target level Debug config", targetLevelConfig);
       assertEquals(new NSString("t3"), targetLevelConfig.getBuildSettings().get("TARGET_FLAG3"));
@@ -363,6 +365,48 @@ public class SeparatedProjectsGeneratorTest {
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()));
     generator.generateProjects();
+  }
+
+  @Test
+  public void generatedTargetsShouldUseShortNames() throws IOException {
+    BuildRule libraryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "library"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    BuildRule binaryRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "binary"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosBinaryDescription);
+
+    BuildRule testRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "test"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosTestDescription);
+
+    BuildRule nativeRule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "native"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosTestDescription);
+
+    BuildRule configRule = createXcodeProjectConfigRule(
+        "//foo",
+        "fooproject",
+        ImmutableSet.of(libraryRule, binaryRule, testRule, nativeRule));
+
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        projectFilesystem,
+        createPartialGraphFromBuildRules(
+            ImmutableSet.of(configRule, libraryRule, binaryRule, testRule, nativeRule)),
+        executionContext,
+        ImmutableSet.of(configRule.getBuildTarget()));
+    generator.generateProjects();
+
+    PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
+    assertTargetExistsAndReturnTarget(project, "library");
+    assertTargetExistsAndReturnTarget(project, "binary");
+    assertTargetExistsAndReturnTarget(project, "test");
+    assertTargetExistsAndReturnTarget(project, "native");
   }
 
   private BuildRule createXcodeProjectConfigRule(
