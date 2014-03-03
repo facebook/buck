@@ -173,8 +173,6 @@ public class ProjectGenerator {
         this.outputDirectory.normalize().toAbsolutePath().relativize(
             projectFilesystem.getRootPath().toAbsolutePath());
     this.project = new PBXProject(projectName);
-    project.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Debug");
-    project.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Release");
 
     this.buildRuleToXcodeTarget = CacheBuilder.newBuilder().build(
         new CacheLoader<BuildRule, Optional<PBXTarget>>() {
@@ -271,7 +269,8 @@ public class ProjectGenerator {
         project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
 
     // -- configurations
-    setTargetConfigurations(rule.getBuildTarget(), target, targetGroup,
+    setTargetBuildConfigurations(
+        rule.getBuildTarget(), target, targetGroup,
         buildable.getConfigurations(), ImmutableMap.<String, String>of());
 
     // -- build phases
@@ -307,7 +306,8 @@ public class ProjectGenerator {
 
     // -- configurations
     Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
-    setTargetConfigurations(rule.getBuildTarget(),
+    setTargetBuildConfigurations(
+        rule.getBuildTarget(),
         target,
         targetGroup,
         buildable.getConfigurations(),
@@ -356,7 +356,7 @@ public class ProjectGenerator {
 
     // -- configurations
     Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
-    setTargetConfigurations(
+    setTargetBuildConfigurations(
         rule.getBuildTarget(),
         target,
         targetGroup,
@@ -418,7 +418,12 @@ public class ProjectGenerator {
     return target;
   }
 
-  private void setTargetConfigurations(
+  /**
+   * Create project level (if it does not exist) and target level configuration entries.
+   *
+   * Each configuration should have an empty entry at the project level.
+   */
+  private void setTargetBuildConfigurations(
       BuildTarget buildTarget,
       PBXTarget target,
       PBXGroup targetGroup,
@@ -442,6 +447,11 @@ public class ProjectGenerator {
     // XCConfig search path is relative to the xcode project and the file itself.
     ImmutableList<Path> searchPaths = ImmutableList.of(originalProjectPath);
     for (XcodeRuleConfiguration configuration : configurations) {
+      // Call for effect to create a stub configuration entry at project level.
+      project.getBuildConfigurationList()
+          .getBuildConfigurationsByName()
+          .getUnchecked(configuration.getName());
+
       Path configurationFilePath = outputConfigurationDirectory.resolve(
           mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
       String serializedConfiguration = serializeBuildConfiguration(

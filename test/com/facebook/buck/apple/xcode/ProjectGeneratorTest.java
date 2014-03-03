@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.xml.HasXPath.hasXPath;
 import static org.junit.Assert.assertEquals;
@@ -661,6 +662,54 @@ public class ProjectGeneratorTest {
         generatedProject,
         "//foo:bin");
     assertHasSingletonResourcesPhaseWithEntries(binTarget, "foo.png", "foodir");
+  }
+
+  /**
+   * The project configurations should have named entries corresponding to every existing target
+   * configuration for targets in the project.
+   */
+  @Test
+  public void generatedProjectConfigurationListIsUnionOfAllTargetConfigurations()
+      throws IOException {
+    BuildRule rule1 = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule1"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription,
+        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+          @Override
+          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+            input.configs = ImmutableMap.of(
+                "Conf1", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of(),
+                "Conf2", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+            return input;
+          }
+        });
+
+    BuildRule rule2 = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule2"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription,
+        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+          @Override
+          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+            input.configs = ImmutableMap.of(
+                "Conf2", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of(),
+                "Conf3", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+            return input;
+          }
+        });
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule1, rule2),
+        ImmutableSet.of(rule1.getBuildTarget(), rule2.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    Map<String, XCBuildConfiguration> configurations =
+        generatedProject.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
+    assertThat(configurations, hasKey("Conf1"));
+    assertThat(configurations, hasKey("Conf2"));
+    assertThat(configurations, hasKey("Conf3"));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
