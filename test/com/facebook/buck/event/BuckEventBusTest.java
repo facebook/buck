@@ -16,7 +16,9 @@
 
 package com.facebook.buck.event;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -26,7 +28,6 @@ import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -72,12 +73,47 @@ public class BuckEventBusTest {
     } catch (ShutdownException e) {
       assertThat("Exception should be due to shutdown.",
           e.getMessage(),
-          Matchers.containsString("failed to shut down"));
+          containsString("failed to shut down"));
     }
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat("Shutdown should not take a long time.",
         durationMillis, lessThanOrEqualTo((long) timeoutMillis * 2));
+  }
+
+  @Test
+  public void whenEventTimestampedThenEventCannotBePosted() {
+    BuckEventBus eb = new BuckEventBus(
+        new DefaultClock(),
+        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        BuckEventBusFactory.BUILD_ID_FOR_TEST,
+        timeoutMillis);
+    TestEvent event = new TestEvent();
+    eb.timestamp(event);
+    try {
+      eb.post(event);
+      fail("Post should throw IllegalStateException.");
+    } catch (IllegalStateException e) {
+      assertThat(
+          "Exception should be due to double configuration.",
+          e.getMessage(),
+          containsString("Events can only be configured once."));
+    }
+  }
+
+  @Test
+  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() {
+    BuckEventBus eb = new BuckEventBus(
+        new DefaultClock(),
+        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        BuckEventBusFactory.BUILD_ID_FOR_TEST,
+        timeoutMillis);
+    TestEvent timestamp = new TestEvent();
+    TestEvent event = new TestEvent();
+    eb.timestamp(timestamp);
+    eb.post(event, timestamp);
+    assertEquals(timestamp.getTimestamp(), event.getTimestamp());
+    assertEquals(timestamp.getNanoTime(), event.getNanoTime());
   }
 
   private static class SleepEvent extends AbstractBuckEvent {
@@ -114,4 +150,21 @@ public class BuckEventBusTest {
     }
   }
 
+  private static class TestEvent extends AbstractBuckEvent {
+
+    @Override
+    protected String getValueString() {
+      return "Test event, please ignore.";
+    }
+
+    @Override
+    public boolean eventsArePair(BuckEvent event) {
+      return false;
+    }
+
+    @Override
+    public String getEventName() {
+      return "TestEvent";
+    }
+  }
 }

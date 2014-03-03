@@ -222,7 +222,10 @@ public final class Main {
       });
     }
 
-    private void watchFileSystem(Console console, CommandEvent commandEvent) throws IOException {
+    private void watchFileSystem(
+        Console console,
+        CommandEvent commandEvent,
+        BuckEventBus eventBus) throws IOException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
       // as a single, atomic Parser cache update and are not interleaved with Parser cache
@@ -231,6 +234,7 @@ public final class Main {
       synchronized (parser) {
         parser.setConsole(console);
         hashCache.setConsole(console);
+        parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
         filesystemWatcher.postEvents();
       }
@@ -476,8 +480,13 @@ public final class Main {
               androidDirectoryResolver);
 
       if (isDaemon) {
-        parser = getParserFromDaemon(context, projectFilesystem, config, console, commandEvent);
-
+        parser = getParserFromDaemon(
+            context,
+            projectFilesystem,
+            config,
+            console,
+            commandEvent,
+            buildEventBus);
       } else {
         // Initialize logging and create new Parser for new process.
         JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
@@ -534,11 +543,12 @@ public final class Main {
       Optional<NGContext> context,
       ProjectFilesystem projectFilesystem,
       BuckConfig config, Console console,
-      CommandEvent commandEvent) throws IOException {
+      CommandEvent commandEvent,
+      BuckEventBus eventBus) throws IOException {
     // Wire up daemon to new client and console and get cached Parser.
     Daemon daemon = getDaemon(projectFilesystem, config, console);
     daemon.watchClient(context.get());
-    daemon.watchFileSystem(console, commandEvent);
+    daemon.watchFileSystem(console, commandEvent, eventBus);
     daemon.initWebServer();
     return daemon.getParser();
   }

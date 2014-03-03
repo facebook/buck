@@ -71,7 +71,15 @@ public class BuckEventBus implements Closeable {
   }
 
   public void post(BuckEvent event) {
-    event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get(), buildId);
+    timestamp(event);
+    eventBus.post(event);
+  }
+
+  /**
+   * Post event to the EventBus using the timestamp given by atTime.
+   */
+  public void post(BuckEvent event, BuckEvent atTime) {
+    event.configure(atTime.getTimestamp(), atTime.getNanoTime(), threadIdSupplier.get(), buildId);
     eventBus.post(event);
   }
 
@@ -126,5 +134,13 @@ public class BuckEventBus implements Closeable {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
+  }
+
+  /**
+   * Timestamp event. A timestamped event cannot subsequently being posted and is useful only to
+   * pass its timestamp on to another posted event.
+   */
+  public void timestamp(BuckEvent event) {
+    event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get(), buildId);
   }
 }

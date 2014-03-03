@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
@@ -127,6 +128,13 @@ public class Parser {
    * that depend on them (typically {@code /jimp/BUCK} files).
    */
   private final ListMultimap<Path, Path> buildFileDependents;
+
+  /**
+   * A BuckEvent used to record the parse start time, which should include the WatchEvent
+   * processing that occurs before the BuildTargets required to build a full ParseStart event are
+   * known.
+   */
+  private Optional<BuckEvent> parseStartEvent = Optional.absent();
 
   /**
    * Parsers may be reused on different consoles, so need to allow the console to be set.
@@ -317,7 +325,7 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, IOException {
     // Make sure that knownBuildTargets is initially populated with the BuildRuleBuilders for the
     // seed BuildTargets for the traversal.
-    eventBus.post(ParseEvent.started(buildTargets));
+    postParseStartEvent(buildTargets, eventBus);
     DependencyGraph graph = null;
     try (ProjectBuildFileParser buildFileParser =
              buildFileParserFactory.createParser(defaultIncludes,
@@ -722,7 +730,8 @@ public class Parser {
   public synchronized void onCommandStartedEvent(BuckEvent event) {
     // Ideally, the type of event would be CommandEvent.Started, but that would introduce
     // a dependency on com.facebook.buck.cli.
-    Preconditions.checkArgument(event.getEventName().equals("CommandStarted"),
+    Preconditions.checkArgument(
+        event.getEventName().equals("CommandStarted"),
         "event should be of type CommandEvent.Started, but was: %s.",
         event);
     buildFileTreeCache.onCommandStartedEvent(event);
@@ -851,5 +860,50 @@ public class Parser {
    */
   private Path normalize(Path path) {
     return path.toAbsolutePath().normalize();
+  }
+
+  /**
+   * Record the parse start time, which should include the WatchEvent processing that occurs
+   * before the BuildTargets required to build a full ParseStart event are known.
+   */
+  public void recordParseStartTime(BuckEventBus eventBus) {
+    class ParseStartTime extends AbstractBuckEvent {
+
+      @Override
+      protected String getValueString() {
+        return "Timestamp.";
+      }
+
+      @Override
+      public boolean eventsArePair(BuckEvent event) {
+        return false;
+      }
+
+      @Override
+      public String getEventName() {
+        return "ParseStartTime";
+      }
+    }
+    parseStartEvent = Optional.<BuckEvent>of(new ParseStartTime());
+    eventBus.timestamp(parseStartEvent.get());
+  }
+
+  /**
+   * @return an Optional BuckEvent timestamped with the parse start time.
+   */
+  public Optional<BuckEvent> getParseStartTime() {
+    return parseStartEvent;
+  }
+
+  /**
+   * Post a ParseStart event to eventBus, using the start of WatchEvent processing as the start
+   * time if applicable.
+   */
+  private void postParseStartEvent(Iterable<BuildTarget> buildTargets, BuckEventBus eventBus) {
+    if (parseStartEvent.isPresent()) {
+      eventBus.post(ParseEvent.started(buildTargets), parseStartEvent.get());
+    } else {
+      eventBus.post(ParseEvent.started(buildTargets));
+    }
   }
 }
