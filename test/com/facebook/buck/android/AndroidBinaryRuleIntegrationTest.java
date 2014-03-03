@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.testutil.integration.ApkInspector;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -47,6 +48,30 @@ public class AndroidBinaryRuleIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build", SIMPLE_TARGET, EXOPACKAGE_TARGET);
     result.assertSuccess();
+  }
+
+  @Test
+  public void testNonExopackageHasSecondary() throws IOException {
+    ApkInspector apkInspector = new ApkInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app.apk"));
+    apkInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
+    apkInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1.dex.jar");
+
+    apkInspector.assertFileExists("classes.dex");
+    apkInspector.assertFileExists("lib/armeabi/libfakenative.so");
+  }
+
+  @Test
+  public void testExopackageHasNoSecondary() throws IOException {
+    ApkInspector apkInspector = new ApkInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app-exo.apk"));
+    apkInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
+    apkInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
+
+    apkInspector.assertFileExists("classes.dex");
+    apkInspector.assertFileExists("lib/armeabi/libfakenative.so");
   }
 
   @Test
