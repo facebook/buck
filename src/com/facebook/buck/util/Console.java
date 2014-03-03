@@ -78,7 +78,7 @@ public class Console {
    */
   public void printBuildFailureWithStacktrace(Throwable t) {
     t.printStackTrace(stdErr);
-    printBuildFailure("Unexpected internal error (this is probably a buck bug).");
+    printBuildFailure("Unexpected internal error (if you are using buckd, you should restart it).");
   }
 
   /**
