@@ -40,7 +40,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -295,11 +294,11 @@ public final class ProGuardObfuscateStep extends ShellStep {
     }
 
     public Path getConfigurationTxt() {
-      return Paths.get(proguardDirectory + "/configuration.txt");
+      return proguardDirectory.resolve("configuration.txt");
     }
 
     public Path getMappingTxt() {
-      return Paths.get(proguardDirectory + "/mapping.txt");
+      return proguardDirectory.resolve("mapping.txt");
     }
 
     @Override
