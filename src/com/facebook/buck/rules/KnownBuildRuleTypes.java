@@ -22,6 +22,7 @@ import com.facebook.buck.android.AndroidLibraryBuildRuleFactory;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidResourceBuildRuleFactory;
 import com.facebook.buck.android.ApkGenruleBuildRuleFactory;
+import com.facebook.buck.android.BuildConfigDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkLibraryBuildRuleFactory;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuildRuleFactory;
@@ -110,6 +111,7 @@ public class KnownBuildRuleTypes {
     Builder builder = builder();
 
     builder.register(new AndroidManifestDescription());
+    builder.register(new BuildConfigDescription());
     builder.register(new ExportFileDescription());
     builder.register(new GenAidlDescription());
     builder.register(new IosBinaryDescription());
