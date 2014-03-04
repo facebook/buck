@@ -66,6 +66,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
       ImmutableSet<BuildRule> buildRulesToExcludeFromDex,
       FilteredResourcesProvider filteredResourcesProvider,
       UberRDotJava uberRDotJava,
+      Optional<PackageStringAssets> packageStringAssets,
       AaptPackageResources aaptPackageResourcesBuildable,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       ImmutableSortedSet<BuildRule> classpathDepsForInstrumentationApk) {
@@ -86,6 +87,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
         BuildTargets.getBinPath(buildRuleParams.getBuildTarget(), ".dex/%s/classes.dex"),
         filteredResourcesProvider,
         uberRDotJava,
+        packageStringAssets,
         aaptPackageResourcesBuildable,
         Optional.<PreDexMerge>absent(),
         Optional.<ComputeExopackageDepsAbi>absent(),
@@ -211,6 +213,7 @@ public class AndroidInstrumentationApk extends AndroidBinaryRule {
           buildRulesToExcludeFromDex,
           result.getFilteredResourcesProvider(),
           result.getUberRDotJava(),
+          result.getPackageStringAssets(),
           result.getAaptPackageResources(),
           androidResourceDepsFinder,
           getBuildTargetsAsBuildRules(ruleResolver, classpathDeps.build()));

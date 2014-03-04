@@ -166,6 +166,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final Path primaryDexPath;
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final UberRDotJava uberRDotJava;
+  private final Optional<PackageStringAssets> packageStringAssets;
   private final AaptPackageResources aaptPackageResources;
   private final Optional<PreDexMerge> preDexMerge;
   private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
@@ -196,6 +197,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Path primaryDexPath,
       FilteredResourcesProvider filteredResourcesProvider,
       UberRDotJava uberRDotJava,
+      Optional<PackageStringAssets> packageStringAssets,
       AaptPackageResources aaptPackageResources,
       Optional<PreDexMerge> preDexMerge,
       Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
@@ -219,6 +221,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
     this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+    this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
     this.computeExopackageDepsAbi = Preconditions.checkNotNull(computeExopackageDepsAbi);
@@ -451,13 +454,20 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       nativeLibraryDirectories = ImmutableSet.of();
     }
 
+    // If non-english strings are to be stored as assets, pass them to ApkBuilder.
+    ImmutableSet.Builder<Path> zipFiles = ImmutableSet.builder();
+    zipFiles.addAll(dexFilesInfo.secondaryDexZips);
+    if (packageStringAssets.isPresent()) {
+      zipFiles.add(packageStringAssets.get().getPathToStringAssetsZip());
+    }
+
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         aaptPackageResources.getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
         /* javaResourcesDirectories */ ImmutableSet.<String>of(),
         nativeLibraryDirectories,
-        dexFilesInfo.secondaryDexZips,
+        zipFiles.build(),
         dexTransitiveDependencies.pathsToThirdPartyJars,
         keystore.getPathToStore(),
         keystore.getPathToPropertiesFile(),
@@ -1083,6 +1093,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           primaryDexPath,
           result.getFilteredResourcesProvider(),
           result.getUberRDotJava(),
+          result.getPackageStringAssets(),
           result.getAaptPackageResources(),
           result.getPreDexMerge(),
           result.getComputeExopackageDepsAbi(),

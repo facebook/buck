@@ -66,6 +66,7 @@ public class ComputeExopackageDepsAbi
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final UberRDotJava uberRDotJava;
   private final AaptPackageResources aaptPackageResources;
+  private final Optional<PackageStringAssets> packageStringAssets;
   private final Optional<PreDexMerge> preDexMerge;
   private final Keystore keystore;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -75,11 +76,13 @@ public class ComputeExopackageDepsAbi
       AndroidResourceDepsFinder androidResourceDepsFinder,
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResources,
+      Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
+    this.packageStringAssets = Preconditions.checkNotNull(packageStringAssets);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
     this.keystore = Preconditions.checkNotNull(keystore);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -113,6 +116,11 @@ public class ComputeExopackageDepsAbi
               hasher.putUnencodedChars(aaptPackageResources.getResourcePackageHash().toString());
               // Next is the primary dex.  Same plan.
               hasher.putUnencodedChars(preDexMerge.get().getPrimaryDexHash().toString());
+              // Non-english string packaged as assets.
+              if (packageStringAssets.isPresent()) {
+                hasher.putUnencodedChars(
+                    packageStringAssets.get().getStringAssetsZipHash().toString());
+              }
 
               // We currently don't use any resource directories, so nothing to add there.
 
@@ -204,6 +212,7 @@ public class ComputeExopackageDepsAbi
       AndroidResourceDepsFinder androidResourceDepsFinder,
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResources,
+      Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
     Builder builder = new Builder(params);
@@ -211,6 +220,7 @@ public class ComputeExopackageDepsAbi
     builder.androidResourceDepsFinder = androidResourceDepsFinder;
     builder.uberRDotJava = uberRDotJava;
     builder.aaptPackageResources = aaptPackageResources;
+    builder.packageStringAssets = packageStringAssets;
     builder.preDexMerge = preDexMerge;
     builder.keystore = keystore;
     for (BuildRule dep : deps) {
@@ -223,6 +233,7 @@ public class ComputeExopackageDepsAbi
     @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
     @Nullable private UberRDotJava uberRDotJava;
     @Nullable private AaptPackageResources aaptPackageResources;
+    @Nullable private Optional<PackageStringAssets> packageStringAssets;
     @Nullable private Optional<PreDexMerge> preDexMerge;
     @Nullable private Keystore keystore;
 
@@ -249,6 +260,7 @@ public class ComputeExopackageDepsAbi
           androidResourceDepsFinder,
           uberRDotJava,
           aaptPackageResources,
+          packageStringAssets,
           preDexMerge,
           keystore);
     }

@@ -226,6 +226,10 @@ public final class MoreAsserts {
         commands);
   }
 
+  public static void assertDepends(String userMessage, BuildRule rule, BuildRule dep) {
+    assertDepends(userMessage, rule, dep.getBuildTarget());
+  }
+
   public static void assertDepends(String userMessage, BuildRule rule, BuildTarget dep) {
     assertDepends(userMessage, rule.getDeps(), dep);
   }

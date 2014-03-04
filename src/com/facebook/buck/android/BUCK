@@ -49,6 +49,7 @@ RULES_SRCS = [
   'NativeLibraryBuildable.java',
   'NdkLibraryBuildRuleFactory.java',
   'NdkLibrary.java',
+  'PackageStringAssets.java',
   'PreDexedFilesSorter.java',
   'PreDexMerge.java',
   'PrebuiltNativeLibrary.java',
