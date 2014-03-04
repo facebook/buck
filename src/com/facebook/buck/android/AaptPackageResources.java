@@ -114,7 +114,7 @@ public class AaptPackageResources extends AbstractBuildable {
     // commands to ensure that it is available at the desired path.
     steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
 
-    final AndroidTransitiveDependencies transitiveDependencies = uberRDotJava
+    final AndroidTransitiveDependencies transitiveDependencies = resourcesFilter
         .getAndroidTransitiveDependencies();
 
     // If the strings should be stored as assets, then we need to create the .fbstr bundles.

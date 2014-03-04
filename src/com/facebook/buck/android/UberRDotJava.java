@@ -129,11 +129,6 @@ public class UberRDotJava extends AbstractBuildable implements
     });
   }
 
-  AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
-    return androidResourceDepsFinder.getAndroidTransitiveDependencies();
-  }
-
-
   BuildTarget getBuildTarget() {
     return buildTarget;
   }
