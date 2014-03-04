@@ -74,8 +74,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -89,6 +91,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -120,6 +123,18 @@ public class ProjectGenerator {
      * Generate a workspace
      */
     GENERATE_WORKSPACE,
+
+    /**
+     * Attempt to generate projects with configurations in the standard xcode configuration layout.
+     *
+     * Checks that the rules declare their configurations in either
+     * - 4 layers: file-project inline-project file-target inline-target
+     * - 2 layers: file-project file-target
+     *
+     * Additionally, all project-level layers should be identical amongst all targets in the
+     * project.
+     */
+    REFERENCE_EXISTING_XCCONFIGS,
     ;
   }
 
@@ -133,6 +148,7 @@ public class ProjectGenerator {
   };
 
   public static final Option[] SEPARATED_PROJECT_OPTIONS = new Option[] {
+      Option.REFERENCE_EXISTING_XCCONFIGS,
   };
 
   private final PartialGraph partialGraph;
@@ -151,6 +167,15 @@ public class ProjectGenerator {
   private final LoadingCache<BuildRule, Optional<PBXTarget>> buildRuleToXcodeTarget;
   private XCScheme scheme = null;
   private Document workspace = null;
+
+  /**
+   * Populated while generating project configurations, in order to collect the possible
+   * project-level configurations to set when operation with
+   * {@link Option#REFERENCE_EXISTING_XCCONFIGS}.
+   */
+  private final ImmutableMultimap.Builder<String, ConfigInXcodeLayout>
+    xcodeConfigurationLayersMultimapBuilder;
+
 
   public ProjectGenerator(
       PartialGraph partialGraph,
@@ -181,6 +206,8 @@ public class ProjectGenerator {
             return generateTargetForBuildRule(key);
           }
         });
+
+    xcodeConfigurationLayersMultimapBuilder = ImmutableMultimap.builder();
   }
 
   @Nullable
@@ -213,6 +240,15 @@ public class ProjectGenerator {
           }
         }
       }
+
+      if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+        setProjectLevelConfigs(
+            project,
+            repoRootRelativeToOutputDirectory,
+            collectProjectLevelConfigsIfIdenticalOrFail(
+                xcodeConfigurationLayersMultimapBuilder.build()));
+      }
+
       addGeneratedSignedSourceTarget(project);
       writeProjectFile(project);
 
@@ -421,7 +457,9 @@ public class ProjectGenerator {
   /**
    * Create project level (if it does not exist) and target level configuration entries.
    *
-   * Each configuration should have an empty entry at the project level.
+   * Each configuration should have an empty entry at the project level. The target level entries
+   * combine the configuration values of every layer into a single configuration file that is
+   * effectively laid out in layers.
    */
   private void setTargetBuildConfigurations(
       BuildTarget buildTarget,
@@ -430,11 +468,6 @@ public class ProjectGenerator {
       ImmutableSet<XcodeRuleConfiguration> configurations,
       ImmutableMap<String, String> extraBuildSettings)
       throws IOException {
-    Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
-    projectFilesystem.mkdirs(outputConfigurationDirectory);
-
-    Path originalProjectPath = projectFilesystem.getPathForRelativePath(
-        Paths.get(buildTarget.getBasePathWithSlash()));
 
     ImmutableMap<String, String> extraConfigs = ImmutableMap.<String, String>builder()
         .putAll(extraBuildSettings)
@@ -444,30 +477,66 @@ public class ProjectGenerator {
         .build();
 
     PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
-    // XCConfig search path is relative to the xcode project and the file itself.
-    ImmutableList<Path> searchPaths = ImmutableList.of(originalProjectPath);
+
     for (XcodeRuleConfiguration configuration : configurations) {
-      // Call for effect to create a stub configuration entry at project level.
-      project.getBuildConfigurationList()
-          .getBuildConfigurationsByName()
-          .getUnchecked(configuration.getName());
+      if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+        ConfigInXcodeLayout layers = extractXcodeConfigurationLayers(buildTarget, configuration);
+        xcodeConfigurationLayersMultimapBuilder.put(configuration.getName(), layers);
 
-      Path configurationFilePath = outputConfigurationDirectory.resolve(
-          mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
-      String serializedConfiguration = serializeBuildConfiguration(
-          configuration, searchPaths, extraConfigs);
-      projectFilesystem.writeContentsToPath(serializedConfiguration, configurationFilePath);
+        XCBuildConfiguration outputConfiguration =
+            target.getBuildConfigurationList().getBuildConfigurationsByName()
+                .getUnchecked(configuration.getName());
+        if (layers.targetLevelConfigFile.isPresent()) {
+          PBXFileReference fileReference =
+              configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+                  new SourceTreePath(
+                      PBXReference.SourceTree.SOURCE_ROOT,
+                      this.repoRootRelativeToOutputDirectory.resolve(
+                          layers.targetLevelConfigFile.get()).normalize()));
+          outputConfiguration.setBaseConfigurationReference(fileReference);
 
-      PBXFileReference fileReference =
-          configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
-              new SourceTreePath(
-                  PBXReference.SourceTree.SOURCE_ROOT,
-                  this.repoRootRelativeToOutputDirectory.resolve(configurationFilePath)
-              ));
-      XCBuildConfiguration outputConfiguration =
-          target.getBuildConfigurationList().getBuildConfigurationsByName()
-              .getUnchecked(configuration.getName());
-      outputConfiguration.setBaseConfigurationReference(fileReference);
+          NSDictionary inlineSettings = new NSDictionary();
+          Iterable<Map.Entry<String, String>> entries = Iterables.concat(
+              layers.targetLevelInlineSettings.entrySet(),
+              extraConfigs.entrySet());
+          for (Map.Entry<String, String> entry : entries) {
+            inlineSettings.put(entry.getKey(), entry.getValue());
+          }
+          outputConfiguration.setBuildSettings(inlineSettings);
+        }
+      } else {
+        Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
+        projectFilesystem.mkdirs(outputConfigurationDirectory);
+
+        Path originalProjectPath = projectFilesystem.getPathForRelativePath(
+            Paths.get(buildTarget.getBasePathWithSlash()));
+
+        // XCConfig search path is relative to the xcode project and the file itself.
+        ImmutableList<Path> searchPaths = ImmutableList.of(originalProjectPath);
+
+        // Call for effect to create a stub configuration entry at project level.
+        project.getBuildConfigurationList()
+            .getBuildConfigurationsByName()
+            .getUnchecked(configuration.getName());
+
+        // Write an xcconfig that embodies all the config levels, and set that as the target config.
+        Path configurationFilePath = outputConfigurationDirectory.resolve(
+            mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
+        String serializedConfiguration = serializeBuildConfiguration(
+            configuration, searchPaths, extraConfigs);
+        projectFilesystem.writeContentsToPath(serializedConfiguration, configurationFilePath);
+
+        PBXFileReference fileReference =
+            configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.SOURCE_ROOT,
+                    this.repoRootRelativeToOutputDirectory.resolve(configurationFilePath)
+                ));
+        XCBuildConfiguration outputConfiguration =
+            target.getBuildConfigurationList().getBuildConfigurationsByName()
+                .getUnchecked(configuration.getName());
+        outputConfiguration.setBaseConfigurationReference(fileReference);
+      }
     }
   }
 
@@ -494,7 +563,7 @@ public class ProjectGenerator {
   private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
     for (BuildRule dependency : rule.getDeps()) {
       if (dependency.getType().equals(BuildRuleType.GENRULE)) {
-        addRunScriptBuildPhase(target, (Genrule)dependency);
+        addRunScriptBuildPhase(target, (Genrule) dependency);
       }
     }
   }
@@ -891,5 +960,147 @@ public class ProjectGenerator {
       throw new RuntimeException(e);
     }
     return filteredRules.build();
+  }
+
+  /**
+   * For all inputs by name, verify every entry has identical project level config, and pick one
+   * such config to return.
+   *
+   * @param configInXcodeLayoutMultimap input mapping of { Config Name -> Config List }
+   * @throws com.facebook.buck.util.HumanReadableException
+   *    if project-level configs are not identical for a named configuration
+   */
+  private static
+  ImmutableMap<String, ConfigInXcodeLayout> collectProjectLevelConfigsIfIdenticalOrFail(
+      ImmutableMultimap<String, ConfigInXcodeLayout> configInXcodeLayoutMultimap) {
+
+    ImmutableMap.Builder<String, ConfigInXcodeLayout> builder = ImmutableMap.builder();
+
+    for (String configName : configInXcodeLayoutMultimap.keySet()) {
+      ConfigInXcodeLayout firstConfig = null;
+      for (ConfigInXcodeLayout config : configInXcodeLayoutMultimap.get(configName)) {
+        if (firstConfig == null) {
+          firstConfig = config;
+        } else if (
+            !firstConfig.projectLevelConfigFile.equals(config.projectLevelConfigFile) ||
+            !firstConfig.projectLevelInlineSettings.equals(config.projectLevelInlineSettings)) {
+          throw new HumanReadableException(String.format(
+              "Project level configurations should be identical:\n" +
+              "  Config named: `%s` in `%s` and `%s` ",
+              configName,
+              firstConfig.buildTarget,
+              config.buildTarget));
+        }
+      }
+      Preconditions.checkNotNull(firstConfig);
+
+      builder.put(configName, firstConfig);
+    }
+
+    return builder.build();
+  }
+
+  private static void setProjectLevelConfigs(
+      PBXProject project,
+      Path repoRootRelativeToOutputDirectory,
+      ImmutableMap<String, ConfigInXcodeLayout> configs) {
+    for (Map.Entry<String, ConfigInXcodeLayout> configEntry : configs.entrySet()) {
+      XCBuildConfiguration outputConfig = project
+          .getBuildConfigurationList()
+          .getBuildConfigurationsByName()
+          .getUnchecked(configEntry.getKey());
+
+      ConfigInXcodeLayout config = configEntry.getValue();
+
+      PBXGroup configurationsGroup = project.getMainGroup().getOrCreateChildGroupByName(
+          "Configurations");
+      PBXFileReference fileReference =
+          configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+              new SourceTreePath(
+                  PBXReference.SourceTree.SOURCE_ROOT,
+                  repoRootRelativeToOutputDirectory.resolve(
+                      config.projectLevelConfigFile.get()).normalize()));
+      outputConfig.setBaseConfigurationReference(fileReference);
+
+      NSDictionary inlineSettings = new NSDictionary();
+      for (Map.Entry<String, String> entry : config.projectLevelInlineSettings.entrySet()) {
+        inlineSettings.put(entry.getKey(), entry.getValue());
+      }
+      outputConfig.setBuildSettings(inlineSettings);
+    }
+  }
+
+
+  /**
+   * Take a List of configuration layers and try to fit it into the xcode configuration layers
+   * layout.
+   *
+   * @throws com.facebook.buck.util.HumanReadableException if the configuration layers are not in
+   *  the right layout to be coerced into standard xcode layout.
+   */
+  private static ConfigInXcodeLayout extractXcodeConfigurationLayers(
+      BuildTarget buildTarget,
+      XcodeRuleConfiguration configuration) {
+    ConfigInXcodeLayout extractedLayers = null;
+    ImmutableList<XcodeRuleConfiguration.Layer> layers = configuration.getLayers();
+    switch (layers.size()) {
+      case 2:
+        if (layers.get(0).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
+            layers.get(1).getLayerType() == XcodeRuleConfiguration.LayerType.FILE) {
+          extractedLayers = new ConfigInXcodeLayout(
+              buildTarget,
+              layers.get(0).getPath(),
+              ImmutableMap.<String, String>of(),
+              layers.get(1).getPath(),
+              ImmutableMap.<String, String>of());
+        }
+        break;
+      case 4:
+        if (layers.get(0).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
+            layers.get(1).getLayerType() == XcodeRuleConfiguration.LayerType.INLINE_SETTINGS &&
+            layers.get(2).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
+            layers.get(3).getLayerType() == XcodeRuleConfiguration.LayerType.INLINE_SETTINGS) {
+          extractedLayers = new ConfigInXcodeLayout(
+              buildTarget,
+              layers.get(0).getPath(),
+              layers.get(1).getInlineSettings().or(ImmutableMap.<String, String>of()),
+              layers.get(2).getPath(),
+              layers.get(3).getInlineSettings().or(ImmutableMap.<String, String>of()));
+        }
+        break;
+      default:
+        // handled later on by the fact that extractLayers is null
+        break;
+    }
+    if (extractedLayers == null) {
+      throw new HumanReadableException(
+          "Configuration layers cannot be expressed in xcode for target: " + buildTarget + "\n" +
+              "   expected: [File, Inline settings, File, Inline settings]");
+    }
+    return extractedLayers;
+  }
+
+  private static class ConfigInXcodeLayout {
+    /** Tracks the originating build target for error reporting. */
+    public final BuildTarget buildTarget;
+
+    public final Optional<Path> projectLevelConfigFile;
+    public final ImmutableMap<String, String> projectLevelInlineSettings;
+    public final Optional<Path> targetLevelConfigFile;
+    public final ImmutableMap<String, String> targetLevelInlineSettings;
+
+    private ConfigInXcodeLayout(
+        BuildTarget buildTarget,
+        Optional<Path> projectLevelConfigFile,
+        ImmutableMap<String, String> projectLevelInlineSettings,
+        Optional<Path> targetLevelConfigFile,
+        ImmutableMap<String, String> targetLevelInlineSettings) {
+      this.buildTarget = Preconditions.checkNotNull(buildTarget);
+      this.projectLevelConfigFile =
+          Preconditions.checkNotNull(projectLevelConfigFile);
+      this.projectLevelInlineSettings = Preconditions.checkNotNull(projectLevelInlineSettings);
+      this.targetLevelConfigFile = Preconditions.checkNotNull(targetLevelConfigFile);
+      this.targetLevelInlineSettings = Preconditions.checkNotNull(targetLevelInlineSettings);
+    }
   }
 }

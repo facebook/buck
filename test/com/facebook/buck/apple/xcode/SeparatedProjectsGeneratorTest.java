@@ -24,33 +24,39 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPart
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isA;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.dd.plist.NSString;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SeparatedProjectsGeneratorTest {
@@ -135,9 +141,7 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSet.of(configRule.getBuildTarget()));
     generator.generateProjects();
 
-    PBXProject project = Preconditions.checkNotNull(generator.getProjectGenerators())
-        .get(configRule.getBuildTarget())
-        .getGeneratedProject();
+    PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
 
     assertThat("Has only two targets", project.getTargets(), hasSize(2));
     assertThat(
@@ -173,13 +177,192 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSet.of(configRule.getBuildTarget()));
     generator.generateProjects();
 
-    PBXProject project = Preconditions.checkNotNull(generator.getProjectGenerators())
-        .get(configRule.getBuildTarget())
-        .getGeneratedProject();
+    PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of("$BUILT_PRODUCTS_DIR/libsomedep.a"));
+  }
+
+  @Test
+  public void generatedProjectsReferencesXcconfigFilesDirectly() throws IOException {
+    BuildRule rule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription,
+        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+          @Override
+          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
+                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
+                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig"))));
+            return input;
+          }
+        });
+
+    BuildRule configRule = createXcodeProjectConfigRule(
+        "//foo",
+        "fooproject",
+        ImmutableSet.of(rule));
+
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        projectFilesystem,
+        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)),
+        executionContext,
+        ImmutableSet.of(configRule.getBuildTarget()));
+    generator.generateProjects();
+
+    PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
+
+    XCBuildConfiguration projectLevelConfig =
+        project.getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    assertNotNull("should have project level Debug config", projectLevelConfig);
+    assertNotNull(
+        "project level Debug config should reference xcconfig file",
+        projectLevelConfig.getBaseConfigurationReference());
+    assertEquals(
+        "Project level config file should be set correctly",
+        "../project.xcconfig", // reference is relative from project directory
+        projectLevelConfig.getBaseConfigurationReference().getPath());
+
+    XCBuildConfiguration targetLevelConfig =
+        ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "//foo:rule")
+            .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    assertNotNull("should have target level Debug config", targetLevelConfig);
+    assertNotNull(
+        "project level Debug config should reference xcconfig file",
+        targetLevelConfig.getBaseConfigurationReference());
+    assertEquals(
+        "Target level config file should be set correctly",
+        "../target.xcconfig",
+        targetLevelConfig.getBaseConfigurationReference().getPath());
+  }
+
+  /** Tests that project and target level configs are set in the generated project correctly */
+  @Test
+  public void generatedProjectsSetsInlineConfigsCorrectly() throws IOException {
+    BuildRule rule1 = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule1"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription,
+        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+          @Override
+          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
+                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
+                Either.<Path, ImmutableMap<String, String>>ofRight(
+                    ImmutableMap.of(
+                        "PROJECT_FLAG1", "p1",
+                        "PROJECT_FLAG2", "p2")),
+                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig")),
+                Either.<Path, ImmutableMap<String, String>>ofRight(
+                    ImmutableMap.of(
+                        "TARGET_FLAG1", "t1",
+                        "TARGET_FLAG2", "t2"))));
+            return input;
+          }
+        });
+
+    BuildRule rule2 = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule2"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription,
+        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+          @Override
+          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
+                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("project.xcconfig")),
+                Either.<Path, ImmutableMap<String, String>>ofRight(
+                    ImmutableMap.of(
+                        "PROJECT_FLAG1", "p1",
+                        "PROJECT_FLAG2", "p2")),
+                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig")),
+                Either.<Path, ImmutableMap<String, String>>ofRight(
+                    ImmutableMap.of(
+                        "TARGET_FLAG3", "t3",
+                        "TARGET_FLAG4", "t4"))));
+            return input;
+          }
+        });
+
+    BuildRule configRule = createXcodeProjectConfigRule(
+        "//foo",
+        "fooproject",
+        ImmutableSet.of(rule1, rule2));
+
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        projectFilesystem,
+        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule1, rule2)),
+        executionContext,
+        ImmutableSet.of(configRule.getBuildTarget()));
+    generator.generateProjects();
+
+    PBXProject project = getGeneratedProjectOfConfigRule(generator, configRule);
+
+    // not looking that the config files are set correctly, since they are covered by
+    // the other test: generatedProjectsReferencesXcconfigFilesDirectly
+
+    {
+      XCBuildConfiguration projectLevelConfig =
+          project.getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+
+      assertNotNull("should have project level Debug config", projectLevelConfig);
+      assertEquals(2, projectLevelConfig.getBuildSettings().count());
+      assertEquals(new NSString("p1"), projectLevelConfig.getBuildSettings().get("PROJECT_FLAG1"));
+      assertEquals(new NSString("p2"), projectLevelConfig.getBuildSettings().get("PROJECT_FLAG2"));
+    }
+
+    {
+      XCBuildConfiguration targetLevelConfig =
+          ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "//foo:rule1")
+              .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+      assertNotNull("should have target level Debug config", targetLevelConfig);
+      assertEquals(new NSString("t1"), targetLevelConfig.getBuildSettings().get("TARGET_FLAG1"));
+      assertEquals(new NSString("t2"), targetLevelConfig.getBuildSettings().get("TARGET_FLAG2"));
+      assertFalse(targetLevelConfig.getBuildSettings().containsKey("TARGET_FLAG3"));
+      assertFalse(targetLevelConfig.getBuildSettings().containsKey("TARGET_FLAG4"));
+    }
+
+    {
+      XCBuildConfiguration targetLevelConfig =
+          ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(project, "//foo:rule2")
+              .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+      assertNotNull("should have target level Debug config", targetLevelConfig);
+      assertEquals(new NSString("t3"), targetLevelConfig.getBuildSettings().get("TARGET_FLAG3"));
+      assertEquals(new NSString("t4"), targetLevelConfig.getBuildSettings().get("TARGET_FLAG4"));
+      assertFalse(targetLevelConfig.getBuildSettings().containsKey("TARGET_FLAG1"));
+      assertFalse(targetLevelConfig.getBuildSettings().containsKey("TARGET_FLAG2"));
+    }
+
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void errorIfXcconfigHasIncorrectPatternOfLayers() throws IOException {
+    BuildRule rule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription,
+        new Function<IosLibraryDescription.Arg, IosLibraryDescription.Arg>() {
+          @Override
+          public IosLibraryDescription.Arg apply(IosLibraryDescription.Arg input) {
+            input.configs = ImmutableMap.of("Debug", ImmutableList.of(
+                // this only has one layer, accepted layers is 2 or 4
+                Either.<Path, ImmutableMap<String, String>>ofLeft(Paths.get("target.xcconfig"))));
+            return input;
+          }
+        });
+
+    BuildRule configRule = createXcodeProjectConfigRule(
+        "//foo",
+        "fooproject",
+        ImmutableSet.of(rule));
+
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        projectFilesystem,
+        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)),
+        executionContext,
+        ImmutableSet.of(configRule.getBuildTarget()));
+    generator.generateProjects();
   }
 
   private BuildRule createXcodeProjectConfigRule(
@@ -198,5 +381,21 @@ public class SeparatedProjectsGeneratorTest {
             return input;
           }
         });
+  }
+
+  private static PBXProject getGeneratedProjectOfConfigRule(
+      SeparatedProjectsGenerator generator,
+      BuildRule rule) {
+
+    ImmutableMap<BuildTarget, ProjectGenerator> projectGeneratorMap =
+        generator.getProjectGenerators();
+    assertNotNull(
+        "should have called SeparatedProjectsGenerator.generateProjects()",
+        projectGeneratorMap);
+    ProjectGenerator innerGenerator = projectGeneratorMap.get(rule.getBuildTarget());
+    assertNotNull(
+        "should have generated project from config rule: " + rule.getBuildTarget(),
+        innerGenerator);
+    return innerGenerator.getGeneratedProject();
   }
 }
