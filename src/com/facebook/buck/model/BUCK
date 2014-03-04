@@ -12,5 +12,8 @@ java_library(
     '//lib:jackson-databind',
     '//lib:jsr305',
   ],
+  exported_deps = [
+    '//lib:jackson-annotations',
+  ],
   visibility = ['PUBLIC'],
 )
