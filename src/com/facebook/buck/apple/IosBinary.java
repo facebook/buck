@@ -45,12 +45,13 @@ public class IosBinary extends AbstractBuildable {
   private final ImmutableSortedSet<SourcePath> headers;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
+  private final ImmutableMap<SourcePath, HeaderVisibility> perHeaderVisibility;
   private final ImmutableList<GroupedSource> groupedSrcs;
+  private final ImmutableList<GroupedSource> groupedHeaders;
 
   public IosBinary(IosBinaryDescription.Arg arg) {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
-    headers = Preconditions.checkNotNull(arg.headers);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
 
     ImmutableSortedSet.Builder<SourcePath> srcsBuilder = ImmutableSortedSet.naturalOrder();
@@ -64,6 +65,19 @@ public class IosBinary extends AbstractBuildable {
     srcs = srcsBuilder.build();
     perFileCompilerFlags = perFileCompileFlagsBuilder.build();
     groupedSrcs = groupedSourcesBuilder.build();
+
+    ImmutableSortedSet.Builder<SourcePath> headersBuilder = ImmutableSortedSet.naturalOrder();
+    ImmutableMap.Builder<SourcePath, HeaderVisibility> perHeaderVisibilityBuilder =
+      ImmutableMap.builder();
+    ImmutableList.Builder<GroupedSource> groupedHeadersBuilder = ImmutableList.builder();
+    RuleUtils.extractHeaderPaths(
+        headersBuilder,
+        perHeaderVisibilityBuilder,
+        groupedHeadersBuilder,
+        arg.headers);
+    headers = headersBuilder.build();
+    perHeaderVisibility = perHeaderVisibilityBuilder.build();
+    groupedHeaders = groupedHeadersBuilder.build();
   }
 
   public Path getInfoPlist() {
@@ -90,8 +104,16 @@ public class IosBinary extends AbstractBuildable {
     return perFileCompilerFlags;
   }
 
+  public ImmutableMap<SourcePath, HeaderVisibility> getPerHeaderVisibility() {
+    return perHeaderVisibility;
+  }
+
   public ImmutableList<GroupedSource> getGroupedSrcs() {
     return groupedSrcs;
+  }
+
+  public ImmutableList<GroupedSource> getGroupedHeaders() {
+    return groupedHeaders;
   }
 
   @Nullable

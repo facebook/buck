@@ -47,13 +47,14 @@ public class IosTest extends AbstractBuildable {
   private final ImmutableSortedSet<SourcePath> headers;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableMap<SourcePath, String> perFileCompilerFlags;
+  private final ImmutableMap<SourcePath, HeaderVisibility> perHeaderVisibility;
   private final ImmutableSortedSet<BuildRule> sourceUnderTest;
   private final ImmutableList<GroupedSource> groupedSrcs;
+  private final ImmutableList<GroupedSource> groupedHeaders;
 
   public IosTest(IosTestDescription.Arg arg) {
     infoPlist = Preconditions.checkNotNull(arg.infoPlist);
     configurations = XcodeRuleConfiguration.fromRawJsonStructure(arg.configs);
-    headers = Preconditions.checkNotNull(arg.headers);
     frameworks = Preconditions.checkNotNull(arg.frameworks);
     sourceUnderTest = Preconditions.checkNotNull(arg.sourceUnderTest);
 
@@ -68,6 +69,19 @@ public class IosTest extends AbstractBuildable {
     srcs = srcsBuilder.build();
     perFileCompilerFlags = perFileCompileFlagsBuilder.build();
     groupedSrcs = groupedSourcesBuilder.build();
+
+    ImmutableSortedSet.Builder<SourcePath> headersBuilder = ImmutableSortedSet.naturalOrder();
+    ImmutableMap.Builder<SourcePath, HeaderVisibility> perHeaderVisibilityBuilder =
+      ImmutableMap.builder();
+    ImmutableList.Builder<GroupedSource> groupedHeadersBuilder = ImmutableList.builder();
+    RuleUtils.extractHeaderPaths(
+        headersBuilder,
+        perHeaderVisibilityBuilder,
+        groupedHeadersBuilder,
+        arg.headers);
+    headers = headersBuilder.build();
+    perHeaderVisibility = perHeaderVisibilityBuilder.build();
+    groupedHeaders = groupedHeadersBuilder.build();
   }
 
   public Path getInfoPlist() {
@@ -90,6 +104,10 @@ public class IosTest extends AbstractBuildable {
     return perFileCompilerFlags;
   }
 
+  public ImmutableMap<SourcePath, HeaderVisibility> getPerHeaderVisibility() {
+    return perHeaderVisibility;
+  }
+
   public ImmutableSortedSet<BuildRule> getSourceUnderTest() {
     return sourceUnderTest;
   }
@@ -100,6 +118,10 @@ public class IosTest extends AbstractBuildable {
 
   public ImmutableList<GroupedSource> getGroupedSrcs() {
     return groupedSrcs;
+  }
+
+  public ImmutableList<GroupedSource> getGroupedHeaders() {
+    return groupedHeaders;
   }
 
   @Nullable

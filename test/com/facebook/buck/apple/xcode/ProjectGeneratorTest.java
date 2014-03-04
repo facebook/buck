@@ -242,7 +242,7 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableSortedSet.of();
+    arg.headers = ImmutableList.of();
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourceGroup(
             new Pair<>(
@@ -344,7 +344,7 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
+    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
@@ -401,7 +401,7 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Paths.get("Info.plist");
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
+    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
         new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
@@ -447,7 +447,7 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Paths.get("Info.plist");
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
+    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
         new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
@@ -496,7 +496,7 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableSortedSet.of((SourcePath) new FileSourcePath("foo.h"));
+    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
         new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
     arg.frameworks = ImmutableSortedSet.of();
@@ -758,7 +758,7 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of();
     arg.infoPlist = Paths.get("Info.plist");
     arg.frameworks = ImmutableSortedSet.of();
-    arg.headers = ImmutableSortedSet.of();
+    arg.headers = ImmutableList.of();
     arg.srcs = ImmutableList.of();
     arg.sourceUnderTest = sourceUnderTest;
     return new DescribedRule(

@@ -32,6 +32,36 @@ public class RuleUtils {
   private RuleUtils() {}
 
   /**
+   * Extract the header paths and visibility flags from the input list
+   * and populate the output collections.
+   *
+   * @param outputHeaders header file names will be added to this builder
+   * @param outputPerFileHeaderVisibility per file visibility flags will be added to this builder
+   *        (if not present, a header should use PROJECT visibility)
+   * @param outputGroupedHeaders The ordered tree of headers and header groups (as
+   *        they should appear in a generated Xcode project) will be added to
+   *        this builder.
+   * @param items input list of headers
+   */
+  public static void extractHeaderPaths(
+      ImmutableSortedSet.Builder<SourcePath> outputHeaders,
+      ImmutableMap.Builder<SourcePath, HeaderVisibility> outputPerFileHeaderVisibility,
+      ImmutableList.Builder<GroupedSource> outputGroupedHeaders,
+      ImmutableList<AppleSource> items) {
+    ImmutableMap.Builder<SourcePath, String> perFileFlagsBuilder = ImmutableMap.builder();
+    extractSourcePaths(
+        outputHeaders,
+        perFileFlagsBuilder,
+        outputGroupedHeaders,
+        items);
+    for (ImmutableMap.Entry<SourcePath, String> entry : perFileFlagsBuilder.build().entrySet()) {
+      outputPerFileHeaderVisibility.put(
+          entry.getKey(),
+          HeaderVisibility.fromString(entry.getValue()));
+    }
+  }
+
+  /**
    * Extract the source paths and flags from the input list and populate the output collections.
    *
    * @param outputSources source file names will be added to this builder

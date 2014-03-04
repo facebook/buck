@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
@@ -58,7 +57,7 @@ public class IosLibraryDescription implements Description<IosLibraryDescription.
         String,
         ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
     public ImmutableList<AppleSource> srcs;
-    public ImmutableSortedSet<SourcePath> headers;
+    public ImmutableList<AppleSource> headers;
 
     /**
      * List of system frameworks, may contain build settings in the path to denote its location.

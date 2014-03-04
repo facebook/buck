@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
@@ -59,7 +58,7 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
         ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
     public Path infoPlist;
     public ImmutableList<AppleSource> srcs;
-    public ImmutableSortedSet<SourcePath> headers;
+    public ImmutableList<AppleSource> headers;
     public ImmutableSortedSet<String> frameworks;
     public ImmutableSortedSet<BuildRule> sourceUnderTest;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
