@@ -21,6 +21,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.GroupedSource;
+import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosBinary;
 import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibrary;
@@ -321,7 +322,11 @@ public class ProjectGenerator {
         targetGroup,
         buildable.getGroupedSrcs(),
         buildable.getPerFileCompilerFlags());
-    addHeadersBuildPhase(target, targetGroup, buildable.getHeaders());
+    addHeadersBuildPhase(
+        target,
+        targetGroup,
+        buildable.getGroupedHeaders(),
+        buildable.getPerHeaderVisibility());
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -654,23 +659,73 @@ public class ProjectGenerator {
   private void addHeadersBuildPhase(
       PBXNativeTarget target,
       PBXGroup targetGroup,
-      Iterable<SourcePath> headers) {
+      Iterable<GroupedSource> groupedHeaders,
+      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
     PBXGroup headersGroup = targetGroup.getOrCreateChildGroupByName("Headers");
+    headersGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
     PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
     target.getBuildPhases().add(headersBuildPhase);
-    for (SourcePath sourcePath : headers) {
-      Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
-      PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
-          new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              this.repoRootRelativeToOutputDirectory.resolve(path)
-          ));
-      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-      NSDictionary settings = new NSDictionary();
-      settings.put("ATTRIBUTES", new NSArray(new NSString("Public")));
-      buildFile.setSettings(Optional.of(settings));
-      headersBuildPhase.getFiles().add(buildFile);
+
+    addGroupedHeadersToBuildPhase(
+        headersGroup,
+        headersBuildPhase,
+        groupedHeaders,
+        headerVisibilityFlags);
+  }
+
+  private void addGroupedHeadersToBuildPhase(
+      PBXGroup headersGroup,
+      PBXHeadersBuildPhase headersBuildPhase,
+      Iterable<GroupedSource> groupedHeaders,
+      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
+    for (GroupedSource groupedHeader : groupedHeaders) {
+      switch (groupedHeader.getType()) {
+        case SOURCE_PATH:
+          addHeaderPathToBuildPhase(
+              groupedHeader.getSourcePath(),
+              headersGroup,
+              headersBuildPhase,
+              headerVisibilityFlags);
+          break;
+        case SOURCE_GROUP:
+          PBXGroup newHeaderGroup = headersGroup.getOrCreateChildGroupByName(
+              groupedHeader.getSourceGroupName());
+          // Header groups stay in the order in which they're declared in the BUCK file.
+          newHeaderGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
+          addGroupedHeadersToBuildPhase(
+              newHeaderGroup,
+              headersBuildPhase,
+              groupedHeader.getSourceGroup(),
+              headerVisibilityFlags);
+          break;
+        default:
+          throw new RuntimeException("Unhandled grouped source type: " + groupedHeader.getType());
+      }
     }
+  }
+
+  private void addHeaderPathToBuildPhase(
+      SourcePath headerPath,
+      PBXGroup headersGroup,
+      PBXHeadersBuildPhase headersBuildPhase,
+      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
+    Path path = headerPath.resolve(partialGraph.getDependencyGraph());
+    PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            this.repoRootRelativeToOutputDirectory.resolve(path)
+        ));
+    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    NSDictionary settings = new NSDictionary();
+    HeaderVisibility headerVisibility = headerVisibilityFlags.get(headerPath);
+    if (headerVisibility != null) {
+      // If we specify nothing, Xcode will use "project" visibility.
+      settings.put("ATTRIBUTES", new NSArray(new NSString(headerVisibility.toXcodeAttribute())));
+      buildFile.setSettings(Optional.of(settings));
+    } else {
+      buildFile.setSettings(Optional.<NSDictionary>absent());
+    }
+    headersBuildPhase.getFiles().add(buildFile);
   }
 
   private void addResourcesBuildPhase(

@@ -42,4 +42,17 @@ public enum HeaderVisibility {
         throw new HumanReadableException("Invalid header visibility value %s.", s);
     }
   }
+
+  public String toXcodeAttribute() {
+    switch (this) {
+      case PUBLIC:
+        return "Public";
+      case PROJECT:
+        return "Project";
+      case PRIVATE:
+        return "Private";
+      default:
+        throw new IllegalStateException("Invalid header visibility value: " + this.toString());
+    }
+  }
 }

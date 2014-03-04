@@ -29,12 +29,14 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.xml.HasXPath.hasXPath;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
@@ -292,6 +294,99 @@ public class ProjectGeneratorTest {
     assertEquals("baz.m", fileRefBaz.getName());
     PBXFileReference fileRefBlech = (PBXFileReference)Iterables.get(group2.getChildren(), 1);
     assertEquals("blech.m", fileRefBlech.getName());
+  }
+
+  @Test
+  public void testLibraryHeaderGroups() throws IOException {
+    BuildRuleParams params = new FakeBuildRuleParams(
+        new BuildTarget("//foo", "lib"), ImmutableSortedSet.<BuildRule>of());
+    IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
+    arg.configs = ImmutableMap.of(
+        "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
+    arg.srcs = ImmutableList.of();
+    arg.headers = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "HeaderGroup1",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("foo.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("bar.h"), "public"))))),
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "HeaderGroup2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("baz.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("blech.h"), "private"))))
+        ));
+    arg.frameworks = ImmutableSortedSet.of();
+    BuildRule rule = new DescribedRule(
+        IosLibraryDescription.TYPE,
+        iosLibraryDescription.createBuildable(params, arg), params);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+    PBXGroup headersGroup = targetGroup.getOrCreateChildGroupByName("Headers");
+
+    assertThat(headersGroup.getChildren(), hasSize(2));
+
+    PBXGroup group1 = (PBXGroup)Iterables.get(headersGroup.getChildren(), 0);
+    assertEquals("HeaderGroup1", group1.getName());
+    assertThat(group1.getChildren(), hasSize(2));
+    PBXFileReference fileRefFoo = (PBXFileReference)Iterables.get(group1.getChildren(), 0);
+    assertEquals("foo.h", fileRefFoo.getName());
+    PBXFileReference fileRefBar = (PBXFileReference)Iterables.get(group1.getChildren(), 1);
+    assertEquals("bar.h", fileRefBar.getName());
+
+    PBXGroup group2 = (PBXGroup)Iterables.get(headersGroup.getChildren(), 1);
+    assertEquals("HeaderGroup2", group2.getName());
+    assertThat(group2.getChildren(), hasSize(2));
+    PBXFileReference fileRefBaz = (PBXFileReference)Iterables.get(group2.getChildren(), 0);
+    assertEquals("baz.h", fileRefBaz.getName());
+    PBXFileReference fileRefBlech = (PBXFileReference)Iterables.get(group2.getChildren(), 1);
+    assertEquals("blech.h", fileRefBlech.getName());
+
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        project,
+        "//foo:lib");
+    PBXBuildPhase headersBuildPhase =
+      Iterables.find(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
+          @Override
+          public boolean apply(PBXBuildPhase input) {
+              return input instanceof PBXHeadersBuildPhase;
+          }
+        });
+    PBXBuildFile fooHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 0);
+    assertFalse(
+        "foo.h should not have settings dictionary",
+        fooHeaderBuildFile.getSettings().isPresent());
+    PBXBuildFile barHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 1);
+    assertTrue(
+        "bar.h should have settings dictionary",
+        barHeaderBuildFile.getSettings().isPresent());
+    NSDictionary barBuildFileSettings = barHeaderBuildFile.getSettings().get();
+    NSArray barAttributes = (NSArray) barBuildFileSettings.get("ATTRIBUTES");
+    assertArrayEquals(new NSString[]{new NSString("Public")}, barAttributes.getArray());
+    PBXBuildFile bazHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 2);
+    assertFalse(
+        "baz.h should not have settings dictionary",
+        bazHeaderBuildFile.getSettings().isPresent());
+    PBXBuildFile blechHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 3);
+    assertTrue(
+        "blech.h should have settings dictionary",
+        blechHeaderBuildFile.getSettings().isPresent());
+    NSDictionary blechBuildFileSettings = blechHeaderBuildFile.getSettings().get();
+    NSArray blechAttributes = (NSArray) blechBuildFileSettings.get("ATTRIBUTES");
+    assertArrayEquals(new NSString[]{new NSString("Private")}, blechAttributes.getArray());
   }
 
   @Test
