@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -40,12 +41,14 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   @Override
   public ProjectBuildFileParser createParser(
       Iterable<String> commonIncludes,
-      EnumSet<ProjectBuildFileParser.Option> parseOptions) {
+      EnumSet<ProjectBuildFileParser.Option> parseOptions,
+      Console console) {
     return new ProjectBuildFileParser(
         projectFilesystem,
         commonIncludes,
         pythonInterpreter,
         descriptions,
-        parseOptions);
+        parseOptions,
+        console);
   }
 }

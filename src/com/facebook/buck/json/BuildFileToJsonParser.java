@@ -90,25 +90,27 @@ public class BuildFileToJsonParser implements AutoCloseable {
    */
   @SuppressWarnings("unchecked")
   List<Map<String, Object>> nextRules() throws IOException {
-    List<Map<String, Object>> items = Lists.newArrayList();
+    try {
+      List<Map<String, Object>> items = Lists.newArrayList();
+      if (isServerMode) {
+        reader.beginArray();
 
-    if (isServerMode) {
-      reader.beginArray();
+        while (reader.hasNext()) {
+          JsonObject json = gson.fromJson(reader, JsonObject.class);
+          items.add((Map<String, Object>) toRawTypes(json));
+        }
 
-      while (reader.hasNext()) {
-        JsonObject json = gson.fromJson(reader, JsonObject.class);
-        items.add((Map<String, Object>) toRawTypes(json));
+        reader.endArray();
+      } else {
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
+          JsonObject json = gson.fromJson(reader, JsonObject.class);
+          items.add((Map<String, Object>) toRawTypes(json));
+        }
       }
-
-      reader.endArray();
-    } else {
-      while (reader.peek() != JsonToken.END_DOCUMENT) {
-        JsonObject json = gson.fromJson(reader, JsonObject.class);
-        items.add((Map<String, Object>) toRawTypes(json));
-      }
+      return items;
+    } catch (IllegalStateException e) {
+      throw new IOException(e); // Rethrow Gson exceptions as IO (non-runtime) exceptions.
     }
-
-    return items;
   }
 
   /**

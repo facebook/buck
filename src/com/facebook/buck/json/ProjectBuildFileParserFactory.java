@@ -16,6 +16,8 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.util.Console;
+
 import java.util.EnumSet;
 
 /**
@@ -31,5 +33,6 @@ public interface ProjectBuildFileParserFactory {
    */
   public ProjectBuildFileParser createParser(
       Iterable<String> commonIncludes,
-      EnumSet<ProjectBuildFileParser.Option> parseOptions);
+      EnumSet<ProjectBuildFileParser.Option> parseOptions,
+      Console console);
 }

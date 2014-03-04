@@ -282,6 +282,27 @@ public class DaemonIntegrationTest {
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
   }
 
+  @Test
+  public void whenAppBuckFileInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    workspace.runBuckdCommand("build", "app").assertSuccess();
+
+    String fileName = "apps/myapp/BUCK";
+    Files.write("Some Illegal Python".getBytes(Charsets.US_ASCII), workspace.getFile(fileName));
+    waitForChange(Paths.get(fileName));
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckdCommand("build", "app");
+    assertThat(
+        "Failure should be due to syntax error.",
+        result.getStderr(),
+        Matchers.containsString("SyntaxError: invalid syntax"));
+    result.assertFailure();
+  }
+
   private void waitForChange(final Path path) throws IOException {
 
     class Watcher {

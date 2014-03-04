@@ -328,8 +328,10 @@ public class Parser {
     postParseStartEvent(buildTargets, eventBus);
     DependencyGraph graph = null;
     try (ProjectBuildFileParser buildFileParser =
-             buildFileParserFactory.createParser(defaultIncludes,
-                 EnumSet.of(ProjectBuildFileParser.Option.STRIP_NULL))) {
+             buildFileParserFactory.createParser(
+                 defaultIncludes,
+                 EnumSet.of(ProjectBuildFileParser.Option.STRIP_NULL),
+                 console)) {
       if (!isCacheComplete(defaultIncludes)) {
         Set<File> buildTargetFiles = Sets.newHashSet();
         for (BuildTarget buildTarget : buildTargets) {
@@ -352,8 +354,10 @@ public class Parser {
   DependencyGraph onlyUseThisWhenTestingToFindAllTransitiveDependencies(
       Iterable<BuildTarget> toExplore,
       final Iterable<String> defaultIncludes) throws IOException {
-    ProjectBuildFileParser parser = buildFileParserFactory.createParser(defaultIncludes,
-        EnumSet.noneOf(ProjectBuildFileParser.Option.class));
+    ProjectBuildFileParser parser = buildFileParserFactory.createParser(
+        defaultIncludes,
+        EnumSet.noneOf(ProjectBuildFileParser.Option.class),
+        console);
     return findAllTransitiveDependencies(toExplore, defaultIncludes, parser);
   }
 
@@ -522,7 +526,10 @@ public class Parser {
       EnumSet<ProjectBuildFileParser.Option> parseOptions)
       throws BuildFileParseException, BuildTargetException, IOException {
     try (ProjectBuildFileParser projectBuildFileParser =
-        buildFileParserFactory.createParser(defaultIncludes, parseOptions)) {
+        buildFileParserFactory.createParser(
+            defaultIncludes,
+            parseOptions,
+            console)) {
       return parseBuildFile(buildFile, defaultIncludes, projectBuildFileParser);
     }
   }
@@ -689,8 +696,10 @@ public class Parser {
       knownBuildTargets.clear();
       parsedBuildFiles.clear();
       parseRawRulesInternal(
-          ProjectBuildFileParser.getAllRulesInProject(buildFileParserFactory,
-              includes));
+          ProjectBuildFileParser.getAllRulesInProject(
+              buildFileParserFactory,
+              includes,
+              console));
       allBuildFilesParsed = true;
     }
     return filterTargets(filter);
@@ -859,7 +868,7 @@ public class Parser {
    * @return An equivalent file constructed from a normalized, absolute path to the given File.
    */
   private Path normalize(Path path) {
-    return path.toAbsolutePath().normalize();
+    return projectFilesystem.resolve(path);
   }
 
   /**
