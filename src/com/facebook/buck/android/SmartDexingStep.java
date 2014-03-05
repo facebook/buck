@@ -192,8 +192,10 @@ public class SmartDexingStep implements Step {
       Path secondaryOutputDir,
       Set<Path> producedArtifacts,
       ProjectFilesystem projectFilesystem) throws IOException {
+    Path normalizedRoot = projectFilesystem.getRootPath().normalize();
     for (Path secondaryOutput : projectFilesystem.getDirectoryContents(secondaryOutputDir)) {
-      if (!producedArtifacts.contains(secondaryOutput.normalize())) {
+      Path relativePath = normalizedRoot.relativize(secondaryOutput.normalize());
+      if (!producedArtifacts.contains(relativePath)) {
         projectFilesystem.rmdir(secondaryOutput);
       }
     }
