@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -60,7 +62,7 @@ import javax.annotation.Nullable;
  * Clients of this Buildable may need to know the path to the {@code R.java} file.
  */
 public class UberRDotJava extends AbstractBuildable implements
-    InitializableFromDisk<BuildOutput> {
+    AbiRule, InitializableFromDisk<BuildOutput> {
 
   public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
 
@@ -199,6 +201,11 @@ public class UberRDotJava extends AbstractBuildable implements
   public BuildOutput getBuildOutput() {
     Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
     return buildOutput;
+  }
+
+  @Override
+  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+    return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDepsFinder.getAndroidResources());
   }
 
   public static class BuildOutput {
