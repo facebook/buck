@@ -168,13 +168,14 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
   };
 
-  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
-                                   Set<Path> srcs,
-                                   Set<? extends SourcePath> resources,
-                                   Optional<DummyRDotJava> optionalDummyRDotJava,
-                                   Optional<Path> proguardConfig,
-                                   Set<BuildRule> exportedDeps,
-                                   JavacOptions javacOptions) {
+  protected DefaultJavaLibraryRule(
+      BuildRuleParams buildRuleParams,
+      Set<Path> srcs,
+      Set<? extends SourcePath> resources,
+      Optional<DummyRDotJava> optionalDummyRDotJava,
+      Optional<Path> proguardConfig,
+      Set<BuildRule> exportedDeps,
+      JavacOptions javacOptions) {
     this(buildRuleParams,
         srcs,
         resources,
@@ -186,15 +187,16 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         Optional.<String>absent());
   }
 
-  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
-                                   Set<Path> srcs,
-                                   Set<? extends SourcePath> resources,
-                                   Optional<DummyRDotJava> optionalDummyRDotJava,
-                                   Optional<Path> proguardConfig,
-                                   Set<BuildRule> exportedDeps,
-                                   JavacOptions javacOptions,
-                                   Optional<Path> javac,
-                                   Optional<String> javacVersion) {
+  protected DefaultJavaLibraryRule(
+      BuildRuleParams buildRuleParams,
+      Set<Path> srcs,
+      Set<? extends SourcePath> resources,
+      Optional<DummyRDotJava> optionalDummyRDotJava,
+      Optional<Path> proguardConfig,
+      Set<BuildRule> exportedDeps,
+      JavacOptions javacOptions,
+      Optional<Path> javac,
+      Optional<String> javacVersion) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
