@@ -51,14 +51,15 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   private final Optional<Path> manifestFile;
 
   @VisibleForTesting
-  public AndroidLibraryRule(BuildRuleParams buildRuleParams,
-                            Set<Path> srcs,
-                            Set<SourcePath> resources,
-                            Optional<DummyRDotJava> optionalDummyRDotJava,
-                            Optional<Path> proguardConfig,
-                            Set<BuildRule> exportedDeps,
-                            JavacOptions javacOptions,
-                            Optional<Path> manifestFile) {
+  public AndroidLibraryRule(
+      BuildRuleParams buildRuleParams,
+      Set<Path> srcs,
+      Set<SourcePath> resources,
+      Optional<DummyRDotJava> optionalDummyRDotJava,
+      Optional<Path> proguardConfig,
+      Set<BuildRule> exportedDeps,
+      JavacOptions javacOptions,
+      Optional<Path> manifestFile) {
     this(buildRuleParams,
         srcs,
         resources,
