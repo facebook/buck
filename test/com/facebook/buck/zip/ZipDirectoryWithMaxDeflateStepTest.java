@@ -23,7 +23,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.io.Files;
 
-import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,8 +60,7 @@ public class ZipDirectoryWithMaxDeflateStepTest {
     ZipDirectoryWithMaxDeflateStep zipCommand = new ZipDirectoryWithMaxDeflateStep(
         zipDirectory, outputApk.toPath(), 128);
 
-    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.replay(executionContext);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     zipCommand.execute(executionContext);
 
@@ -85,7 +83,6 @@ public class ZipDirectoryWithMaxDeflateStepTest {
           compressedFile.getMethod(),
           ZipEntry.STORED);
     }
-    EasyMock.verify(executionContext);
   }
 
   @Test

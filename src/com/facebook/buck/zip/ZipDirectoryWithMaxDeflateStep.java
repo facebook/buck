@@ -17,6 +17,7 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -72,7 +73,8 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    File inputDirectory = inputDirectoryPath.toFile();
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    File inputDirectory = filesystem.getFileForRelativePath(inputDirectoryPath);
     Preconditions.checkState(inputDirectory.exists() && inputDirectory.isDirectory(),
         "%s must be a directory.",
         inputDirectoryPath);
@@ -83,9 +85,8 @@ public class ZipDirectoryWithMaxDeflateStep implements Step {
       ImmutableMap<File, ZipEntry> zipEntries = zipEntriesBuilder.build();
 
       if (!zipEntries.isEmpty()) {
-        try (CustomZipOutputStream outputStream =
-                 ZipOutputStreams.newOutputStream(outputZipPath.toFile())
-        ) {
+        File outputZipFile = filesystem.getFileForRelativePath(outputZipPath);
+        try (CustomZipOutputStream outputStream = ZipOutputStreams.newOutputStream(outputZipFile)) {
           for (Map.Entry<File, ZipEntry> zipEntry : zipEntries.entrySet()) {
             outputStream.putNextEntry(zipEntry.getValue());
             ByteStreams.copy(Files.newInputStreamSupplier(zipEntry.getKey()), outputStream);
