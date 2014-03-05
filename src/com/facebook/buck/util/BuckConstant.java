@@ -42,6 +42,8 @@ public class BuckConstant {
   public static final String ANNOTATION_DIR = BUCK_OUTPUT_DIRECTORY + "/annotation";
   public static final Path ANNOTATION_PATH = BUCK_OUTPUT_PATH.resolve("annotation");
 
+  public static final Path LOG_PATH = BUCK_OUTPUT_PATH.resolve("log");
+
   public static final Path BUCK_TRACE_DIR = BUCK_OUTPUT_PATH.resolve("log/traces");
 
   /**

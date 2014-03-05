@@ -5,7 +5,8 @@
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/buck-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/buck-out" />
+      <excludeFolder url="file://$MODULE_DIR$/buck-out/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/buck-out/log" />
     </content>
     <content url="file://$MODULE_DIR$/buck-out/android/gen">
       <sourceFolder url="file://$MODULE_DIR$/buck-out/android/gen" isTestSource="false" />

@@ -413,7 +413,7 @@ public class Project {
         projectConfig.getSourceRoots(),
         false /* isTestSource */);
 
-    addRootExcludes(module, projectConfig.getSrcRule());
+    addRootExcludes(module, projectConfig.getSrcRule(), projectFilesystem);
 
     // At least one of src or tests should contribute a source folder unless this is an
     // non-library Android project with no source roots specified.
@@ -653,15 +653,36 @@ public class Project {
     return true;
   }
 
-  private void addRootExcludes(Module module, BuildRule buildRule) {
+  @VisibleForTesting
+  static void addRootExcludes(Module module,
+      BuildRule buildRule,
+      ProjectFilesystem projectFilesystem) {
     // If in the root of the project, specify ignored paths.
     if (buildRule != null && buildRule.getBuildTarget().getBasePathWithSlash().isEmpty()) {
       for (Path path : projectFilesystem.getIgnorePaths()) {
-        module.excludeFolders.add(
-            new SourceFolder(String.format("file://$MODULE_DIR$/%s", path), false));
+        // It turns out that ignoring all of buck-out causes problems in IntelliJ: it forces an
+        // extra "modules" folder to appear at the top of the navigation pane that competes with the
+        // ordinary file tree, making navigation a real pain. The hypothesis is that this is because
+        // there are files in buck-out/gen and buck-out/android that IntelliJ freaks out about if it
+        // cannot find them. Therefore, if "buck-out" is listed in the default list of paths to
+        // ignore (which makes sense for other parts of Buck, such as Watchman), then we will ignore
+        // only the appropriate subfolders of buck-out instead.
+        if (BuckConstant.BUCK_OUTPUT_PATH.equals(path)) {
+          addRootExclude(module, BuckConstant.BIN_PATH);
+          addRootExclude(module, BuckConstant.LOG_PATH);
+        } else {
+          addRootExclude(module, path);
+        }
       }
       module.isRootModule = true;
     }
+  }
+
+  private static void addRootExclude(Module module, Path path) {
+    module.excludeFolders.add(
+        new SourceFolder(
+            String.format("file://$MODULE_DIR$/%s", path),
+            /* isTestSource */ false));
   }
 
   /**
