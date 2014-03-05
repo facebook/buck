@@ -71,7 +71,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -217,27 +216,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
-            ImmutableSetMultimap.Builder<JavaLibraryRule, String> outputClasspathBuilder =
-                ImmutableSetMultimap.builder();
-            Iterable<JavaLibraryRule> javaExportedLibraryDeps = Iterables.filter(
-                getExportedDeps(),
-                JavaLibraryRule.class);
-
-            for (JavaLibraryRule rule : javaExportedLibraryDeps) {
-              outputClasspathBuilder.putAll(rule, rule.getOutputClasspathEntries().values());
-              // If we have any exported deps, add an entry mapping ourselves to to their,
-              // classpaths so when suggesting libraries to add we know that adding this library
-              // would pull in it's deps.
-              outputClasspathBuilder.putAll(DefaultJavaLibraryRule.this,
-                  rule.getOutputClasspathEntries().values());
-            }
-
-            if (outputJar.isPresent()) {
-              outputClasspathBuilder.put(DefaultJavaLibraryRule.this,
-                  getPathToOutputFile().toString());
-            }
-
-            return outputClasspathBuilder.build();
+            return JavaLibraryClasspathProvider.getOutputClasspathEntries(
+                DefaultJavaLibraryRule.this,
+                outputJar);
           }
         });
 
@@ -245,31 +226,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
-            final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
-                ImmutableSetMultimap.builder();
-            ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForDeps =
-                Classpaths.getClasspathEntries(getDeps());
-
-            ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForExportedsDeps =
-                Classpaths.getClasspathEntries(getExportedDeps());
-
-            classpathEntries.putAll(classpathEntriesForDeps);
-
-            // If we have any exported deps, add an entry mapping ourselves to to their classpaths,
-            // so when suggesting libraries to add we know that adding this library would pull in
-            // it's deps.
-            if (!classpathEntriesForExportedsDeps.isEmpty()) {
-              classpathEntries.putAll(DefaultJavaLibraryRule.this,
-                  classpathEntriesForExportedsDeps.values());
-            }
-
-            // Only add ourselves to the classpath if there's a jar to be built.
-            if (outputJar.isPresent()) {
-              classpathEntries.putAll(DefaultJavaLibraryRule.this,
-                  getPathToOutputFile().toString());
-            }
-
-            return classpathEntries.build();
+            return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
+                DefaultJavaLibraryRule.this,
+                outputJar);
           }
         });
 
@@ -277,16 +236,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
-            final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
-               ImmutableSetMultimap.builder();
-
-            Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(getDeps(),
-                JavaLibraryRule.class);
-
-            for (JavaLibraryRule rule : javaLibraryDeps) {
-              classpathEntries.putAll(rule, rule.getOutputClasspathEntries().values());
-            }
-            return classpathEntries.build();
+            return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
+                DefaultJavaLibraryRule.this);
           }
         });
   }

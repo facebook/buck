@@ -34,6 +34,7 @@ java_library(
     'JavaBinaryRule.java',
     'JavaBinaryBuildRuleFactory.java',
     'JavaLibraryBuildRuleFactory.java',
+    'JavaLibraryClasspathProvider.java',
     'JavaLibraryRules.java',
     'JavaTestRule.java',
     'JavaTestBuildRuleFactory.java',
