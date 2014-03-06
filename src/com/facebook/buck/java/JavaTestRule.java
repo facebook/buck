@@ -180,6 +180,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
         executionContext.isCodeCoverageEnabled(),
         executionContext.isJacocoEnabled(),
         executionContext.isDebugEnabled(),
+        executionContext.getBuckEventBus().getBuildId(),
         testSelectorList);
     steps.add(junit);
 

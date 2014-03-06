@@ -49,6 +49,9 @@ public class JUnitStep extends ShellStep {
 
   private static final String EMMA_COVERAGE_OUT_FILE = "emma.coverage.out.file";
 
+  @VisibleForTesting
+  public static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
+
   private final Set<String> classpathEntries;
 
   private final Set<String> testClassNames;
@@ -60,6 +63,8 @@ public class JUnitStep extends ShellStep {
   private final boolean isCodeCoverageEnabled;
 
   private final boolean isDebugEnabled;
+
+  private final String buildId;
 
   private Optional<TestSelectorList> testSelectorListOptional;
 
@@ -97,6 +102,7 @@ public class JUnitStep extends ShellStep {
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
+      String buildId,
       Optional<TestSelectorList> testSelectorListOptional) {
     this(classpathEntries,
         testClassNames,
@@ -105,6 +111,7 @@ public class JUnitStep extends ShellStep {
         isCodeCoverageEnabled,
         isJacocoEnabled,
         isDebugEnabled,
+        buildId,
         testSelectorListOptional,
         System.getProperty("buck.testrunner_classes",
             new File("build/testrunner/classes").getAbsolutePath()));
@@ -119,6 +126,7 @@ public class JUnitStep extends ShellStep {
       boolean isCodeCoverageEnabled,
       boolean isJacocoEnabled,
       boolean isDebugEnabled,
+      String buildId,
       Optional<TestSelectorList> testSelectorListOptional,
       String testRunnerClassesDirectory) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
@@ -128,6 +136,7 @@ public class JUnitStep extends ShellStep {
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isJacocoEnabled = isJacocoEnabled;
     this.isDebugEnabled = isDebugEnabled;
+    this.buildId = buildId;
     this.testSelectorListOptional = testSelectorListOptional;
     this.testRunnerClassesDirectory = Preconditions.checkNotNull(testRunnerClassesDirectory);
   }
@@ -154,6 +163,9 @@ public class JUnitStep extends ShellStep {
             JACOCO_EXEC_COVERAGE_FILE));
       }
     }
+
+    // Include the buildId
+    args.add(String.format("-D%s=%s", BUILD_ID_PROPERTY, buildId));
 
     if (isDebugEnabled) {
       // This is the default config used by IntelliJ. By doing this, all a user
