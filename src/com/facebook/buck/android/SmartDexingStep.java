@@ -303,7 +303,7 @@ public class SmartDexingStep implements Step {
       // entry contents but change on disk due to entry metadata.
       ClasspathTraverser traverser = new DefaultClasspathTraverser();
       try {
-        traverser.traverse(new ClasspathTraversal(srcs) {
+        traverser.traverse(new ClasspathTraversal(srcs, filesystem) {
               @Override
               public void visit(FileLike fileLike) {
                 try {

@@ -132,26 +132,27 @@ public class AccumulateClassNamesStep implements Step {
       ExecutionContext context, Path path) {
     final ImmutableSortedMap.Builder<String, HashCode> classNamesBuilder =
         ImmutableSortedMap.naturalOrder();
-    ClasspathTraversal traversal = new ClasspathTraversal(Collections.singleton(path)) {
-      @Override
-      public void visit(final FileLike fileLike) throws IOException {
-        // When traversing a JAR file, it may have resources or directory entries that do not end
-        // in .class, which should be ignored.
-        if (!FileLikes.isClassFile(fileLike)) {
-          return;
-        }
-
-        String key = FileLikes.getFileNameWithoutClassSuffix(fileLike);
-        InputSupplier<InputStream> input = new InputSupplier<InputStream>() {
+    ClasspathTraversal traversal =
+        new ClasspathTraversal(Collections.singleton(path), context.getProjectFilesystem()) {
           @Override
-          public InputStream getInput() throws IOException {
-            return fileLike.getInput();
+          public void visit(final FileLike fileLike) throws IOException {
+            // When traversing a JAR file, it may have resources or directory entries that do not
+            // end in .class, which should be ignored.
+            if (!FileLikes.isClassFile(fileLike)) {
+              return;
+            }
+
+            String key = FileLikes.getFileNameWithoutClassSuffix(fileLike);
+            InputSupplier<InputStream> input = new InputSupplier<InputStream>() {
+              @Override
+              public InputStream getInput() throws IOException {
+                return fileLike.getInput();
+              }
+            };
+            HashCode value = ByteStreams.hash(input, Hashing.sha1());
+            classNamesBuilder.put(key, value);
           }
         };
-        HashCode value = ByteStreams.hash(input, Hashing.sha1());
-        classNamesBuilder.put(key, value);
-      }
-    };
 
     try {
       new DefaultClasspathTraverser().traverse(traversal);

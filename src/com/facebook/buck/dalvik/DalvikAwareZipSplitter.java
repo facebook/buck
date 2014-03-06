@@ -21,6 +21,7 @@ import com.facebook.buck.java.classes.ClasspathTraverser;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +48,7 @@ import java.util.Set;
  */
 public class DalvikAwareZipSplitter implements ZipSplitter {
 
+  private final ProjectFilesystem filesystem;
   private final Set<Path> inFiles;
   private final File outPrimary;
   private final Predicate<String> requiredInPrimaryZip;
@@ -63,6 +65,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
    *                                     DexSplitStrategy, CanaryStrategy, File)
    */
   private DalvikAwareZipSplitter(
+      ProjectFilesystem filesystem,
       Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
@@ -75,6 +78,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     if (linearAllocLimit <= 0) {
       throw new HumanReadableException("linear_alloc_hard_limit must be greater than zero.");
     }
+    this.filesystem = Preconditions.checkNotNull(filesystem);
     this.inFiles = ImmutableSet.copyOf(inFiles);
     this.outPrimary = Preconditions.checkNotNull(outPrimary);
     this.secondaryDexWriter =
@@ -87,6 +91,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   }
 
   public static DalvikAwareZipSplitter splitZip(
+      ProjectFilesystem filesystem,
       Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
@@ -97,6 +102,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
     return new DalvikAwareZipSplitter(
+        filesystem,
         inFiles,
         outPrimary,
         outSecondaryDir,
@@ -118,7 +124,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
     // Iterate over all of the inFiles and add all entries that match the requiredInPrimaryZip
     // predicate.
-    classpathTraverser.traverse(new ClasspathTraversal(inFiles) {
+    classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) throws IOException {
         if (requiredInPrimaryZip.apply(entry.getRelativePath())) {
@@ -129,7 +135,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
     // Now that all of the required entries have been added to the primary zip, fill the rest of
     // the zip up with the remaining entries.
-    classpathTraverser.traverse(new ClasspathTraversal(inFiles) {
+    classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) throws IOException {
         if (primaryOut.containsEntry(entry)) {

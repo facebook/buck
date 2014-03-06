@@ -166,6 +166,7 @@ public class SplitZipStep implements Step {
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       File primaryJarFile = primaryJarPath.toFile();
       Collection<File> secondaryZips = zipSplitterFactory.newInstance(
+          projectFilesystem,
           FluentIterable.from(inputPathsToSplit)
               .transform(context.getProjectFilesystem().getAbsolutifier())
               .toSet(),

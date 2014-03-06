@@ -20,6 +20,7 @@ import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.ClasspathTraverser;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -42,15 +43,17 @@ public class DefaultZipSplitter implements ZipSplitter {
   private final MySecondaryDexHelper secondaryDexWriter;
   private final long zipSizeSoftLimit;
   private final long zipSizeHardLimit;
+  private final ProjectFilesystem filesystem;
 
   private DefaultZipOutputStreamHelper primaryOut;
   private long remainingSize;
 
   /**
-   * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate,
+   * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, File, File, String, Predicate,
    *                                     DexSplitStrategy, CanaryStrategy, File)
    */
   private DefaultZipSplitter(
+      ProjectFilesystem filesystem,
       Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
@@ -61,6 +64,7 @@ public class DefaultZipSplitter implements ZipSplitter {
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
+    this.filesystem = Preconditions.checkNotNull(filesystem);
     this.inFiles = ImmutableSet.copyOf(inFiles);
     this.outPrimary = Preconditions.checkNotNull(outPrimary);
     this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
@@ -73,6 +77,7 @@ public class DefaultZipSplitter implements ZipSplitter {
   }
 
   public static DefaultZipSplitter splitZip(
+      ProjectFilesystem filesystem,
       Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
@@ -84,6 +89,7 @@ public class DefaultZipSplitter implements ZipSplitter {
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
     return new DefaultZipSplitter(
+        filesystem,
         inFiles,
         outPrimary,
         outSecondaryDir,
@@ -107,7 +113,7 @@ public class DefaultZipSplitter implements ZipSplitter {
     // this first-pass step then assigning it as the "currentSecondaryOut" to complete the second
     // pass.  We're already tracking unique entries so we would not end up adding those primary
     // entries twice.
-    classpathTraverser.traverse(new ClasspathTraversal(inFiles) {
+    classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) {
         long entrySize = entry.getSize();
@@ -122,12 +128,13 @@ public class DefaultZipSplitter implements ZipSplitter {
 
     try {
       for (Path inFile : inFiles) {
-        classpathTraverser.traverse(new ClasspathTraversal(Collections.singleton(inFile)) {
-          @Override
-          public void visit(FileLike entry) throws IOException {
-            processEntry(entry);
-          }
-        });
+        classpathTraverser.traverse(
+            new ClasspathTraversal(Collections.singleton(inFile), filesystem) {
+              @Override
+              public void visit(FileLike entry) throws IOException {
+                processEntry(entry);
+              }
+            });
 
         // The soft limit was tripped (and not the hard limit).  Flag that the next non-zero length
         // entry should create a new zip.

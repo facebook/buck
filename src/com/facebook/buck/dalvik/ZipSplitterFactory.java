@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Predicate;
 
 import java.io.File;
@@ -51,7 +52,9 @@ public interface ZipSplitterFactory {
    * @param reportDir Directory where to publish a report of which classes were written to which
    *     zip files with a corresponding size estimate.
    */
-  public ZipSplitter newInstance(Set<Path> inFiles,
+  public ZipSplitter newInstance(
+      ProjectFilesystem filesystem,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,

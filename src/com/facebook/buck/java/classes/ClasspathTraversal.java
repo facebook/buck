@@ -17,6 +17,7 @@
 package com.facebook.buck.java.classes;
 
 import com.facebook.buck.util.DirectoryTraversal;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
@@ -42,9 +43,11 @@ import java.util.zip.ZipFile;
  */
 public abstract class ClasspathTraversal {
   private final Iterable<Path> paths;
+  private final ProjectFilesystem filesystem;
 
-  public ClasspathTraversal(Collection<Path> paths) {
+  public ClasspathTraversal(Collection<Path> paths, ProjectFilesystem filesystem) {
     this.paths = Preconditions.checkNotNull(paths);
+    this.filesystem = Preconditions.checkNotNull(filesystem);
   }
 
   public abstract void visit(FileLike fileLike) throws IOException;
@@ -60,7 +63,7 @@ public abstract class ClasspathTraversal {
 
   public final void traverse() throws IOException {
     for (Path path : paths) {
-      ClasspathTraverser adapter = createTraversalAdapter(path.toFile());
+      ClasspathTraverser adapter = createTraversalAdapter(filesystem.getFileForRelativePath(path));
       adapter.traverse(this);
     }
   }

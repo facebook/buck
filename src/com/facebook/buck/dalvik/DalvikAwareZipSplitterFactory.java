@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Predicate;
 
 import java.io.File;
@@ -31,7 +32,9 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
   }
 
   @Override
-  public ZipSplitter newInstance(Set<Path> inFiles,
+  public ZipSplitter newInstance(
+      ProjectFilesystem filesystem,
+      Set<Path> inFiles,
       File outPrimary,
       File outSecondaryDir,
       String secondaryPattern,
@@ -39,7 +42,9 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
-    return DalvikAwareZipSplitter.splitZip(inFiles,
+    return DalvikAwareZipSplitter.splitZip(
+        filesystem,
+        inFiles,
         outPrimary,
         outSecondaryDir,
         secondaryPattern,

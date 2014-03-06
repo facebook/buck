@@ -19,6 +19,7 @@ package com.facebook.buck.java.classes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -39,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.CRC32;
@@ -60,7 +62,7 @@ public class ClasspathTraversalTest {
     }).toList();
     final ImmutableList.Builder<FileLike> completeList = ImmutableList.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
-    traverser.traverse(new ClasspathTraversal(paths) {
+    traverser.traverse(new ClasspathTraversal(paths, new ProjectFilesystem(Paths.get("."))) {
       @Override
       public void visit(FileLike fileLike) {
         completeList.add(fileLike);

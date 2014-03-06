@@ -22,6 +22,7 @@ import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -75,8 +76,9 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
 
   @Override
   public int execute(ExecutionContext context) {
-    Path path = context.getProjectFilesystem().resolve(pathToJarOrClassesDirectory);
-    ClasspathTraversal traversal = new ClasspathTraversal(Collections.singleton(path)) {
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    Path path = filesystem.resolve(pathToJarOrClassesDirectory);
+    ClasspathTraversal traversal = new ClasspathTraversal(Collections.singleton(path), filesystem) {
 
       private int totalLinearAllocEstimate = 0;
 
