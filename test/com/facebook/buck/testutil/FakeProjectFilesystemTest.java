@@ -67,4 +67,14 @@ public class FakeProjectFilesystemTest {
         ImmutableList.of(),
         filesystem.readLines(Paths.get("D.txt")));
   }
+
+  @Test
+  public void testTouch() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("A.txt"));
+    filesystem.touch(Paths.get("A/B.txt"));
+
+    assertTrue(filesystem.exists(Paths.get("A.txt")));
+    assertTrue(filesystem.exists(Paths.get("A/B.txt")));
+  }
 }

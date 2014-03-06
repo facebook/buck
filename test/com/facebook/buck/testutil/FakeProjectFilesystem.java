@@ -195,6 +195,10 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return Hashing.sha1().hashBytes(getFileBytes(path)).toString();
   }
 
+  public void touch(Path path) {
+    writeContentsToPath("", path);
+  }
+
   @Override
   public boolean isPathChangeEvent(WatchEvent<?> event) {
     throw new UnsupportedOperationException();
