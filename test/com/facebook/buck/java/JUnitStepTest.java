@@ -23,7 +23,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -72,8 +71,6 @@ public class JUnitStepTest {
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
-    EasyMock.expect(executionContext.getAndroidPlatformTargetOptional()).andReturn(
-        Optional.<AndroidPlatformTarget>absent());
     EasyMock.expect(executionContext.getDefaultTestTimeoutMillis()).andReturn(5000L);
     EasyMock.replay(executionContext);
 

@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -179,14 +178,6 @@ public class JUnitStep extends ShellStep {
     // Add EMMA to the classpath.
     if (isCodeCoverageEnabled && !isJacocoEnabled) {
       classpath.add(PATH_TO_EMMA_JAR);
-    }
-
-    // Next, add the bootclasspath entries specific to the Android platform being targeted.
-    if (context.getAndroidPlatformTargetOptional().isPresent()) {
-      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-      for (Path bootclasspathEntry : androidPlatformTarget.getBootclasspathEntries()) {
-        classpath.add(bootclasspathEntry.toString());
-      }
     }
 
     // Finally, include an entry for the test runner.

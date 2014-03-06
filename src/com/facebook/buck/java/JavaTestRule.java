@@ -137,6 +137,10 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     return vmArgs;
   }
 
+  protected Set<String> getBootClasspathEntries(ExecutionContext context) {
+    return ImmutableSet.of();
+  }
+
   /**
    * Runs the tests specified by the "srcs" of this class. If this rule transitively depends on
    * other {@code java_test()} rules, then they will be run separately.
@@ -165,6 +169,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     ImmutableSet<String> classpathEntries = ImmutableSet.<String>builder()
         .addAll(getTransitiveClasspathEntries().values())
         .addAll(additionalClasspathEntries)
+        .addAll(getBootClasspathEntries(executionContext))
         .build();
 
     Step junit = new JUnitStep(

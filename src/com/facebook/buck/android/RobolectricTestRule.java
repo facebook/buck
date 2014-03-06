@@ -32,12 +32,15 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -107,6 +110,16 @@ public class RobolectricTestRule extends JavaTestRule {
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
     return super.getInputsToCompareToOutput();
+  }
+
+  @Override
+  protected Set<String> getBootClasspathEntries(ExecutionContext context) {
+    if (context.getAndroidPlatformTargetOptional().isPresent()) {
+      return FluentIterable.from(context.getAndroidPlatformTarget().getBootclasspathEntries())
+          .transform(Functions.toStringFunction())
+          .toSet();
+    }
+    return ImmutableSet.of();
   }
 
   @Override

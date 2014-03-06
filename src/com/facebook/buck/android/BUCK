@@ -86,6 +86,7 @@ java_library(
   name = 'rules',
   srcs = RULES_SRCS,
   deps = [
+    ':exceptions',
     ':r',
     ':split_dex',
     ':steps',

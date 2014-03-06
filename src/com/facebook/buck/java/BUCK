@@ -86,7 +86,6 @@ java_library(
     ':support',
     '//lib:guava',
     '//lib:jsr305',
-    '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/java/classes:classes',
