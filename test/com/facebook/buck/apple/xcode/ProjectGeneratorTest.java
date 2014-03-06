@@ -244,7 +244,6 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableList.of();
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourceGroup(
             new Pair<>(
@@ -303,8 +302,7 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.srcs = ImmutableList.of();
-    arg.headers = ImmutableList.of(
+    arg.srcs = ImmutableList.of(
         AppleSource.ofSourceGroup(
             new Pair<>(
                 "HeaderGroup1",
@@ -334,11 +332,11 @@ public class ProjectGeneratorTest {
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXGroup targetGroup =
         project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
-    PBXGroup headersGroup = targetGroup.getOrCreateChildGroupByName("Headers");
+    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
 
-    assertThat(headersGroup.getChildren(), hasSize(2));
+    assertThat(sourcesGroup.getChildren(), hasSize(2));
 
-    PBXGroup group1 = (PBXGroup)Iterables.get(headersGroup.getChildren(), 0);
+    PBXGroup group1 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 0);
     assertEquals("HeaderGroup1", group1.getName());
     assertThat(group1.getChildren(), hasSize(2));
     PBXFileReference fileRefFoo = (PBXFileReference)Iterables.get(group1.getChildren(), 0);
@@ -346,7 +344,7 @@ public class ProjectGeneratorTest {
     PBXFileReference fileRefBar = (PBXFileReference)Iterables.get(group1.getChildren(), 1);
     assertEquals("bar.h", fileRefBar.getName());
 
-    PBXGroup group2 = (PBXGroup)Iterables.get(headersGroup.getChildren(), 1);
+    PBXGroup group2 = (PBXGroup)Iterables.get(sourcesGroup.getChildren(), 1);
     assertEquals("HeaderGroup2", group2.getName());
     assertThat(group2.getChildren(), hasSize(2));
     PBXFileReference fileRefBaz = (PBXFileReference)Iterables.get(group2.getChildren(), 0);
@@ -439,10 +437,10 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new FileSourcePath("foo.h")),
         AppleSource.ofSourcePath(new FileSourcePath("bar.m")));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
@@ -496,9 +494,9 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Paths.get("Info.plist");
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-        new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
     arg.sourceUnderTest = ImmutableSortedSet.of();
 
@@ -542,9 +540,9 @@ public class ProjectGeneratorTest {
     arg.infoPlist = Paths.get("Info.plist");
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-        new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of("$SDKROOT/Foo.framework");
 
     BuildRule rule = new DescribedRule(
@@ -591,9 +589,9 @@ public class ProjectGeneratorTest {
     IosLibraryDescription.Arg arg = iosLibraryDescription.createUnpopulatedConstructorArg();
     arg.configs = ImmutableMap.of(
         "Debug", ImmutableList.<Either<Path, ImmutableMap<String, String>>>of());
-    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.srcs = ImmutableList.of(AppleSource.ofSourcePathWithFlags(
-        new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")));
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-foo")),
+        AppleSource.ofSourcePath(new FileSourcePath("foo.h")));
     arg.frameworks = ImmutableSortedSet.of();
     BuildRule rule = new DescribedRule(
         IosLibraryDescription.TYPE,
@@ -853,7 +851,6 @@ public class ProjectGeneratorTest {
     arg.configs = ImmutableMap.of();
     arg.infoPlist = Paths.get("Info.plist");
     arg.frameworks = ImmutableSortedSet.of();
-    arg.headers = ImmutableList.of();
     arg.srcs = ImmutableList.of();
     arg.sourceUnderTest = sourceUnderTest;
     return new DescribedRule(

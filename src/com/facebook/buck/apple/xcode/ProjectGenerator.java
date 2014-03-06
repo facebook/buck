@@ -80,6 +80,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.w3c.dom.DOMImplementation;
@@ -155,6 +156,9 @@ public class ProjectGenerator {
       Option.REFERENCE_EXISTING_XCCONFIGS,
       Option.USE_SHORT_NAMES_FOR_TARGETS,
   };
+
+  private static final ImmutableSet<String> HEADER_FILE_EXTENSIONS =
+    ImmutableSet.of("h", "hh", "hpp");
 
   private final PartialGraph partialGraph;
   private final ProjectFilesystem projectFilesystem;
@@ -317,16 +321,11 @@ public class ProjectGenerator {
     // TODO(Task #3772930): Go through all dependencies of the rule
     // and add any shell script rules here
     addRunScriptBuildPhasesForDependencies(rule, target);
-    addSourcesBuildPhase(
+    addSourcesAndHeadersBuildPhases(
         target,
         targetGroup,
-        buildable.getGroupedSrcs(),
-        buildable.getPerFileCompilerFlags());
-    addHeadersBuildPhase(
-        target,
-        targetGroup,
-        buildable.getGroupedHeaders(),
-        buildable.getPerHeaderVisibility());
+        buildable.getSrcs(),
+        buildable.getPerFileFlags());
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -364,8 +363,8 @@ public class ProjectGenerator {
     addSourcesBuildPhase(
         target,
         targetGroup,
-        buildable.getGroupedSrcs(),
-        buildable.getPerFileCompilerFlags());
+        buildable.getSrcs(),
+        buildable.getPerFileFlags());
     addFrameworksBuildPhase(
         rule.getBuildTarget(),
         target,
@@ -413,8 +412,8 @@ public class ProjectGenerator {
     addSourcesBuildPhase(
         target,
         targetGroup,
-        buildable.getGroupedSrcs(),
-        buildable.getPerFileCompilerFlags());
+        buildable.getSrcs(),
+        buildable.getPerFileFlags());
     addFrameworksBuildPhase(
         rule.getBuildTarget(),
         target,
@@ -575,13 +574,13 @@ public class ProjectGenerator {
   }
 
   /**
-   * Add a sources build phase to a target, and add references to the target's group.
+   * Add sources build phases to a target, and add references to the target's group.
    *
    * @param target      Target to add the build phase to.
    * @param targetGroup Group to link the source files to.
    * @param groupedSources Grouped sources to include in the build
    *        phase, path relative to project root.
-   * @param sourceFlags    Source to compiler flag mapping.
+   * @param sourceFlags    Source path to flag mapping.
    */
   private void addSourcesBuildPhase(
       PBXNativeTarget target,
@@ -592,37 +591,92 @@ public class ProjectGenerator {
     // Sources groups stay in the order in which they're declared in the BUCK file.
     sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
     PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
-    target.getBuildPhases().add(sourcesBuildPhase);
 
-    addGroupedSourcesToBuildPhase(
+    addGroupedSourcesToBuildPhases(
         sourcesGroup,
         sourcesBuildPhase,
+        Optional.<PBXHeadersBuildPhase>absent(),
         groupedSources,
         sourceFlags);
+
+    if (!sourcesBuildPhase.getFiles().isEmpty()) {
+      target.getBuildPhases().add(sourcesBuildPhase);
+    }
   }
 
-  private void addGroupedSourcesToBuildPhase(
+  /**
+   * Add sources and headers build phases to a target, and add references to the target's group.
+   *
+   * @param target      Target to add the build phases to.
+   * @param targetGroup Group to link the source files to.
+   * @param groupedSources Grouped sources and headers to include in the build
+   *        phase, path relative to project root.
+   * @param sourceFlags    Source path to flag mapping.
+   */
+  private void addSourcesAndHeadersBuildPhases(
+      PBXNativeTarget target,
+      PBXGroup targetGroup,
+      Iterable<GroupedSource> groupedSources,
+      ImmutableMap<SourcePath, String> sourceFlags) {
+    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+    // Sources groups stay in the order in which they're declared in the BUCK file.
+    sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
+    PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
+    PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
+
+    addGroupedSourcesToBuildPhases(
+        sourcesGroup,
+        sourcesBuildPhase,
+        Optional.of(headersBuildPhase),
+        groupedSources,
+        sourceFlags);
+
+    if (!sourcesBuildPhase.getFiles().isEmpty()) {
+      target.getBuildPhases().add(sourcesBuildPhase);
+    }
+    if (!headersBuildPhase.getFiles().isEmpty()) {
+      target.getBuildPhases().add(headersBuildPhase);
+    }
+  }
+
+  private static boolean isHeaderSourcePath(SourcePath sourcePath) {
+    return HEADER_FILE_EXTENSIONS.contains(Files.getFileExtension(sourcePath.asReference()));
+  }
+
+  private void addGroupedSourcesToBuildPhases(
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase,
+      Optional<PBXHeadersBuildPhase> headersBuildPhase,
       Iterable<GroupedSource> groupedSources,
       ImmutableMap<SourcePath, String> sourceFlags) {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
-          addSourcePathToBuildPhase(
-              groupedSource.getSourcePath(),
-              sourcesGroup,
-              sourcesBuildPhase,
-              sourceFlags);
+          if (isHeaderSourcePath(groupedSource.getSourcePath())) {
+            if (headersBuildPhase.isPresent()) {
+              addSourcePathToHeadersBuildPhase(
+                  groupedSource.getSourcePath(),
+                  sourcesGroup,
+                  headersBuildPhase.get(),
+                  sourceFlags);
+            }
+          } else {
+            addSourcePathToSourcesBuildPhase(
+                groupedSource.getSourcePath(),
+                sourcesGroup,
+                sourcesBuildPhase,
+                sourceFlags);
+          }
           break;
         case SOURCE_GROUP:
           PBXGroup newSourceGroup = sourcesGroup.getOrCreateChildGroupByName(
               groupedSource.getSourceGroupName());
           // Sources groups stay in the order in which they're declared in the BUCK file.
           newSourceGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
-          addGroupedSourcesToBuildPhase(
+          addGroupedSourcesToBuildPhases(
               newSourceGroup,
               sourcesBuildPhase,
+              headersBuildPhase,
               groupedSource.getSourceGroup(),
               sourceFlags);
           break;
@@ -632,7 +686,7 @@ public class ProjectGenerator {
     }
   }
 
-  private void addSourcePathToBuildPhase(
+  private void addSourcePathToSourcesBuildPhase(
       SourcePath sourcePath,
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase,
@@ -653,62 +707,11 @@ public class ProjectGenerator {
     }
   }
 
-  /**
-   * Add a header copy phase to a target, and add references of the header to the group.
-   */
-  private void addHeadersBuildPhase(
-      PBXNativeTarget target,
-      PBXGroup targetGroup,
-      Iterable<GroupedSource> groupedHeaders,
-      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
-    PBXGroup headersGroup = targetGroup.getOrCreateChildGroupByName("Headers");
-    headersGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
-    PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
-    target.getBuildPhases().add(headersBuildPhase);
-
-    addGroupedHeadersToBuildPhase(
-        headersGroup,
-        headersBuildPhase,
-        groupedHeaders,
-        headerVisibilityFlags);
-  }
-
-  private void addGroupedHeadersToBuildPhase(
-      PBXGroup headersGroup,
-      PBXHeadersBuildPhase headersBuildPhase,
-      Iterable<GroupedSource> groupedHeaders,
-      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
-    for (GroupedSource groupedHeader : groupedHeaders) {
-      switch (groupedHeader.getType()) {
-        case SOURCE_PATH:
-          addHeaderPathToBuildPhase(
-              groupedHeader.getSourcePath(),
-              headersGroup,
-              headersBuildPhase,
-              headerVisibilityFlags);
-          break;
-        case SOURCE_GROUP:
-          PBXGroup newHeaderGroup = headersGroup.getOrCreateChildGroupByName(
-              groupedHeader.getSourceGroupName());
-          // Header groups stay in the order in which they're declared in the BUCK file.
-          newHeaderGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
-          addGroupedHeadersToBuildPhase(
-              newHeaderGroup,
-              headersBuildPhase,
-              groupedHeader.getSourceGroup(),
-              headerVisibilityFlags);
-          break;
-        default:
-          throw new RuntimeException("Unhandled grouped source type: " + groupedHeader.getType());
-      }
-    }
-  }
-
-  private void addHeaderPathToBuildPhase(
+  private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
       PBXHeadersBuildPhase headersBuildPhase,
-      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
+      ImmutableMap<SourcePath, String> sourceFlags) {
     Path path = headerPath.resolve(partialGraph.getDependencyGraph());
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
@@ -717,10 +720,12 @@ public class ProjectGenerator {
         ));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     NSDictionary settings = new NSDictionary();
-    HeaderVisibility headerVisibility = headerVisibilityFlags.get(headerPath);
-    if (headerVisibility != null) {
+    String headerFlags = sourceFlags.get(headerPath);
+    if (headerFlags != null) {
       // If we specify nothing, Xcode will use "project" visibility.
-      settings.put("ATTRIBUTES", new NSArray(new NSString(headerVisibility.toXcodeAttribute())));
+      settings.put(
+          "ATTRIBUTES",
+          new NSArray(new NSString(HeaderVisibility.fromString(headerFlags).toXcodeAttribute())));
       buildFile.setSettings(Optional.of(settings));
     } else {
       buildFile.setSettings(Optional.<NSDictionary>absent());

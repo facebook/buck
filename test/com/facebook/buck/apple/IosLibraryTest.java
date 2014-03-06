@@ -38,8 +38,9 @@ public class IosLibraryTest {
   @Test
   public void getInputsToCompareToOutput() {
     IosLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("some_source")));
-    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("some_header")));
+    arg.srcs = ImmutableList.of(
+        AppleSource.ofSourcePath(new FileSourcePath("some_source.m")),
+        AppleSource.ofSourcePath(new FileSourcePath("some_header.h")));
     arg.configs = ImmutableMap.of();
     arg.frameworks = ImmutableSortedSet.of();
 
@@ -47,7 +48,7 @@ public class IosLibraryTest {
     IosLibrary buildable = (IosLibrary) description.createBuildable(buildRuleParams, arg);
 
     assertThat(buildable.getInputsToCompareToOutput(), containsInAnyOrder(
-        Paths.get("some_header"),
-        Paths.get("some_source")));
+        Paths.get("some_header.h"),
+        Paths.get("some_source.m")));
   }
 }
