@@ -51,7 +51,8 @@ public class DxStepTest extends EasyMockSupport {
       "/usr/bin/dx" +
           " --dex";
 
-  private static final Path SAMPLE_OUTPUT_PATH = Paths.get("buck-out/gen/classes.dex");
+  private static final Path SAMPLE_OUTPUT_PATH =
+      Paths.get(".").toAbsolutePath().normalize().resolve("buck-out/gen/classes.dex");
 
   private static final ImmutableSet<Path> SAMPLE_FILES_TO_DEX = ImmutableSet.of(
       Paths.get("buck-out/gen/foo.dex.jar"),

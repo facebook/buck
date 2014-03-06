@@ -87,11 +87,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo")))
-        .andReturn(Paths.get("/home/user/buck-out/gen/foo"));
+        .andStubReturn(Paths.get("/home/user/buck-out/gen/foo"));
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")))
-        .andReturn(Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar"));
+        .andStubReturn(Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar"));
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar.jar")))
-        .andReturn(Paths.get("/home/user/buck-out/gen/foo/bar.jar"));
+        .andStubReturn(Paths.get("/home/user/buck-out/gen/foo/bar.jar"));
     replayAll();
 
     ExecutionContext executionContext = TestExecutionContext
@@ -101,7 +101,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         .build();
 
     String expectedDxCommand = "/usr/bin/dx" +
-        " --dex --no-optimize --force-jumbo --output buck-out/gen/foo/bar#dex.dex.jar " +
+        " --dex --no-optimize --force-jumbo --output /home/user/buck-out/gen/foo/bar#dex.dex.jar " +
         "/home/user/buck-out/gen/foo/bar.jar";
     MoreAsserts.assertSteps("Generate bar.dex.jar.",
         ImmutableList.of(

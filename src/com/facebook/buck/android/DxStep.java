@@ -137,8 +137,8 @@ public class DxStep extends ShellStep {
       builder.add("--verbose");
     }
 
-    builder.add("--output", outputDexFile.toString());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    builder.add("--output", projectFilesystem.resolve(outputDexFile).toString());
     for (Path fileToDex : filesToDex) {
       builder.add(projectFilesystem.resolve(fileToDex).toString());
     }

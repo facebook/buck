@@ -78,9 +78,10 @@ public class DexRDotJavaStepTest {
 
   private static String dxStepDescription(String dexfile) {
     String outputPath = Paths.get(".").toAbsolutePath().normalize().toString();
+    String dexFilePath = Paths.get(".").toAbsolutePath().normalize().resolve(dexfile).toString();
     String jvmFlags = (DxStep.XMX_OVERRIDE.isEmpty() ? null : DxStep.XMX_OVERRIDE);
 
     return Joiner.on(" ").skipNulls().join(
-        "/bin/dx", jvmFlags, "--dex --no-optimize --output", dexfile, outputPath);
+        "/bin/dx", jvmFlags, "--dex --no-optimize --output", dexFilePath, outputPath);
   }
 }
