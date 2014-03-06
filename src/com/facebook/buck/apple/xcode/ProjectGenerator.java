@@ -474,12 +474,28 @@ public class ProjectGenerator {
       ImmutableMap<String, String> extraBuildSettings)
       throws IOException {
 
-    ImmutableMap<String, String> extraConfigs = ImmutableMap.<String, String>builder()
+    ImmutableMap.Builder<String, String> extraConfigsBuilder = ImmutableMap.builder();
+
+    extraConfigsBuilder
         .putAll(extraBuildSettings)
         .put("TARGET_NAME", getProductName(buildTarget))
-        .put("SRCROOT", relativizeBuckRelativePathToGeneratedProject(buildTarget, "").toString())
-        .put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)")
-        .build();
+        .put("SRCROOT", relativizeBuckRelativePathToGeneratedProject(buildTarget, "").toString());
+
+    // HACK: GCC_PREFIX_HEADER needs to be modified because the path is referenced relative to
+    // project root, so if the project is generated in a different place from the BUCK file, it
+    // would break. This forces it to be based off of SRCROOT, which is overriden to point to the
+    // BUCK file location.
+    // However, when using REFERENCE_EXISTING_XCCONFIGS, this setting is not put into another layer,
+    // and therefore may override an existing setting in the target-inline-config level.
+    // Fortunately, this option is only set when we are generating separated projects, which are
+    // placed next to the BUCK files, so avoiding this is OK.
+    // In the long run, setting should be written relative to SRCROOT everywhere, and this entire
+    // hack can be deleted.
+    if (!options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+      extraConfigsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
+    }
+
+    ImmutableMap<String, String> extraConfigs = extraConfigsBuilder.build();
 
     PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
 
