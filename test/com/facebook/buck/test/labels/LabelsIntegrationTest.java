@@ -63,12 +63,27 @@ public class LabelsIntegrationTest {
 
   /**
    * This will fail because, as stated in TestCommand.java:
-   *   "We always want to run the rules that are given on the command line. Always."
+   *   "We always want to run the rules that are given on the command line. Always. Unless we don't
+   *    want to."
    */
   @Test
   public void shouldFailBecauseWeExplicitlyAskedForAFailingTestToRunEvenThoughWeTriedToExcludeIt()
       throws IOException {
     assertTestsFail("test", "//test:geometry", "//test:orientation", "--exclude", "unscientific");
+  }
+
+  /**
+   * This will succeed, as stated in TestCommand.java:
+   *   "We always want to run the rules that are given on the command line. Always. Unless we don't
+   *    want to."
+   */
+  @Test
+  public void shouldPassWhenFailingTestIncludedAndExcludedWithAlwaysExcludeFlag()
+      throws IOException {
+    assertTestsPass(
+        "test", "//test:geometry", "//test:orientation",
+        "--exclude", "unscientific",
+        "--always_exclude");
   }
 
   @Test

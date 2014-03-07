@@ -146,4 +146,8 @@ public class TestCommandOptions extends BuildCommandOptions {
   public boolean isMatchedByLabelOptions(Set<Label> labels) {
     return testLabelOptions.isMatchedByLabelOptions(getBuckConfig(), labels);
   }
+
+  public boolean shouldExcludeWin() {
+    return testLabelOptions.shouldExcludeWin();
+  }
 }

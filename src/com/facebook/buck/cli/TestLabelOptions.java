@@ -68,6 +68,14 @@ class TestLabelOptions {
       handler = LabelsOptionHandler.class)
   private Map<Integer, LabelSelector> includedLabelSets;
 
+  @Option(
+      name = "--always_exclude",
+      usage =
+          "If set, an exclude filter will win over a target on the command line, so tests " +
+          "that were both specified to run on the command line and are excluded through either " +
+          "the '--exclude' option or in the .buckconfig will not run.")
+  private boolean alwaysExclude;
+
   private Supplier<ImmutableList<LabelSelector>> supplier =
       Suppliers.memoize(new Supplier<ImmutableList<LabelSelector>>() {
         @Override
@@ -86,6 +94,9 @@ class TestLabelOptions {
         }
       });
 
+  public boolean shouldExcludeWin() {
+    return alwaysExclude;
+  }
 
   public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<Label> rawLabels) {
     ImmutableList<LabelSelector> labelSelectors = supplier.get();

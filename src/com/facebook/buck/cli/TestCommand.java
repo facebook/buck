@@ -383,11 +383,14 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       Iterable<TestRule> testRules) {
     ImmutableSortedSet.Builder<TestRule> builder = ImmutableSortedSet.naturalOrder();
 
-    // We always want to run the rules that are given on the command line. Always.
-    List<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
-    for (TestRule rule : testRules) {
-      if (allTargets.contains(rule.getFullyQualifiedName())) {
-        builder.add(rule);
+    // We always want to run the rules that are given on the command line. Always. Unless we don't
+    // want to.
+    if (!options.shouldExcludeWin()) {
+      List<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
+      for (TestRule rule : testRules) {
+        if (allTargets.contains(rule.getFullyQualifiedName())) {
+          builder.add(rule);
+        }
       }
     }
 
