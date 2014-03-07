@@ -21,7 +21,9 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -39,6 +41,9 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +51,54 @@ import java.util.Properties;
 
 // TODO(user): Implement methods that throw UnsupportedOperationException.
 public class FakeProjectFilesystem extends ProjectFilesystem {
+
+  private static final BasicFileAttributes DEFAULT_FILE_ATTRIBUTES =
+      new BasicFileAttributes() {
+        @Override
+        public FileTime lastModifiedTime() {
+          return null;
+        }
+
+        @Override
+        public FileTime lastAccessTime() {
+          return null;
+        }
+
+        @Override
+        public FileTime creationTime() {
+          return null;
+        }
+
+        @Override
+        public boolean isRegularFile() {
+          return true;
+        }
+
+        @Override
+        public boolean isDirectory() {
+          return false;
+        }
+
+        @Override
+        public boolean isSymbolicLink() {
+          return false;
+        }
+
+        @Override
+        public boolean isOther() {
+          return false;
+        }
+
+        @Override
+        public long size() {
+          return 0;
+        }
+
+        @Override
+        public Object fileKey() {
+          return null;
+        }
+      };
 
   private final Map<Path, byte[]> fileContents;
 
@@ -195,8 +248,30 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return Hashing.sha1().hashBytes(getFileBytes(path)).toString();
   }
 
+  /**
+   * TODO(user): (1) Also traverse the directories. (2) Do not ignore return value of
+   * {@code fileVisitor}.
+   */
+  @Override
+  public void walkRelativeFileTree(Path path, FileVisitor<Path> fileVisitor) throws IOException {
+    Preconditions.checkArgument(!fileContents.containsKey(path),
+        "FakeProjectFilesystem only supports walkRelativeFileTree over directories.");
+    for (Path file : getFilesUnderDir(path)) {
+      fileVisitor.visitFile(file, DEFAULT_FILE_ATTRIBUTES);
+    }
+  }
+
   public void touch(Path path) {
     writeContentsToPath("", path);
+  }
+
+  private Collection<Path> getFilesUnderDir(final Path dirPath) {
+    return Collections2.filter(fileContents.keySet(), new Predicate<Path>() {
+          @Override
+          public boolean apply(Path input) {
+            return input.startsWith(dirPath);
+          }
+        });
   }
 
   @Override

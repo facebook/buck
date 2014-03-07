@@ -32,6 +32,8 @@ java_test(
   deps = [
     ':testutil',
     '//lib:guava',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
     '//lib:junit',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/model:model',
