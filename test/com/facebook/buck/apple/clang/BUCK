@@ -1,0 +1,15 @@
+java_test(
+  name = 'headermap',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/apple/clang:headermap',
+  ],
+  deps = [
+    '//lib:guava',
+    '//lib:jsr305',
+    '//lib:junit',
+    '//lib:hamcrest-core',
+    '//lib:hamcrest-library',
+    '//src/com/facebook/buck/apple/clang:headermap',
+  ]
+)
