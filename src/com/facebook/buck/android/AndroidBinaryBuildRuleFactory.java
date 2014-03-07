@@ -89,6 +89,10 @@ public class AndroidBinaryBuildRuleFactory extends
     long linearAllocHardLimit = params.getRequiredLongAttribute("linear_alloc_hard_limit");
     Optional<SourcePath> primaryDexClassesFile = params.getOptionalSourcePath(
         "primary_dex_classes_file", builder);
+    Optional<SourcePath> primaryDexScenarioFile = params.getOptionalSourcePath(
+        "primary_dex_scenario_file", builder);
+    boolean isPrimaryDexScenarioOverflowAllowed = params.getBooleanAttribute(
+        "primary_dex_scenario_overflow_allowed");
 
     builder.setDexSplitMode(new DexSplitMode(
         useSplitDex,
@@ -97,7 +101,9 @@ public class AndroidBinaryBuildRuleFactory extends
         useLinearAllocSplitDex,
         linearAllocHardLimit,
         primaryDexPatterns,
-        primaryDexClassesFile));
+        primaryDexClassesFile,
+        primaryDexScenarioFile,
+        isPrimaryDexScenarioOverflowAllowed));
 
     // use_android_proguard_config_with_optimizations
     boolean useAndroidProguardConfigWithOptimizations =

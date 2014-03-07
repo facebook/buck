@@ -795,6 +795,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           proguardMappingFile,
           dexSplitMode.getPrimaryDexPatterns(),
           dexSplitMode.getPrimaryDexClassesFile().transform(sourcePathResolver),
+          dexSplitMode.getPrimaryDexScenarioFile().transform(sourcePathResolver),
+          dexSplitMode.isPrimaryDexScenarioOverflowAllowed(),
           dexSplitMode.getDexSplitStrategy(),
           dexSplitMode.getDexStore(),
           zipSplitReportDir,

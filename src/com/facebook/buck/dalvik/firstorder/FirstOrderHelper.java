@@ -16,10 +16,7 @@
 
 package com.facebook.buck.dalvik.firstorder;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
@@ -29,13 +26,6 @@ import org.objectweb.asm.tree.ClassNode;
 import java.util.Map;
 
 public class FirstOrderHelper {
-
-  private static final Function<Type, String> TYPE_TO_CLASS_NAME = new Function<Type, String>() {
-    @Override
-    public String apply(Type input) {
-      return input.getClassName();
-    }
-  };
 
   private final Iterable<Type> scenarioTypes;
   private final ImmutableSet.Builder<String> resultBuilder;
@@ -49,7 +39,7 @@ public class FirstOrderHelper {
     this.knownTypes = Maps.newHashMap();
   }
 
-  public static void addDependencies(
+  public static void addTypesAndDependencies(
       Iterable<Type> scenarioTypes,
       Iterable<ClassNode> allClasses,
       ImmutableSet.Builder<String> classNamesBuilder) {
@@ -66,29 +56,18 @@ public class FirstOrderHelper {
       knownTypes.put(info.type, info);
     }
 
-    checkMissingTypes();
+    // TODO(user): consider adding events here that allow developers to track
+    // how many non android.* and java.* classes went unrecognized over time.
+    //
+    // Not all types will be known.  This includes types from Android, java
+    // runtime libraries, and any types that have been removed from the application
+    // since the scenario ran.
 
     for (Type type : scenarioTypes) {
       addFirstOrderTypes(type);
     }
 
     return resultBuilder.build();
-  }
-
-  private void checkMissingTypes() {
-    ImmutableSet.Builder<Type> builder = ImmutableSet.builder();
-    for (Type type : scenarioTypes) {
-      if (!knownTypes.containsKey(type)) {
-        builder.add(type);
-      }
-    }
-
-    ImmutableSet<Type> unknownTypes = builder.build();
-    if (!unknownTypes.isEmpty()) {
-      throw new RuntimeException(
-          "WARNING: The specified .jar files did not include the following requested classes: " +
-          Joiner.on(", ").join(FluentIterable.from(unknownTypes).transform(TYPE_TO_CLASS_NAME)));
-    }
   }
 
   private void addFirstOrderTypes(Type type) {

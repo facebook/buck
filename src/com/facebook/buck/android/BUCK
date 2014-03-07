@@ -151,6 +151,7 @@ java_library(
     '//lib:jackson-databind',
     '//lib:jsr305',
     '//lib:sdklib',
+    '//src/com/facebook/buck/dalvik/firstorder:firstorder',
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/java/classes:classes',

@@ -24,6 +24,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
@@ -52,6 +53,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final Set<Path> inFiles;
   private final File outPrimary;
   private final Predicate<String> requiredInPrimaryZip;
+  private final Set<String> wantedInPrimaryZip;
   private final File reportDir;
   private final long linearAllocLimit;
   private final DalvikStatsCache dalvikStatsCache;
@@ -72,6 +74,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
+      Set<String> wantedInPrimaryZip,
       DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
@@ -84,6 +87,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.secondaryDexWriter =
         new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
     this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
+    this.wantedInPrimaryZip = ImmutableSet.copyOf(wantedInPrimaryZip);
     this.reportDir = reportDir;
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
     this.linearAllocLimit = linearAllocLimit;
@@ -98,6 +102,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       String secondaryPattern,
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
+      Set<String> wantedInPrimaryZip,
       DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
@@ -109,6 +114,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         secondaryPattern,
         linearAllocLimit,
         requiredInPrimaryZip,
+        wantedInPrimaryZip,
         dexSplitStrategy,
         canaryStrategy,
         reportDir);
@@ -122,16 +128,30 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     primaryOut = newZipOutput(outPrimary);
     secondaryDexWriter.reset();
 
+    final ImmutableMap.Builder<String, FileLike> entriesBuilder = ImmutableMap.builder();
+
     // Iterate over all of the inFiles and add all entries that match the requiredInPrimaryZip
     // predicate.
     classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) throws IOException {
-        if (requiredInPrimaryZip.apply(entry.getRelativePath())) {
+        String relativePath = entry.getRelativePath();
+        if (requiredInPrimaryZip.apply(relativePath)) {
           primaryOut.putEntry(entry);
+        } else if (wantedInPrimaryZip.contains(relativePath)) {
+          entriesBuilder.put(relativePath, entry);
         }
       }
     });
+
+    // Put as many of the items wanted in the primary dex as we can into the primary dex.
+    ImmutableMap<String, FileLike> entries = entriesBuilder.build();
+    for (String wanted : wantedInPrimaryZip) {
+      FileLike entry = entries.get(wanted);
+      if ((entry != null) && !primaryOut.containsEntry(entry) && primaryOut.canPutEntry(entry)) {
+        primaryOut.putEntry(entry);
+      }
+    }
 
     // Now that all of the required entries have been added to the primary zip, fill the rest of
     // the zip up with the remaining entries.

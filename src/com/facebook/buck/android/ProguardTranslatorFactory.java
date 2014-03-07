@@ -113,8 +113,11 @@ class ProguardTranslatorFactory {
       public String apply(@Nullable String input) {
         Preconditions.checkNotNull(input);
         String mapped = map.get(input);
-        Preconditions.checkNotNull(mapped);
-        return mapped;
+        if (mapped != null) {
+          return mapped;
+        } else {
+          return input;
+        }
       }
     };
   }

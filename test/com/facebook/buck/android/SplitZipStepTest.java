@@ -25,6 +25,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +36,7 @@ import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -105,6 +107,8 @@ public class SplitZipStepTest {
         /* proguardMappingFile */ Optional.<Path>absent(),
         /* primaryDexPatterns */ ImmutableSet.of("List"),
         Optional.of(primaryDexClassesFile),
+        /* primaryDexScenarioFile */ Optional.<Path>absent(),
+        /* isPrimaryDexScenarioOverflowAllowed */ false,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         DexStore.JAR,
         /* pathToReportDir */ Paths.get(""),
@@ -124,7 +128,10 @@ public class SplitZipStepTest {
     EasyMock.replay(projectFilesystem, context);
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
-        .createRequiredInPrimaryZipPredicate(context);
+        .createRequiredInPrimaryZipPredicate(
+            context,
+            ProguardTranslatorFactory.createForTest(Optional.<Map<String, String>>absent()),
+            Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
     assertTrue(
         "All non-.class files should be accepted.",
         requiredInPrimaryZipPredicate.apply("apples.txt"));
@@ -168,6 +175,8 @@ public class SplitZipStepTest {
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
         /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
         Optional.of(primaryDexClassesFile),
+        /* primaryDexScenarioFile */ Optional.<Path>absent(),
+        /* isPrimaryDexScenarioOverflowAllowed */ false,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         DexStore.JAR,
         /* pathToReportDir */ Paths.get(""),
@@ -202,8 +211,14 @@ public class SplitZipStepTest {
     EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
     EasyMock.replay(projectFilesystem, context);
 
+    ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
+        context, Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
-        .createRequiredInPrimaryZipPredicate(context);
+        .createRequiredInPrimaryZipPredicate(
+            context,
+            translatorFactory,
+            Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
     assertTrue(
         "Mapped class from primary list should be in primary.",
         requiredInPrimaryZipPredicate.apply("foo/bar/a.class"));
@@ -243,6 +258,8 @@ public class SplitZipStepTest {
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
         /* primaryDexPatterns */ ImmutableSet.<String>of("primary"),
         /* primaryDexClassesFile */ Optional.<Path>absent(),
+        /* primaryDexScenarioFile */ Optional.<Path>absent(),
+        /* isPrimaryDexScenarioOverflowAllowed */ false,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         DexStore.JAR,
         /* pathToReportDir */ Paths.get(""),
@@ -256,8 +273,14 @@ public class SplitZipStepTest {
     EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
     EasyMock.replay(projectFilesystem, context);
 
+    ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
+        context, Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
-        .createRequiredInPrimaryZipPredicate(context);
+        .createRequiredInPrimaryZipPredicate(
+            context,
+            translatorFactory,
+            Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
     assertTrue(
         "Primary class should be in primary.",
         requiredInPrimaryZipPredicate.apply("primary.class"));

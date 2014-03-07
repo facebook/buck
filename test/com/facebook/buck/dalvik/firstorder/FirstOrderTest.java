@@ -208,7 +208,7 @@ public class FirstOrderTest {
       Iterable<? extends Class<?>> types) {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
-    FirstOrderHelper.addDependencies(
+    FirstOrderHelper.addTypesAndDependencies(
         FluentIterable.from(types).transform(TYPE_FROM_CLASS),
         loadAndMergeClasses(types, KNOWN_CLASS_NODES),
         builder);

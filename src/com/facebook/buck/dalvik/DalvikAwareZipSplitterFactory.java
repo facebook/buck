@@ -26,9 +26,13 @@ import java.util.Set;
 public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
 
   private final long linearAllocLimit;
+  private final Set<String> wantedInPrimaryZip;
 
-  public DalvikAwareZipSplitterFactory(long linearAllocLimit) {
+  public DalvikAwareZipSplitterFactory(
+      long linearAllocLimit,
+      Set<String> wantedInPrimaryZip) {
     this.linearAllocLimit = linearAllocLimit;
+    this.wantedInPrimaryZip = wantedInPrimaryZip;
   }
 
   @Override
@@ -50,6 +54,7 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
         secondaryPattern,
         linearAllocLimit,
         requiredInPrimaryZip,
+        wantedInPrimaryZip,
         dexSplitStrategy,
         canaryStrategy,
         reportDir);

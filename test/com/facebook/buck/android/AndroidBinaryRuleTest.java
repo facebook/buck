@@ -307,7 +307,9 @@ public class AndroidBinaryRuleTest {
             /* useLinearAllocSplitDex */ false,
             /* linearAllocHardLimit */ 0,
             /* primaryDexPatterns */ ImmutableSet.<String>of(),
-            /* primaryDexClassesFile */ Optional.<SourcePath>absent())));
+            /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
+            /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+            /* primaryDexScenarioOverflowOkay */ true)));
 
     Set<Path> classpath = Sets.newHashSet();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();

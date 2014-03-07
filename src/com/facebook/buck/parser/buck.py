@@ -450,6 +450,8 @@ def android_binary(
       resource_compression=None,
       primary_dex_patterns=None,
       primary_dex_classes_file=None,
+      primary_dex_scenario_file=None,
+      primary_dex_scenario_overflow_allowed=False,
       # By default, assume we have 5MB of linear alloc,
       # 1MB of which is taken up by the framework, so that leaves 4MB.
       linear_alloc_hard_limit=4 * 1024 * 1024,
@@ -481,6 +483,8 @@ def android_binary(
     'resource_compression' : resource_compression,
     'primary_dex_patterns' : primary_dex_patterns,
     'primary_dex_classes_file' : primary_dex_classes_file,
+    'primary_dex_scenario_file' : primary_dex_scenario_file,
+    'primary_dex_scenario_overflow_allowed' : primary_dex_scenario_overflow_allowed,
     'linear_alloc_hard_limit' : linear_alloc_hard_limit,
     'resource_filter' : resource_filter,
     'build_string_source_map' : build_string_source_map,
