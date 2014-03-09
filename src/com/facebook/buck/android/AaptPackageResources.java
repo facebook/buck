@@ -38,11 +38,8 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.DefaultDirectoryTraverser;
-import com.facebook.buck.util.DirectoryTraversal;
-import com.facebook.buck.util.DirectoryTraverser;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MorePaths;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -51,9 +48,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -142,7 +141,7 @@ public class AaptPackageResources extends AbstractBuildable {
           createAllAssetsDirectory(
               transitiveDependencies.assetsDirectories,
               commands,
-              new DefaultDirectoryTraverser());
+              context.getProjectFilesystem());
         } catch (IOException e) {
           context.logError(e, "Error creating all assets directory in %s.", buildTarget);
           return 1;
@@ -239,7 +238,7 @@ public class AaptPackageResources extends AbstractBuildable {
   Optional<Path> createAllAssetsDirectory(
       Set<Path> assetsDirectories,
       ImmutableList.Builder<Step> steps,
-      DirectoryTraverser traverser) throws IOException {
+      ProjectFilesystem filesystem) throws IOException {
     if (assetsDirectories.isEmpty()) {
       return Optional.absent();
     }
@@ -248,22 +247,23 @@ public class AaptPackageResources extends AbstractBuildable {
     // specified in Buck, then all of the contents must be symlinked to a single directory.
     Path destination = getPathToAllAssetsDirectory();
     steps.add(new MakeCleanDirectoryStep(destination));
-    final ImmutableMap.Builder<String, File> allAssets = ImmutableMap.builder();
+    final ImmutableMap.Builder<Path, Path> allAssets = ImmutableMap.builder();
 
-    File destinationDirectory = destination.toFile();
-    for (Path assetsDirectory : assetsDirectories) {
-      traverser.traverse(new DirectoryTraversal(assetsDirectory.toFile()) {
-        @Override
-        public void visit(File file, String relativePath) {
-          allAssets.put(relativePath, file);
-        }
-      });
+    for (final Path assetsDirectory : assetsDirectories) {
+      filesystem.walkRelativeFileTree(
+          assetsDirectory, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+              allAssets.put(assetsDirectory.relativize(file), file);
+              return FileVisitResult.CONTINUE;
+            }
+          });
     }
 
-    for (Map.Entry<String, File> entry : allAssets.build().entrySet()) {
+    for (Map.Entry<Path, Path> entry : allAssets.build().entrySet()) {
       steps.add(new MkdirAndSymlinkFileStep(
-          MorePaths.newPathInstance(entry.getValue()),
-          MorePaths.newPathInstance(destinationDirectory + "/" + entry.getKey())));
+          entry.getValue(),
+          destination.resolve(entry.getKey())));
     }
 
     return Optional.of(destination);

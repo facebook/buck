@@ -31,22 +31,18 @@ import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.FakeDirectoryTraverser;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -78,7 +74,7 @@ public class AaptPackageResourcesTest {
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         /* assetsDirectories */ ImmutableSet.<Path>of(),
         commands,
-        new FakeDirectoryTraverser());
+        new FakeProjectFilesystem());
     EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that no assets/ directory is used.
@@ -128,22 +124,13 @@ public class AaptPackageResourcesTest {
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<Path> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new FakeDirectoryTraverser(
-        ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
-            "java/src/com/facebook/base/assets2",
-            ImmutableList.of(
-                new FakeDirectoryTraverser.Entry(
-                    new File("java/src/com/facebook/base/assets2",
-                             "fonts/Theinhardt-Medium.otf"),
-                    "fonts/Theinhardt-Medium.otf"),
-                new FakeDirectoryTraverser.Entry(
-                    new File("java/src/com/facebook/base/assets2",
-                             "fonts/Theinhardt-Regular.otf"),
-                    "fonts/Theinhardt-Regular.otf"))));
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("java/src/com/facebook/base/assets2/fonts/Theinhardt-Medium.otf"));
+    filesystem.touch(Paths.get("java/src/com/facebook/base/assets2/fonts/Theinhardt-Regular.otf"));
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
-        assetsDirectories, commands, traverser);
+        assetsDirectories, commands, filesystem);
     EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that the existing assets/ directory will be passed to aapt.
@@ -200,49 +187,44 @@ public class AaptPackageResourcesTest {
         resourceOne.getAssets(),
         resourceTwo.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DirectoryTraverser traverser = new FakeDirectoryTraverser(
-        ImmutableMap.<String, Collection<FakeDirectoryTraverser.Entry>>of(
-            "facebook/base/assets1",
-            ImmutableList.of(
-                new FakeDirectoryTraverser.Entry(
-                    new File("facebook/base/assets1",
-                             "guava-10.0.1-fork.dex.1.jar"),
-                    "guava-10.0.1-fork.dex.1.jar")),
-            "facebook/base/assets2",
-            ImmutableList.of(
-                new FakeDirectoryTraverser.Entry(
-                    new File("facebook/base/assets2",
-                             "fonts/Theinhardt-Medium.otf"),
-                    "fonts/Theinhardt-Medium.otf"),
-                new FakeDirectoryTraverser.Entry(
-                    new File("facebook/base/assets2",
-                             "fonts/Theinhardt-Regular.otf"),
-                    "fonts/Theinhardt-Regular.otf"))));
+
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/Theinhardt-Medium.otf"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"));
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
-        assetsDirectories, commands, traverser);
+        assetsDirectories, commands, filesystem);
     EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that an assets/ directory will be created and passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
     assertEquals(BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__"),
         allAssetsDirectory.get());
-    List<? extends Step> expectedCommands = ImmutableList.of(
-        new MakeCleanDirectoryStep(BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__")),
-        new MkdirAndSymlinkFileStep(
-            Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"),
-            BIN_PATH.resolve(
-                "facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),
-        new MkdirAndSymlinkFileStep(
-            Paths.get("facebook/base/assets2/fonts/Theinhardt-Medium.otf"),
-            BIN_PATH.resolve(
-                "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Medium.otf")),
-        new MkdirAndSymlinkFileStep(
-            Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"),
-            BIN_PATH.resolve(
-                "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf")));
-    MoreAsserts.assertListEquals(expectedCommands, commands.build());
-  }
 
+    List<? extends Step> observedCommands = commands.build();
+    assertEquals(4, observedCommands.size());
+    assertEquals(
+        new MakeCleanDirectoryStep(BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__")),
+        observedCommands.get(0));
+
+    ImmutableSet<Step> remainingCommands = ImmutableSet.copyOf(observedCommands.subList(1, 4));
+    MoreAsserts.assertSetEquals(
+        ImmutableSet.<Step>of(
+            new MkdirAndSymlinkFileStep(
+                Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"),
+                BIN_PATH.resolve(
+                    "facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),
+            new MkdirAndSymlinkFileStep(
+                Paths.get("facebook/base/assets2/fonts/Theinhardt-Medium.otf"),
+                BIN_PATH.resolve(
+                    "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Medium.otf")),
+            new MkdirAndSymlinkFileStep(
+                Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"),
+                BIN_PATH.resolve(
+                    "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf"))),
+        remainingCommands
+    );
+  }
 }
