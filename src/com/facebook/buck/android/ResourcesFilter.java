@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -102,9 +103,7 @@ public class ResourcesFilter extends AbstractBuildable
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final ResourceCompressionMode resourceCompressionMode;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
-
-  @Nullable
-  private BuildOutput buildOutput;
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ResourcesFilter(
       BuildTarget buildTarget,
@@ -115,14 +114,15 @@ public class ResourcesFilter extends AbstractBuildable
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   public ImmutableSet<Path> getResDirectories() {
-    return getBuildOutput().resDirectories;
+    return buildOutputInitializer.getBuildOutput().resDirectories;
   }
 
   public ImmutableSet<Path> getNonEnglishStringFiles() {
-    return getBuildOutput().nonEnglishStringFiles;
+    return buildOutputInitializer.getBuildOutput().nonEnglishStringFiles;
   }
 
   AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
@@ -263,17 +263,8 @@ public class ResourcesFilter extends AbstractBuildable
   }
 
   @Override
-  public void setBuildOutput(BuildOutput buildOutput) throws IllegalStateException {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() throws IllegalStateException {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   public static class BuildOutput {

@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -124,11 +125,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       transitiveClasspathEntriesSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
+  private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   private JavacOptions javacOptions;
-
-  @Nullable
-  private JavaLibraryRule.Data buildOutput;
 
   /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
@@ -217,6 +216,9 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
                 DefaultJavaLibraryRule.this);
           }
         });
+
+    this.buildOutputInitializer =
+        new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
   }
 
   /**
@@ -657,27 +659,18 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public void setBuildOutput(JavaLibraryRule.Data buildOutput) {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public JavaLibraryRule.Data getBuildOutput() {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<Data> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   @Override
   public Sha1HashCode getAbiKey() {
-    return getBuildOutput().getAbiKey();
+    return buildOutputInitializer.getBuildOutput().getAbiKey();
   }
 
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-    return getBuildOutput().getClassNamesToHashes();
+    return buildOutputInitializer.getBuildOutput().getClassNamesToHashes();
   }
 
 

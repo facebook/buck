@@ -114,6 +114,7 @@ java_library(
     'ArtifactCacheEvent.java',
     'Builder.java',
     'BuildEvent.java',
+    'BuildOutputInitializer.java',
     'BuildResult.java',
     'BuildRuleEvent.java',
     'BuildRuleParams.java',

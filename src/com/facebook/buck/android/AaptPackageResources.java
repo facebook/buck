@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -80,6 +81,7 @@ public class AaptPackageResources extends AbstractBuildable
   private final UberRDotJava uberRDotJava;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   AaptPackageResources(BuildTarget buildTarget,
       SourcePath manifest,
@@ -93,6 +95,7 @@ public class AaptPackageResources extends AbstractBuildable
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -300,7 +303,7 @@ public class AaptPackageResources extends AbstractBuildable
   }
 
   public Sha1HashCode getResourcePackageHash() {
-    return getBuildOutput().resourcePackageHash;
+    return buildOutputInitializer.getBuildOutput().resourcePackageHash;
   }
 
   static class BuildOutput {
@@ -310,9 +313,6 @@ public class AaptPackageResources extends AbstractBuildable
       this.resourcePackageHash = Preconditions.checkNotNull(resourcePackageHash);
     }
   }
-
-  @Nullable
-  private BuildOutput buildOutput;
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
@@ -325,17 +325,8 @@ public class AaptPackageResources extends AbstractBuildable
   }
 
   @Override
-  public void setBuildOutput(BuildOutput buildOutput) {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   public static Builder newAaptPackageResourcesBuildableBuilder(

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -118,10 +119,9 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
 
   private final boolean hasWhitelistedStrings;
 
-  @Nullable
-  private BuildOutput buildOutput;
-
   private final Supplier<ImmutableList<HasAndroidResourceDeps>> transitiveAndroidResourceDeps;
+
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   protected AndroidResourceRule(BuildRuleParams buildRuleParams,
       @Nullable Path res,
@@ -157,6 +157,9 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
           }
         }
     );
+
+    this.buildOutputInitializer =
+        new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
   }
 
   @Override
@@ -247,7 +250,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
 
   @Override
   public Sha1HashCode getTextSymbolsAbiKey() {
-    return getBuildOutput().textSymbolsAbiKey;
+    return buildOutputInitializer.getBuildOutput().textSymbolsAbiKey;
   }
 
   @Override
@@ -299,21 +302,8 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public void setBuildOutput(BuildOutput buildOutput) throws IllegalStateException {
-    Preconditions.checkState(
-        this.buildOutput == null,
-        "Build output must not be already set for %s",
-        getBuildTarget());
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() throws IllegalStateException {
-    Preconditions.checkState(
-        buildOutput != null,
-        "Build output must already be set for %s",
-        getBuildTarget());
-    return buildOutput;
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   public static class BuildOutput {

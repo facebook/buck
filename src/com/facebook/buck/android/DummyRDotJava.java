@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
@@ -66,11 +67,10 @@ public class DummyRDotJava extends AbstractBuildable
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final BuildTarget buildTarget;
   private final JavacOptions javacOptions;
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   @VisibleForTesting
   static final String METADATA_KEY_FOR_ABI_KEY = "DUMMY_R_DOT_JAVA_ABI_KEY";
-
-  private BuildOutput buildOutput;
 
   public DummyRDotJava(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
@@ -79,6 +79,7 @@ public class DummyRDotJava extends AbstractBuildable
     this.androidResourceDeps = Preconditions.checkNotNull(androidResourceDeps);
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -211,21 +212,13 @@ public class DummyRDotJava extends AbstractBuildable
     return new BuildOutput(abiKey.get());
   }
 
-  @Override
-  public void setBuildOutput(BuildOutput buildOutput) throws IllegalStateException {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() throws IllegalStateException {
-    return Preconditions.checkNotNull(buildOutput, "buildOutput must already be set for %s", this);
-  }
-
   public Sha1HashCode getRDotTxtSha1() {
-    return getBuildOutput().rDotTxtSha1;
+    return buildOutputInitializer.getBuildOutput().rDotTxtSha1;
+  }
+
+  @Override
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   public static class BuildOutput {

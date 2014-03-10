@@ -230,14 +230,14 @@ public class AndroidResourceRuleTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res1")));
-    resourceRule1.setBuildOutput(
+    resourceRule1.getBuildOutputInitializer().setBuildOutput(
         new AndroidResourceRule.BuildOutput(new Sha1HashCode(Strings.repeat("a", 40))));
     AndroidResourceRule resourceRule2 = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
             .setRes(Paths.get("android_res/com/example/res2")));
-    resourceRule2.setBuildOutput(
+    resourceRule2.getBuildOutputInitializer().setBuildOutput(
         new AndroidResourceRule.BuildOutput(new Sha1HashCode(Strings.repeat("b", 40))));
     AndroidResourceRule resourceRule3 = ruleResolver.buildAndAddToIndex(
         AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())

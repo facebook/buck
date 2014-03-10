@@ -325,8 +325,9 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
   private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable,
       OnDiskBuildInfo onDiskBuildInfo) {
-    T buildOutput = initializable.initializeFromDisk(onDiskBuildInfo);
-    initializable.setBuildOutput(buildOutput);
+    BuildOutputInitializer<T> outputInitializer = initializable.getBuildOutputInitializer();
+    T buildOutput = outputInitializer.initializeFromDisk(onDiskBuildInfo);
+    outputInitializer.setBuildOutput(buildOutput);
   }
 
   /**

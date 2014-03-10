@@ -25,6 +25,7 @@ import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -72,8 +73,7 @@ public class UberRDotJava extends AbstractBuildable implements
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
-
-  @Nullable private BuildOutput buildOutput;
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   UberRDotJava(BuildTarget buildTarget,
       ResourcesFilter resourcesFilter,
@@ -87,6 +87,7 @@ public class UberRDotJava extends AbstractBuildable implements
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -112,28 +113,29 @@ public class UberRDotJava extends AbstractBuildable implements
         "Error trying to get R.java dex file: R.java is not supposed to be dexed.");
 
     final Optional<Integer> linearAllocSizeEstimate =
-        getBuildOutput().rDotJavaDexLinearAllocEstimate;
+        buildOutputInitializer.getBuildOutput().rDotJavaDexLinearAllocEstimate;
     if (!linearAllocSizeEstimate.isPresent()) {
       return Optional.absent();
     }
 
     return Optional.<DexWithClasses>of(new DexWithClasses() {
-      @Override
-      public Path getPathToDexFile() {
-        return DexRDotJavaStep.getPathToDexFile(buildTarget);
-      }
+          @Override
+          public Path getPathToDexFile() {
+            return DexRDotJavaStep.getPathToDexFile(buildTarget);
+          }
 
-      @Override
-      public ImmutableSet<String> getClassNames() {
-        throw new RuntimeException("Since R.java is unconditionally packed in the primary dex, no" +
-            "one should call this method.");
-      }
+          @Override
+          public ImmutableSet<String> getClassNames() {
+            throw new RuntimeException(
+                "Since R.java is unconditionally packed in the primary dex, no" +
+                    "one should call this method.");
+          }
 
-      @Override
-      public int getSizeEstimate() {
-        return linearAllocSizeEstimate.get();
-      }
-    });
+          @Override
+          public int getSizeEstimate() {
+            return linearAllocSizeEstimate.get();
+          }
+        });
   }
 
   BuildTarget getBuildTarget() {
@@ -190,17 +192,8 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   @Override
-  public void setBuildOutput(BuildOutput buildOutput) {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   @Override

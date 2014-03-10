@@ -577,9 +577,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     private final Iterable<Path> inputs;
     private final Path pathToOutputFile;
     private final List<Step> buildSteps;
+    private final BuildOutputInitializer<Object> buildOutputInitializer;
 
-    @Nullable
-    private Object buildOutput;
     private boolean isInitializedFromDisk = false;
 
     private BuildableAbstractCachingBuildRule(BuildRuleParams params,
@@ -590,6 +589,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
       this.inputs = inputs;
       this.pathToOutputFile = pathToOutputFile == null ? null : Paths.get(pathToOutputFile);
       this.buildSteps = buildSteps;
+      this.buildOutputInitializer =
+          new BuildOutputInitializer<>(params.getBuildTarget(), this);
     }
 
     @Override
@@ -627,19 +628,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public void setBuildOutput(Object buildOutput) {
-      if (this.buildOutput != null) {
-        throw new IllegalStateException("buildOutput is already set for " + this);
-      }
-      this.buildOutput = buildOutput;
-    }
-
-    @Override
-    public Object getBuildOutput() {
-      if (buildOutput == null) {
-        throw new IllegalStateException("buildOutput has not been set for " + this);
-      }
-      return buildOutput;
+    public BuildOutputInitializer<Object> getBuildOutputInitializer() {
+      return buildOutputInitializer;
     }
 
     public boolean isInitializedFromDisk() {
@@ -658,12 +648,13 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
         "efd7d450d9f1c3d9e43392dec63b1f31692305b9";
     private static final String ABI_KEY_FOR_DEPS_HASH = "92d6de0a59080284055bcde5d2923f144b216a59";
 
-    @Nullable
-    private Object buildOutput;
     private boolean isAbiLoadedFromDisk = false;
+    private final BuildOutputInitializer<Object> buildOutputInitializer;
 
     TestAbstractCachingBuildRule(BuildRuleParams buildRuleParams) {
       super(buildRuleParams);
+      this.buildOutputInitializer =
+          new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
     }
 
     @Override
@@ -699,19 +690,8 @@ public class AbstractCachingBuildRuleTest extends EasyMockSupport {
     }
 
     @Override
-    public void setBuildOutput(Object buildOutput) {
-      if (this.buildOutput != null) {
-        throw new IllegalStateException("buildOutput is already set for " + this);
-      }
-      this.buildOutput = buildOutput;
-    }
-
-    @Override
-    public Object getBuildOutput() {
-      if (buildOutput == null) {
-        throw new IllegalStateException("buildOutput has not been set for " + this);
-      }
-      return buildOutput;
+    public BuildOutputInitializer<Object> getBuildOutputInitializer() {
+      return buildOutputInitializer;
     }
 
     public boolean isAbiLoadedFromDisk() {

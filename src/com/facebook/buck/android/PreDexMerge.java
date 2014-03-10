@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
@@ -89,6 +90,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<IntermediateDexRule> preDexDeps;
   private final UberRDotJava uberRDotJava;
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public PreDexMerge(
       BuildTarget buildTarget,
@@ -101,6 +103,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.preDexDeps = Preconditions.checkNotNull(preDexDeps);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -272,11 +275,11 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
 
   public Sha1HashCode getPrimaryDexHash() {
     Preconditions.checkState(dexSplitMode.isShouldSplitDex());
-    return getBuildOutput().primaryDexHash;
+    return buildOutputInitializer.getBuildOutput().primaryDexHash;
   }
 
   public ImmutableSet<Path> getSecondaryDexDirectories() {
-    return getBuildOutput().secondaryDexDirectories;
+    return buildOutputInitializer.getBuildOutput().secondaryDexDirectories;
   }
 
   static class BuildOutput {
@@ -289,9 +292,6 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
       this.secondaryDexDirectories = Preconditions.checkNotNull(secondaryDexDirectories);
     }
   }
-
-  @Nullable
-  private BuildOutput buildOutput;
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
@@ -309,17 +309,8 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
   }
 
   @Override
-  public void setBuildOutput(BuildOutput buildOutput) {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   public static Builder newPreDexMergeBuilder(AbstractBuildRuleBuilderParams params) {

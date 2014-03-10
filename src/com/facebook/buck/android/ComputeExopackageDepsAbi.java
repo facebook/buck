@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -67,8 +68,10 @@ public class ComputeExopackageDepsAbi
   private final AaptPackageResources aaptPackageResources;
   private final Optional<PreDexMerge> preDexMerge;
   private final Keystore keystore;
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ComputeExopackageDepsAbi(
+      BuildTarget buildTarget,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       UberRDotJava uberRDotJava,
       AaptPackageResources aaptPackageResources,
@@ -79,6 +82,7 @@ public class ComputeExopackageDepsAbi
     this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
     this.keystore = Preconditions.checkNotNull(keystore);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -172,7 +176,7 @@ public class ComputeExopackageDepsAbi
   }
 
   public Sha1HashCode getAndroidBinaryAbiHash() {
-    return getBuildOutput().abiHash;
+    return buildOutputInitializer.getBuildOutput().abiHash;
   }
 
   static class BuildOutput {
@@ -183,26 +187,14 @@ public class ComputeExopackageDepsAbi
     }
   }
 
-  @Nullable
-  private BuildOutput buildOutput;
-
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     return new BuildOutput(onDiskBuildInfo.getHash(METADATA_KEY).get());
   }
 
   @Override
-  public void setBuildOutput(BuildOutput buildOutput) {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   public static Builder newBuildableBuilder(
@@ -253,6 +245,7 @@ public class ComputeExopackageDepsAbi
     protected ComputeExopackageDepsAbi newBuildable(BuildRuleParams params,
         BuildRuleResolver resolver) {
       return new ComputeExopackageDepsAbi(
+          getBuildTarget(),
           androidResourceDepsFinder,
           uberRDotJava,
           aaptPackageResources,

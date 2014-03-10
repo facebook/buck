@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AbstractBuildable;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.Buildable;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
@@ -75,14 +76,14 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
 
   private final BuildTarget buildTarget;
   private final JavaLibraryRule javaLibrary;
-
-  @Nullable private BuildOutput buildOutput;
+  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   @VisibleForTesting
   DexProducedFromJavaLibraryThatContainsClassFiles(BuildTarget buildTarget,
       JavaLibraryRule javaLibrary) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.javaLibrary = Preconditions.checkNotNull(javaLibrary);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override
@@ -153,17 +154,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   }
 
   @Override
-  public void setBuildOutput(BuildOutput buildOutput) {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public BuildOutput getBuildOutput() {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   static class BuildOutput {
@@ -198,7 +190,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFiles extends AbstractBu
   }
 
   int getLinearAllocEstimate() {
-    return getBuildOutput().linearAllocEstimate;
+    return buildOutputInitializer.getBuildOutput().linearAllocEstimate;
   }
 
   /**

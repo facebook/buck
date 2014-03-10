@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -45,8 +46,6 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 public class ShBinaryRule extends DoNotUseAbstractBuildable
     implements BinaryBuildRule, InitializableFromDisk<Object> {
 
@@ -56,9 +55,7 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   /** The path where the output will be written. */
   private final Path output;
 
-  // Dummy value
-  @Nullable
-  private Object buildOutput;
+  private final BuildOutputInitializer<Object> buildOutputInitializer;
 
   protected ShBinaryRule(BuildRuleParams buildRuleParams,
       Path main,
@@ -73,6 +70,8 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
         target.getBasePath(),
         "__" + target.getShortName() + "__",
         target.getShortName() + ".sh");
+    this.buildOutputInitializer =
+        new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
   }
 
   @Override
@@ -139,18 +138,8 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public void setBuildOutput(Object buildOutput) throws IllegalStateException {
-    Preconditions.checkState(
-        this.buildOutput == null,
-        "buildOutput must not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public Object getBuildOutput() throws IllegalStateException {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<Object> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<ShBinaryRule>

@@ -24,38 +24,11 @@ package com.facebook.buck.rules;
  * returns {@code true}.
  * <p>
  * Objects that implement this interface should create getter methods that delegate to
- * {@link #getBuildOutput()} to access the in-memory data structures rather than have clients invoke
- * {@link #getBuildOutput()} directly. This ensures that all getters go through any protections
- * provided by {@link #getBuildOutput()}. (If this were an abstract class, {@link #getBuildOutput()}
- * would be protected.)
+ * {@link BuildOutputInitializer#getBuildOutput()} to access the in-memory data structures rather
+ * than have clients invoke {@link BuildOutputInitializer#getBuildOutput()} directly. This ensures
+ * that all getters go through any protections provided by
+ * {@link BuildOutputInitializer#getBuildOutput()}.
  * <p>
- * This implementation is heavy-handed to ensure that certain invariants are maintained when
- * creating, setting, and getting the build output. Specifically, implementations of this interface
- * should look like the following:
- * <pre>
- * &#64;Nullable
- * private T buildOutput;
- *
- * &#64;Override
- * public T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
- *   // ...add your magic here...
- *   return t;
- * }
- *
- * &#64;Override
- * public void setBuildOutput(T buildOutput) {
- *   Preconditions.checkState(this.buildOutput == null,
- *       "buildOutput should not already be set for %s.",
- *       this);
- *   this.buildOutput = buildOutput;
- * }
- *
- * &#64;Override
- * public T getBuildOutput() {
- *   Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
- *   return buildOutput;
- * }
- * </pre>
  */
 public interface InitializableFromDisk<T> {
 
@@ -66,17 +39,5 @@ public interface InitializableFromDisk<T> {
    */
   public T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo);
 
-  /**
-   * This should be invoked only by the build engine (currently, {@link AbstractCachingBuildRule})
-   * that invoked {@link #initializeFromDisk(OnDiskBuildInfo)}.
-   * <p>
-   * @throws IllegalStateException if this method has already been invoked.
-   */
-  public void setBuildOutput(T buildOutput) throws IllegalStateException;
-
-  /**
-   * @return the value passed to {@link #setBuildOutput(Object)}.
-   * @throws IllegalStateException if {@link #setBuildOutput(Object)} has not been invoked yet.
-   */
-  public T getBuildOutput() throws IllegalStateException;
+  public BuildOutputInitializer<T> getBuildOutputInitializer();
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -58,8 +59,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 public class PrebuiltJarRule extends DoNotUseAbstractBuildable
     implements JavaLibraryRule, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibraryRule.Data> {
@@ -75,8 +74,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
 
-  @Nullable
-  private JavaLibraryRule.Data buildOutput;
+  private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   PrebuiltJarRule(BuildRuleParams buildRuleParams,
       Path classesJar,
@@ -109,6 +107,9 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
             return classpathEntries.build();
           }
         });
+
+    buildOutputInitializer =
+        new BuildOutputInitializer<>(buildRuleParams.getBuildTarget(), this);
   }
 
   @Override
@@ -143,12 +144,12 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   @Override
   public Sha1HashCode getAbiKey() {
-    return getBuildOutput().getAbiKey();
+    return buildOutputInitializer.getBuildOutput().getAbiKey();
   }
 
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-    return getBuildOutput().getClassNamesToHashes();
+    return buildOutputInitializer.getBuildOutput().getClassNamesToHashes();
   }
 
   @Override
@@ -157,17 +158,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
   }
 
   @Override
-  public void setBuildOutput(JavaLibraryRule.Data buildOutput) {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s.",
-        this);
-    this.buildOutput = buildOutput;
-  }
-
-  @Override
-  public JavaLibraryRule.Data getBuildOutput() {
-    Preconditions.checkState(buildOutput != null, "buildOutput must already be set for %s.", this);
-    return buildOutput;
+  public BuildOutputInitializer<Data> getBuildOutputInitializer() {
+    return buildOutputInitializer;
   }
 
   @Override
