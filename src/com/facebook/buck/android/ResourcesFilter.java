@@ -42,6 +42,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
@@ -134,7 +135,14 @@ public class ResourcesFilter extends AbstractBuildable
 
   @Override
   public Collection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
+    // Since this buildable does not declare these resource rules as an explicit dependency (so that
+    // it doesn't have to wait for the resource rules to finish building), it needs to set the
+    // input sources this way.
+    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
+    for (HasAndroidResourceDeps deps : androidResourceDepsFinder.getAndroidResources()) {
+      builder.addAll(deps.getInputsToCompareToOutput());
+    }
+    return builder.build();
   }
 
   @Override
@@ -323,11 +331,6 @@ public class ResourcesFilter extends AbstractBuildable
 
     public Builder setAndroidResourceDepsFinder(AndroidResourceDepsFinder resourceDepsFinder) {
       this.androidResourceDepsFinder = resourceDepsFinder;
-      // Add the android_resource rules as deps.
-      for (HasAndroidResourceDeps dep : androidResourceDepsFinder.getAndroidResources()) {
-        addDep(dep.getBuildTarget());
-      }
-
       return this;
     }
 

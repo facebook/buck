@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 
 public class RobolectricTestRuleTest {
 
@@ -61,6 +62,11 @@ public class RobolectricTestRuleTest {
     @Override
     public Path getRes() {
       return resourceDirectory;
+    }
+
+    @Override
+    public Collection<Path> getInputsToCompareToOutput() {
+      return null;
     }
 
     @Override

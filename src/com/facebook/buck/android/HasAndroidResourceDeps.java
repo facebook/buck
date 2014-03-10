@@ -23,6 +23,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.nio.file.Path;
+import java.util.Collection;
 
 /**
  * Indicates that this class may have android resources that should be packaged into an APK.
@@ -65,6 +66,15 @@ public interface HasAndroidResourceDeps {
    * @return path to a directory containing Android resources.
    */
   Path getRes();
+
+  /**
+   * See {@link com.facebook.buck.rules.Buildable#getInputsToCompareToOutput()}
+   *
+   * This is used by buildables that need to be rebuilt if any of the inputs of the android
+   * resource rules that they depend on change. This allows the buildables to avoid waiting for
+   * this rule to finish.
+   */
+  Collection<Path> getInputsToCompareToOutput();
 
   /**
    * @return boolean indicating whether this resource rule has whitelisted strings.
