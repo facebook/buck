@@ -1,36 +1,3 @@
-R_DOT_JAVA_SRCS = [
-  'DummyRDotJava.java',
-  'DummyRDotJavaAbiRule.java',
-  'GenRDotJavaStep.java',
-  'HasAndroidResourceDeps.java',
-  'AndroidLibraryGraphEnhancer.java',
-  'MergeAndroidResourcesStep.java',
-  'UberRDotJavaUtil.java',
-]
-java_library(
-  name = 'r',
-  srcs = R_DOT_JAVA_SRCS,
-  deps = [
-    ':exceptions',
-    '//lib:guava',
-    '//lib:jsr305',
-    '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/java:steps',
-    '//src/com/facebook/buck/java:support',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/shell:steps',
-    '//src/com/facebook/buck/step:step',
-    '//src/com/facebook/buck/step/fs:fs',
-    '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:util',
-  ],
-  visibility = ['PUBLIC'],
-)
-
 EXCEPTION_SRCS = [
   'NoAndroidSdkException.java',
 ]
@@ -52,6 +19,7 @@ RULES_SRCS = [
   'AndroidInstrumentationApk.java',
   'AndroidInstrumentationApkRuleFactory.java',
   'AndroidLibraryBuildRuleFactory.java',
+  'AndroidLibraryGraphEnhancer.java',
   'AndroidLibraryRule.java',
   'AndroidManifest.java',
   'AndroidManifestDescription.java',
@@ -63,17 +31,22 @@ RULES_SRCS = [
   'AndroidTransitiveDependencyGraph.java',
   'ApkGenrule.java',
   'ApkGenruleBuildRuleFactory.java',
-  'PreDexedFilesSorter.java',
   'DexProducedFromJavaLibraryThatContainsClassFiles.java',
   'DexRDotJavaStep.java',
   'DexWithClasses.java',
+  'DummyRDotJava.java',
+  'DummyRDotJavaAbiRule.java',
   'GenAidl.java',
   'GenAidlDescription.java',
+  'GenRDotJavaStep.java',
   'HasAndroidPlatformTarget.java',
+  'HasAndroidResourceDeps.java',
   'IntermediateDexRule.java',
+  'MergeAndroidResourcesStep.java',
   'NativeLibraryBuildable.java',
   'NdkLibraryBuildRuleFactory.java',
   'NdkLibrary.java',
+  'PreDexedFilesSorter.java',
   'PreDexMerge.java',
   'PrebuiltNativeLibrary.java',
   'PrebuiltNativeLibraryBuildRuleFactory.java',
@@ -81,13 +54,13 @@ RULES_SRCS = [
   'RobolectricTestBuildRuleFactory.java',
   'RobolectricTestRule.java',
   'UberRDotJava.java',
+  'UberRDotJavaUtil.java',
 ]
 java_library(
   name = 'rules',
   srcs = RULES_SRCS,
   deps = [
     ':exceptions',
-    ':r',
     ':split_dex',
     ':steps',
     '//lib:guava',
@@ -143,7 +116,7 @@ java_library(
 
 java_library(
   name = 'steps',
-  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + R_DOT_JAVA_SRCS + RULES_SRCS + SPLIT_DEX_SRCS),
+  srcs = glob(['*.java'], excludes = EXCEPTION_SRCS + RULES_SRCS + SPLIT_DEX_SRCS),
   deps = [
     ':exceptions',
     ':split_dex',

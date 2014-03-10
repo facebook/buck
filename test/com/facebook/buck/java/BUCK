@@ -7,7 +7,6 @@ java_library(
   deps = [
     '//lib:guava',
     '//lib:jsr305',
-    '//src/com/facebook/buck/android:r',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/java:steps',
@@ -40,7 +39,6 @@ java_test(
     '//lib:hamcrest-library',
     '//lib:jsr305',
     '//lib:junit',
-    '//src/com/facebook/buck/android:r',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
