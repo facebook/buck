@@ -286,7 +286,7 @@ public class AndroidResourceRule extends DoNotUseAbstractBuildable
     // We hash the transitive dependencies and not just the first order deps because we pass these
     // to aapt to generate R.java/R.txt.
     // Transitive dependencies includes this rule itself; filter it out.
-    return HasAndroidResourceDeps.HASHER.apply(Iterables.filter(
+    return HasAndroidResourceDeps.ABI_HASHER.apply(Iterables.filter(
         transitiveAndroidResourceDeps.get(),
         Predicates.not(
             Predicates.equalTo((HasAndroidResourceDeps) AndroidResourceRule.this))));

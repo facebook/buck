@@ -250,7 +250,7 @@ public class AndroidResourceRuleTest {
         resourceRule3.getBuildSteps(EasyMock.createMock(BuildContext.class), buildableContext)
             .isEmpty());
 
-    Sha1HashCode expectedSha1 = HasAndroidResourceDeps.HASHER.apply(
+    Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
         ImmutableList.<HasAndroidResourceDeps>of(resourceRule1, resourceRule2));
     buildableContext.assertContainsMetadataMapping(
         AndroidResourceRule.METADATA_KEY_FOR_ABI,

@@ -29,7 +29,7 @@ import java.nio.file.Path;
  */
 public interface HasAndroidResourceDeps {
 
-  public static final Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode> HASHER =
+  public static final Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode> ABI_HASHER =
       new Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode>() {
         @Override
         public Sha1HashCode apply(Iterable<HasAndroidResourceDeps> deps) {

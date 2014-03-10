@@ -157,7 +157,7 @@ public class DummyRDotJava extends AbstractBuildable
 
   @Override
   public Sha1HashCode getAbiKeyForDeps() throws IOException {
-    return HasAndroidResourceDeps.HASHER.apply(androidResourceDeps);
+    return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDeps);
   }
 
   @Override
