@@ -150,13 +150,14 @@ public class DefaultJavaLibraryRuleTest {
         /* srcs */ ImmutableSet.<Path>of(),
         ImmutableSet.of(
             new FileSourcePath("android/java/src/com/facebook/base/data.json"),
-            new FileSourcePath("android/java/src/com/facebook/common/util/data.json")
+            new FileSourcePath("android/java/src/com/facebook/common/util/data.json"),
+            new FileSourcePath("matt.json")
         ),
         /* proguardConfig */ Optional.<Path>absent(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.DEFAULTS
-        );
+    );
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
@@ -169,7 +170,10 @@ public class DefaultJavaLibraryRuleTest {
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
             BIN_PATH.resolve(
-                "android/java/lib__resources__classes/com/facebook/common/util/data.json")));
+                "android/java/lib__resources__classes/com/facebook/common/util/data.json")),
+        new MkdirAndSymlinkFileStep(
+            Paths.get("matt.json"),
+            BIN_PATH.resolve("android/java/lib__resources__classes/matt.json")));
     MoreAsserts.assertListEquals(expected, commands.build());
   }
 
