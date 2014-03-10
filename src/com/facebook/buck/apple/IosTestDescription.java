@@ -20,10 +20,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class IosTestDescription implements Description<IosTestDescription.Arg> {
-  public static BuildRuleType TYPE = new BuildRuleType("ios_test");
+  public static final BuildRuleType TYPE = new BuildRuleType("ios_test");
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -49,7 +49,7 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
     return new IosTest(args);
   }
 
-  public class Arg {
+  public class Arg implements ConstructorArg {
     /**
      * @see com.facebook.buck.apple.XcodeRuleConfiguration#fromRawJsonStructure
      */
@@ -57,10 +57,10 @@ public class IosTestDescription implements Description<IosTestDescription.Arg> {
         String,
         ImmutableList<Either<Path, ImmutableMap<String, String>>>> configs;
     public Path infoPlist;
-    public ImmutableList<Either<SourcePath, Pair<SourcePath, String>>> srcs;
-    public ImmutableSortedSet<SourcePath> headers;
-    public ImmutableSortedSet<SourcePath> resources;
+    public ImmutableList<AppleSource> srcs;
+    public ImmutableList<AppleSource> headers;
     public ImmutableSortedSet<String> frameworks;
+    public ImmutableSortedSet<BuildRule> sourceUnderTest;
     public Optional<ImmutableSortedSet<BuildRule>> deps;
   }
 }

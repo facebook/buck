@@ -38,6 +38,6 @@ public class ExportFileIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:file");
 
-    result.assertExitCode(0);
+    result.assertSuccess();
   }
 }

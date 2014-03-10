@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +54,8 @@ import java.util.Set;
  * where:
  * <ul>
  *   <li>androidResourceId is the integer value, assigned by aapt, extracted from R.txt
- *   <li>stringsXmlPath is the path to the first strings.xml file where this string resource was found.
+ *   <li>stringsXmlPath is the path to the first strings.xml file where this string resource was
+ *   found.
  * </ul>
  * <p/>
  * Example:
@@ -77,7 +77,7 @@ import java.util.Set;
 public class GenStringSourceMapStep extends AbstractExecutionStep {
 
   private final Path rDotJavaSrcDir;
-  private final Set<String> resDirectories;
+  private final Set<Path> resDirectories;
   private final Path destinationPath;
 
   private HashMap<String, Integer> mapResNameToResId = Maps.newHashMap();
@@ -93,7 +93,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
    */
   public GenStringSourceMapStep(
       Path rDotJavaSrcDir,
-      Set<String> resDirectories,
+      Set<Path> resDirectories,
       Path destinationPath) {
     super("build_string_source_map");
     this.rDotJavaSrcDir = Preconditions.checkNotNull(rDotJavaSrcDir);
@@ -129,7 +129,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       ProjectFilesystem filesystem = context.getProjectFilesystem();
       mapper.writeValue(filesystem.getFileForRelativePath(outputPath), nativeStrings);
     } catch (IOException ex) {
-      context.logError(ex, "Failed when trying to save the output file: '%s'", outputPath.toString());
+      context.logError(
+          ex, "Failed when trying to save the output file: '%s'", outputPath.toString());
       return 1;
     }
 
@@ -139,10 +140,10 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   private Map<String, NativeStringInfo> parseStringFiles(ExecutionContext context) {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
 
-    HashMap<String, NativeStringInfo> nativeStrings = new HashMap<String, NativeStringInfo>();
+    Map<String, NativeStringInfo> nativeStrings = Maps.newHashMap();
 
-    for (String resDir : resDirectories) {
-      Path stringsPath = Paths.get(resDir, "values", "strings.xml");
+    for (Path resDir : resDirectories) {
+      Path stringsPath = resDir.resolve("values").resolve("strings.xml");
       File stringsFile = filesystem.getFileForRelativePath(stringsPath);
       if (stringsFile.exists()) {
         try {
@@ -180,7 +181,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   void scrapeNodes(
       NodeList nodes,
       String stringsFilePath,
-      HashMap<String, NativeStringInfo> nativeStrings) {
+      Map<String, NativeStringInfo> nativeStrings) {
     for (int i = 0; i < nodes.getLength(); ++i) {
       Node node = nodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
@@ -207,14 +208,17 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // resource originated from
 
     public NativeStringInfo(Integer androidResourceId, String stringsXmlPath) {
-      this.androidResourceId = String.format("0x%08X", Preconditions.checkNotNull(androidResourceId));
+      this.androidResourceId =
+          String.format("0x%08X", Preconditions.checkNotNull(androidResourceId));
       this.stringsXmlPath = Preconditions.checkNotNull(stringsXmlPath);
     }
 
+    @SuppressWarnings("unused") // Used via reflection for JSON serialization.
     public String getAndroidResourceId() {
       return androidResourceId;
     }
 
+    @SuppressWarnings("unused") // Used via reflection for JSON serialization.
     public String getStringsXmlPath() {
       return stringsXmlPath;
     }

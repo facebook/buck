@@ -19,5 +19,5 @@ import com.google.common.collect.ImmutableSet;
 
 public interface LabelsAttributeBuilder {
 
-  public AbstractBuildRuleBuilder<?> setLabels(ImmutableSet<String> labels);
+  public AbstractBuildRuleBuilder<?> setLabels(ImmutableSet<Label> labels);
 }

@@ -36,7 +36,7 @@ public class MorePaths {
   /** Utility class: do not instantiate. */
   private MorePaths() {}
 
-  public static Function<String, Path> TO_PATH = new Function<String, Path>() {
+  public static final Function<String, Path> TO_PATH = new Function<String, Path>() {
     @Override
     public Path apply(String path) {
       return Paths.get(path);

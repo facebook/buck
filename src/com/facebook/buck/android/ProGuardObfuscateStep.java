@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.CompositeStep;
@@ -28,6 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,9 +58,11 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Path generatedProGuardConfig,
       Set<Path> customProguardConfigs,
       boolean useProguardOptimizations,
+      Optional<Integer> optimizationPasses,
       Map<Path, Path> inputAndOutputEntries,
       Set<String> additionalLibraryJarsForProguard,
-      Path proguardDirectory) {
+      Path proguardDirectory,
+      BuildableContext buildableContext) {
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 
@@ -66,6 +70,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         generatedProGuardConfig,
         customProguardConfigs,
         useProguardOptimizations,
+        optimizationPasses,
         inputAndOutputEntries,
         additionalLibraryJarsForProguard,
         proguardDirectory,
@@ -73,6 +78,11 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
         inputAndOutputEntries, pathToProGuardCommandLineArgsFile);
+
+
+    buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
+    buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
+
 
     return new CompositeStep(ImmutableList.of(commandLineHelperStep, proGuardStep));
   }
@@ -184,6 +194,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     private final Map<Path, Path> inputAndOutputEntries;
     private final Set<String> additionalLibraryJarsForProguard;
     private final boolean useAndroidProguardConfigWithOptimizations;
+    private final Optional<Integer> optimizationPasses;
     private final Path proguardDirectory;
     private final Path pathToProGuardCommandLineArgsFile;
 
@@ -202,6 +213,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         Path generatedProGuardConfig,
         Set<Path> customProguardConfigs,
         boolean useProguardOptimizations,
+        Optional<Integer> optimizationPasses,
         Map<Path, Path> inputAndOutputEntries,
         Set<String> additionalLibraryJarsForProguard,
         Path proguardDirectory,
@@ -210,6 +222,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       this.generatedProGuardConfig = Preconditions.checkNotNull(generatedProGuardConfig);
       this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
       this.useAndroidProguardConfigWithOptimizations = useProguardOptimizations;
+      this.optimizationPasses = Preconditions.checkNotNull(optimizationPasses);
       this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
       this.additionalLibraryJarsForProguard = ImmutableSet.copyOf(additionalLibraryJarsForProguard);
       this.proguardDirectory = Preconditions.checkNotNull(proguardDirectory);
@@ -248,6 +261,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
       if (useAndroidProguardConfigWithOptimizations) {
         args.add("-include")
             .add(androidPlatformTarget.getOptimizedProguardConfig().getAbsolutePath());
+        if (optimizationPasses.isPresent()) {
+          args.add("-optimizationpasses").add(optimizationPasses.get().toString());
+        }
       } else {
         args.add("-include").add(androidPlatformTarget.getProguardConfig().getAbsolutePath());
       }
@@ -271,13 +287,18 @@ public final class ProGuardObfuscateStep extends ShellStep {
       args.add("-libraryjars").add(pathJoiner.join(libraryJars));
 
       // -dump
-      args.add("-dump").add(proguardDirectory + "/dump.txt");
-      args.add("-printseeds").add(proguardDirectory + "/seeds.txt");
-      args.add("-printusage").add(proguardDirectory + "/usage.txt");
-      args.add("-printmapping").add(proguardDirectory + "/mapping.txt");
-      args.add("-printconfiguration").add(proguardDirectory + "/configuration.txt");
+      args.add("-printmapping").add(getMappingTxt().toString());
+      args.add("-printconfiguration").add(getConfigurationTxt().toString());
 
       return args.build();
+    }
+
+    public Path getConfigurationTxt() {
+      return proguardDirectory.resolve("configuration.txt");
+    }
+
+    public Path getMappingTxt() {
+      return proguardDirectory.resolve("mapping.txt");
     }
 
     @Override

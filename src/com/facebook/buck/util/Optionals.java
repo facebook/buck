@@ -21,6 +21,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 
 public class Optionals {
+
+  /** Utility class: do not instantiate. */
+  private Optionals() {}
+
   public static <T> void addIfPresent(Optional<T> optional,
                                       ImmutableCollection.Builder<T> collection) {
     if (optional.isPresent()) {

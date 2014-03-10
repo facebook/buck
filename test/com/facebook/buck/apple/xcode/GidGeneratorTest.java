@@ -25,7 +25,7 @@ public class GidGeneratorTest {
   @Test
   public void testTrivialGidGeneration() {
     GidGenerator generator = new GidGenerator(0);
-    String gid = generator.genGID();
+    String gid = generator.genGid();
     assertFalse("GID should be non-empty", gid.isEmpty());
     assertTrue("GID should be hexadecimal", gid.matches("^[0-9A-F]+$"));
     assertTrue("GID should be 96 bits (24 hex digits)", gid.length() <= 24);

@@ -17,6 +17,7 @@
 package com.facebook.buck.javacc;
 
 import org.junit.Test;
+
 import java.io.StringReader;
 
 // This class depends on javacc-generated source code.

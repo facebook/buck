@@ -42,10 +42,12 @@ public class SourceTreePath {
     return path;
   }
 
+  @Override
   public int hashCode() {
     return Objects.hash(sourceTree, path);
   }
 
+  @Override
   public boolean equals(Object other) {
     if (other == null || !(other instanceof SourceTreePath)) {
       return false;
@@ -54,9 +56,5 @@ public class SourceTreePath {
     SourceTreePath that = (SourceTreePath) other;
     return Objects.equals(this.sourceTree, that.sourceTree)
         || Objects.equals(this.path, that.path);
-  }
-
-  public static SourceTreePath absolute(Path path) {
-    return new SourceTreePath(PBXReference.SourceTree.ABSOLUTE, path.toAbsolutePath());
   }
 }

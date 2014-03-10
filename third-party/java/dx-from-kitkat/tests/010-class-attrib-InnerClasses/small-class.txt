@@ -1,0 +1,37 @@
+#
+# sample small-but-valid classfile
+#
+
+cafe babe  # magic
+0000       # minor_version
+002e       # major_version
+0008       # constant_pool_count
+
+#
+# constant_pool
+#
+01 0005 "Small"            # 0001: utf8["Small"]
+01 0010 "java/lang/Object" # 0002: utf8["java/lang/Object"]
+07 0001                    # 0003: class[Small]
+07 0002                    # 0004: class[java/lang/Object]
+01 000c "InnerClasses"     # 0005: utf8["InnerClasses"]
+01 0005 "Zorch"            # 0006: utf8["Zorch"]
+07 0006                    # 0007: class[Zorch]
+
+0021  # access_flags
+0003  # this_class
+0004  # super_class
+0000  # interfaces_count
+0000  # fields_count
+0000  # methods_count
+
+0001  # attributes_count
+
+# attribute[0]
+0005      # name
+00000022  # length
+0004      # number_of_classes
+0003 0000 0000 0001  # Small / null / null / public
+0003 0000 0001 0002  # Small / null / "Small" / private
+0003 0007 0000 0004  # Small / Zorch / null / protected
+0007 0003 0006 ffff  # Zorch / Small / "Zorch" / all-bits

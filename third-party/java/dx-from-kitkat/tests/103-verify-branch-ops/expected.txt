@@ -1,0 +1,36 @@
+Generated: ./op_if_acmpeq.class
+if_acmpeq: expected failure occurred
+Generated: ./op_if_acmpne.class
+if_acmpne: expected failure occurred
+Generated: ./op_if_icmpeq.class
+if_icmpeq: expected failure occurred
+Generated: ./op_if_icmpge.class
+if_icmpge: expected failure occurred
+Generated: ./op_if_icmpgt.class
+if_icmpgt: expected failure occurred
+Generated: ./op_if_icmple.class
+if_icmple: expected failure occurred
+Generated: ./op_if_icmplt.class
+if_icmplt: expected failure occurred
+Generated: ./op_if_icmpne.class
+if_icmpne: expected failure occurred
+Generated: ./op_ifeq.class
+ifeq: expected failure occurred
+Generated: ./op_ifge.class
+ifge: expected failure occurred
+Generated: ./op_ifgt.class
+ifgt: expected failure occurred
+Generated: ./op_ifle.class
+ifle: expected failure occurred
+Generated: ./op_iflt.class
+iflt: expected failure occurred
+Generated: ./op_ifne.class
+ifne: expected failure occurred
+Generated: ./op_ifnonnull.class
+ifnonnull: expected failure occurred
+Generated: ./op_ifnull.class
+ifnull: expected failure occurred
+Generated: ./op_lookupswitch.class
+lookupswitch: expected failure occurred
+Generated: ./op_tableswitch.class
+tableswitch: expected failure occurred

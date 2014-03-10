@@ -1,0 +1,103 @@
+/*
+ * Copyright 2012-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.apple.xcode;
+
+import com.facebook.buck.apple.XcodeProjectConfig;
+import com.facebook.buck.apple.XcodeProjectConfigDescription;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+
+import javax.annotation.Nullable;
+
+/**
+ * Generate separate xcode projects based on the given xcode_project_config rules
+ */
+public class SeparatedProjectsGenerator {
+  private final ProjectFilesystem projectFilesystem;
+  private final PartialGraph partialGraph;
+  private final ExecutionContext executionContext;
+  private final ImmutableSet<BuildTarget> projectConfigTargets;
+
+  /**
+   * Project generators used to generate the projects, useful for testing to retrieve pre-serialized
+   * structures.
+   */
+  private ImmutableMap<BuildTarget, ProjectGenerator> projectGenerators;
+
+  public SeparatedProjectsGenerator(
+      ProjectFilesystem projectFilesystem,
+      PartialGraph partialGraph,
+      ExecutionContext executionContext,
+      ImmutableSet<BuildTarget> projectConfigTargets) {
+    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.partialGraph = Preconditions.checkNotNull(partialGraph);
+    this.executionContext = Preconditions.checkNotNull(executionContext);
+    this.projectConfigTargets = Preconditions.checkNotNull(projectConfigTargets);
+    this.projectGenerators = null;
+
+    for (BuildTarget target : projectConfigTargets) {
+      BuildRule rule = partialGraph.getDependencyGraph().findBuildRuleByTarget(target);
+      if (!rule.getType().equals(XcodeProjectConfigDescription.TYPE)) {
+        throw new HumanReadableException(
+            "expected only xcode_project_config rules, got: " + target.toString());
+      }
+    }
+  }
+
+  public void generateProjects() throws IOException {
+    ImmutableMap.Builder<BuildTarget, ProjectGenerator> projectGeneratorsBuilder =
+        ImmutableMap.builder();
+    for (BuildTarget target : projectConfigTargets) {
+      BuildRule rule = partialGraph.getDependencyGraph().findBuildRuleByTarget(target);
+      XcodeProjectConfig buildable =
+          (XcodeProjectConfig) Preconditions.checkNotNull(rule.getBuildable());
+
+      ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
+      for (BuildRule memberRule : buildable.getRules()) {
+        initialTargetsBuilder.add(memberRule.getBuildTarget());
+      }
+      ProjectGenerator generator = new ProjectGenerator(
+          partialGraph,
+          initialTargetsBuilder.build(),
+          projectFilesystem,
+          executionContext,
+          Paths.get(target.getBasePath()),
+          buildable.getProjectName(),
+          ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
+      generator.createXcodeProjects();
+      projectGeneratorsBuilder.put(target, generator);
+    }
+    projectGenerators = projectGeneratorsBuilder.build();
+  }
+
+  @VisibleForTesting
+  @Nullable
+  ImmutableMap<BuildTarget, ProjectGenerator> getProjectGenerators() {
+    return projectGenerators;
+  }
+}

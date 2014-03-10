@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  * the components separately.
  */
 public class AnnotationProcessingParams implements AnnotationProcessingData {
-  public final static AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
+  public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       null,
       ImmutableSet.<Path>of(),
       ImmutableSet.<String>of(),

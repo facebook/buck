@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Buildable;
+import com.facebook.buck.rules.ConstructorArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.google.common.base.Optional;
@@ -30,7 +31,7 @@ import java.nio.file.Path;
 
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
-  public static BuildRuleType TYPE = new BuildRuleType("gen_aidl");
+  public static final BuildRuleType TYPE = new BuildRuleType("gen_aidl");
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -54,7 +55,7 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
     return new GenAidl(params.getBuildTarget(), args.aidl, args.importPath);
   }
 
-  public static class Arg {
+  public static class Arg implements ConstructorArg {
     public Path aidl;
     @Hint(name = "import_path")
     public String importPath;

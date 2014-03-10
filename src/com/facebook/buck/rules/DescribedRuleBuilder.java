@@ -31,7 +31,8 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 
-public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> {
+public class DescribedRuleBuilder<T extends ConstructorArg>
+    implements BuildRuleBuilder<DescribedRule> {
 
   private final Description<T> description;
   private final BuildTarget target;
@@ -99,7 +100,8 @@ public class DescribedRuleBuilder<T> implements BuildRuleBuilder<DescribedRule> 
         ruleFactoryParams.getPathRelativizer(),
         ruleFactoryParams.getRuleKeyBuilderFactory());
 
-    ConstructorArgMarshaller inspector = new ConstructorArgMarshaller(Paths.get(target.getBasePath()));
+    ConstructorArgMarshaller inspector =
+        new ConstructorArgMarshaller(Paths.get(target.getBasePath()));
     T arg = description.createUnpopulatedConstructorArg();
     inspector.populate(ruleResolver, ruleFactoryParams, arg);
 

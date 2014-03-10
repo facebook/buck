@@ -1,0 +1,46 @@
+reading small-class.txt...
+begin classfile
+magic: cafebabe
+minor_version: 0000
+major_version: 002e
+constant_pool_count: 0008
+
+constant_pool:
+  0001: utf8{"Small"}
+  0002: utf8{"java/lang/Object"}
+  0003: type{Small}
+  0004: type{java.lang.Object}
+  0005: utf8{"InnerClasses"}
+  0006: utf8{"Zorch"}
+  0007: type{Zorch}
+end constant_pool
+access_flags: public|super
+this_class: type{Small}
+super_class: type{java.lang.Object}
+interfaces_count: 0000
+fields_count: 0000
+methods_count: 0000
+attributes_count: 0001
+
+attributes[0]:
+  name: InnerClasses
+  length: 00000022
+  number_of_classes: 0004
+  inner_class: type{Small}
+    outer_class: (none)
+    name: (none)
+    access_flags: public
+  inner_class: type{Small}
+    outer_class: (none)
+    name: string{"Small"}
+    access_flags: private
+  inner_class: type{Small}
+    outer_class: type{Zorch}
+    name: (none)
+    access_flags: protected
+  inner_class: type{Zorch}
+    outer_class: type{Small}
+    name: string{"Zorch"}
+    access_flags: public|private|protected|static|final|interface|abstract|synthetic|annotation|enum|89e0
+end attributes[0]
+end classfile

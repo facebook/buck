@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.xcode.ProjectGenerator;
+import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -29,11 +30,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -164,28 +167,44 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
 
+    // Load all the project files
     PartialGraph partialGraph;
-    ImmutableList<BuildTarget> targets;
+    ImmutableSet<BuildTarget> targets;
     try {
-      // IOS creates a full graph all the time in order to find tests of targets (which depends
-      // on, but is not depended on, by the libraries).
       partialGraph = PartialGraph.createFullGraph(getProjectFilesystem(),
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-      targets = getBuildTargets(argumentsAsBuildTargets);
+      targets = ImmutableSet.copyOf(getBuildTargets(argumentsAsBuildTargets));
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
 
-    ProjectGenerator projectGenerator = new ProjectGenerator(
-        partialGraph,
-        targets,
-        getProjectFilesystem(),
-        getProjectFilesystem().getFileForRelativePath("_gen").toPath(),
-        "GeneratedProject");
+    ExecutionContext executionContext = createExecutionContext(options,
+        partialGraph.getDependencyGraph());
 
-    projectGenerator.createXcodeProjects();
+    if (options.getCombinedProject() != null) {
+      // Generate a single project containing a target and all its dependencies and tests.
+      ProjectGenerator projectGenerator = new ProjectGenerator(
+          partialGraph,
+          targets,
+          getProjectFilesystem(),
+          executionContext,
+          getProjectFilesystem().getPathForRelativePath(Paths.get("_gen")),
+          "GeneratedProject",
+          ProjectGenerator.COMBINED_PROJECT_OPTIONS);
+      projectGenerator.createXcodeProjects();
+    } else {
+      // Generate projects based on xcode_project_config rules, and place them in the same directory
+      // as the Buck file.
+      SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
+          getProjectFilesystem(),
+          partialGraph,
+          executionContext,
+          targets);
+      projectGenerator.generateProjects();
+    }
+
     return 0;
   }
 

@@ -50,6 +50,10 @@ if command -v watchman &> /dev/null; then
     echo "Using watchman."
     BUCK_JAVA_ARGS="$BUCK_JAVA_ARGS -Dbuck.buckd_watcher=Watchman"
     watchman watch $PROJECT_ROOT &> /dev/null
+else
+    echo "Watchman not found, please install when using buckd."
+    echo "See https://github.com/facebook/watchman for details."
+    echo "(brew install --HEAD watchman on OS X)"
 fi
 
 killBuckdIfRunning

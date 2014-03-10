@@ -44,8 +44,7 @@ public interface AndroidDirectoryResolver {
   Optional<Path> findAndroidNdkDir();
 
   /**
-   * @param ndkPath The path to the NDK Directory
-   * @return The NDK version in that directory.
+   * @return The NDK version in use from the directory returned by {@link #findAndroidNdkDir()}.
    */
-  String getNdkVersion(Path ndkPath);
+  Optional<String> getNdkVersion();
 }

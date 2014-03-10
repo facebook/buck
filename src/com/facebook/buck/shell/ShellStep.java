@@ -123,15 +123,15 @@ public abstract class ShellStep implements Step {
         /* shouldPrintStdOut */ false,
         /* shouldPrintStdErr */ false,
         context.getVerbosity() == Verbosity.SILENT);
-    this.stdout = result.getStdout();
-    this.stderr = result.getStderr();
+    stdout = result.getStdout();
+    stderr = result.getStderr();
 
     Verbosity verbosity = context.getVerbosity();
-    if (!result.getStderr().isEmpty() && shouldPrintStderr(verbosity)) {
-      context.postEvent(LogEvent.severe(result.getStderr()));
+    if (!stderr.isEmpty() && shouldPrintStderr(verbosity)) {
+      context.postEvent(LogEvent.severe("%s", stderr));
     }
-    if (!result.getStdout().isEmpty() && shouldPrintStdout(verbosity)) {
-      context.postEvent(LogEvent.info(result.getStdout()));
+    if (!stdout.isEmpty() && shouldPrintStdout(verbosity)) {
+      context.postEvent(LogEvent.info("%s", stdout));
     }
 
     return result.getExitCode();

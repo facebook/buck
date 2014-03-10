@@ -1,0 +1,6 @@
+This is a smoke test of dex conversion, which checks to make sure that
+code arrays are 4-byte aligned within a dex file.
+
+This test compares emitted code against a known-good (via eyeballing)
+version, so it is possible for this test to spuriously fail if other
+aspects of conversion end up altering the output in innocuous ways.

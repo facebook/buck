@@ -17,9 +17,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaTestBuildRuleFactory;
 import com.facebook.buck.java.JavaTestRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 
 
 public class RobolectricTestBuildRuleFactory extends JavaTestBuildRuleFactory {

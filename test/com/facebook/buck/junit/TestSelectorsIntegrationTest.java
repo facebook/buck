@@ -49,7 +49,7 @@ public class TestSelectorsIntegrationTest {
   @Test
   public void shouldFailWithoutAnySelectors() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all");
-    result.assertExitCode("Some tests fail", 1);
+    result.assertTestFailure("Some tests fail");
     assertThat(result.getStderr(), containsString("TESTS FAILED: 1 Failures"));
   }
 
@@ -57,7 +57,7 @@ public class TestSelectorsIntegrationTest {
   public void shouldRunASingleTest() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test", "--all", "--filter", "com.example.clown.FlowerTest");
-    result.assertExitCode("The test passed", 0);
+    result.assertSuccess("The test passed");
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
   }
 
@@ -66,7 +66,7 @@ public class TestSelectorsIntegrationTest {
     String testSelector = "!com.example.clown.PrimeMinisterialDecreeTest";
     String[] command1 = {"test", "--all", "--test-selectors", testSelector};
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command1);
-    result.assertExitCode("All tests pass", 0);
+    result.assertSuccess("All tests pass");
     assertTestsPassed(result);
     assertThatATestRan(result, "com.example.clown.CarTest");
     assertNotCached(result);
@@ -76,7 +76,7 @@ public class TestSelectorsIntegrationTest {
   public void shouldPassWhenUnselectingTheFailingMethod() throws IOException {
     String[] command = {"test", "--all", "--test-selectors", "!#formAllianceWithClowns"};
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command);
-    result.assertExitCode("All tests pass", 0);
+    result.assertSuccess("All tests pass");
     assertTestsPassed(result);
     assertThatATestRan(result, "com.example.clown.CarTest");
     assertNotCached(result);
@@ -123,7 +123,7 @@ public class TestSelectorsIntegrationTest {
     String arg = String.format("@%s", testSelectorsFile.getAbsolutePath());
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test", "--all", "--filter", arg);
-    result.assertExitCode(0);
+    result.assertSuccess();
   }
 
   private void assertOutputWithSelectors(ProjectWorkspace.ProcessResult result) {

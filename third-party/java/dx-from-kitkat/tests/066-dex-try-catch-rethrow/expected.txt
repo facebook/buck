@@ -1,0 +1,95 @@
+Blort.test1:()V:
+regs: 0005; ins: 0000; outs: 0002
+  0000: const-string v1, "x"
+  0002: invoke-static {v1}, Blort.zorch1:(Ljava/lang/String;)Ljava/lang/Object;
+  0005: move-result-object v1
+  0006: return-void
+  0007: move-exception v1
+  0008: move-object v0, v1
+  0009: new-instance v1, java.lang.RuntimeException
+  000b: move-object v4, v1
+  000c: move-object v1, v4
+  000d: move-object v2, v4
+  000e: move-object v3, v0
+  000f: invoke-direct {v2, v3}, java.lang.RuntimeException.<init>:(Ljava/lang/Throwable;)V
+  0012: throw v1
+  catches
+    tries:
+      try 0000..0005
+      catch java.lang.Exception -> 0007
+Blort.test2:()V:
+regs: 0005; ins: 0000; outs: 0002
+  0000: const-string v1, "x"
+  0002: invoke-static {v1}, Blort.zorch2:(Ljava/lang/String;)V
+  0005: return-void
+  0006: move-exception v1
+  0007: move-object v0, v1
+  0008: new-instance v1, java.lang.RuntimeException
+  000a: move-object v4, v1
+  000b: move-object v1, v4
+  000c: move-object v2, v4
+  000d: move-object v3, v0
+  000e: invoke-direct {v2, v3}, java.lang.RuntimeException.<init>:(Ljava/lang/Throwable;)V
+  0011: throw v1
+  catches
+    tries:
+      try 0000..0005
+      catch java.lang.Exception -> 0006
+Blort.test3:()V:
+regs: 0005; ins: 0000; outs: 0002
+  0000: const-string v1, "x"
+  0002: invoke-static {v1}, Blort.zorch3:(Ljava/lang/String;)I
+  0005: move-result v1
+  0006: return-void
+  0007: move-exception v1
+  0008: move-object v0, v1
+  0009: new-instance v1, java.lang.RuntimeException
+  000b: move-object v4, v1
+  000c: move-object v1, v4
+  000d: move-object v2, v4
+  000e: move-object v3, v0
+  000f: invoke-direct {v2, v3}, java.lang.RuntimeException.<init>:(Ljava/lang/Throwable;)V
+  0012: throw v1
+  catches
+    tries:
+      try 0000..0005
+      catch java.lang.Exception -> 0007
+Blort.test4:()V:
+regs: 0005; ins: 0000; outs: 0002
+  0000: const/4 v1, #int 1 // #1
+  0001: invoke-static {v1}, Blort.zorch4:(I)Ljava/lang/Object;
+  0004: move-result-object v1
+  0005: return-void
+  0006: move-exception v1
+  0007: move-object v0, v1
+  0008: new-instance v1, java.lang.RuntimeException
+  000a: move-object v4, v1
+  000b: move-object v1, v4
+  000c: move-object v2, v4
+  000d: move-object v3, v0
+  000e: invoke-direct {v2, v3}, java.lang.RuntimeException.<init>:(Ljava/lang/Throwable;)V
+  0011: throw v1
+  catches
+    tries:
+      try 0001..0004
+      catch java.lang.Exception -> 0006
+Blort.test5:()Ljava/lang/Object;:
+regs: 0005; ins: 0000; outs: 0002
+  0000: const/4 v1, #int 1 // #1
+  0001: invoke-static {v1}, Blort.zorch5:(I)Ljava/lang/Object;
+  0004: move-result-object v1
+  0005: move-object v0, v1
+  0006: return-object v0
+  0007: move-exception v1
+  0008: move-object v0, v1
+  0009: new-instance v1, java.lang.RuntimeException
+  000b: move-object v4, v1
+  000c: move-object v1, v4
+  000d: move-object v2, v4
+  000e: move-object v3, v0
+  000f: invoke-direct {v2, v3}, java.lang.RuntimeException.<init>:(Ljava/lang/Throwable;)V
+  0012: throw v1
+  catches
+    tries:
+      try 0001..0004
+      catch java.lang.Exception -> 0007

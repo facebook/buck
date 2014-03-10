@@ -1,6 +1,11 @@
 java_library(
   name = 'project_generator',
-  srcs = ['ProjectGenerator.java'],
+  srcs = [
+    'ProjectGenerator.java',
+    'SeparatedProjectsGenerator.java',
+    'RuleDependencyFinder.java',
+    'SchemeGenerator.java',
+  ],
   deps = [
     ':xcode',
     '//lib:guava',
@@ -8,13 +13,18 @@ java_library(
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/xcode/plist:plist',
     '//src/com/facebook/buck/apple/xcode/xcconfig:xcconfig',
+    '//src/com/facebook/buck/codegen:codegen',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/shell:rules',
+    '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
     '//third-party/java/dd-plist:dd-plist',
   ],
   visibility = [

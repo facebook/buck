@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
@@ -279,6 +280,74 @@ public class TypeCoercerTest {
             sameInstance(input.get(1)))));
   }
 
+  @Test
+  public void coercingAppleSourcePaths() throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfAppleSources").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    ImmutableList<String> input = ImmutableList.of("foo.m", "bar.m");
+    Object result = coercer.coerce(buildRuleResolver, Paths.get(""), input);
+    ImmutableList<AppleSource> expectedResult = ImmutableList.of(
+        AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
+        AppleSource.ofSourcePath(new FileSourcePath("bar.m")));
+    assertEquals(expectedResult, result);
+  }
+
+  @Test
+  public void coercingAppleSourcePathsWithFlags()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfAppleSources").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    ImmutableList<?> input = ImmutableList.of(
+        ImmutableList.of("foo.m", "-Wall"),
+        ImmutableList.of("bar.m", "-fobjc-arc"));
+    Object result = coercer.coerce(buildRuleResolver, Paths.get(""), input);
+    ImmutableList<AppleSource> expectedResult = ImmutableList.of(
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new FileSourcePath("foo.m"), "-Wall")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-fobjc-arc")));
+    assertEquals(expectedResult, result);
+  }
+
+  @Test
+  public void coercingHeterogeneousAppleSourceGroups()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfAppleSources").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    ImmutableList<?> input = ImmutableList.of(
+        ImmutableList.of(
+            "Group1",
+            ImmutableList.of(
+                "foo.m",
+                ImmutableList.of("bar.m", "-Wall"))),
+        ImmutableList.of(
+            "Group2",
+            ImmutableList.of(
+                "baz.m",
+                ImmutableList.of("blech.m", "-fobjc-arc"))));
+    Object result = coercer.coerce(buildRuleResolver, Paths.get(""), input);
+    ImmutableList<AppleSource> expectedResult = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group1",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-Wall"))))),
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("baz.m")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("blech.m"), "-fobjc-arc"))))
+        ));
+    assertEquals(expectedResult, result);
+  }
+
   @SuppressWarnings("unused")
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
@@ -294,5 +363,6 @@ public class TypeCoercerTest {
     public String primitiveString;
     public Either<String, List<String>> eitherStringOrStringList;
     public Pair<Path, String> pairOfPathsAndStrings;
+    public ImmutableList<AppleSource> listOfAppleSources;
   }
 }

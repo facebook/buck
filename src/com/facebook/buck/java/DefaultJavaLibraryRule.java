@@ -19,8 +19,6 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.android.DummyRDotJava;
-import com.facebook.buck.android.JavaLibraryGraphEnhancer;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
@@ -71,7 +69,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -113,37 +110,24 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     implements JavaLibraryRule, AbiRule, HasJavaSrcs, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibraryRule.Data> {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private final ImmutableSortedSet<Path> srcs;
-
   private final ImmutableSortedSet<SourcePath> resources;
-
-  protected final Optional<DummyRDotJava> optionalDummyRDotJava;
-
   private final Optional<Path> outputJar;
-
   private final Optional<Path> proguardConfig;
-
-
   private final ImmutableSortedSet<BuildRule> exportedDeps;
-
-  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>> outputClasspathEntriesSupplier;
-
+  protected final ImmutableSet<String> additionalClasspathEntries;
+  private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
+      outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       transitiveClasspathEntriesSupplier;
-
   private final Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>
       declaredClasspathEntriesSupplier;
-
   private final JavacOptions javacOptions;
-
   private final Optional<Path> javac;
-
   private final Optional<String> javacVersion;
-
-  @Nullable
-  private JavaLibraryRule.Data buildOutput;
+  @Nullable private JavaLibraryRule.Data buildOutput;
 
   /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
@@ -154,7 +138,7 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath);
   }
 
-  private final JarResolver JAR_RESOLVER =
+  private static final JarResolver JAR_RESOLVER =
       new JarResolver() {
     @Override
     public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
@@ -181,39 +165,42 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
   };
 
-  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
-                                   Set<Path> srcs,
-                                   Set<? extends SourcePath> resources,
-                                   Optional<DummyRDotJava> optionalDummyRDotJava,
-                                   Optional<Path> proguardConfig,
-                                   Set<BuildRule> exportedDeps,
-                                   JavacOptions javacOptions) {
-    this(buildRuleParams,
+  protected DefaultJavaLibraryRule(
+      BuildRuleParams buildRuleParams,
+      Set<Path> srcs,
+      Set<? extends SourcePath> resources,
+      Optional<Path> proguardConfig,
+      Set<BuildRule> exportedDeps,
+      ImmutableSet<String> additionalClasspathEntries,
+      JavacOptions javacOptions) {
+    this(
+        buildRuleParams,
         srcs,
         resources,
-        optionalDummyRDotJava,
         proguardConfig,
         exportedDeps,
+        additionalClasspathEntries,
         javacOptions,
         Optional.<Path>absent(),
         Optional.<String>absent());
   }
 
-  protected DefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
-                                   Set<Path> srcs,
-                                   Set<? extends SourcePath> resources,
-                                   Optional<DummyRDotJava> optionalDummyRDotJava,
-                                   Optional<Path> proguardConfig,
-                                   Set<BuildRule> exportedDeps,
-                                   JavacOptions javacOptions,
-                                   Optional<Path> javac,
-                                   Optional<String> javacVersion) {
+  protected DefaultJavaLibraryRule(
+      BuildRuleParams buildRuleParams,
+      Set<Path> srcs,
+      Set<? extends SourcePath> resources,
+      Optional<Path> proguardConfig,
+      Set<BuildRule> exportedDeps,
+      ImmutableSet<String> additionalClasspathEntries,
+      JavacOptions javacOptions,
+      Optional<Path> javac,
+      Optional<String> javacVersion) {
     super(buildRuleParams);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
-    this.optionalDummyRDotJava = Preconditions.checkNotNull(optionalDummyRDotJava);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.exportedDeps = ImmutableSortedSet.copyOf(exportedDeps);
+    this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.javac = Preconditions.checkNotNull(javac);
     this.javacVersion = Preconditions.checkNotNull(javacVersion);
@@ -224,78 +211,32 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
       this.outputJar = Optional.absent();
     }
 
-    outputClasspathEntriesSupplier =
+    this.outputClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
-            ImmutableSetMultimap.Builder<JavaLibraryRule, String> outputClasspathBuilder =
-                ImmutableSetMultimap.builder();
-            Iterable<JavaLibraryRule> javaExportedLibraryDeps = Iterables.filter(
-                getExportedDeps(),
-                JavaLibraryRule.class);
-
-            for (JavaLibraryRule rule : javaExportedLibraryDeps) {
-              outputClasspathBuilder.putAll(rule, rule.getOutputClasspathEntries().values());
-              // If we have any exported deps, add an entry mapping ourselves to to their,
-              // classpaths so when suggesting libraries to add we know that adding this library
-              // would pull in it's deps.
-              outputClasspathBuilder.putAll(DefaultJavaLibraryRule.this,
-                  rule.getOutputClasspathEntries().values());
-            }
-
-            if (outputJar.isPresent()) {
-              outputClasspathBuilder.put(DefaultJavaLibraryRule.this, getPathToOutputFile().toString());
-            }
-
-            return outputClasspathBuilder.build();
+            return JavaLibraryClasspathProvider.getOutputClasspathEntries(
+                DefaultJavaLibraryRule.this,
+                outputJar);
           }
         });
 
-    transitiveClasspathEntriesSupplier =
+    this.transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
-            final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
-                ImmutableSetMultimap.builder();
-            ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForDeps =
-                Classpaths.getClasspathEntries(getDeps());
-
-            ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesForExportedsDeps =
-                Classpaths.getClasspathEntries(getExportedDeps());
-
-            classpathEntries.putAll(classpathEntriesForDeps);
-
-            // If we have any exported deps, add an entry mapping ourselves to to their classpaths,
-            // so when suggesting libraries to add we know that adding this library would pull in
-            // it's deps.
-            if (!classpathEntriesForExportedsDeps.isEmpty()) {
-              classpathEntries.putAll(DefaultJavaLibraryRule.this,
-                  classpathEntriesForExportedsDeps.values());
-            }
-
-            // Only add ourselves to the classpath if there's a jar to be built.
-            if (outputJar.isPresent()) {
-              classpathEntries.putAll(DefaultJavaLibraryRule.this, getPathToOutputFile().toString());
-            }
-
-            return classpathEntries.build();
+            return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
+                DefaultJavaLibraryRule.this,
+                outputJar);
           }
         });
 
-    declaredClasspathEntriesSupplier =
+    this.declaredClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibraryRule, String>>() {
           @Override
           public ImmutableSetMultimap<JavaLibraryRule, String> get() {
-            final ImmutableSetMultimap.Builder<JavaLibraryRule, String> classpathEntries =
-               ImmutableSetMultimap.builder();
-
-            Iterable<JavaLibraryRule> javaLibraryDeps = Iterables.filter(getDeps(),
-                JavaLibraryRule.class);
-
-            for (JavaLibraryRule rule : javaLibraryDeps) {
-              classpathEntries.putAll(rule, rule.getOutputClasspathEntries().values());
-            }
-            return classpathEntries.build();
+            return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
+                DefaultJavaLibraryRule.this);
           }
         });
   }
@@ -551,31 +492,16 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
     }
 
     ImmutableSetMultimap<JavaLibraryRule, String> transitiveClasspathEntries =
-        getTransitiveClasspathEntries();
+        ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+            .putAll(getTransitiveClasspathEntries())
+            .putAll(this, additionalClasspathEntries)
+            .build();
+
     ImmutableSetMultimap<JavaLibraryRule, String> declaredClasspathEntries =
-        getDeclaredClasspathEntries();
-
-    // If this rule depends on AndroidResourceRules, then we need to include the compiled R.java
-    // files on the classpath when compiling this rule.
-    if (optionalDummyRDotJava.isPresent()) {
-      DummyRDotJava dummyRDotJava = optionalDummyRDotJava.get();
-      ImmutableSetMultimap.Builder<JavaLibraryRule, String> transitiveClasspathEntriesWithRDotJava =
-          ImmutableSetMultimap.builder();
-      transitiveClasspathEntriesWithRDotJava.putAll(transitiveClasspathEntries);
-
-      ImmutableSetMultimap.Builder<JavaLibraryRule, String> declaredClasspathEntriesWithRDotJava =
-          ImmutableSetMultimap.builder();
-      declaredClasspathEntriesWithRDotJava.putAll(declaredClasspathEntries);
-
-      ImmutableSet<String> rDotJavaClasspath =
-          ImmutableSet.of(dummyRDotJava.getRDotJavaBinFolder().toString());
-
-      transitiveClasspathEntriesWithRDotJava.putAll(this, rDotJavaClasspath);
-      declaredClasspathEntriesWithRDotJava.putAll(this, rDotJavaClasspath);
-
-      declaredClasspathEntries = declaredClasspathEntriesWithRDotJava.build();
-      transitiveClasspathEntries = transitiveClasspathEntriesWithRDotJava.build();
-    }
+        ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+            .putAll(getDeclaredClasspathEntries())
+            .putAll(this, additionalClasspathEntries)
+            .build();
 
     // Javac requires that the root directory for generated sources already exist.
     Path annotationGenFolder =
@@ -816,7 +742,8 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
         // Therefore, some path-wrangling is required to produce the correct string.
 
         Path resource = MorePaths.separatorsToUnix(rawResource.resolve(context));
-        String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
+        String javaPackageAsPath =
+            javaPackageFinder.findJavaPackageFolderForPath(resource.toString());
         Path relativeSymlinkPath;
 
 
@@ -900,18 +827,13 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
-              .createBuildableForAndroidResources(
-                  ruleResolver, /* createBuildableIfEmptyDeps */ false);
-
       return new DefaultJavaLibraryRule(
-          result.getBuildRuleParams(),
+          buildRuleParams,
           srcs,
           resources,
-          result.getOptionalDummyRDotJava(),
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
+          /* additionaLClasspathEntries */ ImmutableSet.<String>of(),
           javacOptions.build(),
           javac,
           javacVersion);

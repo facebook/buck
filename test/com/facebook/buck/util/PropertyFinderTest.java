@@ -39,7 +39,7 @@ public class PropertyFinderTest {
     HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
     ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
 
-    Optional<Path> path = PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+    Optional<Path> path = DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         properties,
         hostFilesystem,
         systemEnvironment,
@@ -54,7 +54,7 @@ public class PropertyFinderTest {
     ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
     HostFilesystem hostFilesystem = FakeHostFilesystem.withDirectories("/path/to/sdk");
 
-    Optional<Path> path = PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+    Optional<Path> path = DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         Optional.of(properties),
         hostFilesystem,
         systemEnvironment,
@@ -73,7 +73,7 @@ public class PropertyFinderTest {
     thrown.expectMessage(
         "Properties file local.properties contains invalid path [/path/to/sdk] for key sdk.dir.");
 
-    PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+    DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         Optional.of(properties),
         hostFilesystem,
         systemEnvironment,
@@ -86,7 +86,7 @@ public class PropertyFinderTest {
     ImmutableMap<String, String> systemEnvironment = ImmutableMap.of("ANDROID_SDK", "/path/to/sdk");
     HostFilesystem hostFilesystem = FakeHostFilesystem.withDirectories("/path/to/sdk");
 
-    Optional<Path> path = PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+    Optional<Path> path = DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         properties,
         hostFilesystem,
         systemEnvironment,
@@ -104,7 +104,7 @@ public class PropertyFinderTest {
     thrown.expect(RuntimeException.class);
     thrown.expectMessage("Environment variable ANDROID_SDK points to invalid path [/path/to/sdk].");
 
-    PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+    DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         properties,
         hostFilesystem,
         systemEnvironment,
@@ -118,7 +118,7 @@ public class PropertyFinderTest {
     ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
     HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
 
-    Optional<Path> path = PropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+    Optional<Path> path = DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         properties,
         hostFilesystem,
         systemEnvironment,

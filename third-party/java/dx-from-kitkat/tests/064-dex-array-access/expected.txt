@@ -1,0 +1,157 @@
+Blort.test01:([Z)Z:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v1, v6
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const/4 v4, #int 1 // #1
+  0005: aput-boolean v4, v2, v3
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 1 // #1
+  0009: aget-boolean v2, v2, v3
+  000b: move v0, v2
+  000c: return v0
+Blort.test02:([B)B:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v1, v6
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const/4 v4, #int 5 // #5
+  0005: aput-byte v4, v2, v3
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 1 // #1
+  0009: aget-byte v2, v2, v3
+  000b: move v0, v2
+  000c: return v0
+Blort.test03:([S)S:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v1, v6
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const/4 v4, #int 5 // #5
+  0005: aput-short v4, v2, v3
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 1 // #1
+  0009: aget-short v2, v2, v3
+  000b: move v0, v2
+  000c: return v0
+Blort.test04:([C)C:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v1, v6
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const/4 v4, #int 5 // #5
+  0005: aput-char v4, v2, v3
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 1 // #1
+  0009: aget-char v2, v2, v3
+  000b: move v0, v2
+  000c: return v0
+Blort.test05:([I)I:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v1, v6
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const/4 v4, #int 5 // #5
+  0005: aput v4, v2, v3
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 1 // #1
+  0009: aget v2, v2, v3
+  000b: move v0, v2
+  000c: return v0
+Blort.test06:([J)J:
+regs: 0008; ins: 0002; outs: 0000
+  0000: move-object v0, v6
+  0001: move-object v1, v7
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const-wide/16 v4, #long 5 // #0005
+  0006: aput-wide v4, v2, v3
+  0008: move-object v2, v1
+  0009: const/4 v3, #int 1 // #1
+  000a: aget-wide v2, v2, v3
+  000c: move-wide v0, v2
+  000d: return-wide v0
+Blort.test07:([F)F:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v1, v6
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const/high16 v4, #float 2.0 // #40000000
+  0006: aput v4, v2, v3
+  0008: move-object v2, v1
+  0009: const/4 v3, #int 1 // #1
+  000a: aget v2, v2, v3
+  000c: move v0, v2
+  000d: return v0
+Blort.test08:([D)D:
+regs: 0008; ins: 0002; outs: 0000
+  0000: move-object v0, v6
+  0001: move-object v1, v7
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const-wide/high16 v4, #double 2.0 // #4000000000000000
+  0006: aput-wide v4, v2, v3
+  0008: move-object v2, v1
+  0009: const/4 v3, #int 1 // #1
+  000a: aget-wide v2, v2, v3
+  000c: move-wide v0, v2
+  000d: return-wide v0
+Blort.test09:([Ljava/lang/Object;)Ljava/lang/Object;:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v1, v6
+  0002: move-object v2, v1
+  0003: const/4 v3, #int 0 // #0
+  0004: const/4 v4, #null // #0
+  0005: aput-object v4, v2, v3
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 1 // #1
+  0009: aget-object v2, v2, v3
+  000b: move-object v0, v2
+  000c: return-object v0
+Blort.test10:([[Ljava/lang/Object;)Ljava/lang/Object;:
+regs: 0005; ins: 0001; outs: 0000
+  0000: move-object v0, v4
+  0001: move-object v1, v0
+  0002: const/4 v2, #int 0 // #0
+  0003: aget-object v1, v1, v2
+  0005: const/4 v2, #int 0 // #0
+  0006: const/4 v3, #null // #0
+  0007: aput-object v3, v1, v2
+  0009: move-object v1, v0
+  000a: const/4 v2, #int 1 // #1
+  000b: aget-object v1, v1, v2
+  000d: const/4 v2, #int 2 // #2
+  000e: aget-object v1, v1, v2
+  0010: move-object v0, v1
+  0011: return-object v0
+Blort.test11:(Ljava/lang/Object;)I:
+regs: 0006; ins: 0001; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v2, v0
+  0002: check-cast v2, int[][][]
+  0004: check-cast v2, int[][][]
+  0006: move-object v1, v2
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 0 // #0
+  0009: aget-object v2, v2, v3
+  000b: const/4 v3, #int 0 // #0
+  000c: aget-object v2, v2, v3
+  000e: const/4 v3, #int 0 // #0
+  000f: const/16 v4, #int 123 // #007b
+  0011: aput v4, v2, v3
+  0013: move-object v2, v1
+  0014: const/4 v3, #int 1 // #1
+  0015: aget-object v2, v2, v3
+  0017: const/4 v3, #int 2 // #2
+  0018: aget-object v2, v2, v3
+  001a: const/4 v3, #int 3 // #3
+  001b: aget v2, v2, v3
+  001d: move v0, v2
+  001e: return v0

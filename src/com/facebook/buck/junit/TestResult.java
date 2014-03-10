@@ -16,6 +16,8 @@
 
 package com.facebook.buck.junit;
 
+import com.facebook.buck.test.result.type.ResultType;
+
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
@@ -23,6 +25,7 @@ import org.junit.runner.notification.RunListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,6 +39,7 @@ final class TestResult {
   final String testClassName;
   final String testMethodName;
   final long runTime;
+  final ResultType type;
   final /* @Nullable */ Failure failure;
   final /* @Nullable */ String stdOut;
   final /* @Nullable */ String stdErr;
@@ -43,19 +47,21 @@ final class TestResult {
   public TestResult(String testClassName,
       String testMethodName,
       long runTime,
-      Failure failure,
+      ResultType type,
+      /* @Nullable */ Failure failure,
       /* @Nullable */ String stdOut,
       /* @Nullable */ String stdErr) {
     this.testClassName = testClassName;
     this.testMethodName = testMethodName;
     this.runTime = runTime;
+    this.type = type;
     this.failure = failure;
     this.stdOut = stdOut;
     this.stdErr = stdErr;
   }
 
   public boolean isSuccess() {
-    return failure == null;
+    return type == ResultType.SUCCESS;
   }
 
   /**
@@ -69,6 +75,7 @@ final class TestResult {
       private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
       private Result result;
       private RunListener resultListener;
+      private final List<Failure> assumptionFailures = new ArrayList<>();
 
       // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
       private long startTime = System.currentTimeMillis();
@@ -114,8 +121,8 @@ final class TestResult {
         String className = description.getClassName();
         String methodName = description.getMethodName();
         // In practice, I have seen one case of a test having more than one failure:
-        // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2 failures.
-        // However, I am not sure what to make of it, so we let it through.
+        // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2
+        // failures.  However, I am not sure what to make of it, so we let it through.
         if (numFailures < 0) {
           throw new IllegalStateException(String.format(
               "Unexpected number of failures while testing %s#%s(): %d (%s)",
@@ -124,7 +131,19 @@ final class TestResult {
               numFailures,
               result.getFailures()));
         }
-        Failure failure = numFailures == 0 ? null : result.getFailures().get(0);
+
+        Failure failure;
+        ResultType type;
+        if (assumptionFailures.size() > 0) {
+          failure = assumptionFailures.get(0);
+          type = ResultType.ASSUMPTION_VIOLATION;
+        } else if (numFailures == 0) {
+          failure = null;
+          type = ResultType.SUCCESS;
+        } else {
+          failure = result.getFailures().get(0);
+          type = ResultType.FAILURE;
+        }
 
         String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
         String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
@@ -132,14 +151,22 @@ final class TestResult {
         results.add(new TestResult(className,
             methodName,
             result.getRunTime(),
+            type,
             failure,
             stdOut,
             stdErr));
       }
 
+      /**
+       * The regular listener we created from the singular result, in this class, will not by
+       * default treat assumption failures as regular failures, and will not store them.  As a
+       * consequence, we store them ourselves!
+       */
       @Override
       public void testAssumptionFailure(Failure failure) {
+        assumptionFailures.add(failure);
         if (resultListener != null) {
+          // Left in only to help catch future bugs -- right now this does nothing.
           resultListener.testAssumptionFailure(failure);
         }
       }
@@ -175,6 +202,7 @@ final class TestResult {
             description.getClassName(),
             description.getMethodName(),
             runtime,
+            ResultType.FAILURE,
             failure,
             null,
             null));

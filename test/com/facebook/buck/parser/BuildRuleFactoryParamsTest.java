@@ -36,6 +36,8 @@ import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import org.junit.AfterClass;
@@ -49,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class BuildRuleFactoryParamsTest {
 
@@ -280,4 +283,91 @@ public class BuildRuleFactoryParamsTest {
     verify(builder);
   }
 
+  @Test
+  public void testGetOptionalIntegerAttributeWithValue() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    Map<String, Object> instance = ImmutableMap.<String, Object>of(
+        "some_value", 42
+    );
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        instance /* instance */,
+        filesystem,
+        tree,
+        parser,
+        target,
+        new FakeRuleKeyBuilderFactory());
+
+    assertEquals(Optional.of(42), params.getOptionalIntegerAttribute("some_value"));
+  }
+
+  @Test
+  public void testGetOptionalIntegerAttributeWithoutValue() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    Map<String, Object> instance = ImmutableMap.<String, Object>of(
+        "another_value", "yolo"
+    );
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        instance /* instance */,
+        filesystem,
+        tree,
+        parser,
+        target,
+        new FakeRuleKeyBuilderFactory());
+
+    assertEquals(Optional.absent(), params.getOptionalIntegerAttribute("some_value"));
+  }
+
+  @Test
+  public void testGetOptionalIntegerAttributeWrongType() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    Map<String, Object> instance = ImmutableMap.<String, Object>of(
+        "some_value", "yolo"
+    );
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        instance /* instance */,
+        filesystem,
+        tree,
+        parser,
+        target,
+        new FakeRuleKeyBuilderFactory());
+
+    try {
+      assertEquals(Optional.absent(), params.getOptionalIntegerAttribute("some_value"));
+      fail("Should have failed to parse a string as an integer");
+    } catch (Exception e) {
+      assertEquals("Expected a integer for some_value in /src/com/facebook/BUCK but was yolo",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  public void testGetOptionalIntegerAttributeDouble() {
+    BuildTarget target = BuildTargetFactory.newInstance("//src/com/facebook:Main");
+
+    Map<String, Object> instance = ImmutableMap.<String, Object>of(
+        "some_value", 3.33
+    );
+
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        instance /* instance */,
+        filesystem,
+        tree,
+        parser,
+        target,
+        new FakeRuleKeyBuilderFactory());
+
+    try {
+      assertEquals(Optional.absent(), params.getOptionalIntegerAttribute("some_value"));
+      fail("Should have failed to parse a string as an integer");
+    } catch (Exception e) {
+      assertEquals("Expected a integer for some_value in /src/com/facebook/BUCK but was 3.33",
+          e.getMessage());
+    }
+  }
 }

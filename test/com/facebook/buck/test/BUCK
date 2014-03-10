@@ -4,6 +4,7 @@ java_test(
   deps = [
     '//lib:guava',
     '//lib:junit',
+    '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:test',  
   ],
   source_under_test = [

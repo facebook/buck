@@ -53,15 +53,18 @@ public class PlistSerializerTest {
 
     assertThat(document, hasXPath("/plist/dict/key[. = \"key1\"]"));
     assertThat(document, hasXPath(
-        "/plist/dict/key[. = \"key1\"]/following-sibling::*[position()=1]/self::string[. = \"foo\"]"));
+        "/plist/dict/key[. = \"key1\"]/following-sibling::*[position()=1]/self::string[. " +
+            "= \"foo\"]"));
 
     assertThat(document, hasXPath("/plist/dict/key[. = \"key2\"]"));
     assertThat(document, hasXPath(
-        "/plist/dict/key[. = \"key2\"]/following-sibling::*[position()=1]/self::string[. = \"bar\"]"));
+        "/plist/dict/key[. = \"key2\"]/following-sibling::*[position()=1]/self::string[. " +
+            "= \"bar\"]"));
 
     assertThat(document, hasXPath("/plist/dict/key[. = \"key3\"]"));
     assertThat(document, hasXPath(
-        "/plist/dict/key[. = \"key3\"]/following-sibling::*[position()=1]/self::integer[. = \"4\"]"));
+        "/plist/dict/key[. = \"key3\"]/following-sibling::*[position()=1]/self::integer[. " +
+            "= \"4\"]"));
   }
 
   @Test

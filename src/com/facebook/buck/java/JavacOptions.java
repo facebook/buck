@@ -93,7 +93,8 @@ public class JavacOptions {
     }
 
     // Add annotation processors.
-    AnnotationProcessingData annotationProcessingData = decorator.decorate(this.annotationProcessingData);
+    AnnotationProcessingData annotationProcessingData =
+        decorator.decorate(this.annotationProcessingData);
     if (!annotationProcessingData.isEmpty()) {
 
       // Specify where to generate sources so IntelliJ can pick them up.

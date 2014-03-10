@@ -1,0 +1,4 @@
+Blort.test1:()I:
+    system-annotation dalvik.annotation.Throws {value: {java.lang.RuntimeException}}
+Blort.test2:()I:
+    system-annotation dalvik.annotation.Throws {value: {java.lang.Throwable, java.lang.IllegalArgumentException}}

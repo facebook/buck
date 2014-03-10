@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -44,6 +45,11 @@ public class RobolectricTestRuleTest {
 
     @Override
     public Path getPathToTextSymbolsFile() {
+      return null;
+    }
+
+    @Override
+    public Sha1HashCode getTextSymbolsAbiKey() {
       return null;
     }
 

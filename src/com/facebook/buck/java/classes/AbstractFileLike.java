@@ -22,7 +22,7 @@ import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
 
-abstract public class AbstractFileLike implements FileLike {
+public abstract class AbstractFileLike implements FileLike {
   @Override
   public HashCode fastHash() throws IOException {
     // Default non-fast implementation.

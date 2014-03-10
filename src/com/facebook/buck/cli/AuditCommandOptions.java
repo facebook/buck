@@ -33,11 +33,11 @@ public class AuditCommandOptions extends AbstractCommandOptions {
    * </pre>
    */
   @Option(name = "--dot",
-      usage = "Print dependencies as Dot graph")
+          usage = "Print dependencies as Dot graph")
   private boolean generateDotOutput;
 
   @Option(name = "--json",
-	    usage = "Output in JSON format")
+          usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   @Argument

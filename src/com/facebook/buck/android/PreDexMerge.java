@@ -138,8 +138,10 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
         secondaryDexMetadataScratchDir, secondaryDexJarFilesScratchDir);
 
 
-    final Path secondaryDexMetadataDir = secondaryDexMetadataScratchDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
-    final Path secondaryDexJarFilesDir = secondaryDexJarFilesScratchDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+    final Path secondaryDexMetadataDir =
+        secondaryDexMetadataScratchDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
+    final Path secondaryDexJarFilesDir =
+        secondaryDexJarFilesScratchDir.resolve(AndroidBinaryRule.SECONDARY_DEX_SUBDIR);
     steps.add(new MakeCleanDirectoryStep(secondaryDexMetadataDir));
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
@@ -314,7 +316,7 @@ public class PreDexMerge extends AbstractBuildable implements InitializableFromD
 
     @Override
     protected BuildRuleType getType() {
-      return BuildRuleType._DEX_MERGE;
+      return BuildRuleType.DEX_MERGE;
     }
 
     @Override

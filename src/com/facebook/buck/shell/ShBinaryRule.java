@@ -126,7 +126,7 @@ public class ShBinaryRule extends DoNotUseAbstractBuildable
    * This method implements InitializableFromDisk so that it can make the output file
    * executable when this rule is populated from cache. The buildOutput Object is meaningless:
    * it is created only to satisfy InitializableFromDisk contract.
-   * TODO (task #3321496) Delete this entire interface implementation after we fix zipping exe's.
+   * TODO(task #3321496): Delete this entire interface implementation after we fix zipping exe's.
    */
   @Override
   public Object initializeFromDisk(OnDiskBuildInfo info) {

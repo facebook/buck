@@ -27,6 +27,9 @@ import javax.lang.model.element.ExecutableElement;
 
 class Annotations {
 
+  /** Utility class: do not instantiate. */
+  private Annotations() {}
+
   public static String printAnnotations(Collection<? extends AnnotationMirror> allAnnotations) {
     if (allAnnotations.isEmpty()) {
       return "";
@@ -52,6 +55,7 @@ class Annotations {
       for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
           mirror.getElementValues().entrySet()) {
         AnnotationValue rhs = entry.getValue();
+
         if (rhs != null) {
           annotationValues.add(entry.getKey().getSimpleName() + "=" + rhs);
           continue;

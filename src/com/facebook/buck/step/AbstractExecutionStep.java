@@ -32,7 +32,7 @@ public abstract class AbstractExecutionStep implements Step {
   }
 
   @Override
-  abstract public int execute(ExecutionContext context);
+  public abstract int execute(ExecutionContext context);
 
   @Override
   public String getShortName() {

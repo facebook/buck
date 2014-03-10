@@ -1,0 +1,17 @@
+java_library(
+  name = 'type',
+  srcs = glob(['*.java']),
+  deps = [
+    # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/junit/BUCK.
+  ],
+  visibility = [
+    '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/junit:junit',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/test:test',
+    '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/event/listener:listener',
+    '//test/com/facebook/buck/event:event',
+    '//test/com/facebook/buck/test:test',
+  ],
+)

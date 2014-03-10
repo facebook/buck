@@ -16,9 +16,9 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 
 public final class GenruleBuildRuleFactory extends AbstractBuildRuleFactory<Genrule.Builder> {

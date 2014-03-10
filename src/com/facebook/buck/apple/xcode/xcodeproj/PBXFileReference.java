@@ -28,7 +28,10 @@ public class PBXFileReference extends PBXReference {
   private static ImmutableMap<String, String> fileTypeToFileTypeIdentifiers =
       ImmutableMap.<String, String>builder()
           .put("h", "sourcecode.c.h")
+          .put("hh", "sourcecode.cpp.h")
+          .put("hpp", "sourcecode.cpp.h")
           .put("c", "sourcecode.c.c")
+          .put("cc", "sourcecode.cpp.cpp")
           .put("cpp", "sourcecode.cpp.cpp")
           .put("a", "archive.ar")
           .put("m", "sourcecode.c.objc")

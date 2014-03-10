@@ -27,7 +27,8 @@ import com.google.common.base.Optional;
 
 import java.util.List;
 
-public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
+public class AndroidBinaryBuildRuleFactory extends
+    AbstractBuildRuleFactory<AndroidBinaryRule.Builder> {
 
   @Override
   public AndroidBinaryRule.Builder newBuilder(AbstractBuildRuleBuilderParams params) {
@@ -69,9 +70,10 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     // use_split_dex
     boolean useSplitDex = params.getBooleanAttribute("use_split_dex");
 
-    ZipSplitter.DexSplitStrategy dexSplitStrategy = params.getBooleanAttribute("minimize_primary_dex_size")
-        ? ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
-        : ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
+    ZipSplitter.DexSplitStrategy dexSplitStrategy =
+        params.getBooleanAttribute("minimize_primary_dex_size") ?
+            ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE :
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
 
     // disable_pre_dex
     builder.setDisablePreDex(params.getBooleanAttribute("disable_pre_dex"));
@@ -102,12 +104,18 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
         params.getBooleanAttribute("use_android_proguard_config_with_optimizations");
     builder.setUseAndroidProguardConfigWithOptimizations(useAndroidProguardConfigWithOptimizations);
 
+    // optimization_passes
+    Optional<Integer> optimizationPasses =
+        params.getOptionalIntegerAttribute("optimization_passes");
+    builder.setOptimizationPasses(optimizationPasses);
+
     // proguard_config
     Optional<SourcePath> proguardConfig = params.getOptionalSourcePath("proguard_config", builder);
     builder.setProguardConfig(proguardConfig);
 
     // resource_compression
-    Optional<String> resourceCompression = params.getOptionalStringAttribute("resource_compression");
+    Optional<String> resourceCompression =
+        params.getOptionalStringAttribute("resource_compression");
     if (resourceCompression.isPresent()) {
       builder.setResourceCompressionMode(resourceCompression.get());
     }
@@ -121,6 +129,9 @@ public class AndroidBinaryBuildRuleFactory extends AbstractBuildRuleFactory<Andr
     for (String filter: cpuFilters) {
       builder.addCpuFilter(filter);
     }
+
+    // build_string_source_map
+    builder.setBuildStringSourceMap(params.getBooleanAttribute("build_string_source_map"));
 
     // preprocess_java_classes_deps
     for (String dep : params.getOptionalListAttribute("preprocess_java_classes_deps")) {

@@ -111,7 +111,8 @@ public class AbiWriter extends AbstractProcessor {
 
       for (String summary : summaries) {
         // "2" is the number of bytes in a java character
-        ByteBuffer buffer = ByteBuffer.allocate(summary.length() * 2).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer buffer =
+            ByteBuffer.allocate(summary.length() * 2).order(ByteOrder.LITTLE_ENDIAN);
 
         for (int i = 0; i < summary.length(); i++) {
           buffer.putChar(summary.charAt(i));

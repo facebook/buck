@@ -47,7 +47,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
-import com.facebook.buck.test.resultgroups.TestResultsGrouper;
+import com.facebook.buck.test.result.groups.TestResultsGrouper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -95,6 +95,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
+
+  public static final int TEST_FAILURES_EXIT_CODE = 42;
 
   public TestCommand(CommandRunnerParams params) {
     super(params);
@@ -568,7 +570,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     });
 
-    return failures ? 1 : 0;
+    return failures ? TEST_FAILURES_EXIT_CODE : 0;
   }
 
   private FutureCallback<TestResults> getFutureCallback(
@@ -645,7 +647,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     } else if (isRunningWithTestSelectors) {
       // As a feature to aid developers, we'll assume that when we are using test selectors,
       // we should always run each test (and never look at the cache.)
-      // TODO When #3090004 and #3436849 are closed we can respect the cache again.
+      // TODO(user) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
     } else if (((successType = test.getBuildResultType()) != null)
                && successType == BuildRuleSuccess.Type.MATCHING_RULE_KEY

@@ -30,6 +30,7 @@ import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibraryDescription;
 import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNativeDescription;
+import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.java.JavaBinaryBuildRuleFactory;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
@@ -44,6 +45,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleBuildRuleFactory;
 import com.facebook.buck.shell.ShBinaryBuildRuleFactory;
 import com.facebook.buck.shell.ShTestBuildRuleFactory;
+import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
@@ -116,6 +118,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosLibraryDescription());
     builder.register(new IosTestDescription());
     builder.register(new PythonLibraryDescription());
+    builder.register(new XcodeProjectConfigDescription());
     builder.register(new XcodeNativeDescription());
 
     // TODO(simons): Consider once more whether we actually want to have default rules
@@ -126,8 +129,7 @@ public class KnownBuildRuleTypes {
     builder.register(BuildRuleType.ANDROID_RESOURCE, new AndroidResourceBuildRuleFactory());
     builder.register(BuildRuleType.APK_GENRULE, new ApkGenruleBuildRuleFactory());
     builder.register(BuildRuleType.GENRULE, new GenruleBuildRuleFactory());
-    builder.register(BuildRuleType.JAVA_LIBRARY,
-        new JavaLibraryBuildRuleFactory(Optional.<Path>absent(), Optional.<String>absent()));
+    builder.register(BuildRuleType.JAVA_LIBRARY, new JavaLibraryBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_TEST, new JavaTestBuildRuleFactory());
     builder.register(BuildRuleType.JAVA_BINARY, new JavaBinaryBuildRuleFactory());
     builder.register(BuildRuleType.KEYSTORE, new KeystoreBuildRuleFactory());
@@ -149,14 +151,14 @@ public class KnownBuildRuleTypes {
   public static KnownBuildRuleTypes getConfigured(
       BuckConfig buckConfig,
       ProcessExecutor executor,
-      Optional<String> ndkVersion) {
-    return createConfiguredBuilder(buckConfig, executor, ndkVersion).build();
+      AndroidDirectoryResolver androidDirectoryResolver) {
+    return createConfiguredBuilder(buckConfig, executor, androidDirectoryResolver).build();
   }
 
   public static Builder createConfiguredBuilder(
       BuckConfig buckConfig,
       ProcessExecutor executor,
-      Optional<String> ndkVersion) {
+      AndroidDirectoryResolver androidDirectoryResolver) {
     Optional<Path> javac = buckConfig.getJavac();
 
     Optional<String> javacVersion = Optional.absent();
@@ -179,8 +181,16 @@ public class KnownBuildRuleTypes {
         new JavaLibraryBuildRuleFactory(javac, javacVersion));
     builder.register(BuildRuleType.ANDROID_LIBRARY,
         new AndroidLibraryBuildRuleFactory(javac, javacVersion));
-    builder.register(BuildRuleType.NDK_LIBRARY,
-        new NdkLibraryBuildRuleFactory(ndkVersion));
+
+    Optional<String> ndkVersion = buckConfig.getNdkVersion();
+    // If a NDK version isn't specified, we've got to reach into the runtime environment to find
+    // out which one we will end up using.
+    if (!ndkVersion.isPresent()) {
+      ndkVersion = androidDirectoryResolver.getNdkVersion();
+    }
+
+    builder.register(BuildRuleType.NDK_LIBRARY, new NdkLibraryBuildRuleFactory(ndkVersion));
+
     return builder;
   }
 

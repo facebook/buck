@@ -1,0 +1,2 @@
+This test is just a minimal test involving assembling a jasmin source
+file and then dumping it. It doesn't test any features in particular.

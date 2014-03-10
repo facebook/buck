@@ -49,7 +49,7 @@ public class CleanClasspathIntegrationTest {
 
     // Build //:example so that content is written to buck-out/gen/.
     ProcessResult processResult1 = workspace.runBuckCommand("build", "//:example");
-    processResult1.assertExitCode(0);
+    processResult1.assertSuccess();
     assertTrue(
         "example.jar should be written. This should not be on the classpath on the next build.",
         workspace.getFile("buck-out/gen/lib__example__output/example.jar").isFile());
@@ -67,6 +67,6 @@ public class CleanClasspathIntegrationTest {
     // Rebuilding //:example should fail even though Bar.class is in
     // buck-out/gen/lib__example__output/example.jar.
     ProcessResult processResult2 = workspace.runBuckCommand("build", "//:example");
-    processResult2.assertExitCode("Build should fail because Foo.java depends on Bar.java.", 1);
+    processResult2.assertFailure("Build should fail because Foo.java depends on Bar.java.");
   }
 }

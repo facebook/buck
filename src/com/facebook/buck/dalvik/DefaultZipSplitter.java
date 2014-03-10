@@ -47,7 +47,8 @@ public class DefaultZipSplitter implements ZipSplitter {
   private long remainingSize;
 
   /**
-   * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate, DexSplitStrategy, CanaryStrategy, File)
+   * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate,
+   *                                     DexSplitStrategy, CanaryStrategy, File)
    */
   private DefaultZipSplitter(
       Set<Path> inFiles,
@@ -64,7 +65,8 @@ public class DefaultZipSplitter implements ZipSplitter {
     this.outPrimary = Preconditions.checkNotNull(outPrimary);
     this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
     this.dexSplitStrategy = dexSplitStrategy;
-    this.secondaryDexWriter = new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
+    this.secondaryDexWriter =
+        new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
     this.reportDir = reportDir;
     this.zipSizeSoftLimit = zipSizeSoftLimit;
     this.zipSizeHardLimit = zipSizeHardLimit;
@@ -165,8 +167,9 @@ public class DefaultZipSplitter implements ZipSplitter {
     // Otherwise, the entry will be added to the secondary zip.
     boolean canFitAllRemaining = remainingSize + primaryOut.getCurrentSize() <= zipSizeHardLimit;
 
-    if ((canFitAllRemaining && dexSplitStrategy == ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE)
-        || requiredInPrimaryZip.apply(entry.getRelativePath())        // File must be in primary
+    if ((canFitAllRemaining &&
+             dexSplitStrategy == ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE) ||
+        requiredInPrimaryZip.apply(entry.getRelativePath())        // File must be in primary
         ) {
       // Going to write this entry to the primary zip.
       if (!primaryOut.canPutEntry(entry)) {

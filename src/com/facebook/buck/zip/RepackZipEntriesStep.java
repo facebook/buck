@@ -18,6 +18,7 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -25,6 +26,7 @@ import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,48 +42,52 @@ import java.util.zip.ZipInputStream;
  */
 public class RepackZipEntriesStep implements Step {
 
-  private final Path inputFile;
-  private final Path outputFile;
+  private final Path inputPath;
+  private final Path outputPath;
   private final ImmutableSet<String> entries;
   private final int compressionLevel;
 
   /**
    * Creates a {@link RepackZipEntriesStep}. A temporary directory will be created and used
    * to extract entries. Entries will be packed with the maximum compression level.
-   * @param inputFile input archive
-   * @param outputFile destination archive
+   * @param inputPath input archive
+   * @param outputPath destination archive
    * @param entries files to repack (e.g. {@code ImmutableSet.of("resources.arsc")})
    */
   public RepackZipEntriesStep(
-      Path inputFile,
-      Path outputFile,
+      Path inputPath,
+      Path outputPath,
       ImmutableSet<String> entries) {
-    this(inputFile, outputFile, entries, ZipStep.MAX_COMPRESSION_LEVEL);
+    this(inputPath, outputPath, entries, ZipStep.MAX_COMPRESSION_LEVEL);
   }
 
   /**
    * Creates a {@link RepackZipEntriesStep}.
-   * @param inputFile input archive
-   * @param outputFile destination archive
+   * @param inputPath input archive
+   * @param outputPath destination archive
    * @param entries files to repack (e.g. {@code ImmutableSet.of("resources.arsc")})
    * @param compressionLevel 0 to 9
    */
   public RepackZipEntriesStep(
-      Path inputFile,
-      Path outputFile,
+      Path inputPath,
+      Path outputPath,
       ImmutableSet<String> entries,
       int compressionLevel) {
-    this.inputFile = inputFile;
-    this.outputFile = outputFile;
+    this.inputPath = inputPath;
+    this.outputPath = outputPath;
     this.entries = entries;
     this.compressionLevel = compressionLevel;
   }
 
   @Override
   public int execute(ExecutionContext context) {
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    File inputFile = filesystem.getFileForRelativePath(inputPath);
+    File outputFile = filesystem.getFileForRelativePath(outputPath);
     try (
-        ZipInputStream in = new ZipInputStream(new BufferedInputStream(new FileInputStream(inputFile.toFile())));
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile.toFile())
+        ZipInputStream in =
+            new ZipInputStream(new BufferedInputStream(new FileInputStream(inputFile)));
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile)
     ) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
         CustomZipEntry customEntry = new CustomZipEntry(entry);
@@ -123,6 +129,6 @@ public class RepackZipEntriesStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("repack %s in %s", inputFile, outputFile);
+    return String.format("repack %s in %s", inputPath, outputPath);
   }
 }

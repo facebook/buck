@@ -27,7 +27,8 @@ import com.google.common.base.Preconditions;
  *
  * @param <T> The constructor argument type returned by a {@link Description} of type T.
  */
-public class DescribedRuleFactory<T> implements BuildRuleFactory<DescribedRuleBuilder<T>> {
+public class DescribedRuleFactory<T extends ConstructorArg>
+    implements BuildRuleFactory<DescribedRuleBuilder<T>> {
 
   private final Description<T> description;
 
@@ -36,7 +37,8 @@ public class DescribedRuleFactory<T> implements BuildRuleFactory<DescribedRuleBu
   }
 
   @Override
-  public DescribedRuleBuilder<T> newInstance(BuildRuleFactoryParams params) throws NoSuchBuildTargetException {
+  public DescribedRuleBuilder<T> newInstance(BuildRuleFactoryParams params)
+      throws NoSuchBuildTargetException {
     return new DescribedRuleBuilder<>(description, params);
   }
 }

@@ -45,6 +45,11 @@ public class PBXReference extends PBXContainerItem {
      * Relative to the build setting {@code SDKROOT}.
      */
     SDKROOT("SDKROOT"),
+
+    /**
+     * Relative to the directory containing the project file {@code SOURCE_ROOT}.
+     */
+    SOURCE_ROOT("SOURCE_ROOT"),
     ;
 
     private final String rep;
@@ -52,6 +57,7 @@ public class PBXReference extends PBXContainerItem {
       rep = str;
     }
 
+    @Override
     public String toString() {
       return rep;
     }

@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class BuckEventBusFactory {
 
-  public static String BUILD_ID_FOR_TEST = "CAFEBABE";
+  public static final String BUILD_ID_FOR_TEST = "CAFEBABE";
 
   /** Utility class: do not instantiate. */
   private BuckEventBusFactory() {}

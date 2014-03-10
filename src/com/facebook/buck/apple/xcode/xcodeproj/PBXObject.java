@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 
 import javax.annotation.Nullable;
@@ -38,8 +39,15 @@ public abstract class PBXObject {
   public abstract String isa();
 
   /**
-   * Populates the serializer with the fields of this objects.
+   * Populates the serializer with the fields of this object.
    */
-  public void serializeInto(XcodeprojSerializer s) {
+  public void serializeInto(@SuppressWarnings("unused") XcodeprojSerializer serializer) {
+  }
+
+  /**
+   * Generate a GID, can be overridden to generate a stable GID.
+   */
+  public String generateGid(GidGenerator generator) {
+    return generator.genGid();
   }
 }

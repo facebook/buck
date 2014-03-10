@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -45,7 +46,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
-    result.assertExitCode("buck project should exit cleanly", 0);
+    result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
 
@@ -83,7 +84,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project", "//modules/dep1:dep1");
-    result.assertExitCode("buck project should exit cleanly", 0);
+    result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
 
@@ -125,7 +126,7 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
-    result.assertExitCode("buck project should exit cleanly", 0);
+    result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
   }

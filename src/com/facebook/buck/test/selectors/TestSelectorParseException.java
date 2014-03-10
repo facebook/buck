@@ -24,6 +24,7 @@ package com.facebook.buck.test.selectors;
  * this package to a minimum means we'll subclass {@link RuntimeException} instead and convert
  * to a {@link com.facebook.buck.util.HumanReadableException} elsewhere.
  */
+@SuppressWarnings("serial")
 public class TestSelectorParseException extends RuntimeException {
   public TestSelectorParseException(String message) {
     super(message);

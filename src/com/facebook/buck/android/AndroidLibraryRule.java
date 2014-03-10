@@ -35,6 +35,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -51,20 +52,21 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   private final Optional<Path> manifestFile;
 
   @VisibleForTesting
-  public AndroidLibraryRule(BuildRuleParams buildRuleParams,
-                            Set<Path> srcs,
-                            Set<SourcePath> resources,
-                            Optional<DummyRDotJava> optionalDummyRDotJava,
-                            Optional<Path> proguardConfig,
-                            Set<BuildRule> exportedDeps,
-                            JavacOptions javacOptions,
-                            Optional<Path> manifestFile) {
+  public AndroidLibraryRule(
+      BuildRuleParams buildRuleParams,
+      Set<Path> srcs,
+      Set<SourcePath> resources,
+      Optional<Path> proguardConfig,
+      Set<BuildRule> exportedDeps,
+      ImmutableSet<String> additionalClasspathEntries,
+      JavacOptions javacOptions,
+      Optional<Path> manifestFile) {
     this(buildRuleParams,
         srcs,
         resources,
-        optionalDummyRDotJava,
         proguardConfig,
         exportedDeps,
+        additionalClasspathEntries,
         javacOptions,
         Optional.<Path>absent(),
         Optional.<String>absent(),
@@ -75,9 +77,9 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
   public AndroidLibraryRule(BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
-      Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Path> proguardConfig,
       Set<BuildRule> exportedDeps,
+      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> javac,
       Optional<String> javacVersion,
@@ -85,9 +87,9 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     super(buildRuleParams,
         srcs,
         resources,
-        optionalDummyRDotJava,
         proguardConfig,
         exportedDeps,
+        additionalClasspathEntries,
         javacOptions,
         javac,
         javacVersion);
@@ -124,14 +126,20 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
     return newAndroidLibraryRuleBuilder(Optional.<Path>absent(), Optional.<String>absent(), params);
   }
 
-  public static Builder newAndroidLibraryRuleBuilder(Optional<Path> javac, Optional<String> javacVersion, AbstractBuildRuleBuilderParams params) {
+  public static Builder newAndroidLibraryRuleBuilder(
+      Optional<Path> javac,
+      Optional<String> javacVersion,
+      AbstractBuildRuleBuilderParams params) {
     return new Builder(javac, javacVersion, params);
   }
 
   public static class Builder extends DefaultJavaLibraryRule.Builder {
     private Optional<Path> manifestFile = Optional.absent();
 
-    private Builder(Optional<Path> javac, Optional<String> javacVersion, AbstractBuildRuleBuilderParams params) {
+    private Builder(
+        Optional<Path> javac,
+        Optional<String> javacVersion,
+        AbstractBuildRuleBuilderParams params) {
       super(javac, javacVersion, params);
     }
 
@@ -144,18 +152,23 @@ public class AndroidLibraryRule extends DefaultJavaLibraryRule {
           annotationProcessingBuilder.build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+      AndroidLibraryGraphEnhancer.Result result =
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ false);
+
+      Optional<DummyRDotJava> uberRDotJava = result.getOptionalDummyRDotJava();
+      ImmutableSet<String> additionalClasspathEntries = uberRDotJava.isPresent()
+          ? ImmutableSet.of(uberRDotJava.get().getRDotJavaBinFolder().toString())
+          : ImmutableSet.<String>of();
 
       return new AndroidLibraryRule(
           result.getBuildRuleParams(),
           srcs,
           resources,
-          result.getOptionalDummyRDotJava(),
           proguardConfig,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),
+          additionalClasspathEntries,
           javacOptions.build(),
           javac,
           javacVersion,

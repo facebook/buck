@@ -16,14 +16,13 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.android.DummyRDotJava;
-import com.facebook.buck.android.JavaLibraryGraphEnhancer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -34,20 +33,20 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
   @SuppressWarnings("unused")
   private final boolean ruleInputsAreCached;
 
-  protected FakeDefaultJavaLibraryRule(BuildRuleParams buildRuleParams,
-                                       Set<Path> srcs,
-                                       Set<SourcePath> resources,
-                                       Optional<DummyRDotJava> optionalDummyRDotJava,
-                                       Optional<Path> proguardConfig,
-                                       AnnotationProcessingParams annotationProcessingParams,
-                                       Set<BuildRule> exportedDeps,
-                                       boolean ruleInputsAreCached) {
+  protected FakeDefaultJavaLibraryRule(
+      BuildRuleParams buildRuleParams,
+      Set<Path> srcs,
+      Set<SourcePath> resources,
+      Optional<Path> proguardConfig,
+      AnnotationProcessingParams annotationProcessingParams,
+      Set<BuildRule> exportedDeps,
+      boolean ruleInputsAreCached) {
     super(buildRuleParams,
         srcs,
         resources,
-        optionalDummyRDotJava,
         proguardConfig,
         exportedDeps,
+        /* addtionalClasspathEntries */ ImmutableSet.<String>of(),
         JavacOptions.builder().setAnnotationProcessingData(annotationProcessingParams).build()
     );
 
@@ -71,16 +70,10 @@ public class FakeDefaultJavaLibraryRule extends DefaultJavaLibraryRule {
       AnnotationProcessingParams processingParams =
           annotationProcessingBuilder.build(ruleResolver);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
-              .createBuildableForAndroidResources(
-                  ruleResolver, /* createBuildableIfEmptyDeps */ false);
-
       return new FakeDefaultJavaLibraryRule(
-          result.getBuildRuleParams(),
+          buildRuleParams,
           srcs,
           resources,
-          result.getOptionalDummyRDotJava(),
           proguardConfig,
           processingParams,
           getBuildTargetsAsBuildRules(ruleResolver, exportedDeps),

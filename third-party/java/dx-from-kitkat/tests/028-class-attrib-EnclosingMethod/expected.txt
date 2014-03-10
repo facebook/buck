@@ -1,0 +1,61 @@
+reading small-class-1.txt...
+begin classfile
+magic: cafebabe
+minor_version: 0000
+major_version: 002e
+constant_pool_count: 0006
+
+constant_pool:
+  0001: utf8{"Small"}
+  0002: utf8{"java/lang/Object"}
+  0003: type{Small}
+  0004: type{java.lang.Object}
+  0005: utf8{"EnclosingMethod"}
+end constant_pool
+access_flags: public|super
+this_class: type{Small}
+super_class: type{java.lang.Object}
+interfaces_count: 0000
+fields_count: 0000
+methods_count: 0000
+attributes_count: 0001
+
+attributes[0]:
+  name: EnclosingMethod
+  length: 00000004
+  class: type{Small}
+  method: (none)
+end attributes[0]
+end classfile
+reading small-class-2.txt...
+begin classfile
+magic: cafebabe
+minor_version: 0000
+major_version: 002e
+constant_pool_count: 0009
+
+constant_pool:
+  0001: utf8{"Small"}
+  0002: utf8{"java/lang/Object"}
+  0003: type{Small}
+  0004: type{java.lang.Object}
+  0005: utf8{"EnclosingMethod"}
+  0006: utf8{"zorp"}
+  0007: utf8{"()V"}
+  0008: nat{zorp:()V}
+end constant_pool
+access_flags: public|super
+this_class: type{Small}
+super_class: type{java.lang.Object}
+interfaces_count: 0000
+fields_count: 0000
+methods_count: 0000
+attributes_count: 0001
+
+attributes[0]:
+  name: EnclosingMethod
+  length: 00000004
+  class: type{Small}
+  method: nat{zorp:()V}
+end attributes[0]
+end classfile

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createNiceMock;
@@ -25,6 +26,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -45,9 +47,6 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-
-import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
-import static org.junit.Assert.assertEquals;
 
 public class WatchServiceWatcherTest {
 
@@ -113,6 +112,7 @@ public class WatchServiceWatcherTest {
     expect(path.relativize(anyObject(Path.class))).andReturn(Paths.get("SomeClass.java"));
     eventBus.post(anyObject(WatchEvent.class));
     expectLastCall().andDelegateTo(new EventBus() {
+      @Override
       @SuppressWarnings("unchecked") // Allow downcast from obj to WatchEvent<Path>.
       public void post(Object obj) {
         WatchEvent<Path> event = (WatchEvent<Path>) obj;

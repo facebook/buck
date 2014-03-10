@@ -34,5 +34,9 @@ java_test(
     '//lib:guava',
     '//lib:junit',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )

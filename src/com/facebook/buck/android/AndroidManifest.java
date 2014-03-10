@@ -62,7 +62,7 @@ import java.util.Set;
  * <pre>
  * android_binary(
  *   name = 'my_app',
- *   manifest = genfile('AndroidManifest__manifest__.xml'),
+ *   manifest = genfile('AndroidManifest__my_manifest__.xml'),
  *   deps = [
  *     ':my_manifest',
  *   ],

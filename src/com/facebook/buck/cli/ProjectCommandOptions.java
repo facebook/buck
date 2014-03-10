@@ -30,8 +30,10 @@ import java.util.List;
 
 public class ProjectCommandOptions extends AbstractCommandOptions {
 
-  @Option(name = "--output-path", usage = "project output path, only applicable for 'xcode' target.")
-  private String outputPath;
+  @Option(
+      name = "--combined-project",
+      usage = "Generate an xcode project of a target and its dependencies.")
+  private String combinedProject;
 
 
   @Argument
@@ -53,8 +55,8 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
   }
 
-  public String getOutputPath() {
-    return outputPath;
+  public String getCombinedProject() {
+    return combinedProject;
   }
 
 

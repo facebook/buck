@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.UberRDotJava.BuildOutput;
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.model.BuildTarget;
@@ -35,23 +34,14 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MorePaths;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -61,81 +51,43 @@ import javax.annotation.Nullable;
 /**
  * Buildable that is responsible for:
  * <ul>
- *   <li>Taking a set of res/ directories and applying an optional resource filter to them,
- *       ultimately generating the final set of res/ directories whose contents should be included
- *       in an APK.
  *   <li>Generating a single {@code R.java} file from those directories (aka the uber-R.java).
  *   <li>Compiling the single {@code R.java} file.
  *   <li>Dexing the single {@code R.java} to a {@code classes.dex.jar} file (Optional).
  * </ul>
  * <p>
- * Clients of this Buildable may need to know:
- * <ul>
- *   <li>The set of res/ directories that was used to calculate the R.java file. (These are needed
- *       as arguments to aapt to create the unsigned APK, as well as arguments to create a
- *       ProGuard config, if appropriate.)
- *   <li>The set of non-english {@code strings.xml} files identified by the resource filter.
- *   <li>The path to the {@code R.java} file.
- * </ul>
+ * Clients of this Buildable may need to know the path to the {@code R.java} file.
  */
 public class UberRDotJava extends AbstractBuildable implements
     InitializableFromDisk<BuildOutput> {
 
   public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
-  private static final String RES_DIRECTORIES_KEY = "res_directories";
-  private static final String NON_ENGLISH_STRING_FILES_KEY = "non_english_string_files";
-
-  static enum ResourceCompressionMode {
-    DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
-    ENABLED(/* isCompressResources */ true, /* isStoreStringsAsAssets */ false),
-    ENABLED_WITH_STRINGS_AS_ASSETS(
-      /* isCompressResources */ true,
-      /* isStoreStringsAsAssets */ true),
-    ;
-
-    private final boolean isCompressResources;
-    private final boolean isStoreStringsAsAssets;
-
-    private ResourceCompressionMode(boolean isCompressResources, boolean isStoreStringsAsAssets) {
-      this.isCompressResources = isCompressResources;
-      this.isStoreStringsAsAssets = isStoreStringsAsAssets;
-    }
-
-    public boolean isCompressResources() {
-      return isCompressResources;
-    }
-
-    public boolean isStoreStringsAsAssets() {
-      return isStoreStringsAsAssets;
-    }
-  }
 
   private final BuildTarget buildTarget;
-  private final ResourceCompressionMode resourceCompressionMode;
-  private final FilterResourcesStep.ResourceFilter resourceFilter;
+  private final ResourcesFilter resourcesFilter;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final boolean rDotJavaNeedsDexing;
+  private final boolean shouldBuildStringSourceMap;
 
   @Nullable private BuildOutput buildOutput;
 
   UberRDotJava(BuildTarget buildTarget,
-      ResourceCompressionMode resourceCompressionMode,
-      ResourceFilter resourceFilter,
+      ResourcesFilter resourcesFilter,
       AndroidResourceDepsFinder androidResourceDepsFinder,
-      boolean rDotJavaNeedsDexing) {
+      boolean rDotJavaNeedsDexing,
+      boolean shouldBuildStringSourceMap) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
-    this.resourceFilter = Preconditions.checkNotNull(resourceFilter);
+    this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
+    this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
     return builder
-        .set("resourceCompressionMode", resourceCompressionMode.toString())
-        .set("resourceFilter", resourceFilter.getDescription())
-        .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing);
+        .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
+        .set("shouldBuildStringSourceMap", shouldBuildStringSourceMap);
   }
 
   @Override
@@ -148,19 +100,12 @@ public class UberRDotJava extends AbstractBuildable implements
     return null;
   }
 
-  public ImmutableSet<String> getResDirectories() {
-    return getBuildOutput().resDirectories;
-  }
-
-  public ImmutableSet<Path> getNonEnglishStringFiles() {
-    return getBuildOutput().nonEnglishStringFiles;
-  }
-
   public Optional<DexWithClasses> getRDotJavaDexWithClasses() {
     Preconditions.checkState(rDotJavaNeedsDexing,
         "Error trying to get R.java dex file: R.java is not supposed to be dexed.");
 
-    final Optional<Integer> linearAllocSizeEstimate = getBuildOutput().rDotJavaDexLinearAllocEstimate;
+    final Optional<Integer> linearAllocSizeEstimate =
+        getBuildOutput().rDotJavaDexLinearAllocEstimate;
     if (!linearAllocSizeEstimate.isPresent()) {
       return Optional.absent();
     }
@@ -189,41 +134,19 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   @Override
-  public List<Step> getBuildSteps(BuildContext context, final BuildableContext buildableContext)
-      throws IOException {
+  public List<Step> getBuildSteps(
+      BuildContext context,
+      final BuildableContext buildableContext
+  ) throws IOException {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     AndroidResourceDetails androidResourceDetails =
         androidResourceDepsFinder.getAndroidResourceDetails();
-    final Set<String> rDotJavaPackages = androidResourceDetails.rDotJavaPackages;
-    final ImmutableSet<Path> resDirectories;
-    final Supplier<ImmutableSet<String>> nonEnglishStringFiles;
-    if (requiresResourceFilter()) {
-      final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
-          androidResourceDetails.resDirectories,
-          androidResourceDetails.whitelistedStringDirs);
-      steps.add(filterResourcesStep);
-
-      resDirectories = filterResourcesStep.getOutputResourceDirs();
-      nonEnglishStringFiles = new Supplier<ImmutableSet<String>>() {
-        @Override
-        public ImmutableSet<String> get() {
-          return FluentIterable.from(filterResourcesStep.getNonEnglishStringFiles())
-              .transform(Functions.toStringFunction())
-              .toSet();
-        }
-      };
-      for (Path outputResourceDir : resDirectories) {
-        buildableContext.recordArtifactsInDirectory(outputResourceDir);
-      }
-    } else {
-      resDirectories = androidResourceDetails.resDirectories;
-      nonEnglishStringFiles = Suppliers.ofInstance(ImmutableSet.<String>of());
-    }
+    ImmutableSet<String> rDotJavaPackages = androidResourceDetails.rDotJavaPackages;
+    ImmutableSet<Path> resDirectories = resourcesFilter.getResDirectories();
 
     if (!resDirectories.isEmpty()) {
-      generateAndCompileRDotJavaFiles(
-          resDirectories, rDotJavaPackages, steps, buildableContext);
+      generateAndCompileRDotJavaFiles(resDirectories, rDotJavaPackages, steps, buildableContext);
     }
 
     final Optional<DexRDotJavaStep> dexRDotJava = rDotJavaNeedsDexing && !resDirectories.isEmpty()
@@ -237,13 +160,6 @@ public class UberRDotJava extends AbstractBuildable implements
     steps.add(new AbstractExecutionStep("record_build_output") {
       @Override
       public int execute(ExecutionContext context) {
-        buildableContext.addMetadata(
-            RES_DIRECTORIES_KEY,
-            Iterables.transform(resDirectories, Functions.toStringFunction()));
-        buildableContext.addMetadata(
-            NON_ENGLISH_STRING_FILES_KEY,
-            nonEnglishStringFiles.get());
-
         if (dexRDotJava.isPresent()) {
           buildableContext.addMetadata(
               R_DOT_JAVA_LINEAR_ALLOC_SIZE,
@@ -263,13 +179,7 @@ public class UberRDotJava extends AbstractBuildable implements
         ? Optional.of(Integer.parseInt(linearAllocSizeValue.get()))
         : Optional.<Integer>absent();
 
-    return new BuildOutput(
-      ImmutableSet.copyOf(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get()),
-      FluentIterable.from(onDiskBuildInfo.getValues(NON_ENGLISH_STRING_FILES_KEY).get())
-          .transform(MorePaths.TO_PATH)
-          .toSet(),
-      linearAllocSize
-    );
+    return new BuildOutput(linearAllocSize);
   }
 
   @Override
@@ -287,68 +197,12 @@ public class UberRDotJava extends AbstractBuildable implements
   }
 
   public static class BuildOutput {
-    private final ImmutableSet<String> resDirectories;
-    private final ImmutableSet<Path> nonEnglishStringFiles;
     private final Optional<Integer> rDotJavaDexLinearAllocEstimate;
 
-    public BuildOutput(ImmutableSet<String> resDirectories,
-        ImmutableSet<Path> nonEnglishStringFiles,
-        Optional<Integer> rDotJavaDexLinearAllocSizeEstimate) {
-      this.resDirectories = Preconditions.checkNotNull(resDirectories);
-      this.nonEnglishStringFiles = Preconditions.checkNotNull(nonEnglishStringFiles);
+    public BuildOutput(Optional<Integer> rDotJavaDexLinearAllocSizeEstimate) {
       this.rDotJavaDexLinearAllocEstimate =
           Preconditions.checkNotNull(rDotJavaDexLinearAllocSizeEstimate);
     }
-  }
-
-  AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
-    return androidResourceDepsFinder.getAndroidTransitiveDependencies();
-  }
-
-  private boolean requiresResourceFilter() {
-    return resourceFilter.isEnabled() || isStoreStringsAsAssets();
-  }
-
-  boolean isStoreStringsAsAssets() {
-    return resourceCompressionMode.isStoreStringsAsAssets();
-  }
-
-  /**
-   * Sets up filtering of resources, images/drawables and strings in particular, based on build
-   * rule parameters {@link #resourceFilter} and {@link #isStoreStringsAsAssets}.
-   *
-   * {@link com.facebook.buck.android.FilterResourcesStep.ResourceFilter} {@code resourceFilter}
-   * determines which drawables end up in the APK (based on density - mdpi, hdpi etc), and also
-   * whether higher density drawables get scaled down to the specified density (if not present).
-   *
-   * {@code isStoreStringsAsAssets} determines whether non-english string resources are packaged
-   * separately as assets (and not bundled together into the {@code resources.arsc} file).
-   *
-   * @param whitelistedStringDirs overrides storing non-english strings as assets for resources
-   *     inside these directories.
-   */
-  @VisibleForTesting
-  FilterResourcesStep createFilterResourcesStep(Set<Path> resourceDirectories,
-      ImmutableSet<Path> whitelistedStringDirs) {
-    ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
-    String resDestinationBasePath = getResDestinationBasePath();
-    int count = 0;
-    for (Path resDir : resourceDirectories) {
-      filteredResourcesDirMapBuilder.put(resDir,
-          Paths.get(resDestinationBasePath, String.valueOf(count++)));
-    }
-
-    ImmutableBiMap<Path, Path> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
-    FilterResourcesStep.Builder filterResourcesStepBuilder = FilterResourcesStep.builder()
-        .setInResToOutResDirMap(resSourceToDestDirMap)
-        .setResourceFilter(resourceFilter);
-
-    if (isStoreStringsAsAssets()) {
-      filterResourcesStepBuilder.enableStringsFilter();
-      filterResourcesStepBuilder.setWhitelistedStringDirs(whitelistedStringDirs);
-    }
-
-    return filterResourcesStepBuilder.build();
   }
 
   /**
@@ -377,8 +231,22 @@ public class UberRDotJava extends AbstractBuildable implements
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
     commands.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
-    // TODO: add command to build the string source map file...
+    if (shouldBuildStringSourceMap) {
+      // Make sure we have an output directory
+      Path outputDirPath = getPathForNativeStringInfoDirectory();
+      commands.add(new MakeCleanDirectoryStep(outputDirPath));
 
+      // Add the step that parses R.txt and all the strings.xml files, and
+      // produces a JSON with android resource id's and xml paths for each string resource.
+      GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
+          rDotJavaSrc,
+          resDirectories,
+          outputDirPath);
+      commands.add(genNativeStringInfo);
+
+      // Cache the generated strings.json file, it will be stored inside outputDirPath
+      buildableContext.recordArtifactsInDirectory(outputDirPath);
+    }
 
     // Compile the R.java files.
     Set<Path> javaSourceFilePaths = Sets.newHashSet();
@@ -393,6 +261,10 @@ public class UberRDotJava extends AbstractBuildable implements
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
     buildableContext.recordArtifactsInDirectory(rDotJavaSrc);
     buildableContext.recordArtifactsInDirectory(rDotJavaBin);
+  }
+
+  private Path getPathForNativeStringInfoDirectory() {
+    return BuildTargets.getBinPath(buildTarget, "__%s_string_source_map__");
   }
 
   /**
@@ -412,20 +284,16 @@ public class UberRDotJava extends AbstractBuildable implements
     return BuildTargets.getBinPath(buildTarget, "__%s_uber_rdotjava_src__");
   }
 
-  private String getResDestinationBasePath() {
-    return BuildTargets.getBinPath(buildTarget, "__filtered__%s__").toString();
-  }
-
   public static Builder newUberRDotJavaBuilder(AbstractBuildRuleBuilderParams params) {
     return new Builder(params);
   }
 
   static class Builder extends AbstractBuildable.Builder {
 
-    @Nullable private ResourceCompressionMode resourceCompressionMode;
-    @Nullable private FilterResourcesStep.ResourceFilter resourceFilter;
+    @Nullable private ResourcesFilter resourcesFilter;
     @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
     private boolean rDotJavaNeedsDexing = false;
+    private boolean shouldBuildStringSourceMap = false;
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -433,7 +301,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
     @Override
     protected BuildRuleType getType() {
-      return BuildRuleType._UBER_R_DOT_JAVA;
+      return BuildRuleType.UBER_R_DOT_JAVA;
     }
 
     @Override
@@ -442,13 +310,9 @@ public class UberRDotJava extends AbstractBuildable implements
       return this;
     }
 
-    public Builder setResourceCompressionMode(ResourceCompressionMode mode) {
-      this.resourceCompressionMode = mode;
-      return this;
-    }
-
-    public Builder setResourceFilter(ResourceFilter resourceFilter) {
-      this.resourceFilter = resourceFilter;
+    public Builder setResourcesFilter(ResourcesFilter resourcesFilter) {
+      this.resourcesFilter = resourcesFilter;
+      addDep(resourcesFilter.getBuildTarget());
       return this;
     }
 
@@ -467,13 +331,18 @@ public class UberRDotJava extends AbstractBuildable implements
       return this;
     }
 
+    public Builder setBuildStringSourceMap(boolean shouldBuildStringSourceMap) {
+      this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
+      return this;
+    }
+
     @Override
     protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
       return new UberRDotJava(buildTarget,
-          resourceCompressionMode,
-          resourceFilter,
+          resourcesFilter,
           androidResourceDepsFinder,
-          rDotJavaNeedsDexing);
+          rDotJavaNeedsDexing,
+          shouldBuildStringSourceMap);
     }
   }
 }

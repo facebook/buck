@@ -58,13 +58,15 @@ public class AaptPackageResourcesTest {
    */
   @Test
   public void testCreateAllAssetsDirectoryWithZeroAssetsDirectories() throws IOException {
+    ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(uberRDotJava);
+    EasyMock.replay(resourcesFilter, uberRDotJava);
 
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+        resourcesFilter,
         uberRDotJava,
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of());
@@ -77,7 +79,7 @@ public class AaptPackageResourcesTest {
         /* assetsDirectories */ ImmutableSet.<Path>of(),
         commands,
         new FakeDirectoryTraverser());
-    EasyMock.verify(uberRDotJava);
+    EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that no assets/ directory is used.
     assertFalse("There should not be an assets/ directory to pass to aapt.",
@@ -107,8 +109,9 @@ public class AaptPackageResourcesTest {
         null, /* resDirectory */
         "java/src/com/facebook/base/assets2",
         null /* nativeLibsDirectory */);
+    ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(uberRDotJava);
+    EasyMock.replay(resourcesFilter, uberRDotJava);
 
     AndroidResourceRule resourceOne = (AndroidResourceRule) ruleResolver
         .get(BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo_resources"));
@@ -117,6 +120,7 @@ public class AaptPackageResourcesTest {
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//java/src/com/facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+        resourcesFilter,
         uberRDotJava,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
@@ -140,12 +144,14 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         assetsDirectories, commands, traverser);
-    EasyMock.verify(uberRDotJava);
+    EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that the existing assets/ directory will be passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
     assertEquals(
-        "Even though there is only one assets directory, the one in " + BIN_DIR + " should be used.",
+        "Even though there is only one assets directory, the one in " +
+            BIN_DIR +
+            " should be used.",
         aaptPackageResources.getPathToAllAssetsDirectory(),
         allAssetsDirectory.get());
   }
@@ -171,13 +177,15 @@ public class AaptPackageResourcesTest {
         null, /* resDirectory */
         "facebook/base/assets2",
         null /* nativeLibsDirectory */);
+    ResourcesFilter resourcesFilter = EasyMock.createMock(ResourcesFilter.class);
     UberRDotJava uberRDotJava = EasyMock.createMock(UberRDotJava.class);
-    EasyMock.replay(uberRDotJava);
+    EasyMock.replay(resourcesFilter, uberRDotJava);
 
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         new BuildTarget("//facebook/base", "apk", "aapt_package"),
         /* manifest */ new FileSourcePath("facebook/base/AndroidManifest.xml"),
+        resourcesFilter,
         uberRDotJava,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
@@ -214,7 +222,7 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         assetsDirectories, commands, traverser);
-    EasyMock.verify(uberRDotJava);
+    EasyMock.verify(resourcesFilter, uberRDotJava);
 
     // Verify that an assets/ directory will be created and passed to aapt.
     assertTrue(allAssetsDirectory.isPresent());
@@ -224,13 +232,16 @@ public class AaptPackageResourcesTest {
         new MakeCleanDirectoryStep(BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__")),
         new MkdirAndSymlinkFileStep(
             Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"),
-            BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),
+            BIN_PATH.resolve(
+                "facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),
         new MkdirAndSymlinkFileStep(
             Paths.get("facebook/base/assets2/fonts/Theinhardt-Medium.otf"),
-            BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Medium.otf")),
+            BIN_PATH.resolve(
+                "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Medium.otf")),
         new MkdirAndSymlinkFileStep(
             Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"),
-            BIN_PATH.resolve("facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf")));
+            BIN_PATH.resolve(
+                "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf")));
     MoreAsserts.assertListEquals(expectedCommands, commands.build());
   }
 

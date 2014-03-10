@@ -1,0 +1,48 @@
+Blort.exTest1:(I)I:
+regs: 0004; ins: 0001; outs: 0001
+  0000: move v0, v3
+  0001: move v2, v0
+  0002: invoke-static {v2}, Blort.maybeThrow:(I)I
+  0005: move-result v2
+  0006: const/4 v2, #int 1 // #1
+  0007: move v0, v2
+  0008: return v0
+  0009: move-exception v2
+  000a: move-object v1, v2
+  000b: const/4 v2, #int 2 // #2
+  000c: move v0, v2
+  000d: goto 0008 // -0005
+  catches
+    tries:
+      try 0002..0005
+      catch java.lang.RuntimeException -> 0009
+Blort.exTest2:(I)I:
+regs: 0004; ins: 0001; outs: 0001
+  0000: move v0, v3
+  0001: add-int/lit8 v0, v0, #int 1 // #01
+  0003: move v2, v0
+  0004: invoke-static {v2}, Blort.maybeThrow:(I)I
+  0007: move-result v2
+  0008: move v0, v2
+  0009: add-int/lit8 v0, v0, #int 1 // #01
+  000b: move v2, v0
+  000c: invoke-static {v2}, Blort.maybeThrow:(I)I
+  000f: move-result v2
+  0010: move v0, v2
+  0011: return v0
+  0012: move-exception v2
+  0013: move-object v1, v2
+  0014: const/4 v2, #int 1 // #1
+  0015: move v0, v2
+  0016: goto 0011 // -0005
+  0017: move-exception v2
+  0018: move-object v1, v2
+  0019: const/4 v2, #int 3 // #3
+  001a: move v0, v2
+  001b: goto 0011 // -000a
+  catches
+    tries:
+      try 0004..0007
+      catch java.lang.RuntimeException -> 0012
+      try 000c..000f
+      catch java.lang.RuntimeException -> 0017

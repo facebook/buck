@@ -335,12 +335,12 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           options.getDefaultIncludes(),
           EnumSet.noneOf(ProjectBuildFileParser.Option.class));
     } catch (BuildTargetException | BuildFileParseException e) {
-      // TODO: this doesn't smell right!
+      // TODO(devjasta): this doesn't smell right!
       return null;
     }
 
     // Check that the given target is a valid target.
-    for (Map<String,Object> rule : ruleObjects) {
+    for (Map<String, Object> rule : ruleObjects) {
       String name = (String)rule.get("name");
       if (name.equals(buildTarget.getShortName())) {
         return buildTarget.getFullyQualifiedName();

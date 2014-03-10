@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
@@ -110,21 +111,34 @@ public class AndroidBinaryRuleTest {
         FluentIterable.from(dexTransitiveDependencies.classpathEntriesToDex)
             .transform(MorePaths.TO_PATH)
             .toSet();
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+
     androidBinary.addProguardCommands(
         context,
         classpathEntriesToDex,
         transitiveDependencies.proguardConfigs,
         commands,
-        ImmutableSet.<String>of());
+        ImmutableSet.<Path>of(),
+        buildableContext);
     verify(context);
 
+    ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
+        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/configuration.txt"),
+        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/mapping.txt"));
+
+    assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
+
+    buildableContext = new FakeBuildableContext();
+
     MakeCleanDirectoryStep expectedClean =
-        new MakeCleanDirectoryStep(Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
+        new MakeCleanDirectoryStep(
+            Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
 
     GenProGuardConfigStep expectedGenProguard =
         new GenProGuardConfigStep(
-            Paths.get("buck-out/bin/java/src/com/facebook/base/__manifest_apk#aapt_package__/AndroidManifest.xml"),
-            ImmutableSet.<String>of(),
+            Paths.get("buck-out/bin/java/src/com/facebook/base/" +
+                "__manifest_apk#aapt_package__/AndroidManifest.xml"),
+            ImmutableSet.<Path>of(),
             Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
 
     Step expectedObfuscation =
@@ -132,16 +146,23 @@ public class AndroidBinaryRuleTest {
           Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
           ImmutableSet.<Path>of(),
           false,
+          Optional.<Integer>absent(),
           ImmutableMap.of(
-              Paths.get("buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
-              Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/java/src/com/" +
-                  "facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
-          ImmutableSet.of("buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
-          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
+              Paths.get(
+                  "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
+              Paths.get(
+                  "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/" +
+                  "java/src/com/facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
+          ImmutableSet.of(
+              "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar"),
+          Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"),
+          buildableContext);
 
     assertEquals(
         ImmutableList.of(expectedClean, expectedGenProguard, expectedObfuscation),
         commands.build());
+
+    assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
   }
 
   static JavaLibraryRule createAndroidLibraryRule(String buildTarget,
@@ -159,7 +180,8 @@ public class AndroidBinaryRuleTest {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
       AndroidResourceRule androidResourceRule = ruleResolver.buildAndAddToIndex(
-          AndroidResourceRule.newAndroidResourceRuleBuilder(new FakeAbstractBuildRuleBuilderParams())
+          AndroidResourceRule.newAndroidResourceRuleBuilder(
+              new FakeAbstractBuildRuleBuilderParams())
           .setAssetsDirectory(Paths.get(assetDirectory))
           .setRes(resDirectory == null ? null : Paths.get(resDirectory))
           .setBuildTarget(resourceOnebuildTarget));
@@ -359,14 +381,14 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
     Set<Path> resourceDirectories = ImmutableSet.of(Paths.get("one"), Paths.get("two"));
 
-    FilterResourcesStep filterResourcesStep = buildRule.getUberRDotJava()
+    FilterResourcesStep filterResourcesStep = buildRule.getResourcesFilter()
         .createFilterResourcesStep(resourceDirectories,
             /* whitelistedStringsDir */ ImmutableSet.<Path>of());
 
     assertEquals(
         ImmutableSet.of(
-            Paths.get("buck-out/bin/__filtered__target#uber_r_dot_java__/0"),
-            Paths.get("buck-out/bin/__filtered__target#uber_r_dot_java__/1")),
+            Paths.get("buck-out/bin/__filtered__target#resources_filter__/0"),
+            Paths.get("buck-out/bin/__filtered__target#resources_filter__/1")),
         filterResourcesStep.getOutputResourceDirs());
   }
 

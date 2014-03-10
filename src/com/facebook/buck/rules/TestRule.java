@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -68,7 +68,7 @@ public interface TestRule extends BuildRule {
   /**
    * @return The set of labels for this build rule.
    */
-  public ImmutableSet<String> getLabels();
+  public ImmutableSet<Label> getLabels();
 
   /**
    * @return The set of email addresses to act as contact points for this test.

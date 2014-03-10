@@ -153,8 +153,8 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
       if (!(apkRule.getBuildable() instanceof InstallableApk)) {
         throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
-        		"installable rule, such as android_binary() or apk_genrule().",
-        		getBuildTarget(),
+            "installable rule, such as android_binary() or apk_genrule().",
+            getBuildTarget(),
             apkRule.getFullyQualifiedName());
       }
 

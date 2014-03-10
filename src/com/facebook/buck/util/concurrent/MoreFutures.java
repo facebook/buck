@@ -29,6 +29,10 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 public class MoreFutures {
+
+  /** Utility class: do not instantiate. */
+  private MoreFutures() {}
+
   /**
    * Invoke multiple callables on the provided executor and wait for all to return successfully.
    * An exception is thrown (immediately) if any callable fails.

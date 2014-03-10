@@ -37,7 +37,7 @@ public class ParserIntegrationTest {
 
     ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand(
         "build", "//:base_genrule", "-v", "2");
-    buildResult.assertExitCode(0);
+    buildResult.assertSuccess();
 
     workspace.verify();
   }

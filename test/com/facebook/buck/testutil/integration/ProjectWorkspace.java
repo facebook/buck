@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.Main;
+import com.facebook.buck.cli.TestCommand;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.MoreStrings;
@@ -65,6 +66,8 @@ import javax.annotation.Nullable;
 public class ProjectWorkspace {
 
   private static final String EXPECTED_SUFFIX = ".expected";
+
+  private static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
 
   private static final Function<Path, Path> BUILD_FILE_RENAME = new Function<Path, Path>() {
     @Override
@@ -183,11 +186,33 @@ public class ProjectWorkspace {
     return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
   }
 
+  public void replaceFileContents(String pathRelativeToProjectRoot,
+      String target,
+      String replacement) throws IOException {
+    String fileContents = getFileContents(pathRelativeToProjectRoot);
+    fileContents = fileContents.replace(target, replacement);
+    writeContentsToPath(fileContents, pathRelativeToProjectRoot);
+  }
+
+  public void writeContentsToPath(String contents, String pathRelativeToProjectRoot)
+      throws IOException {
+    Files.write(contents.getBytes(Charsets.UTF_8), getFile(pathRelativeToProjectRoot));
+  }
+
   /**
    * @return the specified path resolved against the root of this workspace.
    */
   public Path resolve(Path pathRelativeToWorkspaceRoot) {
     return destPath.resolve(pathRelativeToWorkspaceRoot);
+  }
+
+  public void resetBuildLogFile() throws IOException {
+    writeContentsToPath("", PATH_TO_BUILD_LOG);
+  }
+
+  public BuckBuildLog getBuildLog() throws IOException {
+    return BuckBuildLog.fromLogContents(
+        Files.readLines(getFile(PATH_TO_BUILD_LOG), Charsets.UTF_8));
   }
 
   /** The result of running {@code buck} from the command line. */
@@ -206,8 +231,9 @@ public class ProjectWorkspace {
      * Returns the exit code from the process.
      * <p>
      * Currently, this method is private because, in practice, any time a client might want to use
-     * it, it is more appropriate to use {@link #assertExitCode(String, int)} instead. If a valid
-     * use case arises, then we should make this getter public.
+     * it, it is more appropriate to use {@link #assertSuccess()} or
+     * {@link #assertFailure()} instead. If a valid use case arises, then we should make this
+     * getter public.
      */
     private int getExitCode() {
       return exitCode;
@@ -221,11 +247,31 @@ public class ProjectWorkspace {
       return stderr;
     }
 
-    public void assertExitCode(int exitCode) {
-      assertExitCode(null, exitCode);
+    public void assertSuccess() {
+      assertExitCode(null, 0);
     }
 
-    public void assertExitCode(@Nullable String message, int exitCode) {
+    public void assertSuccess(String message) {
+      assertExitCode(message, 0);
+    }
+
+    public void assertFailure() {
+      assertExitCode(null, Main.FAIL_EXIT_CODE);
+    }
+
+    public void assertTestFailure() {
+      assertExitCode(null, TestCommand.TEST_FAILURES_EXIT_CODE);
+    }
+
+    public void assertTestFailure(String message) {
+      assertExitCode(message, TestCommand.TEST_FAILURES_EXIT_CODE);
+    }
+
+    public void assertFailure(String message) {
+      assertExitCode(message, 1);
+    }
+
+    private void assertExitCode(@Nullable String message, int exitCode) {
       if (exitCode == getExitCode()) {
         return;
       }
@@ -242,6 +288,10 @@ public class ProjectWorkspace {
       System.err.println("=== STDOUT ===");
       System.err.println(getStdout());
       fail(failureMessage);
+    }
+
+    public void assertSpecialExitCode(String message, int exitCode) {
+      assertExitCode(message, exitCode);
     }
   }
 

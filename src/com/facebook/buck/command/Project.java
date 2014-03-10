@@ -129,7 +129,7 @@ public class Project {
    * again, which causes IntelliJ to go and index the world. Empirically, it seems that if we do
    * not write them at all, IntelliJ can live without them.
    */
-  private static boolean GENERATE_PROPERTIES_FILES = false;
+  private static final boolean GENERATE_PROPERTIES_FILES = false;
 
   private final PartialGraph partialGraph;
   private final BuildFileTree buildFileTree;
@@ -276,7 +276,8 @@ public class Project {
       Path pathToImlFile = Paths.get(module.pathToImlFile);
       Path depPathToImlFile = Paths.get(dep.pathToImlFile);
 
-      String relativePath = pathToImlFile.getParent().relativize(depPathToImlFile.getParent()).toString();
+      String relativePath =
+          pathToImlFile.getParent().relativize(depPathToImlFile.getParent()).toString();
 
       // This is probably a self-reference. Ignore it.
       if (relativePath.isEmpty()) {
@@ -412,7 +413,7 @@ public class Project {
         projectConfig.getSourceRoots(),
         false /* isTestSource */);
 
-    addRootExcludes(module, projectConfig.getSrcRule());
+    addRootExcludes(module, projectConfig.getSrcRule(), projectFilesystem);
 
     // At least one of src or tests should contribute a source folder unless this is an
     // non-library Android project with no source roots specified.
@@ -450,7 +451,8 @@ public class Project {
         NdkLibrary ndkLibrary = (NdkLibrary) projectRule.getBuildable();
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-        module.nativeLibs = Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
+        module.nativeLibs =
+            Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
       } else if (projectRule instanceof AndroidResourceRule) {
         AndroidResourceRule androidResourceRule = (AndroidResourceRule)projectRule;
         module.resFolder = createRelativePath(androidResourceRule.getRes(), target);
@@ -489,7 +491,8 @@ public class Project {
               "indicating that it is relative to the root of the repository.",
               rootPrefix);
           manifestPath = manifestPath.substring(rootPrefix.length());
-          String relativePathToManifest = Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
+          String relativePathToManifest =
+              Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
           // IntelliJ requires that the path start with a slash to indicate that it is relative to
           // the module.
           module.androidManifest = "/" + relativePathToManifest;
@@ -608,7 +611,9 @@ public class Project {
       // then the corresponding .iml file (in the same directory) should contain:
       //
       // <content url="file://$MODULE_DIR$">
-      //   <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" packagePrefix="com.example.base" />
+      //   <sourceFolder url="file://$MODULE_DIR$"
+      //                 isTestSource="false"
+      //                 packagePrefix="com.example.base" />
       //   <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" />
       //
       //   <!-- It will have an <excludeFolder> for every "subpackage" of com.example.base. -->
@@ -648,15 +653,36 @@ public class Project {
     return true;
   }
 
-  private void addRootExcludes(Module module, BuildRule buildRule) {
+  @VisibleForTesting
+  static void addRootExcludes(Module module,
+      BuildRule buildRule,
+      ProjectFilesystem projectFilesystem) {
     // If in the root of the project, specify ignored paths.
     if (buildRule != null && buildRule.getBuildTarget().getBasePathWithSlash().isEmpty()) {
       for (Path path : projectFilesystem.getIgnorePaths()) {
-        module.excludeFolders.add(
-            new SourceFolder(String.format("file://$MODULE_DIR$/%s", path), false));
+        // It turns out that ignoring all of buck-out causes problems in IntelliJ: it forces an
+        // extra "modules" folder to appear at the top of the navigation pane that competes with the
+        // ordinary file tree, making navigation a real pain. The hypothesis is that this is because
+        // there are files in buck-out/gen and buck-out/android that IntelliJ freaks out about if it
+        // cannot find them. Therefore, if "buck-out" is listed in the default list of paths to
+        // ignore (which makes sense for other parts of Buck, such as Watchman), then we will ignore
+        // only the appropriate subfolders of buck-out instead.
+        if (BuckConstant.BUCK_OUTPUT_PATH.equals(path)) {
+          addRootExclude(module, BuckConstant.BIN_PATH);
+          addRootExclude(module, BuckConstant.LOG_PATH);
+        } else {
+          addRootExclude(module, path);
+        }
       }
       module.isRootModule = true;
     }
+  }
+
+  private static void addRootExclude(Module module, Path path) {
+    module.excludeFolders.add(
+        new SourceFolder(
+            String.format("file://$MODULE_DIR$/%s", path),
+            /* isTestSource */ false));
   }
 
   /**

@@ -21,6 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.test.result.type.ResultType;
+
 import org.junit.Test;
 
 /**
@@ -33,7 +35,7 @@ public class TestResultSummaryTest {
     TestResultSummary testResultSummary = new TestResultSummary(
         "com.facebook.buck.rules.TestResultSummaryTest",
         "testGetters",
-        true /* isSuccess */,
+        ResultType.SUCCESS,
         123L,
         null /* message */,
         null /* stacktrace */,
@@ -60,7 +62,7 @@ public class TestResultSummaryTest {
     TestResultSummary testResultSummary = new TestResultSummary(
         "com.facebook.buck.rules.TestResultSummaryTest",
         "testGetters",
-        false /* isSuccess */,
+        ResultType.FAILURE,
         456L,
         assertionFailedMessage,
         stacktrace,

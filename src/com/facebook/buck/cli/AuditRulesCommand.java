@@ -51,7 +51,7 @@ import javax.annotation.Nullable;
 public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> {
 
   /** Indent to use in generated build file. */
-  private static String INDENT = "  ";
+  private static final String INDENT = "  ";
 
   /**
    * Properties from the JSON produced by {@code buck.py} that start with this prefix do not
@@ -95,10 +95,11 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
         options.getBuckConfig().getPythonInterpreter(),
         // TODO(simons): When we land dynamic loading, this MUST change.
         KnownBuildRuleTypes.getDefault().getAllDescriptions());
-    try (
-        ProjectBuildFileParser parser =
-            factory.createParser(options.getBuckConfig().getDefaultIncludes(),
-                EnumSet.noneOf(ProjectBuildFileParser.Option.class))) {
+    try (ProjectBuildFileParser parser =
+             factory.createParser(
+                 options.getBuckConfig().getDefaultIncludes(),
+                 EnumSet.noneOf(ProjectBuildFileParser.Option.class),
+                 console)) {
       PrintStream out = console.getStdOut();
       for (String pathToBuildFile : options.getArguments()) {
         // Print a comment with the path to the build file.

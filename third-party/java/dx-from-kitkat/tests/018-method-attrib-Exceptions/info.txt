@@ -1,0 +1,6 @@
+This is a dump of a simple class which is valid in structure but is overall
+invalid. That being said, the system should still have no trouble parsing and
+dumping it.
+
+The salient bit of parsing tested here is that the class has a single
+method with a syntactically valid Exceptions attribute.

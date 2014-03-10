@@ -16,11 +16,11 @@
 
 package com.facebook.buck.zip;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;

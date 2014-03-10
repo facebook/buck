@@ -16,10 +16,10 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;

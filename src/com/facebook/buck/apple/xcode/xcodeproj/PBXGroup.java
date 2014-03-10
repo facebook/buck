@@ -21,6 +21,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +31,26 @@ import java.util.List;
  * A collection of files in Xcode's virtual filesystem hierarchy.
  */
 public class PBXGroup extends PBXReference {
+  /**
+   * Method by which group contents will be sorted.
+   */
+  public enum SortPolicy {
+      /**
+       * By name, in default Java sort order.
+       */
+      BY_NAME,
+
+      /**
+       * Group contents will not be sorted, and will remain in the
+       * order they were added.
+       */
+      UNSORTED;
+  }
+
+  // Unfortunately, we can't determine this at constructor time, because CacheBuilder
+  // calls our constructor and it's not easy to pass arguments to it.
+  private SortPolicy sortPolicy;
+
   private final List<PBXReference> children;
 
   private final LoadingCache<String, PBXGroup> childGroupsByName;
@@ -38,6 +59,7 @@ public class PBXGroup extends PBXReference {
   public PBXGroup(String name, String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
 
+    sortPolicy = SortPolicy.BY_NAME;
     children = Lists.newArrayList();
 
     childGroupsByName = CacheBuilder.newBuilder().build(
@@ -76,6 +98,14 @@ public class PBXGroup extends PBXReference {
     return children;
   }
 
+  public void setSortPolicy(SortPolicy sortPolicy) {
+    this.sortPolicy = Preconditions.checkNotNull(sortPolicy);
+  }
+
+  public SortPolicy getSortPolicy() {
+    return sortPolicy;
+  }
+
   @Override
   public String isa() {
     return "PBXGroup";
@@ -85,12 +115,15 @@ public class PBXGroup extends PBXReference {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    Collections.sort(children, new Comparator<PBXReference>() {
-      @Override
-      public int compare(PBXReference o1, PBXReference o2) {
-        return o1.getName().compareTo(o2.getName());
-      }
-    });
+    if (sortPolicy == SortPolicy.BY_NAME) {
+      Collections.sort(children, new Comparator<PBXReference>() {
+          @Override
+          public int compare(PBXReference o1, PBXReference o2) {
+            return o1.getName().compareTo(o2.getName());
+          }
+        });
+    }
+
     s.addField("children", children);
   }
 }

@@ -57,7 +57,9 @@ public class KeystoreTest {
 
     Keystore keystore = (Keystore) rule.getBuildable();
     MoreAsserts.assertIterablesEquals(
-        ImmutableList.of(Paths.get("keystores/debug.keystore"), Paths.get("keystores/debug.keystore.properties")),
+        ImmutableList.of(
+            Paths.get("keystores/debug.keystore"),
+            Paths.get("keystores/debug.keystore.properties")),
         keystore.getInputsToCompareToOutput());
     assertEquals(Paths.get("keystores/debug.keystore"), keystore.getPathToStore());
     assertEquals(Paths.get("keystores/debug.keystore.properties"),

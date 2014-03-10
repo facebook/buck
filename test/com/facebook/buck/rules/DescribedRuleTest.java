@@ -79,7 +79,7 @@ public class DescribedRuleTest {
 
   @Test
   public void canConstructRuleUsingBuilder() throws NoSuchBuildTargetException, IOException {
-    class Dto {
+    class Dto implements ConstructorArg {
       public String name;
     }
 
@@ -130,7 +130,8 @@ public class DescribedRuleTest {
     DescribedRuleFactory<Dto> factory = new DescribedRuleFactory<>(description);
     DescribedRuleBuilder<Dto> builder = factory.newInstance(factoryParams);
     DescribedRule rule = builder.build(new BuildRuleResolver());
-    List<Step> steps = rule.getBuildable().getBuildSteps(fakeBuildContext, new FakeBuildableContext());
+    List<Step> steps =
+        rule.getBuildable().getBuildSteps(fakeBuildContext, new FakeBuildableContext());
 
     assertEquals(1, steps.size());
     EchoStep step = (EchoStep) Iterables.getOnlyElement(steps);
@@ -145,7 +146,7 @@ public class DescribedRuleTest {
   public void addingASourcePathShouldAmendTheDepsOfARule() throws NoSuchBuildTargetException {
     // The allowable variations. We don't populate Collection<Optional<SourcePath>>.
     @SuppressWarnings("unused")
-    class Dto {
+    class Dto implements ConstructorArg {
       public SourcePath path;
       public Optional<SourcePath> other;
       public ImmutableSet<SourcePath> paths;
@@ -208,8 +209,9 @@ public class DescribedRuleTest {
   }
 
   @Test
-  public void ensureThatIfOnlyACollectionOfSourcePathsAreDeclaredTheyGetAddedAsDeps() throws NoSuchBuildTargetException {
-    class Dto {
+  public void ensureThatIfOnlyACollectionOfSourcePathsAreDeclaredTheyGetAddedAsDeps()
+      throws NoSuchBuildTargetException {
+    class Dto implements ConstructorArg {
       @SuppressWarnings("unused")
       public Set<SourcePath> paths;
     }
@@ -284,7 +286,8 @@ public class DescribedRuleTest {
     }
 
     @Override
-    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext) throws IOException {
+    public List<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext)
+        throws IOException {
       return ImmutableList.<Step>of(new EchoStep(message));
     }
 

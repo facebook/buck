@@ -44,7 +44,8 @@ public class SourcePathsTest {
     MoreAsserts.assertIterablesEquals(
         "Iteration order should be preserved: results should not be alpha-sorted.",
         ImmutableList.of(
-            Paths.get("java/com/facebook/Main.java"), Paths.get("java/com/facebook/BuckConfig.java")),
+            Paths.get("java/com/facebook/Main.java"),
+            Paths.get("java/com/facebook/BuckConfig.java")),
         inputs);
   }
 }

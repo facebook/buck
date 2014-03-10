@@ -22,10 +22,10 @@ package com.facebook.buck.rules;
  * expected that instances of this class are stateless.
  *
  * @param <T> The object describing the parameters to be passed to the {@link Buildable}. How this
- *           is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
+ *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  *
  */
-public interface Description<T> {
+public interface Description<T extends ConstructorArg> {
 
   /**
    * @return The {@link BuildRuleType} being described.
@@ -34,7 +34,7 @@ public interface Description<T> {
 
   /**
    * @return An instance of the argument that must later be passed to
-   *     {@link #createBuildable(BuildRuleParams, Object)}.
+   *     {@link #createBuildable(BuildRuleParams, ConstructorArg)}.
    * @see ConstructorArgMarshaller
    *
    */

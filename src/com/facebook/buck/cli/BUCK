@@ -80,7 +80,7 @@ java_library(
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test:test',
-    '//src/com/facebook/buck/test/resultgroups:resultgroups',
+    '//src/com/facebook/buck/test/result/groups:groups',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/httpserver:httpserver',
     '//src/com/facebook/buck/shell:steps',

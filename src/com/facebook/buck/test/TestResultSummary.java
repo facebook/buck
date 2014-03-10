@@ -16,8 +16,10 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -29,7 +31,7 @@ public class TestResultSummary {
 
   private String testName;
 
-  private boolean success;
+  private ResultType type;
 
   private long time;
 
@@ -53,7 +55,7 @@ public class TestResultSummary {
   public TestResultSummary(
       String testCaseName,
       String testName,
-      boolean isSuccess,
+      ResultType type,
       long time,
       @Nullable String message,
       @Nullable String stacktrace,
@@ -61,7 +63,7 @@ public class TestResultSummary {
       @Nullable String stdErr) {
     this.testCaseName = testCaseName;
     this.testName = testName;
-    this.success = isSuccess;
+    this.type = type;
     this.time = time;
     this.message = message;
     this.stacktrace = stacktrace;
@@ -73,8 +75,23 @@ public class TestResultSummary {
     return testName;
   }
 
+  /**
+   * For now "success" means "not failure", which introduces the least surprise for tests that have
+   * an assumption violation / failure.  Tests that fall into this category are still considered
+   * "successful" by buck, though other parts of the system (specifically, event listeners) can do
+   * differently if they please.
+   */
+  @JsonIgnore
   public boolean isSuccess() {
-    return success;
+    return type != ResultType.FAILURE;
+  }
+
+  public void setType(String stringType) {
+    type = ResultType.valueOf(stringType);
+  }
+
+  public ResultType getType() {
+    return type;
   }
 
   /** @return how long the test took, in milliseconds */

@@ -248,7 +248,8 @@ public class Genrule extends DoNotUseAbstractBuildable implements Buildable {
       // from the shell but anyone reading the environment variable will get the
       // full paths due to variable interpolation
       if (output.startsWith(BuckConstant.GEN_PATH)) {
-        Path relativePath = output.subpath(BuckConstant.GEN_PATH.getNameCount(), output.getNameCount());
+        Path relativePath =
+            output.subpath(BuckConstant.GEN_PATH.getNameCount(), output.getNameCount());
         appendTo.add("$GEN_DIR/" + relativePath);
       } else {
         appendTo.add(relativeToAbsolutePathFunction.apply(output).toString());

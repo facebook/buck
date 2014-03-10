@@ -18,10 +18,11 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Predicate;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 
 /**
@@ -47,36 +48,37 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
   }
 
   @Override
-  public void copyDirs(Map<Path, Path> sourcesToDestinations,
-      Predicate<File> pred) throws IOException {
+  public void copyDirs(ProjectFilesystem filesystem,
+      Map<Path, Path> sourcesToDestinations,
+      Predicate<Path> pred) throws IOException {
     for (Map.Entry<Path, Path> e : sourcesToDestinations.entrySet()) {
-      copyDir(e.getKey(), e.getValue(), pred);
+      copyDir(filesystem, e.getKey(), e.getValue(), pred);
     }
   }
 
   @Override
-  public void copyDir(
-      Path srcDir,
-      Path destDir,
-      final Predicate<File> pred) throws IOException {
-    final Path dest = MorePaths.absolutify(destDir);
+  public void copyDir(final ProjectFilesystem filesystem,
+      final Path srcDir,
+      final Path destDir,
+      final Predicate<Path> pred) throws IOException {
 
     // Remove existing contents if any.
-    if (dest.toFile().exists()) {
-      MoreFiles.rmdir(dest);
+    if (filesystem.exists(destDir)) {
+      filesystem.rmdir(destDir);
     }
-    Files.createDirectories(dest);
+    filesystem.mkdirs(destDir);
 
-    // Copy filtered contents.
-    new DirectoryTraversal(srcDir.toFile()) {
-      @Override
-      public void visit(File srcFile, String relativePath) throws IOException {
-        if (pred.apply(srcFile)) {
-          Path destPath = dest.resolve(relativePath);
-          Files.createDirectories(destPath.getParent());
-          Files.copy(srcFile.toPath(), destPath);
-        }
-      }
-    }.traverse();
+    filesystem.walkRelativeFileTree(srcDir, new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path srcPath, BasicFileAttributes attributes)
+              throws IOException {
+            if (pred.apply(srcPath)) {
+              Path destPath = destDir.resolve(srcDir.relativize(srcPath));
+              filesystem.createParentDirs(destPath);
+              filesystem.copy(srcPath, destPath, ProjectFilesystem.CopySourceMode.FILE);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
   }
 }

@@ -134,7 +134,7 @@ public class UberRDotJavaUtil {
         );
   }
 
-  private static Function<BuildRule, HasAndroidResourceDeps> CAST_TO_ANDROID_RESOURCE_RULE =
+  private static final Function<BuildRule, HasAndroidResourceDeps> CAST_TO_ANDROID_RESOURCE_RULE =
       new Function<BuildRule, HasAndroidResourceDeps>() {
         @Override
         public HasAndroidResourceDeps apply(BuildRule rule) {

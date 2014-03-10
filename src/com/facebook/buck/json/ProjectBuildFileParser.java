@@ -21,11 +21,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -58,6 +57,7 @@ import java.util.Map;
  * parsing phase and must be closed afterward to free up resources.
  */
 public class ProjectBuildFileParser implements AutoCloseable {
+
   /** Options for parsing build files. */
   public enum Option {
     /** Don't output null items from {@code buck.py}. */
@@ -81,6 +81,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final ImmutableList<String> commonIncludes;
   private final String pythonInterpreter;
   private final EnumSet<Option> parseOptions;
+  private final Console console;
 
   private boolean isServerMode;
 
@@ -92,7 +93,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Iterable<String> commonIncludes,
       String pythonInterpreter,
       ImmutableSet<Description<?>> descriptions,
-      EnumSet<Option> parseOptions) {
+      EnumSet<Option> parseOptions,
+      Console console) {
     this.projectRoot = projectFilesystem.getProjectRoot();
     this.descriptions = Preconditions.checkNotNull(descriptions);
     this.ignorePaths = projectFilesystem.getIgnorePaths();
@@ -100,6 +102,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
     this.parseOptions = parseOptions;
     this.pathToBuckPy = Optional.absent();
+    this.console = Preconditions.checkNotNull(console);
 
     // Default to server mode unless explicitly unset internally.
     setServerMode(true);
@@ -155,8 +158,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Thread stderrConsumer = Threads.namedThread(
         ProjectBuildFileParser.class.getSimpleName(),
         new InputStreamConsumer(stderr,
-            System.err,
-            new Ansi(Platform.detect())));
+            console.getStdErr(),
+            console.getAnsi()));
     stderrConsumer.start();
 
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
@@ -209,10 +212,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
    */
   public static List<Map<String, Object>> getAllRulesInProject(
       ProjectBuildFileParserFactory factory,
-      Iterable<String> includes)
+      Iterable<String> includes,
+      Console console)
       throws BuildFileParseException {
     try (ProjectBuildFileParser buildFileParser =
-             factory.createParser(includes, EnumSet.of(Option.STRIP_NULL))) {
+             factory.createParser(includes, EnumSet.of(Option.STRIP_NULL), console)) {
       buildFileParser.setServerMode(false);
       return buildFileParser.getAllRulesInternal(Optional.<Path>absent());
     } catch (IOException e) {
@@ -333,7 +337,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
     // for the life of this buck invocation. We do this since this is generated in parallel we end
     // up with strange InterruptedExceptions being thrown.
     // TODO(simons): This would be the ideal thing to do.
-//    Path buckDotPy = projectRoot.toPath().resolve(BuckConstant.BIN_DIR).resolve("generated-buck.py");
+    //    Path buckDotPy =
+    //        projectRoot.toPath().resolve(BuckConstant.BIN_DIR).resolve("generated-buck.py");
     Path buckDotPy = Files.createTempFile("buck", ".py");
     Files.createDirectories(buckDotPy.getParent());
 

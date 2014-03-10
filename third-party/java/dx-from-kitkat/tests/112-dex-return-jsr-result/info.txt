@@ -1,0 +1,6 @@
+This test checks to make sure a result returned more-or-less directly
+from a jsr subroutine ends up being represented appropriately.
+
+In particular, this is a regression test for a bug which caused a
+goto instruction to be interposed between an invoke instruction and
+its associated move-result.

@@ -20,7 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * An injectable service for interacting with the host filesystem via paths outside the project root.
+ * An injectable service for interacting with the host filesystem via paths outside the project
+ * root.
  *
  * @see ProjectFilesystem if you want to interact with the filesystem relative to the project root.
  */

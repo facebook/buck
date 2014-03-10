@@ -32,6 +32,8 @@ import java.util.Map;
  */
 public final class NonCheckingBuildRuleFactoryParams {
 
+  private NonCheckingBuildRuleFactoryParams() {}
+
   public static BuildRuleFactoryParams createNonCheckingBuildRuleFactoryParams(
       Map<String, ?> instance,
       BuildTargetParser buildTargetParser,

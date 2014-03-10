@@ -1,6 +1,8 @@
 java_test(
   name = 'xcode',
-  srcs = ['XcodeprojSerializerTest.java'],
+  srcs = [
+    'XcodeprojSerializerTest.java'
+  ],
   source_under_test = [
     '//src/com/facebook/buck/apple/xcode:xcode',
   ],
@@ -15,7 +17,12 @@ java_test(
 
 java_test(
   name = 'project_generator',
-  srcs = ['ProjectGeneratorTest.java'],
+  srcs = [
+    'Matchers.java',
+    'ProjectGeneratorTest.java',
+    'ProjectGeneratorTestUtils.java',
+    'SeparatedProjectsGeneratorTest.java',
+  ],
   source_under_test = ['//src/com/facebook/buck/apple/xcode:project_generator'],
   deps = [
     '//lib:easymock',
@@ -27,15 +34,21 @@ java_test(
     '//src/com/facebook/buck/apple/xcode/plist:plist',
     '//src/com/facebook/buck/apple/xcode:project_generator',
     '//src/com/facebook/buck/apple/xcode:xcode',
+    '//src/com/facebook/buck/codegen:codegen',
+    '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:rules',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/parser:PartialGraphFactory',
     '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/dd-plist:dd-plist',
   ]

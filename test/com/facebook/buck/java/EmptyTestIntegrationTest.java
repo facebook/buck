@@ -39,6 +39,6 @@ public class EmptyTestIntegrationTest {
         this, "empty_test", tmp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test");
-    result.assertExitCode("An empty test rule should pass.", 0);
+    result.assertSuccess("An empty test rule should pass.");
   }
 }

@@ -83,7 +83,7 @@ public class DefaultStepRunnerTest {
     assertEquals(expected, ImmutableList.copyOf(events));
   }
 
-  @Test(expected=StepFailedException.class, timeout=5000)
+  @Test(expected = StepFailedException.class, timeout = 5000)
   public void testParallelStepFailure() throws Exception {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new SleepingStep(0, 0));

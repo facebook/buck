@@ -1,0 +1,19 @@
+Blort.test:()V:
+regs: 0006; ins: 0001; outs: 0001
+  0000: move-object v0, v5
+  0001: move-object v3, v5
+  0002: monitor-enter v3
+  0003: new-instance v1, java.lang.Object
+  0005: move-object v4, v1
+  0006: move-object v1, v4
+  0007: move-object v2, v4
+  0008: invoke-direct {v2}, java.lang.Object.<init>:()V
+  000b: monitor-exit v3
+  000c: return-void
+  000d: move-exception v0
+  000e: monitor-exit v3
+  000f: throw v0
+  catches
+    tries:
+      try 0003..000b
+      catch <any> -> 000d

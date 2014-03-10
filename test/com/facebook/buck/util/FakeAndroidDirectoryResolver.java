@@ -23,22 +23,22 @@ import java.nio.file.Path;
 public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   private final Optional<Path> androidSdkDir;
   private final Optional<Path> androidNdkDir;
-  private final String ndkVersion;
+  private final Optional<String> ndkVersion;
 
   public FakeAndroidDirectoryResolver() {
     this(
-        /* androidSdkVersion */ Optional.<Path>absent(),
-        /* androidNdkVersion */ Optional.<Path>absent(),
-        /* ndkVersion */ "");
+        /* androidSdkDir */ Optional.<Path>absent(),
+        /* androidNdkDir */ Optional.<Path>absent(),
+        /* ndkVersion */ Optional.<String>absent());
   }
 
   public FakeAndroidDirectoryResolver(
       Optional<Path> androidSdkDir,
       Optional<Path> androidNdkDir,
-      String ndkVersion) {
-    this.androidSdkDir = androidSdkDir;
-    this.androidNdkDir = androidNdkDir;
-    this.ndkVersion = ndkVersion;
+      Optional<String> ndkVersion) {
+    this.androidSdkDir = Preconditions.checkNotNull(androidSdkDir);
+    this.androidNdkDir = Preconditions.checkNotNull(androidNdkDir);
+    this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
   }
 
   @Override
@@ -58,7 +58,7 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   }
 
   @Override
-  public String getNdkVersion(Path ndkPath) {
+  public Optional<String> getNdkVersion() {
     return ndkVersion;
   }
 }

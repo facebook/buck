@@ -1,0 +1,3 @@
+This is a smoke test that makes sure that dx complains when a local
+variable table entry fundamentally disagrees with an instruction that
+accesses that local.

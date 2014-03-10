@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -33,14 +33,19 @@ public class RuleUtilsTest {
   public void extractSourcePaths() {
     ImmutableSortedSet.Builder<SourcePath> files = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableList.Builder<GroupedSource> groupedSources = ImmutableList.builder();
 
-    ImmutableList<Either<SourcePath, Pair<SourcePath, String>>> input = ImmutableList.of(
-        newEntry("foo.m"),
-        newEntry("bar.m", "-flag1 -flag2"),
-        newEntry("baz.m"),
-        newEntry("quox.m", "-flag1"));
+    ImmutableList<AppleSource> input = ImmutableList.of(
+        AppleSource.ofSourcePath(
+            new FileSourcePath("foo.m")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-flag1 -flag2")),
+        AppleSource.ofSourcePath(
+            new FileSourcePath("baz.m")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new FileSourcePath("quox.m"), "-flag1")));
 
-    RuleUtils.extractSourcePaths(files, perFileCompileFlags, input);
+    RuleUtils.extractSourcePaths(files, perFileCompileFlags, groupedSources, input);
     assertEquals(ImmutableSortedSet.<SourcePath>of(
         new FileSourcePath("foo.m"),
         new FileSourcePath("bar.m"),
@@ -53,11 +58,105 @@ public class RuleUtilsTest {
     ), perFileCompileFlags.build());
   }
 
-  private Either<SourcePath, Pair<SourcePath, String>> newEntry(String path) {
-    return Either.ofLeft((SourcePath) new FileSourcePath(path));
+  @Test
+  public void extractGroupedSources() {
+    ImmutableSortedSet.Builder<SourcePath> files = ImmutableSortedSet.naturalOrder();
+    ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableList.Builder<GroupedSource> groupedSources = ImmutableList.builder();
+
+    ImmutableList<AppleSource> input = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group1",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("foo.m")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("bar.m"), "-Wall"))))),
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("baz.m")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("blech.m"), "-fobjc-arc"))))
+        ));
+
+    RuleUtils.extractSourcePaths(files, perFileCompileFlags, groupedSources, input);
+    assertEquals(ImmutableSortedSet.<SourcePath>of(
+        new FileSourcePath("foo.m"),
+        new FileSourcePath("bar.m"),
+        new FileSourcePath("baz.m"),
+        new FileSourcePath("blech.m")
+    ), files.build());
+    assertEquals(
+        ImmutableList.<GroupedSource>of(
+            GroupedSource.ofSourceGroup(
+                "Group1",
+                ImmutableList.of(
+                    GroupedSource.ofSourcePath(new FileSourcePath("foo.m")),
+                    GroupedSource.ofSourcePath(new FileSourcePath("bar.m"))
+                )),
+            GroupedSource.ofSourceGroup(
+                "Group2",
+                ImmutableList.of(
+                    GroupedSource.ofSourcePath(new FileSourcePath("baz.m")),
+                    GroupedSource.ofSourcePath(new FileSourcePath("blech.m"))
+                ))
+    ), groupedSources.build());
+    assertEquals(ImmutableMap.<SourcePath, String>of(
+        new FileSourcePath("bar.m"), "-Wall",
+        new FileSourcePath("blech.m"), "-fobjc-arc"
+    ), perFileCompileFlags.build());
   }
 
-  private Either<SourcePath, Pair<SourcePath, String>> newEntry(String path, String flags) {
-    return Either.ofRight(new Pair<SourcePath, String>(new FileSourcePath(path), flags));
+  @Test
+  public void extractHeaders() {
+    ImmutableSortedSet.Builder<SourcePath> files = ImmutableSortedSet.naturalOrder();
+    ImmutableMap.Builder<SourcePath, HeaderVisibility> perHeaderVisibility = ImmutableMap.builder();
+    ImmutableList.Builder<GroupedSource> groupedHeaders = ImmutableList.builder();
+
+    ImmutableList<AppleSource> input = ImmutableList.of(
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group1",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("foo.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("bar.h"), "public"))))),
+        AppleSource.ofSourceGroup(
+            new Pair<>(
+                "Group2",
+                ImmutableList.of(
+                    AppleSource.ofSourcePath(new FileSourcePath("baz.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new FileSourcePath("blech.h"), "private"))))
+        ));
+
+    RuleUtils.extractHeaderPaths(files, perHeaderVisibility, groupedHeaders, input);
+    assertEquals(ImmutableSortedSet.<SourcePath>of(
+        new FileSourcePath("foo.h"),
+        new FileSourcePath("bar.h"),
+        new FileSourcePath("baz.h"),
+        new FileSourcePath("blech.h")
+    ), files.build());
+    assertEquals(
+        ImmutableList.<GroupedSource>of(
+            GroupedSource.ofSourceGroup(
+                "Group1",
+                ImmutableList.of(
+                    GroupedSource.ofSourcePath(new FileSourcePath("foo.h")),
+                    GroupedSource.ofSourcePath(new FileSourcePath("bar.h"))
+                )),
+            GroupedSource.ofSourceGroup(
+                "Group2",
+                ImmutableList.of(
+                    GroupedSource.ofSourcePath(new FileSourcePath("baz.h")),
+                    GroupedSource.ofSourcePath(new FileSourcePath("blech.h"))
+                ))
+    ), groupedHeaders.build());
+    assertEquals(ImmutableMap.<SourcePath, HeaderVisibility>of(
+        new FileSourcePath("bar.h"), HeaderVisibility.PUBLIC,
+        new FileSourcePath("blech.h"), HeaderVisibility.PRIVATE
+    ), perHeaderVisibility.build());
   }
 }

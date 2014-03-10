@@ -1,0 +1,497 @@
+Generated: ./blort.class
+reading blort.class...
+method <init> ()V
+block 0000: 0000..0004
+  0000: aload_0 // 00
+  0001: invokespecial method{java.lang.Object.<init>:()V}
+  next 0004
+block 0004: 0004..0005
+  0004: return
+  returns
+
+method test_live_exception ([I)V
+block 0000: 0000..0002
+  0000: nop
+  0001: nop
+  next 0002
+block 0002: 0002..0004
+  0002: aload_0 // 00
+  0003: arraylength
+  next 0007
+  next 0006
+  next 0004
+  catch java.lang.RuntimeException -> 0007
+  catch <any> -> 0006
+block 0004: 0004..0005
+  0004: nop
+  next 0005
+block 0005: 0005..0006
+  0005: return
+  returns
+block 0006: 0006..0007
+  0006: return
+  returns
+block 0007: 0007..0008
+  0007: return
+  returns
+
+method test_dead_exception ()V
+block 0000: 0000..0002
+  0000: nop
+  0001: nop
+  next 0002
+block 0002: 0002..0003
+  0002: nop
+  next 0003
+block 0003: 0003..0004
+  0003: nop
+  next 0004
+block 0004: 0004..0005
+  0004: return
+  returns
+block 0005: 0005..0006
+  0005: return
+  returns
+block 0006: 0006..0007
+  0006: return
+  returns
+
+method test_ifs ()V
+block 0000: 0000..0003
+  0000: ifeq 0031
+  next 0003
+  next 0031
+block 0003: 0003..0006
+  0003: ifne 0032
+  next 0006
+  next 0032
+block 0006: 0006..0009
+  0006: iflt 0033
+  next 0009
+  next 0033
+block 0009: 0009..000c
+  0009: ifge 0034
+  next 000c
+  next 0034
+block 000c: 000c..000f
+  000c: ifgt 0035
+  next 000f
+  next 0035
+block 000f: 000f..0012
+  000f: ifle 0036
+  next 0012
+  next 0036
+block 0012: 0012..0015
+  0012: if_icmpeq 0037
+  next 0015
+  next 0037
+block 0015: 0015..0018
+  0015: if_icmpne 0038
+  next 0018
+  next 0038
+block 0018: 0018..001b
+  0018: if_icmplt 0039
+  next 001b
+  next 0039
+block 001b: 001b..001e
+  001b: if_icmpge 003a
+  next 001e
+  next 003a
+block 001e: 001e..0021
+  001e: if_icmpgt 003b
+  next 0021
+  next 003b
+block 0021: 0021..0024
+  0021: if_icmple 003c
+  next 0024
+  next 003c
+block 0024: 0024..0027
+  0024: if_acmpeq 003d
+  next 0027
+  next 003d
+block 0027: 0027..002a
+  0027: if_acmpne 003e
+  next 002a
+  next 003e
+block 002a: 002a..002d
+  002a: ifnull 003f
+  next 002d
+  next 003f
+block 002d: 002d..0030
+  002d: ifnonnull 0040
+  next 0030
+  next 0040
+block 0030: 0030..0031
+  0030: return
+  returns
+block 0031: 0031..0032
+  0031: return
+  returns
+block 0032: 0032..0033
+  0032: return
+  returns
+block 0033: 0033..0034
+  0033: return
+  returns
+block 0034: 0034..0035
+  0034: return
+  returns
+block 0035: 0035..0036
+  0035: return
+  returns
+block 0036: 0036..0037
+  0036: return
+  returns
+block 0037: 0037..0038
+  0037: return
+  returns
+block 0038: 0038..0039
+  0038: return
+  returns
+block 0039: 0039..003a
+  0039: return
+  returns
+block 003a: 003a..003b
+  003a: return
+  returns
+block 003b: 003b..003c
+  003b: return
+  returns
+block 003c: 003c..003d
+  003c: return
+  returns
+block 003d: 003d..003e
+  003d: return
+  returns
+block 003e: 003e..003f
+  003e: return
+  returns
+block 003f: 003f..0040
+  003f: return
+  returns
+block 0040: 0040..0041
+  0040: return
+  returns
+
+method test_jsr ()V
+block 0000: 0000..0003
+  0000: jsr 0009
+  next 0003
+  next 0009
+block 0003: 0003..0008
+  0003: jsr_w 0000000c
+  next 0008
+  next 000c
+block 0008: 0008..0009
+  0008: return
+  returns
+block 0009: 0009..000c
+  0009: astore_0 // 00
+  000a: ret 00
+  returns
+block 000c: 000c..0011
+  000c: astore_0 // 00
+  000d: wide ret 0000
+  returns
+
+method test_tableswitch ()V
+block 0000: 0000..0018
+  0000: tableswitch
+    +00000010: 0018
+    +00000011: 0019
+    default: 001a
+  next 0018
+  next 0019
+  next 001a
+block 0018: 0018..0019
+  0018: return
+  returns
+block 0019: 0019..001a
+  0019: return
+  returns
+block 001a: 001a..001b
+  001a: return
+  returns
+
+method test_lookupswitch ()V
+block 0000: 0000..001c
+  0000: lookupswitch
+    +00000005: 001c
+    +00000010: 001d
+    default: 001e
+  next 001c
+  next 001d
+  next 001e
+block 001c: 001c..001d
+  001c: return
+  returns
+block 001d: 001d..001e
+  001d: return
+  returns
+block 001e: 001e..001f
+  001e: return
+  returns
+
+method test_nonbranch ()V
+block 0000: 0000..0017
+  0000: nop
+  0001: aconst_null
+  0002: iconst_m1 // #-01
+  0003: iconst_0 // #+00
+  0004: iconst_1 // #+01
+  0005: iconst_2 // #+02
+  0006: iconst_3 // #+03
+  0007: iconst_4 // #+04
+  0008: iconst_5 // #+05
+  0009: lconst_0 // +00
+  000a: lconst_1 // +01
+  000b: fconst_0 // 0.0
+  000c: fconst_1 // 1.0
+  000d: fconst_2 // 2.0
+  000e: dconst_0 // 0.0
+  000f: dconst_1 // 1.0
+  0010: bipush #+10
+  0012: sipush #+1000
+  0015: ldc string{"x"}
+  next 0017
+block 0017: 0017..001a
+  0017: ldc_w string{"y"}
+  next 001a
+block 001a: 001a..003c
+  001a: ldc2_w #4008000000000000 // 3.0
+  001d: iload 05
+  001f: lload 05 // category-2
+  0021: fload 05
+  0023: dload 05 // category-2
+  0025: aload 05
+  0027: iload_0 // 00
+  0028: iload_1 // 01
+  0029: iload_2 // 02
+  002a: iload_3 // 03
+  002b: lload_0 // 00, category-2
+  002c: lload_1 // 01, category-2
+  002d: lload_2 // 02, category-2
+  002e: lload_3 // 03, category-2
+  002f: fload_0 // 00
+  0030: fload_1 // 01
+  0031: fload_2 // 02
+  0032: fload_3 // 03
+  0033: dload_0 // 00, category-2
+  0034: dload_1 // 01, category-2
+  0035: dload_2 // 02, category-2
+  0036: dload_3 // 03, category-2
+  0037: aload_0 // 00
+  0038: aload_1 // 01
+  0039: aload_2 // 02
+  003a: aload_3 // 03
+  003b: iaload
+  next 003c
+block 003c: 003c..003d
+  003c: laload
+  next 003d
+block 003d: 003d..003e
+  003d: faload
+  next 003e
+block 003e: 003e..003f
+  003e: daload
+  next 003f
+block 003f: 003f..0040
+  003f: aaload
+  next 0040
+block 0040: 0040..0041
+  0040: baload
+  next 0041
+block 0041: 0041..0042
+  0041: caload
+  next 0042
+block 0042: 0042..0043
+  0042: saload
+  next 0043
+block 0043: 0043..0062
+  0043: istore 05
+  0045: lstore 05 // category-2
+  0047: fstore 05
+  0049: dstore 05 // category-2
+  004b: astore 05
+  004d: istore_0 // 00
+  004e: istore_1 // 01
+  004f: istore_2 // 02
+  0050: istore_3 // 03
+  0051: lstore_0 // 00, category-2
+  0052: lstore_1 // 01, category-2
+  0053: lstore_2 // 02, category-2
+  0054: lstore_3 // 03, category-2
+  0055: fstore_0 // 00
+  0056: fstore_1 // 01
+  0057: fstore_2 // 02
+  0058: fstore_3 // 03
+  0059: dstore_0 // 00, category-2
+  005a: dstore_1 // 01, category-2
+  005b: dstore_2 // 02, category-2
+  005c: dstore_3 // 03, category-2
+  005d: astore_0 // 00
+  005e: astore_1 // 01
+  005f: astore_2 // 02
+  0060: astore_3 // 03
+  0061: iastore
+  next 0062
+block 0062: 0062..0063
+  0062: lastore
+  next 0063
+block 0063: 0063..0064
+  0063: fastore
+  next 0064
+block 0064: 0064..0065
+  0064: dastore
+  next 0065
+block 0065: 0065..0066
+  0065: aastore
+  next 0066
+block 0066: 0066..0067
+  0066: bastore
+  next 0067
+block 0067: 0067..0068
+  0067: castore
+  next 0068
+block 0068: 0068..0069
+  0068: sastore
+  next 0069
+block 0069: 0069..007f
+  0069: pop
+  006a: pop2
+  006b: dup
+  006c: dup_x1
+  006d: dup_x2
+  006e: dup2
+  006f: dup2_x1
+  0070: dup2_x2
+  0071: swap
+  0072: iadd
+  0073: ladd
+  0074: fadd
+  0075: dadd
+  0076: isub
+  0077: lsub
+  0078: fsub
+  0079: dsub
+  007a: imul
+  007b: lmul
+  007c: fmul
+  007d: dmul
+  007e: idiv
+  next 007f
+block 007f: 007f..0080
+  007f: ldiv
+  next 0080
+block 0080: 0080..0083
+  0080: fdiv
+  0081: ddiv
+  0082: irem
+  next 0083
+block 0083: 0083..0084
+  0083: lrem
+  next 0084
+block 0084: 0084..00b0
+  0084: frem
+  0085: drem
+  0086: ineg
+  0087: lneg
+  0088: fneg
+  0089: dneg
+  008a: ishl
+  008b: lshl
+  008c: ishr
+  008d: lshr
+  008e: iushr
+  008f: lushr
+  0090: iand
+  0091: land
+  0092: ior
+  0093: lor
+  0094: ixor
+  0095: lxor
+  0096: iinc 05, #+10
+  0099: i2l
+  009a: i2f
+  009b: i2d
+  009c: l2i
+  009d: l2f
+  009e: l2d
+  009f: f2i
+  00a0: f2l
+  00a1: f2d
+  00a2: d2i
+  00a3: d2l
+  00a4: d2f
+  00a5: i2b
+  00a6: i2c
+  00a7: i2s
+  00a8: lcmp
+  00a9: fcmpl
+  00aa: fcmpg
+  00ab: dcmpl
+  00ac: dcmpg
+  00ad: getstatic field{blort.x:I}
+  next 00b0
+block 00b0: 00b0..00b3
+  00b0: putstatic field{blort.x:I}
+  next 00b3
+block 00b3: 00b3..00b6
+  00b3: getfield field{blort.x:I}
+  next 00b6
+block 00b6: 00b6..00b9
+  00b6: putfield field{blort.x:I}
+  next 00b9
+block 00b9: 00b9..00bc
+  00b9: invokevirtual method{blort.x:()V}
+  next 00bc
+block 00bc: 00bc..00bf
+  00bc: invokespecial method{blort.x:()V}
+  next 00bf
+block 00bf: 00bf..00c2
+  00bf: invokestatic method{blort.x:()V}
+  next 00c2
+block 00c2: 00c2..00c7
+  00c2: invokeinterface ifaceMethod{blort.x:()V}, 0001
+  next 00c7
+block 00c7: 00c7..00ca
+  00c7: new type{blort}
+  next 00ca
+block 00ca: 00ca..00cc
+  00ca: newarray int
+  next 00cc
+block 00cc: 00cc..00cf
+  00cc: anewarray type{blort}
+  next 00cf
+block 00cf: 00cf..00d0
+  00cf: arraylength
+  next 00d0
+block 00d0: 00d0..00d3
+  00d0: checkcast type{blort}
+  next 00d3
+block 00d3: 00d3..00d6
+  00d3: instanceof type{blort}
+  next 00d6
+block 00d6: 00d6..00d7
+  00d6: monitorenter
+  next 00d7
+block 00d7: 00d7..00d8
+  00d7: monitorexit
+  next 00d8
+block 00d8: 00d8..010a
+  00d8: wide iload 0100
+  00dc: wide lload 0100 // category-2
+  00e0: wide fload 0100
+  00e4: wide dload 0100 // category-2
+  00e8: wide aload 0100
+  00ec: wide istore 0100
+  00f0: wide lstore 0100 // category-2
+  00f4: wide fstore 0100
+  00f8: wide dstore 0100 // category-2
+  00fc: wide astore 0100
+  0100: wide iinc 0123, #+0321
+  0106: multianewarray type{int[][][]}, 02
+  next 010a
+block 010a: 010a..010b
+  010a: return
+  returns

@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 public class FakeDirectoryTraverser implements DirectoryTraverser {
 
   /**
-   * A (file, path) pair passed to {@link DirectoryTraversal.visit(File, String)}.
+   * A (file, path) pair passed to {@link DirectoryTraversal#visit(File, String)}.
    */
   public static class Entry {
     public final File file;

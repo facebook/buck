@@ -1,6 +1,7 @@
 java_test(
   name = 'android',
   srcs = glob(['*.java']),
+  resources = glob(['testdata/**/*']),
   deps = [
     '//lib:easymock',
     '//lib:guava',
@@ -44,6 +45,8 @@ java_test(
     '//test/com/facebook/buck/util:testutil',
     '//test/com/facebook/buck/util/concurrent:testutil',
     '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/asm:asm',
   ],
   source_under_test = [
     '//src/com/facebook/buck/android:exceptions',

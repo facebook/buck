@@ -33,29 +33,8 @@ import java.util.Set;
  * There are two major uses this information is put to: populating the DTO object from the
  * {@link BuildRuleFactoryParams}, which is populated by the functions added to Buck's core build
  * file parsing script. The second function of this class is to generate those functions.
- * <p>
- * The constructor arg is examined for public fields. Reflection is used to determine the type of
- * the field, and it's possible to indicate that a field isn't mandatory by using {@link Optional}
- * declarations. If the name of the property to be exposed to a build file does not match the field
- * name, then a {@link Hint} can be used to set it.
- * <p>
- * As an example, the arguments for a build target defined as:
- * <pre>
- *    example_library(
- *      name = 'example',
- *      srcs = [ '//foo:bar', 'Eggs.java', ],
- *      optional_thing = True,
- *    )
- * </pre>
- * Could be defined as a constructor arg that looks like:
- * <pre>
- *     public class ExampleLibraryArg {
- *       public String name;
- *       public ImmutableSortedSet&gt;SourcePath> srcs;
- *       @Hint(name = "optional_thing")
- *       public Optional&gt;Boolean> isNeeded;
- *     }
- * </pre>
+ *
+ * @see ConstructorArg
  */
 public class ConstructorArgMarshaller {
 
@@ -107,7 +86,10 @@ public class ConstructorArgMarshaller {
    * @param params The parameters to be used to populate the {@code dto} instance.
    * @param dto The constructor dto to be populated.
    */
-  public void populate(BuildRuleResolver ruleResolver, BuildRuleFactoryParams params, Object dto) {
+  public void populate(
+      BuildRuleResolver ruleResolver,
+      BuildRuleFactoryParams params,
+      ConstructorArg dto) {
     Set<ParamInfo> allInfo = getAllParamInfo(dto);
 
     for (ParamInfo info : allInfo) {
@@ -115,7 +97,7 @@ public class ConstructorArgMarshaller {
     }
   }
 
-  ImmutableSet<ParamInfo> getAllParamInfo(Object dto) {
+  ImmutableSet<ParamInfo> getAllParamInfo(ConstructorArg dto) {
     Class<?> argClass = dto.getClass();
 
     ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();

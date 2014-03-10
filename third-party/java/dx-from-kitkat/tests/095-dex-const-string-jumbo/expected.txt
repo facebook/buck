@@ -1,0 +1,6 @@
+Blort.test:()V:
+regs: 0003; ins: 0001; outs: 0001
+  0000: move-object v0, v2
+  0001: const-string/jumbo v1, "zorch"
+  0004: invoke-static {v1}, Blort.consume:(Ljava/lang/String;)V
+  0007: return-void

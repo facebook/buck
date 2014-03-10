@@ -21,6 +21,7 @@ package com.facebook.buck.util;
  * useful information about shutdown processing failures.
  * This exception is meant only to be caught at the top level of the application.
  */
+@SuppressWarnings("serial")
 public class ShutdownException extends RuntimeException {
 
   public ShutdownException(String message) {

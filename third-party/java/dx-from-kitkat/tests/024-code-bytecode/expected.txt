@@ -1,0 +1,293 @@
+reading small-class.txt...
+begin classfile
+magic: cafebabe
+minor_version: 0000
+major_version: 002e
+constant_pool_count: 0017
+
+constant_pool:
+  0001: type{Small}
+  0002: type{java.lang.Object}
+  0003: utf8{"Small"}
+  0004: utf8{"java/lang/Object"}
+  0005: utf8{"blort"}
+  0006: utf8{"()V"}
+  0007: utf8{"Code"}
+  0008: string{"Small"}
+  0009: int{0x12345678 / 305419896}
+  000a: float{0x42f6e666 / 123.45}
+  000b: long{0x123456789abcdef0 / 1311768467463790320}
+  000d: double{0x411958955f8a0903 / 415269.3433}
+  000f: utf8{"blort"}
+  0010: utf8{"x/y/Zzz"}
+  0011: utf8{"()V"}
+  0012: nat{blort:x/y/Zzz}
+  0013: nat{blort:()V}
+  0014: field{Small.blort:x/y/Zzz}
+  0015: method{Small.blort:()V}
+  0016: ifaceMethod{Small.blort:()V}
+end constant_pool
+access_flags: public
+this_class: type{Small}
+super_class: type{java.lang.Object}
+interfaces_count: 0000
+fields_count: 0000
+methods_count: 0001
+
+methods[0]:
+  access_flags: public
+  name: blort
+  descriptor: ()V
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: Code
+    length: 000001db
+    max_stack: 0001
+    max_locals: 0001
+    code_length: 000001cf
+    0000: nop
+    0001: aconst_null
+    0002: iconst_m1 // #-01
+    0003: iconst_0 // #+00
+    0004: iconst_1 // #+01
+    0005: iconst_2 // #+02
+    0006: iconst_3 // #+03
+    0007: iconst_4 // #+04
+    0008: iconst_5 // #+05
+    0009: lconst_0 // +00
+    000a: lconst_1 // +01
+    000b: fconst_0 // 0.0
+    000c: fconst_1 // 1.0
+    000d: fconst_2 // 2.0
+    000e: dconst_0 // 0.0
+    000f: dconst_1 // 1.0
+    0010: bipush #+45
+    0012: sipush #+5432
+    0015: ldc string{"Small"}
+    0017: ldc #+12345678
+    0019: ldc #42f6e666 // 123.45
+    001b: ldc_w string{"Small"}
+    001e: ldc_w #+12345678
+    0021: ldc_w #42f6e666 // 123.45
+    0024: ldc2_w #+123456789abcdef0
+    0027: ldc2_w #411958955f8a0903 // 415269.3433
+    002a: iload 01
+    002c: lload 02 // category-2
+    002e: fload 03
+    0030: dload 04 // category-2
+    0032: aload 05
+    0034: iload_0 // 00
+    0035: iload_1 // 01
+    0036: iload_2 // 02
+    0037: iload_3 // 03
+    0038: lload_0 // 00, category-2
+    0039: lload_1 // 01, category-2
+    003a: lload_2 // 02, category-2
+    003b: lload_3 // 03, category-2
+    003c: fload_0 // 00
+    003d: fload_1 // 01
+    003e: fload_2 // 02
+    003f: fload_3 // 03
+    0040: dload_0 // 00, category-2
+    0041: dload_1 // 01, category-2
+    0042: dload_2 // 02, category-2
+    0043: dload_3 // 03, category-2
+    0044: aload_0 // 00
+    0045: aload_1 // 01
+    0046: aload_2 // 02
+    0047: aload_3 // 03
+    0048: iaload
+    0049: laload
+    004a: faload
+    004b: daload
+    004c: aaload
+    004d: baload
+    004e: caload
+    004f: saload
+    0050: istore 41
+    0052: lstore 42 // category-2
+    0054: fstore 43
+    0056: dstore 44 // category-2
+    0058: astore 45
+    005a: istore_0 // 00
+    005b: istore_1 // 01
+    005c: istore_2 // 02
+    005d: istore_3 // 03
+    005e: lstore_0 // 00, category-2
+    005f: lstore_1 // 01, category-2
+    0060: lstore_2 // 02, category-2
+    0061: lstore_3 // 03, category-2
+    0062: fstore_0 // 00
+    0063: fstore_1 // 01
+    0064: fstore_2 // 02
+    0065: fstore_3 // 03
+    0066: dstore_0 // 00, category-2
+    0067: dstore_1 // 01, category-2
+    0068: dstore_2 // 02, category-2
+    0069: dstore_3 // 03, category-2
+    006a: astore_0 // 00
+    006b: astore_1 // 01
+    006c: astore_2 // 02
+    006d: astore_3 // 03
+    006e: iastore
+    006f: lastore
+    0070: fastore
+    0071: dastore
+    0072: aastore
+    0073: bastore
+    0074: castore
+    0075: sastore
+    0076: pop
+    0077: pop2
+    0078: dup
+    0079: dup_x1
+    007a: dup_x2
+    007b: dup2
+    007c: dup2_x1
+    007d: dup2_x2
+    007e: swap
+    007f: iadd
+    0080: ladd
+    0081: fadd
+    0082: dadd
+    0083: isub
+    0084: lsub
+    0085: fsub
+    0086: dsub
+    0087: imul
+    0088: lmul
+    0089: fmul
+    008a: dmul
+    008b: idiv
+    008c: ldiv
+    008d: fdiv
+    008e: ddiv
+    008f: irem
+    0090: lrem
+    0091: frem
+    0092: drem
+    0093: ineg
+    0094: lneg
+    0095: fneg
+    0096: dneg
+    0097: ishl
+    0098: lshl
+    0099: ishr
+    009a: lshr
+    009b: iushr
+    009c: lushr
+    009d: iand
+    009e: land
+    009f: ior
+    00a0: lor
+    00a1: ixor
+    00a2: lxor
+    00a3: iinc 05, #-01
+    00a6: i2l
+    00a7: i2f
+    00a8: i2d
+    00a9: l2i
+    00aa: l2f
+    00ab: l2d
+    00ac: f2i
+    00ad: f2l
+    00ae: f2d
+    00af: d2i
+    00b0: d2l
+    00b1: d2f
+    00b2: i2b
+    00b3: i2c
+    00b4: i2s
+    00b5: lcmp
+    00b6: fcmpl
+    00b7: fcmpg
+    00b8: dcmpl
+    00b9: dcmpg
+    00ba: ifeq 00ba
+    00bd: ifne 00ba
+    00c0: iflt 00ba
+    00c3: ifge 00ba
+    00c6: ifgt 00ba
+    00c9: ifle 00ba
+    00cc: if_icmpeq 00db
+    00cf: if_icmpne 00db
+    00d2: if_icmplt 00db
+    00d5: if_icmpge 00db
+    00d8: if_icmpgt 00db
+    00db: if_icmple 00db
+    00de: if_acmpeq 00de
+    00e1: if_acmpne 00e1
+    00e4: goto 0000
+    00e7: jsr 00e7
+    00ea: ret 2f
+    00ec: tableswitch
+      +12340000: 0000
+      +12340001: 0001
+      +12340002: 0002
+      +12340003: 0003
+      +12340004: 0004
+      +12340005: 0005
+      +12340006: 0007
+      +12340007: 0009
+      default: 00ea
+    011c: lookupswitch
+      -7689edcc: 0148
+      +00001000: 0149
+      +03333333: 0149
+      +79787776: 014b
+      default: 00ec
+    0148: ireturn
+    0149: lreturn
+    014a: freturn
+    014b: dreturn
+    014c: areturn
+    014d: return
+    014e: getstatic field{Small.blort:x/y/Zzz}
+    0151: putstatic field{Small.blort:x/y/Zzz}
+    0154: getfield field{Small.blort:x/y/Zzz}
+    0157: putfield field{Small.blort:x/y/Zzz}
+    015a: invokevirtual method{Small.blort:()V}
+    015d: invokespecial method{Small.blort:()V}
+    0160: invokestatic method{Small.blort:()V}
+    0163: invokeinterface ifaceMethod{Small.blort:()V}, 0001
+    0168: new type{Small}
+    016b: newarray boolean
+    016d: newarray char
+    016f: newarray float
+    0171: newarray double
+    0173: newarray byte
+    0175: newarray short
+    0177: newarray int
+    0179: newarray long
+    017b: anewarray type{Small}
+    017e: arraylength
+    017f: athrow
+    0180: checkcast type{java.lang.Object}
+    0183: instanceof type{java.lang.Object}
+    0186: monitorenter
+    0187: monitorexit
+    0188: wide iload 0123
+    018c: wide lload 0124 // category-2
+    0190: wide fload 0125
+    0194: wide dload 0126 // category-2
+    0198: wide aload 0127
+    019c: wide istore 20f0
+    01a0: wide lstore 20f1 // category-2
+    01a4: wide fstore 20f2
+    01a8: wide dstore 20f3 // category-2
+    01ac: wide astore 20f4
+    01b0: wide ret ffff
+    01b4: wide iinc 0002, #+1000
+    01ba: multianewarray type{java.lang.Object}, 04
+    01be: ifnull ffff
+    01c1: ifnonnull 01c1
+    01c4: goto_w 700001c4
+    01c9: jsr_w 000001c4
+    01ce: unused_ca
+    exception_table_length: 0000
+    attributes_count: 0000
+  end attributes[0]
+end methods[0]
+attributes_count: 0000
+end classfile

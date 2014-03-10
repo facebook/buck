@@ -40,9 +40,10 @@ public class Buildables {
   /**
    * Helper function for {@link Buildable}s to create their lists of files for caching.
    */
-  public static void addInputsToSortedSet(@Nullable Path pathToDirectory,
-                                          ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes,
-                                          DirectoryTraverser traverser) {
+  public static void addInputsToSortedSet(
+      @Nullable Path pathToDirectory,
+      ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes,
+      DirectoryTraverser traverser) {
     if (pathToDirectory == null) {
       return;
     }

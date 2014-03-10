@@ -16,6 +16,7 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -34,6 +35,9 @@ import java.util.List;
 
 public class XmlTestResultParser {
 
+  /** Utility Class:  Do not instantiate. */
+  private XmlTestResultParser() {}
+
   public static TestCaseSummary parse(File xmlFile) throws IOException {
     String xmlFileContents = Files.toString(xmlFile, Charsets.UTF_8);
 
@@ -48,7 +52,7 @@ public class XmlTestResultParser {
 
   private static TestCaseSummary doParse(String xml) throws IOException {
     Document doc = XmlDomParser.parse(new InputSource(new StringReader(xml)),
-        /* namespaceAware */ false);
+        /* namespaceAware */ true);
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testcase".equals(root.getTagName()));
     String testCaseName = root.getAttribute("name");
@@ -58,12 +62,13 @@ public class XmlTestResultParser {
     for (int i = 0; i < testElements.getLength(); i++) {
       Element node = (Element)testElements.item(i);
       String testName = node.getAttribute("name");
-      boolean isSuccess = Boolean.valueOf(node.getAttribute("success"));
       long time = Long.valueOf(node.getAttribute("time"));
+      String typeString = node.getAttribute("type");
+      ResultType type = ResultType.valueOf(typeString);
 
       String message;
       String stacktrace;
-      if (isSuccess) {
+      if (type == ResultType.SUCCESS) {
         message = null;
         stacktrace = null;
       } else {
@@ -90,7 +95,7 @@ public class XmlTestResultParser {
       TestResultSummary testResult = new TestResultSummary(
           testCaseName,
           testName,
-          isSuccess,
+          type,
           time,
           message,
           stacktrace,

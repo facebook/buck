@@ -59,6 +59,9 @@ public class CanaryFactory {
    */
   private static final int CANARY_INDEX_OFFSET = 32;
 
+  /** Utility class: do not instantiate */
+  private CanaryFactory() {}
+
   /**
    * Adds a "canary" class to a secondary dex that can be safely loaded on any system.
    * This avoids an issue where, during secondary dex loading, we attempt to verify a

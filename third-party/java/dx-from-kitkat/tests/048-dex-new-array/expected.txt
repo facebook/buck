@@ -1,0 +1,29 @@
+Blort.test:()V:
+regs: 0002; ins: 0000; outs: 0001
+  0000: const/4 v1, #int 0 // #0
+  0001: new-array v0, v1, boolean[]
+  0003: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  0006: const/4 v0, #int 1 // #1
+  0007: new-array v0, v0, byte[]
+  0009: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  000c: const/4 v0, #int 2 // #2
+  000d: new-array v0, v0, char[]
+  000f: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  0012: const/4 v0, #int 3 // #3
+  0013: new-array v0, v0, short[]
+  0015: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  0018: const/4 v0, #int 4 // #4
+  0019: new-array v0, v0, int[]
+  001b: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  001e: const/4 v0, #int 5 // #5
+  001f: new-array v0, v0, long[]
+  0021: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  0024: const/4 v0, #int 6 // #6
+  0025: new-array v0, v0, float[]
+  0027: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  002a: const/4 v0, #int 7 // #7
+  002b: new-array v0, v0, double[]
+  002d: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  0030: new-array v0, v1, java.lang.Object[]
+  0032: invoke-static {v0}, Blort.sink:(Ljava/lang/Object;)V
+  0035: return-void

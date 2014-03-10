@@ -26,12 +26,12 @@ import javax.annotation.Nullable;
 
 public final class MoreStrings {
 
-  private static String RANDOM_STRING_CHARSET =
+  private static final String RANDOM_STRING_CHARSET =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890";
 
-  private static int LENGTH_OF_RANDOM_STRING = 8;
+  private static final int LENGTH_OF_RANDOM_STRING = 8;
 
-  private static Random insecureRandom = new Random();
+  private static final Random INSECURE_RANDOM = new Random();
 
   public static final Predicate<String> NON_EMPTY =
       new Predicate<String>() {
@@ -97,7 +97,7 @@ public final class MoreStrings {
     char[] chars = new char[LENGTH_OF_RANDOM_STRING];
     int maxIndex = RANDOM_STRING_CHARSET.length();
     for (int i = 0; i < LENGTH_OF_RANDOM_STRING; i++) {
-      chars[i] = RANDOM_STRING_CHARSET.charAt(insecureRandom.nextInt(maxIndex));
+      chars[i] = RANDOM_STRING_CHARSET.charAt(INSECURE_RANDOM.nextInt(maxIndex));
     }
     return new String(chars);
   }

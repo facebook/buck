@@ -305,7 +305,7 @@ public class BuckConfig {
    */
   public ImmutableSet<Path> getIgnorePaths() {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
-    final String IGNORE_KEY = "ignore";
+    final String ignoreKey = "ignore";
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
     builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
@@ -320,12 +320,12 @@ public class BuckConfig {
       }
     }
 
-    if (projectConfig.containsKey(IGNORE_KEY)) {
+    if (projectConfig.containsKey(ignoreKey)) {
       builder.addAll(MorePaths.asPaths(
           Splitter.on(',')
             .omitEmptyStrings()
             .trimResults()
-            .split(projectConfig.get(IGNORE_KEY))));
+            .split(projectConfig.get(ignoreKey))));
     }
 
     // Normalize paths in order to eliminate trailing '/' characters and whatnot.
@@ -334,13 +334,13 @@ public class BuckConfig {
 
   public ImmutableSet<Pattern> getTempFilePatterns() {
     final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
-    final String TEMP_FILES_KEY = "temp_files";
+    final String tempFilesKey = "temp_files";
     ImmutableSet.Builder<Pattern> builder = ImmutableSet.builder();
-    if (projectConfig.containsKey(TEMP_FILES_KEY)) {
+    if (projectConfig.containsKey(tempFilesKey)) {
       for (String regex : Splitter.on(',')
           .omitEmptyStrings()
           .trimResults()
-          .split(projectConfig.get(TEMP_FILES_KEY))) {
+          .split(projectConfig.get(tempFilesKey))) {
         builder.add(Pattern.compile(regex));
       }
     }
@@ -460,19 +460,22 @@ public class BuckConfig {
     return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(paths);
   }
 
-  ImmutableSet<String> getDefaultExcludedLabels() {
+  /**
+   * Return Strings so as to avoid a dependency on {@link LabelSelector}!
+   */
+  ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     Optional<String> excludedRulesOptional = getValue("test", "excluded_labels");
     if (excludedRulesOptional.isPresent()) {
       String excludedRules = excludedRulesOptional.get();
       Splitter splitter = Splitter.on(',').omitEmptyStrings().trimResults();
-      ImmutableSet<String> result =  ImmutableSet.copyOf(splitter.split(excludedRules));
+      ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
       // Validate that all specified labels are valid.
-      for (String label : result) {
-        validateLabelName(label);
+      for (String raw : splitter.split(excludedRules)) {
+        builder.add(raw);
       }
-      return result;
+      return builder.build();
     } else {
-      return ImmutableSet.of();
+      return ImmutableList.of();
     }
   }
 
@@ -610,12 +613,8 @@ public class BuckConfig {
     }
   }
 
-  public Optional<String> getMinimumNdkVersion() {
-    return getValue("ndk", "min_version");
-  }
-
-  public Optional<String> getMaximumNdkVersion() {
-    return getValue("ndk", "max_version");
+  public Optional<String> getNdkVersion() {
+    return getValue("ndk", "ndk_version");
   }
 
   public Optional<Path> getJavac() {
@@ -631,31 +630,6 @@ public class BuckConfig {
       return Optional.of(javac.toPath());
     }
     return Optional.absent();
-  }
-
-  @VisibleForTesting
-  void validateNdkVersion(Path ndkPath, String ndkVersion) {
-    Optional<String> minVersion = getMinimumNdkVersion();
-    Optional<String> maxVersion = getMaximumNdkVersion();
-
-    if (minVersion.isPresent() && maxVersion.isPresent()) {
-      // Example forms: r8, r8b, r9
-      if (ndkVersion.length() < 2) {
-        throw new HumanReadableException("Invalid NDK version: %s", ndkVersion);
-      }
-
-      if (ndkVersion.compareTo(minVersion.get()) < 0 || ndkVersion.compareTo(maxVersion.get()) > 0) {
-        throw new HumanReadableException(
-            "Supported NDK versions are between %s and %s but Buck is configured to use %s from %s",
-            minVersion.get(),
-            maxVersion.get(),
-            ndkVersion,
-            ndkPath.toAbsolutePath());
-      }
-    } else if (minVersion.isPresent() || maxVersion.isPresent()) {
-      throw new HumanReadableException(
-          "Either both min_version and max_version are provided or neither are");
-    }
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {

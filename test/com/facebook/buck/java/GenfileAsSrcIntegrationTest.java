@@ -47,13 +47,13 @@ public class GenfileAsSrcIntegrationTest {
 
     // The test should pass out of the box.
     ProcessResult result = workspace.runBuckCommand("test", "//:test");
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     // Edit the test so it should fail and then make sure that it fails.
     File testFile = workspace.getFile("resource.base.txt");
     Files.write("Different text", testFile, charsetForTest);
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
-    result2.assertExitCode(1);
+    result2.assertTestFailure();
     assertThat("`buck test` should fail because testStringFromGenfile() failed.",
         result2.getStderr(),
         containsString("FAILURE testStringFromGenfile"));

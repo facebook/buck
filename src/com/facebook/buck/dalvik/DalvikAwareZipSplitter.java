@@ -59,7 +59,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private DalvikAwareOutputStreamHelper primaryOut;
 
   /**
-   * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate, DexSplitStrategy, CanaryStrategy, File)
+   * @see ZipSplitterFactory#newInstance(Set, File, File, String, Predicate,
+   *                                     DexSplitStrategy, CanaryStrategy, File)
    */
   private DalvikAwareZipSplitter(
       Set<Path> inFiles,
@@ -76,7 +77,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     }
     this.inFiles = ImmutableSet.copyOf(inFiles);
     this.outPrimary = Preconditions.checkNotNull(outPrimary);
-    this.secondaryDexWriter = new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
+    this.secondaryDexWriter =
+        new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
     this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
     this.reportDir = reportDir;
     this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);

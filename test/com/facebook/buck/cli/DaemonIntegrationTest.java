@@ -133,8 +133,8 @@ public class DaemonIntegrationTest {
   }
 
   private InputStream createHeartbeatStream(int count) {
-    final int BYTES_PER_HEARTBEAT = 5;
-    byte[] bytes = new byte[BYTES_PER_HEARTBEAT * count];
+    final int bytesPerHeartbeat = 5;
+    byte[] bytes = new byte[bytesPerHeartbeat * count];
     Arrays.fill(bytes, NGConstants.CHUNKTYPE_HEARTBEAT);
     return new ByteArrayInputStream(bytes);
   }
@@ -213,7 +213,7 @@ public class DaemonIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckdCommand("build", "app");
-    result.assertExitCode(0);
+    result.assertSuccess();
 
     String fileName = "apps/myapp/BUCK";
     assertTrue("Should delete BUCK file successfully", workspace.getFile(fileName).delete());
@@ -235,14 +235,13 @@ public class DaemonIntegrationTest {
         this, "file_watching", tmp);
     workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/BUCK";
     assertTrue("Should delete BUCK file successfully.", workspace.getFile(fileName).delete());
     waitForChange(Paths.get(fileName));
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(
-        Main.FAIL_EXIT_CODE);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
   }
 
   @Test
@@ -252,7 +251,7 @@ public class DaemonIntegrationTest {
         this, "file_watching", tmp);
     workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     assertTrue("Should delete BUCK file successfully.", workspace.getFile(fileName).delete());
@@ -268,19 +267,40 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenSourceInputInvalidatedThenRebuildFails() throws IOException, InterruptedException {
+  public void whenSourceInputInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "file_watching", tmp);
     workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(0);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.write("Some Illegal Java".getBytes(Charsets.US_ASCII), workspace.getFile(fileName));
     waitForChange(Paths.get(fileName));
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertExitCode(
-        Main.FAIL_EXIT_CODE);
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
+  }
+
+  @Test
+  public void whenAppBuckFileInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+
+    workspace.runBuckdCommand("build", "app").assertSuccess();
+
+    String fileName = "apps/myapp/BUCK";
+    Files.write("Some Illegal Python".getBytes(Charsets.US_ASCII), workspace.getFile(fileName));
+    waitForChange(Paths.get(fileName));
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckdCommand("build", "app");
+    assertThat(
+        "Failure should be due to syntax error.",
+        result.getStderr(),
+        Matchers.containsString("SyntaxError: invalid syntax"));
+    result.assertFailure();
   }
 
   private void waitForChange(final Path path) throws IOException {

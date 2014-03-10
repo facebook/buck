@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="**/BUCK|com/facebook/buck/cli/quickstart/**" kind="src" path="src"/>
+	<classpathentry kind="src" path="build/testjavacc"/>
+	<classpathentry kind="src" path="build/javacc"/>
 	<classpathentry excluding="**/BUCK" kind="src" path="third-party/java/aosp/src"/>
 	<classpathentry excluding="**/BUCK|**/testdata/**" kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

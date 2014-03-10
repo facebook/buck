@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildRuleFactory;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 

@@ -23,6 +23,9 @@ import java.util.TreeSet;
 import javax.lang.model.element.Modifier;
 
 class Modifiers {
+  /** Utility class: do not instantiate. */
+  private Modifiers() {}
+
   public static String printModifiers(Set<Modifier> allModifiers) {
     if (allModifiers.isEmpty()) {
       return "";

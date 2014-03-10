@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
@@ -33,9 +36,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-
 /**
  * Base class for commands that use the AndroidDebugBridge to run commands on devices.
  * Currently, {@link InstallCommand}, {@link UninstallCommand}.
@@ -49,8 +49,8 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
   // Taken from ddms source code.
-  final static int INSTALL_TIMEOUT = 2*60*1000; // 2 min
-  final static int GETPROP_TIMEOUT = 2*1000; // 2 seconds
+  static final int INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
+  static final int GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
 
   protected AdbCommandRunner(CommandRunnerParams params) {
     super(params);
@@ -218,8 +218,9 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
         devices = filterDevices(adb.getDevices(), options, deviceOptions);
       }
 
-      if (devices == null)
+      if (devices == null) {
         return false;
+      }
     }
 
     int adbThreadCount = options.getAdbThreadCount();
@@ -312,7 +313,7 @@ public abstract class AdbCommandRunner<T extends AbstractCommandOptions>
    * {@link com.android.ddmlib.IDevice#executeShellCommand(String,
    * com.android.ddmlib.IShellOutputReceiver)} succeeded.
    */
-  protected static abstract class ErrorParsingReceiver extends MultiLineReceiver {
+  protected abstract static class ErrorParsingReceiver extends MultiLineReceiver {
 
     private String errorMessage = null;
 

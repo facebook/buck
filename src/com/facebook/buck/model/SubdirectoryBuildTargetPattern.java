@@ -29,7 +29,8 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
 
   /**
    * @param basePathWithSlash The base path of the build target in the ancestor directory. It is
-   *     expected to match the value returned from a {@link BuildTarget#getBasePathWithSlash()} call.
+   *     expected to match the value returned from a {@link BuildTarget#getBasePathWithSlash()}
+   *     call.
    */
   public SubdirectoryBuildTargetPattern(String basePathWithSlash) {
     Preconditions.checkNotNull(basePathWithSlash);

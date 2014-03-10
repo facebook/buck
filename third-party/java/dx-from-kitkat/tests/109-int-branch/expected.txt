@@ -1,0 +1,67 @@
+Generated: ./blort.class
+blort.test1:(ZBCSI[I)V:
+regs: 000f; ins: 0006; outs: 0000
+  0000: move v0, v9
+  0001: move v1, v10
+  0002: move v2, v11
+  0003: move v3, v12
+  0004: move v4, v13
+  0005: move-object v5, v14
+  0006: move v6, v0
+  0007: move v7, v1
+  0008: if-eq v6, v7, 0021 // +0019
+  000a: move v6, v2
+  000b: move v7, v3
+  000c: if-ne v6, v7, 0021 // +0015
+  000e: move v6, v4
+  000f: move-object v7, v5
+  0010: const/4 v8, #int 0 // #0
+  0011: aget v7, v7, v8
+  0013: if-lt v6, v7, 0021 // +000e
+  0015: move-object v6, v5
+  0016: const/4 v7, #int 0 // #0
+  0017: aget v6, v6, v7
+  0019: move v7, v0
+  001a: if-gt v6, v7, 0021 // +0007
+  001c: move v6, v4
+  001d: move v7, v1
+  001e: if-ge v6, v7, 0021 // +0003
+  0020: nop
+  0021: return-void
+  source file: "blort.j"
+blort.test2:(I)Ljava/lang/Object;:
+regs: 0005; ins: 0001; outs: 0000
+  0000: move v0, v4
+  0001: const/4 v2, #null // #0
+  0002: move-object v1, v2
+  0003: move-object v2, v1
+  0004: const/4 v3, #int 0 // #0
+  0005: aget v2, v2, v3
+  0007: move v3, v0
+  0008: if-ge v2, v3, 000b // +0003
+  000a: nop
+  000b: const/4 v2, #null // #0
+  000c: move-object v0, v2
+  000d: return-object v0
+  source file: "blort.j"
+blort.test3:(I[I)Ljava/lang/Object;:
+regs: 0007; ins: 0002; outs: 0000
+  0000: move v0, v5
+  0001: move-object v1, v6
+  0002: const/4 v3, #null // #0
+  0003: move-object v2, v3
+  0004: move-object v3, v2
+  0005: if-nez v3, 000a // +0005
+  0007: move-object v3, v1
+  0008: move-object v2, v3
+  0009: goto 0004 // -0005
+  000a: move-object v3, v2
+  000b: const/4 v4, #int 0 // #0
+  000c: aget v3, v3, v4
+  000e: move v4, v0
+  000f: if-ge v3, v4, 0012 // +0003
+  0011: nop
+  0012: const/4 v3, #null // #0
+  0013: move-object v0, v3
+  0014: return-object v0
+  source file: "blort.j"

@@ -6,6 +6,7 @@ java_library(
     '//lib:guava',
     '//lib:jsr305',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//lib:jackson-annotations',

@@ -1,0 +1,2 @@
+This tests that the various "objecty" opcodes verify that their
+arguments are actually of the appropriate types.

@@ -1,0 +1,49 @@
+#
+# sample small-but-valid classfile
+#
+
+cafe babe  # magic
+0000       # minor_version
+002e       # major_version
+000a       # constant_pool_count
+
+#
+# constant_pool
+#
+0a 0003 0007               # 0001: method[0003, 0007]
+07 0008                    # 0002: class[0008]
+07 0009                    # 0003: class[0009]
+01 0006 "<init>"           # 0004: utf8["<init>"]
+01 0003 "()V"              # 0005: utf8["()V"]
+01 0004 "Code"             # 0006: utf8["Code"]
+0c 0004 0005               # 0007: nat[0004, 0005]
+01 0005 "Small"            # 0008: utf8["Small"]
+01 0010 "java/lang/Object" # 0009: utf8["java/lang/Object"]
+
+0021  # access_flags
+0002  # this_class
+0003  # super_class
+0000  # interfaces_count
+0000  # fields_count
+0001  # methods_count
+
+#
+# methods[0]
+#
+0001  # access_flags
+0004  # name
+0005  # descriptor
+0001  # attributes_count
+# attributes[0]
+0006       # name
+0000 0011  # length
+0001       # max_stack
+0001       # max_locals
+0000 0005  # code_length
+2a         # 0000: aload_0
+b7 0001    # 0001: invokespecial method[java/lang/Object.<init>:()V]
+b1         # 0004: return
+0000       # exception_table_length
+0000       # attributes_count
+
+0000  # attributes_count

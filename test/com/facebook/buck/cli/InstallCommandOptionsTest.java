@@ -89,7 +89,8 @@ public class InstallCommandOptionsTest {
   @Test
   public void testInstallCommandOptionsEmulatorMode() throws CmdLineException {
     // Short form.
-    TargetDeviceOptions options = getTargetDeviceOptions(TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
+    TargetDeviceOptions options =
+        getTargetDeviceOptions(TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
     assertTrue(options.isEmulatorsOnlyModeEnabled());
 
     // Long form.

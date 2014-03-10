@@ -49,7 +49,7 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */"");
+            /* ndkVersion */ Optional.<String>absent());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
         .createFromDefaultDirectoryStructure(
@@ -81,8 +81,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromOldUpgradePath = new File(buildToolsDir, "17.0.0");
@@ -103,9 +103,12 @@ public class AndroidPlatformTargetTest {
     assertEquals(
         ImmutableList.of(
             MorePaths.newPathInstance(new File(androidSdkDir, "platforms/android-17/android.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
@@ -127,8 +130,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromFreshDownload = new File(buildToolsDir, "android-4.2.2");
@@ -149,9 +152,12 @@ public class AndroidPlatformTargetTest {
     assertEquals(
         ImmutableList.of(
             MorePaths.newPathInstance(new File(androidSdkDir, "platforms/android-17/android.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
-            MorePaths.newPathInstance(new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/effects.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/maps.jar")),
+            MorePaths.newPathInstance(
+                new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs/usb.jar"))),
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(new File(androidSdkDir, "platforms/android-17/android.jar"),
         androidPlatformTarget.getAndroidJar());
@@ -173,8 +179,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
@@ -191,7 +197,9 @@ public class AndroidPlatformTargetTest {
     new File(buildToolsDir, "16.0.0").mkdir();
 
     Optional<AndroidPlatformTarget> androidPlatformTargetOption =
-        AndroidPlatformTarget.getTargetForId("Google Inc.:Google APIs:17", androidDirectoryResolver);
+        AndroidPlatformTarget.getTargetForId(
+            "Google Inc.:Google APIs:17",
+            androidDirectoryResolver);
     assertTrue(androidPlatformTargetOption.isPresent());
 
     assertEquals(
@@ -207,8 +215,8 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /** androidNdkDir */ Optional.<Path>absent(),
-            /** ndkVersion */"");
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
     try {
       AndroidPlatformTarget.getTargetForId(platformId, androidDirectoryResolver);
       fail("Should have thrown HumanReadableException");

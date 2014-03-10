@@ -134,7 +134,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   @Override
   public final ListenableFuture<BuildRuleSuccess> build(final BuildContext context) {
     // We use hasBuildStarted as a lock so that we can minimize how much we need to synchronize.
-    synchronized(hasBuildStarted) {
+    synchronized (hasBuildStarted) {
       if (hasBuildStarted.get()) {
         return buildRuleResult;
       } else {
@@ -236,9 +236,15 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
 
               doHydrationAfterBuildStepsFinish(result, onDiskBuildInfo);
 
-              // Do the post to the event bus immediately after the future is set so that the
-              // build time measurement is as accurate as possible.
+              // Do the post to the event bus just before the future is set so that the build time
+              // measurement is as accurate as possible.
               logBuildRuleFinished(result);
+
+
+              // Only now that the rule should be in a completely valid state, resolve the future.
+              BuildRuleSuccess buildRuleSuccess =
+                  new BuildRuleSuccess(AbstractCachingBuildRule.this, result.getSuccess());
+              buildRuleResult.set(buildRuleSuccess);
 
               // Finally, upload to the artifact cache.
               if (result.getSuccess().shouldUploadResultingArtifact()) {
@@ -316,10 +322,6 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
       InitializableFromDisk<?> initializable = (InitializableFromDisk<?>) this.getBuildable();
       doInitializeFromDisk(initializable, onDiskBuildInfo);
     }
-
-    // Only now that the rule should be in a completely valid state, resolve the future.
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(this, result.getSuccess());
-    buildRuleResult.set(buildRuleSuccess);
   }
 
   private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable,

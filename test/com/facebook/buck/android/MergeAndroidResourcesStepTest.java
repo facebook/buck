@@ -100,7 +100,8 @@ public class MergeAndroidResourcesStepTest {
         .add("int string debug_ssl_cert_check_summary 0x7f030001")
         .add("int string debug_ssl_cert_check_title 0x7f030000")
         .add("int styleable SherlockMenuItem_android_visible 4")
-        .add("int[] styleable SherlockMenuView { 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d }")
+        .add("int[] styleable SherlockMenuView { 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, " +
+            "0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d }")
         .build();
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     entriesBuilder.add(new RDotTxtEntry(rDotJavaPackage, symbolsFile, outputTextSymbols));
@@ -127,7 +128,8 @@ public class MergeAndroidResourcesStepTest {
     assertResource("int[]",
         "styleable",
         "SherlockMenuView",
-        "{ 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d }",
+        "{ 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, " +
+            "0x7f01002d }",
         iter.next());
 
     // Verify that the correct Java code is generated.
@@ -153,7 +155,8 @@ public class MergeAndroidResourcesStepTest {
         "\n" +
         "  public static class styleable {\n" +
         "    public static int SherlockMenuItem_android_visible=4;\n" +
-        "    public static int[] SherlockMenuView={ 0x7f010026, 0x7f010027, 0x7f010028, 0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d };\n" +
+        "    public static int[] SherlockMenuView={ 0x7f010026, 0x7f010027, 0x7f010028, " +
+                "0x7f010029, 0x7f01002a, 0x7f01002b, 0x7f01002c, 0x7f01002d };\n" +
         "  }\n" +
         "\n" +
         "}\n",

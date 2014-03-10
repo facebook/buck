@@ -3,7 +3,7 @@ R_DOT_JAVA_SRCS = [
   'DummyRDotJavaAbiRule.java',
   'GenRDotJavaStep.java',
   'HasAndroidResourceDeps.java',
-  'JavaLibraryGraphEnhancer.java',
+  'AndroidLibraryGraphEnhancer.java',
   'MergeAndroidResourcesStep.java',
   'UberRDotJavaUtil.java',
 ]
@@ -77,6 +77,7 @@ RULES_SRCS = [
   'PreDexMerge.java',
   'PrebuiltNativeLibrary.java',
   'PrebuiltNativeLibraryBuildRuleFactory.java',
+  'ResourcesFilter.java',
   'RobolectricTestBuildRuleFactory.java',
   'RobolectricTestRule.java',
   'UberRDotJava.java',
@@ -154,6 +155,7 @@ java_library(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
@@ -165,6 +167,7 @@ java_library(
     '//src/com/facebook/buck/zip:steps',
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/aosp:aosp',
+    '//third-party/java/asm:asm',
   ],
   visibility = ['PUBLIC'],
 )

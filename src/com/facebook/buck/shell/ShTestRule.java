@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DoNotUseAbstractBuildable;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -34,7 +35,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
-import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -43,9 +44,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -58,12 +57,12 @@ import java.util.concurrent.Callable;
 public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
   private final Path test;
-  private final ImmutableSet<String> labels;
+  private final ImmutableSet<Label> labels;
 
   protected ShTestRule(
       BuildRuleParams buildRuleParams,
       Path test,
-      Set<String> labels) {
+      Set<Label> labels) {
     super(buildRuleParams);
     this.test = Preconditions.checkNotNull(test);
     this.labels = ImmutableSet.copyOf(labels);
@@ -80,7 +79,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
   }
 
   @Override
-  public ImmutableSet<String> getLabels() {
+  public ImmutableSet<Label> getLabels() {
     return labels;
   }
 
@@ -124,16 +123,14 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return Paths.get(
-        BuckConstant.GEN_DIR,
-        getBuildTarget().getBasePath(),
-        String.format("__java_test_%s_output__", getBuildTarget().getShortName())
-    );
+    return BuildTargets.getGenPath(
+        getBuildTarget(),
+        "__java_test_%s_output__");
   }
 
   @VisibleForTesting
-  String getPathToTestOutputResult() {
-    return getPathToTestOutputDirectory() + "/result.json";
+  Path getPathToTestOutputResult() {
+    return getPathToTestOutputDirectory().resolve("result.json");
   }
 
   @Override
@@ -141,13 +138,15 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
       ExecutionContext context,
       boolean isUsingTestSelectors) {
     final ImmutableSet<String> contacts = getContacts();
+    final ProjectFilesystem filesystem = context.getProjectFilesystem();
     return new Callable<TestResults>() {
 
       @Override
       public TestResults call() throws Exception {
-        File resultsFile = new File(getPathToTestOutputResult());
+        Optional<String> resultsFileContents =
+            filesystem.readFileIfItExists(getPathToTestOutputResult());
         ObjectMapper mapper = new ObjectMapper();
-        TestResultSummary testResultSummary = mapper.readValue(resultsFile,
+        TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
             TestResultSummary.class);
         TestCaseSummary testCaseSummary = new TestCaseSummary(
             getFullyQualifiedName(), ImmutableList.of(testResultSummary));
@@ -165,7 +164,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
       LabelsAttributeBuilder {
 
     private Path test;
-    private ImmutableSet<String> labels = ImmutableSet.of();
+    private ImmutableSet<Label> labels = ImmutableSet.of();
 
     private Builder(AbstractBuildRuleBuilderParams params) {
       super(params);
@@ -183,7 +182,7 @@ public class ShTestRule extends DoNotUseAbstractBuildable implements TestRule {
     }
 
     @Override
-    public Builder setLabels(ImmutableSet<String> labels) {
+    public Builder setLabels(ImmutableSet<Label> labels) {
       this.labels = labels;
       return this;
     }

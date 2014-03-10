@@ -1,0 +1,314 @@
+Blort.test01:(Ljava/lang/Object;)V:
+regs: 0003; ins: 0001; outs: 0001
+  0000: move-object v0, v2
+  0001: move-object v1, v0
+  0002: invoke-virtual {v1}, java.lang.Object.hashCode:()I
+  0005: move-result v1
+  0006: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v2
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x java.lang.Object
+    end sequence
+Blort.test02:()Ljava/lang/Object;:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/4 v1, #null // #0
+  0001: move-object v0, v1
+  0002: move-object v1, v0
+  0003: const/4 v2, #int 0 // #0
+  0004: aget-object v1, v1, v2
+  0006: move-object v0, v1
+  0007: return-object v0
+  debug info
+    line_start: 1
+    parameters_size: 0000
+    0000: prologue end
+    0002: advance pc
+    0002: +local v0 arr java.lang.Object[]
+    0007: advance pc
+    0007: -local v0 arr java.lang.Object[]
+    end sequence
+Blort.test03:(I)Ljava/lang/String;:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: const/4 v2, #null // #0
+  0002: move-object v1, v2
+  0003: move-object v2, v1
+  0004: move-object v0, v2
+  0005: return-object v0
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x int
+    0003: advance pc
+    0003: +local v1 foo java.lang.String
+    0005: advance pc
+    0005: -local v0 x int
+    end sequence
+Blort.test04:(I)Ljava/lang/String;:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: const/4 v2, #null // #0
+  0002: move-object v1, v2
+  0003: move v2, v0
+  0004: if-gez v2, 0009 // +0005
+  0006: const-string v2, "bar"
+  0008: move-object v1, v2
+  0009: move-object v2, v1
+  000a: move-object v0, v2
+  000b: return-object v0
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x int
+    0003: advance pc
+    0003: +local v1 foo java.lang.String
+    000b: advance pc
+    000b: -local v0 x int
+    end sequence
+Blort.test05:(Ljava/lang/Object;)I:
+regs: 0006; ins: 0001; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v2, v0
+  0002: check-cast v2, int[]
+  0004: check-cast v2, int[]
+  0006: move-object v1, v2
+  0007: move-object v2, v1
+  0008: const/4 v3, #int 0 // #0
+  0009: const/16 v4, #int 123 // #007b
+  000b: aput v4, v2, v3
+  000d: move-object v2, v1
+  000e: const/4 v3, #int 0 // #0
+  000f: aget v2, v2, v3
+  0011: move v0, v2
+  0012: return v0
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v5
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x java.lang.Object
+    0007: advance pc
+    0007: +local v1 arr int[]
+    0012: advance pc
+    0012: -local v0 x java.lang.Object
+    end sequence
+Blort.test06:(I)I:
+regs: 0005; ins: 0001; outs: 0000
+  0000: move v0, v4
+  0001: move v2, v0
+  0002: const/16 v3, #int 10 // #000a
+  0004: if-ge v2, v3, 000b // +0007
+  0006: const/4 v2, #int 1 // #1
+  0007: move v1, v2
+  0008: move v2, v1
+  0009: move v0, v2
+  000a: return v0
+  000b: const/4 v2, #int 2 // #2
+  000c: move v1, v2
+  000d: move v2, v1
+  000e: move v0, v2
+  000f: goto 000a // -0005
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v4
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x int
+    0008: advance pc
+    0008: +local v1 y int
+    000a: advance pc
+    000a: -local v0 x int
+    000b: advance pc
+    000b: -local v1 y int
+    000b: +local restart v0 x int
+    000d: advance pc
+    000d: +local restart v1 y int
+    end sequence
+Blort.test07:(Z)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: move v2, v0
+  0002: move v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x boolean
+    0003: advance pc
+    0003: +local v1 y boolean
+    end sequence
+Blort.test08:(B)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: move v2, v0
+  0002: move v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x byte
+    0003: advance pc
+    0003: +local v1 y byte
+    end sequence
+Blort.test09:(C)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: move v2, v0
+  0002: move v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x char
+    0003: advance pc
+    0003: +local v1 y char
+    end sequence
+Blort.test10:(D)V:
+regs: 0008; ins: 0002; outs: 0000
+  0000: move-wide v0, v6
+  0001: move-wide v4, v0
+  0002: move-wide v2, v4
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v6
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x double
+    0003: advance pc
+    0003: +local v2 y double
+    end sequence
+Blort.test11:(F)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: move v2, v0
+  0002: move v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x float
+    0003: advance pc
+    0003: +local v1 y float
+    end sequence
+Blort.test12:(I)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: move v2, v0
+  0002: move v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x int
+    0003: advance pc
+    0003: +local v1 y int
+    end sequence
+Blort.test13:(J)V:
+regs: 0008; ins: 0002; outs: 0000
+  0000: move-wide v0, v6
+  0001: move-wide v4, v0
+  0002: move-wide v2, v4
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v6
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x long
+    0003: advance pc
+    0003: +local v2 y long
+    end sequence
+Blort.test14:(S)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move v0, v3
+  0001: move v2, v0
+  0002: move v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x short
+    0003: advance pc
+    0003: +local v1 y short
+    end sequence
+Blort.test15:(Ljava/lang/Object;)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move-object v0, v3
+  0001: move-object v2, v0
+  0002: move-object v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x java.lang.Object
+    0003: advance pc
+    0003: +local v1 y java.lang.Object
+    end sequence
+Blort.test16:(Ljava/lang/String;)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move-object v0, v3
+  0001: move-object v2, v0
+  0002: move-object v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x java.lang.String
+    0003: advance pc
+    0003: +local v1 y java.lang.String
+    end sequence
+Blort.test17:([I)V:
+regs: 0004; ins: 0001; outs: 0000
+  0000: move-object v0, v3
+  0001: move-object v2, v0
+  0002: move-object v1, v2
+  0003: return-void
+  debug info
+    line_start: 1
+    parameters_size: 0001
+    parameter <unnamed> v3
+    0000: prologue end
+    0001: advance pc
+    0001: +local v0 x int[]
+    0003: advance pc
+    0003: +local v1 y int[]
+    end sequence

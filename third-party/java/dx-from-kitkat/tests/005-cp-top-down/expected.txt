@@ -1,0 +1,34 @@
+reading small-class.txt...
+begin classfile
+magic: cafebabe
+minor_version: 0000
+major_version: 002e
+constant_pool_count: 0014
+
+constant_pool:
+  0001: double{0x411958955f8a0903 / 415269.3433}
+  0003: long{0x123456789abcdef0 / 1311768467463790320}
+  0005: float{0x42f6e666 / 123.45}
+  0006: int{0x12345678 / 305419896}
+  0007: string{"Small"}
+  0008: ifaceMethod{Small.blort:()V}
+  0009: method{Small.blort:()V}
+  000a: field{Small.blort:x/y/Zzz}
+  000b: nat{blort:()V}
+  000c: nat{blort:x/y/Zzz}
+  000d: utf8{"()V"}
+  000e: utf8{"x/y/Zzz"}
+  000f: utf8{"blort"}
+  0010: type{java.lang.Object}
+  0011: type{Small}
+  0012: utf8{"java/lang/Object"}
+  0013: utf8{"Small"}
+end constant_pool
+access_flags: public
+this_class: type{Small}
+super_class: type{java.lang.Object}
+interfaces_count: 0000
+fields_count: 0000
+methods_count: 0000
+attributes_count: 0000
+end classfile

@@ -31,11 +31,12 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +79,8 @@ public final class XcconfigStack {
    * Builder class for XcconfigStack objects.
    *
    * Layers and settings are taken by increasing order of priority (last one wins).
-   * $(inherited) tokens are replaced by (internal, generated, indirect) references to the previous layers.
+   * $(inherited) tokens are replaced by (internal, generated, indirect) references to the previous
+   * layers.
    */
   public static class Builder {
 
@@ -93,9 +95,9 @@ public final class XcconfigStack {
 
     public Builder(String aliasPrefix) {
       stack = ArrayListMultimap.create();
-      keyAliases = new HashMap<String, String>();
-      currentLayer = new ArrayList<PredicatedConfigValue>();
-      currentKeyAliases = new HashMap<String, String>();
+      keyAliases = Maps.newHashMap();
+      currentLayer = Lists.newArrayList();
+      currentKeyAliases = Maps.newHashMap();
       currentCounter = 0;
       prefix = aliasPrefix;
     }
@@ -114,6 +116,7 @@ public final class XcconfigStack {
         // single human readable message
         String combinedMessage = Joiner.on('\n').join(
             Iterables.transform(Throwables.getCausalChain(e), new Function<Throwable, String>() {
+              @Override
               public String apply(Throwable input) {
                 return input.getMessage();
               }
@@ -173,7 +176,7 @@ public final class XcconfigStack {
         addSettingToLayer(stack, setting);
       }
       currentLayer = new ArrayList<PredicatedConfigValue>();
-      currentKeyAliases = new HashMap<String, String>();
+      currentKeyAliases = Maps.newHashMap();
       currentCounter += 1;
     }
 
@@ -219,7 +222,8 @@ public final class XcconfigStack {
     public XcconfigStack build() {
       pushLayer();
 
-      ImmutableMultimap.Builder<String, PredicatedConfigValue> builder = ImmutableMultimap.builder();
+      ImmutableMultimap.Builder<String, PredicatedConfigValue> builder =
+          ImmutableMultimap.builder();
       List<String> keys = new ArrayList<String>(stack.keySet());
       Collections.sort(keys);
       for (String key : keys) {

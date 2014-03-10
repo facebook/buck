@@ -48,7 +48,10 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see InstallCommand#installApk(com.facebook.buck.rules.InstallableApk, InstallCommandOptions, ExecutionContext)
+   * @see InstallCommand#installApk(
+   *          com.facebook.buck.rules.InstallableApk,
+   *          InstallCommandOptions,
+   *          ExecutionContext)
    */
   @VisibleForTesting
   protected boolean uninstallApk(final String packageName,
@@ -101,7 +104,8 @@ public abstract class UninstallSupportCommandRunner<T extends AbstractCommandOpt
       long end = System.currentTimeMillis();
 
       if (reason != null) {
-        console.printBuildFailure(String.format("Failed to uninstall apk from %s: %s.", name, reason));
+        console.printBuildFailure(
+            String.format("Failed to uninstall apk from %s: %s.", name, reason));
         return false;
       }
 

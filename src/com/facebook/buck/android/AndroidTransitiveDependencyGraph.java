@@ -112,8 +112,8 @@ public class AndroidTransitiveDependencyGraph {
       Path pathToCompiledRDotJavaFiles = uberRDotJava.getPathToCompiledRDotJavaFiles();
       pathsToDexBuilder.add(pathToCompiledRDotJavaFiles.toString());
 
-      // TODO: Ultimately, pathToCompiledRDotJavaFiles should be pre-dexed so that it does not need
-      // its own field in AndroidDexTransitiveDependencies.
+      // TODO(user): Ultimately, pathToCompiledRDotJavaFiles should be pre-dexed so that it does
+      // not need its own field in AndroidDexTransitiveDependencies.
       pathToCompiledRDotJavaFilesOptional = Optional.of(pathToCompiledRDotJavaFiles);
     } else {
       pathToCompiledRDotJavaFilesOptional = Optional.absent();

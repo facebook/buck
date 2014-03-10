@@ -59,8 +59,7 @@ public class AndroidPlatformTarget {
   private final File proguardJar;
   private final File proguardConfig;
   private final File optimizedProguardConfig;
-  private final Optional<String> ndkVersion;
-  private final Optional<Path> ndkDirectory;
+  private final AndroidDirectoryResolver androidDirectoryResolver;
 
 
   private AndroidPlatformTarget(
@@ -76,8 +75,7 @@ public class AndroidPlatformTarget {
       File proguardJar,
       File proguardConfig,
       File optimizedProguardConfig,
-      Optional<String> ndkVersion,
-      Optional<Path> ndkDirectory) {
+      AndroidDirectoryResolver androidDirectoryResolver) {
     this.name = Preconditions.checkNotNull(name);
     this.androidJar = Preconditions.checkNotNull(androidJar);
     this.bootclasspathEntries = ImmutableList.copyOf(bootclasspathEntries);
@@ -90,8 +88,7 @@ public class AndroidPlatformTarget {
     this.proguardJar = Preconditions.checkNotNull(proguardJar);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.optimizedProguardConfig = Preconditions.checkNotNull(optimizedProguardConfig);
-    this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
-    this.ndkDirectory = Preconditions.checkNotNull(ndkDirectory);
+    this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
   }
 
   public String getName() {
@@ -150,12 +147,8 @@ public class AndroidPlatformTarget {
     return optimizedProguardConfig;
   }
 
-  public Optional<String> getNdkVersion() {
-    return ndkVersion;
-  }
-
   public Optional<Path> getNdkDirectory() {
-    return ndkDirectory;
+    return androidDirectoryResolver.findAndroidNdkDir();
   }
 
   /**
@@ -223,7 +216,9 @@ public class AndroidPlatformTarget {
       Set<String> additionalJarPaths) {
     File androidSdkDir = androidDirectoryResolver.findAndroidSdkDir().toFile();
     if (!androidSdkDir.isAbsolute()) {
-      throw new HumanReadableException("Path to Android SDK must be absolute but was: %s.", androidSdkDir);
+      throw new HumanReadableException(
+          "Path to Android SDK must be absolute but was: %s.",
+          androidSdkDir);
     }
 
     File platformDirectory = new File(androidSdkDir, platformDirectoryPath);
@@ -273,13 +268,6 @@ public class AndroidPlatformTarget {
     File optimizedProguardConfig =
         new File(androidSdkDir, "tools/proguard/proguard-android-optimize.txt");
 
-
-    Optional<Path> ndkDirectory = androidDirectoryResolver.findAndroidNdkDir();
-    Optional<String> ndkVersion = Optional.absent();
-    if (ndkDirectory.isPresent()) {
-      ndkVersion = Optional.of(androidDirectoryResolver.getNdkVersion(ndkDirectory.get()));
-    }
-
     return new AndroidPlatformTarget(
         name,
         androidJar,
@@ -293,8 +281,7 @@ public class AndroidPlatformTarget {
         proguardJar,
         proguardConfig,
         optimizedProguardConfig,
-        ndkVersion,
-        ndkDirectory);
+        androidDirectoryResolver);
   }
 
   private static File pickNewestBuildToolsDir(Set<File> directories) {

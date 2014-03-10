@@ -16,8 +16,10 @@
 
 package com.facebook.buck.util;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.WatchEvents;
@@ -37,10 +39,13 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.nio.file.attribute.BasicFileAttributes;
 
 /** Unit test for {@link ProjectFilesystem}. */
 public class ProjectFilesystemTest {
@@ -59,9 +64,11 @@ public class ProjectFilesystemTest {
     tmp.newFolder("foo");
     tmp.newFile("foo/bar.txt");
 
-    assertTrue(filesystem.isFile("foo/bar.txt"));
-    assertFalse(filesystem.isFile("i_do_not_exist"));
-    assertFalse("foo/ is a directory, but not an ordinary file", filesystem.isFile("foo"));
+    assertTrue(filesystem.isFile(Paths.get("foo/bar.txt")));
+    assertFalse(filesystem.isFile(Paths.get("i_do_not_exist")));
+    assertFalse(
+        "foo/ is a directory, but not an ordinary file",
+        filesystem.isFile(Paths.get("foo")));
   }
 
   @Test
@@ -276,4 +283,51 @@ public class ProjectFilesystemTest {
     };
     assertEquals("I am the context string.", filesystem.createContextString(overflowEvent));
   }
+
+  @Test
+  public void testWalkFileTreeWhenProjectRootIsNotWorkingDir() throws IOException {
+    tmp.newFolder("dir");
+    tmp.newFile("dir/file.txt");
+    tmp.newFolder("dir/dir2");
+    tmp.newFile("dir/dir2/file2.txt");
+
+    final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
+
+    filesystem.walkRelativeFileTree(
+        Paths.get("dir"), new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            fileNames.add(file.getFileName().toString());
+            return FileVisitResult.CONTINUE;
+          }
+        });
+
+    assertThat(fileNames.build(), containsInAnyOrder("file.txt", "file2.txt"));
+  }
+
+  @Test
+  public void testWalkFileTreeWhenProjectRootIsWorkingDir() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
+
+    Path pathRelativeToProjectRoot = Paths.get("test/com/facebook/buck/util/testdata");
+    projectFilesystem.walkRelativeFileTree(
+        pathRelativeToProjectRoot,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            fileNames.add(file.getFileName().toString());
+            return FileVisitResult.CONTINUE;
+          }
+        }
+    );
+
+    assertThat(fileNames.build(), containsInAnyOrder(
+            "file",
+            "a_file",
+            "b_file",
+            "b_c_file",
+            "b_d_file"));
+  }
 }
+

@@ -154,7 +154,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
               }
               break;
             case "exists":
-              if (! jsonParser.nextBooleanValue()) {
+              if (!jsonParser.nextBooleanValue()) {
                 builder.setDeletionEvent();
               }
               break;
@@ -166,6 +166,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
             ++eventCount;
           }
           builder = new PathEventBuilder();
+          break;
+        // $CASES-OMITTED$
+        default:
           break;
       }
       token = jsonParser.nextToken();

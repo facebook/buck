@@ -64,9 +64,9 @@ class TemplateHandler extends AbstractHandler {
   }
 
   /**
-   * Handles a request. Invokes {@link TemplateHandlerDelegate#getTemplateForRequest(Request)} to get the template and
-   * {@link TemplateHandlerDelegate#getDataForRequest(Request)} to get the template data, and then combines them to
-   * produce the response.
+   * Handles a request. Invokes {@link TemplateHandlerDelegate#getTemplateForRequest(Request)} to
+   * get the template and {@link TemplateHandlerDelegate#getDataForRequest(Request)} to get the
+   * template data, and then combines them to produce the response.
    */
   @Override
   public void handle(String target,

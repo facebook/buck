@@ -21,13 +21,11 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -43,21 +41,22 @@ import java.util.logging.Logger;
  */
 public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
-  private final static Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
-  private final static Level LEVEL = Level.INFO;
+  private static final Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
+  private static final Level LEVEL = Level.INFO;
 
-  public static void ensureLogFileIsWritten() {
+  public static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
     try {
-      Path dir = Paths.get(BuckConstant.BIN_DIR);
+      filesystem.mkdirs(BuckConstant.BIN_PATH);
+    } catch (IOException e) {
+      throw new HumanReadableException(e,
+          "Unable to create output directory: %s",
+          BuckConstant.BIN_DIR);
+    }
 
-      try {
-        Files.createDirectories(dir);
-      } catch (IOException e) {
-        throw new HumanReadableException(e, "Unable to create output directory: " + dir);
-      }
-
+    try {
       FileHandler handler = new FileHandler(
-          String.format("%s/build.log", BuckConstant.BIN_DIR), /* append */ false);
+          filesystem.resolve(BuckConstant.BIN_PATH.resolve("build.log")).toString(),
+          /* append */ false);
       Formatter formatter = new BuildEventFormatter();
       handler.setFormatter(formatter);
 
@@ -100,7 +99,9 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(String buildId) {}
+  public void outputTrace(String buildId) {
+    closeLogFile();
+  }
 
   private static class BuildEventFormatter extends Formatter {
 

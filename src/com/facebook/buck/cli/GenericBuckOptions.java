@@ -68,7 +68,7 @@ public class GenericBuckOptions {
    * @return The version of Buck currently running
    */
   private String getBuckVersion() {
-    return (buckGitRepoHasChanges? "*" : "") + buckGitCommitHash;
+    return (buckGitRepoHasChanges ? "*" : "") + buckGitCommitHash;
   }
 
   @VisibleForTesting

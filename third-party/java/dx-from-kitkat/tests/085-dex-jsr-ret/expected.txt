@@ -1,0 +1,148 @@
+Generated: ./blort.class
+reading blort.class...
+method test_jsr ()Ljava/lang/Object;
+first 005c
+block 0000
+  pred 005c
+  blort.j:@0000: move-object v3:Lblort; <- v0:Lblort;
+  blort.j:@0000: goto . <- .
+  next 0001
+block 0001
+  pred 0000
+  @????: goto . <- .
+  next 0063
+block 0004
+  pred 0065
+  blort.j:@0004: move-object v4:Lblort; <- v0:Lblort;
+  blort.j:@0006: const-int(10) v4:I=10 <- .
+  blort.j:@0008: move-int v0:I=10 <- v4:I=10
+  blort.j:@0008: goto . <- .
+  next 0009
+block 0009
+  pred 0004
+  @????: goto . <- .
+  next 006c
+block 000c
+  pred 006e
+  blort.j:@000c: move-int v4:I <- v0:I
+  blort.j:@000c: goto . <- .
+  next 000e
+block 000e
+  pred 000c
+  @????: goto . <- .
+  next 0075
+block 005c
+  blort.j:@0000: move-param-object(0) v0:Lblort; <- .
+  blort.j:@0000: goto . <- .
+  next 0000
+block 005d
+  pred 006b
+  pred 0074
+  pred 0075
+  blort.j:@002c: return-object . <- v0:Ljava/lang/Object;
+  returns
+block 0063
+  pred 0001
+  blort.j:@0012: goto . <- .
+  next 0064
+block 0064
+  pred 0063
+  @????: goto . <- .
+  next 0066
+block 0065
+  pred 0069
+  pred 006a
+  @????: goto . <- .
+  next 0004
+block 0066
+  pred 0064
+  blort.j:@001b: move-object v7:Lblort; <- v3:Lblort;
+  blort.j:@001b: move-object v3:Lblort; <- v7:Lblort;
+  blort.j:@001b: move-object v4:Lblort; <- v7:Lblort;
+  blort.j:@001c: move-object v7:Lblort; <- v4:Lblort;
+  blort.j:@001c: move-object v4:Lblort; <- v7:Lblort;
+  blort.j:@001c: move-object v5:Lblort; <- v7:Lblort;
+  blort.j:@001d: Rop{invoke-virtual . <- Lblort; call throws <any>}(blort.test_
+  jsr:()V catch java.lang.Throwable) . <- v5:Lblort;
+  next 0067
+  next 0068 *
+block 0067
+  pred 0066
+  blort.j:@002d: Rop{move-exception Ljava/lang/Throwable; <- . flows} v3:Ljava/
+  lang/Throwable; <- .
+  blort.j:@002d: goto . <- .
+  next 006b
+block 0068
+  pred 0066
+  blort.j:@0020: if-nez-object . <- v4:Lblort;
+  next 0069 *
+  next 006a
+block 0069
+  pred 0068
+  @????: goto . <- .
+  next 0065
+block 006a
+  pred 0068
+  @????: goto . <- .
+  next 0065
+block 006b
+  pred 0067
+  blort.j:@002d: move-object v0:Ljava/lang/Class;=java.lang.Throwable <- v3:Lja
+  va/lang/Class;=java.lang.Throwable
+  blort.j:@002d: goto . <- .
+  next 005d
+block 006c
+  pred 0009
+  blort.j:@0012: goto . <- .
+  next 006d
+block 006d
+  pred 006c
+  @????: goto . <- .
+  next 006f
+block 006e
+  pred 0072
+  pred 0073
+  @????: goto . <- .
+  next 000c
+block 006f
+  pred 006d
+  blort.j:@001b: move-object v7:Lblort; <- v3:Lblort;
+  blort.j:@001b: move-object v3:Lblort; <- v7:Lblort;
+  blort.j:@001b: move-object v4:Lblort; <- v7:Lblort;
+  blort.j:@001c: move-object v7:Lblort; <- v4:Lblort;
+  blort.j:@001c: move-object v4:Lblort; <- v7:Lblort;
+  blort.j:@001c: move-object v5:Lblort; <- v7:Lblort;
+  blort.j:@001d: Rop{invoke-virtual . <- Lblort; call throws <any>}(blort.test_
+  jsr:()V catch java.lang.Throwable) . <- v5:Lblort;
+  next 0070
+  next 0071 *
+block 0070
+  pred 006f
+  blort.j:@002d: Rop{move-exception Ljava/lang/Throwable; <- . flows} v3:Ljava/
+  lang/Throwable; <- .
+  blort.j:@002d: goto . <- .
+  next 0074
+block 0071
+  pred 006f
+  blort.j:@0020: if-nez-object . <- v4:Lblort;
+  next 0072 *
+  next 0073
+block 0072
+  pred 0071
+  @????: goto . <- .
+  next 006e
+block 0073
+  pred 0071
+  @????: goto . <- .
+  next 006e
+block 0074
+  pred 0070
+  blort.j:@002d: move-object v0:Ljava/lang/Class;=java.lang.Throwable <- v3:Lja
+  va/lang/Class;=java.lang.Throwable
+  blort.j:@002d: goto . <- .
+  next 005d
+block 0075
+  pred 000e
+  blort.j:@002c: move-object v0:Lblort; <- v3:Lblort;
+  blort.j:@002c: goto . <- .
+  next 005d

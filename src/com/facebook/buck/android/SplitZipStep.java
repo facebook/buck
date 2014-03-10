@@ -76,7 +76,7 @@ public class SplitZipStep implements Step {
   private static final int ZIP_SIZE_HARD_LIMIT = ZIP_SIZE_SOFT_LIMIT + (2 * 1024 * 1024);
 
   @VisibleForTesting
-  static final Pattern classFilePattern = Pattern.compile("^([\\w/$]+)\\.class");
+  static final Pattern CLASS_FILE_PATTERN = Pattern.compile("^([\\w/$]+)\\.class");
 
   private final Set<Path> inputPathsToSplit;
   private final Path secondaryJarMetaPath;
@@ -111,7 +111,8 @@ public class SplitZipStep implements Step {
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output).
-   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter} will be used. Also,
+   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter}
+   *     will be used. Also,
    *     {@code linearAllocHardLimit} must have a positive value in this case.
    */
   public SplitZipStep(
@@ -177,7 +178,7 @@ public class SplitZipStep implements Step {
           projectFilesystem.getFileForRelativePath(pathToReportDir))
           .execute();
 
-      try(BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
+      try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
           Charsets.UTF_8)) {
         writeMetaList(secondaryMetaInfoWriter, secondaryZips, dexStore);
       }
@@ -311,7 +312,7 @@ public class SplitZipStep implements Step {
   private static String findAnyClass(File jarFile) throws IOException {
     try (ZipFile inZip = new ZipFile(jarFile)) {
       for (ZipEntry entry : Collections.list(inZip.entries())) {
-        Matcher m = classFilePattern.matcher(entry.getName());
+        Matcher m = CLASS_FILE_PATTERN.matcher(entry.getName());
         if (m.matches()) {
           return m.group(1).replace('/', '.');
         }

@@ -20,10 +20,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeBuildRuleParams;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FileSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -80,7 +82,7 @@ public class AppleResourceTest {
 
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
-    args.files = ImmutableSortedSet.of(Paths.get("image.png"));
+    args.files = ImmutableSortedSet.<SourcePath>of(new FileSourcePath("image.png"));
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -139,7 +141,7 @@ public class AppleResourceTest {
 
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of();
-    args.files = ImmutableSortedSet.of(Paths.get("image.png"));
+    args.files = ImmutableSortedSet.<SourcePath>of(new FileSourcePath("image.png"));
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -210,7 +212,7 @@ public class AppleResourceTest {
 
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of(Paths.get("MyLibrary.bundle"));
-    args.files = ImmutableSortedSet.of(Paths.get("Resources/MyImage.jpg"));
+    args.files = ImmutableSortedSet.<SourcePath>of(new FileSourcePath("Resources/MyImage.jpg"));
 
     AppleResource appleResource = new AppleResource(
         // Pretend that MyLibrary.bundle contains two files: an image and a sound file.
@@ -244,9 +246,9 @@ public class AppleResourceTest {
 
     AppleResourceDescriptionArg args = new AppleResourceDescriptionArg();
     args.dirs = ImmutableSortedSet.of(Paths.get("MyLibrary.bundle"), Paths.get("Another.bundle"));
-    args.files = ImmutableSortedSet.of(
-        Paths.get("Resources/MySound.wav"),
-        Paths.get("Resources/MyImage.jpg"));
+    args.files = ImmutableSortedSet.<SourcePath>of(
+        new FileSourcePath("Resources/MySound.wav"),
+        new FileSourcePath("Resources/MyImage.jpg"));
 
     AppleResource appleResource = new AppleResource(
         new FakeDirectoryTraverser(),
@@ -262,8 +264,8 @@ public class AppleResourceTest {
 
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of(
-            Paths.get("Resources/MyImage.jpg"),
-            Paths.get("Resources/MySound.wav")),
+            new FileSourcePath("Resources/MyImage.jpg"),
+            new FileSourcePath("Resources/MySound.wav")),
         appleResource.getFiles());
   }
 }

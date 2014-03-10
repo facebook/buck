@@ -40,7 +40,8 @@ public class JavaTestRuleTest {
   public void testGetClassNamesForSources() {
     Path classesFolder = Paths.get("testdata/javatestrule/default.jar");
     Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
-    Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+    Set<String> classNames =
+        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
@@ -48,7 +49,8 @@ public class JavaTestRuleTest {
   public void testGetClassNamesForSourcesWithInnerClasses() {
     Path classesFolder = Paths.get("testdata/javatestrule/case1.jar");
     Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
-    Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+    Set<String> classNames =
+        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
@@ -56,7 +58,8 @@ public class JavaTestRuleTest {
   public void testGetClassNamesForSourcesWithMultipleTopLevelClasses() {
     Path classesFolder = Paths.get("testdata/javatestrule/case2.jar");
     Set<Path> sources = ImmutableSet.of(Paths.get("src/com/facebook/DummyTest.java"));
-    Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+    Set<String> classNames =
+        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
@@ -66,7 +69,8 @@ public class JavaTestRuleTest {
     Set<Path> sources = ImmutableSet.of(
         Paths.get("src/com/facebook/feed/DummyTest.java"),
         Paths.get("src/com/facebook/nav/OtherDummyTest.java"));
-    Set<String> classNames = JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
+    Set<String> classNames =
+        JavaTestRule.CompiledClassFileFinder.getClassNamesForSources(sources, classesFolder);
     assertEquals("Ideally, if the implementation of getClassNamesForSources() were tightened up,"
         + " the set would not include com.facebook.feed.OtherDummyTest because"
         + " it was not specified in sources.",

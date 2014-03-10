@@ -68,24 +68,24 @@ public class CassandraArtifactCache implements ArtifactCache {
    */
   private static final int MAX_CONNECTION_FAILURE_REPORTS = 10;
 
-  private static final String poolName = "ArtifactCachePool";
-  private static final String clusterName = "BuckCacheCluster";
-  private static final String keyspaceName = "Buck";
+  private static final String POOL_NAME = "ArtifactCachePool";
+  private static final String CLUSTER_NAME = "BuckCacheCluster";
+  private static final String KEYSPACE_NAME = "Buck";
 
-  private static final String configurationColumnFamilyName = "Configuration";
-  private static final String configurationMagicKey = "magic";
-  private static final String configurationMagicValue = "Buck artifact cache";
-  private static final String configurationTtlKey = "ttl";
-  private static final String configurationColumnName = "value";
+  private static final String CONFIGURATION_COLUMN_FAMILY_NAME = "Configuration";
+  private static final String CONFIGURATION_MAGIC_KEY = "magic";
+  private static final String CONFIGURATION_MAGIC_VALUE = "Buck artifact cache";
+  private static final String CONFIGURATION_TTL_KEY = "ttl";
+  private static final String CONFIGURATION_COLUMN_NAME = "value";
   private static final ColumnFamily<String, String> CF_CONFIG = new ColumnFamily<String, String>(
-      configurationColumnFamilyName,
+      CONFIGURATION_COLUMN_FAMILY_NAME,
       StringSerializer.get(),
       StringSerializer.get());
 
-  private static final String artifactColumnFamilyName = "Artifacts";
-  private static final String artifactColumnName = "artifact";
+  private static final String ARTIFACT_COLUMN_FAMILY_NAME = "Artifacts";
+  private static final String ARTIFACT_COLUMN_NAME = "artifact";
   private static final ColumnFamily<String, String> CF_ARTIFACT = new ColumnFamily<String, String>(
-      artifactColumnFamilyName,
+      ARTIFACT_COLUMN_FAMILY_NAME,
       StringSerializer.get(),
       StringSerializer.get());
 
@@ -122,14 +122,14 @@ public class CassandraArtifactCache implements ArtifactCache {
     this.numConnectionExceptionReports = new AtomicInteger(0);
 
     final AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
-        .forCluster(clusterName)
-        .forKeyspace(keyspaceName)
+        .forCluster(CLUSTER_NAME)
+        .forKeyspace(KEYSPACE_NAME)
         .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
             .setCqlVersion("3.0.0")
             .setTargetCassandraVersion("1.2")
             .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
         )
-        .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl(poolName)
+        .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl(POOL_NAME)
             .setSeeds(hosts)
             .setPort(port)
             .setMaxConnsPerHost(1)
@@ -164,14 +164,14 @@ public class CassandraArtifactCache implements ArtifactCache {
     OperationResult<ColumnList<String>> result;
     try {
       result = keyspace.prepareQuery(CF_CONFIG)
-          .getKey(configurationMagicKey)
+          .getKey(CONFIGURATION_MAGIC_KEY)
           .execute();
     } catch (BadRequestException e) {
       throw new HumanReadableException("Artifact cache error during schema verification: %s",
           e.getMessage());
     }
-    Column<String> column = result.getResult().getColumnByName(configurationColumnName);
-    if (column == null || !column.getStringValue().equals(configurationMagicValue)) {
+    Column<String> column = result.getResult().getColumnByName(CONFIGURATION_COLUMN_NAME);
+    if (column == null || !column.getStringValue().equals(CONFIGURATION_MAGIC_VALUE)) {
       throw new HumanReadableException("Artifact cache schema mismatch");
     }
   }
@@ -193,9 +193,9 @@ public class CassandraArtifactCache implements ArtifactCache {
 
   private static int getTtl(Keyspace keyspace) throws ConnectionException {
     OperationResult<ColumnList<String>> result = keyspace.prepareQuery(CF_CONFIG)
-        .getKey(configurationTtlKey)
+        .getKey(CONFIGURATION_TTL_KEY)
         .execute();
-    Column<String> column = result.getResult().getColumnByName(configurationColumnName);
+    Column<String> column = result.getResult().getColumnByName(CONFIGURATION_COLUMN_NAME);
     if (column == null) {
       throw new HumanReadableException("Artifact cache schema malformation.");
     }
@@ -232,7 +232,7 @@ public class CassandraArtifactCache implements ArtifactCache {
 
     CacheResult success = CacheResult.MISS;
     try {
-      Column<String> column = result.getResult().getColumnByName(artifactColumnName);
+      Column<String> column = result.getResult().getColumnByName(ARTIFACT_COLUMN_NAME);
       if (column != null) {
         byte[] artifact = column.getByteArrayValue();
         Files.createParentDirs(output);
@@ -276,7 +276,7 @@ public class CassandraArtifactCache implements ArtifactCache {
 
       mutationBatch.withRow(CF_ARTIFACT, ruleKey.toString())
           .setDefaultTtl(ttl)
-          .putColumn(artifactColumnName, Files.toByteArray(output));
+          .putColumn(ARTIFACT_COLUMN_NAME, Files.toByteArray(output));
       ListenableFuture<OperationResult<Void>> mutationFuture = mutationBatch.executeAsync();
       trackFuture(mutationFuture);
     } catch (ConnectionException e) {

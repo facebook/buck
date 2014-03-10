@@ -262,7 +262,7 @@
     <fileset dir="${basedir}/pmd" includes="*.jar" />
   </path>
 
-  <target name="lint">
+  <target name="pmd">
     <taskdef name="pmd"
              classpathref="pmd-classpath"
              classname="net.sourceforge.pmd.ant.PMDTask"
@@ -281,6 +281,27 @@
       </fileset>
     </pmd>
   </target>
+
+  <path id="checkstyle-classpath">
+    <fileset dir="${basedir}/third-party/java/checkstyle" includes="*.jar" />
+  </path>
+
+  <target name="checkstyle">
+    <taskdef resource="checkstyletask.properties"
+           classpathref="checkstyle-classpath"/>
+    <checkstyle config="checkstyle.xml">
+      <fileset dir="${src.dir}">
+        <include name="**/*.java"/>
+      </fileset>
+      <fileset dir="${test.dir}">
+        <include name="**/*.java"/>
+        <exclude name="**/testdata/**"/>
+      </fileset>
+      <formatter type="plain"/>
+    </checkstyle>
+  </target>
+
+  <target name="lint" depends="pmd, checkstyle" />
 
   <target name="test" depends="java-test, py-test" description="runs the unit tests" />
 

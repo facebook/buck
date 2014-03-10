@@ -43,6 +43,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -50,6 +51,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -110,14 +112,6 @@ public class ProjectFilesystem {
 
   public ProjectFilesystem(Path projectRoot) {
     this(projectRoot, ImmutableSet.<Path>of());
-  }
-
-  /**
-   * // @deprecated Prefer passing around {@code Path}s instead of {@code File}s or {@code String}s,
-   *  replaced by {@link #ProjectFilesystem(java.nio.file.Path, com.google.common.collect.ImmutableSet)}.
-   */
-  public ProjectFilesystem(File projectRoot, ImmutableSet<Path> ignorePaths) {
-    this(projectRoot.toPath(), ignorePaths);
   }
 
   /**
@@ -230,19 +224,44 @@ public class ProjectFilesystem {
   }
 
   /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *    {@link #isFile(java.nio.file.Path)}.
-   */
-  public boolean isFile(String pathRelativeToProjectRoot) {
-    return isFile(Paths.get(pathRelativeToProjectRoot));
-  }
-
-  /**
    * Checks whether there is a normal file at the specified path.
    */
   public boolean isFile(Path pathRelativeToProjectRoot) {
     return java.nio.file.Files.isRegularFile(
         getPathForRelativePath(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to
+   * the project root.
+   */
+  public void walkRelativeFileTree(
+      Path pathRelativeToProjectRoot,
+      final FileVisitor<Path> fileVisitor) throws IOException {
+    Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
+    java.nio.file.Files.walkFileTree(rootPath, new FileVisitor<Path>() {
+          @Override
+          public FileVisitResult preVisitDirectory(
+              Path dir, BasicFileAttributes attrs) throws IOException {
+            return fileVisitor.preVisitDirectory(projectRoot.relativize(dir), attrs);
+          }
+
+          @Override
+          public FileVisitResult visitFile(
+              Path file, BasicFileAttributes attrs) throws IOException {
+            return fileVisitor.visitFile(projectRoot.relativize(file), attrs);
+          }
+
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+            return fileVisitor.visitFileFailed(projectRoot.relativize(file), exc);
+          }
+
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            return fileVisitor.postVisitDirectory(projectRoot.relativize(dir), exc);
+          }
+        });
   }
 
   /**
@@ -288,6 +307,11 @@ public class ProjectFilesystem {
     }
   }
 
+  public long getLastModifiedTime(Path pathRelativeToProjectRoot) throws IOException {
+    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
+    return java.nio.file.Files.getLastModifiedTime(path).toMillis();
+  }
+
   /**
    * Recursively delete everything under the specified path.
    */
@@ -297,7 +321,8 @@ public class ProjectFilesystem {
 
   /**
    * Resolves the relative path against the project root and then calls
-   * {@link java.nio.file.Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
+   * {@link java.nio.file.Files#createDirectories(java.nio.file.Path,
+   *            java.nio.file.attribute.FileAttribute[])}
    */
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
     java.nio.file.Files.createDirectories(resolve(pathRelativeToProjectRoot));
@@ -350,6 +375,11 @@ public class ProjectFilesystem {
     }
   }
 
+  public OutputStream newFileOutputStream(Path pathRelativeToProjectRoot)
+    throws IOException {
+    return java.nio.file.Files.newOutputStream(getPathForRelativePath(pathRelativeToProjectRoot));
+  }
+
   /**
    * @param inputStream Source of the bytes. This method does not close this stream.
    */
@@ -387,7 +417,8 @@ public class ProjectFilesystem {
     Path fileToRead = getPathForRelativePath(pathRelativeToProjectRoot);
     if (java.nio.file.Files.isRegularFile(fileToRead)) {
       try {
-        return Optional.of((Reader) new InputStreamReader(java.nio.file.Files.newInputStream(fileToRead)));
+        return Optional.of(
+            (Reader) new InputStreamReader(java.nio.file.Files.newInputStream(fileToRead)));
       } catch (Exception e) {
         throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
       }
@@ -417,14 +448,6 @@ public class ProjectFilesystem {
     Preconditions.checkNotNull(pathRelativeToProjectRoot);
     Path file = getPathForRelativePath(pathRelativeToProjectRoot);
     return readFirstLineFromFile(file);
-  }
-
-  /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *  {@link #readFirstLineFromFile(java.nio.file.Path)}.
-   */
-  public Optional<String> readFirstLineFromFile(File file) {
-    return readFirstLineFromFile(file.toPath());
   }
 
   /**

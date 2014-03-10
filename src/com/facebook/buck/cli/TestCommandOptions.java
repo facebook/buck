@@ -17,16 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.java.DefaultJavaPackageFinder;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 import org.kohsuke.args4j.Option;
 
@@ -36,7 +30,6 @@ import javax.annotation.Nullable;
 
 public class TestCommandOptions extends BuildCommandOptions {
 
-  public static final String LABEL_SEPERATOR = "+";
   public static final String USE_RESULTS_CACHE = "use_results_cache";
 
   @Option(name = "--all", usage = "Whether all of the tests should be run.")
@@ -45,14 +38,16 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Option(name = "--code-coverage", usage = "Whether code coverage information will be generated.")
   private boolean isCodeCoverageEnabled = false;
 
-  @Option(name = "--debug", usage = "Whether the test will start suspended with a JDWP debug port of 5005")
+  @Option(name = "--debug",
+          usage = "Whether the test will start suspended with a JDWP debug port of 5005")
   private boolean isDebugEnabled = false;
 
   @Option(name = "--xml", usage = "Where to write test output as XML.")
   @Nullable
   private String pathToXmlTestOutput = null;
 
-  @Option(name = "--jacoco", usage = "Whether jacoco should be used for code coverage analysis or emma.")
+  @Option(name = "--jacoco",
+          usage = "Whether jacoco should be used for code coverage analysis or emma.")
   private boolean isJaccoEnabled = false;
 
   @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
@@ -70,18 +65,6 @@ public class TestCommandOptions extends BuildCommandOptions {
   private boolean isIgnoreFailingDependencies = false;
 
   @Option(
-      name = "--include",
-      usage = "Labels to include when running tests, --include L1 L2 ... LN --other_option.",
-      handler = StringSetOptionHandler.class)
-  private Supplier<ImmutableSet<String>> includedSet;
-
-  @Option(
-      name = "--exclude",
-      usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN --other_option.",
-      handler = StringSetOptionHandler.class)
-  private Supplier<ImmutableSet<String>> excludedSet;
-
-  @Option(
       name = "--dry-run",
       usage = "Print tests that match the given command line options, but don't run them.")
   private boolean printMatchingTestRules;
@@ -92,29 +75,8 @@ public class TestCommandOptions extends BuildCommandOptions {
   @AdditionalOptions
   private TestSelectorOptions testSelectorOptions;
 
-  private Supplier<ImmutableSet<ImmutableSet<String>>> includedLabelsSupplier =
-      Suppliers.memoize(new Supplier<ImmutableSet<ImmutableSet<String>>>() {
-        @Override
-        public ImmutableSet<ImmutableSet<String>> get() {
-          return splitLabels(includedSet.get());
-        }
-      });
-
-  private Supplier<ImmutableSet<ImmutableSet<String>>> excludedLabelsSupplier =
-      Suppliers.memoize(new Supplier<ImmutableSet<ImmutableSet<String>>>() {
-        @Override
-        public ImmutableSet<ImmutableSet<String>> get() {
-          return splitLabels(excludedSet.get());
-        }
-      });
-
-  private Supplier<ImmutableSet<ImmutableSet<String>>> globalExcludedLabelsSupplier =
-      Suppliers.memoize(new Supplier<ImmutableSet<ImmutableSet<String>>>() {
-        @Override
-        public ImmutableSet<ImmutableSet<String>> get() {
-          return splitLabels(getBuckConfig().getDefaultExcludedLabels());
-        }
-      });
+  @AdditionalOptions
+  private TestLabelOptions testLabelOptions;
 
   public TestCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
@@ -177,77 +139,11 @@ public class TestCommandOptions extends BuildCommandOptions {
     return testSelectorOptions.shouldExplain();
   }
 
-  /**
-   * See if we include (either by default, or explicit inclusion) or explicitly exclude a set of
-   * labels.
-   *
-   * @param labels A candidate set of labels -- {a, b, j, k} -- that we are checking.
-   */
-  public boolean isMatchedByLabelOptions(Set<String> labels) {
-    // A set of subsets of labels -- { {a, b}, {x, y} } -- that we include.
-    ImmutableSet<ImmutableSet<String>> included = includedLabelsSupplier.get();
-    ImmutableSet<ImmutableSet<String>> excluded = excludedLabelsSupplier.get();
-
-    // Don't include the global labels in this check, as it's likely we might do the following:
-    //
-    //   config file: exclude X     ...to, by default, never run X tests
-    //   --include: X               ...for the rare occasions we do actually want to run X tests
-    //
-    Sets.SetView<ImmutableSet<String>> intersection = Sets.intersection(included, excluded);
-    if (!intersection.isEmpty()) {
-      ImmutableSet.Builder<String> builder = new ImmutableSet.Builder<>();
-      for (ImmutableSet<String> labelSet : intersection) {
-        String setString = Joiner.on(LABEL_SEPERATOR).join(labelSet);
-        builder.add(setString);
-      }
-      String message = "You have specified labels that are both included and excluded: " +
-          Joiner.on(", ").join(builder.build());
-      throw new HumanReadableException(message);
-    }
-
-    // If non-empty, only include if we have a --include that matches.
-    if (!included.isEmpty()) {
-      for (ImmutableSet<String> comparisonLabels : included) {
-        // An individual set of labels -- {a, b} -- all of which have be in our candidate.
-        if (labels.containsAll(comparisonLabels)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    // If any exclude exists that matches, we should exclude.
-    ImmutableSet<ImmutableSet<String>> globalExcluded = globalExcludedLabelsSupplier.get();
-    Sets.SetView<ImmutableSet<String>> allExcluded = Sets.union(excluded, globalExcluded);
-    for (ImmutableSet<String> comparisonLabels : allExcluded) {
-      if (labels.containsAll(comparisonLabels)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Split a set of "a+b" "x+y" args into {{"a", "b"}, {"x", "y"}}.
-   */
-  private ImmutableSet<ImmutableSet<String>> splitLabels(Set<String> labelSets) {
-    // This could be an ImmutableOrderedSet but it's hard to find an order for a Set<Set<String>>.
-    ImmutableSet.Builder<ImmutableSet<String>> disjunction = new ImmutableSet.Builder<>();
-    for (String labelSet : labelSets) {
-      ImmutableSet.Builder<String> conjunction = new ImmutableSet.Builder<>();
-      Iterable<String> split = Splitter.on(LABEL_SEPERATOR)
-          .trimResults().omitEmptyStrings().split(labelSet);
-      for (String labelName : split) {
-        BuckConfig.validateLabelName(labelName);
-        conjunction.add(labelName);
-      }
-      disjunction.add(conjunction.build());
-    }
-    return disjunction.build();
-  }
-
   public boolean isPrintMatchingTestRules() {
     return printMatchingTestRules;
+  }
+
+  public boolean isMatchedByLabelOptions(Set<Label> labels) {
+    return testLabelOptions.isMatchedByLabelOptions(getBuckConfig(), labels);
   }
 }

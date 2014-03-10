@@ -61,13 +61,13 @@ public class ClassNameFilter {
 
     for (String pattern : patterns) {
       boolean isPrefix = pattern.charAt(0) == '^';
-      boolean isSuffix = pattern.charAt(pattern.length()-1) == '^';
+      boolean isSuffix = pattern.charAt(pattern.length() - 1) == '^';
       if (isPrefix && isSuffix) {
         exactMatches.add(pattern.substring(1, pattern.length() - 1));
       } else if (isPrefix) {
         prefixes.add(pattern.substring(1));
       } else if (isSuffix) {
-        suffixes.add(pattern.substring(0, pattern.length()-1));
+        suffixes.add(pattern.substring(0, pattern.length() - 1));
       } else {
         substrings.add(pattern);
       }

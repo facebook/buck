@@ -19,44 +19,67 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleResource;
+import com.facebook.buck.apple.GroupedSource;
+import com.facebook.buck.apple.HeaderVisibility;
+import com.facebook.buck.apple.IosBinary;
+import com.facebook.buck.apple.IosBinaryDescription;
 import com.facebook.buck.apple.IosLibrary;
 import com.facebook.buck.apple.IosLibraryDescription;
+import com.facebook.buck.apple.IosResourceDescription;
+import com.facebook.buck.apple.IosTest;
+import com.facebook.buck.apple.IosTestDescription;
 import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.XcodeRuleConfiguration;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.codegen.SourceSigner;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.w3c.dom.DOMImplementation;
@@ -65,11 +88,10 @@ import org.w3c.dom.Element;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -87,47 +109,110 @@ import javax.xml.transform.stream.StreamResult;
  * Generator for xcode project and associated files from a set of xcode/ios rules.
  */
 public class ProjectGenerator {
+  public enum Option {
+    /**
+     * Generate a build scheme
+     */
+    GENERATE_SCHEME,
+
+    /**
+     * generate native xcode targets for dependent build targets.
+     */
+    GENERATE_TARGETS_FOR_DEPENDENCIES,
+
+    /**
+     * Generate a workspace
+     */
+    GENERATE_WORKSPACE,
+
+    /**
+     * Attempt to generate projects with configurations in the standard xcode configuration layout.
+     *
+     * Checks that the rules declare their configurations in either
+     * - 4 layers: file-project inline-project file-target inline-target
+     * - 2 layers: file-project file-target
+     *
+     * Additionally, all project-level layers should be identical amongst all targets in the
+     * project.
+     */
+    REFERENCE_EXISTING_XCCONFIGS,
+
+    /** Use short BuildTarget name instead of full name for targets */
+    USE_SHORT_NAMES_FOR_TARGETS,
+    ;
+  }
+
+  /**
+   * Standard options for generating a combined project
+   */
+  public static final Option[] COMBINED_PROJECT_OPTIONS = new Option[] {
+      Option.GENERATE_SCHEME,
+      Option.GENERATE_TARGETS_FOR_DEPENDENCIES,
+      Option.GENERATE_WORKSPACE,
+  };
+
+  public static final Option[] SEPARATED_PROJECT_OPTIONS = new Option[] {
+      Option.REFERENCE_EXISTING_XCCONFIGS,
+      Option.USE_SHORT_NAMES_FOR_TARGETS,
+  };
+
   private final PartialGraph partialGraph;
   private final ProjectFilesystem projectFilesystem;
+  private final ExecutionContext executionContext;
   private final Path outputDirectory;
   private final String projectName;
-  private final ImmutableList<BuildTarget> initialTargets;
+  private final ImmutableSet<BuildTarget> initialTargets;
   private final Path projectPath;
   private final Path repoRootRelativeToOutputDirectory;
 
+  private final ImmutableSet<Option> options;
+
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
-  private final LoadingCache<BuildRule, PBXTarget> buildRuleToXcodeTarget;
+  private final LoadingCache<BuildRule, Optional<PBXTarget>> buildRuleToXcodeTarget;
   private XCScheme scheme = null;
   private Document workspace = null;
 
+  /**
+   * Populated while generating project configurations, in order to collect the possible
+   * project-level configurations to set when operation with
+   * {@link Option#REFERENCE_EXISTING_XCCONFIGS}.
+   */
+  private final ImmutableMultimap.Builder<String, ConfigInXcodeLayout>
+    xcodeConfigurationLayersMultimapBuilder;
+
+
   public ProjectGenerator(
       PartialGraph partialGraph,
-      ImmutableList<BuildTarget> initialTargets,
+      ImmutableSet<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
+      ExecutionContext executionContext,
       Path outputDirectory,
-      String projectName) {
+      String projectName,
+      Option... options) {
     this.partialGraph = partialGraph;
     this.initialTargets = initialTargets;
     this.projectFilesystem = projectFilesystem;
+    this.executionContext = executionContext;
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
+    this.options = Sets.immutableEnumSet(Arrays.asList(options));
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.repoRootRelativeToOutputDirectory =
         this.outputDirectory.normalize().toAbsolutePath().relativize(
             projectFilesystem.getRootPath().toAbsolutePath());
     this.project = new PBXProject(projectName);
-    project.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Debug");
-    project.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Release");
 
     this.buildRuleToXcodeTarget = CacheBuilder.newBuilder().build(
-        new CacheLoader<BuildRule, PBXTarget>() {
+        new CacheLoader<BuildRule, Optional<PBXTarget>>() {
           @Override
-          public PBXTarget load(BuildRule key) throws Exception {
-            return generateTargetForBuildRule(key).orNull();
+          public Optional<PBXTarget> load(BuildRule key) throws Exception {
+            return generateTargetForBuildRule(key);
           }
         });
+
+    xcodeConfigurationLayersMultimapBuilder = ImmutableMultimap.builder();
   }
 
   @Nullable
@@ -149,15 +234,38 @@ public class ProjectGenerator {
 
   public void createXcodeProjects() throws IOException {
     try {
-      ImmutableList<BuildRule> allRules = getAllRules(partialGraph, initialTargets);
+      Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);
+      ImmutableMap.Builder<BuildRule, PBXTarget> ruleToTargetMapBuilder = ImmutableMap.builder();
       for (BuildRule rule : allRules) {
-        // Trigger the loading cache to call the generateTargetForBuildRule function.
-        buildRuleToXcodeTarget.getUnchecked(rule);
+        if (isBuiltByCurrentProject(rule)) {
+          // Trigger the loading cache to call the generateTargetForBuildRule function.
+          Optional<PBXTarget> target = buildRuleToXcodeTarget.getUnchecked(rule);
+          if (target.isPresent()) {
+            ruleToTargetMapBuilder.put(rule, target.get());
+          }
+        }
       }
+
+      if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+        setProjectLevelConfigs(
+            project,
+            repoRootRelativeToOutputDirectory,
+            collectProjectLevelConfigsIfIdenticalOrFail(
+                xcodeConfigurationLayersMultimapBuilder.build()));
+      }
+
+      addGeneratedSignedSourceTarget(project);
       writeProjectFile(project);
-      scheme = createScheme(partialGraph, projectPath, buildRuleToXcodeTarget.asMap());
-      writeWorkspace(projectPath);
-      writeScheme(scheme, projectPath);
+
+      if (options.contains(Option.GENERATE_WORKSPACE)) {
+        writeWorkspace(projectPath);
+      }
+
+      if (options.contains(Option.GENERATE_SCHEME)) {
+        scheme = SchemeGenerator.createScheme(
+            partialGraph, projectPath, ruleToTargetMapBuilder.build());
+        SchemeGenerator.writeScheme(projectFilesystem, scheme, projectPath);
+      }
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.
@@ -170,52 +278,24 @@ public class ProjectGenerator {
   }
 
   private Optional<PBXTarget> generateTargetForBuildRule(BuildRule rule) throws IOException {
+    Preconditions.checkState(
+        isBuiltByCurrentProject(rule),
+        "should not generate rule if it shouldn't be built by current project");
     if (rule.getType().equals(IosLibraryDescription.TYPE)) {
       return Optional.of((PBXTarget) generateIosLibraryTarget(
           project, rule, (IosLibrary) rule.getBuildable()));
     } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
       return Optional.of((PBXTarget) generateXcodeNativeTarget(
           project, rule, (XcodeNative) rule.getBuildable()));
+    } else if (rule.getType().equals(IosTestDescription.TYPE)) {
+      return Optional.of((PBXTarget) generateIosTestTarget(
+          project, rule, (IosTest) rule.getBuildable()));
+    } else if (rule.getType().equals(IosBinaryDescription.TYPE)) {
+      return Optional.of((PBXTarget) generateIOSBinaryTarget(
+          project, rule, (IosBinary) rule.getBuildable()));
     } else {
       return Optional.absent();
     }
-  }
-
-  private static ImmutableList<BuildRule> getAllRules(
-      PartialGraph graph,
-      Iterable<BuildTarget> initialTargets) {
-
-    ImmutableList.Builder<BuildRule> initialRules = ImmutableList.builder();
-    for (BuildTarget target : initialTargets) {
-      BuildRule rule = graph.getDependencyGraph().findBuildRuleByTarget(target);
-      initialRules.add(rule);
-    }
-
-    final ImmutableList.Builder<BuildRule> buildRules = ImmutableList.builder();
-    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
-        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
-          @Override
-          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
-            return node.getDeps().iterator();
-          }
-          @Override
-          protected void onNodeExplored(BuildRule node) {
-          }
-          @Override
-          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
-            buildRules.addAll(nodesInExplorationOrder);
-          }
-        };
-    try {
-      traversal.traverse(initialRules.build());
-    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException e) {
-      throw new HumanReadableException(e,
-          "Cycle detected while gathering build rule dependencies for project generation:\n " +
-              e.getMessage());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    return buildRules.build();
   }
 
   private PBXNativeTarget generateIosLibraryTarget(
@@ -223,20 +303,30 @@ public class ProjectGenerator {
       BuildRule rule,
       IosLibrary buildable)
       throws IOException {
-    PBXNativeTarget target = new PBXNativeTarget(rule.getFullyQualifiedName());
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
     target.setProductType(PBXTarget.ProductType.IOS_LIBRARY);
 
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
 
     // -- configurations
-    setTargetConfigurations(rule.getBuildTarget(), target, targetGroup,
+    setTargetBuildConfigurations(
+        rule.getBuildTarget(), target, targetGroup,
         buildable.getConfigurations(), ImmutableMap.<String, String>of());
 
     // -- build phases
+    // TODO(Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
     addSourcesBuildPhase(
-        target, targetGroup, buildable.getSrcs(), buildable.getPerFileCompilerFlags());
-    addHeadersBuildPhase(target, targetGroup, buildable.getHeaders());
+        target,
+        targetGroup,
+        buildable.getGroupedSrcs(),
+        buildable.getPerFileCompilerFlags());
+    addHeadersBuildPhase(
+        target,
+        targetGroup,
+        buildable.getGroupedHeaders(),
+        buildable.getPerHeaderVisibility());
 
     // -- products
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
@@ -250,35 +340,140 @@ public class ProjectGenerator {
     return target;
   }
 
+  private PBXNativeTarget generateIosTestTarget(
+      PBXProject project, BuildRule rule, IosTest buildable) throws IOException {
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
+    target.setProductType(PBXTarget.ProductType.IOS_TEST);
+
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
+
+    // -- configurations
+    Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    setTargetBuildConfigurations(
+        rule.getBuildTarget(),
+        target,
+        targetGroup,
+        buildable.getConfigurations(),
+        ImmutableMap.of(
+            "INFOPLIST_FILE", infoPlistPath.toString()));
+
+    // -- phases
+    // TODO(Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
+    addSourcesBuildPhase(
+        target,
+        targetGroup,
+        buildable.getGroupedSrcs(),
+        buildable.getPerFileCompilerFlags());
+    addFrameworksBuildPhase(
+        rule.getBuildTarget(),
+        target,
+        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
+        buildable.getFrameworks(),
+        collectRecursiveLibraryDependencies(rule));
+    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
+
+    // -- products
+    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
+    String productName = getProductName(rule.getBuildTarget());
+    String productOutputName = productName + ".octest";
+    PBXFileReference productReference = new PBXFileReference(
+        productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
+    productsGroup.getChildren().add(productReference);
+    target.setProductName(productName);
+    target.setProductReference(productReference);
+
+    project.getTargets().add(target);
+    return target;
+  }
+
+  private PBXNativeTarget generateIOSBinaryTarget(
+      PBXProject project, BuildRule rule, IosBinary buildable)
+      throws IOException {
+    PBXNativeTarget target = new PBXNativeTarget(getXcodeTargetName(rule));
+    target.setProductType(PBXTarget.ProductType.IOS_BINARY);
+
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(target.getName());
+
+    // -- configurations
+    Path infoPlistPath = this.repoRootRelativeToOutputDirectory.resolve(buildable.getInfoPlist());
+    setTargetBuildConfigurations(
+        rule.getBuildTarget(),
+        target,
+        targetGroup,
+        buildable.getConfigurations(),
+        ImmutableMap.of(
+            "INFOPLIST_FILE", infoPlistPath.toString()));
+
+    // -- phases
+    // TODO(Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    addRunScriptBuildPhasesForDependencies(rule, target);
+    addSourcesBuildPhase(
+        target,
+        targetGroup,
+        buildable.getGroupedSrcs(),
+        buildable.getPerFileCompilerFlags());
+    addFrameworksBuildPhase(
+        rule.getBuildTarget(),
+        target,
+        project.getMainGroup().getOrCreateChildGroupByName("Frameworks"),
+        buildable.getFrameworks(),
+        collectRecursiveLibraryDependencies(rule));
+    addResourcesBuildPhase(target, targetGroup, collectRecursiveResources(rule));
+
+    // -- products
+    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
+    String productName = getProductName(rule.getBuildTarget());
+    String productOutputName = productName + ".app";
+    PBXFileReference productReference = new PBXFileReference(
+        productOutputName, productOutputName, PBXReference.SourceTree.BUILT_PRODUCTS_DIR);
+    productsGroup.getChildren().add(productReference);
+    target.setProductName(productName);
+    target.setProductReference(productReference);
+
+    project.getTargets().add(target);
+    return target;
+  }
+
   private PBXAggregateTarget generateXcodeNativeTarget(
       PBXProject project,
       BuildRule rule,
       XcodeNative buildable) {
     Path referencedProjectPath =
-        buildable.getProjectContainerPath().resolve(partialGraph.getDependencyGraph()).normalize();
+        buildable.getProjectContainerPath().resolve(partialGraph.getDependencyGraph());
     PBXFileReference referencedProject = project.getMainGroup()
         .getOrCreateChildGroupByName("Project References")
-        .getOrCreateFileReferenceBySourceTreePath(SourceTreePath.absolute(referencedProjectPath));
+        .getOrCreateFileReferenceBySourceTreePath(new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            this.outputDirectory.normalize().toAbsolutePath()
+                .relativize(referencedProjectPath.toAbsolutePath()))
+        );
     PBXContainerItemProxy proxy = new PBXContainerItemProxy(
-        referencedProject, buildable.getTargetGid(), PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
-    PBXAggregateTarget target = new PBXAggregateTarget(rule.getFullyQualifiedName());
+        referencedProject,
+        buildable.getTargetGid(),
+        PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
+    PBXAggregateTarget target = new PBXAggregateTarget(getXcodeTargetName(rule));
     target.getDependencies().add(new PBXTargetDependency(proxy));
     project.getTargets().add(target);
     return target;
   }
 
-  private void setTargetConfigurations(
+  /**
+   * Create project level (if it does not exist) and target level configuration entries.
+   *
+   * Each configuration should have an empty entry at the project level. The target level entries
+   * combine the configuration values of every layer into a single configuration file that is
+   * effectively laid out in layers.
+   */
+  private void setTargetBuildConfigurations(
       BuildTarget buildTarget,
       PBXTarget target,
       PBXGroup targetGroup,
       ImmutableSet<XcodeRuleConfiguration> configurations,
       ImmutableMap<String, String> extraBuildSettings)
       throws IOException {
-    Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
-    projectFilesystem.mkdirs(outputConfigurationDirectory);
-
-    Path originalProjectPath = projectFilesystem.getPathForRelativePath(
-        Paths.get(buildTarget.getBasePathWithSlash()));
 
     ImmutableMap<String, String> extraConfigs = ImmutableMap.<String, String>builder()
         .putAll(extraBuildSettings)
@@ -288,22 +483,94 @@ public class ProjectGenerator {
         .build();
 
     PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
-    // XCConfig search path is relative to the xcode project and the file itself.
-    ImmutableList<Path> searchPaths = ImmutableList.of(originalProjectPath);
-    for (XcodeRuleConfiguration configuration : configurations) {
-      Path configurationFilePath = outputConfigurationDirectory.resolve(
-          mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
-      String serializedConfiguration = serializeBuildConfiguration(
-          configuration, searchPaths, extraConfigs);
-      projectFilesystem.writeContentsToPath(serializedConfiguration, configurationFilePath);
 
-      PBXFileReference fileReference =
-          configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
-              SourceTreePath.absolute(configurationFilePath));
-      XCBuildConfiguration outputConfiguration =
-          target.getBuildConfigurationList().getBuildConfigurationsByName()
-              .getUnchecked(configuration.getName());
-      outputConfiguration.setBaseConfigurationReference(fileReference);
+    for (XcodeRuleConfiguration configuration : configurations) {
+      if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+        ConfigInXcodeLayout layers = extractXcodeConfigurationLayers(buildTarget, configuration);
+        xcodeConfigurationLayersMultimapBuilder.put(configuration.getName(), layers);
+
+        XCBuildConfiguration outputConfiguration =
+            target.getBuildConfigurationList().getBuildConfigurationsByName()
+                .getUnchecked(configuration.getName());
+        if (layers.targetLevelConfigFile.isPresent()) {
+          PBXFileReference fileReference =
+              configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+                  new SourceTreePath(
+                      PBXReference.SourceTree.SOURCE_ROOT,
+                      this.repoRootRelativeToOutputDirectory.resolve(
+                          layers.targetLevelConfigFile.get()).normalize()));
+          outputConfiguration.setBaseConfigurationReference(fileReference);
+
+          NSDictionary inlineSettings = new NSDictionary();
+          Iterable<Map.Entry<String, String>> entries = Iterables.concat(
+              layers.targetLevelInlineSettings.entrySet(),
+              extraConfigs.entrySet());
+          for (Map.Entry<String, String> entry : entries) {
+            inlineSettings.put(entry.getKey(), entry.getValue());
+          }
+          outputConfiguration.setBuildSettings(inlineSettings);
+        }
+      } else {
+        Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
+        projectFilesystem.mkdirs(outputConfigurationDirectory);
+
+        Path originalProjectPath = projectFilesystem.getPathForRelativePath(
+            Paths.get(buildTarget.getBasePathWithSlash()));
+
+        // XCConfig search path is relative to the xcode project and the file itself.
+        ImmutableList<Path> searchPaths = ImmutableList.of(originalProjectPath);
+
+        // Call for effect to create a stub configuration entry at project level.
+        project.getBuildConfigurationList()
+            .getBuildConfigurationsByName()
+            .getUnchecked(configuration.getName());
+
+        // Write an xcconfig that embodies all the config levels, and set that as the target config.
+        Path configurationFilePath = outputConfigurationDirectory.resolve(
+            mangledBuildTargetName(buildTarget) + "-" + configuration.getName() + ".xcconfig");
+        String serializedConfiguration = serializeBuildConfiguration(
+            configuration, searchPaths, extraConfigs);
+        projectFilesystem.writeContentsToPath(serializedConfiguration, configurationFilePath);
+
+        PBXFileReference fileReference =
+            configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.SOURCE_ROOT,
+                    this.repoRootRelativeToOutputDirectory.resolve(configurationFilePath)
+                ));
+        XCBuildConfiguration outputConfiguration =
+            target.getBuildConfigurationList().getBuildConfigurationsByName()
+                .getUnchecked(configuration.getName());
+        outputConfiguration.setBaseConfigurationReference(fileReference);
+      }
+    }
+  }
+
+  private void addRunScriptBuildPhase(PBXNativeTarget target, Genrule rule) {
+    // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
+    // we can't handle it currently.
+    PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
+    target.getBuildPhases().add(shellScriptBuildPhase);
+    for (Path path : rule.getSrcs()) {
+      shellScriptBuildPhase.getInputPaths().add(path.toString());
+    }
+
+    StringBuilder bashCommandBuilder = new StringBuilder();
+    ShellStep genruleStep = rule.createGenruleStep();
+    for (String commandElement : genruleStep.getShellCommand(executionContext)) {
+      if (bashCommandBuilder.length() > 0) {
+        bashCommandBuilder.append(' ');
+      }
+      bashCommandBuilder.append(Escaper.escapeAsBashString(commandElement));
+    }
+    shellScriptBuildPhase.setShellScript(bashCommandBuilder.toString());
+  }
+
+  private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
+    for (BuildRule dependency : rule.getDeps()) {
+      if (dependency.getType().equals(BuildRuleType.GENRULE)) {
+        addRunScriptBuildPhase(target, (Genrule) dependency);
+      }
     }
   }
 
@@ -312,29 +579,77 @@ public class ProjectGenerator {
    *
    * @param target      Target to add the build phase to.
    * @param targetGroup Group to link the source files to.
-   * @param sources        Sources to include in the build phase, path relative to project root.
+   * @param groupedSources Grouped sources to include in the build
+   *        phase, path relative to project root.
    * @param sourceFlags    Source to compiler flag mapping.
    */
   private void addSourcesBuildPhase(
       PBXNativeTarget target,
       PBXGroup targetGroup,
-      Iterable<SourcePath> sources,
+      Iterable<GroupedSource> groupedSources,
       ImmutableMap<SourcePath, String> sourceFlags) {
     PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+    // Sources groups stay in the order in which they're declared in the BUCK file.
+    sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
     PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
     target.getBuildPhases().add(sourcesBuildPhase);
-    for (SourcePath sourcePath : sources) {
-      Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
-      PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-          SourceTreePath.absolute(projectFilesystem.getPathForRelativePath(path)));
-      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-      sourcesBuildPhase.getFiles().add(buildFile);
-      String customFlags = sourceFlags.get(sourcePath);
-      if (customFlags != null) {
-        NSDictionary settings = new NSDictionary();
-        settings.put("COMPILER_FLAGS", customFlags);
-        buildFile.setSettings(Optional.of(settings));
+
+    addGroupedSourcesToBuildPhase(
+        sourcesGroup,
+        sourcesBuildPhase,
+        groupedSources,
+        sourceFlags);
+  }
+
+  private void addGroupedSourcesToBuildPhase(
+      PBXGroup sourcesGroup,
+      PBXSourcesBuildPhase sourcesBuildPhase,
+      Iterable<GroupedSource> groupedSources,
+      ImmutableMap<SourcePath, String> sourceFlags) {
+    for (GroupedSource groupedSource : groupedSources) {
+      switch (groupedSource.getType()) {
+        case SOURCE_PATH:
+          addSourcePathToBuildPhase(
+              groupedSource.getSourcePath(),
+              sourcesGroup,
+              sourcesBuildPhase,
+              sourceFlags);
+          break;
+        case SOURCE_GROUP:
+          PBXGroup newSourceGroup = sourcesGroup.getOrCreateChildGroupByName(
+              groupedSource.getSourceGroupName());
+          // Sources groups stay in the order in which they're declared in the BUCK file.
+          newSourceGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
+          addGroupedSourcesToBuildPhase(
+              newSourceGroup,
+              sourcesBuildPhase,
+              groupedSource.getSourceGroup(),
+              sourceFlags);
+          break;
+        default:
+          throw new RuntimeException("Unhandled grouped source type: " + groupedSource.getType());
       }
+    }
+  }
+
+  private void addSourcePathToBuildPhase(
+      SourcePath sourcePath,
+      PBXGroup sourcesGroup,
+      PBXSourcesBuildPhase sourcesBuildPhase,
+      ImmutableMap<SourcePath, String> sourceFlags) {
+    Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
+    PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            this.repoRootRelativeToOutputDirectory.resolve(path)
+        ));
+    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    sourcesBuildPhase.getFiles().add(buildFile);
+    String customFlags = sourceFlags.get(sourcePath);
+    if (customFlags != null) {
+      NSDictionary settings = new NSDictionary();
+      settings.put("COMPILER_FLAGS", customFlags);
+      buildFile.setSettings(Optional.of(settings));
     }
   }
 
@@ -344,32 +659,161 @@ public class ProjectGenerator {
   private void addHeadersBuildPhase(
       PBXNativeTarget target,
       PBXGroup targetGroup,
-      Iterable<SourcePath> headers) {
+      Iterable<GroupedSource> groupedHeaders,
+      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
     PBXGroup headersGroup = targetGroup.getOrCreateChildGroupByName("Headers");
+    headersGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
     PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
     target.getBuildPhases().add(headersBuildPhase);
-    for (SourcePath sourcePath : headers) {
-      Path path = sourcePath.resolve(partialGraph.getDependencyGraph());
-      PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
-          SourceTreePath.absolute(projectFilesystem.getPathForRelativePath(path)));
-      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-      NSDictionary settings = new NSDictionary();
-      settings.put("ATTRIBUTES", new NSArray(new NSString("Public")));
-      buildFile.setSettings(Optional.of(settings));
-      headersBuildPhase.getFiles().add(buildFile);
+
+    addGroupedHeadersToBuildPhase(
+        headersGroup,
+        headersBuildPhase,
+        groupedHeaders,
+        headerVisibilityFlags);
+  }
+
+  private void addGroupedHeadersToBuildPhase(
+      PBXGroup headersGroup,
+      PBXHeadersBuildPhase headersBuildPhase,
+      Iterable<GroupedSource> groupedHeaders,
+      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
+    for (GroupedSource groupedHeader : groupedHeaders) {
+      switch (groupedHeader.getType()) {
+        case SOURCE_PATH:
+          addHeaderPathToBuildPhase(
+              groupedHeader.getSourcePath(),
+              headersGroup,
+              headersBuildPhase,
+              headerVisibilityFlags);
+          break;
+        case SOURCE_GROUP:
+          PBXGroup newHeaderGroup = headersGroup.getOrCreateChildGroupByName(
+              groupedHeader.getSourceGroupName());
+          // Header groups stay in the order in which they're declared in the BUCK file.
+          newHeaderGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
+          addGroupedHeadersToBuildPhase(
+              newHeaderGroup,
+              headersBuildPhase,
+              groupedHeader.getSourceGroup(),
+              headerVisibilityFlags);
+          break;
+        default:
+          throw new RuntimeException("Unhandled grouped source type: " + groupedHeader.getType());
+      }
     }
   }
 
+  private void addHeaderPathToBuildPhase(
+      SourcePath headerPath,
+      PBXGroup headersGroup,
+      PBXHeadersBuildPhase headersBuildPhase,
+      ImmutableMap<SourcePath, HeaderVisibility> headerVisibilityFlags) {
+    Path path = headerPath.resolve(partialGraph.getDependencyGraph());
+    PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            this.repoRootRelativeToOutputDirectory.resolve(path)
+        ));
+    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    NSDictionary settings = new NSDictionary();
+    HeaderVisibility headerVisibility = headerVisibilityFlags.get(headerPath);
+    if (headerVisibility != null) {
+      // If we specify nothing, Xcode will use "project" visibility.
+      settings.put("ATTRIBUTES", new NSArray(new NSString(headerVisibility.toXcodeAttribute())));
+      buildFile.setSettings(Optional.of(settings));
+    } else {
+      buildFile.setSettings(Optional.<NSDictionary>absent());
+    }
+    headersBuildPhase.getFiles().add(buildFile);
+  }
+
+  private void addResourcesBuildPhase(
+      PBXNativeTarget target, PBXGroup targetGroup, Iterable<Path> resources) {
+    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+    PBXBuildPhase phase = new PBXResourcesBuildPhase();
+    target.getBuildPhases().add(phase);
+    for (Path resource : resources) {
+      PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              this.repoRootRelativeToOutputDirectory.resolve(resource)
+          ));
+      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+      phase.getFiles().add(buildFile);
+    }
+  }
+
+  private void addFrameworksBuildPhase(
+      BuildTarget buildTarget,
+      PBXNativeTarget target,
+      PBXGroup sharedFrameworksGroup,
+      Iterable<String> frameworks,
+      Iterable<PBXFileReference> archives) {
+    PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
+    target.getBuildPhases().add(frameworksBuildPhase);
+    for (String framework : frameworks) {
+      Path path = Paths.get(framework);
+      if (path.startsWith("$SDKROOT")) {
+        Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
+        PBXFileReference fileReference =
+            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(PBXReference.SourceTree.SDKROOT, sdkRootRelativePath));
+        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      } else if (!path.toString().startsWith("$")) {
+        // regular path
+        PBXFileReference fileReference =
+            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.GROUP,
+                    relativizeBuckRelativePathToGeneratedProject(buildTarget, path.toString())));
+        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      }
+    }
+
+    for (PBXFileReference archive : archives) {
+      frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
+    }
+  }
+
+  private void addGeneratedSignedSourceTarget(PBXProject project) {
+    PBXAggregateTarget target = new PBXAggregateTarget("GeneratedSignedSourceTarget");
+    PBXShellScriptBuildPhase generatedSignedSourceScriptPhase = new PBXShellScriptBuildPhase();
+    generatedSignedSourceScriptPhase.setShellScript(
+        "# Do not change or remove this. This is a generated script phase\n" +
+            "# used solely to include a signature in the generated Xcode project.\n" +
+            "# " + SourceSigner.SIGNED_SOURCE_PLACEHOLDER
+    );
+    target.getBuildPhases().add(generatedSignedSourceScriptPhase);
+    project.getTargets().add(target);
+  }
+
+  /**
+   * Create the project bundle structure and write {@code project.pbxproj}.
+   */
   private Path writeProjectFile(PBXProject project) throws IOException {
     XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(0), project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);
     Path serializedProject = xcodeprojDir.resolve("project.pbxproj");
-    projectFilesystem.writeContentsToPath(rootObject.toXMLPropertyList(), serializedProject);
+    String unsignedXmlProject = rootObject.toXMLPropertyList();
+    Optional<String> signedXmlProject = SourceSigner.sign(unsignedXmlProject);
+    String contentsToWrite;
+    if (signedXmlProject.isPresent()) {
+      contentsToWrite = signedXmlProject.get();
+    } else {
+      contentsToWrite = unsignedXmlProject;
+    }
+    projectFilesystem.writeContentsToPath(contentsToWrite, serializedProject);
     return xcodeprojDir;
   }
 
+  /**
+   * Create the workspace bundle structure and write the workspace file.
+   *
+   * Updates {@link #workspace} with the written document for examination.
+   */
   private void writeWorkspace(Path xcodeprojDir) throws IOException {
     DocumentBuilder docBuilder;
     Transformer transformer;
@@ -453,94 +897,6 @@ public class ProjectGenerator {
     return buildTarget.getFullyQualifiedName().replace('/', '-');
   }
 
-  private static XCScheme createScheme(
-      PartialGraph partialGraph,
-      Path projectPath,
-      final Map<BuildRule, PBXTarget> ruleToTargetMap) throws IOException {
-
-    List<BuildRule> orderedBuildRules = TopologicalSort.sort(
-        partialGraph.getDependencyGraph(),
-        new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(@Nullable BuildRule input) {
-            return ruleToTargetMap.containsKey(input);
-          }
-        });
-
-    XCScheme scheme = new XCScheme("Scheme");
-    for (BuildRule rule : orderedBuildRules) {
-      scheme.addBuildAction(
-          projectPath.getFileName().toString(),
-          ruleToTargetMap.get(rule).getGlobalID());
-    }
-
-    return scheme;
-  }
-
-  private void writeScheme(XCScheme scheme, Path projectPath) throws IOException {
-    Path schemeDirectory = projectPath.resolve("xcshareddata/xcschemes");
-    projectFilesystem.mkdirs(schemeDirectory);
-    Path schemePath = schemeDirectory.resolve(scheme.getName() + ".xcscheme");
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      serializeScheme(scheme, outputStream);
-      projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);
-    }
-  }
-
-  private static void serializeScheme(XCScheme scheme, OutputStream stream) {
-    DocumentBuilder docBuilder;
-    Transformer transformer;
-    try {
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-      transformer = TransformerFactory.newInstance().newTransformer();
-    } catch (ParserConfigurationException | TransformerConfigurationException e) {
-      throw new RuntimeException(e);
-    }
-
-    DOMImplementation domImplementation = docBuilder.getDOMImplementation();
-    Document doc = domImplementation.createDocument(null, "Scheme", null);
-    doc.setXmlVersion("1.0");
-
-    Element rootElem = doc.getDocumentElement();
-    rootElem.setAttribute("LastUpgradeVersion", "0500");
-    rootElem.setAttribute("version", "1.7");
-
-    // serialize the scheme
-    Element buildActionElem = doc.createElement("BuildAction");
-    rootElem.appendChild(buildActionElem);
-    buildActionElem.setAttribute("parallelizeBuildables", "NO");
-    buildActionElem.setAttribute("buildImplicitDependencies", "NO");
-
-    Element buildActionEntriesElem = doc.createElement("BuildActionEntries");
-    buildActionElem.appendChild(buildActionEntriesElem);
-
-    for (XCScheme.BuildActionEntry entry : scheme.getBuildAction()) {
-      Element entryElem = doc.createElement("BuildActionEntry");
-      buildActionEntriesElem.appendChild(entryElem);
-      entryElem.setAttribute("buildForRunning", "YES");
-      entryElem.setAttribute("buildForTesting", "YES");
-      entryElem.setAttribute("buildForProfiling", "YES");
-      entryElem.setAttribute("buildForArchiving", "YES");
-      entryElem.setAttribute("buildForAnalyzing", "YES");
-      Element refElem = doc.createElement("BuildableReference");
-      entryElem.appendChild(refElem);
-      refElem.setAttribute("BuildableIdentifier", "primary");
-      refElem.setAttribute("BlueprintIdentifier", entry.getBlueprintIdentifier());
-      refElem.setAttribute("referencedContainer", "container:" + entry.getContainerRelativePath());
-    }
-
-    // write out
-
-    DOMSource source = new DOMSource(doc);
-    StreamResult result = new StreamResult(stream);
-
-    try {
-      transformer.transform(source, result);
-    } catch (TransformerException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   private static String getProductName(BuildTarget buildTarget) {
     return buildTarget.getShortName();
   }
@@ -556,5 +912,257 @@ public class ProjectGenerator {
     Path originalProjectPath = projectFilesystem.getPathForRelativePath(
         Paths.get(buildTarget.getBasePathWithSlash()));
     return this.repoRootRelativeToOutputDirectory.resolve(originalProjectPath).resolve(path);
+  }
+
+  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(BuildRule rule) {
+    return FluentIterable
+        .from(getRecursiveRuleDependenciesOfType(
+            rule,
+            IosLibraryDescription.TYPE,
+            XcodeNativeDescription.TYPE))
+        .transform(
+            new Function<BuildRule, PBXFileReference>() {
+              @Override
+              public PBXFileReference apply(BuildRule input) {
+                return getLibraryFileReferenceForRule(input);
+              }
+            }
+        ).toSet();
+  }
+
+  private PBXFileReference getLibraryFileReferenceForRule(BuildRule rule) {
+    if (rule.getType().equals(IosLibraryDescription.TYPE)) {
+      if (isBuiltByCurrentProject(rule)) {
+        PBXNativeTarget target = (PBXNativeTarget) buildRuleToXcodeTarget.getUnchecked(rule).get();
+        return target.getProductReference();
+      } else {
+        return project.getMainGroup()
+            .getOrCreateChildGroupByName("Frameworks")
+            .getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                    Paths.get(getLibraryNameFromTargetName(rule.getBuildTarget().getShortName()))));
+      }
+    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
+      XcodeNative xcodeNative = (XcodeNative) Preconditions.checkNotNull(rule.getBuildable());
+      return project.getMainGroup()
+          .getOrCreateChildGroupByName("Frameworks")
+          .getOrCreateFileReferenceBySourceTreePath(
+              new SourceTreePath(
+                  PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                  Paths.get(xcodeNative.getProduct())));
+    } else {
+      throw new RuntimeException("Unexpected type: " + rule.getType());
+    }
+  }
+
+  /**
+   * Whether a given build rule is built by the project being generated, or being build elsewhere.
+   */
+  private boolean isBuiltByCurrentProject(BuildRule rule) {
+    return options.contains(Option.GENERATE_TARGETS_FOR_DEPENDENCIES)
+        || initialTargets.contains(rule.getBuildTarget());
+  }
+
+  private static String getLibraryNameFromTargetName(String string) {
+    return "lib" + string + ".a";
+  }
+
+  private String getXcodeTargetName(BuildRule rule) {
+    return options.contains(Option.USE_SHORT_NAMES_FOR_TARGETS)
+        ? rule.getBuildTarget().getShortName()
+        : rule.getBuildTarget().getFullyQualifiedName();
+  }
+
+  /**
+   * Collect resources from recursive dependencies.
+   *
+   * @param rule  Build rule at the tip of the traversal.
+   * @return  Paths to resource files and folders, children of folder are not included.
+   */
+  private Iterable<Path> collectRecursiveResources(BuildRule rule) {
+    Iterable<BuildRule> resourceRules = getRecursiveRuleDependenciesOfType(
+        rule, IosResourceDescription.TYPE);
+    ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
+    for (BuildRule resourceRule : resourceRules) {
+      AppleResource resource =
+          (AppleResource) Preconditions.checkNotNull(resourceRule.getBuildable());
+      paths.addAll(resource.getDirs());
+      paths.addAll(SourcePaths.toPaths(resource.getFiles(), partialGraph.getDependencyGraph()));
+    }
+    return paths.build();
+  }
+
+  private Iterable<BuildRule> getRecursiveRuleDependenciesOfType(
+      final BuildRule rule, BuildRuleType... types) {
+    final ImmutableSet<BuildRuleType> requestedTypes = ImmutableSet.copyOf(types);
+    final ImmutableList.Builder<BuildRule> filteredRules = ImmutableList.builder();
+    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
+        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
+          @Override
+          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
+            return node.getDeps().iterator();
+          }
+
+          @Override
+          protected void onNodeExplored(BuildRule node) {
+            if (node != rule && requestedTypes.contains(node.getType())) {
+              filteredRules.add(node);
+            }
+          }
+
+          @Override
+          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
+          }
+        };
+    try {
+      traversal.traverse(ImmutableList.of(rule));
+    } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException e) {
+      // actual load failures and cycle exceptions should have been caught at an earlier stage
+      throw new RuntimeException(e);
+    }
+    return filteredRules.build();
+  }
+
+  /**
+   * For all inputs by name, verify every entry has identical project level config, and pick one
+   * such config to return.
+   *
+   * @param configInXcodeLayoutMultimap input mapping of { Config Name -> Config List }
+   * @throws com.facebook.buck.util.HumanReadableException
+   *    if project-level configs are not identical for a named configuration
+   */
+  private static
+  ImmutableMap<String, ConfigInXcodeLayout> collectProjectLevelConfigsIfIdenticalOrFail(
+      ImmutableMultimap<String, ConfigInXcodeLayout> configInXcodeLayoutMultimap) {
+
+    ImmutableMap.Builder<String, ConfigInXcodeLayout> builder = ImmutableMap.builder();
+
+    for (String configName : configInXcodeLayoutMultimap.keySet()) {
+      ConfigInXcodeLayout firstConfig = null;
+      for (ConfigInXcodeLayout config : configInXcodeLayoutMultimap.get(configName)) {
+        if (firstConfig == null) {
+          firstConfig = config;
+        } else if (
+            !firstConfig.projectLevelConfigFile.equals(config.projectLevelConfigFile) ||
+            !firstConfig.projectLevelInlineSettings.equals(config.projectLevelInlineSettings)) {
+          throw new HumanReadableException(String.format(
+              "Project level configurations should be identical:\n" +
+              "  Config named: `%s` in `%s` and `%s` ",
+              configName,
+              firstConfig.buildTarget,
+              config.buildTarget));
+        }
+      }
+      Preconditions.checkNotNull(firstConfig);
+
+      builder.put(configName, firstConfig);
+    }
+
+    return builder.build();
+  }
+
+  private static void setProjectLevelConfigs(
+      PBXProject project,
+      Path repoRootRelativeToOutputDirectory,
+      ImmutableMap<String, ConfigInXcodeLayout> configs) {
+    for (Map.Entry<String, ConfigInXcodeLayout> configEntry : configs.entrySet()) {
+      XCBuildConfiguration outputConfig = project
+          .getBuildConfigurationList()
+          .getBuildConfigurationsByName()
+          .getUnchecked(configEntry.getKey());
+
+      ConfigInXcodeLayout config = configEntry.getValue();
+
+      PBXGroup configurationsGroup = project.getMainGroup().getOrCreateChildGroupByName(
+          "Configurations");
+      PBXFileReference fileReference =
+          configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+              new SourceTreePath(
+                  PBXReference.SourceTree.SOURCE_ROOT,
+                  repoRootRelativeToOutputDirectory.resolve(
+                      config.projectLevelConfigFile.get()).normalize()));
+      outputConfig.setBaseConfigurationReference(fileReference);
+
+      NSDictionary inlineSettings = new NSDictionary();
+      for (Map.Entry<String, String> entry : config.projectLevelInlineSettings.entrySet()) {
+        inlineSettings.put(entry.getKey(), entry.getValue());
+      }
+      outputConfig.setBuildSettings(inlineSettings);
+    }
+  }
+
+
+  /**
+   * Take a List of configuration layers and try to fit it into the xcode configuration layers
+   * layout.
+   *
+   * @throws com.facebook.buck.util.HumanReadableException if the configuration layers are not in
+   *  the right layout to be coerced into standard xcode layout.
+   */
+  private static ConfigInXcodeLayout extractXcodeConfigurationLayers(
+      BuildTarget buildTarget,
+      XcodeRuleConfiguration configuration) {
+    ConfigInXcodeLayout extractedLayers = null;
+    ImmutableList<XcodeRuleConfiguration.Layer> layers = configuration.getLayers();
+    switch (layers.size()) {
+      case 2:
+        if (layers.get(0).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
+            layers.get(1).getLayerType() == XcodeRuleConfiguration.LayerType.FILE) {
+          extractedLayers = new ConfigInXcodeLayout(
+              buildTarget,
+              layers.get(0).getPath(),
+              ImmutableMap.<String, String>of(),
+              layers.get(1).getPath(),
+              ImmutableMap.<String, String>of());
+        }
+        break;
+      case 4:
+        if (layers.get(0).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
+            layers.get(1).getLayerType() == XcodeRuleConfiguration.LayerType.INLINE_SETTINGS &&
+            layers.get(2).getLayerType() == XcodeRuleConfiguration.LayerType.FILE &&
+            layers.get(3).getLayerType() == XcodeRuleConfiguration.LayerType.INLINE_SETTINGS) {
+          extractedLayers = new ConfigInXcodeLayout(
+              buildTarget,
+              layers.get(0).getPath(),
+              layers.get(1).getInlineSettings().or(ImmutableMap.<String, String>of()),
+              layers.get(2).getPath(),
+              layers.get(3).getInlineSettings().or(ImmutableMap.<String, String>of()));
+        }
+        break;
+      default:
+        // handled later on by the fact that extractLayers is null
+        break;
+    }
+    if (extractedLayers == null) {
+      throw new HumanReadableException(
+          "Configuration layers cannot be expressed in xcode for target: " + buildTarget + "\n" +
+              "   expected: [File, Inline settings, File, Inline settings]");
+    }
+    return extractedLayers;
+  }
+
+  private static class ConfigInXcodeLayout {
+    /** Tracks the originating build target for error reporting. */
+    public final BuildTarget buildTarget;
+
+    public final Optional<Path> projectLevelConfigFile;
+    public final ImmutableMap<String, String> projectLevelInlineSettings;
+    public final Optional<Path> targetLevelConfigFile;
+    public final ImmutableMap<String, String> targetLevelInlineSettings;
+
+    private ConfigInXcodeLayout(
+        BuildTarget buildTarget,
+        Optional<Path> projectLevelConfigFile,
+        ImmutableMap<String, String> projectLevelInlineSettings,
+        Optional<Path> targetLevelConfigFile,
+        ImmutableMap<String, String> targetLevelInlineSettings) {
+      this.buildTarget = Preconditions.checkNotNull(buildTarget);
+      this.projectLevelConfigFile =
+          Preconditions.checkNotNull(projectLevelConfigFile);
+      this.projectLevelInlineSettings = Preconditions.checkNotNull(projectLevelInlineSettings);
+      this.targetLevelConfigFile = Preconditions.checkNotNull(targetLevelConfigFile);
+      this.targetLevelInlineSettings = Preconditions.checkNotNull(targetLevelInlineSettings);
+    }
   }
 }

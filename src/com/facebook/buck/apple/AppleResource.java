@@ -18,11 +18,13 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildable;
-import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.Buildables;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.BuckConstant;
@@ -35,8 +37,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Copies the image, sound, NIB/XIB, and other resources
@@ -55,7 +57,7 @@ public class AppleResource extends AbstractBuildable {
 
   private final DirectoryTraverser directoryTraverser;
   private final ImmutableSortedSet<Path> dirs;
-  private final ImmutableSortedSet<Path> files;
+  private final ImmutableSortedSet<SourcePath> files;
   private final Path outputDirectory;
 
   AppleResource(
@@ -71,7 +73,7 @@ public class AppleResource extends AbstractBuildable {
     Path baseOutputDirectory = Paths.get(
         BuckConstant.BIN_DIR,
         target.getBasePath(),
-        target.getShortName() + ".app"); // TODO: This is hokey, just a hack to get started.
+        target.getShortName() + ".app"); // TODO(user): This is hokey, just a hack to get started.
     if (outputPathSubdirectory.isPresent()) {
       this.outputDirectory = baseOutputDirectory.resolve(outputPathSubdirectory.get());
     } else {
@@ -89,7 +91,7 @@ public class AppleResource extends AbstractBuildable {
   /**
    * Returns the set of files to copy for this resource rule.
    */
-  public ImmutableSortedSet<Path> getFiles() {
+  public ImmutableSortedSet<SourcePath> getFiles() {
     return files;
   }
 
@@ -105,7 +107,7 @@ public class AppleResource extends AbstractBuildable {
           directoryTraverser);
     }
 
-    inputsToConsiderForCachingPurposes.addAll(files);
+    inputsToConsiderForCachingPurposes.addAll(SourcePaths.filterInputsToCompareToOutput(files));
     return inputsToConsiderForCachingPurposes.build();
   }
 
@@ -132,8 +134,8 @@ public class AppleResource extends AbstractBuildable {
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
 
-    for (Path file : files) {
-      steps.add(CopyStep.forFile(file, outputDirectory));
+    for (SourcePath file : files) {
+      steps.add(CopyStep.forFile(file.resolve(context), outputDirectory));
     }
 
     return steps.build();

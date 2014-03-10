@@ -89,9 +89,9 @@ public final class JUnitRunner {
         public boolean shouldRun(Description description) {
           String methodName = description.getMethodName();
           if (methodName == null) {
-            // JUnit will give us an org.junit.runner.Description like this for the test class itself.
-            // It's easier for our filtering to make decisions just at the method level, however, so
-            // just always return true here.
+            // JUnit will give us an org.junit.runner.Description like this for the test class
+            // itself.  It's easier for our filtering to make decisions just at the method level,
+            // however, so just always return true here.
             return true;
           } else {
             String className = description.getClassName();
@@ -224,7 +224,11 @@ public final class JUnitRunner {
       protected AnnotatedBuilder annotatedBuilder() {
         // If there is no default timeout specified in .buckconfig, then use the original behavior
         // of AllDefaultPossibilitiesBuilder.
-        if (defaultTestTimeoutMillis <= 0) {
+        //
+        // Additionally, if we are using test selectors then we should use the original behavior
+        // to use our BuckBlockJUnit4ClassRunner, which provides the Descriptions needed to do
+        // test selecting properly.
+        if (defaultTestTimeoutMillis <= 0 || testSelectorList != null) {
           return super.annotatedBuilder();
         }
 
@@ -267,13 +271,16 @@ public final class JUnitRunner {
       boolean isSuccess = result.isSuccess();
       test.setAttribute("success", Boolean.toString(isSuccess));
 
+      // type attribute
+      test.setAttribute("type", result.type.toString());
+
       // time attribute
       long runTime = result.runTime;
       test.setAttribute("time", String.valueOf(runTime));
 
       // Include failure details, if appropriate.
-      if (!isSuccess) {
-        Failure failure = result.failure;
+      Failure failure = result.failure;
+      if (failure != null) {
         String message = failure.getMessage();
         test.setAttribute("message", message);
 

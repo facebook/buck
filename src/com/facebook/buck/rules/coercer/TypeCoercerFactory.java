@@ -34,6 +34,10 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
 
+/**
+ * Create {@link TypeCoercer}s that can convert incoming java structures (from json) into particular
+ * types.
+ */
 public class TypeCoercerFactory {
   private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
@@ -54,6 +58,14 @@ public class TypeCoercerFactory {
         }
       };
 
+  private final TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
+
+  private final TypeCoercer<AppleSource> appleSourceTypeCoercer =
+    new AppleSourceTypeCoercer(
+        sourcePathTypeCoercer,
+        new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
+        stringTypeCoercer);
+
   private final TypeCoercer<?>[] nonContainerTypeCoercers = {
       // special classes
       pathTypeCoercer,
@@ -63,7 +75,7 @@ public class TypeCoercerFactory {
       buildTargetPatternTypeCoercer,
 
       // identity
-      new IdentityTypeCoercer<>(String.class),
+      stringTypeCoercer,
       new IdentityTypeCoercer<>(Boolean.class),
 
       // numeric
@@ -73,11 +85,14 @@ public class TypeCoercerFactory {
       new NumberTypeCoercer<>(Long.class),
       new NumberTypeCoercer<>(Short.class),
       new NumberTypeCoercer<>(Byte.class),
+
+      // other simple
+      appleSourceTypeCoercer,
   };
 
   public TypeCoercer<?> typeCoercerForType(Type type) {
     if (type instanceof TypeVariable) {
-      type = ((TypeVariable) type).getBounds()[0];
+      type = ((TypeVariable<?>) type).getBounds()[0];
       if (Object.class.equals(type)) {
         throw new IllegalArgumentException("Generic types must be specific: " + type);
       }
@@ -140,7 +155,10 @@ public class TypeCoercerFactory {
         // SortedSet is tested second because it is a subclass of Set, and therefore can
         // be assigned to something of type Set, but not vice versa.
         Type elementType = getSingletonTypeParameter(parameterizedType);
-        return new SortedSetTypeCoercer<>(typeCoercerForComparableType(elementType));
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        SortedSetTypeCoercer<?> sortedSetTypeCoercer = new SortedSetTypeCoercer(
+            typeCoercerForComparableType(elementType));
+        return sortedSetTypeCoercer;
       } else if (rawClass.isAssignableFrom(ImmutableMap.class)) {
         Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
             "expected type '%s' to have two parameters", parameterizedType);
@@ -157,7 +175,7 @@ public class TypeCoercerFactory {
 
   private <T extends Comparable<T>> TypeCoercer<T> typeCoercerForComparableType(Type type) {
     Preconditions.checkState(
-        type instanceof Class && Comparable.class.isAssignableFrom((Class) type),
+        type instanceof Class && Comparable.class.isAssignableFrom((Class<?>) type),
         "type '%s' should be a class implementing Comparable",
         type);
 
@@ -172,4 +190,3 @@ public class TypeCoercerFactory {
     return type.getActualTypeArguments()[0];
   }
 }
-

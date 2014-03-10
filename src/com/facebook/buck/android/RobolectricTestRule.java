@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.annotations.VisibleForTesting;
@@ -49,17 +50,18 @@ import java.util.Set;
 
 public class RobolectricTestRule extends JavaTestRule {
 
-  private final static BuildableProperties PROPERTIES = new BuildableProperties(
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(
       ANDROID, LIBRARY, TEST);
 
+  private final Optional<DummyRDotJava> optionalDummyRDotJava;
   /**
    * Used by robolectric test runner to get list of resource directories that
    * can be used for tests.
    */
-  final static String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
+  static final String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_res_directories";
 
-  private final static Function<HasAndroidResourceDeps, Path> RESOURCE_DIRECTORY_FUNCTION =
+  private static final Function<HasAndroidResourceDeps, Path> RESOURCE_DIRECTORY_FUNCTION =
       new Function<HasAndroidResourceDeps, Path>() {
     @Override
     public Path apply(HasAndroidResourceDeps input) {
@@ -67,26 +69,29 @@ public class RobolectricTestRule extends JavaTestRule {
     }
   };
 
-  protected RobolectricTestRule(BuildRuleParams buildRuleParams,
+  protected RobolectricTestRule(
+      BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
-      Optional<DummyRDotJava> optionalDummyRDotJava,
-      Set<String> labels,
+      Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
+      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
-      ImmutableSet<BuildRule> sourceUnderTest) {
+      ImmutableSet<BuildRule> sourceUnderTest,
+      Optional<DummyRDotJava> optionalDummyRDotJava) {
     super(buildRuleParams,
         srcs,
         resources,
-        optionalDummyRDotJava,
         labels,
         contacts,
         proguardConfig,
+        additionalClasspathEntries,
         javacOptions,
         vmArgs,
         sourceUnderTest);
+    this.optionalDummyRDotJava = Preconditions.checkNotNull(optionalDummyRDotJava);
   }
 
   @Override
@@ -143,26 +148,34 @@ public class RobolectricTestRule extends JavaTestRule {
       ImmutableList.Builder<String> allVmArgs = ImmutableList.builder();
       allVmArgs.addAll(vmArgs);
 
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
+      AnnotationProcessingParams processingParams =
+          getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
+      AndroidLibraryGraphEnhancer.Result result =
+          new AndroidLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
               .createBuildableForAndroidResources(
                   ruleResolver, /* createBuildableIfEmptyDeps */ true);
 
-      return new RobolectricTestRule(result.getBuildRuleParams(),
+      Optional<DummyRDotJava> dummyRDotJava = result.getOptionalDummyRDotJava();
+      ImmutableSet<String> additionalClasspathEntries = dummyRDotJava.isPresent()
+          ? ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder().toString())
+          : ImmutableSet.<String>of();
+
+      return new RobolectricTestRule(
+          result.getBuildRuleParams(),
           srcs,
           resources,
-          result.getOptionalDummyRDotJava(),
           labels,
           contacts,
           proguardConfig,
+          additionalClasspathEntries,
           javacOptions.build(),
           allVmArgs.build(),
-          sourceUnderTest);
+          sourceUnderTest,
+          result.getOptionalDummyRDotJava());
     }
 
     @Override

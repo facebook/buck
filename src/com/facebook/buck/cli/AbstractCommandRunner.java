@@ -113,7 +113,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   /**
    * @return the exit code this process should exit with
    */
-  public synchronized final int runCommandWithOptions(T options) throws IOException {
+  public final synchronized int runCommandWithOptions(T options) throws IOException {
     this.options = options;
     return runCommandWithOptionsInternal(options);
   }

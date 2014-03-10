@@ -1,0 +1,38 @@
+#
+# sample small-but-valid classfile
+#
+
+cafe babe  # magic
+0000       # minor_version
+002e       # major_version
+0008       # constant_pool_count
+
+#
+# constant_pool
+#
+01 0005 "Small"            # 0001: utf8["Small"]
+01 0010 "java/lang/Object" # 0002: utf8["java/lang/Object"]
+07 0001                    # 0003: class[Small]
+07 0002                    # 0004: class[java/lang/Object]
+01 000a "Deprecated"       # 0005: utf8["Deprecated"]
+01 0001 "a"                # 0006: utf8["a"]
+01 0001 "I"                # 0007: utf8["I"]
+
+0021  # access_flags
+0003  # this_class
+0004  # super_class
+0000  # interfaces_count
+
+0001  # fields_count
+
+# fields[0]
+0001  # access_flags
+0006  # "a"
+0007  # "I"
+0001  # attributes_count
+# attributes[0]
+0005      # name
+00000000  # length
+
+0000  # methods_count
+0000  # attributes_count

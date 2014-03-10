@@ -38,12 +38,14 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultFileHashCache;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
+import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.ShutdownException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchServiceWatcher;
@@ -71,7 +73,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
@@ -149,7 +150,7 @@ public final class Main {
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
       webServer = createWebServer(config, console, projectFilesystem);
-      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
     }
 
     private ProjectFilesystemWatcher createWatcher(ProjectFilesystem projectFilesystem)
@@ -172,7 +173,8 @@ public final class Main {
         ProjectFilesystem projectFilesystem) {
       // Enable the web httpserver if it is given by command line parameter or specified in
       // .buckconfig. The presence of a port number is sufficient.
-      Optional<String> serverPort = Optional.fromNullable(System.getProperty("buck.httpserver.port"));
+      Optional<String> serverPort =
+          Optional.fromNullable(System.getProperty("buck.httpserver.port"));
       if (!serverPort.isPresent()) {
         serverPort = config.getValue("httpserver", "port");
       }
@@ -183,7 +185,8 @@ public final class Main {
           int port = Integer.parseInt(rawPort, 10);
           webServer = Optional.of(new WebServer(port, projectFilesystem, STATIC_CONTENT_DIRECTORY));
         } catch (NumberFormatException e) {
-          console.printErrorText(String.format("Could not parse port for httpserver: %s.", rawPort));
+          console.printErrorText(
+              String.format("Could not parse port for httpserver: %s.", rawPort));
           webServer = Optional.absent();
         }
       } else {
@@ -219,7 +222,10 @@ public final class Main {
       });
     }
 
-    private void watchFileSystem(Console console, CommandEvent commandEvent) throws IOException {
+    private void watchFileSystem(
+        Console console,
+        CommandEvent commandEvent,
+        BuckEventBus eventBus) throws IOException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
       // as a single, atomic Parser cache update and are not interleaved with Parser cache
@@ -228,6 +234,7 @@ public final class Main {
       synchronized (parser) {
         parser.setConsole(console);
         hashCache.setConsole(console);
+        parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
         filesystemWatcher.postEvents();
       }
@@ -267,7 +274,7 @@ public final class Main {
     }
   }
 
-  @Nullable volatile private static Daemon daemon;
+  @Nullable private static volatile Daemon daemon;
 
   /**
    * Get or create Daemon.
@@ -359,7 +366,8 @@ public final class Main {
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
-  public int runMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args) throws IOException {
+  public int runMainWithExitCode(File projectRoot, Optional<NGContext> context, String... args)
+      throws IOException {
     if (args.length == 0) {
       return usage();
     }
@@ -397,7 +405,7 @@ public final class Main {
     // ignorePaths from a BuckConfig instance, which in turn needs a ProjectFilesystem (i.e. this
     // solves a bootstrapping issue).
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(
-        projectRoot,
+        Paths.get(projectRoot.getPath()),
         createBuckConfig(new ProjectFilesystem(projectRoot), platform).getIgnorePaths());
     BuckConfig config = createBuckConfig(projectFilesystem, platform);
     Verbosity verbosity = VerbosityParser.parse(args);
@@ -456,27 +464,32 @@ public final class Main {
       ArtifactCacheFactory artifactCacheFactory = new LoggingArtifactCacheFactory(buildEventBus);
 
       // Configure the AndroidDirectoryResolver.
+      PropertyFinder propertyFinder = new DefaultPropertyFinder(projectFilesystem);
       AndroidDirectoryResolver androidDirectoryResolver =
-          new DefaultAndroidDirectoryResolver(projectFilesystem);
-      Optional<Path> ndkDir = androidDirectoryResolver.findAndroidNdkDir();
-      Optional<String> ndkVersion = Optional.absent();
-      if (ndkDir.isPresent()) {
-        ndkVersion = Optional.of(androidDirectoryResolver.getNdkVersion(ndkDir.get()));
-        config.validateNdkVersion(ndkDir.get(), ndkVersion.get());
-      }
+          new DefaultAndroidDirectoryResolver(
+              projectFilesystem,
+              config.getNdkVersion(),
+              propertyFinder);
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser;
 
       KnownBuildRuleTypes buildRuleTypes =
-          KnownBuildRuleTypes.getConfigured(config, new ProcessExecutor(console), ndkVersion);
+          KnownBuildRuleTypes.getConfigured(config,
+              new ProcessExecutor(console),
+              androidDirectoryResolver);
 
       if (isDaemon) {
-        parser = getParserFromDaemon(context, projectFilesystem, config, console, commandEvent);
-
+        parser = getParserFromDaemon(
+            context,
+            projectFilesystem,
+            config,
+            console,
+            commandEvent,
+            buildEventBus);
       } else {
         // Initialize logging and create new Parser for new process.
-        JavaUtilsLoggingBuildListener.ensureLogFileIsWritten();
+        JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(projectFilesystem);
         parser = new Parser(projectFilesystem,
             buildRuleTypes,
             console,
@@ -530,11 +543,12 @@ public final class Main {
       Optional<NGContext> context,
       ProjectFilesystem projectFilesystem,
       BuckConfig config, Console console,
-      CommandEvent commandEvent) throws IOException {
+      CommandEvent commandEvent,
+      BuckEventBus eventBus) throws IOException {
     // Wire up daemon to new client and console and get cached Parser.
     Daemon daemon = getDaemon(projectFilesystem, config, console);
     daemon.watchClient(context.get());
-    daemon.watchFileSystem(console, commandEvent);
+    daemon.watchFileSystem(console, commandEvent, eventBus);
     daemon.initWebServer();
     return daemon.getParser();
   }

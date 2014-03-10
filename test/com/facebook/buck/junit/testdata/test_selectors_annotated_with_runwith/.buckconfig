@@ -1,0 +1,3 @@
+# Setting a test timeout affects (or used to affect) which sort of runner we use!!!
+[test]
+  timeout = 654321

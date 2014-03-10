@@ -53,7 +53,8 @@ import javax.annotation.Nullable;
  */
 public class BuildInfoRecorder {
 
-  private static final DirectoryTraverser DEFAULT_DIRECTORY_TRAVERSER = new DefaultDirectoryTraverser();
+  private static final DirectoryTraverser DEFAULT_DIRECTORY_TRAVERSER =
+      new DefaultDirectoryTraverser();
 
   private final BuildTarget buildTarget;
   private final Path pathToMetadataDirectory;

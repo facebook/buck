@@ -1,0 +1,652 @@
+reading ViewDebug$ViewServer.class...
+method run ()V
+first 0162
+block 0000
+  pred 0162
+  ViewDebug.java:564@0000: move-object v11:Landroid/view/ViewDebug$ViewServer; 
+  <- v0:Landroid/view/ViewDebug$ViewServer;
+  ViewDebug.java:564@0001: get-field-object(android.view.ViewDebug$ViewServer.m
+  ViewServerSocket:Ljava/net/ServerSocket; catch) . <- v11:Landroid/view/ViewDe
+  bug$ViewServer;
+  next 0169
+block 0004
+  pred 0169
+  ViewDebug.java:564@0004: move-object v1:"server"Ljava/net/ServerSocket; <- v1
+  1:Ljava/net/ServerSocket;
+  ViewDebug.java:564@0004: goto . <- .
+  next 0005
+block 0005
+  pred 0004
+  pred 00ad
+  ViewDebug.java:566@0005: Rop{invoke-static . <- . call throws <any>}(java.lan
+  g.Thread.currentThread:()Ljava/lang/Thread; catch) . <- .
+  next 016a
+block 0008
+  pred 016a
+  ViewDebug.java:566@0008: move-object v12:Landroid/view/ViewDebug$ViewServer; 
+  <- v0:Landroid/view/ViewDebug$ViewServer;
+  ViewDebug.java:566@0009: get-field-object(android.view.ViewDebug$ViewServer.m
+  Thread:Ljava/lang/Thread; catch) . <- v12:Landroid/view/ViewDebug$ViewServer;
+  next 016b
+block 000c
+  pred 016b
+  ViewDebug.java:566@000c: if-ne-object . <- v11:Ljava/lang/Thread; v12:Ljava/l
+  ang/Thread;
+  next 000f *
+  next 00b0
+block 000f
+  pred 000c
+  ViewDebug.java:567@000f: const-object-nothrow(null) v11:<null>=null <- .
+  ViewDebug.java:567@0010: move-object v2:"client"Ljava/net/Socket; <- v11:<nul
+  l>=null
+  ViewDebug.java:567@0010: goto . <- .
+  next 0011
+block 0011
+  pred 000f
+  ViewDebug.java:569@0011: move-object v11:Ljava/net/ServerSocket; <- v1:Ljava/
+  net/ServerSocket;
+  ViewDebug.java:569@0012: Rop{invoke-virtual . <- Ljava/net/ServerSocket; call
+   throws <any>}(java.net.ServerSocket.accept:()Ljava/net/Socket; catch java.io
+  .IOException java.lang.Object) . <- v11:Ljava/net/ServerSocket;
+  next 0130
+  next 0140
+  next 016c *
+block 0015
+  pred 016c
+  ViewDebug.java:569@0015: move-object v2:"client"Ljava/net/Socket; <- v11:Ljav
+  a/net/Socket;
+  ViewDebug.java:571@0016: const-object-nothrow(null) v11:<null>=null <- .
+  ViewDebug.java:571@0017: move-object v3:"in"Ljava/io/BufferedReader; <- v11:<
+  null>=null
+  ViewDebug.java:571@0017: goto . <- .
+  next 0018
+block 0018
+  pred 0015
+  ViewDebug.java:573@0018: new-instance(java.io.BufferedReader catch java.lang.
+  Object) . <- .
+  next 0116
+  next 016d *
+block 001b
+  pred 016d
+  ViewDebug.java:573@001b: move-object v16:N0018Ljava/io/BufferedReader; <- v11
+  :N0018Ljava/io/BufferedReader;
+  ViewDebug.java:573@001b: move-object v11:N0018Ljava/io/BufferedReader; <- v16
+  :N0018Ljava/io/BufferedReader;
+  ViewDebug.java:573@001b: move-object v12:N0018Ljava/io/BufferedReader; <- v16
+  :N0018Ljava/io/BufferedReader;
+  ViewDebug.java:573@001c: new-instance(java.io.InputStreamReader catch java.la
+  ng.Object) . <- .
+  next 0116
+  next 016e *
+block 001f
+  pred 016e
+  ViewDebug.java:573@001f: move-object v16:N001cLjava/io/InputStreamReader; <- 
+  v13:N001cLjava/io/InputStreamReader;
+  ViewDebug.java:573@001f: move-object v13:N001cLjava/io/InputStreamReader; <- 
+  v16:N001cLjava/io/InputStreamReader;
+  ViewDebug.java:573@001f: move-object v14:N001cLjava/io/InputStreamReader; <- 
+  v16:N001cLjava/io/InputStreamReader;
+  ViewDebug.java:573@0020: move-object v15:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:573@0021: Rop{invoke-virtual . <- Ljava/net/Socket; call throw
+  s <any>}(java.net.Socket.getInputStream:()Ljava/io/InputStream; catch java.la
+  ng.Object) . <- v15:Ljava/net/Socket;
+  next 0116
+  next 016f *
+block 0024
+  pred 016f
+  ViewDebug.java:573@0024: Rop{invoke-direct . <- Ljava/io/InputStreamReader; L
+  java/io/InputStream; call throws <any>}(java.io.InputStreamReader.<init>:(Lja
+  va/io/InputStream;)V catch java.lang.Object) . <- v14:N001cLjava/io/InputStre
+  amReader; v15:Ljava/io/InputStream;
+  next 0116
+  next 0027 *
+block 0027
+  pred 0024
+  ViewDebug.java:573@0027: Rop{invoke-direct . <- Ljava/io/BufferedReader; Ljav
+  a/io/Reader; call throws <any>}(java.io.BufferedReader.<init>:(Ljava/io/Reade
+  r;)V catch java.lang.Object) . <- v12:N0018Ljava/io/BufferedReader; v13:Ljava
+  /io/InputStreamReader;
+  next 0116
+  next 002a *
+block 002a
+  pred 0027
+  ViewDebug.java:573@002a: move-object v3:"in"Ljava/io/BufferedReader; <- v11:L
+  java/io/BufferedReader;
+  ViewDebug.java:574@002b: move-object v11:Ljava/io/BufferedReader; <- v3:Ljava
+  /io/BufferedReader;
+  ViewDebug.java:574@002c: Rop{invoke-virtual . <- Ljava/io/BufferedReader; cal
+  l throws <any>}(java.io.BufferedReader.readLine:()Ljava/lang/String; catch ja
+  va.lang.Object) . <- v11:Ljava/io/BufferedReader;
+  next 0116
+  next 0170 *
+block 002f
+  pred 0170
+  ViewDebug.java:574@002f: move-object v4:"command"Ljava/lang/String; <- v11:Lj
+  ava/lang/String;
+  ViewDebug.java:576@0031: const-object("DUMP" catch java.lang.Object) . <- .
+  next 0116
+  next 0171 *
+block 0033
+  pred 0171
+  ViewDebug.java:576@0033: move-object v12:Ljava/lang/String; <- v4:Ljava/lang/
+  String;
+  ViewDebug.java:576@0035: Rop{invoke-virtual . <- Ljava/lang/String; Ljava/lan
+  g/String; call throws <any>}(java.lang.String.equalsIgnoreCase:(Ljava/lang/St
+  ring;)Z catch java.lang.Object) . <- v11:Ljava/lang/String;="DUMP" v12:Ljava/
+  lang/String;
+  next 0116
+  next 0172 *
+block 0038
+  pred 0172
+  ViewDebug.java:576@0038: if-eqz-int . <- v11:I
+  next 003b *
+  next 0042
+block 003b
+  pred 0038
+  ViewDebug.java:577@003b: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:577@003c: Rop{invoke-static . <- Ljava/net/Socket; call throws
+   <any>}(android.view.ViewDebug$ViewServer.dump:(Ljava/net/Socket;)V catch jav
+  a.lang.Object) . <- v11:Ljava/net/Socket;
+  next 0116
+  next 003f *
+block 003f
+  pred 003b
+  ViewDebug.java:577@003f: goto . <- .
+  next 005f
+block 0042
+  pred 0038
+  ViewDebug.java:579@0042: move-object v11:Ljava/lang/String; <- v4:Ljava/lang/
+  String;
+  ViewDebug.java:579@0044: const-object(" " catch java.lang.Object) . <- .
+  next 0116
+  next 0173 *
+block 0046
+  pred 0173
+  ViewDebug.java:579@0046: Rop{invoke-virtual . <- Ljava/lang/String; Ljava/lan
+  g/String; call throws <any>}(java.lang.String.split:(Ljava/lang/String;)[Ljav
+  a/lang/String; catch java.lang.Object) . <- v11:Ljava/lang/String; v12:Ljava/
+  lang/String;=" "
+  next 0116
+  next 0174 *
+block 0049
+  pred 0174
+  ViewDebug.java:579@0049: move-object v5:"params"[Ljava/lang/String; <- v11:[L
+  java/lang/String;
+  ViewDebug.java:580@004b: const-object("CAPTURE" catch java.lang.Object) . <- 
+  .
+  next 0116
+  next 0175 *
+block 004d
+  pred 0175
+  ViewDebug.java:580@004d: move-object v12:[Ljava/lang/String; <- v5:[Ljava/lan
+  g/String;
+  ViewDebug.java:580@004f: const-int(0) v13:I=0 <- .
+  ViewDebug.java:580@0050: aget-object(catch java.lang.Object) . <- v12:[Ljava/
+  lang/String; v13:I=0
+  next 0116
+  next 0176 *
+block 0051
+  pred 0176
+  ViewDebug.java:580@0051: Rop{invoke-virtual . <- Ljava/lang/String; Ljava/lan
+  g/String; call throws <any>}(java.lang.String.equalsIgnoreCase:(Ljava/lang/St
+  ring;)Z catch java.lang.Object) . <- v11:Ljava/lang/String;="CAPTURE" v12:Lja
+  va/lang/String;
+  next 0116
+  next 0177 *
+block 0054
+  pred 0177
+  ViewDebug.java:580@0054: if-eqz-int . <- v11:I
+  next 0057 *
+  next 005f
+block 0057
+  pred 0054
+  ViewDebug.java:581@0057: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:581@0058: move-object v12:[Ljava/lang/String; <- v5:[Ljava/lan
+  g/String;
+  ViewDebug.java:581@005a: const-int(1) v13:I=1 <- .
+  ViewDebug.java:581@005b: aget-object(catch java.lang.Object) . <- v12:[Ljava/
+  lang/String; v13:I=1
+  next 0116
+  next 0178 *
+block 005c
+  pred 0178
+  ViewDebug.java:581@005c: Rop{invoke-static . <- Ljava/net/Socket; Ljava/lang/
+  String; call throws <any>}(android.view.ViewDebug$ViewServer.capture:(Ljava/n
+  et/Socket;Ljava/lang/String;)V catch java.lang.Object) . <- v11:Ljava/net/Soc
+  ket; v12:Ljava/lang/String;
+  next 0116
+  next 005f *
+block 005f
+  pred 003f
+  pred 0054
+  pred 005c
+  @????: goto . <- .
+  next 018b
+block 0062
+  pred 018d
+  ViewDebug.java:589@0062: goto . <- .
+  next 0079
+block 0065
+  pred 0116
+  ViewDebug.java:586@0065: move-object v6:Ljava/lang/Class;=java.lang.Object <-
+   v11:Ljava/lang/Class;=java.lang.Object
+  ViewDebug.java:586@0065: goto . <- .
+  next 0067
+block 0067
+  pred 0065
+  @????: goto . <- .
+  next 0188
+block 006a
+  pred 018a
+  ViewDebug.java:586@006a: move-object v11:Ljava/lang/Class;=java.lang.Object <
+  - v6:Ljava/lang/Class;=java.lang.Object
+  ViewDebug.java:586@006c: throw(catch java.io.IOException java.lang.Object) . 
+  <- v11:Ljava/lang/Class;=java.lang.Object
+  next 0130
+  next 0140
+block 0079
+  pred 0062
+  @????: goto . <- .
+  next 018e
+block 007c
+  pred 0190
+  ViewDebug.java:600@007c: goto . <- .
+  next 00ad
+block 007f
+  pred 0130
+  ViewDebug.java:590@007f: move-object v3:"e"Ljava/io/IOException; <- v11:Ljava
+  /lang/Class;=java.io.IOException
+  ViewDebug.java:591@0080: const-object("ViewServer" catch java.lang.Object) . 
+  <- .
+  next 0140
+  next 0179 *
+block 0082
+  pred 0179
+  ViewDebug.java:591@0082: const-object("Connection error: " catch java.lang.Ob
+  ject) . <- .
+  next 0140
+  next 017a *
+block 0084
+  pred 017a
+  ViewDebug.java:591@0084: move-object v13:Ljava/io/IOException; <- v3:Ljava/io
+  /IOException;
+  ViewDebug.java:591@0085: Rop{invoke-static . <- Ljava/lang/String; Ljava/lang
+  /String; Ljava/lang/Throwable; call throws <any>}(android.util.Log.w:(Ljava/l
+  ang/String;Ljava/lang/String;Ljava/lang/Throwable;)I catch java.lang.Object) 
+  . <- v11:Ljava/lang/String;="ViewServer" v12:Ljava/lang/String;="Connection e
+  rror: " v13:Ljava/io/IOException;
+  next 0140
+  next 017b *
+block 0088
+  pred 017b
+  @????: goto . <- .
+  next 0089
+block 0089
+  pred 0088
+  @????: goto . <- .
+  next 0182
+block 008c
+  pred 0184
+  ViewDebug.java:600@008c: goto . <- .
+  next 00ad
+block 008f
+  pred 0140
+  ViewDebug.java:593@008f: move-object v8:Ljava/lang/Class;=java.lang.Object <-
+   v11:Ljava/lang/Class;=java.lang.Object
+  ViewDebug.java:593@008f: goto . <- .
+  next 0091
+block 0091
+  pred 008f
+  @????: goto . <- .
+  next 017c
+block 0094
+  pred 017e
+  ViewDebug.java:593@0094: move-object v11:Ljava/lang/Class;=java.lang.Object <
+  - v8:Ljava/lang/Class;=java.lang.Object
+  ViewDebug.java:593@0096: throw(catch) . <- v11:Ljava/lang/Class;=java.lang.Ob
+  ject
+  returns
+block 00ad
+  pred 007c
+  pred 008c
+  ViewDebug.java:601@00ad: goto . <- .
+  next 0005
+block 00b0
+  pred 000c
+  ViewDebug.java:602@00b0: goto . <- .
+  next 0163
+block 0116
+  pred 0018
+  pred 001b
+  pred 001f
+  pred 0024
+  pred 0027
+  pred 002a
+  pred 002f
+  pred 0033
+  pred 003b
+  pred 0042
+  pred 0046
+  pred 0049
+  pred 004d
+  pred 0051
+  pred 0057
+  pred 005c
+  ViewDebug.java:586@0065: Rop{move-exception Ljava/lang/Object; <- . flows} v1
+  1:Ljava/lang/Object; <- .
+  ViewDebug.java:586@0065: goto . <- .
+  next 0065
+block 0130
+  pred 0011
+  pred 006a
+  pred 0189
+  pred 018c
+  ViewDebug.java:590@007f: Rop{move-exception Ljava/io/IOException; <- . flows}
+   v11:Ljava/io/IOException; <- .
+  ViewDebug.java:590@007f: goto . <- .
+  next 007f
+block 0140
+  pred 0011
+  pred 006a
+  pred 007f
+  pred 0082
+  pred 0084
+  pred 0189
+  pred 018c
+  ViewDebug.java:593@008f: Rop{move-exception Ljava/lang/Object; <- . flows} v1
+  1:Ljava/lang/Object; <- .
+  ViewDebug.java:593@008f: goto . <- .
+  next 008f
+block 0162
+  ViewDebug.java:564@0000: move-param-object(0) v0:"this"Landroid/view/ViewDebu
+  g$ViewServer; <- .
+  ViewDebug.java:564@0000: goto . <- .
+  next 0000
+block 0163
+  pred 00b0
+  ViewDebug.java:602@00b0: return-void . <- .
+  returns
+block 0169
+  pred 0000
+  ViewDebug.java:564@0001: Rop{move-result-pseudo Ljava/net/ServerSocket; <- . 
+  flows} v11:Ljava/net/ServerSocket; <- .
+  ViewDebug.java:564@0001: goto . <- .
+  next 0004
+block 016a
+  pred 0005
+  ViewDebug.java:566@0005: Rop{move-result Ljava/lang/Thread; <- . flows} v11:L
+  java/lang/Thread; <- .
+  ViewDebug.java:566@0005: goto . <- .
+  next 0008
+block 016b
+  pred 0008
+  ViewDebug.java:566@0009: Rop{move-result-pseudo Ljava/lang/Thread; <- . flows
+  } v12:Ljava/lang/Thread; <- .
+  ViewDebug.java:566@0009: goto . <- .
+  next 000c
+block 016c
+  pred 0011
+  ViewDebug.java:569@0012: Rop{move-result Ljava/net/Socket; <- . flows} v11:Lj
+  ava/net/Socket; <- .
+  ViewDebug.java:569@0012: goto . <- .
+  next 0015
+block 016d
+  pred 0018
+  ViewDebug.java:573@0018: Rop{move-result-pseudo N0018Ljava/io/BufferedReader;
+   <- . flows} v11:N0018Ljava/io/BufferedReader; <- .
+  ViewDebug.java:573@0018: goto . <- .
+  next 001b
+block 016e
+  pred 001b
+  ViewDebug.java:573@001c: Rop{move-result-pseudo N001cLjava/io/InputStreamRead
+  er; <- . flows} v13:N001cLjava/io/InputStreamReader; <- .
+  ViewDebug.java:573@001c: goto . <- .
+  next 001f
+block 016f
+  pred 001f
+  ViewDebug.java:573@0021: Rop{move-result Ljava/io/InputStream; <- . flows} v1
+  5:Ljava/io/InputStream; <- .
+  ViewDebug.java:573@0021: goto . <- .
+  next 0024
+block 0170
+  pred 002a
+  ViewDebug.java:574@002c: Rop{move-result Ljava/lang/String; <- . flows} v11:L
+  java/lang/String; <- .
+  ViewDebug.java:574@002c: goto . <- .
+  next 002f
+block 0171
+  pred 002f
+  ViewDebug.java:576@0031: Rop{move-result-pseudo Ljava/lang/String; <- . flows
+  } v11:Ljava/lang/String;="DUMP" <- .
+  ViewDebug.java:576@0031: goto . <- .
+  next 0033
+block 0172
+  pred 0033
+  ViewDebug.java:576@0035: Rop{move-result Z <- . flows} v11:Z <- .
+  ViewDebug.java:576@0035: goto . <- .
+  next 0038
+block 0173
+  pred 0042
+  ViewDebug.java:579@0044: Rop{move-result-pseudo Ljava/lang/String; <- . flows
+  } v12:Ljava/lang/String;=" " <- .
+  ViewDebug.java:579@0044: goto . <- .
+  next 0046
+block 0174
+  pred 0046
+  ViewDebug.java:579@0046: Rop{move-result [Ljava/lang/String; <- . flows} v11:
+  [Ljava/lang/String; <- .
+  ViewDebug.java:579@0046: goto . <- .
+  next 0049
+block 0175
+  pred 0049
+  ViewDebug.java:580@004b: Rop{move-result-pseudo Ljava/lang/String; <- . flows
+  } v11:Ljava/lang/String;="CAPTURE" <- .
+  ViewDebug.java:580@004b: goto . <- .
+  next 004d
+block 0176
+  pred 004d
+  ViewDebug.java:580@0050: Rop{move-result-pseudo Ljava/lang/String; <- . flows
+  } v12:Ljava/lang/String; <- .
+  ViewDebug.java:580@0050: goto . <- .
+  next 0051
+block 0177
+  pred 0051
+  ViewDebug.java:580@0051: Rop{move-result Z <- . flows} v11:Z <- .
+  ViewDebug.java:580@0051: goto . <- .
+  next 0054
+block 0178
+  pred 0057
+  ViewDebug.java:581@005b: Rop{move-result-pseudo Ljava/lang/String; <- . flows
+  } v12:Ljava/lang/String; <- .
+  ViewDebug.java:581@005b: goto . <- .
+  next 005c
+block 0179
+  pred 007f
+  ViewDebug.java:591@0080: Rop{move-result-pseudo Ljava/lang/String; <- . flows
+  } v11:Ljava/lang/String;="ViewServer" <- .
+  ViewDebug.java:591@0080: goto . <- .
+  next 0082
+block 017a
+  pred 0082
+  ViewDebug.java:591@0082: Rop{move-result-pseudo Ljava/lang/String; <- . flows
+  } v12:Ljava/lang/String;="Connection error: " <- .
+  ViewDebug.java:591@0082: goto . <- .
+  next 0084
+block 017b
+  pred 0084
+  ViewDebug.java:591@0085: Rop{move-result I <- . flows} v11:I <- .
+  ViewDebug.java:591@0085: goto . <- .
+  next 0088
+block 017c
+  pred 0091
+  ViewDebug.java:593@0099: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:593@009a: if-eqz-object . <- v11:Ljava/net/Socket;
+  next 017d *
+  next 017e
+block 017d
+  pred 017c
+  ViewDebug.java:595@009d: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:595@009e: Rop{invoke-virtual . <- Ljava/net/Socket; call throw
+  s <any>}(java.net.Socket.close:()V catch java.io.IOException) . <- v11:Ljava/
+  net/Socket;
+  next 017f
+  next 0180 *
+block 017e
+  pred 017c
+  pred 0180
+  pred 0181
+  @????: goto . <- .
+  next 0094
+block 017f
+  pred 017d
+  ViewDebug.java:596@00a4: Rop{move-exception Ljava/io/IOException; <- . flows}
+   v11:Ljava/io/IOException; <- .
+  ViewDebug.java:596@00a4: goto . <- .
+  next 0181
+block 0180
+  pred 017d
+  ViewDebug.java:598@00a1: goto . <- .
+  next 017e
+block 0181
+  pred 017f
+  ViewDebug.java:596@00a4: move-object v10:"e"Ljava/io/IOException; <- v11:Ljav
+  a/lang/Class;=java.io.IOException
+  ViewDebug.java:597@00a6: move-object v11:Ljava/io/IOException; <- v10:Ljava/i
+  o/IOException;
+  ViewDebug.java:597@00a8: Rop{invoke-virtual . <- Ljava/io/IOException; call t
+  hrows <any>}(java.io.IOException.printStackTrace:()V catch) . <- v11:Ljava/io
+  /IOException;
+  next 017e
+block 0182
+  pred 0089
+  ViewDebug.java:593@0099: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:593@009a: if-eqz-object . <- v11:Ljava/net/Socket;
+  next 0183 *
+  next 0184
+block 0183
+  pred 0182
+  ViewDebug.java:595@009d: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:595@009e: Rop{invoke-virtual . <- Ljava/net/Socket; call throw
+  s <any>}(java.net.Socket.close:()V catch java.io.IOException) . <- v11:Ljava/
+  net/Socket;
+  next 0185
+  next 0186 *
+block 0184
+  pred 0182
+  pred 0186
+  pred 0187
+  @????: goto . <- .
+  next 008c
+block 0185
+  pred 0183
+  ViewDebug.java:596@00a4: Rop{move-exception Ljava/io/IOException; <- . flows}
+   v11:Ljava/io/IOException; <- .
+  ViewDebug.java:596@00a4: goto . <- .
+  next 0187
+block 0186
+  pred 0183
+  ViewDebug.java:598@00a1: goto . <- .
+  next 0184
+block 0187
+  pred 0185
+  ViewDebug.java:596@00a4: move-object v10:"e"Ljava/io/IOException; <- v11:Ljav
+  a/lang/Class;=java.io.IOException
+  ViewDebug.java:597@00a6: move-object v11:Ljava/io/IOException; <- v10:Ljava/i
+  o/IOException;
+  ViewDebug.java:597@00a8: Rop{invoke-virtual . <- Ljava/io/IOException; call t
+  hrows <any>}(java.io.IOException.printStackTrace:()V catch) . <- v11:Ljava/io
+  /IOException;
+  next 0184
+block 0188
+  pred 0067
+  ViewDebug.java:586@006f: move-object v11:Ljava/io/BufferedReader; <- v3:Ljava
+  /io/BufferedReader;
+  ViewDebug.java:586@0070: if-eqz-object . <- v11:Ljava/io/BufferedReader;
+  next 0189 *
+  next 018a
+block 0189
+  pred 0188
+  ViewDebug.java:587@0073: move-object v11:Ljava/io/BufferedReader; <- v3:Ljava
+  /io/BufferedReader;
+  ViewDebug.java:587@0074: Rop{invoke-virtual . <- Ljava/io/BufferedReader; cal
+  l throws <any>}(java.io.BufferedReader.close:()V catch java.io.IOException ja
+  va.lang.Object) . <- v11:Ljava/io/BufferedReader;
+  next 0130
+  next 0140
+  next 018a *
+block 018a
+  pred 0188
+  pred 0189
+  @????: goto . <- .
+  next 006a
+block 018b
+  pred 005f
+  ViewDebug.java:586@006f: move-object v11:Ljava/io/BufferedReader; <- v3:Ljava
+  /io/BufferedReader;
+  ViewDebug.java:586@0070: if-eqz-object . <- v11:Ljava/io/BufferedReader;
+  next 018c *
+  next 018d
+block 018c
+  pred 018b
+  ViewDebug.java:587@0073: move-object v11:Ljava/io/BufferedReader; <- v3:Ljava
+  /io/BufferedReader;
+  ViewDebug.java:587@0074: Rop{invoke-virtual . <- Ljava/io/BufferedReader; cal
+  l throws <any>}(java.io.BufferedReader.close:()V catch java.io.IOException ja
+  va.lang.Object) . <- v11:Ljava/io/BufferedReader;
+  next 0130
+  next 0140
+  next 018d *
+block 018d
+  pred 018b
+  pred 018c
+  @????: goto . <- .
+  next 0062
+block 018e
+  pred 0079
+  ViewDebug.java:593@0099: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:593@009a: if-eqz-object . <- v11:Ljava/net/Socket;
+  next 018f *
+  next 0190
+block 018f
+  pred 018e
+  ViewDebug.java:595@009d: move-object v11:Ljava/net/Socket; <- v2:Ljava/net/So
+  cket;
+  ViewDebug.java:595@009e: Rop{invoke-virtual . <- Ljava/net/Socket; call throw
+  s <any>}(java.net.Socket.close:()V catch java.io.IOException) . <- v11:Ljava/
+  net/Socket;
+  next 0191
+  next 0192 *
+block 0190
+  pred 018e
+  pred 0192
+  pred 0193
+  @????: goto . <- .
+  next 007c
+block 0191
+  pred 018f
+  ViewDebug.java:596@00a4: Rop{move-exception Ljava/io/IOException; <- . flows}
+   v11:Ljava/io/IOException; <- .
+  ViewDebug.java:596@00a4: goto . <- .
+  next 0193
+block 0192
+  pred 018f
+  ViewDebug.java:598@00a1: goto . <- .
+  next 0190
+block 0193
+  pred 0191
+  ViewDebug.java:596@00a4: move-object v10:"e"Ljava/io/IOException; <- v11:Ljav
+  a/lang/Class;=java.io.IOException
+  ViewDebug.java:597@00a6: move-object v11:Ljava/io/IOException; <- v10:Ljava/i
+  o/IOException;
+  ViewDebug.java:597@00a8: Rop{invoke-virtual . <- Ljava/io/IOException; call t
+  hrows <any>}(java.io.IOException.printStackTrace:()V catch) . <- v11:Ljava/io
+  /IOException;
+  next 0190

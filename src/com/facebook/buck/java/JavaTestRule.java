@@ -16,11 +16,6 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-
-import com.facebook.buck.android.DummyRDotJava;
-import com.facebook.buck.android.JavaLibraryGraphEnhancer;
-import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.BuildContext;
@@ -28,6 +23,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.LabelsAttributeBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -39,6 +35,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.XmlTestResultParser;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -76,26 +73,26 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
   private CompiledClassFileFinder compiledClassFileFinder;
 
-  private final ImmutableSet<String> labels;
+  private final ImmutableSet<Label> labels;
 
   private final ImmutableSet<String> contacts;
 
   protected JavaTestRule(BuildRuleParams buildRuleParams,
       Set<Path> srcs,
       Set<SourcePath> resources,
-      Optional<DummyRDotJava> optionalDummyRDotJava,
-      Set<String> labels,
+      Set<Label> labels,
       Set<String> contacts,
       Optional<Path> proguardConfig,
+      ImmutableSet<String> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(buildRuleParams,
         srcs,
         resources,
-        optionalDummyRDotJava,
         proguardConfig,
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
+        additionalClasspathEntries,
         javacOptions);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
@@ -109,7 +106,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   }
 
   @Override
-  public ImmutableSet<String> getLabels() {
+  public ImmutableSet<Label> getLabels() {
     return labels;
   }
 
@@ -131,6 +128,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
   /**
    * @return A set of rules that this test rule will be testing.
    */
+  @Override
   public ImmutableSet<BuildRule> getSourceUnderTest() {
     return sourceUnderTest;
   }
@@ -164,20 +162,10 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     MakeCleanDirectoryStep mkdirClean = new MakeCleanDirectoryStep(pathToTestOutput);
     steps.add(mkdirClean);
 
-    // If there are android resources, then compile the uber R.java files and add them to the
-    // classpath used to run the test runner.
-    ImmutableSet<String> classpathEntries;
-    if (getProperties().is(ANDROID)) {
-      Preconditions.checkState(optionalDummyRDotJava.isPresent(),
-          "DummyRDotJava must have been created by the BuildRuleBuilder!");
-      Path rDotJavaClasspathEntry = optionalDummyRDotJava.get().getRDotJavaBinFolder();
-      ImmutableSet.Builder<String> classpathEntriesBuilder = ImmutableSet.builder();
-      classpathEntriesBuilder.add(rDotJavaClasspathEntry.toString());
-      classpathEntriesBuilder.addAll(getTransitiveClasspathEntries().values());
-      classpathEntries = classpathEntriesBuilder.build();
-    } else {
-      classpathEntries = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
-    }
+    ImmutableSet<String> classpathEntries = ImmutableSet.<String>builder()
+        .addAll(getTransitiveClasspathEntries().values())
+        .addAll(additionalClasspathEntries)
+        .build();
 
     Step junit = new JUnitStep(
         classpathEntries,
@@ -335,9 +323,9 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
      *     http://stackoverflow.com/questions/2336692/java-multiple-class-declarations-in-one-file)
      *     will generate multiple .class files that do not have '$' in the name.
      * In this method, we perform a strict check for (1) and use a heuristic for (2). It is possible
-     * to filter out the type (2) situation with a stricter check that aligns the package directories
-     * of the .java files and the .class files, but it is a pain to implement. If this heuristic turns
-     * out to be insufficient in practice, then we can fix it.
+     * to filter out the type (2) situation with a stricter check that aligns the package
+     * directories of the .java files and the .class files, but it is a pain to implement.
+     * If this heuristic turns out to be insufficient in practice, then we can fix it.
      *
      * @param sources paths to .java source files that were passed to javac
      * @param jarFile jar where the generated .class files were written
@@ -371,8 +359,8 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
             return;
           }
 
-          // As a heuristic for case (2) as described in the Javadoc, make sure the name of the .class
-          // file matches the name of a .java file.
+          // As a heuristic for case (2) as described in the Javadoc, make sure the name of the
+          // .class file matches the name of a .java file.
           String nameWithoutDotClass = name.substring(0, name.length() - ".class".length());
           if (!sourceClassNames.contains(nameWithoutDotClass)) {
             return;
@@ -408,7 +396,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
 
     @Nullable protected List<String> vmArgs = ImmutableList.of();
     protected ImmutableSet<BuildTarget> sourcesUnderTest = ImmutableSet.of();
-    protected ImmutableSet<String> labels = ImmutableSet.of();
+    protected ImmutableSet<Label> labels = ImmutableSet.of();
     protected ImmutableSet<String> contacts = ImmutableSet.of();
 
     protected Builder(AbstractBuildRuleBuilderParams params) {
@@ -419,23 +407,20 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     public JavaTestRule build(BuildRuleResolver ruleResolver) {
       ImmutableSet<BuildRule> sourceUnderTest = generateSourceUnderTest(sourcesUnderTest,
           ruleResolver);
-      AnnotationProcessingParams processingParams = getAnnotationProcessingBuilder().build(ruleResolver);
+      AnnotationProcessingParams processingParams =
+          getAnnotationProcessingBuilder().build(ruleResolver);
       javacOptions.setAnnotationProcessingData(processingParams);
 
       BuildRuleParams buildRuleParams = createBuildRuleParams(ruleResolver);
 
-      JavaLibraryGraphEnhancer.Result result =
-          new JavaLibraryGraphEnhancer(buildTarget, buildRuleParams, params)
-              .createBuildableForAndroidResources(
-                  ruleResolver, /* createBuildableIfEmptyDeps */ false);
-
-      return new JavaTestRule(result.getBuildRuleParams(),
+      return new JavaTestRule(
+          buildRuleParams,
           srcs,
           resources,
-          result.getOptionalDummyRDotJava(),
           labels,
           contacts,
           proguardConfig,
+          /* additionalClasspathEntries */ ImmutableSet.<String>of(),
           javacOptions.build(),
           vmArgs,
           sourceUnderTest);
@@ -470,7 +455,7 @@ public class JavaTestRule extends DefaultJavaLibraryRule implements TestRule {
     }
 
     @Override
-    public Builder setLabels(ImmutableSet<String> labels) {
+    public Builder setLabels(ImmutableSet<Label> labels) {
       this.labels = labels;
       return this;
     }

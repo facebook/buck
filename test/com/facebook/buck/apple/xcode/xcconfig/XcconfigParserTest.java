@@ -16,16 +16,15 @@
 
 package com.facebook.buck.apple.xcode.xcconfig;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.FakeReadonlyProjectFilesystem;
 import com.facebook.buck.util.ProjectFilesystem;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -150,7 +149,7 @@ public class XcconfigParserTest {
   @Test
   public void testMultiFileParsing() throws ParseException, IOException {
 
-    ImmutableMap<String,String> files = ImmutableMap.of(
+    ImmutableMap<String, String> files = ImmutableMap.of(
         "file1.xcconfig", s2 + "\n" + s3,
         "folder/file2.xcconfig", s1 + "\n" + "#include \"../file1.xcconfig\""
     );

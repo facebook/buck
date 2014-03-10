@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
@@ -156,7 +157,8 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\",\"" +
         "results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\":" +
-        "null,\"success\":false,\"time\":0,\"message\":null,\"stacktrace\":null,\"stdOut\":null," +
+        "null,\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
+        "\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
         "\"failureCount\":1,\"dependenciesPassTheirTests\":true,\"success\":false}]," +
         "\"type\":\"RunComplete\"}", message);
@@ -179,7 +181,8 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\"" +
-        ":null,\"success\":false,\"time\":0,\"message\":null,\"stacktrace\":null,\"stdOut\":null," +
+        ":null,\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
+        "\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
         "\"failureCount\":1,\"dependenciesPassTheirTests\":true,\"success\":false}," +
         "\"type\":\"ResultsAvailable\"}", message);
@@ -198,7 +201,7 @@ public class EventSerializationTest {
   private TestResults generateFakeTestResults() {
     String testCaseName = "Test1";
     TestResultSummary testResultSummary = new TestResultSummary(
-        testCaseName, null, false, 0, null, null, null, null);
+        testCaseName, null, ResultType.FAILURE, 0, null, null, null, null);
     TestCaseSummary testCase = new TestCaseSummary(testCaseName,
         ImmutableList.of(testResultSummary));
     ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);

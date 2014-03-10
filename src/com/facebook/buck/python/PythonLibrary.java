@@ -46,7 +46,8 @@ import javax.annotation.Nullable;
 
 public class PythonLibrary extends AbstractBuildable {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final Path pythonPathDirectory;

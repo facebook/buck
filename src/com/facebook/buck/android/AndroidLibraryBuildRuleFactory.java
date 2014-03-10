@@ -18,9 +18,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavaLibraryBuildRuleFactory;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;

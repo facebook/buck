@@ -1,0 +1,12 @@
+
+  elements[0]:
+    name
+    value: utf8 grue
+
+  elements[0]:
+    names
+    value: array {gruesome}
+
+  elements[0]:
+    names
+    value: array {awful, awesome}

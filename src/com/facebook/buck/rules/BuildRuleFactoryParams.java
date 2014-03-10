@@ -318,6 +318,24 @@ public final class BuildRuleFactoryParams {
     }
   }
 
+  public Optional<Integer> getOptionalIntegerAttribute(String attributeName) {
+    Object value = instance.get(attributeName);
+    if (value != null) {
+      if (value instanceof Number) {
+        Number number = (Number) value;
+        if (number.intValue() == number.floatValue()) {
+          return Optional.of(number.intValue());
+        }
+      }
+      throw new RuntimeException(String.format("Expected a integer for %s in %s but was %s",
+          attributeName,
+          target.getBuildFilePath(),
+          value));
+    } else {
+      return Optional.absent();
+    }
+  }
+
   public Function<String, Path> getResolveFilePathRelativeToBuildFileDirectoryTransform() {
     return resolveFilePathRelativeToBuildFileDirectoryTransform;
   }

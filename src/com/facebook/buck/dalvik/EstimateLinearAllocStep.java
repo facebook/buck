@@ -43,7 +43,8 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
    * priority, an estimator based on {@link DalvikStatsTool#getEstimate(java.io.InputStream)} should
    * be used instead.
    */
-  private static LinearAllocEstimator DEFAULT_LINEAR_ALLOC_ESTIMATOR = new LinearAllocEstimator() {
+  private static final LinearAllocEstimator DEFAULT_LINEAR_ALLOC_ESTIMATOR =
+      new LinearAllocEstimator() {
     @Override
     public int getEstimate(FileLike fileLike) throws IOException {
       return (int) fileLike.getSize();

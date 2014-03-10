@@ -57,7 +57,6 @@ public class TestSelector {
    * If the selector string doesn't contain a "#" at all, it is interpreted as a class-part.
    *
    * @param rawSelectorString An unparsed selector string.
-   * @return
    */
   public static TestSelector buildFrom(String rawSelectorString) {
     if (rawSelectorString == null || rawSelectorString.isEmpty()) {
@@ -89,7 +88,7 @@ public class TestSelector {
     Pattern methodPattern = null;
     String[] parts = remainder.split("#");
 
-    try{
+    try {
       switch (parts.length) {
         // "#"
         case 0:

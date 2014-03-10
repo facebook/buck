@@ -25,7 +25,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
-import com.facebook.buck.android.SmartDexingStep.InputResolver;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -34,14 +33,9 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
@@ -58,60 +52,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class SmartDexingStepTest extends EasyMockSupport {
   @Rule
   public TemporaryFolder tmpDir = new TemporaryFolder();
-
-  /**
-   * This test makes sure the input processing builds the correct pair of output filenames and
-   * input arguments that are ultimately passed to dx.
-   */
-  @Test
-  public void testInputResolverWithMultipleOutputs() throws IOException {
-    File primaryOutDir = tmpDir.newFolder("primary-out");
-      File primaryOut = new File(primaryOutDir, "primary.jar");
-    Set<Path> primaryIn = ImmutableSet.of(
-        Paths.get("input/a.jar"), Paths.get("input/b.jar"), Paths.get("input/c.jar"));
-    File secondaryOutDir = tmpDir.newFolder("secondary-out");
-    File secondaryInDir = tmpDir.newFolder("secondary-in");
-    File secondaryInFile = new File(secondaryInDir, "2.jar");
-    Files.write(new byte[]{0}, secondaryInFile);
-
-    Multimap<Path, Path> secondaryOutputToInputFiles =
-        ImmutableListMultimap.of(
-            Paths.get(new File(secondaryOutDir, "2.dex.jar").getPath()),
-            Paths.get(secondaryInFile.getPath()));
-    InputResolver resolver = new InputResolver(
-        Paths.get("primary-out/primary.jar"),
-        Suppliers.ofInstance(primaryIn),
-        Optional.of(Paths.get("secondary-out")),
-        Optional.of(Suppliers.ofInstance(secondaryOutputToInputFiles)));
-    assertTrue("Expected secondary output", resolver.hasSecondaryOutput());
-    final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
-    Multimap<File, File> outputToInputs = resolver.createOutputToInputs(projectFilesystem);
-    assertEquals("Expected 2 output artifacts", 2, outputToInputs.keySet().size());
-
-    MoreAsserts.assertIterablesEquals(
-        "Detected inconsistency with primary input arguments",
-        Iterables.transform(primaryIn, new Function<Path, File>() {
-          @Override
-          public File apply(Path input) {
-            return projectFilesystem.getFileForRelativePath(input);
-          }
-        }),
-        outputToInputs.get(primaryOut));
-
-    // Make sure that secondary-out/2.dex.jar came from secondary-in/2.jar.
-    File secondaryOutFile = new File(secondaryOutDir, "2.dex.jar");
-    MoreAsserts.assertIterablesEquals(
-        "Detected inconsistency with secondary output arguments",
-        ImmutableSet.of(secondaryInFile),
-        outputToInputs.get(secondaryOutFile));
-  }
 
   /**
    * Tests whether pseudo rule cache detection is working properly.
@@ -135,7 +81,10 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputHashFile = new File(tmpDir.getRoot(), "out.dex.hash").toPath();
     Files.write("dummy", outputHashFile.toFile(), Charsets.UTF_8);
 
-    DxPseudoRule rule = new DxPseudoRule(context,
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+
+    DxPseudoRule rule = new DxPseudoRule(
+        filesystem,
         ImmutableSet.of(testIn.toPath()),
         outputFile.toPath(),
         outputHashFile,

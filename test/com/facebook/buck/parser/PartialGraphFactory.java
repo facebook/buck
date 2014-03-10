@@ -24,6 +24,8 @@ import java.util.List;
 
 public class PartialGraphFactory {
 
+  private PartialGraphFactory() {}
+
   /**
    * Creates a PartialGraph via dependency injection.
    * <p>

@@ -21,13 +21,11 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
-import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
 import com.facebook.buck.util.Filters.Density;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -40,10 +38,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -88,7 +89,6 @@ public class FilterResourcesStep implements Step {
    * @param whitelistedStringDirs set of directories containing string resource files that must not
    *     be filtered out.
    * @param filteredDirectoryCopier refer {@link FilteredDirectoryCopier}
-   *
    * @param targetDensities densities we're interested in keeping (e.g. {@code mdpi}, {@code hdpi}
    *     etc.) Only applicable if filterDrawables is true
    * @param drawableFinder refer {@link DrawableFinder}. Only applicable if filterDrawables is true.
@@ -144,42 +144,44 @@ public class FilterResourcesStep implements Step {
   }
 
   private int doExecute(ExecutionContext context) throws IOException {
-    List<Predicate<File>> filePredicates = Lists.newArrayList();
+    List<Predicate<Path>> pathPredicates = Lists.newArrayList();
 
     final boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
 
     if (filterDrawables) {
-      Set<Path> drawables = drawableFinder.findDrawables(inResDirToOutResDirMap.keySet());
-      filePredicates.add(
+      Set<Path> drawables = drawableFinder.findDrawables(
+          inResDirToOutResDirMap.keySet(),
+          context.getProjectFilesystem());
+      pathPredicates.add(
           Filters.createImageDensityFilter(drawables, targetDensities, canDownscale));
     }
 
     if (filterStrings) {
-      final ProjectFilesystem filesystem = context.getProjectFilesystem();
-      filePredicates.add(new Predicate<File>() {
-        @Override
-        public boolean apply(File input) {
-          // TODO(user): Change the predicate to accept a relative Path instead of File.
-          String inputPath = input.getAbsolutePath();
-          Path pathRelativeToProjectRoot = filesystem.getRootPath().toAbsolutePath().normalize()
-              .relativize(Paths.get(inputPath));
-
-          if (!NON_ENGLISH_STRING_PATH.matcher(pathRelativeToProjectRoot.toString()).matches()) {
-            return true;
-          }
-          for (Path whitelistedStringDir : whitelistedStringDirs) {
-            if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
-              return true;
+      pathPredicates.add(
+          new Predicate<Path>() {
+            @Override
+            public boolean apply(Path pathRelativeToProjectRoot) {
+              if (!NON_ENGLISH_STRING_PATH.matcher(pathRelativeToProjectRoot.toString())
+                  .matches()) {
+                return true;
+              }
+              for (Path whitelistedStringDir : whitelistedStringDirs) {
+                if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
+                  return true;
+                }
+              }
+              nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
+              return false;
             }
           }
-          nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
-          return false;
-        }
-      });
+      );
     }
 
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
-    filteredDirectoryCopier.copyDirs(inResDirToOutResDirMap, Predicates.and(filePredicates));
+    filteredDirectoryCopier.copyDirs(
+        context.getProjectFilesystem(),
+        inResDirToOutResDirMap,
+        Predicates.and(pathPredicates));
 
     // If an ImageScaler was specified, but only if it is available, try to apply it.
     if (canDownscale && filterDrawables) {
@@ -211,15 +213,16 @@ public class FilterResourcesStep implements Step {
     Filters.Density targetDensity = Filters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
-    for (Path drawable : drawableFinder.findDrawables(inResDirToOutResDirMap.values())) {
-      File drawableFile = filesystem.getFileForRelativePath(drawable);
-
+    Collection<Path> drawables = drawableFinder.findDrawables(
+        inResDirToOutResDirMap.values(),
+        context.getProjectFilesystem());
+    for (Path drawable : drawables) {
       if (drawable.toString().endsWith(".9.png")) {
         // Skip nine-patch for now.
         continue;
       }
 
-      Filters.Qualifiers qualifiers = new Filters.Qualifiers(drawableFile);
+      Filters.Qualifiers qualifiers = new Filters.Qualifiers(drawable);
       Filters.Density density = qualifiers.density;
 
       // If the image has a qualifier but it's not the right one.
@@ -248,7 +251,7 @@ public class FilterResourcesStep implements Step {
         }
 
         // Delete newly-empty directories to prevent missing resources errors in apkbuilder.
-        Path parent = drawableFile.toPath().getParent();
+        Path parent = drawable.getParent();
         if (filesystem.listFiles(parent).length == 0 && !filesystem.deleteFileAtPath(parent)) {
           throw new HumanReadableException("Cannot delete directory: " + parent);
         }
@@ -258,7 +261,8 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface DrawableFinder {
-    public Set<Path> findDrawables(Iterable<Path> dirs) throws IOException;
+    public Set<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
+        throws IOException;
   }
 
   public static class DefaultDrawableFinder implements DrawableFinder {
@@ -270,19 +274,21 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public Set<Path> findDrawables(Iterable<Path> dirs) throws IOException {
+    public Set<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
+        throws IOException {
       final ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
       for (Path dir : dirs) {
-        new DirectoryTraversal(dir.toFile()) {
-          @Override
-          public void visit(File file, String relativePath) {
-            if (DRAWABLE_PATH_PATTERN.matcher(relativePath).matches() &&
-                !DRAWABLE_EXCLUDE_PATTERN.matcher(relativePath).matches()) {
-              // The path is normalized so that the value can be matched against patterns.
-              drawableBuilder.add(MorePaths.newPathInstance(file));
-            }
-          }
-        }.traverse();
+        filesystem.walkRelativeFileTree(dir, new SimpleFileVisitor<Path>() {
+              @Override
+              public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
+                if (DRAWABLE_PATH_PATTERN.matcher(path.toString()).matches() &&
+                    !DRAWABLE_EXCLUDE_PATTERN.matcher(path.toString()).matches()) {
+                  // The path is normalized so that the value can be matched against patterns.
+                  drawableBuilder.add(path);
+                }
+                return FileVisitResult.CONTINUE;
+              }
+            });
       }
       return drawableBuilder.build();
     }

@@ -42,6 +42,7 @@ public class Pair<FIRST, SECOND> {
     return second;
   }
 
+  @Override
   public boolean equals(Object other) {
     if (!(other instanceof Pair)) {
       return false;
@@ -52,6 +53,7 @@ public class Pair<FIRST, SECOND> {
         && Objects.equals(this.second, that.second);
   }
 
+  @Override
   public int hashCode() {
     return Objects.hash(first, second);
   }

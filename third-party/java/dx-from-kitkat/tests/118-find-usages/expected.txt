@@ -1,0 +1,9 @@
+StreamTokenizer.nval
+LFoo;.readStreamTokenizerNval: field reference (iget-wide)
+LFoo;.writeStreamTokenizerNval: field reference (iput-wide)
+ArrayList.remove()
+LFoo;.callArrayListRemoveIndex: method reference (invoke-virtual)
+LFoo;.callArrayListRemoveValue: method reference (invoke-virtual)
+Collection.remove()
+String.valueOf()
+LFoo;.callStringValueOf: method reference (invoke-static)

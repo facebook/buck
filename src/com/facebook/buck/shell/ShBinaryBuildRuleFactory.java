@@ -16,10 +16,10 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.AbstractBuildRuleFactory;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.AbstractBuildRuleFactory;
+import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.shell.ShBinaryRule.Builder;
 
 import java.nio.file.Path;

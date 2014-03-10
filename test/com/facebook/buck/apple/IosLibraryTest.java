@@ -16,15 +16,13 @@
 
 package com.facebook.buck.apple;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeBuildRuleParams;
 import com.facebook.buck.rules.FileSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,9 +38,8 @@ public class IosLibraryTest {
   @Test
   public void getInputsToCompareToOutput() {
     IosLibraryDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.srcs = ImmutableList.of(
-        Either.<SourcePath, Pair<SourcePath, String>>ofLeft(new FileSourcePath("some_source")));
-    arg.headers = ImmutableSortedSet.<SourcePath>of(new FileSourcePath("some_header"));
+    arg.srcs = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("some_source")));
+    arg.headers = ImmutableList.of(AppleSource.ofSourcePath(new FileSourcePath("some_header")));
     arg.configs = ImmutableMap.of();
     arg.frameworks = ImmutableSortedSet.of();
 

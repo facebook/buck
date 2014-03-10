@@ -96,6 +96,7 @@ java_test(
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/test:test',
+    '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

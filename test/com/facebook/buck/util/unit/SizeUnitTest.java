@@ -74,7 +74,7 @@ public class SizeUnitTest {
     assertEquals(2048L, SizeUnit.MEGABYTES.toKilobytes(2L));
     assertEquals(42L, SizeUnit.MEGABYTES.toMegabytes(42L));
     assertEquals(0L, SizeUnit.MEGABYTES.toGigabytes(4L));
-    assertEquals(10L, SizeUnit.MEGABYTES.toGigabytes(10L* 1024L));
+    assertEquals(10L, SizeUnit.MEGABYTES.toGigabytes(10L * 1024L));
     assertEquals(10L, SizeUnit.MEGABYTES.toTerabytes(10L * 1024L * 1024L));
   }
 

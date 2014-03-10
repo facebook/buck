@@ -89,7 +89,14 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
-    getBuckEventBus().post(BuildEvent.started(buildTargets));
+    // Post the build started event, setting it to the Parser recorded start time if appropriate.
+    if (getParser().getParseStartTime().isPresent()) {
+      getBuckEventBus().post(
+          BuildEvent.started(buildTargets),
+          getParser().getParseStartTime().get());
+    } else {
+      getBuckEventBus().post(BuildEvent.started(buildTargets));
+    }
 
     // Parse the build files to create a DependencyGraph.
     DependencyGraph dependencyGraph;
@@ -123,7 +130,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       build.getStepRunner().getListeningExecutorService().shutdown();
     }
 
-    getBuckEventBus().post(BuildEvent.finished(buildTargets,exitCode));
+    getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
 
     if (exitCode != 0) {
       return exitCode;

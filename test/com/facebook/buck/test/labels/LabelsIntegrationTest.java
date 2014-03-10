@@ -48,7 +48,7 @@ public class LabelsIntegrationTest {
 
   @Test
   public void shouldFailWithExplicitTargetsThatReferToFailingTests() throws IOException {
-    assertTestsFail("test","//test:geometry", "//test:orientation");
+    assertTestsFail("test", "//test:geometry", "//test:orientation");
   }
 
   @Test
@@ -78,7 +78,7 @@ public class LabelsIntegrationTest {
     //
     // NB: A bug in the way args are parsed means that even though "testy light" is a single arg
     // here, it is split into multiple labels in by TestCommandOptions.
-    assertTestsFail("test", "--all", "--include", "testy lighty");
+    assertTestsFail("test", "--all", "--include", "testy", "lighty");
 
     // ...but "testy AND lighty" only matches the passing test.
     assertTestsPass("test", "--all", "--include", "testy+lighty");
@@ -86,14 +86,14 @@ public class LabelsIntegrationTest {
 
   private void assertTestsFail(String... args) throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
-    result.assertExitCode(1);
+    result.assertTestFailure();
     assertThat(result.getStderr(), containsString("Earth should be flat!"));
     assertThat(result.getStderr(), containsString("TESTS FAILED: 1 Failures"));
   }
 
   private void assertTestsPass(String... args) throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
-    result.assertExitCode(0);
+    result.assertSuccess();
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
   }
 

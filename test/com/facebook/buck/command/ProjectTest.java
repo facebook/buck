@@ -39,8 +39,10 @@ import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.FakeAbstractBuildRuleBuilderParams;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.JavaPackageFinder;
 import com.facebook.buck.rules.ProjectConfigRule;
@@ -54,6 +56,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.easymock.EasyMock;
@@ -842,5 +846,31 @@ public class ProjectTest {
           "depends on it.",
           e.getHumanReadableErrorMessage().replace("\\", "/"));
     }
+  }
+
+  @Test
+  public void testDoNotIgnoreAllOfBuckOut() {
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    ImmutableSet<Path> ignorePaths = ImmutableSet.of(Paths.get("buck-out"), Paths.get(".git"));
+    EasyMock.expect(projectFilesystem.getIgnorePaths()).andReturn(ignorePaths);
+    EasyMock.replay(projectFilesystem);
+
+    BuildTarget buildTarget = new BuildTarget("//", "base");
+    BuildRule buildRule = new FakeBuildRule(BuildRuleType.JAVA_LIBRARY, buildTarget);
+    Module module = new Module(buildRule, buildTarget);
+
+    Project.addRootExcludes(module, buildRule, projectFilesystem);
+
+    ImmutableSortedSet<SourceFolder> expectedExcludeFolders =
+        ImmutableSortedSet.orderedBy(Module.ALPHABETIZER)
+        .add(new SourceFolder("file://$MODULE_DIR$/.git", /* isTestSource */ false))
+        .add(new SourceFolder("file://$MODULE_DIR$/buck-out/bin", /* isTestSource */ false))
+        .add(new SourceFolder("file://$MODULE_DIR$/buck-out/log", /* isTestSource */ false))
+        .build();
+    assertEquals("Specific subfolders of buck-out should be excluded rather than all of buck-out.",
+        expectedExcludeFolders,
+        module.excludeFolders);
+
+    EasyMock.verify(projectFilesystem);
   }
 }

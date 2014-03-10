@@ -24,8 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.util.Set;
 import java.nio.file.Path;
+import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
 
@@ -84,7 +84,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
       args.add("emma", "report");
 
-      // Add output directory property so code coverage data lands in the specified output directory.
+      // Add output directory property so code coverage data lands in the specified output
+      // directory.
       args.add(String.format("-D%s=%s", REPORT_OUTPUT_DIR, outputDirectory));
 
       for (String reportFormat : CODE_COVERAGE_OUTPUT_FORMAT) {

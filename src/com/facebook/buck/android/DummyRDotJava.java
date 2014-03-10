@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.AbiRule.ABI_KEY_ON_DISK_METADATA;
-
 import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -37,6 +35,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -59,12 +58,16 @@ import javax.annotation.Nullable;
  * generate a corresponding {@code R.class} file. These are called "dummy" {@code R.java} files
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
-public class DummyRDotJava extends AbstractBuildable implements InitializableFromDisk<Sha1HashCode> {
+public class DummyRDotJava extends AbstractBuildable
+    implements InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final BuildTarget buildTarget;
 
-  private Sha1HashCode buildOutput;
+  @VisibleForTesting
+  static final String METADATA_KEY_FOR_ABI_KEY = "DUMMY_R_DOT_JAVA_ABI_KEY";
+
+  private BuildOutput buildOutput;
 
   public DummyRDotJava(
       ImmutableList<HasAndroidResourceDeps> androidResourceDeps,
@@ -134,13 +137,17 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
         Sha1HashCode abiKey = javacInMemoryStep.getAbiKey();
         Preconditions.checkNotNull(abiKey,
             "Javac step must create a non-null ABI key for this rule.");
-        buildableContext.addMetadata(ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
+        buildableContext.addMetadata(METADATA_KEY_FOR_ABI_KEY, abiKey.getHash());
         return 0;
       }
     });
 
     buildableContext.recordArtifactsInDirectory(rDotJavaClassesFolder);
     return steps.build();
+  }
+
+  public Sha1HashCode getAbiKeyForDeps() throws IOException {
+    return HasAndroidResourceDeps.HASHER.apply(androidResourceDeps);
   }
 
   @Override
@@ -179,18 +186,18 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
   }
 
   @Override
-  public Sha1HashCode initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Optional<Sha1HashCode> abiKey = onDiskBuildInfo.getHash(ABI_KEY_ON_DISK_METADATA);
+  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    Optional<Sha1HashCode> abiKey = onDiskBuildInfo.getHash(METADATA_KEY_FOR_ABI_KEY);
     if (!abiKey.isPresent()) {
       throw new IllegalStateException(String.format(
           "Should not be initializing %s from disk if ABI key is not written",
           this));
     }
-    return abiKey.get();
+    return new BuildOutput(abiKey.get());
   }
 
   @Override
-  public void setBuildOutput(Sha1HashCode buildOutput) throws IllegalStateException {
+  public void setBuildOutput(BuildOutput buildOutput) throws IllegalStateException {
     Preconditions.checkState(this.buildOutput == null,
         "buildOutput should not already be set for %s",
         this);
@@ -198,8 +205,21 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
   }
 
   @Override
-  public Sha1HashCode getBuildOutput() throws IllegalStateException {
+  public BuildOutput getBuildOutput() throws IllegalStateException {
     return Preconditions.checkNotNull(buildOutput, "buildOutput must already be set for %s", this);
+  }
+
+  public Sha1HashCode getRDotTxtSha1() {
+    return getBuildOutput().rDotTxtSha1;
+  }
+
+  public static class BuildOutput {
+    @VisibleForTesting
+    final Sha1HashCode rDotTxtSha1;
+
+    public BuildOutput(Sha1HashCode rDotTxtSha1) {
+      this.rDotTxtSha1 = Preconditions.checkNotNull(rDotTxtSha1);
+    }
   }
 
   public static class Builder extends AbstractBuildRuleBuilder<DummyRDotJavaAbiRule> {
@@ -223,7 +243,8 @@ public class DummyRDotJava extends AbstractBuildable implements InitializableFro
       return this;
     }
 
-    public Builder setAndroidResourceDeps(ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
+    public Builder setAndroidResourceDeps(
+        ImmutableList<HasAndroidResourceDeps> androidResourceDeps) {
       this.androidResourceDeps = Preconditions.checkNotNull(androidResourceDeps);
       for (HasAndroidResourceDeps dep : androidResourceDeps) {
         addDep(dep.getBuildTarget());

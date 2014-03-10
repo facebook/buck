@@ -64,7 +64,7 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
     implements JavaLibraryRule, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibraryRule.Data> {
 
-  private final static BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private final Path binaryJar;
   private final Optional<Path> sourceJar;
@@ -182,7 +182,8 @@ public class PrebuiltJarRule extends DoNotUseAbstractBuildable
 
   @Override
   public ImmutableSetMultimap<JavaLibraryRule, String> getOutputClasspathEntries() {
-    return ImmutableSetMultimap.<JavaLibraryRule, String>builder().put(this, getBinaryJar().toString()).build();
+    return ImmutableSetMultimap.<JavaLibraryRule, String>builder()
+        .put(this, getBinaryJar().toString()).build();
   }
 
   @Override

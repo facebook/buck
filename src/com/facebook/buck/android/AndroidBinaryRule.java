@@ -20,8 +20,8 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.android.common.SdkConstants;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import com.facebook.buck.android.UberRDotJava.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibraryRule;
@@ -111,7 +111,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private static final long FROYO_DEFLATE_LIMIT_BYTES = 1 << 20;
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
-  static EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
+  static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
       DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
       DxStep.Option.NO_OPTIMIZE);
 
@@ -155,17 +155,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
   private final ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex;
   private DexSplitMode dexSplitMode;
   private final boolean useAndroidProguardConfigWithOptimizations;
+  private final Optional<Integer> optimizationPasses;
   private final Optional<SourcePath> proguardConfig;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final Path primaryDexPath;
+  private final ResourcesFilter resourcesFilter;
   private final UberRDotJava uberRDotJava;
-  private final AaptPackageResources aaptPackageResourcesBuildable;
+  private final AaptPackageResources aaptPackageResources;
   private final Optional<PreDexMerge> preDexMerge;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Optional<String> preprocessJavaClassesBash;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
-  private final AndroidTransitiveDependencyGraph transitiveDependencyGraph;
 
   /**
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
@@ -182,17 +183,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<BuildRule> buildRulesToExcludeFromDex,
       DexSplitMode dexSplitMode,
       boolean useAndroidProguardConfigWithOptimizations,
+      Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       ResourceCompressionMode resourceCompressionMode,
       Set<TargetCpuType> cpuFilters,
       Path primaryDexPath,
+      ResourcesFilter resourcesFilter,
       UberRDotJava uberRDotJava,
-      AaptPackageResources aaptPackageResourcesBuildable,
+      AaptPackageResources aaptPackageResources,
       Optional<PreDexMerge> preDexMerge,
       Set<BuildRule> preprocessJavaClassesDeps,
       Optional<String> preprocessJavaClassesBash,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      AndroidTransitiveDependencyGraph transitiveDependencyGraph) {
+      AndroidResourceDepsFinder androidResourceDepsFinder) {
     super(buildRuleParams);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.target = Preconditions.checkNotNull(target);
@@ -202,17 +204,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     this.buildRulesToExcludeFromDex = ImmutableSortedSet.copyOf(buildRulesToExcludeFromDex);
     this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
     this.useAndroidProguardConfigWithOptimizations = useAndroidProguardConfigWithOptimizations;
+    this.optimizationPasses = Preconditions.checkNotNull(proguardOptimizationPasses);
     this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
     this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
+    this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
-    this.aaptPackageResourcesBuildable = Preconditions.checkNotNull(aaptPackageResourcesBuildable);
+    this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageResources);
     this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.preprocessJavaClassesBash = Preconditions.checkNotNull(preprocessJavaClassesBash);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
-    this.transitiveDependencyGraph = Preconditions.checkNotNull(transitiveDependencyGraph);
   }
 
   @Override
@@ -239,6 +242,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         .set("packageType", packageType.toString())
         .set("buildRulesToExcludeFromDex", buildRulesToExcludeFromDex)
         .set("useAndroidProguardConfigWithOptimizations", useAndroidProguardConfigWithOptimizations)
+        .set("optimizationPasses", optimizationPasses.toString())
         .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
         .set("preprocessJavaClassesBash", preprocessJavaClassesBash)
@@ -248,10 +252,6 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   public ImmutableSortedSet<BuildRule> getBuildRulesToExcludeFromDex() {
     return buildRulesToExcludeFromDex;
-  }
-
-  public AndroidTransitiveDependencyGraph getTransitiveDependencyGraph() {
-    return transitiveDependencyGraph;
   }
 
   public Optional<SourcePath> getProguardConfig() {
@@ -274,6 +274,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     return this.cpuFilters;
   }
 
+  @VisibleForTesting
+  ResourcesFilter getResourcesFilter() {
+    return resourcesFilter;
+  }
+
   public UberRDotJava getUberRDotJava() {
     return uberRDotJava;
   }
@@ -284,6 +289,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
   public Optional<String> getPreprocessJavaClassesBash() {
     return preprocessJavaClassesBash;
+  }
+
+  public Optional<Integer> getOptimizationPasses() {
+    return optimizationPasses;
   }
 
   /**
@@ -335,7 +344,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         steps.add(new Step() {
           @Override
           public int execute(ExecutionContext context) {
-            if (!context.getProjectFilesystem().exists(libSourceDir.toString())) {
+            if (!context.getProjectFilesystem().exists(libSourceDir)) {
               return 0;
             }
             if (mkDirStep.execute(context) == 0 && copyStep.execute(context) == 0) {
@@ -412,11 +421,12 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         context,
         transitiveDependencies,
         dexTransitiveDependencies,
-        uberRDotJava.getResDirectories(),
+        resourcesFilter.getResDirectories(),
+        buildableContext,
         steps);
 
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
-        aaptPackageResourcesBuildable.getResourceApkPath(),
+        aaptPackageResources.getResourceApkPath(),
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
         /* javaResourcesDirectories */ ImmutableSet.<String>of(),
@@ -463,7 +473,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       BuildContext context,
       final AndroidTransitiveDependencies transitiveDependencies,
       final AndroidDexTransitiveDependencies dexTransitiveDependencies,
-      ImmutableSet<String> resDirectories,
+      ImmutableSet<Path> resDirectories,
+      BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
     // Execute preprocess_java_classes_binary, if appropriate.
     ImmutableSet<Path> classpathEntriesToDex;
@@ -521,7 +532,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           classpathEntriesToDex,
           transitiveDependencies.proguardConfigs,
           steps,
-          resDirectories);
+          resDirectories,
+          buildableContext);
     }
 
     // Create the final DEX (or set of DEX files in the case of split dex).
@@ -637,7 +649,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     Preconditions.checkArgument(!classpathEntry.isAbsolute(),
         "Classpath entries should be relative rather than absolute paths: %s",
         classpathEntry);
-    String obfuscatedName = Files.getNameWithoutExtension(classpathEntry.toString()) + "-obfuscated.jar";
+    String obfuscatedName =
+        Files.getNameWithoutExtension(classpathEntry.toString()) + "-obfuscated.jar";
     Path dirName = classpathEntry.getParent();
     Path outputJar = getPathForProGuardDirectory().resolve(dirName).resolve(obfuscatedName);
     return outputJar;
@@ -652,7 +665,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
       ImmutableList.Builder<Step> steps,
-      Set<String> resDirectories) {
+      Set<Path> resDirectories,
+      BuildableContext buildableContext) {
     final ImmutableSetMultimap<JavaLibraryRule, String> classpathEntriesMap =
         getTransitiveClasspathEntries();
     ImmutableSet.Builder<String> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
@@ -671,7 +685,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     // Generate a file of ProGuard config options using aapt.
     Path generatedProGuardConfig = proguardDirectory.resolve("proguard.txt");
     GenProGuardConfigStep genProGuardConfig = new GenProGuardConfigStep(
-        aaptPackageResourcesBuildable.getAndroidManifestXml(),
+        aaptPackageResources.getAndroidManifestXml(),
         resDirectories,
         generatedProGuardConfig);
     steps.add(genProGuardConfig);
@@ -696,14 +710,16 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
         });
 
     // Run ProGuard on the classpath entries.
-    // TODO: ProGuardObfuscateStep's final argument should be a Path
+    // TODO(user): ProGuardObfuscateStep's final argument should be a Path
     Step obfuscateCommand = ProGuardObfuscateStep.create(
         generatedProGuardConfig,
         proguardConfigsBuilder.build(),
         useAndroidProguardConfigWithOptimizations,
+        optimizationPasses,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
-        proguardDirectory);
+        proguardDirectory,
+        buildableContext);
     steps.add(obfuscateCommand);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
@@ -720,7 +736,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
    *     their way into the final APK structure (but not necessarily into the
    *     primary dex).
    * @param secondaryDexDirectories The contract for updating this builder must match that
-   *     of {@link #mergePreDexedArtifactsIntoMultipleDexFiles}.
+   *     of {@link PreDexMerge#getSecondaryDexDirectories()}.
    * @param steps List of steps to add to.
    * @param primaryDexPath Output path for the primary dex file.
    */
@@ -739,7 +755,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       Optional<Path> proguardFullConfigFile = Optional.absent();
       Optional<Path> proguardMappingFile = Optional.absent();
       if (packageType.isBuildWithObfuscation()) {
-        proguardFullConfigFile = Optional.of(getPathForProGuardDirectory().resolve("configuration.txt"));
+        proguardFullConfigFile =
+            Optional.of(getPathForProGuardDirectory().resolve("configuration.txt"));
         proguardMappingFile = Optional.of(getPathForProGuardDirectory().resolve("mapping.txt"));
       }
 
@@ -900,8 +917,10 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
     private boolean disablePreDex = false;
     private DexSplitMode dexSplitMode = DexSplitMode.NO_SPLIT;
     private boolean useAndroidProguardConfigWithOptimizations = false;
+    private Optional<Integer> optimizationPasses = Optional.absent();
     private Optional<SourcePath> proguardConfig = Optional.absent();
     private ResourceCompressionMode resourceCompressionMode = ResourceCompressionMode.DISABLED;
+    private boolean buildStringSourceMap = false;
     private FilterResourcesStep.ResourceFilter resourceFilter = ResourceFilter.EMPTY_FILTER;
     private ImmutableSet.Builder<TargetCpuType> cpuFilters = ImmutableSet.builder();
     private ImmutableSet.Builder<BuildTarget> preprocessJavaClassesDeps = ImmutableSet.builder();
@@ -965,7 +984,8 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
               manifest,
               packageType,
               cpuFilters.build(),
-              shouldPreDex);
+              shouldPreDex,
+              this.buildStringSourceMap);
 
       Path primaryDexPath = BuildTargets.getBinPath(getBuildTarget(), ".dex/%s/classes.dex");
       AndroidBinaryGraphEnhancer.DexEnhancementResult dexEnhancementResult;
@@ -993,17 +1013,18 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
           buildRulesToExcludeFromDex,
           dexSplitMode,
           useAndroidProguardConfigWithOptimizations,
+          optimizationPasses,
           proguardConfig,
           resourceCompressionMode,
           cpuFilters.build(),
           primaryDexPath,
+          aaptEnhancementResult.getResourcesFilter(),
           aaptEnhancementResult.getUberRDotJava(),
           aaptEnhancementResult.getAaptPackageResources(),
           dexEnhancementResult.getPreDexMerge(),
           getBuildTargetsAsBuildRules(ruleResolver, preprocessJavaClassesDeps.build()),
           preprocessJavaClassesBash,
-          androidResourceDepsFinder,
-          androidTransitiveDependencyGraph);
+          androidResourceDepsFinder);
     }
 
     @Override
@@ -1076,6 +1097,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
       return this;
     }
 
+    public Builder setOptimizationPasses(Optional<Integer> optimizationPasses) {
+      this.optimizationPasses = optimizationPasses;
+      return this;
+    }
+
     public Builder setProguardConfig(Optional<SourcePath> proguardConfig) {
       this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
       return this;
@@ -1097,6 +1123,11 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
             buildTarget.getFullyQualifiedName(),
             resourceCompressionMode));
       }
+      return this;
+    }
+
+    public Builder setBuildStringSourceMap(boolean buildStringSourceMap) {
+      this.buildStringSourceMap = buildStringSourceMap;
       return this;
     }
 

@@ -104,6 +104,7 @@ class TypeSummary implements Renderable {
         builder.append("interface ");
         break;
 
+      // $CASES-OMITTED$
       default:
         throw new RuntimeException("Unhandled kind: " + kind);
     }

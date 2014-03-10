@@ -26,12 +26,15 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 
-import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 public class Filters {
+
+  /** Utility class: do not instantiate. */
+  private Filters() {}
 
   public enum Density {
     LDPI("ldpi", 120.0),
@@ -84,12 +87,12 @@ public class Filters {
 
     /**
      * Splits off the density qualifier from a drawable.
-     * @param file path to a drawable
+     * @param path path to a drawable
      */
-    public Qualifiers(File file) {
+    public Qualifiers(Path path) {
       Filters.Density density = Density.NO_QUALIFIER;
       StringBuilder othersBuilder = new StringBuilder();
-      for (String qualifier : file.getParentFile().getName().split("-")) {
+      for (String qualifier : path.getParent().getFileName().toString().split("-")) {
         if (qualifier.equals("drawable")) { // We're assuming they're all drawables.
           continue;
         }
@@ -120,11 +123,11 @@ public class Filters {
    * @return set of files to remove
    */
   @VisibleForTesting
-  static Set<File> filterByDensity(
-      Iterable<Path> candidates,
+  static Set<Path> filterByDensity(
+      Collection<Path> candidates,
       Set<Filters.Density> targetDensities,
       boolean canDownscale) {
-    ImmutableSet.Builder<File> removals = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> removals = ImmutableSet.builder();
 
     Table<String, Density, Path> imageValues = HashBasedTable.create();
 
@@ -136,13 +139,11 @@ public class Filters {
     // key: res/some.png/    |  res/drawable-mdpi/some.png          res/drawable-hdpi/some.png
     // key: res/some.png/fr  |  res/drawable-fr-hdpi/some.png
     for (Path candidate : candidates) {
-      File f = candidate.toFile();
+      Qualifiers qualifiers = new Qualifiers(candidate);
 
-      Qualifiers qualifiers = new Qualifiers(f);
-
-      String filename = f.getName();
+      String filename = candidate.getFileName().toString();
       Density density = qualifiers.density;
-      String resDirectory = f.getParentFile().getParent();
+      String resDirectory = candidate.getParent().getParent().toString();
       String key = String.format("%s/%s/%s", resDirectory, filename, qualifiers.others);
       imageValues.put(key, density, candidate);
     }
@@ -153,7 +154,7 @@ public class Filters {
 
       // This is to make sure we preserve the existing structure of drawable/ files.
       Set<Density> targets = targetDensities;
-      if (available.contains(Density.NO_QUALIFIER) && !available.contains(Density.MDPI) ) {
+      if (available.contains(Density.NO_QUALIFIER) && !available.contains(Density.MDPI)) {
         targets = Sets.newHashSet(Iterables.transform(targetDensities,
             new Function<Density, Density>() {
               @Override
@@ -189,7 +190,7 @@ public class Filters {
 
       // Mark remaining densities for removal.
       for (Density density : Sets.difference(available, toKeep)) {
-        removals.add(options.get(density).toFile().getAbsoluteFile());
+        removals.add(options.get(density));
       }
     }
 
@@ -205,14 +206,15 @@ public class Filters {
    * @param canDownscale if no exact match is available, retain the highest quality
    * @return a predicate as above
    */
-  public static Predicate<File> createImageDensityFilter(Iterable<Path> candidates,
-                                                         Set<Filters.Density> targetDensities,
-                                                         boolean canDownscale) {
-    final Set<File> filesToRemove = filterByDensity(candidates, targetDensities, canDownscale);
-    return new Predicate<File>() {
+  public static Predicate<Path> createImageDensityFilter(
+      Collection<Path> candidates,
+      Set<Filters.Density> targetDensities,
+      boolean canDownscale) {
+    final Set<Path> pathsToRemove = filterByDensity(candidates, targetDensities, canDownscale);
+    return new Predicate<Path>() {
       @Override
-      public boolean apply(File pathname) {
-        return !filesToRemove.contains(pathname.getAbsoluteFile());
+      public boolean apply(Path path) {
+        return !pathsToRemove.contains(path);
       }
     };
   }

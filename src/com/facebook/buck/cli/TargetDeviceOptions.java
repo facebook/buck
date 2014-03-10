@@ -92,7 +92,8 @@ public class TargetDeviceOptions {
     return useRealDevicesOnlyMode;
   }
 
-  public @Nullable String getSerialNumber() {
+  @Nullable
+  public String getSerialNumber() {
     return serialNumber;
   }
 

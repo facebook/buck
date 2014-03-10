@@ -95,7 +95,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
       @Override
       public void visit(BuildRule rule) {
         for (Path input : rule.getInputs()) {
-          // TODO (t3437464) remove `toString` once Jackson supports serializing Path instances
+          // TODO(user) remove `toString` once Jackson supports serializing Path instances
           targetInputs.put(rule.getFullyQualifiedName(), input.toString());
         }
       }

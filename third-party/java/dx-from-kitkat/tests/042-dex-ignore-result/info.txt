@@ -1,0 +1,5 @@
+This is a smoke test of dex conversion, which ensures that the
+conversion runs without failure, though the contents of the converted
+file are not checked for correctness. This test is of the case of a
+method call to a method which returns a value, where that value is
+ignored.

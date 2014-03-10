@@ -1,0 +1,5 @@
+This is a test case for the phi placement algorthim used in the conversion to SSA form.
+
+This test compares emitted code against a known-good (via eyeballing)
+version, so it is possible for this test to spuriously fail if other
+aspects of conversion end up altering the output in innocuous ways.

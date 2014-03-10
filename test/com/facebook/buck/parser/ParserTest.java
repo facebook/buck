@@ -53,6 +53,7 @@ import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
@@ -159,7 +160,8 @@ public class ParserTest extends EasyMockSupport {
       @Override
       public ProjectBuildFileParser createParser(
           Iterable<String> commonIncludes,
-          EnumSet<ProjectBuildFileParser.Option> parseOptions) {
+          EnumSet<ProjectBuildFileParser.Option> parseOptions,
+          Console console) {
         return mockBuildFileParser;
       }
     };
@@ -446,7 +448,8 @@ public class ParserTest extends EasyMockSupport {
     parser.parseBuildFile(buildFile,
         /* defaultIncludes */ ImmutableList.<String>of(),
         buildFileParserFactory.createParser(/* commonIncludes */ Lists.<String>newArrayList(),
-            EnumSet.noneOf(ProjectBuildFileParser.Option.class)));
+            EnumSet.noneOf(ProjectBuildFileParser.Option.class),
+            new TestConsole()));
   }
 
   @Test
@@ -523,7 +526,8 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_CREATE);
+    WatchEvent<Path> event = createPathEvent(includedByBuildFile,
+        StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -544,7 +548,8 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_MODIFY);
+    WatchEvent<Path> event = createPathEvent(includedByBuildFile,
+        StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -565,7 +570,8 @@ public class ParserTest extends EasyMockSupport {
     parseBuildFile(testBuildFile, parser, buildFileParserFactory);
 
     // Process event.
-    WatchEvent<Path> event = createPathEvent(includedByBuildFile, StandardWatchEventKinds.ENTRY_DELETE);
+    WatchEvent<Path> event = createPathEvent(includedByBuildFile,
+        StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1096,7 +1102,9 @@ public class ParserTest extends EasyMockSupport {
     private final KnownBuildRuleTypes buildRuleTypes;
     public int calls = 0;
 
-    public TestProjectBuildFileParserFactory(ProjectFilesystem projectFilesystem, KnownBuildRuleTypes buildRuleTypes) {
+    public TestProjectBuildFileParserFactory(
+        ProjectFilesystem projectFilesystem,
+        KnownBuildRuleTypes buildRuleTypes) {
       this.projectFilesystem = projectFilesystem;
       this.buildRuleTypes = buildRuleTypes;
     }
@@ -1104,7 +1112,8 @@ public class ParserTest extends EasyMockSupport {
     @Override
     public ProjectBuildFileParser createParser(
         Iterable<String> commonIncludes,
-        EnumSet<ProjectBuildFileParser.Option> parseOptions) {
+        EnumSet<ProjectBuildFileParser.Option> parseOptions,
+        Console console) {
       return new TestProjectBuildFileParser();
     }
 
@@ -1115,7 +1124,8 @@ public class ParserTest extends EasyMockSupport {
             ImmutableList.of("//java/com/facebook/defaultIncludeFile"),
             "python",
             buildRuleTypes.getAllDescriptions(),
-            EnumSet.noneOf(ProjectBuildFileParser.Option.class));
+            EnumSet.noneOf(ProjectBuildFileParser.Option.class),
+            new TestConsole());
       }
 
       @Override

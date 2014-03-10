@@ -88,7 +88,8 @@ class CompilerXml {
       buffer.append("      <file url=\"" + url + "BUCK\" />\n");
 
       if (module.isAndroidModule()) {
-        buffer.append("      <directory url=\"" + url + "gen\" includeSubdirectories=\"true\" />\n");
+        buffer.append("      <directory url=\"" + url +
+            "gen\" includeSubdirectories=\"true\" />\n");
         buffer.append("      <file url=\"" + url + "project.properties\" />\n");
       }
     }

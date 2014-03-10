@@ -1,0 +1,32 @@
+Generated: ./op_anewarray.class
+anewarray: expected failure occurred
+Generated: ./op_arraylength.class
+arraylength: expected failure occurred
+Generated: ./op_athrow.class
+athrow: expected failure occurred
+Generated: ./op_checkcast.class
+checkcast: expected failure occurred
+Generated: ./op_getfield.class
+getfield: expected failure occurred
+Generated: ./op_instanceof.class
+instanceof: expected failure occurred
+Generated: ./op_invokeinterface.class
+invokeinterface: expected failure occurred
+Generated: ./op_invokespecial.class
+invokespecial: expected failure occurred
+Generated: ./op_invokestatic.class
+invokestatic: expected failure occurred
+Generated: ./op_invokevirtual.class
+invokevirtual: expected failure occurred
+Generated: ./op_monitorenter.class
+monitorenter: expected failure occurred
+Generated: ./op_monitorexit.class
+monitorexit: expected failure occurred
+Generated: ./op_multianewarray.class
+multianewarray: expected failure occurred
+Generated: ./op_newarray.class
+newarray: expected failure occurred
+Generated: ./op_putfield.class
+putfield: expected failure occurred
+Generated: ./op_putstatic.class
+putstatic: expected failure occurred

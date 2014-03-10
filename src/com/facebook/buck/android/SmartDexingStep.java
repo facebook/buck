@@ -35,13 +35,14 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -50,13 +51,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -73,14 +73,12 @@ import javax.annotation.Nullable;
  * even the right course of action given that it would require dynamically modifying the DAG.
  */
 public class SmartDexingStep implements Step {
-  private final InputResolver inputResolver;
+  private final Supplier<Multimap<Path, Path>> outputToInputsSupplier;
+  private final Optional<Path> secondaryOutputDir;
   private final Path successDir;
   private final Optional<Integer> numThreads;
   private final EnumSet<DxStep.Option> dxOptions;
   private ListeningExecutorService dxExecutor;
-
-  /** Lazily initialized.  See {@link InputResolver#createOutputToInputs(ProjectFilesystem)}. */
-  private Multimap<File, File> outputToInputs;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -97,17 +95,27 @@ public class SmartDexingStep implements Step {
    *     reasonable default will be selected based on the number of available processors.
    */
   public SmartDexingStep(
-      Path primaryOutputPath,
-      Supplier<Set<Path>> primaryInputsToDex,
+      final Path primaryOutputPath,
+      final Supplier<Set<Path>> primaryInputsToDex,
       Optional<Path> secondaryOutputDir,
-      Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
+      final Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       Path successDir,
       Optional<Integer> numThreads,
       EnumSet<Option> dxOptions) {
-    this.inputResolver = new InputResolver(primaryOutputPath,
-        primaryInputsToDex,
-        secondaryOutputDir,
-        secondaryInputsToDex);
+    this.outputToInputsSupplier = Suppliers.memoize(
+        new Supplier<Multimap<Path, Path>>() {
+          @Override
+          public Multimap<Path, Path> get() {
+            final ImmutableMultimap.Builder<Path, Path> map = ImmutableMultimap.builder();
+            map.putAll(primaryOutputPath, primaryInputsToDex.get());
+            if (secondaryInputsToDex.isPresent()) {
+              map.putAll(secondaryInputsToDex.get().get());
+            }
+            return map.build();
+          }
+        }
+    );
+    this.secondaryOutputDir = Preconditions.checkNotNull(secondaryOutputDir);
     this.successDir = Preconditions.checkNotNull(successDir);
     this.numThreads = Preconditions.checkNotNull(numThreads);
     this.dxOptions = Preconditions.checkNotNull(dxOptions);
@@ -123,8 +131,8 @@ public class SmartDexingStep implements Step {
       numThreadsValue = determineOptimalThreadCount();
     }
     return listeningDecorator(newMultiThreadExecutor(
-        SmartDexingStep.class.getSimpleName(),
-        numThreadsValue));
+            SmartDexingStep.class.getSimpleName(),
+            numThreadsValue));
   }
 
   private ListeningExecutorService getDxExecutor() {
@@ -138,43 +146,33 @@ public class SmartDexingStep implements Step {
     return (int)(1.25 * Runtime.getRuntime().availableProcessors());
   }
 
-  private final Multimap<File, File> getOutputToInputsMultimap(
-      ProjectFilesystem projectFilesystem) {
-    if (outputToInputs == null) {
-      outputToInputs = inputResolver.createOutputToInputs(projectFilesystem);
-    }
-    return outputToInputs;
-  }
-
   @Override
   public int execute(ExecutionContext context) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     try {
-      Multimap<File, File> outputToInputs = getOutputToInputsMultimap(projectFilesystem);
+      Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
       runDxCommands(context, outputToInputs);
-      if (inputResolver.hasSecondaryOutput()) {
+      if (secondaryOutputDir.isPresent()) {
         removeExtraneousSecondaryArtifacts(
-            inputResolver.getSecondaryOutputDir(projectFilesystem),
+            secondaryOutputDir.get(),
             outputToInputs.keySet(),
             projectFilesystem);
       }
-      return 0;
-    } catch (StepFailedException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
+    } catch (StepFailedException | IOException e) {
+      context.logError(e, "There was an error in smart dexing step.");
       return 1;
     }
+
+    return 0;
   }
 
-  private void runDxCommands(ExecutionContext context, Multimap<File, File> outputToInputs)
+  private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
       throws StepFailedException, IOException {
     DefaultStepRunner stepRunner = new DefaultStepRunner(context, getDxExecutor());
 
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
-    List<Step> dxSteps = generateDxCommands(context, outputToInputs);
+    List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
     try {
       stepRunner.runStepsInParallelAndWait(dxSteps);
     } finally {
@@ -191,12 +189,12 @@ public class SmartDexingStep implements Step {
    * changes to buck itself.
    */
   private void removeExtraneousSecondaryArtifacts(
-      File secondaryOutputDir,
-      Set<File> producedArtifacts,
+      Path secondaryOutputDir,
+      Set<Path> producedArtifacts,
       ProjectFilesystem projectFilesystem) throws IOException {
-    for (File secondaryOutput : secondaryOutputDir.listFiles()) {
-      if (!producedArtifacts.contains(secondaryOutput)) {
-        projectFilesystem.rmdir(secondaryOutput.getAbsoluteFile().toPath());
+    for (Path secondaryOutput : projectFilesystem.getDirectoryContents(secondaryOutputDir)) {
+      if (!producedArtifacts.contains(secondaryOutput.normalize())) {
+        projectFilesystem.rmdir(secondaryOutput);
       }
     }
   }
@@ -212,12 +210,13 @@ public class SmartDexingStep implements Step {
     b.append(getShortName());
     b.append(' ');
 
-    Multimap<File, File> outputToInputs = getOutputToInputsMultimap(context.getProjectFilesystem());
-    for (File output : outputToInputs.keySet()) {
+    Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
+    for (Path output : outputToInputs.keySet()) {
       b.append("-out ");
-      b.append(output.getPath());
+      b.append(output.toString());
       b.append("-in ");
-      Joiner.on(':').appendTo(b, outputToInputs.get(output));
+      Joiner.on(':').appendTo(b,
+          Iterables.transform(outputToInputs.get(output), Functions.toStringFunction()));
     }
 
     return b.toString();
@@ -228,95 +227,28 @@ public class SmartDexingStep implements Step {
    * to a {@code .dex} file.
    */
   private List<Step> generateDxCommands(
-      ExecutionContext context,
-      Multimap<File, File> outputToInputs) throws IOException {
+      ProjectFilesystem filesystem,
+      Multimap<Path, Path> outputToInputs) throws IOException {
     ImmutableList.Builder<DxPseudoRule> pseudoRules = ImmutableList.builder();
 
-    for (File outputFile : outputToInputs.keySet()) {
-      // This is silly to do so much conversion from String => File and back again but it is
-      // sort of a necessary evil since we're internally simulating a bridge between Java and
-      // the outside world (commands generally seen as external, and rules are generated by parsing
-      // JSON input).
-      pseudoRules.add(new DxPseudoRule(context,
-          ImmutableSet.copyOf(Iterables.transform(outputToInputs.get(outputFile), new Function<File, Path>() {
-
-            @Override
-            public Path apply(File input) {
-              return input.toPath();
-            }
-          })),
-          outputFile.toPath(),
-          context.getProjectFilesystem().resolve(successDir.resolve(outputFile.getName())),
-          dxOptions));
+    for (Path outputFile : outputToInputs.keySet()) {
+      pseudoRules.add(
+          new DxPseudoRule(
+              filesystem,
+              FluentIterable.from(outputToInputs.get(outputFile)).toSet(),
+              outputFile,
+              successDir.resolve(outputFile.getFileName()),
+              dxOptions));
     }
 
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
     for (DxPseudoRule pseudoRule : pseudoRules.build()) {
       if (!pseudoRule.checkIsCached()) {
-        commands.addAll(pseudoRule.buildInternal());
+        steps.addAll(pseudoRule.buildInternal());
       }
     }
 
-    return commands.build();
-  }
-
-  // Helper class to break down the complex set of paths that this command accepts.
-  @VisibleForTesting
-  static class InputResolver {
-    private final Path primaryOutputPath;
-    private final Supplier<Set<Path>> primaryInputsToDex;
-    private final Optional<Path> secondaryOutputDir;
-    private final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
-
-    public InputResolver(
-        Path primaryOutputPath,
-        Supplier<Set<Path>> primaryInputsToDex,
-        Optional<Path> secondaryOutputDir,
-        Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs) {
-      this.primaryOutputPath = Preconditions.checkNotNull(primaryOutputPath);
-      this.primaryInputsToDex = Preconditions.checkNotNull(primaryInputsToDex);
-      Preconditions.checkArgument(
-          !(secondaryOutputDir.isPresent() ^ secondaryOutputToInputs.isPresent()),
-          "Secondary input and output must be passed together (either both absent or both present)");
-      this.secondaryOutputDir = secondaryOutputDir;
-      this.secondaryOutputToInputs = secondaryOutputToInputs;
-    }
-
-    /*
-     * Create a multimap whose keys are output files and whose values are inputs passed to the dx
-     * command.  This defines a set of rules where the keySet of the returned multimap is the
-     * set of expected files to exist after smart dexing completes.
-     */
-    public Multimap<File, File> createOutputToInputs(ProjectFilesystem projectFilesystem) {
-      final ImmutableMultimap.Builder<File, File> map = ImmutableMultimap.builder();
-
-      // Add the primary output.
-      File primaryOutputFile = projectFilesystem.getFileForRelativePath(primaryOutputPath);
-      for (Path primaryInputToDex : primaryInputsToDex.get()) {
-        map.put(primaryOutputFile, projectFilesystem.getFileForRelativePath(primaryInputToDex));
-      }
-
-      // Add all secondary outputs (one for each file in the secondary inputs dir).
-      if (secondaryOutputDir.isPresent()) {
-        Multimap<Path, Path> outputToInputs = secondaryOutputToInputs.get().get();
-        for (Path secondaryOutput : outputToInputs.keySet()) {
-          File secondaryOutputFile = projectFilesystem.getFileForRelativePath(secondaryOutput);
-          for (Path input : outputToInputs.get(secondaryOutput)) {
-            map.put(secondaryOutputFile, projectFilesystem.getFileForRelativePath(input));
-          }
-        }
-      }
-
-      return map.build();
-    }
-
-    public boolean hasSecondaryOutput() {
-      return secondaryOutputDir.isPresent();
-    }
-
-    public File getSecondaryOutputDir(ProjectFilesystem projectFilesystem) {
-      return projectFilesystem.getFileForRelativePath(secondaryOutputDir.get());
-    }
+    return steps.build();
   }
 
   /**
@@ -330,19 +262,19 @@ public class SmartDexingStep implements Step {
    */
   @VisibleForTesting
   static class DxPseudoRule {
-    private final ExecutionContext context;
+    private final ProjectFilesystem filesystem;
     private final Set<Path> srcs;
     private final Path outputPath;
     private final Path outputHashPath;
     private final EnumSet<Option> dxOptions;
     private String newInputsHash;
 
-    public DxPseudoRule(ExecutionContext context,
+    public DxPseudoRule(ProjectFilesystem filesystem,
         Set<Path> srcs,
         Path outputPath,
         Path outputHashPath,
         EnumSet<Option> dxOptions) {
-      this.context = Preconditions.checkNotNull(context);
+      this.filesystem = Preconditions.checkNotNull(filesystem);
       this.srcs = ImmutableSet.copyOf(srcs);
       this.outputPath = Preconditions.checkNotNull(outputPath);
       this.outputHashPath = Preconditions.checkNotNull(outputHashPath);
@@ -356,20 +288,8 @@ public class SmartDexingStep implements Step {
      */
     @Nullable
     private String getPreviousInputsHash() {
-      File outputHashFile = outputHashPath.toFile();
-      if (outputHashFile.exists()) {
-        try {
-          return Iterables.getFirst(
-              Files.readLines(outputHashFile, Charsets.UTF_8),
-              null);
-        } catch (IOException e) {
-          context.getStdErr().println(context.getAnsi().asWarningText(
-              String.format("Error reading success file: %s", outputHashPath)));
-          // Fall through, this is not fatal...
-        }
-      }
-      // This will trigger the dx command to run again.
-      return null;
+      // Returning null will trigger the dx command to run again.
+      return filesystem.readFirstLine(outputHashPath).orNull();
     }
 
     @VisibleForTesting
@@ -384,16 +304,16 @@ public class SmartDexingStep implements Step {
       ClasspathTraverser traverser = new DefaultClasspathTraverser();
       try {
         traverser.traverse(new ClasspathTraversal(srcs) {
-          @Override
-          public void visit(FileLike fileLike) {
-            try {
-              hasher.putBytes(fileLike.fastHash().asBytes());
-            } catch (IOException e) {
-              // Pass it along...
-              throw new RuntimeException(e);
-            }
-          }
-        });
+              @Override
+              public void visit(FileLike fileLike) {
+                try {
+                  hasher.putBytes(fileLike.fastHash().asBytes());
+                } catch (IOException e) {
+                  // Pass it along...
+                  throw new RuntimeException(e);
+                }
+              }
+            });
       } catch (RuntimeException e) {
         Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
         throw Throwables.propagate(e);
@@ -405,9 +325,14 @@ public class SmartDexingStep implements Step {
     public boolean checkIsCached() throws IOException {
       newInputsHash = hashInputs();
 
+      if (!filesystem.exists(outputHashPath) ||
+          !filesystem.exists(outputPath)) {
+        return false;
+      }
+
       // Make sure the output dex file isn't newer than the output hash file.
-      long outputHashFileModTime = outputHashPath.toFile().lastModified();
-      long outputFileModTime = outputPath.toFile().lastModified();
+      long outputHashFileModTime = filesystem.getLastModifiedTime(outputHashPath);
+      long outputFileModTime = filesystem.getLastModifiedTime(outputPath);
       if (outputFileModTime > outputHashFileModTime) {
         return false;
       }
@@ -430,7 +355,6 @@ public class SmartDexingStep implements Step {
       // WriteFileStep dependent in series.
       return ImmutableList.<Step>of(new CompositeStep(steps));
     }
-
   }
 
   /**
@@ -438,7 +362,7 @@ public class SmartDexingStep implements Step {
    * as {@code dx} itself chooses whether to embed the dex inside a jar/zip based on the destination
    * file passed to it.
    */
-  static Step createDxStepForDxPseudoRule(Iterable<Path> filesToDex,
+  static Step createDxStepForDxPseudoRule(Collection<Path> filesToDex,
       Path outputPath,
       EnumSet<Option> dxOptions) {
 

@@ -1,0 +1,134 @@
+Blort.test:(I)I:
+regs: 0006; ins: 0001; outs: 0001
+  0000: move v0, v5
+  0001: move v2, v0
+  0002: if-nez v2, 0007 // +0005
+  0004: const/4 v2, #int 1 // #1
+  0005: move v0, v2
+  0006: return v0
+  0007: move v2, v0
+  0008: const/4 v3, #int 1 // #1
+  0009: add-int/lit8 v2, v2, #int -1 // #ff
+  000b: invoke-static {v2}, Blort.test:(I)I
+  000e: move-result v2
+  000f: move v0, v2
+  0010: move v2, v0
+  0011: move v3, v0
+  0012: const/4 v4, #int 2 // #2
+  0013: add-int/lit8 v3, v3, #int -2 // #fe
+  0015: invoke-static {v3}, Blort.test:(I)I
+  0018: move-result v3
+  0019: add-int/2addr v2, v3
+  001a: move v0, v2
+  001b: move v2, v0
+  001c: move v0, v2
+  001d: goto 0006 // -0017
+  001e: move-exception v2
+  001f: move-object v1, v2
+  0020: const/4 v2, #int 2 // #2
+  0021: move v0, v2
+  0022: goto 0006 // -001c
+  catches
+    tries:
+      try 000b..000e
+      catch java.lang.RuntimeException -> 001e
+Blort.test:(I)I:
+regs: 0006; ins: 0001; outs: 0001
+  0000: move v0, v5
+  0001: move v2, v0
+  0002: if-nez v2, 0007 // +0005
+  0004: const/4 v2, #int 1 // #1
+  0005: move v0, v2
+  0006: return v0
+  0007: move v2, v0
+  0008: const/4 v3, #int 1 // #1
+  0009: add-int/lit8 v2, v2, #int -1 // #ff
+  000b: invoke-static {v2}, Blort.test:(I)I
+  000e: move-result v2
+  000f: move v0, v2
+  0010: move v2, v0
+  0011: move v3, v0
+  0012: const/4 v4, #int 2 // #2
+  0013: add-int/lit8 v3, v3, #int -2 // #fe
+  0015: invoke-static {v3}, Blort.test:(I)I
+  0018: move-result v3
+  0019: add-int/2addr v2, v3
+  001a: move v0, v2
+  001b: move v2, v0
+  001c: move v0, v2
+  001d: goto 0006 // -0017
+  001e: move-exception v2
+  001f: move-object v1, v2
+  0020: const/4 v2, #int 2 // #2
+  0021: move v0, v2
+  0022: goto 0006 // -001c
+  catches
+    tries:
+      try 000b..000e
+      catch java.lang.RuntimeException -> 001e
+  debug info
+    line_start: 20
+    parameters_size: 0001
+    parameter <unnamed> v5
+    0000: prologue end
+    0000: line 20
+    0004: line 21
+    0006: line 29
+    line = 24
+    0007: line 24
+    0010: line 28
+    001b: line 29
+    001e: line 25
+    0020: line 26
+    end sequence
+  source file: "Blort.java"
+Blort.test:(I)I:
+regs: 0006; ins: 0001; outs: 0001
+  0000: move v0, v5
+  0001: move v2, v0
+  0002: if-nez v2, 0007 // +0005
+  0004: const/4 v2, #int 1 // #1
+  0005: move v0, v2
+  0006: return v0
+  0007: move v2, v0
+  0008: const/4 v3, #int 1 // #1
+  0009: add-int/lit8 v2, v2, #int -1 // #ff
+  000b: invoke-static {v2}, Blort.test:(I)I
+  000e: move-result v2
+  000f: move v0, v2
+  0010: move v2, v0
+  0011: move v3, v0
+  0012: const/4 v4, #int 2 // #2
+  0013: add-int/lit8 v3, v3, #int -2 // #fe
+  0015: invoke-static {v3}, Blort.test:(I)I
+  0018: move-result v3
+  0019: add-int/2addr v2, v3
+  001a: move v0, v2
+  001b: move v2, v0
+  001c: move v0, v2
+  001d: goto 0006 // -0017
+  001e: move-exception v2
+  001f: move-object v1, v2
+  0020: const/4 v2, #int 2 // #2
+  0021: move v0, v2
+  0022: goto 0006 // -001c
+  catches
+    tries:
+      try 000b..000e
+      catch java.lang.RuntimeException -> 001e
+  debug info
+    line_start: 20
+    parameters_size: 0001
+    parameter <unnamed> v5
+    0000: prologue end
+    0000: line 20
+    0004: line 21
+    0006: line 29
+    line = 24
+    0007: line 24
+    0010: line 28
+    001b: line 29
+    001e: line 25
+    0020: line 26
+    end sequence
+  source file: "Blort.java"
