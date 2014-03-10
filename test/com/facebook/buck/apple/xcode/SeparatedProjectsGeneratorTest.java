@@ -409,6 +409,44 @@ public class SeparatedProjectsGeneratorTest {
     assertTargetExistsAndReturnTarget(project, "native");
   }
 
+  @Test
+  public void shouldReturnListOfGeneratedProjects() throws IOException {
+    BuildRule fooRule1 = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule1"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    BuildRule fooConfigRule = createXcodeProjectConfigRule(
+        "//foo",
+        "fooproject",
+        ImmutableSet.of(fooRule1));
+
+    BuildRule barRule2 = createBuildRuleWithDefaults(
+        new BuildTarget("//bar", "rule2"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosLibraryDescription);
+
+    BuildRule barConfigRule = createXcodeProjectConfigRule(
+        "//bar",
+        "barproject",
+        ImmutableSet.of(barRule2));
+
+    SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
+        projectFilesystem,
+        createPartialGraphFromBuildRules(
+            ImmutableSet.of(fooRule1, barRule2, fooConfigRule, barConfigRule)),
+        executionContext,
+        ImmutableSet.of(fooConfigRule.getBuildTarget(), barConfigRule.getBuildTarget()));
+
+    ImmutableSet<Path> paths = generator.generateProjects();
+
+    assertEquals(
+        ImmutableSet.of(
+            Paths.get("foo/fooproject.xcodeproj"),
+            Paths.get("bar/barproject.xcodeproj")),
+        paths);
+  }
+
   private BuildRule createXcodeProjectConfigRule(
       String baseName,
       final String projectName,

@@ -236,6 +236,10 @@ public class ProjectGenerator {
     return workspace;
   }
 
+  public Path getProjectPath() {
+    return projectPath;
+  }
+
   public void createXcodeProjects() throws IOException {
     try {
       Iterable<BuildRule> allRules = RuleDependencyFinder.getAllRules(partialGraph, initialTargets);

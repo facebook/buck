@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
@@ -69,7 +70,8 @@ public class SeparatedProjectsGenerator {
     }
   }
 
-  public void generateProjects() throws IOException {
+  public ImmutableSet<Path> generateProjects() throws IOException {
+    ImmutableSet.Builder<Path> generatedProjectPathsBuilder = ImmutableSet.builder();
     ImmutableMap.Builder<BuildTarget, ProjectGenerator> projectGeneratorsBuilder =
         ImmutableMap.builder();
     for (BuildTarget target : projectConfigTargets) {
@@ -91,8 +93,10 @@ public class SeparatedProjectsGenerator {
           ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
       generator.createXcodeProjects();
       projectGeneratorsBuilder.put(target, generator);
+      generatedProjectPathsBuilder.add(generator.getProjectPath());
     }
     projectGenerators = projectGeneratorsBuilder.build();
+    return generatedProjectPathsBuilder.build();
   }
 
   @VisibleForTesting
