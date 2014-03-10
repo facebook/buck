@@ -348,8 +348,7 @@ public class AdbHelper {
    * {@link com.android.ddmlib.IDevice#executeShellCommand(String,
    * com.android.ddmlib.IShellOutputReceiver)} succeeded.
    */
-  // Should be made private in a follow-up diff.
-  public abstract static class ErrorParsingReceiver extends MultiLineReceiver {
+  private abstract static class ErrorParsingReceiver extends MultiLineReceiver {
 
     private String errorMessage = null;
 
