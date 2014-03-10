@@ -55,6 +55,8 @@ RULES_SRCS = [
   'AndroidLibraryRule.java',
   'AndroidManifest.java',
   'AndroidManifestDescription.java',
+  'BuildConfig.java',
+  'BuildConfigDescription.java',
   'AndroidResourceBuildRuleFactory.java',
   'AndroidResourceDepsFinder.java',
   'AndroidResourceDetails.java',
