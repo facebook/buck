@@ -20,6 +20,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRuleBuilder;
 import com.facebook.buck.rules.AbstractBuildRuleBuilderParams;
 import com.facebook.buck.rules.AbstractBuildable;
@@ -60,7 +61,7 @@ import javax.annotation.Nullable;
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
 public class DummyRDotJava extends AbstractBuildable
-    implements InitializableFromDisk<DummyRDotJava.BuildOutput> {
+    implements AbiRule, InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final BuildTarget buildTarget;
@@ -154,6 +155,7 @@ public class DummyRDotJava extends AbstractBuildable
     return steps.build();
   }
 
+  @Override
   public Sha1HashCode getAbiKeyForDeps() throws IOException {
     return HasAndroidResourceDeps.HASHER.apply(androidResourceDeps);
   }

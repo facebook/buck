@@ -377,9 +377,8 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
     // means a change in one of the leaves can result in almost all rules being rebuilt, which is
     // slow. Fortunately, we limit the effects of this when building Java code when checking the ABI
     // of deps instead of the RuleKey for deps.
-    if (this instanceof AbiRule) {
-      AbiRule abiRule = (AbiRule)this;
-
+    AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule();
+    if (abiRule != null) {
       RuleKey ruleKeyNoDeps = getRuleKeyWithoutDeps();
       Optional<RuleKey> cachedRuleKeyNoDeps = onDiskBuildInfo.getRuleKeyWithoutDeps();
       if (ruleKeyNoDeps.equals(cachedRuleKeyNoDeps.orNull())) {
@@ -495,15 +494,25 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
         buildInfoRecorder);
     List<Step> steps = buildable.getBuildSteps(context, buildableContext);
 
-    if (this instanceof AbiRule) {
+    AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule();
+    if (abiRule != null) {
       buildableContext.addMetadata(
           ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-          ((AbiRule)this).getAbiKeyForDeps().getHash());
+          abiRule.getAbiKeyForDeps().getHash());
     }
 
     StepRunner stepRunner = context.getStepRunner();
     for (Step step : steps) {
       stepRunner.runStepForBuildTarget(step, getBuildTarget());
     }
+  }
+
+  private AbiRule checkIfRuleOrBuildableIsAbiRule() {
+    if (this instanceof AbiRule) {
+      return (AbiRule) this;
+    } else if (this.getBuildable() instanceof AbiRule) {
+      return (AbiRule) this.getBuildable();
+    }
+    return null;
   }
 }
