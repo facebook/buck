@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Map;
 
@@ -67,4 +68,26 @@ public class RawRulePredicates {
     };
   }
 
+  public static RawRulePredicate matchBuildRuleType(final BuildRuleType type) {
+    return new RawRulePredicate() {
+      @Override
+      public boolean isMatch(
+          Map<String, Object> rawParseData,
+          BuildRuleType buildRuleType, BuildTarget buildTarget) {
+        return buildRuleType == type;
+      }
+    };
+  }
+
+  public static RawRulePredicate matchBuildTargets(final ImmutableSet<BuildTarget> targets) {
+    return new RawRulePredicate() {
+      @Override
+      public boolean isMatch(
+          Map<String, Object> rawParseData,
+          BuildRuleType buildRuleType,
+          BuildTarget buildTarget) {
+        return targets.contains(buildTarget);
+      }
+    };
+  }
 }

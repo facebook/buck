@@ -16,14 +16,18 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.parser.RawRulePredicates;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -39,21 +43,9 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions> {
 
-  /**
-   * Predicate used to filter out all PROJECT_CONFIG rules in the dependency graph.
-   */
-  private static final RawRulePredicate predicate = new RawRulePredicate() {
-    @Override
-    public boolean isMatch(Map<String, Object> rawParseData,
-        BuildRuleType buildRuleType,
-        BuildTarget buildTarget) {
-      return buildRuleType == BuildRuleType.PROJECT_CONFIG;
-    }
-  };
 
 
   public ProjectCommand(CommandRunnerParams params) {
@@ -87,7 +79,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     PartialGraph partialGraph;
 
     try {
-      partialGraph = createPartialGraph(predicate, options);
+      partialGraph = createPartialGraph(
+          RawRulePredicates.matchBuildRuleType(BuildRuleType.PROJECT_CONFIG),
+          options);
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -166,18 +160,23 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   int runXcodeProjectGenerator(ProjectCommandOptions options)
       throws IOException {
 
-    List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
 
-    // Load all the project files
     PartialGraph partialGraph;
-    ImmutableSet<BuildTarget> targets;
     try {
       partialGraph = PartialGraph.createFullGraph(getProjectFilesystem(),
           options.getDefaultIncludes(),
           getParser(),
           getBuckEventBus());
-      targets = ImmutableSet.copyOf(getBuildTargets(argumentsAsBuildTargets));
     } catch (BuildTargetException | BuildFileParseException e) {
+      throw new HumanReadableException(e);
+    }
+
+    ImmutableSet<BuildTarget> passedInTargetsSet;
+
+    try {
+      List<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
+      passedInTargetsSet = ImmutableSet.copyOf(getBuildTargets(argumentsAsBuildTargets));
+    } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e);
     }
 
@@ -188,16 +187,31 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
           partialGraph,
-          targets,
+          passedInTargetsSet,
           getProjectFilesystem(),
           executionContext,
           getProjectFilesystem().getPathForRelativePath(Paths.get("_gen")),
           "GeneratedProject",
           ProjectGenerator.COMBINED_PROJECT_OPTIONS);
       projectGenerator.createXcodeProjects();
+      console.getStdOut().println(projectGenerator.getProjectPath());
     } else {
       // Generate projects based on xcode_project_config rules, and place them in the same directory
       // as the Buck file.
+
+      ImmutableSet<BuildTarget> targets;
+      if (passedInTargetsSet.isEmpty()) {
+        ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
+        for (BuildRule node : partialGraph.getDependencyGraph().getNodes()) {
+          if (node.getType() == XcodeProjectConfigDescription.TYPE) {
+            targetsBuilder.add(node.getBuildTarget());
+          }
+        }
+        targets = targetsBuilder.build();
+      } else {
+        targets = passedInTargetsSet;
+      }
+
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           getProjectFilesystem(),
           partialGraph,
@@ -205,7 +219,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           targets);
       ImmutableSet<Path> generatedProjectPaths = projectGenerator.generateProjects();
       for (Path path : generatedProjectPaths) {
-        console.getStdOut().println(path.toAbsolutePath().toString());
+        console.getStdOut().println(path.toString());
       }
     }
 

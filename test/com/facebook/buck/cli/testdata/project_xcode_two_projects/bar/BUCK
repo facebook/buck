@@ -1,0 +1,16 @@
+ios_library(
+  name = 'barlib',
+  configs = {},
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC']
+)
+
+xcode_project_config(
+  name = 'project',
+  project_name = 'barproject',
+  rules = [
+    ':barlib',
+  ]
+)

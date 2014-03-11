@@ -130,4 +130,25 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void buckProjectXcodeSeparatedProjectsNoArgsGeneratesAllProjects() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_xcode_two_projects",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess();
+
+    workspace.verify();
+
+    assertEquals(
+        Joiner.on('\n').join(
+            "foo/fooproject.xcodeproj",
+            "bar/barproject.xcodeproj"
+        ) + '\n',
+        result.getStdout());
+  }
 }
