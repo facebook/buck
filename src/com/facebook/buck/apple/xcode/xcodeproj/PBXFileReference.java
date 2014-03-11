@@ -25,7 +25,7 @@ import com.google.common.io.Files;
  * Reference to a concrete file.
  */
 public class PBXFileReference extends PBXReference {
-  private static ImmutableMap<String, String> fileTypeToFileTypeIdentifiers =
+  private static final ImmutableMap<String, String> FILE_TYPE_TO_FILE_TYPE_IDENTIFIERS =
       ImmutableMap.<String, String>builder()
           .put("a", "archive.ar")
           .put("app", "wrapper.application")
@@ -93,7 +93,7 @@ public class PBXFileReference extends PBXReference {
     super(name, path, sourceTree);
 
     // this is necessary to prevent O(n^2) behavior in xcode project loading
-    String fileType = fileTypeToFileTypeIdentifiers.get(Files.getFileExtension(name));
+    String fileType = FILE_TYPE_TO_FILE_TYPE_IDENTIFIERS.get(Files.getFileExtension(name));
     explicitFileType = Optional.fromNullable(fileType);
   }
 
