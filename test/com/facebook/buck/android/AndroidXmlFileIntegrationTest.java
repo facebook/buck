@@ -55,7 +55,7 @@ public class AndroidXmlFileIntegrationTest {
     workspace.replaceFileContents(PATH_TO_STRINGS_XML, "Hello", "Bye");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -71,7 +71,7 @@ public class AndroidXmlFileIntegrationTest {
     workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "white", "black");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -89,7 +89,7 @@ public class AndroidXmlFileIntegrationTest {
         "<string name=\"base_text\">Goodbye!</string></resources>");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -106,7 +106,7 @@ public class AndroidXmlFileIntegrationTest {
     workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "base_button", "base_text");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -124,7 +124,7 @@ public class AndroidXmlFileIntegrationTest {
         "<string name=\"base_text\">Goodbye!</string></resources>");
 
     workspace.resetBuildLogFile();
-    workspace.runBuckCommand("build", "//java/com/sample/lib:lib_using_transitive_empty_res");
+    workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 

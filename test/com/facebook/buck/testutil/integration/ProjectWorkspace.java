@@ -139,6 +139,13 @@ public class ProjectWorkspace {
     isSetUp = true;
   }
 
+  public ProcessResult runBuckBuild(String... args) throws IOException {
+    String[] totalArgs = new String[args.length + 1];
+    totalArgs[0] = "build";
+    System.arraycopy(args, 0, totalArgs, 1, args.length);
+    return runBuckCommand(totalArgs);
+  }
+
   /**
    * Runs Buck with the specified list of command-line arguments.
    * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
