@@ -234,7 +234,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
                 }
               }
 
-              doHydrationAfterBuildStepsFinish(result, onDiskBuildInfo);
+              doHydrationAfterBuildStepsFinish(onDiskBuildInfo);
 
               // Do the post to the event bus just before the future is set so that the build time
               // measurement is as accurate as possible.
@@ -305,8 +305,7 @@ public abstract class AbstractCachingBuildRule extends AbstractBuildRule impleme
   }
 
   @VisibleForTesting
-  public void doHydrationAfterBuildStepsFinish(BuildResult result,
-      OnDiskBuildInfo onDiskBuildInfo) {
+  public void doHydrationAfterBuildStepsFinish(OnDiskBuildInfo onDiskBuildInfo) {
     // Give the rule a chance to populate its internal data structures now that all of the
     // files should be in a valid state.
     if (this instanceof InitializableFromDisk) {
