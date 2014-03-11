@@ -1,7 +1,8 @@
 java_test(
   name = 'xcode',
   srcs = [
-    'XcodeprojSerializerTest.java'
+    'XcodeprojSerializerTest.java',
+    'GidGeneratorTest.java'
   ],
   source_under_test = [
     '//src/com/facebook/buck/apple/xcode:xcode',

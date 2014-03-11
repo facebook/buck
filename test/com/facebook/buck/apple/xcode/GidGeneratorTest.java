@@ -16,7 +16,10 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -25,9 +28,27 @@ public class GidGeneratorTest {
   @Test
   public void testTrivialGidGeneration() {
     GidGenerator generator = new GidGenerator(0);
-    String gid = generator.genGid();
+    String gid = generator.generateGid();
     assertFalse("GID should be non-empty", gid.isEmpty());
     assertTrue("GID should be hexadecimal", gid.matches("^[0-9A-F]+$"));
-    assertTrue("GID should be 96 bits (24 hex digits)", gid.length() <= 24);
+    assertSame("GID should be 96 bits (24 hex digits)", gid.length(), 24);
   }
+
+  @Test
+  public void testStableGidGeneration() {
+    GidGenerator generator1 = new GidGenerator(1);
+    GidGenerator generator2 = new GidGenerator(2);
+
+    String gid1 = generator1.generateStableGid("bla", 0);
+    String gid1bis = generator1.generateStableGid("bla", 0);
+    String gid2 = generator2.generateStableGid("bla", 0);
+
+    assertFalse("GID should be non-empty", gid1.isEmpty());
+    assertTrue("GID should be hexadecimal", gid1.matches("^[0-9A-F]+$"));
+    assertSame("GID should be 96 bits (24 hex digits)", gid1.length(), 24);
+
+    assertEquals("Two runs of the stable GID should yield the same result", gid1, gid2);
+    assertNotEquals("The GID generator should avoid collisions", gid1, gid1bis);
+  }
+
 }

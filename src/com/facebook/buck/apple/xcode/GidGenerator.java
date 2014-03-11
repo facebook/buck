@@ -51,7 +51,7 @@ public class GidGenerator {
     return gid;
   }
 
-  public String genGid() {
+  public String generateGid() {
     String gid;
 
     do {

@@ -48,6 +48,6 @@ public abstract class PBXObject {
    * Generate a GID, can be overridden to generate a stable GID.
    */
   public String generateGid(GidGenerator generator) {
-    return generator.genGid();
+    return generator.generateGid();
   }
 }
