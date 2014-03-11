@@ -33,9 +33,11 @@ public class ApkInspector {
 
   public ApkInspector(File apkFile) throws IOException {
     final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    Enumeration<? extends ZipEntry> entries = new ZipFile(apkFile).entries();
-    while (entries.hasMoreElements()) {
-      builder.add(entries.nextElement().getName());
+    try (ZipFile zipFile = new ZipFile(apkFile)) {
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+      while (entries.hasMoreElements()) {
+        builder.add(entries.nextElement().getName());
+      }
     }
     this.apkFileEntries = builder.build();
   }
