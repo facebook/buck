@@ -67,6 +67,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -779,13 +780,34 @@ public class ProjectGenerator {
     target.getBuildPhases().add(frameworksBuildPhase);
     for (String framework : frameworks) {
       Path path = Paths.get(framework);
-      if (path.startsWith("$SDKROOT")) {
-        Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
-        PBXFileReference fileReference =
-            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-                new SourceTreePath(PBXReference.SourceTree.SDKROOT, sdkRootRelativePath));
-        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
-      } else if (!path.toString().startsWith("$")) {
+
+      String firstElement =
+        Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
+
+      if (firstElement.startsWith("$")) { // NOPMD - length() > 0 && charAt(0) == '$' is ridiculous
+        Optional<PBXReference.SourceTree> sourceTree =
+            PBXReference.SourceTree.fromBuildSetting(firstElement);
+        if (sourceTree.isPresent()) {
+          Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
+          PBXFileReference fileReference =
+              sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
+                  new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
+          frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+        } else {
+          throw new HumanReadableException(String.format(
+              "Unknown SourceTree: %s in build target: %s. Should be one of: %s",
+              firstElement,
+              buildTarget,
+              Joiner.on(',').join(Iterables.transform(
+                  ImmutableList.copyOf(PBXReference.SourceTree.values()),
+                  new Function<PBXReference.SourceTree, String>() {
+                    @Override
+                    public String apply(PBXReference.SourceTree input) {
+                      return "$" + input.toString();
+                    }
+                  }))));
+        }
+      } else {
         // regular path
         PBXFileReference fileReference =
             sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRuleResolver;
@@ -78,6 +79,7 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -805,6 +807,57 @@ public class ProjectGeneratorTest {
     assertThat(configurations, hasKey("Conf3"));
   }
 
+  @Test
+  public void shouldEmitFilesForBuildSettingPrefixedFrameworks() throws IOException {
+    BuildRule rule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosTestDescription,
+        new Function<IosTestDescription.Arg, IosTestDescription.Arg>() {
+          @Override
+          public IosTestDescription.Arg apply(IosTestDescription.Arg input) {
+            input.frameworks = ImmutableSortedSet.of(
+                "$BUILT_PRODUCTS_DIR/libfoo.a",
+                "$SDKROOT/libfoo.a",
+                "$SOURCE_ROOT/libfoo.a");
+            return input;
+          }
+        });
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:rule");
+    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of(
+            "$BUILT_PRODUCTS_DIR/libfoo.a",
+            "$SDKROOT/libfoo.a",
+            "$SOURCE_ROOT/libfoo.a"));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws IOException {
+    BuildRule rule = createBuildRuleWithDefaults(
+        new BuildTarget("//foo", "rule"),
+        ImmutableSortedSet.<BuildRule>of(),
+        iosTestDescription,
+        new Function<IosTestDescription.Arg, IosTestDescription.Arg>() {
+          @Override
+          public IosTestDescription.Arg apply(IosTestDescription.Arg input) {
+            input.frameworks = ImmutableSortedSet.of("$FOOBAR/libfoo.a");
+            return input;
+          }
+        });
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(rule),
+        ImmutableSet.of(rule.getBuildTarget()));
+    projectGenerator.createXcodeProjects();
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       BuildRuleResolver resolver, ImmutableSet<BuildTarget> initialBuildTargets) {
     return createProjectGeneratorForCombinedProject(
@@ -835,7 +888,7 @@ public class ProjectGeneratorTest {
     assert(!fileRef.getPath().startsWith("/"));
     assertEquals(
         "file path should be relative to project directory",
-        PBXFileReference.SourceTree.SOURCE_ROOT,
+        PBXReference.SourceTree.SOURCE_ROOT,
         fileRef.getSourceTree()
     );
     return projectFilesystem.resolve(OUTPUT_DIRECTORY).resolve(fileRef.getPath())
