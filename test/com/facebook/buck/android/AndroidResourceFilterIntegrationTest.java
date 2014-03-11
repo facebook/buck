@@ -16,7 +16,10 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertNotEquals;
+
 import com.facebook.buck.testutil.integration.ApkInspector;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -70,6 +73,31 @@ public class AndroidResourceFilterIntegrationTest {
     apkInspector.assertFileExists("res/drawable-mdpi/app_icon.png");
     apkInspector.assertFileDoesNotExist("res/drawable-hdpi/app_icon.png");
     apkInspector.assertFileDoesNotExist("res/drawable-xhdpi/app_icon.png");
+  }
+
+  @Test
+  public void testModifyingImageRebuildsResourcesFilter() throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//apps/sample:app_mdpi");
+    result.assertSuccess();
+
+    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
+    long firstImageCrc = new ApkInspector(apkFile).getCrc("res/drawable-mdpi/app_icon.png");
+
+    workspace.copyFile(
+        "res/com/sample/base/res/drawable-hdpi/app_icon.png",
+        "res/com/sample/base/res/drawable-mdpi/app_icon.png");
+
+    workspace.resetBuildLogFile();
+    result = workspace.runBuckBuild("//apps/sample:app_mdpi");
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//apps/sample:app_mdpi");
+
+    apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
+    long secondImageCrc = new ApkInspector(apkFile).getCrc("res/drawable-mdpi/app_icon.png");
+
+    assertNotEquals(firstImageCrc, secondImageCrc);
   }
 
   @Test

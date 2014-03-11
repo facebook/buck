@@ -193,6 +193,10 @@ public class ProjectWorkspace {
     return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
   }
 
+  public void copyFile(String source, String dest) throws IOException {
+    Files.copy(getFile(source), getFile(dest));
+  }
+
   public void replaceFileContents(String pathRelativeToProjectRoot,
       String target,
       String replacement) throws IOException {
