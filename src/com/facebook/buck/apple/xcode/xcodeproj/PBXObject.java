@@ -45,9 +45,17 @@ public abstract class PBXObject {
   }
 
   /**
-   * Generate a GID, can be overridden to generate a stable GID.
+   * This method is used to generate stable GIDs and must be stable for identical contents.
+   * Returning a constant value is ok but will make the generated project order-dependent.
    */
-  public String generateGid(GidGenerator generator) {
-    return generator.generateGid();
+  public int stableHash() {
+    return 0;
+  }
+
+  /**
+   * Generate a stable GID.
+   */
+  public final String generateGid(GidGenerator generator) {
+    return generator.generateGid(isa(), stableHash());
   }
 }

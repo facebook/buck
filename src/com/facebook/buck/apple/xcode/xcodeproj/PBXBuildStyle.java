@@ -47,6 +47,11 @@ public class PBXBuildStyle extends PBXProjectItem {
   }
 
   @Override
+  public int stableHash() {
+    return name.hashCode();
+  }
+
+  @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 

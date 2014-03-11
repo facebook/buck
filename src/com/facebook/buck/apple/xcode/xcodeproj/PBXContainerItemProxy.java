@@ -72,6 +72,11 @@ public class PBXContainerItemProxy extends PBXContainerItem {
   }
 
   @Override
+  public int stableHash() {
+    return remoteGlobalIDString.hashCode();
+  }
+
+  @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 

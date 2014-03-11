@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -109,6 +108,11 @@ public abstract class PBXTarget extends PBXProjectItem {
   }
 
   @Override
+  public int stableHash() {
+    return name.hashCode();
+  }
+
+  @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
@@ -121,10 +125,5 @@ public abstract class PBXTarget extends PBXProjectItem {
     s.addField("dependencies", dependencies);
     s.addField("buildPhases", buildPhases);
     s.addField("buildConfigurationList", buildConfigurationList);
-  }
-
-  @Override
-  public String generateGid(GidGenerator generator) {
-    return generator.generateStableGid(isa(), getName().hashCode());
   }
 }

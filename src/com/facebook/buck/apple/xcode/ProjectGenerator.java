@@ -839,7 +839,7 @@ public class ProjectGenerator {
    * Create the project bundle structure and write {@code project.pbxproj}.
    */
   private Path writeProjectFile(PBXProject project) throws IOException {
-    XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(0), project);
+    XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(), project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);

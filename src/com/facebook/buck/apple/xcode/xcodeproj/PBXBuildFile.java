@@ -59,6 +59,11 @@ public class PBXBuildFile extends PBXProjectItem {
   }
 
   @Override
+  public int stableHash() {
+    return fileRef.stableHash();
+  }
+
+  @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 

@@ -18,7 +18,6 @@ package com.facebook.buck.apple.xcode;
 
 import com.google.common.collect.Sets;
 
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -27,11 +26,9 @@ import java.util.Set;
  * The GID is a 96 bit identifier that's unique on a per-project basis.
  */
 public class GidGenerator {
-  private final Random random;
   private final Set<String> generatedIds;
 
-  public GidGenerator(long seed) {
-    random = new Random(seed);
+  public GidGenerator() {
     generatedIds = Sets.newHashSet();
   }
 
@@ -41,29 +38,12 @@ public class GidGenerator {
    * GIDs generated this way will be in the form of
    *  {@code <class-name-hash-32> <obj-hash-32> <counter-32>}
    */
-  public String generateStableGid(String pbxClassName, int hash) {
+  public String generateGid(String pbxClassName, int hash) {
     int counter = 0;
     String gid;
     do {
       gid = String.format("%08X%08X%08X", pbxClassName.hashCode(), hash, counter++);
     } while (generatedIds.contains(gid));
-    generatedIds.add(gid);
-    return gid;
-  }
-
-  public String generateGid() {
-    String gid;
-
-    do {
-      StringBuilder builder = new StringBuilder();
-
-      for (int i = 0; i < 3; i++) {
-        builder.append(String.format("%08X", random.nextLong() & 0xFFFFFFFFL));
-      }
-
-      gid = builder.toString();
-    } while (generatedIds.contains(gid));
-
     generatedIds.add(gid);
     return gid;
   }

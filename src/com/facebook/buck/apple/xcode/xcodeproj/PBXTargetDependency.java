@@ -40,6 +40,11 @@ public class PBXTargetDependency extends PBXProjectItem {
   }
 
   @Override
+  public int stableHash() {
+    return targetProxy.stableHash();
+  }
+
+  @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
