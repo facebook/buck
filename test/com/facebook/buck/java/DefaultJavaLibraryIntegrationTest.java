@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -44,6 +45,9 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Integration test that verifies that a {@link DefaultJavaLibrary} writes its ABI key as part
@@ -210,6 +214,38 @@ public class DefaultJavaLibraryIntegrationTest {
     assertThat(
         buildResult.getStderr(),
         containsString(expectedWarning));
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuildJavaLibraryExportsDirectoryEntries() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "export_directory_entries", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    ProcessResult buildResult = workspace.runBuckBuild("//:empty_directory_entries");
+    buildResult.assertSuccess();
+
+    File outputFile = workspace.getFile(
+        "buck-out/gen/lib__empty_directory_entries__output/empty_directory_entries.jar");
+    assertTrue(outputFile.exists());
+
+    ImmutableSet.Builder<String> jarContents = ImmutableSet.builder();
+    try (ZipFile zipFile = new ZipFile(outputFile)) {
+      for (ZipEntry zipEntry : Collections.list(zipFile.entries())) {
+        jarContents.add(zipEntry.getName());
+      }
+    }
+
+    // TODO(user): Change the output to the intended output.
+    assertEquals(
+        jarContents.build(),
+        ImmutableSet.of(
+          "META-INF/MANIFEST.MF",
+          "swag.txt",
+          "yolo.txt"));
 
     workspace.verify();
   }

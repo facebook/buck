@@ -761,7 +761,7 @@ public class DefaultJavaLibrary extends AbstractBuildable
         } else if ("".equals(javaPackageAsPath)) {
           // In this case, the project root is acting as the default package, so the resource path
           // works fine.
-          relativeSymlinkPath = resource;
+          relativeSymlinkPath = resource.getFileName();
         } else {
           int lastIndex = resource.toString().lastIndexOf(javaPackageAsPath);
           Preconditions.checkState(lastIndex >= 0,
