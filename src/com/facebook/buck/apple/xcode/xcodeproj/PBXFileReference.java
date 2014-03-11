@@ -87,22 +87,22 @@ public class PBXFileReference extends PBXReference {
           .put("zip", "archive.zip")
           .build();
 
-  private Optional<String> lastKnownFileType;
+  private Optional<String> explicitFileType;
 
   public PBXFileReference(String name, String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
 
     // this is necessary to prevent O(n^2) behavior in xcode project loading
     String fileType = fileTypeToFileTypeIdentifiers.get(Files.getFileExtension(name));
-    lastKnownFileType = Optional.fromNullable(fileType);
+    explicitFileType = Optional.fromNullable(fileType);
   }
 
-  public Optional<String> getLastKnownFileType() {
-    return lastKnownFileType;
+  public Optional<String> getExplicitFileType() {
+    return explicitFileType;
   }
 
-  public void setLastKnownFileType(Optional<String> lastKnownFileType) {
-    this.lastKnownFileType = lastKnownFileType;
+  public void setExplicitFileType(Optional<String> explicitFileType) {
+    this.explicitFileType = explicitFileType;
   }
 
   @Override
@@ -114,8 +114,8 @@ public class PBXFileReference extends PBXReference {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    if (lastKnownFileType.isPresent()) {
-      s.addField("lastKnownFileType", lastKnownFileType.get());
+    if (explicitFileType.isPresent()) {
+      s.addField("explicitFileType", explicitFileType.get());
     }
   }
 }
