@@ -25,7 +25,6 @@ import com.facebook.buck.java.PrebuiltJarRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -49,13 +48,6 @@ public class AndroidTransitiveDependencyGraph {
    */
   AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps) {
     this.rulesToTraverseForTransitiveDeps = Preconditions.checkNotNull(deps);
-  }
-
-  public static AndroidTransitiveDependencyGraph createForAndroidManifest(
-      AndroidManifest androidManifest, DependencyGraph graph) {
-    BuildTarget buildTarget = androidManifest.getBuildTarget();
-    BuildRule rule = graph.findBuildRuleByTarget(buildTarget);
-    return new AndroidTransitiveDependencyGraph(rule.getDeps());
   }
 
   /**
