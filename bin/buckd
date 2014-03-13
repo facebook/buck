@@ -67,10 +67,11 @@ done
 mkdir -p "$BUCKD_DIR" &> /dev/null || true
 echo $BUCKD_PORT > "$BUCKD_PORT_FILE"
 
-# Run buckd.
+# Run buckd. Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
 BUCKD_CLIENT_TIMEOUT_MILLIS=10000
 java \
 $BUCK_JAVA_ARGS \
+-XX:SoftRefLRUPolicyMSPerMB=0 \
 -classpath \
 ${BUCK_JAVA_CLASSPATH} \
 com.martiansoftware.nailgun.NGServer \
