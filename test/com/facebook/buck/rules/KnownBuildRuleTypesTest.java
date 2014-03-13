@@ -107,6 +107,29 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
+  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacVersionSet()
+      throws IOException, NoSuchBuildTargetException {
+    final File javac = temporaryFolder.newFile();
+    javac.setExecutable(true);
+
+    String javacVersion = "fakeVersion 0.1";
+
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+
+    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(0, "", javacVersion),
+        new FakeAndroidDirectoryResolver()).build();
+    BuildRuleFactory<?> factory = buildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
+    BuildRule rule = factory.newInstance(params).build(new BuildRuleResolver());
+
+    DefaultJavaLibraryRule libraryRule = (DefaultJavaLibraryRule) rule;
+    assertEquals(javacVersion, libraryRule.getJavacVersion().get());
+  }
+
+  @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
       throws IOException, NoSuchBuildTargetException {
     final File javac = temporaryFolder.newFile();
@@ -122,13 +145,44 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createConfiguredBuilder(
         buckConfig,
-        new FakeProcessExecutor(0, "fakeVersion 0.1", ""),
+        new FakeProcessExecutor(0, "", "fakeVersion 0.1"),
         new FakeAndroidDirectoryResolver()).build();
     BuildRuleFactory<?> configuredFactory =
         configuredBuildRuleTypes.getFactory(BuildRuleType.JAVA_LIBRARY);
     BuildRule configuredRule = configuredFactory.newInstance(params).build(new BuildRuleResolver());
 
     assertNotEquals(rule.getRuleKey(), configuredRule.getRuleKey());
+  }
+
+  @Test
+  public void differentExternalJavacCreateJavaLibraryRulesWithDifferentRuleKey()
+      throws IOException, NoSuchBuildTargetException {
+    final File javac = temporaryFolder.newFile();
+    javac.setExecutable(true);
+
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+
+    KnownBuildRuleTypes configuredBuildRuleTypes1 = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(0, "", "fakeVersion 0.1"),
+        new FakeAndroidDirectoryResolver()).build();
+    BuildRuleFactory<?> configuredFactory1 =
+        configuredBuildRuleTypes1.getFactory(BuildRuleType.JAVA_LIBRARY);
+    BuildRule configuredRule1 = configuredFactory1.newInstance(params)
+        .build(new BuildRuleResolver());
+
+    KnownBuildRuleTypes configuredBuildRuleTypes2 = KnownBuildRuleTypes.createConfiguredBuilder(
+        buckConfig,
+        new FakeProcessExecutor(0, "", "fakeVersion 0.2"),
+        new FakeAndroidDirectoryResolver()).build();
+    BuildRuleFactory<?> configuredFactory2 =
+        configuredBuildRuleTypes2.getFactory(BuildRuleType.JAVA_LIBRARY);
+    BuildRule configuredRule2 = configuredFactory2.newInstance(params)
+        .build(new BuildRuleResolver());
+
+    assertNotEquals(configuredRule1.getRuleKey(), configuredRule2.getRuleKey());
   }
 
   @Test(expected = HumanReadableException.class)

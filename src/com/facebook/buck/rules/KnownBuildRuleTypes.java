@@ -168,7 +168,7 @@ public class KnownBuildRuleTypes {
         ProcessExecutor.Result versionResult = executor.execute(
             Runtime.getRuntime().exec(javac.get() + " -version"));
         if (versionResult.getExitCode() == 0) {
-          javacVersion = Optional.of(versionResult.getStdout());
+          javacVersion = Optional.of(versionResult.getStderr());
         } else {
           throw new HumanReadableException(versionResult.getStderr());
         }

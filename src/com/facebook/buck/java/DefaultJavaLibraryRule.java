@@ -687,6 +687,11 @@ public class DefaultJavaLibraryRule extends DoNotUseAbstractBuildable
   }
 
   @VisibleForTesting
+  public Optional<String> getJavacVersion() {
+    return javacOptions.getJavacVersion();
+  }
+
+  @VisibleForTesting
   void addResourceCommands(BuildContext context,
                            ImmutableList.Builder<Step> commands,
                            Path outputDirectory,
