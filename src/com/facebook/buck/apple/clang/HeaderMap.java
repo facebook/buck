@@ -21,6 +21,7 @@ import static java.lang.Math.max;
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -125,11 +126,30 @@ public class HeaderMap {
     visit(new HeaderMapVisitor() {
       @Override
       public void apply(String str, String prefix, String suffix) {
-        buffer.append("'" + str + "' ==> '" + prefix + "' + '" + suffix + "'\n");
+        buffer.append("\"");
+        buffer.append(str);
+        buffer.append("\" -> \"");
+        buffer.append(prefix);
+        buffer.append(suffix);
+        buffer.append("\"\n");
       }
     });
 
     return buffer.toString();
+  }
+
+  public void print(final PrintStream stream) {
+    visit(new HeaderMapVisitor() {
+      @Override
+      public void apply(String str, String prefix, String suffix) {
+        stream.print("\"");
+        stream.print(str);
+        stream.print("\" -> \"");
+        stream.print(prefix);
+        stream.print(suffix);
+        stream.print("\"\n");
+      }
+    });
   }
 
   @Nullable
@@ -184,14 +204,16 @@ public class HeaderMap {
   }
 
   private boolean processBytes(byte[] bytes) {
-    ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN);
-    if (buffer.getInt(0) != HEADER_MAGIC) {
-      buffer = buffer.order(ByteOrder.LITTLE_ENDIAN);
-    }
+    ByteBuffer buffer = ByteBuffer.wrap(bytes);
     return processBuffer(buffer);
   }
 
   private boolean processBuffer(ByteBuffer buffer) {
+    buffer.order(ByteOrder.BIG_ENDIAN);
+    if (buffer.getInt(0) != HEADER_MAGIC) {
+      buffer.order(ByteOrder.LITTLE_ENDIAN);
+    }
+
     int magic = buffer.getInt();
     short version = buffer.getShort();
     if (magic != HEADER_MAGIC || version != HEADER_VERSION) {

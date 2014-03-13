@@ -84,13 +84,13 @@ public class HeaderMapTest {
   public void testAddAndToString() {
     HeaderMap.Builder builder = HeaderMap.builder();
 
-    assertTrue(builder.add("foo", "value of", "foo"));
-    assertTrue(builder.add("bar", "value of", "bar"));
+    assertTrue(builder.add("foo", "value of ", "foo"));
+    assertTrue(builder.add("bar", "value of ", "bar"));
 
     HeaderMap hmap = builder.build();
     assertEquals(
-        "'foo' ==> 'value of' + 'foo'\n" +
-        "'bar' ==> 'value of' + 'bar'\n",
+        "\"foo\" -> \"value of foo\"\n" +
+        "\"bar\" -> \"value of bar\"\n",
         hmap.toString()
     );
   }
@@ -165,12 +165,12 @@ public class HeaderMapTest {
     assertEquals(testData[5], hmap.getMaxValueLength());
 
     assertEquals(
-        "'QuizViewController.h' ==> "
-            + "'/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/' + 'QuizViewController.h'\n"
-            + "'Quiz-Prefix.pch' ==> "
-            + "'/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/' + 'Quiz-Prefix.pch'\n"
-            + "'QuizAppDelegate.h' ==> "
-            + "'/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/' + 'QuizAppDelegate.h'\n",
+        "\"QuizViewController.h\" -> "
+            + "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/QuizViewController.h\"\n"
+            + "\"Quiz-Prefix.pch\" -> "
+            + "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/Quiz-Prefix.pch\"\n"
+            + "\"QuizAppDelegate.h\" -> "
+            + "\"/Users/mathieubaudet/Documents/XcodeProjects/Quiz/Quiz/QuizAppDelegate.h\"\n",
         hmap.toString());
 
     assertEquals(hmap.lookup("QuizViewController.h").length(), hmap.getMaxValueLength());
