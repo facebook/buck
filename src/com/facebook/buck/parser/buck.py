@@ -113,9 +113,11 @@ def add_rule(rule, build_env):
 def glob_pattern_to_regex_string(pattern):
     # Replace rules for glob pattern (roughly):
     # . => \\.
+    # + => \\+
     # **/* => (.*)
     # * => [^/]*
     pattern = re.sub(r'\.', '\\.', pattern)
+    pattern = re.sub(r'\+', '\\+', pattern)
     pattern = pattern.replace('**/*', '(.*)')
 
     # This handles the case when there is a character preceding the asterisk.

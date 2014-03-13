@@ -60,6 +60,12 @@ class TestBuck(unittest.TestCase):
     self.assertTrue(passes_glob_filter('./path/to/MyJavaTest.java', [all_java_tests_re], []))
 
 
+  def test_glob_plus(self):
+    file_name_with_plus = glob_pattern_to_regex_string('Tom+Jerry.java')
+    file_name_with_plus_re = re.compile(file_name_with_plus)
+    self.assertTrue(passes_glob_filter('Tom+Jerry.java', [file_name_with_plus_re], []))
+
+
   def test_lazy_build_env_partial(self):
     def cobol_binary(name,
         deps=[],
