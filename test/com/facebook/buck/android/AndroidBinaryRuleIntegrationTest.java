@@ -47,7 +47,9 @@ public class AndroidBinaryRuleIntegrationTest {
   public static void setUpOnce() throws IOException {
     projectFolderWithPrebuiltTargets.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        new AndroidBinaryRuleIntegrationTest(), "android_project", projectFolderWithPrebuiltTargets);
+        new AndroidBinaryRuleIntegrationTest(),
+        "android_project",
+        projectFolderWithPrebuiltTargets);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build", SIMPLE_TARGET, EXOPACKAGE_TARGET);
