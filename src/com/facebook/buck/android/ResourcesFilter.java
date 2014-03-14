@@ -138,6 +138,16 @@ public class ResourcesFilter extends AbstractBuildable
     // Since this buildable does not declare these resource rules as an explicit dependency (so that
     // it doesn't have to wait for the resource rules to finish building), it needs to set the
     // input sources this way.
+    if (!requiresResourceFilter()) {
+      // This is an optimization for build targets that do not use resource filters. Since this
+      // buildable returns the resource inputs of *all* the android resource rules, computing its
+      // rule key hits a bottleneck on the file hash cache. #appendDetailsToRuleKey() works around
+      // this by setting just the directory paths in the rule key in such cases, to ensure the
+      // correctnesss of this buildable's results.
+      // TODO(user): Fix this dirty hack by creating the buildable only when required.
+      return ImmutableSet.of();
+    }
+
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
     for (HasAndroidResourceDeps deps : androidResourceDepsFinder.getAndroidResources()) {
       builder.addAll(deps.getInputsToCompareToOutput());
@@ -147,9 +157,24 @@ public class ResourcesFilter extends AbstractBuildable
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) throws IOException {
-    return builder
+    builder
         .set("resourceCompressionMode", resourceCompressionMode.toString())
         .set("resourceFilter", resourceFilter.getDescription());
+
+    if (!requiresResourceFilter()) {
+      // See #getInputsToCompareToOutput()
+      // Basically, instead of hashing all the input files of all the resource rules that this
+      // buildable depends on, we just set the input directory names, because we still want this
+      // buildable to rebuild when a resource directory gets added or removed, because buildables
+      // downstream depend on this rule to get the final list of resource directories.
+      ImmutableSortedSet.Builder<String> resourceDirectories = ImmutableSortedSet.naturalOrder();
+      for (HasAndroidResourceDeps deps : androidResourceDepsFinder.getAndroidResources()) {
+        resourceDirectories.add(deps.getRes().toString());
+      }
+      builder.set("resourceDirectories", resourceDirectories.build());
+    }
+
+    return builder;
   }
 
   @Override
