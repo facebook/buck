@@ -26,6 +26,8 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class HeaderMapTest {
 
@@ -54,21 +56,18 @@ public class HeaderMapTest {
 
   @Test
   public void testAddLookup() {
+    int n = 11;
+
     HeaderMap.Builder builder = HeaderMap.builder();
-
-    final int n = 11;
     for (int i = 0; i < n; i++) {
-      assertTrue(builder.add("foo" + i, "value of foo" + i));
+      assertTrue(builder.add("foo" + i, "", "value of foo" + i));
     }
-
-    assertFalse(builder.add("foo1", "another value for foo1??"));
-
+    assertFalse(builder.add("foo1", "", "another value for foo1??"));
     HeaderMap hmap = builder.build();
 
     for (int i = 0; i < n; i++) {
       assertEquals("value of foo" + i, hmap.lookup("foo" + i));
     }
-
     for (int i = 0; i < n; i++) {
       assertEquals("value of foo" + i, hmap.lookup("FOO" + i));
     }
@@ -193,13 +192,12 @@ public class HeaderMapTest {
 
   @Test
   public void testReserializeVeryLongTable() {
-    HeaderMap.Builder builder = HeaderMap.builder();
+    int n = 1001;
 
-    final int n = 1001;
+    HeaderMap.Builder builder = HeaderMap.builder();
     for (int i = 0; i < n; i++) {
       assertTrue(builder.add("foo" + i, "value of foo", (new Integer(i)).toString()));
     }
-
     HeaderMap hmap = builder.build();
 
     assertEquals(n, hmap.getNumEntries());
@@ -213,6 +211,43 @@ public class HeaderMapTest {
 
     assertThatHeaderMapsAreEqual(hmap, hmap1);
     assertArrayEquals(bytes, hmap1.getBytes());
+  }
+
+  private void assertThatSplitPathWorksOnPath(Path path) {
+    String[] result = HeaderMap.Builder.splitPath(path);
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertNotNull(result[0]);
+    assertNotNull(result[1]);
+    assertEquals(path.toString(), result[0] + result[1]);
+  }
+
+  @Test
+  public void splitPathIsCorrect() {
+    assertThatSplitPathWorksOnPath(Paths.get(""));
+    assertThatSplitPathWorksOnPath(Paths.get("."));
+    assertThatSplitPathWorksOnPath(Paths.get("/"));
+    assertThatSplitPathWorksOnPath(Paths.get("./"));
+    assertThatSplitPathWorksOnPath(Paths.get("../."));
+    assertThatSplitPathWorksOnPath(Paths.get("./.."));
+    assertThatSplitPathWorksOnPath(Paths.get("/asdf/fdgh"));
+    assertThatSplitPathWorksOnPath(Paths.get("asdf/fdgh"));
+    assertThatSplitPathWorksOnPath(Paths.get("asdf/fdgh/dsfg"));
+  }
+
+  @Test
+  public void addPathWorks() {
+    int n = 11;
+
+    HeaderMap.Builder builder = HeaderMap.builder();
+    for (int i = 0; i < n; i++) {
+      assertTrue(builder.add("foo" + i, Paths.get("bar", "file" + i)));
+    }
+    HeaderMap hmap = builder.build();
+
+    for (int i = 0; i < n; i++) {
+      assertEquals("bar/file" + i, hmap.lookup("foo" + i));
+    }
   }
 
 }

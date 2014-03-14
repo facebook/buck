@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -339,9 +340,21 @@ public class HeaderMap {
       return (result == AddResult.OK);
     }
 
-    // TODO(user): auto split value for some clever strategy??
-    public boolean add(String key, String value) {
-      return add(key, "", value);
+    public static String[] splitPath(Path path) {
+      String[] result = new String[2];
+      if (path.getNameCount() < 2) {
+        result[0] = "";
+        result[1] = path.toString();
+      } else {
+        result[0] = path.getParent().toString() + "/";
+        result[1] = path.getFileName().toString();
+      }
+      return result;
+    }
+
+    public boolean add(String key, Path path) {
+      String[] s = splitPath(path);
+      return add(key, s[0], s[1]);
     }
 
     public synchronized HeaderMap build() {
