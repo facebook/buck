@@ -232,7 +232,7 @@ public class ComputeExopackageDepsAbi
 
     @Override
     protected BuildRuleType getType() {
-      return BuildRuleType.AAPT_PACKAGE;
+      return BuildRuleType.EXOPACKAGE_DEPS_ABI;
     }
 
     @Override
