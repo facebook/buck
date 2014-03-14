@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -51,20 +52,143 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final AbstractBuildRuleBuilderParams buildRuleBuilderParams;
-  private final ImmutableSortedSet.Builder<BuildRule> totalDeps;
+  private final BuildRuleResolver ruleResolver;
+  private final ResourceCompressionMode resourceCompressionMode;
+  private final ResourceFilter resourceFilter;
+  private final AndroidResourceDepsFinder androidResourceDepsFinder;
+  private final SourcePath manifest;
+  private final PackageType packageType;
+  private final ImmutableSet<TargetCpuType> cpuFilters;
+  private final boolean shouldBuildStringSourceMap;
+  private final boolean shouldPreDex;
+  private final Path primaryDexPath;
+  private final DexSplitMode dexSplitMode;
+  private final ImmutableSet<BuildTarget> buildRulesToExcludeFromDex;
   private final JavacOptions javacOptions;
+  private final boolean exopackage;
+  private final Keystore keystore;
 
-  AndroidBinaryGraphEnhancer(BuildRuleParams originalParams, JavacOptions javacOptions) {
+  AndroidBinaryGraphEnhancer(
+      BuildRuleParams originalParams,
+      BuildRuleResolver ruleResolver,
+      ResourceCompressionMode resourceCompressionMode,
+      ResourceFilter resourcesFilter,
+      AndroidResourceDepsFinder androidResourceDepsFinder,
+      SourcePath manifest,
+      PackageType packageType,
+      ImmutableSet<TargetCpuType> cpuFilters,
+      boolean shouldBuildStringSourceMap,
+      boolean shouldPreDex,
+      Path primaryDexPath,
+      DexSplitMode dexSplitMode,
+      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex,
+      JavacOptions javacOptions,
+      boolean exopackage,
+      Keystore keystore) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
     this.buildRuleBuilderParams = new DefaultBuildRuleBuilderParams(
         originalParams.getPathRelativizer(),
         originalParams.getRuleKeyBuilderFactory());
-    this.totalDeps = ImmutableSortedSet.naturalOrder();
 
-    totalDeps.addAll(originalDeps);
-
+    this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
+    this.resourceCompressionMode = Preconditions.checkNotNull(resourceCompressionMode);
+    this.resourceFilter = Preconditions.checkNotNull(resourcesFilter);
+    this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
+    this.manifest = Preconditions.checkNotNull(manifest);
+    this.packageType = Preconditions.checkNotNull(packageType);
+    this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
+    this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
+    this.shouldPreDex = shouldPreDex;
+    this.primaryDexPath = Preconditions.checkNotNull(primaryDexPath);
+    this.dexSplitMode = Preconditions.checkNotNull(dexSplitMode);
+    this.buildRulesToExcludeFromDex = Preconditions.checkNotNull(buildRulesToExcludeFromDex);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
+    this.exopackage = exopackage;
+    this.keystore = Preconditions.checkNotNull(keystore);
+  }
+
+  EnhancementResult createAdditionalBuildables() {
+    ImmutableSortedSet.Builder<BuildRule> enhancedDeps = ImmutableSortedSet.naturalOrder();
+    enhancedDeps.addAll(originalDeps);
+
+    BuildTarget buildTargetForFilterResources =
+        createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR);
+    BuildRule resourcesFilterBuildRule = ruleResolver.buildAndAddToIndex(
+        ResourcesFilter
+            .newResourcesFilterBuilder(buildRuleBuilderParams)
+            .setBuildTarget(buildTargetForFilterResources)
+            .setResourceCompressionMode(resourceCompressionMode)
+            .setResourceFilter(resourceFilter)
+            .setAndroidResourceDepsFinder(androidResourceDepsFinder));
+    ResourcesFilter resourcesFilter = (ResourcesFilter) resourcesFilterBuildRule.getBuildable();
+    enhancedDeps.add(resourcesFilterBuildRule);
+
+    BuildTarget buildTargetForUberRDotJava = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
+    BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
+        UberRDotJava
+            .newUberRDotJavaBuilder(buildRuleBuilderParams)
+            .setBuildTarget(buildTargetForUberRDotJava)
+            .setResourcesFilter(resourcesFilter)
+            .setAndroidResourceDepsFinder(androidResourceDepsFinder)
+            .setJavacOptions(javacOptions)
+            .setRDotJavaNeedsDexing(shouldPreDex)
+            .setBuildStringSourceMap(shouldBuildStringSourceMap));
+    UberRDotJava uberRDotJava = (UberRDotJava) uberRDotJavaBuildRule.getBuildable();
+    enhancedDeps.add(uberRDotJavaBuildRule);
+
+    // Create the AaptPackageResourcesBuildable.
+    BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
+    BuildRule aaptPackageResourcesBuildRule = ruleResolver.buildAndAddToIndex(
+        AaptPackageResources
+            .newAaptPackageResourcesBuildableBuilder(buildRuleBuilderParams)
+            .setBuildTarget(buildTargetForAapt)
+            .setAllParams(manifest,
+                resourcesFilter,
+                uberRDotJava,
+                androidResourceDepsFinder.getAndroidTransitiveDependencies()
+                    .nativeTargetsWithAssets,
+                packageType,
+                cpuFilters));
+    AaptPackageResources aaptPackageResources =
+        (AaptPackageResources) aaptPackageResourcesBuildRule.getBuildable();
+    enhancedDeps.add(aaptPackageResourcesBuildRule);
+
+    Optional<PreDexMerge> preDexMerge = Optional.absent();
+    if (shouldPreDex) {
+      BuildRule preDexMergeRule = createPreDexMergeRule(uberRDotJava);
+      preDexMerge = Optional.of((PreDexMerge) preDexMergeRule.getBuildable());
+      enhancedDeps.add(preDexMergeRule);
+    }
+
+    ImmutableSortedSet<BuildRule> finalDeps;
+    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
+    if (exopackage) {
+      BuildTarget buildTargetForAbiCalculation = createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR);
+      BuildRule computeExopackageDepsAbiRule = ruleResolver.buildAndAddToIndex(
+          ComputeExopackageDepsAbi.newBuildableBuilder(
+              buildRuleBuilderParams,
+              buildTargetForAbiCalculation,
+              enhancedDeps.build(),
+              androidResourceDepsFinder,
+              uberRDotJava,
+              aaptPackageResources,
+              preDexMerge,
+              keystore));
+      computeExopackageDepsAbi = Optional.of(
+          (ComputeExopackageDepsAbi) computeExopackageDepsAbiRule.getBuildable());
+      finalDeps = ImmutableSortedSet.of(computeExopackageDepsAbiRule);
+    } else {
+      finalDeps = enhancedDeps.build();
+    }
+
+    return new EnhancementResult(
+        resourcesFilter,
+        uberRDotJava,
+        aaptPackageResources,
+        preDexMerge,
+        computeExopackageDepsAbi,
+        finalDeps);
   }
 
   /**
@@ -73,12 +197,8 @@ public class AndroidBinaryGraphEnhancer {
    * <p>
    * This method may modify {@code ruleResolver}, inserting new rules into its index.
    */
-  DexEnhancementResult createDepsForPreDexing(
-      BuildRuleResolver ruleResolver,
-      Path primaryDexPath,
-      DexSplitMode dexSplitMode,
-      ImmutableSet<BuildTarget> buildRulesToExcludeFromDex,
-      UberRDotJava uberRDotJava) {
+  @VisibleForTesting
+  BuildRule createPreDexMergeRule(UberRDotJava uberRDotJava) {
     ImmutableSet.Builder<IntermediateDexRule> preDexDeps = ImmutableSet.builder();
     ImmutableSet<JavaLibraryRule> transitiveJavaDeps = Classpaths
         .getClasspathEntries(originalDeps).keySet();
@@ -127,131 +247,31 @@ public class AndroidBinaryGraphEnhancer {
             .setDexSplitMode(dexSplitMode)
             .setPreDexDeps(allPreDexDeps)
             .setUberRDotJava(uberRDotJava));
-    PreDexMerge preDexMerge = (PreDexMerge) preDexMergeBuildRule.getBuildable();
 
-    totalDeps.add(preDexMergeBuildRule);
-
-    return new DexEnhancementResult(Optional.of(preDexMerge));
+    return preDexMergeBuildRule;
   }
 
-  AaptEnhancementResult addBuildablesToCreateAaptResources(
-      BuildRuleResolver ruleResolver,
-      ResourceCompressionMode resourceCompressionMode,
-      ResourceFilter resourceFilter,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      SourcePath manifest,
-      PackageType packageType,
-      ImmutableSet<TargetCpuType> cpuFilters,
-      boolean rDotJavaNeedsDexing,
-      boolean shouldBuildStringSourceMap) {
-    BuildTarget buildTargetForFilterResources =
-        createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR);
-    BuildRule resourcesFilterBuildRule = ruleResolver.buildAndAddToIndex(
-        ResourcesFilter
-            .newResourcesFilterBuilder(buildRuleBuilderParams)
-            .setBuildTarget(buildTargetForFilterResources)
-            .setResourceCompressionMode(resourceCompressionMode)
-            .setResourceFilter(resourceFilter)
-            .setAndroidResourceDepsFinder(androidResourceDepsFinder));
-    ResourcesFilter resourcesFilter = (ResourcesFilter) resourcesFilterBuildRule.getBuildable();
-
-    BuildTarget buildTargetForUberRDotJava = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
-    BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
-        UberRDotJava
-            .newUberRDotJavaBuilder(buildRuleBuilderParams)
-            .setBuildTarget(buildTargetForUberRDotJava)
-            .setResourcesFilter(resourcesFilter)
-            .setAndroidResourceDepsFinder(androidResourceDepsFinder)
-            .setJavacOptions(javacOptions)
-            .setRDotJavaNeedsDexing(rDotJavaNeedsDexing)
-            .setBuildStringSourceMap(shouldBuildStringSourceMap)
-    );
-    UberRDotJava uberRDotJava = (UberRDotJava) uberRDotJavaBuildRule.getBuildable();
-
-    // Create the AaptPackageResourcesBuildable.
-    BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
-    BuildRule aaptPackageResourcesBuildRule = ruleResolver.buildAndAddToIndex(
-        AaptPackageResources
-            .newAaptPackageResourcesBuildableBuilder(buildRuleBuilderParams)
-            .setBuildTarget(buildTargetForAapt)
-            .setAllParams(manifest,
-                resourcesFilter,
-                uberRDotJava,
-                androidResourceDepsFinder.getAndroidTransitiveDependencies()
-                    .nativeTargetsWithAssets,
-                packageType,
-                cpuFilters));
-    AaptPackageResources aaptPackageResources =
-        (AaptPackageResources) aaptPackageResourcesBuildRule.getBuildable();
-
-    totalDeps
-        .add(resourcesFilterBuildRule)
-        .add(uberRDotJavaBuildRule)
-        .add(aaptPackageResourcesBuildRule)
-        .build();
-
-    return new AaptEnhancementResult(resourcesFilter, uberRDotJava, aaptPackageResources);
-  }
-
-  /**
-   * Must be called *after* aapt and dex enhancement.  If this is used, the AndroidBinaryRule
-   * should depend on the finalExopackageDeps returned by this method, not "getTotalDeps".
-   */
-  AbiEnhancementResult createDepsForAbiCalculation(
-      BuildRuleResolver ruleResolver,
-      boolean exopackage,
-      Keystore keystore,
-      AndroidResourceDepsFinder androidResourceDepsFinder,
-      AaptEnhancementResult aaptEnhancementResult,
-      DexEnhancementResult dexEnhancementResult) {
-
-    ImmutableSortedSet<BuildRule> finalDeps;
-    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
-    if (!exopackage) {
-      finalDeps = getTotalDeps();
-      computeExopackageDepsAbi = Optional.absent();
-    } else {
-      BuildTarget buildTargetForAbiCalculation = createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR);
-      BuildRule abiCalculatorRule = ruleResolver.buildAndAddToIndex(
-          ComputeExopackageDepsAbi.newBuildableBuilder(
-              buildRuleBuilderParams,
-              buildTargetForAbiCalculation,
-              getTotalDeps(),
-              androidResourceDepsFinder,
-              aaptEnhancementResult.getUberRDotJava(),
-              aaptEnhancementResult.getAaptPackageResources(),
-              dexEnhancementResult.getPreDexMerge(),
-              keystore));
-      finalDeps = ImmutableSortedSet.of(abiCalculatorRule);
-      computeExopackageDepsAbi =
-          Optional.of((ComputeExopackageDepsAbi)abiCalculatorRule.getBuildable());
-    }
-    return new AbiEnhancementResult(finalDeps, computeExopackageDepsAbi);
-  }
-
-  /**
-   * This should be called after all "createDeps" methods to get the total set of dependencies
-   * that the final AndroidBinaryRule should have.
-   * Except for exopackages.  For them, use the result of createDepsForAbiCalculation.
-   *
-   * @return All dependencies for the AndroidBinaryRule.
-   */
-  ImmutableSortedSet<BuildRule> getTotalDeps() {
-    return totalDeps.build();
-  }
-
-  static class AaptEnhancementResult {
+  static class EnhancementResult {
     private final ResourcesFilter resourcesFilter;
     private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
+    private final Optional<PreDexMerge> preDexMerge;
+    private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
+    private final ImmutableSortedSet<BuildRule> finalDeps;
 
-    public AaptEnhancementResult(
+    public EnhancementResult(
         ResourcesFilter resourcesFilter,
         UberRDotJava uberRDotJava,
-        AaptPackageResources aaptPackageBuildable) {
-      this.resourcesFilter = resourcesFilter;
-      this.uberRDotJava = uberRDotJava;
-      this.aaptPackageResources = aaptPackageBuildable;
+        AaptPackageResources aaptPackageBuildable,
+        Optional<PreDexMerge> preDexMerge,
+        Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
+        ImmutableSortedSet<BuildRule> finalDeps) {
+      this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
+      this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+      this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageBuildable);
+      this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
+      this.computeExopackageDepsAbi = Preconditions.checkNotNull(computeExopackageDepsAbi);
+      this.finalDeps = Preconditions.checkNotNull(finalDeps);
     }
 
     public ResourcesFilter getResourcesFilter() {
@@ -265,36 +285,16 @@ public class AndroidBinaryGraphEnhancer {
     public AaptPackageResources getAaptPackageResources() {
       return aaptPackageResources;
     }
-  }
-
-  static class DexEnhancementResult {
-    private final Optional<PreDexMerge> preDexMerge;
-
-    DexEnhancementResult(Optional<PreDexMerge> preDexMerge) {
-      this.preDexMerge = preDexMerge;
-    }
 
     public Optional<PreDexMerge> getPreDexMerge() {
       return preDexMerge;
     }
-  }
 
-  static class AbiEnhancementResult {
-    private final ImmutableSortedSet<BuildRule> finalExopackageDeps;
-    private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
-
-    AbiEnhancementResult(
-        ImmutableSortedSet<BuildRule> finalExopackageDeps,
-        Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi) {
-      this.finalExopackageDeps = finalExopackageDeps;
-      this.computeExopackageDepsAbi = computeExopackageDepsAbi;
+    public ImmutableSortedSet<BuildRule> getFinalDeps() {
+      return finalDeps;
     }
 
-    public ImmutableSortedSet<BuildRule> getFinalExopackageDeps() {
-      return finalExopackageDeps;
-    }
-
-    public Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi() {
+    public Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi() {
       return computeExopackageDepsAbi;
     }
   }

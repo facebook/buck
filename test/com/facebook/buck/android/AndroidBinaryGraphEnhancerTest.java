@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.java.DefaultJavaLibraryRule;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
@@ -34,8 +36,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultBuildRuleBuilderParams;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.FileSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,7 +46,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Iterator;
 
 public class AndroidBinaryGraphEnhancerTest {
@@ -97,7 +98,21 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleKeyBuilderFactory);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
-        JavacOptions.DEFAULTS);
+        ruleResolver,
+        ResourcesFilter.ResourceCompressionMode.DISABLED,
+        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        createStrictMock(AndroidResourceDepsFinder.class),
+        createStrictMock(FileSourcePath.class),
+        AndroidBinaryRule.PackageType.DEBUG,
+        /* cpuFilters */ ImmutableSet.< AndroidBinaryRule.TargetCpuType>of(),
+        /* shouldBuildStringSourceMap */ false,
+        /* shouldPreDex */ true,
+        BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
+        DexSplitMode.NO_SPLIT,
+        buildRulesToExcludeFromDex,
+        JavacOptions.DEFAULTS,
+        /* exopackage */ false,
+        createStrictMock(Keystore.class));
 
     UberRDotJava uberRDotJava = createMock(UberRDotJava.class);
     BuildTarget uberRDotJavaTarget =
@@ -115,22 +130,12 @@ public class AndroidBinaryGraphEnhancerTest {
             ruleKeyBuilderFactory));
     ruleResolver.addToIndex(uberRDotJavaTarget, uberRDotJavaRule);
 
-    AndroidBinaryGraphEnhancer.DexEnhancementResult dexEnhancementResult =
-        graphEnhancer.createDepsForPreDexing(
-          ruleResolver,
-          BuildTargets.getBinPath(apkTarget, "%s/classes.dex"),
-          DexSplitMode.NO_SPLIT,
-          buildRulesToExcludeFromDex,
-          uberRDotJava);
-    Collection<BuildRule> totalDeps = graphEnhancer.getTotalDeps();
+    BuildRule preDexMergeRule =
+        graphEnhancer.createPreDexMergeRule(uberRDotJava);
     BuildTarget dexMergeTarget = new BuildTarget("//java/com/example", "apk", "dex_merge");
     BuildRule dexMergeRule = ruleResolver.get(dexMergeTarget);
 
-    assertEquals(dexMergeRule.getBuildable(), dexEnhancementResult.getPreDexMerge().get());
-
-    MoreAsserts.assertDepends("apk should depend on dex merge", totalDeps, dexMergeTarget);
-    MoreAsserts.assertNotDepends("apk should not depend on library dexes", totalDeps,
-        new BuildTarget("//java/com/example", "dep1"));
+    assertEquals(dexMergeRule.getBuildable(), preDexMergeRule.getBuildable());
 
     assertEquals(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx " +
