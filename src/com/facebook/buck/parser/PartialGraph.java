@@ -20,7 +20,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyGraph;
+import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -79,26 +81,60 @@ public class PartialGraph {
   }
 
   /**
-   * Creates a partial graph of all {@link com.facebook.buck.rules.BuildRule}s that are transitive
-   * dependencies of (rules that pass {@code predicate} and are contained in BUCK files that contain
-   * transitive dependencies of the {@link BuildTarget}s defined in {@code roots}).
+   * Creates a partial graph of all {@link com.facebook.buck.rules.BuildRule}s that are either
+   * transitive dependencies or tests for (rules that pass {@code predicate} and are contained in
+   * BUCK files that contain transitive dependencies of the {@link BuildTarget}s defined in
+   * {@code roots}).
    */
-  public static PartialGraph createPartialGraphFromRoots(
+  public static PartialGraph createPartialGraphFromRootsWithTests(
       Iterable<BuildTarget> roots,
       RawRulePredicate predicate,
+      ProjectFilesystem filesystem,
       Iterable<String> includes,
       Parser parser,
       BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
     Preconditions.checkNotNull(predicate);
 
-    List<BuildTarget> targets = parser.filterTargetsInProjectFromRoots(
-        roots, includes, eventBus, predicate);
+    List<BuildTarget> buildTargets = parser.filterTargetsInProjectFromRoots(
+        roots, includes, eventBus, RawRulePredicates.alwaysTrue());
+    DependencyGraph buildGraph =
+        parseAndCreateGraphFromTargets(buildTargets, includes, parser, eventBus)
+            .getDependencyGraph();
 
-    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
+    // We have to enumerate all test targets, and see which ones refer to a rule in our build graph
+    // with it's src_under_test field.
+    ImmutableList.Builder<BuildTarget> buildAndTestTargetsBuilder =
+        ImmutableList.<BuildTarget>builder()
+            .addAll(roots);
+
+    PartialGraph testGraph = PartialGraph.createPartialGraph(
+        RawRulePredicates.isTestRule(),
+        filesystem,
+        includes,
+        parser,
+        eventBus);
+
+    DependencyGraph testDependencyGraph = testGraph.getDependencyGraph();
+
+    // Iterate through all possible test targets, looking for ones who's src_under_test intersects
+    // with our build graph.
+    for (BuildTarget buildTarget : testGraph.getTargets()) {
+      TestRule testRule = (TestRule) testDependencyGraph.findBuildRuleByTarget(buildTarget);
+      for (BuildRule buildRuleUnderTest : testRule.getSourceUnderTest()) {
+        if (buildGraph.findBuildRuleByTarget(buildRuleUnderTest.getBuildTarget()) != null) {
+          buildAndTestTargetsBuilder.add(testRule.getBuildTarget());
+          break;
+        }
+      }
+    }
+
+    List<BuildTarget> allTargets = parser.filterTargetsInProjectFromRoots(
+        buildAndTestTargetsBuilder.build(), includes, eventBus, predicate);
+    return parseAndCreateGraphFromTargets(allTargets, includes, parser, eventBus);
   }
 
   /**
-   * Like {@link #createPartialGraphFromRoots}, but trades accuracy for speed.
+   * Like {@link #createPartialGraphFromRootsWithTests}, but trades accuracy for speed.
    *
    * <p>The graph returned from this method will include all transitive deps of the roots, but
    * might also include rules that are not actually dependencies.  This looseness allows us to

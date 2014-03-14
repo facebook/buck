@@ -1,0 +1,16 @@
+
+java_test(
+  name = 'another_test',
+  srcs = glob(['*Test.java']),
+  deps = [
+    '//modules/dep1:dep1',
+    '//libs:junit',
+  ],
+  source_under_test = [
+    '//modules/dep1:dep1',
+  ]
+)
+
+project_config(
+  src_target = ':another_test',
+)

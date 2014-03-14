@@ -29,11 +29,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.RawRulePredicate;
+import com.facebook.buck.parser.RawRulePredicates;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DependencyGraph;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRule;
@@ -282,15 +282,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
-    RawRulePredicate predicate = new RawRulePredicate() {
-      @Override
-      public boolean isMatch(
-          Map<String, Object> rawParseData,
-          BuildRuleType buildRuleType,
-          BuildTarget buildTarget) {
-        return buildRuleType.isTestRule();
-      }
-    };
+    RawRulePredicate predicate = RawRulePredicates.isTestRule();
     PartialGraph partialGraph = PartialGraph.createPartialGraph(predicate,
         getProjectFilesystem(),
         options.getDefaultIncludes(),

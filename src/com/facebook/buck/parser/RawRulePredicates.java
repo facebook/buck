@@ -90,4 +90,16 @@ public class RawRulePredicates {
       }
     };
   }
+
+  public static final RawRulePredicate isTestRule() {
+    return new RawRulePredicate() {
+      @Override
+      public boolean isMatch(
+          Map<String, Object> rawParseData,
+          BuildRuleType buildRuleType,
+          BuildTarget buildTarget) {
+        return buildRuleType.isTestRule();
+      }
+    };
+  }
 }

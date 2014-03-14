@@ -49,6 +49,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
@@ -61,6 +62,7 @@ import com.google.common.io.InputSupplier;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.EnumSet;
@@ -87,6 +89,7 @@ public class Parser {
    * The build files that have been parsed and whose build rules are in {@link #knownBuildTargets}.
    */
   private final ListMultimap<Path, Map<String, Object>> parsedBuildFiles;
+  private final Map<BuildTarget, Path> targetsToFile;
   private final ImmutableSet<Pattern> tempFilePatterns;
 
   /**
@@ -249,6 +252,7 @@ public class Parser {
     this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
     this.parsedBuildFiles = ArrayListMultimap.create();
+    this.targetsToFile = Maps.newHashMap();
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
   }
@@ -547,6 +551,7 @@ public class Parser {
     Preconditions.checkNotNull(buildFile);
     Preconditions.checkNotNull(defaultIncludes);
     Preconditions.checkNotNull(buildFileParser);
+
     if (!isCached(buildFile, defaultIncludes)) {
       if (console.getVerbosity().shouldPrintCommand()) {
         console.getStdErr().printf("Parsing %s file: %s\n",
@@ -574,6 +579,8 @@ public class Parser {
 
       BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
       BuildTarget target = parseBuildTargetFromRawRule(map);
+      targetsToFile.put(target,
+          normalize(Paths.get((String)map.get("buck.base_path"))).resolve("BUCK").toAbsolutePath());
 
       BuildRuleFactory<?> factory = buildRuleTypes.getFactory(buildRuleType);
       if (factory == null) {
@@ -629,6 +636,10 @@ public class Parser {
   }
 
   /**
+   * This method has been deprecated because it is not idempotent and returns different results
+   * based upon what has been already parsed.
+   * Prefer {@link #filterGraphTargets(RawRulePredicate, DependencyGraph)}
+   *
    * @param filter the test to apply to all targets that have been read from build files, or null.
    * @return the build targets that pass the test, or null if the filter was null.
    */
@@ -650,6 +661,34 @@ public class Parser {
     }
 
     return matchingTargets;
+  }
+
+  /**
+   * @param filter the test to apply to all targets that have been read from build files, or null.
+   * @return the build targets that pass the test, or null if the filter was null.
+   */
+  @VisibleForTesting
+  @Nullable
+  List<BuildTarget> filterGraphTargets(
+      @Nullable RawRulePredicate filter,
+      DependencyGraph dependencyGraph) throws NoSuchBuildTargetException {
+    if (filter == null) {
+      return null;
+    }
+
+    ImmutableList.Builder<BuildTarget> matchingTargets = ImmutableList.builder();
+    for (BuildRule buildRule : dependencyGraph.getNodes()) {
+      for (Map<String, Object> map :
+           parsedBuildFiles.get(targetsToFile.get(buildRule.getBuildTarget()))) {
+        BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
+        BuildTarget target = parseBuildTargetFromRawRule(map);
+        if (filter.isMatch(map, buildRuleType, target)) {
+          matchingTargets.add(target);
+        }
+      }
+    }
+
+    return matchingTargets.build();
   }
 
   /**
@@ -726,9 +765,9 @@ public class Parser {
       BuckEventBus eventBus,
       RawRulePredicate filter)
       throws BuildFileParseException, BuildTargetException, IOException {
-    parseBuildFilesForTargets(roots, defaultIncludes, eventBus);
+    DependencyGraph dependencyGraph = parseBuildFilesForTargets(roots, defaultIncludes, eventBus);
 
-    return filterTargets(filter);
+    return filterGraphTargets(filter, dependencyGraph);
   }
 
   /**

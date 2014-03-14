@@ -98,7 +98,8 @@ public class ProjectIntegrationTest {
             ".idea/libraries/libs_junit_jar.xml",
             ".idea/modules.xml",
             ".idea/runConfigurations/Debug_Buck_test.xml",
-            "modules/dep1/module_modules_dep1.iml"
+            "modules/dep1/module_modules_dep1.iml",
+            "tests/module_tests.iml"
         ) + '\n',
         result.getStdout());
 
