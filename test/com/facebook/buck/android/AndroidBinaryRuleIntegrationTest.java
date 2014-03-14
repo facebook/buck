@@ -22,13 +22,18 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 
 public class AndroidBinaryRuleIntegrationTest {
+
+  public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets
+      = new DebuggableTemporaryFolder();
 
   @Rule
   public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
@@ -38,16 +43,27 @@ public class AndroidBinaryRuleIntegrationTest {
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
   private static final String EXOPACKAGE_TARGET = "//apps/multidex:app-exo";
 
-  @Before
-  public void setUp() throws IOException {
-    tmpFolder.create();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
-
+  @BeforeClass
+  public static void setUpOnce() throws IOException {
+    projectFolderWithPrebuiltTargets.create();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        new AndroidBinaryRuleIntegrationTest(), "android_project", projectFolderWithPrebuiltTargets);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build", SIMPLE_TARGET, EXOPACKAGE_TARGET);
     result.assertSuccess();
+  }
+
+  @AfterClass
+  public static void tearDownLast() {
+    projectFolderWithPrebuiltTargets.after();
+  }
+
+  @Before
+  public void setUp() throws IOException {
+    tmpFolder.create();
+    workspace = new ProjectWorkspace(projectFolderWithPrebuiltTargets.getRoot(), tmpFolder);
+    workspace.setUp();
   }
 
   @Test
