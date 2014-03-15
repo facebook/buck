@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinaryRule.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
@@ -383,9 +384,12 @@ public class AndroidBinaryRuleTest {
     AndroidBinaryRule buildRule = resolver.buildAndAddToIndex(builder);
     Set<Path> resourceDirectories = ImmutableSet.of(Paths.get("one"), Paths.get("two"));
 
-    FilterResourcesStep filterResourcesStep = buildRule.getResourcesFilter()
-        .createFilterResourcesStep(resourceDirectories,
-            /* whitelistedStringsDir */ ImmutableSet.<Path>of());
+    assertTrue(buildRule.getFilteredResourcesProvider() instanceof ResourcesFilter);
+    FilterResourcesStep filterResourcesStep =
+        ((ResourcesFilter) buildRule.getFilteredResourcesProvider())
+            .createFilterResourcesStep(
+                resourceDirectories,
+                /* whitelistedStringsDir */ ImmutableSet.<Path>of());
 
     assertEquals(
         ImmutableSet.of(

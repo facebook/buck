@@ -114,41 +114,58 @@ public class AndroidBinaryGraphEnhancer {
 
     BuildTarget buildTargetForFilterResources =
         createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR);
-    BuildRule resourcesFilterBuildRule = ruleResolver.buildAndAddToIndex(
-        ResourcesFilter
-            .newResourcesFilterBuilder(buildRuleBuilderParams)
-            .setBuildTarget(buildTargetForFilterResources)
-            .setResourceCompressionMode(resourceCompressionMode)
-            .setResourceFilter(resourceFilter)
-            .setAndroidResourceDepsFinder(androidResourceDepsFinder));
-    ResourcesFilter resourcesFilter = (ResourcesFilter) resourcesFilterBuildRule.getBuildable();
-    enhancedDeps.add(resourcesFilterBuildRule);
+    FilteredResourcesProvider filteredResourcesProvider;
+    boolean needsResourceFiltering =
+        resourceFilter.isEnabled() || resourceCompressionMode.isStoreStringsAsAssets();
+
+    if (needsResourceFiltering) {
+      BuildRule resourcesFilterBuildRule = ruleResolver.buildAndAddToIndex(
+          ResourcesFilter
+              .newResourcesFilterBuilder(buildRuleBuilderParams)
+              .setBuildTarget(buildTargetForFilterResources)
+              .setResourceCompressionMode(resourceCompressionMode)
+              .setResourceFilter(resourceFilter)
+              .setAndroidResourceDepsFinder(androidResourceDepsFinder));
+      filteredResourcesProvider = (ResourcesFilter) resourcesFilterBuildRule.getBuildable();
+      enhancedDeps.add(resourcesFilterBuildRule);
+    } else {
+      filteredResourcesProvider = new IdentityResourcesProvider(androidResourceDepsFinder);
+    }
 
     BuildTarget buildTargetForUberRDotJava = createBuildTargetWithFlavor(UBER_R_DOT_JAVA_FLAVOR);
-    BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(
+    UberRDotJava.Builder uberRDotJavaBuilder =
         UberRDotJava
             .newUberRDotJavaBuilder(buildRuleBuilderParams)
             .setBuildTarget(buildTargetForUberRDotJava)
-            .setResourcesFilter(resourcesFilter)
+            .setFilteredResourcesProvider(filteredResourcesProvider)
             .setAndroidResourceDepsFinder(androidResourceDepsFinder)
             .setJavacOptions(javacOptions)
             .setRDotJavaNeedsDexing(shouldPreDex)
-            .setBuildStringSourceMap(shouldBuildStringSourceMap));
+            .setBuildStringSourceMap(shouldBuildStringSourceMap);
+    if (needsResourceFiltering) {
+      uberRDotJavaBuilder.addDep(buildTargetForFilterResources);
+    }
+    BuildRule uberRDotJavaBuildRule = ruleResolver.buildAndAddToIndex(uberRDotJavaBuilder);
     UberRDotJava uberRDotJava = (UberRDotJava) uberRDotJavaBuildRule.getBuildable();
     enhancedDeps.add(uberRDotJavaBuildRule);
 
     // Create the AaptPackageResourcesBuildable.
     BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
-    BuildRule aaptPackageResourcesBuildRule = ruleResolver.buildAndAddToIndex(
+    AaptPackageResources.Builder aaptPackageResourcesBuilder =
         AaptPackageResources
             .newAaptPackageResourcesBuildableBuilder(buildRuleBuilderParams)
             .setBuildTarget(buildTargetForAapt)
             .setAllParams(manifest,
-                resourcesFilter,
+                filteredResourcesProvider,
                 uberRDotJava,
                 androidResourceDepsFinder.getAndroidTransitiveDependencies(),
                 packageType,
-                cpuFilters));
+                cpuFilters);
+    if (needsResourceFiltering) {
+      aaptPackageResourcesBuilder.addDep(buildTargetForFilterResources);
+    }
+    BuildRule aaptPackageResourcesBuildRule =
+        ruleResolver.buildAndAddToIndex(aaptPackageResourcesBuilder);
     AaptPackageResources aaptPackageResources =
         (AaptPackageResources) aaptPackageResourcesBuildRule.getBuildable();
     enhancedDeps.add(aaptPackageResourcesBuildRule);
@@ -182,7 +199,7 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     return new EnhancementResult(
-        resourcesFilter,
+        filteredResourcesProvider,
         uberRDotJava,
         aaptPackageResources,
         preDexMerge,
@@ -251,7 +268,7 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   static class EnhancementResult {
-    private final ResourcesFilter resourcesFilter;
+    private final FilteredResourcesProvider filteredResourcesProvider;
     private final UberRDotJava uberRDotJava;
     private final AaptPackageResources aaptPackageResources;
     private final Optional<PreDexMerge> preDexMerge;
@@ -259,13 +276,13 @@ public class AndroidBinaryGraphEnhancer {
     private final ImmutableSortedSet<BuildRule> finalDeps;
 
     public EnhancementResult(
-        ResourcesFilter resourcesFilter,
+        FilteredResourcesProvider filteredResourcesProvider,
         UberRDotJava uberRDotJava,
         AaptPackageResources aaptPackageBuildable,
         Optional<PreDexMerge> preDexMerge,
         Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
         ImmutableSortedSet<BuildRule> finalDeps) {
-      this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
+      this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
       this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
       this.aaptPackageResources = Preconditions.checkNotNull(aaptPackageBuildable);
       this.preDexMerge = Preconditions.checkNotNull(preDexMerge);
@@ -273,8 +290,8 @@ public class AndroidBinaryGraphEnhancer {
       this.finalDeps = Preconditions.checkNotNull(finalDeps);
     }
 
-    public ResourcesFilter getResourcesFilter() {
-      return resourcesFilter;
+    public FilteredResourcesProvider getFilteredResourcesProvider() {
+      return filteredResourcesProvider;
     }
 
     public UberRDotJava getUberRDotJava() {

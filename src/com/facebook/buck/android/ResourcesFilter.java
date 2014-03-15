@@ -69,7 +69,7 @@ import javax.annotation.Nullable;
  * </ul>
  */
 public class ResourcesFilter extends AbstractBuildable
-    implements InitializableFromDisk<ResourcesFilter.BuildOutput> {
+    implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
 
   private static final String RES_DIRECTORIES_KEY = "res_directories";
   private static final String NON_ENGLISH_STRING_FILES_KEY = "non_english_string_files";
@@ -117,15 +117,17 @@ public class ResourcesFilter extends AbstractBuildable
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
+  @Override
   public ImmutableSet<Path> getResDirectories() {
     return buildOutputInitializer.getBuildOutput().resDirectories;
   }
 
+  @Override
   public ImmutableSet<Path> getNonEnglishStringFiles() {
     return buildOutputInitializer.getBuildOutput().nonEnglishStringFiles;
   }
 
-  BuildTarget getBuildTarget() {
+  public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 
@@ -182,6 +184,7 @@ public class ResourcesFilter extends AbstractBuildable
         androidResourceDepsFinder.getAndroidResourceDetails();
     final ImmutableSet<Path> resDirectories;
     final Supplier<ImmutableSet<Path>> nonEnglishStringFiles;
+    // TODO(user): Remove this check since this will be always be true.
     if (requiresResourceFilter()) {
       final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
           androidResourceDetails.resDirectories,
@@ -261,7 +264,7 @@ public class ResourcesFilter extends AbstractBuildable
     return resourceFilter.isEnabled() || isStoreStringsAsAssets();
   }
 
-  boolean isStoreStringsAsAssets() {
+  public boolean isStoreStringsAsAssets() {
     return resourceCompressionMode.isStoreStringsAsAssets();
   }
 

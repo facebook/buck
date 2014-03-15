@@ -77,7 +77,7 @@ public class AaptPackageResources extends AbstractBuildable
 
   private final BuildTarget buildTarget;
   private final SourcePath manifest;
-  private final ResourcesFilter resourcesFilter;
+  private final FilteredResourcesProvider filteredResourcesProvider;
   private final UberRDotJava uberRDotJava;
   private final AndroidTransitiveDependencies androidTransitiveDependencies;
   private final PackageType packageType;
@@ -86,14 +86,14 @@ public class AaptPackageResources extends AbstractBuildable
 
   AaptPackageResources(BuildTarget buildTarget,
       SourcePath manifest,
-      ResourcesFilter resourcesFilter,
+      FilteredResourcesProvider filteredResourcesProvider,
       UberRDotJava uberRDotJava,
       AndroidTransitiveDependencies androidTransitiveDependencies,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.manifest = Preconditions.checkNotNull(manifest);
-    this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
+    this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
     this.androidTransitiveDependencies = Preconditions.checkNotNull(androidTransitiveDependencies);
     this.packageType = Preconditions.checkNotNull(packageType);
@@ -128,12 +128,12 @@ public class AaptPackageResources extends AbstractBuildable
     steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
 
     // If the strings should be stored as assets, then we need to create the .fbstr bundles.
-    final ImmutableSet<Path> resDirectories = resourcesFilter.getResDirectories();
+    final ImmutableSet<Path> resDirectories = filteredResourcesProvider.getResDirectories();
     if (!resDirectories.isEmpty() && isStoreStringsAsAssets()) {
       Path tmpStringsDirPath = getPathForTmpStringAssetsDirectory();
       steps.add(new MakeCleanDirectoryStep(tmpStringsDirPath));
       steps.add(new CompileStringsStep(
-          resourcesFilter.getNonEnglishStringFiles(),
+          filteredResourcesProvider.getNonEnglishStringFiles(),
           uberRDotJava.getPathToGeneratedRDotJavaSrcFiles(),
           tmpStringsDirPath));
     }
@@ -239,7 +239,7 @@ public class AaptPackageResources extends AbstractBuildable
   }
 
   private boolean isStoreStringsAsAssets() {
-    return resourcesFilter.isStoreStringsAsAssets();
+    return filteredResourcesProvider.isStoreStringsAsAssets();
   }
 
   /**
@@ -337,7 +337,7 @@ public class AaptPackageResources extends AbstractBuildable
   static class Builder extends AbstractBuildable.Builder {
 
     @Nullable private SourcePath manifest;
-    @Nullable private ResourcesFilter resourcesFilter;
+    @Nullable private FilteredResourcesProvider filteredResourcesProvider;
     @Nullable private UberRDotJava uberRDotJava;
     @Nullable private AndroidTransitiveDependencies androidTransitiveDependencies;
     @Nullable private PackageType packageType;
@@ -360,19 +360,18 @@ public class AaptPackageResources extends AbstractBuildable
 
     public Builder setAllParams(
         SourcePath manifest,
-        ResourcesFilter resourcesFilter,
+        FilteredResourcesProvider filteredResourcesProvider,
         UberRDotJava uberRDotJava,
         AndroidTransitiveDependencies androidTransitiveDependencies,
         PackageType packageType,
         ImmutableSet<TargetCpuType> cpuFilters) {
       this.manifest = manifest;
-      this.resourcesFilter = resourcesFilter;
+      this.filteredResourcesProvider = filteredResourcesProvider;
       this.uberRDotJava = uberRDotJava;
       this.androidTransitiveDependencies = androidTransitiveDependencies;
       this.packageType = packageType;
       this.cpuFilters = cpuFilters;
 
-      addDep(resourcesFilter.getBuildTarget());
       addDep(uberRDotJava.getBuildTarget());
       if (manifest instanceof BuildTargetSourcePath) {
         addDep(((BuildTargetSourcePath) manifest).getTarget());
@@ -390,7 +389,7 @@ public class AaptPackageResources extends AbstractBuildable
       return new AaptPackageResources(
           getBuildTarget(),
           manifest,
-          resourcesFilter,
+          filteredResourcesProvider,
           uberRDotJava,
           androidTransitiveDependencies,
           packageType,

@@ -68,7 +68,7 @@ public class UberRDotJava extends AbstractBuildable implements
   public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
 
   private final BuildTarget buildTarget;
-  private final ResourcesFilter resourcesFilter;
+  private final FilteredResourcesProvider filteredResourcesProvider;
   private final JavacOptions javacOptions;
   private final AndroidResourceDepsFinder androidResourceDepsFinder;
   private final boolean rDotJavaNeedsDexing;
@@ -76,13 +76,13 @@ public class UberRDotJava extends AbstractBuildable implements
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   UberRDotJava(BuildTarget buildTarget,
-      ResourcesFilter resourcesFilter,
+      FilteredResourcesProvider filteredResourcesProvider,
       JavacOptions javacOptions,
       AndroidResourceDepsFinder androidResourceDepsFinder,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
+    this.filteredResourcesProvider = Preconditions.checkNotNull(filteredResourcesProvider);
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.androidResourceDepsFinder = Preconditions.checkNotNull(androidResourceDepsFinder);
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
@@ -152,7 +152,7 @@ public class UberRDotJava extends AbstractBuildable implements
     AndroidResourceDetails androidResourceDetails =
         androidResourceDepsFinder.getAndroidResourceDetails();
     ImmutableSet<String> rDotJavaPackages = androidResourceDetails.rDotJavaPackages;
-    ImmutableSet<Path> resDirectories = resourcesFilter.getResDirectories();
+    ImmutableSet<Path> resDirectories = filteredResourcesProvider.getResDirectories();
 
     if (!resDirectories.isEmpty()) {
       generateAndCompileRDotJavaFiles(resDirectories, rDotJavaPackages, steps, buildableContext);
@@ -298,7 +298,7 @@ public class UberRDotJava extends AbstractBuildable implements
 
   static class Builder extends AbstractBuildable.Builder {
 
-    @Nullable private ResourcesFilter resourcesFilter;
+    @Nullable private FilteredResourcesProvider filteredResourcesProvider;
     @Nullable private AndroidResourceDepsFinder androidResourceDepsFinder;
     @Nullable private JavacOptions javacOptions;
     private boolean rDotJavaNeedsDexing = false;
@@ -319,9 +319,9 @@ public class UberRDotJava extends AbstractBuildable implements
       return this;
     }
 
-    public Builder setResourcesFilter(ResourcesFilter resourcesFilter) {
-      this.resourcesFilter = resourcesFilter;
-      addDep(resourcesFilter.getBuildTarget());
+    public Builder setFilteredResourcesProvider(
+        FilteredResourcesProvider filteredResourcesProvider) {
+      this.filteredResourcesProvider = filteredResourcesProvider;
       return this;
     }
 
@@ -353,7 +353,7 @@ public class UberRDotJava extends AbstractBuildable implements
     @Override
     protected UberRDotJava newBuildable(BuildRuleParams params, BuildRuleResolver resolver) {
       return new UberRDotJava(buildTarget,
-          resourcesFilter,
+          filteredResourcesProvider,
           javacOptions,
           androidResourceDepsFinder,
           rDotJavaNeedsDexing,
