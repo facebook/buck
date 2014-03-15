@@ -151,28 +151,22 @@ public class ResourcesFilter extends AbstractBuildable
 
     AndroidResourceDetails androidResourceDetails =
         androidResourceDepsFinder.getAndroidResourceDetails();
-    final ImmutableSet<Path> resDirectories;
-    final Supplier<ImmutableSet<Path>> nonEnglishStringFiles;
-    // TODO(user): Remove this check since this will be always be true.
-    if (requiresResourceFilter()) {
-      final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
-          androidResourceDetails.resDirectories,
-          androidResourceDetails.whitelistedStringDirs);
-      steps.add(filterResourcesStep);
+    final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
+        androidResourceDetails.resDirectories,
+        androidResourceDetails.whitelistedStringDirs);
+    steps.add(filterResourcesStep);
 
-      resDirectories = filterResourcesStep.getOutputResourceDirs();
-      nonEnglishStringFiles = new Supplier<ImmutableSet<Path>>() {
-        @Override
-        public ImmutableSet<Path> get() {
-          return filterResourcesStep.getNonEnglishStringFiles();
-        }
-      };
-      for (Path outputResourceDir : resDirectories) {
-        buildableContext.recordArtifactsInDirectory(outputResourceDir);
-      }
-    } else {
-      resDirectories = androidResourceDetails.resDirectories;
-      nonEnglishStringFiles = Suppliers.ofInstance(ImmutableSet.<Path>of());
+    final ImmutableSet<Path> resDirectories = filterResourcesStep.getOutputResourceDirs();
+    final Supplier<ImmutableSet<Path>> nonEnglishStringFiles = Suppliers.memoize(
+        new Supplier<ImmutableSet<Path>>() {
+          @Override
+          public ImmutableSet<Path> get() {
+            return filterResourcesStep.getNonEnglishStringFiles();
+          }
+        });
+
+    for (Path outputResourceDir : resDirectories) {
+      buildableContext.recordArtifactsInDirectory(outputResourceDir);
     }
 
     steps.add(new AbstractExecutionStep("record_build_output") {
@@ -227,10 +221,6 @@ public class ResourcesFilter extends AbstractBuildable
     }
 
     return filterResourcesStepBuilder.build();
-  }
-
-  private boolean requiresResourceFilter() {
-    return resourceFilter.isEnabled() || isStoreStringsAsAssets();
   }
 
   public boolean isStoreStringsAsAssets() {
