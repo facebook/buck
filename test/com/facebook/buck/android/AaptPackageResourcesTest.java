@@ -64,6 +64,7 @@ public class AaptPackageResourcesTest {
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         uberRDotJava,
+        AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of());
 
@@ -118,6 +119,7 @@ public class AaptPackageResourcesTest {
         /* manifest */ new FileSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         uberRDotJava,
+        AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
 
@@ -174,6 +176,7 @@ public class AaptPackageResourcesTest {
         /* manifest */ new FileSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         uberRDotJava,
+        AndroidTransitiveDependencies.EMPTY,
         PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of());
 

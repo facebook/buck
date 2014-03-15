@@ -79,6 +79,7 @@ public class AaptPackageResources extends AbstractBuildable
   private final SourcePath manifest;
   private final ResourcesFilter resourcesFilter;
   private final UberRDotJava uberRDotJava;
+  private final AndroidTransitiveDependencies androidTransitiveDependencies;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -87,12 +88,14 @@ public class AaptPackageResources extends AbstractBuildable
       SourcePath manifest,
       ResourcesFilter resourcesFilter,
       UberRDotJava uberRDotJava,
+      AndroidTransitiveDependencies androidTransitiveDependencies,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.manifest = Preconditions.checkNotNull(manifest);
     this.resourcesFilter = Preconditions.checkNotNull(resourcesFilter);
     this.uberRDotJava = Preconditions.checkNotNull(uberRDotJava);
+    this.androidTransitiveDependencies = Preconditions.checkNotNull(androidTransitiveDependencies);
     this.packageType = Preconditions.checkNotNull(packageType);
     this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -124,9 +127,6 @@ public class AaptPackageResources extends AbstractBuildable
     // commands to ensure that it is available at the desired path.
     steps.add(new MkdirAndSymlinkFileStep(manifest.resolve(context), getAndroidManifestXml()));
 
-    final AndroidTransitiveDependencies transitiveDependencies = resourcesFilter
-        .getAndroidTransitiveDependencies();
-
     // If the strings should be stored as assets, then we need to create the .fbstr bundles.
     final ImmutableSet<Path> resDirectories = resourcesFilter.getResDirectories();
     if (!resDirectories.isEmpty() && isStoreStringsAsAssets()) {
@@ -150,7 +150,7 @@ public class AaptPackageResources extends AbstractBuildable
         ImmutableList.Builder<Step> commands = ImmutableList.builder();
         try {
           createAllAssetsDirectory(
-              transitiveDependencies.assetsDirectories,
+              androidTransitiveDependencies.assetsDirectories,
               commands,
               context.getProjectFilesystem());
         } catch (IOException e) {
@@ -181,18 +181,18 @@ public class AaptPackageResources extends AbstractBuildable
     steps.add(collectAssets);
 
     Optional<Path> assetsDirectory;
-    if (transitiveDependencies.assetsDirectories.isEmpty()
-        && transitiveDependencies.nativeLibAssetsDirectories.isEmpty()
+    if (androidTransitiveDependencies.assetsDirectories.isEmpty()
+        && androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty()
         && !isStoreStringsAsAssets()) {
       assetsDirectory = Optional.absent();
     } else {
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
     }
 
-    if (!transitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
+    if (!androidTransitiveDependencies.nativeLibAssetsDirectories.isEmpty()) {
       Path nativeLibAssetsDir = assetsDirectory.get().resolve("lib");
       steps.add(new MakeCleanDirectoryStep(nativeLibAssetsDir));
-      for (Path nativeLibDir : transitiveDependencies.nativeLibAssetsDirectories) {
+      for (Path nativeLibDir : androidTransitiveDependencies.nativeLibAssetsDirectories) {
         AndroidBinaryRule.copyNativeLibrary(nativeLibDir, nativeLibAssetsDir, cpuFilters, steps);
       }
     }
@@ -339,6 +339,7 @@ public class AaptPackageResources extends AbstractBuildable
     @Nullable private SourcePath manifest;
     @Nullable private ResourcesFilter resourcesFilter;
     @Nullable private UberRDotJava uberRDotJava;
+    @Nullable private AndroidTransitiveDependencies androidTransitiveDependencies;
     @Nullable private PackageType packageType;
     @Nullable private ImmutableSet<TargetCpuType> cpuFilters;
 
@@ -361,12 +362,13 @@ public class AaptPackageResources extends AbstractBuildable
         SourcePath manifest,
         ResourcesFilter resourcesFilter,
         UberRDotJava uberRDotJava,
-        ImmutableSet<BuildTarget> nativeTargetsWithAssets,
+        AndroidTransitiveDependencies androidTransitiveDependencies,
         PackageType packageType,
         ImmutableSet<TargetCpuType> cpuFilters) {
       this.manifest = manifest;
       this.resourcesFilter = resourcesFilter;
       this.uberRDotJava = uberRDotJava;
+      this.androidTransitiveDependencies = androidTransitiveDependencies;
       this.packageType = packageType;
       this.cpuFilters = cpuFilters;
 
@@ -375,7 +377,7 @@ public class AaptPackageResources extends AbstractBuildable
       if (manifest instanceof BuildTargetSourcePath) {
         addDep(((BuildTargetSourcePath) manifest).getTarget());
       }
-      for (BuildTarget nativeTarget : nativeTargetsWithAssets) {
+      for (BuildTarget nativeTarget : androidTransitiveDependencies.nativeTargetsWithAssets) {
         addDep(nativeTarget);
       }
 
@@ -385,10 +387,12 @@ public class AaptPackageResources extends AbstractBuildable
     @Override
     protected AaptPackageResources newBuildable(BuildRuleParams params,
         BuildRuleResolver resolver) {
-      return new AaptPackageResources(getBuildTarget(),
+      return new AaptPackageResources(
+          getBuildTarget(),
           manifest,
           resourcesFilter,
           uberRDotJava,
+          androidTransitiveDependencies,
           packageType,
           cpuFilters);
     }

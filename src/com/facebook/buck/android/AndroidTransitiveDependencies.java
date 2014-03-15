@@ -29,6 +29,15 @@ public class AndroidTransitiveDependencies {
   public final ImmutableSet<Path> manifestFiles;
   public final ImmutableSet<Path> proguardConfigs;
 
+  public static final AndroidTransitiveDependencies EMPTY =
+      new AndroidTransitiveDependencies(
+          ImmutableSet.<Path>of(),
+          ImmutableSet.<Path>of(),
+          ImmutableSet.<Path>of(),
+          ImmutableSet.<BuildTarget>of(),
+          ImmutableSet.<Path>of(),
+          ImmutableSet.<Path>of());
+
   public AndroidTransitiveDependencies(
       ImmutableSet<Path> nativeLibsDirectories,
       ImmutableSet<Path> nativeLibAssetsDirectories,

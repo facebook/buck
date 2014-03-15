@@ -125,10 +125,6 @@ public class ResourcesFilter extends AbstractBuildable
     return buildOutputInitializer.getBuildOutput().nonEnglishStringFiles;
   }
 
-  AndroidTransitiveDependencies getAndroidTransitiveDependencies() {
-    return androidResourceDepsFinder.getAndroidTransitiveDependencies();
-  }
-
   BuildTarget getBuildTarget() {
     return buildTarget;
   }

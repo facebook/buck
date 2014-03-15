@@ -146,8 +146,7 @@ public class AndroidBinaryGraphEnhancer {
             .setAllParams(manifest,
                 resourcesFilter,
                 uberRDotJava,
-                androidResourceDepsFinder.getAndroidTransitiveDependencies()
-                    .nativeTargetsWithAssets,
+                androidResourceDepsFinder.getAndroidTransitiveDependencies(),
                 packageType,
                 cpuFilters));
     AaptPackageResources aaptPackageResources =
