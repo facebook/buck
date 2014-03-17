@@ -81,7 +81,7 @@ public class PartialGraph {
   }
 
   /**
-   * Creates a partial graph of all {@link com.facebook.buck.rules.BuildRule}s that are either
+   * Creates a partial graph of all {@link BuildRule}s that are either
    * transitive dependencies or tests for (rules that pass {@code predicate} and are contained in
    * BUCK files that contain transitive dependencies of the {@link BuildTarget}s defined in
    * {@code roots}).
@@ -132,6 +132,28 @@ public class PartialGraph {
         buildAndTestTargetsBuilder.build(), includes, eventBus, predicate);
     return parseAndCreateGraphFromTargets(allTargets, includes, parser, eventBus);
   }
+
+  /**
+   * Creates a partial graph of all {@link BuildRule}s that are transitive
+   * dependencies of (rules that pass {@code predicate} and are contained in BUCK files that contain
+   * transitive dependencies of the {@link BuildTarget}s defined in {@code roots}).
+
+   */
+  public static PartialGraph createPartialGraphFromRoots(
+      Iterable<BuildTarget> roots,
+      RawRulePredicate predicate,
+
+      Iterable<String> includes,
+      Parser parser,
+      BuckEventBus eventBus) throws BuildTargetException, BuildFileParseException, IOException {
+    Preconditions.checkNotNull(predicate);
+
+    List<BuildTarget> targets = parser.filterTargetsInProjectFromRoots(
+        roots, includes, eventBus, predicate);
+
+    return parseAndCreateGraphFromTargets(targets, includes, parser, eventBus);
+  }
+
 
   /**
    * Like {@link #createPartialGraphFromRootsWithTests}, but trades accuracy for speed.

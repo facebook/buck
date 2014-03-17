@@ -36,6 +36,12 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   private String combinedProject;
 
 
+  @Option(
+      name = "--with-tests",
+      usage = "(In Alpha) When generating a project slice, also include all tests that test " +
+          "code in that slice.")
+  private boolean withTests = false;
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -79,6 +85,10 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   public String getIde() {
     Optional<String> ide = getBuckConfig().getValue("project", "ide");
     return ide.or("intellij");
+  }
+
+  public boolean isWithTests() {
+    return withTests;
   }
 
   private List<String> getInitialTargets() {

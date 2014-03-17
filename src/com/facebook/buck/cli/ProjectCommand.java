@@ -254,13 +254,21 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       // files needed to build the build targets specified.
       ImmutableList<BuildTarget> targets = getBuildTargets(argumentsAsBuildTargets);
 
-      return PartialGraph.createPartialGraphFromRootsWithTests(
-          targets,
-          rulePredicate,
-          getProjectFilesystem(),
-          options.getDefaultIncludes(),
-          getParser(),
-          getBuckEventBus());
+      if (options.isWithTests()) {
+        return PartialGraph.createPartialGraphFromRootsWithTests(
+            targets,
+            rulePredicate,
+            getProjectFilesystem(),
+            options.getDefaultIncludes(),
+            getParser(),
+            getBuckEventBus());
+      } else {
+        return PartialGraph.createPartialGraphFromRoots(targets,
+            rulePredicate,
+            options.getDefaultIncludes(),
+            getParser(),
+            getBuckEventBus());
+      }
     }
   }
 
