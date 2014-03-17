@@ -68,9 +68,14 @@ mkdir -p "$BUCKD_DIR" &> /dev/null || true
 echo $BUCKD_PORT > "$BUCKD_PORT_FILE"
 
 # Run buckd. Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
-BUCKD_CLIENT_TIMEOUT_MILLIS=10000
+# Set timeout to 30s (longer than the biggest GC pause seen for a 2GB heap)
+# and GC target to 15s. This means that the GC has to miss its target by 100%
+# or many 500ms heartbeats must be missed before a client disconnection occurs.
+BUCKD_CLIENT_TIMEOUT_MILLIS=30000
+GC_MAX_PAUSE_TARGET=15000
 java \
 $BUCK_JAVA_ARGS \
+-XX:MaxGCPauseMillis=${GC_MAX_PAUSE_TARGET} \
 -XX:SoftRefLRUPolicyMSPerMB=0 \
 -classpath \
 ${BUCK_JAVA_CLASSPATH} \
