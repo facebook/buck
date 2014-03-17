@@ -1,0 +1,9 @@
+java_library(
+  name = 'example',
+  srcs = ['Example.java'],
+  visibility = [ 'PUBLIC' ],
+)
+
+project_config(
+  src_target = ':example',
+)
