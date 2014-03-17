@@ -232,7 +232,7 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
 
     if (exopackage) {
       Preconditions.checkArgument(computeExopackageDepsAbi.isPresent(),
-          "computeExopackageDepsAbi must be set if exopackage is true");
+          "computeExopackageDepsAbi must be set if exopackage is true.");
     }
   }
 
