@@ -380,6 +380,11 @@ public class ProjectFilesystem {
     return java.nio.file.Files.newOutputStream(getPathForRelativePath(pathRelativeToProjectRoot));
   }
 
+  public InputStream newFileInputStream(Path pathRelativeToProjectRoot)
+    throws IOException {
+    return java.nio.file.Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot));
+  }
+
   /**
    * @param inputStream Source of the bytes. This method does not close this stream.
    */

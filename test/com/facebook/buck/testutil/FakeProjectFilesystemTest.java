@@ -22,13 +22,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -115,5 +118,16 @@ public class FakeProjectFilesystemTest {
     assertThat(filesVisited, containsInAnyOrder(
             Paths.get("root/A/B/C.txt"),
             Paths.get("root/A/B.txt")));
+  }
+
+  @Test
+  public void testNewFileInputStream() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path path = Paths.get("hello.txt");
+    filesystem.writeContentsToPath("hello world", path);
+    InputStreamReader reader = new InputStreamReader(
+        filesystem.newFileInputStream(path), Charsets.UTF_8);
+    String contents = CharStreams.toString(reader);
+    assertEquals("hello world", contents);
   }
 }
