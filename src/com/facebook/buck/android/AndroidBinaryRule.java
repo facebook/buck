@@ -55,6 +55,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.Optionals;
@@ -552,8 +553,21 @@ public class AndroidBinaryRule extends DoNotUseAbstractBuildable implements
               "IN_JARS_DIR", aboslutifier.apply(preprocessJavaClassesInDir).toString());
           environmentVariablesBuilder.put(
               "OUT_JARS_DIR", aboslutifier.apply(preprocessJavaClassesOutDir).toString());
-        }
 
+          Optional<AndroidPlatformTarget> platformTarget =
+              context.getAndroidPlatformTargetOptional();
+
+          if (!platformTarget.isPresent()) {
+            return;
+          }
+
+          String bootclasspath = Joiner.on(':').join(
+              Iterables.transform(
+                  platformTarget.get().getBootclasspathEntries(),
+                  aboslutifier));
+
+          environmentVariablesBuilder.put("ANDROID_BOOTCLASSPATH", bootclasspath);
+        }
       });
 
     } else {
