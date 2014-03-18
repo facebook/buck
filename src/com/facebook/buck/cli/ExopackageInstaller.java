@@ -92,7 +92,8 @@ public class ExopackageInstaller {
    */
   private IDevice device = null;
 
-  private static class PackageInfo {
+  @VisibleForTesting
+  static class PackageInfo {
     final String apkPath;
     final String versionCode;
     private PackageInfo(String apkPath, String versionCode) {
@@ -122,7 +123,9 @@ public class ExopackageInstaller {
    * Installs the app specified in the constructor.  This object should be discarded afterward.
    */
   public synchronized boolean install() {
-    Preconditions.checkState(device == null);
+    Preconditions.checkState(
+        device == null,
+        "ExopackageInstaller.install called twice.");
 
     eventBus.post(InstallEvent.started(apkRule.getBuildTarget()));
 
@@ -198,61 +201,66 @@ public class ExopackageInstaller {
       String lines = AdbHelper.executeCommandWithErrorChecking(
         device, "dumpsys package " + packageName);
 
-      final String packagePrefix = "  Package [" + packageName + "] (";
-      final String otherPrefix = "  Package [";
-      boolean sawPackageLine = false;
-      final Splitter splitter = Splitter.on('=').limit(2);
-
-      String codePath = null;
-      String resourcePath = null;
-      String versionCode = null;
-
-      for (String line : Splitter.on("\r\n").split(lines)) {
-        // Just ignore everything until we see the line that says we are in the right package.
-        if (line.startsWith(packagePrefix)) {
-          sawPackageLine = true;
-          continue;
-        }
-        // This should never happen, but if we do see a different package, stop parsing.
-        if (line.startsWith(otherPrefix)) {
-          break;
-        }
-        // Ignore lines before our package.
-        if (!sawPackageLine) {
-          continue;
-        }
-        // Parse key-value pairs.
-        List<String> parts = splitter.splitToList(line.trim());
-        if (parts.size() != 2) {
-          continue;
-        }
-        switch (parts.get(0)) {
-          case "codePath":
-            codePath = parts.get(1);
-            break;
-          case "resourcePath":
-            resourcePath = parts.get(1);
-            break;
-          case "versionCode":
-            // Extra split to get rid of the SDK thing.
-            versionCode = parts.get(1).split(" ", 2)[0];
-            break;
-        }
-      }
-
-      if (!sawPackageLine) {
-        return Optional.absent();
-      }
-
-      Preconditions.checkNotNull(codePath, "Could not find codePath");
-      Preconditions.checkNotNull(resourcePath, "Could not find resourcePath");
-      Preconditions.checkNotNull(versionCode, "Could not find versionCode");
-      if (!codePath.equals(resourcePath)) {
-        throw new IllegalStateException("Code and resource path do not match");
-      }
-
-      return Optional.of(new PackageInfo(codePath, versionCode));
+      return parsePackageInfo(packageName, lines);
     }
+  }
+
+  @VisibleForTesting
+  static Optional<PackageInfo> parsePackageInfo(String packageName, String lines) {
+    final String packagePrefix = "  Package [" + packageName + "] (";
+    final String otherPrefix = "  Package [";
+    boolean sawPackageLine = false;
+    final Splitter splitter = Splitter.on('=').limit(2);
+
+    String codePath = null;
+    String resourcePath = null;
+    String versionCode = null;
+
+    for (String line : Splitter.on("\r\n").split(lines)) {
+      // Just ignore everything until we see the line that says we are in the right package.
+      if (line.startsWith(packagePrefix)) {
+        sawPackageLine = true;
+        continue;
+      }
+      // This should never happen, but if we do see a different package, stop parsing.
+      if (line.startsWith(otherPrefix)) {
+        break;
+      }
+      // Ignore lines before our package.
+      if (!sawPackageLine) {
+        continue;
+      }
+      // Parse key-value pairs.
+      List<String> parts = splitter.splitToList(line.trim());
+      if (parts.size() != 2) {
+        continue;
+      }
+      switch (parts.get(0)) {
+        case "codePath":
+          codePath = parts.get(1);
+          break;
+        case "resourcePath":
+          resourcePath = parts.get(1);
+          break;
+        case "versionCode":
+          // Extra split to get rid of the SDK thing.
+          versionCode = parts.get(1).split(" ", 2)[0];
+          break;
+      }
+    }
+
+    if (!sawPackageLine) {
+      return Optional.absent();
+    }
+
+    Preconditions.checkNotNull(codePath, "Could not find codePath");
+    Preconditions.checkNotNull(resourcePath, "Could not find resourcePath");
+    Preconditions.checkNotNull(versionCode, "Could not find versionCode");
+    if (!codePath.equals(resourcePath)) {
+      throw new IllegalStateException("Code and resource path do not match");
+    }
+
+    return Optional.of(new PackageInfo(codePath, versionCode));
   }
 
   private boolean installAgentIfNecessary() throws Exception {
@@ -472,18 +480,16 @@ public class ExopackageInstaller {
           logFiner("Got key: %s", getOutput());
 
           sentPayload = true;
-          try {
-            try (Socket clientSocket = new Socket("localhost", port)) {
-              logFiner("Connected");
-              OutputStream outToDevice = clientSocket.getOutputStream();
-              outToDevice.write(
-                  getOutput().substring(
-                      0,
-                      AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-              logFiner("Wrote key");
-              com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-              logFiner("Wrote file");
-            }
+          try (Socket clientSocket = new Socket("localhost", port)) {
+            logFiner("Connected");
+            OutputStream outToDevice = clientSocket.getOutputStream();
+            outToDevice.write(
+                getOutput().substring(
+                    0,
+                    AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
+            logFiner("Wrote key");
+            com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
+            logFiner("Wrote file");
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -491,7 +497,7 @@ public class ExopackageInstaller {
       }
     };
 
-    // In my emulator, running the agent under run-as caused an EACCES during
+    // In some emulators, running the agent under run-as caused an EACCES during
     // the socket operation.
     String runAsPrefix;
     String dataDirPrefix;

@@ -17,7 +17,9 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -60,5 +62,28 @@ public class ExopackageInstallerTest {
             "metadata.txt",
             "secondary-07fc80d2de21bd1dd57be0728fdb6c14190c3386.dex.jar"),
         toDeleteBuilder.build());
+  }
+
+  @Test
+  public void testParsePackageInfo() {
+    String lines =
+        "  Package [com.facebook.katana] (4229ce68):\r\n" +
+        "    userId=10145 gids=[1028, 1015, 3003]\r\n" +
+        "    pkg=Package{42690b80 com.facebook.katana}\r\n" +
+        "    codePath=/data/app/com.facebook.katana-1.apk\r\n" +
+        "    resourcePath=/data/app/com.facebook.katana-1.apk\r\n" +
+        "    nativeLibraryPath=/data/app-lib/com.facebook.katana-1\r\n" +
+        "    versionCode=1640376 targetSdk=14\r\n" +
+        "    versionName=8.0.0.0.23\r\n" +
+        "";
+    Optional<ExopackageInstaller.PackageInfo> optionalInfo = ExopackageInstaller.parsePackageInfo(
+        "com.facebook.katana",
+        lines);
+
+    assertTrue(optionalInfo.isPresent());
+    ExopackageInstaller.PackageInfo info = optionalInfo.get();
+
+    assertEquals("/data/app/com.facebook.katana-1.apk", info.apkPath);
+    assertEquals("1640376", info.versionCode);
   }
 }

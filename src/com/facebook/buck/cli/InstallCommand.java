@@ -90,7 +90,7 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
           build.getExecutionContext(),
           adbHelper,
           installableApk)
-          .install();
+            .install();
     } else {
       installSuccess = adbHelper.installApk(installableApk, options);
     }
